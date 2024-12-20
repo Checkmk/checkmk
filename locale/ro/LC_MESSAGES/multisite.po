@@ -138,9 +138,6 @@ msgstr ""
 " Aceasta include, de asemenea, orice modificări efectuate de la ultima "
 "activare care nu au necesitat activare manuală (marcate cu "
 
-msgid " Want to be notified about the public release? "
-msgstr ""
-
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -8658,6 +8655,10 @@ msgstr ""
 "Butoane pentru comutarea globală a stărilor, cum ar fi activarea "
 "verificărilor și a notificărilor"
 
+#, fuzzy
+msgid "Buy a license"
+msgstr "achiziționați o licență"
+
 msgid "By"
 msgstr "De către"
 
@@ -11067,10 +11068,6 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Automatizare Checkmk"
-
-#, fuzzy
-msgid "Checkmk Cloud"
-msgstr "Checkmk Logo"
 
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
@@ -19468,10 +19465,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -29391,6 +29384,14 @@ msgstr ""
 "v-ați achiziționat licența prin intermediul unui %s, vă rugăm să îl "
 "contactați."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk, please contact the Checkmk sales "
+"team at %s."
+msgstr ""
+"Dacă doriți să continuați să folosiți Checkmk, vă rugăm să achiziționați o "
+"licență de suport %s sau să contactați echipa de vânzări Checkmk la %s."
+
 #, python-format
 msgid ""
 "If you want to continue using Checkmk, please purchase a license supporting "
@@ -33324,6 +33325,14 @@ msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
 msgid "License expired: Renew license now"
 msgstr "Licența a expirat: Reînnoiți licența acum"
 
+#, fuzzy
+msgid "License expired: Renew license now to avoid site deletion."
+msgstr "Licența a expirat: Reînnoiți licența acum"
+
+#, fuzzy
+msgid "License expired: Renew license now to reactivate change activation."
+msgstr "Licența a expirat: Reînnoiți licența acum"
+
 msgid "License start"
 msgstr "Începutul licenței"
 
@@ -33336,7 +33345,15 @@ msgstr "Statul de licență: Liber"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licență suspendată: 'Activarea modificărilor' este blocată"
 
+#, fuzzy
+msgid "License suspended: 'Activate changes' is blocked."
+msgstr "Licență suspendată: 'Activarea modificărilor' este blocată"
+
 msgid "License suspended: Contact Checkmk sales team now"
+msgstr "Licență suspendată: Contactați acum echipa de vânzări Checkmk"
+
+#, fuzzy
+msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licență suspendată: Contactați acum echipa de vânzări Checkmk"
 
 msgid "License usage"
@@ -33356,6 +33373,10 @@ msgstr "Verificarea licenței a eșuat: 'Activarea modificărilor' este blocată
 
 msgid "Licensed"
 msgstr "Licențiat"
+
+#, fuzzy
+msgid "Licensed phase: too many services."
+msgstr "Vezi toate gazdele și serviciile"
 
 msgid "Licensed services"
 msgstr "Servicii licențiate"
@@ -40992,6 +41013,11 @@ msgstr ""
 "trata membrii acelor grupuri ca și membri ai grupului de contacte. Vă rugăm "
 "să rețineți că această caracteristică ar putea crește timpul de execuție al "
 "sincronizării LDAP."
+
+msgid ""
+"Once you reach 100%, further change activations will be blocked. Avoid "
+"interruptions by upgrading your license to extend your service limit, "
+msgstr ""
 
 msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
@@ -50149,6 +50175,9 @@ msgstr "Acordul privind nivelul serviciilor"
 msgid "Service Level Agreements"
 msgstr "Acorduri privind nivelul serviciilor"
 
+msgid "Service Limit Reached: Action Required."
+msgstr ""
+
 msgid "Service Name"
 msgstr "Denumirea serviciului"
 
@@ -52013,8 +52042,9 @@ msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
 
-msgid "Sign up here"
-msgstr ""
+#, fuzzy
+msgid "Sign up"
+msgstr "Semnează"
 
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
@@ -66594,6 +66624,12 @@ msgstr ""
 "trebuie să fie o reprezentare sub formă de șir de caractere a unei structuri "
 "de date Python compatibile."
 
+msgid "To unlock higher limits, purchase a license "
+msgstr ""
+
+msgid "To unlock higher limits, upgrade your license "
+msgstr ""
+
 msgid "To:"
 msgstr "Către:"
 
@@ -69286,8 +69322,8 @@ msgid "Treshold"
 msgstr "Treshold"
 
 #, fuzzy
-msgid "Trial Phase"
-msgstr "Schimbare banală"
+msgid "Trial"
+msgstr "Serial"
 
 msgid "Trial expired"
 msgstr "Procesul a expirat"
@@ -69305,7 +69341,14 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr "Perioada de probă s-a încheiat: Reduceți numărul de servicii"
 
+#, fuzzy
+msgid "Trial phase: too many services."
+msgstr "Vezi toate gazdele și serviciile"
+
 msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
+msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
 #, python-format
@@ -73058,6 +73101,10 @@ msgstr "Vizualizați parametrii efectivi ai acestei gazde pe bază de reguli"
 msgid "View timeline"
 msgstr "Vezi cronologie"
 
+#, fuzzy
+msgid "View trial details"
+msgstr "Detalii despre serviciul BI"
+
 msgid "Viewport information"
 msgstr "Informații despre Viewport"
 
@@ -73413,6 +73460,9 @@ msgstr "Așteptare pentru începerea replicării"
 msgid "Waitlocks"
 msgstr "Blocuri de așteptare"
 
+msgid "Want to be notified about the public release? "
+msgstr ""
+
 msgid "Wanted Host State"
 msgstr "Căutat Statul gazdă"
 
@@ -73629,6 +73679,10 @@ msgstr "Avertisment: Această gazdă are o configurație invalidă!"
 
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Avertisment: Această gazdă are o configurație invalidă: "
+
+#, python-format
+msgid "Warning: You are over 90% of your service limit."
+msgstr ""
 
 msgid "Warnings:"
 msgstr "Avertismente:"
@@ -75071,6 +75125,12 @@ msgstr ""
 "continuare să își interogheze configurația țintă și să se înregistreze, dar "
 "nu pot descărca pachete pentru actualizare."
 
+#, python-format
+msgid ""
+"With this activation you will have %s services activated which exceeds your "
+"limit of %s services."
+msgstr ""
+
 msgid ""
 "With this configuration, Checkmk will alert if the actual (not averaged) "
 "total CPU is exceeding a utilization threshold over an extended period of "
@@ -76115,6 +76175,9 @@ msgstr ""
 "în partea dreaptă a ecranului și apăsați butonul \"Test\". Rezultatele vor "
 "fi afișate aici."
 
+msgid "You can easily increase your site's capacity by upgrading your plan."
+msgstr ""
+
 msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
 "predefined conditions, which may be handy if you have to configure the same "
@@ -77082,6 +77145,10 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Aveți permisiunea de a accesa această gazdă."
 
+#, fuzzy, python-format
+msgid "You have reached your limit of %s. "
+msgstr "Ați selectat %d %s pentru migrare: %s"
+
 #, python-format
 msgid "You have selected %d %s for migration: %s"
 msgstr "Ați selectat %d %s pentru migrare: %s"
@@ -77519,6 +77586,10 @@ msgstr ""
 "despre asistență, găsiți detalii pe <a href=\"https://checkmk.com/"
 "checkmk_support_contract.html\" target=\"_blank\">site-ul nostru</a>."
 
+#, fuzzy, python-format
+msgid "Your current service limit is %s. "
+msgstr "Monitorizarea limitelor de serviciu"
+
 msgid "Your end date is before your start date."
 msgstr "Data de sfârșit este anterioară datei de început."
 
@@ -77528,6 +77599,11 @@ msgstr "Extensiile dvs. au o dimensiune de %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Numele de fișier nu trebuie să se termine cu o bară oblică."
+
+msgid ""
+"Your free trial is active! Please note that your site will be deleted when "
+"the trial period ends. "
+msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."
@@ -77567,6 +77643,14 @@ msgstr ""
 "Permisul dumneavoastră a fost suspendat. Vă rugăm să contactați echipa de "
 "vânzări Checkmk la %s."
 
+#, fuzzy, python-format
+msgid ""
+"Your license has been suspended. Please contact the Checkmk sales team at "
+"%s. "
+msgstr ""
+"Permisul dumneavoastră a fost suspendat. Vă rugăm să contactați echipa de "
+"vânzări Checkmk la %s."
+
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -77584,6 +77668,10 @@ msgstr ""
 
 #, python-format
 msgid "Your license has expired on %s."
+msgstr "Licența dvs. a expirat pe %s."
+
+#, fuzzy, python-format
+msgid "Your license has expired on %s. "
 msgstr "Licența dvs. a expirat pe %s."
 
 #, python-format
@@ -78511,6 +78599,9 @@ msgstr "mânere"
 
 msgid "height"
 msgstr "înălțime"
+
+msgid "here"
+msgstr ""
 
 msgid "hide folder names"
 msgstr "ascundeți numele dosarelor"
@@ -79716,6 +79807,9 @@ msgstr "licente nefolosite"
 msgid "up"
 msgstr "sus"
 
+msgid "upgrade here"
+msgstr ""
+
 msgid "upload insecure snapshots"
 msgstr "urca snapshot-uri nesigure"
 
@@ -79904,6 +79998,24 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit by "
+"deleting one or more hosts from your config."
+msgstr ""
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit. In case "
+"you want to increase your service limit, "
+msgstr ""
+
+#, fuzzy
+#~ msgid "Checkmk Cloud"
+#~ msgstr "Checkmk Logo"
+
+#, fuzzy
+#~ msgid "Trial Phase"
+#~ msgstr "Schimbare banală"
 
 #~ msgid "Go to the Saas Admin Panel"
 #~ msgstr "Mergeți la panoul de administrare Saas"

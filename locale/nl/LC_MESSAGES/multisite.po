@@ -140,9 +140,6 @@ msgid ""
 "require manual activation (marked with "
 msgstr ""
 
-msgid " Want to be notified about the public release? "
-msgstr ""
-
 #, python-format
 msgid " and %s '%s'"
 msgstr " en %s '%s'"
@@ -8684,6 +8681,10 @@ msgstr ""
 "Knoppen om wereldwijd te schakelen, zoals het inschakelen van controles en "
 "meldingen"
 
+#, fuzzy
+msgid "Buy a license"
+msgstr "Naam van de vergunning"
+
 msgid "By"
 msgstr "Door"
 
@@ -11060,10 +11061,6 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Checkmk automatisering"
-
-#, fuzzy
-msgid "Checkmk Cloud"
-msgstr "Checkmk Logo"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
@@ -19452,10 +19449,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -29361,6 +29354,14 @@ msgstr ""
 "met het Checkmk-verkoopteam op %s en vernieuw uw licentie. Als u uw licentie "
 "hebt gekocht via een %s, neem dan contact met hen op."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk, please contact the Checkmk sales "
+"team at %s."
+msgstr ""
+"Als u Checkmk wilt blijven gebruiken, koop dan een licentie die %s "
+"ondersteunt of neem contact op met het Checkmk-verkoopteam op %s."
+
 #, python-format
 msgid ""
 "If you want to continue using Checkmk, please purchase a license supporting "
@@ -33284,6 +33285,14 @@ msgid "License expired: Renew license now"
 msgstr "Licentie verlopen: Licentie nu vernieuwen"
 
 #, fuzzy
+msgid "License expired: Renew license now to avoid site deletion."
+msgstr "Licentie verlopen: Licentie nu vernieuwen"
+
+#, fuzzy
+msgid "License expired: Renew license now to reactivate change activation."
+msgstr "Licentie verlopen: Licentie nu vernieuwen"
+
+#, fuzzy
 msgid "License start"
 msgstr "Licentie staat"
 
@@ -33296,7 +33305,15 @@ msgstr "Licentie staat: Vrij"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licentie opgeschort: \"Wijzigingen activeren\" is geblokkeerd"
 
+#, fuzzy
+msgid "License suspended: 'Activate changes' is blocked."
+msgstr "Licentie opgeschort: \"Wijzigingen activeren\" is geblokkeerd"
+
 msgid "License suspended: Contact Checkmk sales team now"
+msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
+
+#, fuzzy
+msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
 
 msgid "License usage"
@@ -33318,6 +33335,10 @@ msgstr "Licentieverificatie mislukt: 'Wijzigingen activeren' is geblokkeerd"
 
 msgid "Licensed"
 msgstr "Erkende"
+
+#, fuzzy
+msgid "Licensed phase: too many services."
+msgstr "Bekijk alle hosts en diensten"
 
 #, fuzzy
 msgid "Licensed services"
@@ -40967,6 +40988,11 @@ msgstr ""
 "leden van die groepen ook als contactgroepleden behandelen. Houd er rekening "
 "mee dat deze functie de uitvoeringstijd van uw LDAP synchronisatie kan "
 "verhogen."
+
+msgid ""
+"Once you reach 100%, further change activations will be blocked. Avoid "
+"interruptions by upgrading your license to extend your service limit, "
+msgstr ""
 
 msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
@@ -50094,6 +50120,9 @@ msgstr "Overeenkomst inzake dienstverleningsniveau"
 msgid "Service Level Agreements"
 msgstr "Overeenkomsten inzake dienstverleningsniveau"
 
+msgid "Service Limit Reached: Action Required."
+msgstr ""
+
 msgid "Service Name"
 msgstr "Naam van de dienst"
 
@@ -51918,8 +51947,9 @@ msgid ""
 msgstr ""
 "Getekende agent-pakketten voor Linux, Windows en andere besturingssystemen"
 
-msgid "Sign up here"
-msgstr ""
+#, fuzzy
+msgid "Sign up"
+msgstr "Teken"
 
 msgid "Signal quality of Wireless device"
 msgstr "Signaalkwaliteit van draadloze apparatuur"
@@ -66378,6 +66408,12 @@ msgstr ""
 "instellen voor een gegeven regel. De waarde moet een string representatie "
 "zijn van een compatibele Python datastructuur."
 
+msgid "To unlock higher limits, purchase a license "
+msgstr ""
+
+msgid "To unlock higher limits, upgrade your license "
+msgstr ""
+
 msgid "To:"
 msgstr "Naar:"
 
@@ -69153,8 +69189,8 @@ msgid "Treshold"
 msgstr "Treshold"
 
 #, fuzzy
-msgid "Trial Phase"
-msgstr "Triviale verandering"
+msgid "Trial"
+msgstr "Serie"
 
 msgid "Trial expired"
 msgstr "Proef vervallen"
@@ -69172,7 +69208,14 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr ""
 
+#, fuzzy
+msgid "Trial phase: too many services."
+msgstr "Bekijk alle hosts en diensten"
+
 msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
+msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
 #, python-format
@@ -72916,6 +72959,10 @@ msgid "View timeline"
 msgstr "Bekijk tijdlijn"
 
 #, fuzzy
+msgid "View trial details"
+msgstr "Details BI-dienst"
+
+#, fuzzy
 msgid "Viewport information"
 msgstr "Informatie over de gastheer"
 
@@ -73273,6 +73320,9 @@ msgstr "Wachten op replicatie om te beginnen"
 msgid "Waitlocks"
 msgstr "Wachtsloten"
 
+msgid "Want to be notified about the public release? "
+msgstr ""
+
 #, fuzzy
 msgid "Wanted Host State"
 msgstr "Gastland"
@@ -73494,6 +73544,10 @@ msgstr "Waarschuwing: Deze host heeft een ongeldige configuratie!"
 
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Waarschuwing: Deze host heeft een ongeldige configuratie: "
+
+#, python-format
+msgid "Warning: You are over 90% of your service limit."
+msgstr ""
 
 msgid "Warnings:"
 msgstr "Waarschuwingen:"
@@ -74923,6 +74977,12 @@ msgstr ""
 "configuratie opvragen en registreren maar kunnen geen pakketten downloaden "
 "voor update."
 
+#, python-format
+msgid ""
+"With this activation you will have %s services activated which exceeds your "
+"limit of %s services."
+msgstr ""
+
 msgid ""
 "With this configuration, Checkmk will alert if the actual (not averaged) "
 "total CPU is exceeding a utilization threshold over an extended period of "
@@ -75979,6 +76039,9 @@ msgstr ""
 "gewoon de verbindingsopties die je wilt proberen aan de rechterkant van het "
 "scherm en druk op de \"Test\" knop. De resultaten worden hier getoond."
 
+msgid "You can easily increase your site's capacity by upgrading your plan."
+msgstr ""
+
 msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
 "predefined conditions, which may be handy if you have to configure the same "
@@ -76951,6 +77014,10 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Je hebt toestemming voor deze host."
 
+#, fuzzy, python-format
+msgid "You have reached your limit of %s. "
+msgstr "U heeft %d %s geselecteerd voor migratie: %s"
+
 #, python-format
 msgid "You have selected %d %s for migration: %s"
 msgstr "U heeft %d %s geselecteerd voor migratie: %s"
@@ -77382,6 +77449,10 @@ msgstr ""
 "over ondersteuning, vindt u de details op <a href=\"https://checkmk.com/"
 "checkmk_support_contract.html\" target=\"_blank\">onze website</a>."
 
+#, fuzzy, python-format
+msgid "Your current service limit is %s. "
+msgstr "Bewaak de servicelimieten"
+
 msgid "Your end date is before your start date."
 msgstr "Uw einddatum ligt vóór uw begindatum."
 
@@ -77391,6 +77462,11 @@ msgstr "Uw extensies hebben een grootte van %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Uw bestandsnaam mag niet eindigen met een schuine streep."
+
+msgid ""
+"Your free trial is active! Please note that your site will be deleted when "
+"the trial period ends. "
+msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."
@@ -77429,6 +77505,12 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"Your license has been suspended. Please contact the Checkmk sales team at "
+"%s. "
+msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
+
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -77442,6 +77524,10 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid "Your license has expired on %s."
+msgstr "Uw %s is opgeslagen."
+
+#, fuzzy, python-format
+msgid "Your license has expired on %s. "
 msgstr "Uw %s is opgeslagen."
 
 #, python-format
@@ -78369,6 +78455,9 @@ msgstr "handvatten"
 
 msgid "height"
 msgstr "hoogte"
+
+msgid "here"
+msgstr ""
 
 msgid "hide folder names"
 msgstr "mapnamen verbergen"
@@ -79587,6 +79676,9 @@ msgstr "ongebruikte licenties"
 msgid "up"
 msgstr "omhoog"
 
+msgid "upgrade here"
+msgstr ""
+
 msgid "upload insecure snapshots"
 msgstr "onveilige snapshots uploaden"
 
@@ -79772,6 +79864,24 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit by "
+"deleting one or more hosts from your config."
+msgstr ""
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit. In case "
+"you want to increase your service limit, "
+msgstr ""
+
+#, fuzzy
+#~ msgid "Checkmk Cloud"
+#~ msgstr "Checkmk Logo"
+
+#, fuzzy
+#~ msgid "Trial Phase"
+#~ msgstr "Triviale verandering"
 
 #~ msgid "Non-ASCII characters are not allowed here."
 #~ msgstr "Niet-ASCII tekens zijn hier niet toegestaan."

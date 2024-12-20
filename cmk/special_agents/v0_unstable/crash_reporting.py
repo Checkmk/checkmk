@@ -24,9 +24,11 @@ class AgentCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
 
 def create_agent_crash_dump() -> str:
     try:
-        crash = AgentCrashReport.from_exception(
+        crash = AgentCrashReport(
             cmk.utils.paths.crash_dir,
-            cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+            AgentCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+            ),
         )
         CrashReportStore().save(crash)
         return f"Agent failed - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"

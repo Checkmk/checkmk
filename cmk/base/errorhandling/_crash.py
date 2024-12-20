@@ -41,20 +41,18 @@ def create_section_crash_dump(
 
     text = f"{operation.title()} of section {section_name} failed"
     try:
-        crash = SectionCrashReport.from_exception(
+        crash = SectionCrashReport(
             cmk.utils.paths.crash_dir,
-            cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
-            details={
-                "section_name": str(section_name),
-                "section_content": section_content,
-                "host_name": host_name,
-            },
-            type_specific_attributes={
-                "snmp_info": _read_snmp_info(host_name),
-                "agent_output": (
-                    _read_agent_output(host_name) if rtc_package is None else rtc_package
-                ),
-            },
+            SectionCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                details={
+                    "section_name": str(section_name),
+                    "section_content": section_content,
+                    "host_name": host_name,
+                },
+            ),
+            snmp_info=_read_snmp_info(host_name),
+            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -83,28 +81,24 @@ def create_check_crash_dump(
     """
     text = "check failed - please submit a crash report!"
     try:
-        crash = CheckCrashReport.from_exception(
+        crash = CheckCrashReport(
             cmk.utils.paths.crash_dir,
-            cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
-            details=CheckDetails(
-                **{
-                    "check_output": text,
-                    "host": host_name,
-                    "is_cluster": is_cluster,
-                    "description": service_name,
-                    "check_type": str(plugin_name),
-                    "inline_snmp": snmp_backend is SNMPBackendEnum.INLINE,
-                    "enforced_service": is_enforced,
+            CheckCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                CheckDetails(
+                    check_output=text,
+                    host=host_name,
+                    is_cluster=is_cluster,
+                    description=service_name,
+                    check_type=str(plugin_name),
+                    inline_snmp=snmp_backend is SNMPBackendEnum.INLINE,
+                    enforced_service=is_enforced,
                     # TODO: Change CheckDetails to use extra_items=True in Python 3.13 (PEP 728)
                     **plugin_kwargs,  # type: ignore[typeddict-item]
-                }
-            ),
-            type_specific_attributes={
-                "snmp_info": _read_snmp_info(host_name),
-                "agent_output": (
-                    _read_agent_output(host_name) if rtc_package is None else rtc_package
                 ),
-            },
+            ),
+            snmp_info=_read_snmp_info(host_name),
+            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()

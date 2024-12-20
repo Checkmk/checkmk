@@ -90,16 +90,16 @@ class CrashReport(ABCCrashReport[BaseDetails]):
         cls,
         crashdir: Path,
         version_info: VersionInfo,
-        _details: BaseDetails | None = None,
-        _type_specific_attributes: object = None,
     ) -> Self:
-        return super().from_exception(
+        return cls(
             crashdir,
-            version_info,
-            details={
-                "argv": sys.argv,
-                "env": dict(os.environ),
-            },
+            cls.make_crash_info(
+                version_info,
+                {
+                    "argv": sys.argv,
+                    "env": dict(os.environ),
+                },
+            ),
         )
 
 

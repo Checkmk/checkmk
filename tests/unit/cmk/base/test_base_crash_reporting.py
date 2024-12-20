@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+from cmk.ccc.crash_reporting import VersionInfo
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.base.errorhandling import CheckCrashReport, CheckDetails
@@ -39,33 +41,32 @@ def test_check_crash_report_from_exception(tmp_path: Path) -> None:
     try:
         raise Exception("DING")
     except Exception:
-        crash = CheckCrashReport.from_exception(
+        crash = CheckCrashReport(
             crashdir,
-            {
-                "time": 0.0,
-                "os": "",
-                "version": "",
-                "edition": "",
-                "core": "",
-                "python_version": "",
-                "python_paths": [],
-            },
-            details=CheckDetails(
-                **{
-                    "item": "foo",
-                    "params": {},
-                    "check_output": "Output",
-                    "host": hostname,
-                    "is_cluster": False,
-                    "description": "Uptime",
-                    "check_type": "uptime",
-                    "manual_check": False,
-                    "uses_snmp": False,
-                    "inline_snmp": False,
-                    "enforced_service": False,
-                }
+            CheckCrashReport.make_crash_info(
+                VersionInfo(
+                    time=0.0,
+                    os="",
+                    version="",
+                    edition="",
+                    core="",
+                    python_version="",
+                    python_paths=[],
+                ),
+                CheckDetails(
+                    item="foo",
+                    params={},
+                    check_output="Output",
+                    host=hostname,
+                    is_cluster=False,
+                    description="Uptime",
+                    check_type="uptime",
+                    manual_check=False,
+                    uses_snmp=False,
+                    inline_snmp=False,
+                    enforced_service=False,
+                ),
             ),
-            type_specific_attributes={},
         )
 
     _check_generic_crash_info(crash)

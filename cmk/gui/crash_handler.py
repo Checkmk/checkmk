@@ -66,7 +66,6 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
         crashdir: Path,
         version_info: VersionInfo,
         details: GUIDetails | None = None,
-        type_specific_attributes: dict[str, Any] | None = None,
     ) -> Self:
         try:
             # Access any attribute to trigger proxy object lookup
@@ -100,13 +99,9 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
                 request_method="unknown",
             )
 
-        return super().from_exception(
+        return cls(
             crashdir,
-            version_info,
-            details=GUIDetails(**details, **request_details)
-            if details
-            else GUIDetails(**request_details),  # type: ignore[typeddict-item]
-            type_specific_attributes=type_specific_attributes,
+            cls.make_crash_info(version_info, GUIDetails(**(details or {}), **request_details)),  # type: ignore[typeddict-item]
         )
 
     def url(self) -> str:

@@ -21,7 +21,7 @@ from collections.abc import Iterator
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, Generic, NotRequired, Self, Sequence, TypedDict, TypeVar
+from typing import Any, Final, Generic, NotRequired, Sequence, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -167,25 +167,17 @@ class ABCCrashReport(Generic[T], abc.ABC):
         raise NotImplementedError()
 
     @classmethod
-    def from_exception(
+    def make_crash_info(
         cls,
-        crashdir: Path,
         version_info: VersionInfo,
         details: T | None = None,
-        type_specific_attributes: dict[str, Any] | None = None,
-    ) -> Self:
+    ) -> CrashInfo:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
                   that are added to the "details" key of the crash_info.
-        type_specific_attributes - Crash type specific class attributes that
-                                   are set as attributes on the crash objects.
         """
-        attributes = {
-            "crash_info": _get_generic_crash_info(cls.type(), version_info, details),
-        }
-        attributes |= type_specific_attributes or {}
-        return cls(crashdir, **attributes)
+        return _get_generic_crash_info(cls.type(), version_info, details)
 
     @classmethod
     def deserialize(cls, crashdir: Path, serialized: SerializedCrashReport) -> ABCCrashReport:

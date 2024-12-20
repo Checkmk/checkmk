@@ -3532,9 +3532,11 @@ def main() -> None:
             raise
 
         CrashReportStore().save(
-            ECCrashReport.from_exception(
+            ECCrashReport(
                 cmk.utils.paths.crash_dir,
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                ECCrashReport.make_crash_info(
+                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+                ),
             )
         )
         bail_out(logger, traceback.format_exc())

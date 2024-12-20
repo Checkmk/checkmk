@@ -41,17 +41,19 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
         raise ValueError("XYZ")
     except ValueError:
-        return UnitTestCrashReport.from_exception(
+        return UnitTestCrashReport(
             crashdir,
-            {
-                "core": "test",
-                "python_version": "test",
-                "edition": "test",
-                "python_paths": ["foo", "bar"],
-                "version": "3.99",
-                "time": 0.0,
-                "os": "Foobuntu",
-            },
+            UnitTestCrashReport.make_crash_info(
+                VersionInfo(
+                    core="test",
+                    python_version="test",
+                    edition="test",
+                    python_paths=["foo", "bar"],
+                    version="3.99",
+                    time=0.0,
+                    os="Foobuntu",
+                ),
+            ),
         )
 
 
@@ -155,17 +157,19 @@ def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
-            crash = UnitTestCrashReport.from_exception(
+            crash = UnitTestCrashReport(
                 crashdir,
-                {
-                    "core": "test",
-                    "python_version": "test",
-                    "edition": "test",
-                    "python_paths": ["foo", "bar"],
-                    "version": "3.99",
-                    "time": 0.0,
-                    "os": "Foobuntu",
-                },
+                UnitTestCrashReport.make_crash_info(
+                    VersionInfo(
+                        core="test",
+                        python_version="test",
+                        edition="test",
+                        python_paths=["foo", "bar"],
+                        version="3.99",
+                        time=0.0,
+                        os="Foobuntu",
+                    )
+                ),
             )
             store.save(crash)
             crash_ids.append(crash.ident_to_text())

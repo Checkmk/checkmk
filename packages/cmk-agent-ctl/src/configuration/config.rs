@@ -611,7 +611,7 @@ impl LegacyPullMarker {
     }
 }
 
-#[derive(StringEnum, PartialEq, Eq)]
+#[derive(StringEnum, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ConnectionMode {
     /// `push-agent`
     Push,

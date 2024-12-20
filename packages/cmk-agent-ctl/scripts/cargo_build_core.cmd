@@ -32,9 +32,9 @@ set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%
 rustup toolchain list
-rustup default 1.66.0
+rustup default 1.71.1
 rustup target add %target%
-rustup update 1.66.0
+rustup update 1.71.1
 @echo RUST versions:
 cd
 cargo -V

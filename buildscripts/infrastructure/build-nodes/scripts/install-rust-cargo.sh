@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-TOOLCHAIN_VERSION="1.66.0"
+TOOLCHAIN_VERSION="1.71.1"
 
 DEFAULT_TOOLCHAIN="${TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 DIR_NAME="rust"
@@ -28,7 +28,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=9
+BUILD_ID=10
 
 build_package() {
     WORK_DIR=$(mktemp -d)

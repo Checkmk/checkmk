@@ -145,6 +145,8 @@ bandit.ini:
 	  echo ) > bandit.ini
 	( echo exclude: /tests >> bandit.ini )
 
+# NOTE: Due to the (unnecessary) use of Docker, find-shell-files *must* emit
+# relative paths, which is inconsistent with find-python-files. :-/
 format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $$($(FIND_SHELL_FILES))
 
@@ -243,6 +245,8 @@ test-format-python-format: ../pyproject.toml
 test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
+# NOTE: Due to the (unnecessary) use of Docker, find-shell-files *must* emit
+# relative paths, which is inconsistent with find-python-files. :-/
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 

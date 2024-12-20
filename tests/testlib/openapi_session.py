@@ -8,11 +8,10 @@ import logging
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple
+from typing import Any, NamedTuple
 
 import requests
 
-from tests.testlib.rest_api_client import RequestHandler, Response
 from tests.testlib.version import CMKVersion
 
 from cmk.gui.http import HTTPMethod
@@ -22,33 +21,6 @@ from cmk import trace
 
 logger = logging.getLogger("rest-session")
 tracer = trace.get_tracer()
-
-
-class RequestSessionRequestHandler(RequestHandler):
-    def __init__(self) -> None:
-        self.session = requests.session()
-
-    def request(
-        self,
-        method: HTTPMethod,
-        url: str,
-        query_params: Mapping[str, str] | None = None,
-        body: AnyStr | None = None,
-        headers: Mapping[str, str] | None = None,
-        follow_redirects: bool = False,
-    ) -> Response:
-        resp = self.session.request(
-            method=method,
-            url=url,
-            params=query_params,
-            data=body,
-            headers=headers,
-            allow_redirects=follow_redirects,
-        )
-        return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
-
-    def set_credentials(self, username: str, password: str) -> None:
-        self.session.headers["Authorization"] = f"Bearer {username} {password}"
 
 
 class RestSessionException(Exception):

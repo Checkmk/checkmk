@@ -1146,7 +1146,6 @@ class Site:
             contactgroups=[],
             roles=["admin"],
             is_automation_user=True,
-            store_automation_secret=False,
         )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
 

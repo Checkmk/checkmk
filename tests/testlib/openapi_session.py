@@ -325,13 +325,11 @@ class UsersAPI(BaseAPI):
         customer: None | str = None,
         roles: list[str] | None = None,
         is_automation_user: bool = False,
-        store_automation_secret: bool = False,
     ) -> None:
         if is_automation_user:
             auth_option = {
                 "auth_type": "automation",
                 "secret": password,
-                "store_automation_secret": store_automation_secret,
             }
         else:
             auth_option = {

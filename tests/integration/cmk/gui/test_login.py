@@ -28,7 +28,6 @@ def create_and_delete_automation_user(site: Site) -> Iterator[tuple[str, str]]:
         contactgroups=[],
         roles=["user"],
         is_automation_user=True,
-        store_automation_secret=False,
     )
     try:
         yield username, password

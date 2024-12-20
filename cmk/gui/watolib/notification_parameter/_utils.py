@@ -53,7 +53,7 @@ def _to_param_item(data: object) -> NotificationParameterItem:
                 comment=general.get("comment", ""),
                 docu_url=general.get("docu_url", ""),
             ),
-            parameter_properties=data["parameter_properties"]["method_parameters"],
+            parameter_properties=data["parameter_properties"],
         )
     except KeyError as exc:
         raise ValueError from exc
@@ -121,14 +121,6 @@ class NotificationParameter(NamedTuple):
     data: Mapping
 
 
-def _add_method_key(item: object) -> object:
-    if not isinstance(item, dict):
-        return item
-    if "parameter_properties" in item:
-        item["parameter_properties"] = {"method_parameters": item["parameter_properties"]}
-    return item
-
-
 def get_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
@@ -141,7 +133,7 @@ def get_notification_parameter(
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     method, item = next(
         (
-            (method, _add_method_key(item.get(parameter_id)))
+            (method, item.get(parameter_id))
             for method, item in notification_parameter.items()
             if parameter_id in item
         ),

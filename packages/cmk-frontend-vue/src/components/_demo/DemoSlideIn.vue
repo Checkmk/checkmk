@@ -67,7 +67,8 @@ const catalog = ref<Catalog>({
         }
       ]
     }
-  ]
+  ],
+  i18n_base: { required: 'required' }
 })
 </script>
 

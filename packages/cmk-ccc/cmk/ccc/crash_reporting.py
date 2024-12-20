@@ -53,7 +53,7 @@ class ContactDetails(TypedDict):
 class CrashInfo(Generic[T], VersionInfo):
     exc_type: str | None
     crash_type: str
-    exc_traceback: NotRequired[Sequence[traceback.FrameSummary]]
+    exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]
     local_vars: str
     details: T
     exc_value: str
@@ -251,7 +251,7 @@ def _get_generic_crash_info(
         crash_type=type_name,
         exc_type=exc_type.__name__ if exc_type else None,
         exc_value=str(exc_value),
-        exc_traceback=[e for e in tb_list],
+        exc_traceback=[tuple(e) for e in tb_list],
         local_vars=_get_local_vars_of_last_exception(),
         details=details,
         core=version_info["core"],

@@ -411,7 +411,7 @@ class PageCrash(ABCCrashReportPage):
 
         html.close_table()
 
-    def _format_traceback(self, tb: Sequence[traceback.FrameSummary]) -> str:
+    def _format_traceback(self, tb: Sequence[tuple[str, int, str, str]]) -> str:
         return "".join(traceback.format_list(tb))
 
     def _show_crash_report_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:

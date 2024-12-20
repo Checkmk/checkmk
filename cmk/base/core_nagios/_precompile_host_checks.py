@@ -165,14 +165,9 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     )
 
     # IP addresses
-    # FIXME:
-    # What we construct here does not match what we need to assign it to `config.ipaddresses` and
-    # `config.ipv6addresses` later.
-    # But maybe it is in fact not a problem, because `config.lookup_ip_address` happens to never
-    # return `None` the way we call it here.
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
-    needed_ipaddresses: dict[HostName, HostAddress | None] = {}
-    needed_ipv6addresses: dict[HostName, HostAddress | None] = {}
+    needed_ipaddresses: dict[HostName, HostAddress] = {}
+    needed_ipv6addresses: dict[HostName, HostAddress] = {}
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
@@ -222,8 +217,8 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         verify_site_python=verify_site_python,
         locations=locations,
         checks_to_load=legacy_checks_to_load,
-        ipaddresses=needed_ipaddresses,  # type: ignore[arg-type]  # see FIXME above.
-        ipv6addresses=needed_ipv6addresses,  # type: ignore[arg-type]  # see FIXME above.
+        ipaddresses=needed_ipaddresses,
+        ipv6addresses=needed_ipv6addresses,
         hostname=hostname,
     )
 

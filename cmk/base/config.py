@@ -1581,7 +1581,7 @@ def lookup_ip_address(
     host_name: HostName | HostAddress,
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
-) -> HostAddress | None:
+) -> HostAddress:
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(

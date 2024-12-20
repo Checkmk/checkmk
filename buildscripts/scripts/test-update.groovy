@@ -74,7 +74,7 @@ def main() {
                 condition: run_condition,
                 raiseOnError: true,
             ) {
-                build(
+                def job = build(
                     job: relative_job_name,
                     propagate: true,  // Raise any errors
                     parameters: [
@@ -88,12 +88,35 @@ def main() {
                         string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                     ],
                 );
+
+                copyArtifacts(
+                    projectName: relative_job_name,
+                    selector: specific(job.getId()), // buildNumber shall be a string
+                    target: "${checkout_dir}/test-results",
+                    fingerprintArtifacts: true
+                );
             }
         }
     }
 
     stage('Run update tests') {
         parallel build_for_parallel;
+    }
+
+    stage("Archive / process test reports") {
+        dir("${checkout_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+            }
+            xunit([Custom(
+                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: "**/junit.xml",
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )]);
+        }
     }
 }
 

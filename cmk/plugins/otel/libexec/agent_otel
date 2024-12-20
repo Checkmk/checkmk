@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Callable
 
 try:
-    from cmk.plugins.otel.special_agents.cce.agent_otel import main
+    from cmk.plugins.otel.special_agents.cce.agent_otel import (  # type: ignore[import-untyped,unused-ignore]
+        main,
+    )
 except ImportError:
 
     def main() -> int:

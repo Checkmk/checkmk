@@ -3,84 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
-import os
 import sys
-import time
-from pathlib import Path
-from typing import Iterable, Sequence
+from collections.abc import Callable
 
-# TODO: fix this layer violation by putting cmk/plugins/otel into cmk-otel-collector!
-from cmk.otel_collector.constants import (  # pylint: disable=cmk-module-layer-violation
-    COLLECTOR_EXPORTED_FILES_PATH,
-)
+try:
+    from cmk.plugins.otel.special_agents.cce.agent_otel import main
+except ImportError:
 
-_SELF_MONITORING_FOLDER = "self+monitoring"
-
-
-def _get_safe_file_list(folder: Path) -> Sequence[Path]:
-    try:
-        file_paths = tuple(folder.iterdir())
-    except FileNotFoundError:
-        # Give a message, but this is ok in general.
-        sys.stderr.write(f"No data available in {folder}\n")
-        return ()
-
-    # The collector starts a new file every second, so:
-    time.sleep(1)
-    # Investing one second here means the collector
-    # is done writing into all files in our list.
-    return file_paths
-
-
-def _output_from_file(files: Iterable[Path]) -> Iterable[tuple[int, str]]:
-    for file in files:
-        try:
-            content = file.read_text()
-        except FileNotFoundError:
-            # race condition: file was deleted between listing and reading
-            continue
-        except IsADirectoryError:
-            sys.stderr.write(f"Skipping folder {file}\n")
-
-        try:
-            timestamp = int(file.stem)
-        except ValueError:
-            sys.stderr.write(f"Cannot extract timestamp of {file}\n")
-
-        yield timestamp, content
-
-
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawTextHelpFormatter,
-    )
-    parser.add_argument(
-        "--self-monitoring",
-        action="store_true",
-        help="Include self-monitoring data in agent output.",
-    )
-    parser.add_argument("host_name")
-    return parser.parse_args()
-
-
-def main() -> int:
-    args = parse_arguments()
-    folder = Path(
-        os.environ["OMD_ROOT"],
-        COLLECTOR_EXPORTED_FILES_PATH,
-    )
-
-    file_paths = [
-        *_get_safe_file_list(folder / args.host_name),
-        *(_get_safe_file_list(folder / _SELF_MONITORING_FOLDER) if args.self_monitoring else ()),
-    ]
-    sys.stdout.write("<<<otel_metrics:sep(0)>>>\n")
-    for timestamp, content in _output_from_file(file_paths):
-        sys.stdout.write(f"{timestamp} {content}" + "\n")
-
-    return 0
+    def main() -> int:
+        sys.stderr.write("OpenTelementry integration is not available in this edition of Checkmk\n")
+        return 1
 
 
 if __name__ == "__main__":

@@ -29,19 +29,11 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
         if not isinstance(raw_value, dict):
             return INVALID_VALUE
 
-        for value in raw_value:
+        for value in raw_value.values():
             if not isinstance(value, str):
                 return INVALID_VALUE
 
-        raw_value = [value for value in raw_value if value]
-        parsed_value = {}
-        for label in raw_value:
-            if ":" not in label:
-                return INVALID_VALUE
-            key, value = label.split(":", 1)
-            parsed_value[key] = value
-
-        return parsed_value
+        return raw_value
 
     def _validators(self) -> Sequence[Callable[[Mapping[str, str]], object]]:
         # Todo: Implement custom validation
@@ -89,13 +81,6 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
     ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, InvalidValue):
             return []
-
-        for key, value in parsed_value.items():
-            if ":" not in key or key == "" or value == "":
-                return create_validation_error(
-                    raw_value,
-                    Title("Labels need to be in the format [KEY]:[VALUE]. For example os:windows."),
-                )
 
         unique_pairs = set()
         for key, value in parsed_value.items():

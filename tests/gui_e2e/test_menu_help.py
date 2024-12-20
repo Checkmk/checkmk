@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
 
 
 def test_help_beginners_guide(logged_in_page: LoginPage) -> None:
@@ -69,3 +70,9 @@ def test_help_info(logged_in_page: LoginPage) -> None:
 def test_help_werks(logged_in_page: LoginPage) -> None:
     response = logged_in_page.go(logged_in_page.main_menu.help_werks.get_attribute("href"))
     assert response and response.ok
+
+
+@skip_if_not_saas_edition
+def test_saas_status_page(logged_in_page: LoginPage) -> None:
+    href = logged_in_page.main_menu.help_saas_status_page.get_attribute("href")
+    assert href is not None and "status.checkmk.com" in href

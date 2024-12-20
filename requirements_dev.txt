@@ -9,6 +9,9 @@ boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
 botocore-stubs  # used for type checking, keep version in sync with botocore
 bson  # used by test_mk_mongodb unit test
 checkmk-dev-tools~=0.1.60  # provides tooling for build artifacts
+# Locked to 0.26.1 since 0.26.3 handled const strings differently
+# which broke inheritance.
+datamodel-code-generator==0.26.1  # used for cmk-shared-typing generation
 devpi-client # Managing the devpi server
 dill
 docker  # used by test_docker test and mk_docker agent plugin

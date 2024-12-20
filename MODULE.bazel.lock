@@ -6801,7 +6801,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "63be5af1409a6d9831bb3e41b378461acebd80e498d1babb4481befcd9e8e59c",
+          "@@//requirements_all_lock.txt": "9b156d4f99ad91b930ea339df3389e875d286646889c1fa6ac147c1cd3339061",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -9434,6 +9434,7 @@
                 "pathable": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pathable\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pathspec": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pathspec\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "protobuf": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_protobuf\",\"target_platforms\":null,\"version\":\"3.12\"}]",
+                "pydantic": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pydantic\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pyflakes": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pyflakes\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pygments": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pygments\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pyspnego": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pyspnego\",\"target_platforms\":null,\"version\":\"3.12\"}]",
@@ -9580,7 +9581,6 @@
                 "mypy_boto3_logs": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_mypy_boto3_logs\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "mypy_extensions": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_mypy_extensions\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "psycopg2_binary": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_psycopg2_binary\",\"target_platforms\":null,\"version\":\"3.12\"}]",
-                "pydantic": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pydantic\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pylint_pydantic": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pylint_pydantic\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pyprof2calltree": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pyprof2calltree\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pyproject_hooks": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pyproject_hooks\",\"target_platforms\":null,\"version\":\"3.12\"}]",

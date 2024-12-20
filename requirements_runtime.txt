@@ -9,6 +9,5 @@
 -r packages/cmk-mkp-tool/requirements.txt
 -r packages/cmk-rulesets/requirements.txt
 -r packages/cmk-server-side-calls/requirements.txt
--r packages/cmk-shared-typing/requirements.txt
 -r packages/cmk-trace/requirements.txt
 -r packages/cmk-werks/requirements.txt

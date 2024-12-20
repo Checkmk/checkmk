@@ -8,6 +8,8 @@ set -e
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
+PYTHON_DESTINATION=../../cmk/shared_typing
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -127,15 +129,13 @@ setup() {
 }
 
 run_clean() {
-    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules python typescript
+    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules typescript
 }
 
 run_build() {
     setup
-    rm -rf python typescript
-    mkdir -p python/cmk/shared_typing typescript
-    touch python/cmk/shared_typing/py.typed
-    cp header_py.txt python/cmk/shared_typing/__init__.py
+    rm -rf typescript
+    mkdir -p typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
     for file in source/*.json; do
@@ -145,7 +145,7 @@ run_build() {
         if [[ "$file" == "source/graph_designer.json" ]]; then
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
-                --output "python/cmk/shared_typing/${target_base}.py" \
+                --output "${PYTHON_DESTINATION}/cee/${target_base}.py" \
                 --target-python-version 3.12 \
                 --output-model-type=pydantic.BaseModel \
                 --collapse-root-models \
@@ -168,7 +168,7 @@ run_build() {
         else
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
-                --output "python/cmk/shared_typing/${target_base}.py" \
+                --output "${PYTHON_DESTINATION}/${target_base}.py" \
                 --target-python-version 3.12 \
                 --output-model-type=dataclasses.dataclass \
                 --use-field-description \
@@ -191,7 +191,8 @@ run_build() {
 
     if [ "$CI" == "true" ]; then
         echo "Checking if the generated files are up-to-date..."
-        git diff --exit-code .
+        git diff --exit-code typescript
+        git diff --exit-code ${PYTHON_DESTINATION}
     fi
 
     echo "Done."

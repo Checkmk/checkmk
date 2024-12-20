@@ -148,7 +148,6 @@ CMK_PACKAGES = [
     "//packages/cmk-mkp-tool",
     "//packages/cmk-rulesets",
     "//packages/cmk-server-side-calls",
-    "//packages/cmk-shared-typing",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

@@ -712,6 +712,19 @@ def test_automation_create_diagnostics_dump(site: Site) -> None:
     assert "var/check_mk/diagnostics" in result.tarfile_path
 
 
+def test_automation_restart_with_non_resolvable_host(site: Site) -> None:
+    host = "modes-test-host-unresolvable"
+    site.openapi.hosts.create(host)
+    try:
+        result = _execute_automation(site, "restart", expect_stderr_pattern=".*")
+    finally:
+        site.openapi.hosts.delete(host)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+    assert isinstance(result, results.RestartResult)
+    assert any(f"Failed to lookup IPv4 address of {host}" in w for w in result.config_warnings)
+
+
 # TODO: rename-hosts
 # TODO: delete-hosts
 # TODO: scan-parents

@@ -3867,7 +3867,7 @@ exclude_options = [
         "no-past",
         "N",
         False,
-        "do not copy RRD files, agent files the monitoring history and log files",
+        "do not copy RRD files, agent files, the monitoring history and log files",
     ),
 ]
 

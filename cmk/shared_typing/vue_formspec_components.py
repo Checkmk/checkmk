@@ -586,7 +586,6 @@ class ListUniqueSelection(FormSpec):
 class TopicGroup:
     title: str
     elements: list[TopicElement]
-    i18n_base: I18nFormSpecBase
     type: str = "topic_group"
 
 
@@ -600,6 +599,7 @@ class Topic:
 @dataclass(kw_only=True)
 class Catalog(FormSpec):
     elements: list[Topic]
+    i18n_base: I18nFormSpecBase
     type: str = "catalog"
 
 

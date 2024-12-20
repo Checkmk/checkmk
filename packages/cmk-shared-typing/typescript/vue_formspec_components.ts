@@ -164,6 +164,7 @@ export type DataSize = FormSpec & {
 export type Catalog = FormSpec & {
   type: "catalog";
   elements: Topic[];
+  i18n_base: I18NFormSpecBase;
 };
 export type DualListChoice = (FormSpec & {
   elements: MultipleChoiceElement[];
@@ -359,7 +360,6 @@ export interface TopicGroup {
   type: "topic_group";
   title: string;
   elements: TopicElement[];
-  i18n_base: I18NFormSpecBase;
 }
 export interface TopicElement {
   type: "topic_element";

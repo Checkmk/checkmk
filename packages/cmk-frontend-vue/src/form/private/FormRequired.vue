@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkSpace from '@/components/CmkSpace.vue'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import required from './requiredValidator'
+import { required } from './requiredValidator'
 
 const props = defineProps<{
   i18nRequired: string

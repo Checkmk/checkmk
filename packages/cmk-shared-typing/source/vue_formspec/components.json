@@ -953,12 +953,9 @@
                     "items": {
                         "$ref": "#/$defs/topic_element"
                     }
-                },
-                "i18n_base": {
-                    "$ref": "#/$defs/i18n_base"
                 }
             },
-            "required": ["type", "title", "elements", "i18n_base"]
+            "required": ["type", "title", "elements"]
         },
         "topic_element": {
             "type": "object",
@@ -1032,9 +1029,12 @@
                             "items": {
                                 "$ref": "#/$defs/topic"
                             }
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "elements"]
+                    "required": ["type", "elements", "i18n_base"]
                 }
             ]
         },

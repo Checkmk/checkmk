@@ -18,8 +18,8 @@ import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import { staticAssertNever } from '@/lib/typeUtils'
 import FormReadonly from '@/form/components/FormReadonly.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -166,37 +166,6 @@ function labelRequired(element: FormSpec.DictionaryElement): boolean {
     element.required &&
     element.parameter_form.title === '' &&
     element.parameter_form.type === 'boolean_choice'
-  )
-}
-
-type RendersRequiredLabels =
-  | FormSpec.Password
-  | FormSpec.ConditionChoices
-  | FormSpec.CascadingSingleChoice
-  | FormSpec.SingleChoice
-  | FormSpec.SingleChoiceEditable
-
-function isTypeRenderingRequiredLabel(
-  parameterForm: FormSpec.FormSpec
-): parameterForm is RendersRequiredLabels {
-  const type = parameterForm.type as RendersRequiredLabels['type']
-  switch (type) {
-    case 'password':
-    case 'condition_choices':
-    case 'cascading_single_choice':
-    case 'single_choice':
-    case 'single_choice_editable':
-      return true
-    default:
-      staticAssertNever(type)
-      return false
-  }
-}
-
-function rendersRequiredLabelItself(parameterForm: FormSpec.FormSpec): boolean {
-  return (
-    ('label' in parameterForm && !!parameterForm.label) ||
-    isTypeRenderingRequiredLabel(parameterForm)
   )
 }
 

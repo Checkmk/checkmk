@@ -86,7 +86,6 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
         vue_topic_group = shared_type_defs.TopicGroup(
             title=localize(topic_group.title),
             elements=[],
-            i18n_base=base_i18n_form_spec(),
         )
         for element_name, element in topic_group.elements.items():
             element_spec = self._compute_topic_element_spec(element, element_name)
@@ -115,7 +114,11 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
 
         vue_value: dict[str, dict[str, object]] = {}
         vue_catalog = shared_type_defs.Catalog(
-            title=title, help=help_text, elements=[], validators=[]
+            title=title,
+            help=help_text,
+            elements=[],
+            validators=[],
+            i18n_base=base_i18n_form_spec(),
         )
         for topic_name, topic in self.form_spec.elements.items():
             vue_value[topic_name] = {}

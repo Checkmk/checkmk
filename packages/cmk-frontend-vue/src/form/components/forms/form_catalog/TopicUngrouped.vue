@@ -4,17 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type {
+  TopicElement,
+  I18NFormSpecBase
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import { useId } from '@/form/utils'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import { onMounted, ref, watch } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'
+import FormRequired from '@/form/private/FormRequired.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 
 const props = defineProps<{
   elements: TopicElement[]
   backendValidation: ValidationMessages
+  i18nBase: I18NFormSpecBase
 }>()
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })
@@ -77,7 +83,13 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             @update:model-value="toggleElement(element.name)"
           />
           <span v-else class="hidden_checkbox_size" />
-          {{ element.parameter_form.title }}
+          {{ element.parameter_form.title
+          }}<FormRequired
+            v-if="!rendersRequiredLabelItself(element.parameter_form)"
+            :spec="element.parameter_form"
+            :i18n-required="props.i18nBase.required"
+            :space="'before'"
+          />
         </label>
         <span class="dots">{{ Array(200).join('.') }}</span>
       </span>

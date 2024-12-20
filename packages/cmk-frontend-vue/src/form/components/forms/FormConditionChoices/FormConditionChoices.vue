@@ -12,7 +12,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
-import required from '@/form/private/requiredValidator'
+import { required } from '@/form/private/requiredValidator'
 
 const props = defineProps<{
   spec: typing.ConditionChoices

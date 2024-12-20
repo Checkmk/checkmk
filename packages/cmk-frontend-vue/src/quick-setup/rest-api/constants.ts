@@ -29,5 +29,8 @@ export const GET_BACKGROUND_JOB_STATUS_URL = `${API_ROOT}/objects/background_job
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds */
 export const BACKGROUND_JOB_CHECK_INTERVAL = 5000
 
+/** @constant {string} FETCH_STAGE_BACKGROUND_JOB_RESULT_URL - Get background job result */
+export const FETCH_STAGE_BACKGROUND_JOB_RESULT_URL = `${API_ROOT}/objects/quick_setup_stage_action_result/{JOB_ID}`
+
 /** @constant {string} FETCH_BACKGROUND_JOB_RESULT_URL - Get background job result */
-export const FETCH_BACKGROUND_JOB_RESULT_URL = `${API_ROOT}/objects/quick_setup_stage_action_result/{JOB_ID}`
+export const FETCH_BACKGROUND_JOB_RESULT_URL = `${API_ROOT}/objects/quick_setup_action_result/{JOB_ID}`

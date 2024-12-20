@@ -10,7 +10,7 @@ import type { StageData } from '../components/quick-setup/widgets/widget_types'
 import {
   BACKGROUND_JOB_CHECK_INTERVAL,
   EDIT_QUICK_SETUP_URL,
-  FETCH_BACKGROUND_JOB_RESULT_URL,
+  FETCH_STAGE_BACKGROUND_JOB_RESULT_URL,
   FETCH_QUICK_SETUP_OVERVIEW_URL,
   FETCH_QUICK_SETUP_STAGE_STRUCTURE_URL,
   GET_BACKGROUND_JOB_STATUS_URL,
@@ -214,10 +214,13 @@ const _waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
  */
 const _getDataFromBackgroundJob = async (jobId: string): Promise<unknown> => {
   await _waitForBackgroundJobToFinish(jobId)
-  const jobResultUrl = FETCH_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
+  const jobResultUrl = FETCH_STAGE_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
   const result = await axios.get(jobResultUrl)
 
-  //TODO: It is possible that a 200 response carries error messages. Should be handled here
+  //It is possible that a 200 response carries error messages. This will raise a CmkError
+  if (result.data?.background_job_exception) {
+    throw result.data.background_job_exception
+  }
 
   return result.data
 }
@@ -231,7 +234,17 @@ const _saveQuickSetupAndFetchRedirect = async (
     let { data } = await axios.request({ url, method, data: payload })
 
     if (data?.domainType === 'background_job') {
-      data = await _getDataFromBackgroundJob(data.id)
+      const jobId = data.id
+      await _waitForBackgroundJobToFinish(jobId)
+      const jobResultUrl = FETCH_STAGE_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
+      const result = await axios.get(jobResultUrl)
+
+      //It is possible that a 200 response carries error messages. This will raise a CmkError
+      if (result.data?.background_job_exception) {
+        throw result.data.background_job_exception
+      }
+
+      data = result.data
     }
 
     return data

@@ -52,15 +52,15 @@ export interface AllStagesValidationError extends RestApiError, OrUndefined<Stag
 /**
  * Returns a record representation of an error to be shown to the user
  * @param err unknown
- * @returns ValidationError | AllStagesValidationError
+ * @returns ValidationError | AllStagesValidationError | CmkError<unknown> | QuickSetupAxiosError
  */
 export const processError = (
   err: unknown
 ): ValidationError | AllStagesValidationError | CmkError<unknown> | QuickSetupAxiosError => {
   if (axios.isAxiosError(err)) {
     if (err.response?.status === 400) {
-      if (err.response.data?.errors) {
-        const responseErrors = err.response.data?.errors
+      if (err.response.data?.validation_errors) {
+        const responseErrors = err.response.data?.validation_errors
         const responseDetail = err.response.data?.detail
         return {
           type: 'validation',

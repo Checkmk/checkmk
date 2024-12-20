@@ -24,6 +24,7 @@ from typing import assert_never
 
 import cmk.ccc.debug
 from cmk.ccc import store
+from cmk.ccc.exceptions import MKIPAddressLookupError
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -144,6 +145,8 @@ def precompile_hostchecks(
             host_check_store.write(
                 config_path, hostname, host_check, precompile_mode=precompile_mode
             )
+        except MKIPAddressLookupError as e:
+            console.error(f"Error precompiling checks for host {hostname}: {e}", file=sys.stderr)
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise

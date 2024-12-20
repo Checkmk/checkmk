@@ -2,6 +2,8 @@
 
 /// file: test-update.groovy
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def build_make_target(edition) {
     def prefix = "test-update-";
     def suffix = "-docker";
@@ -27,8 +29,8 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
@@ -68,16 +70,47 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    testing_helper.run_make_targets(
-        DOCKER_GROUP_ID: get_docker_group_id(),
-        DISTRO_LIST: distros,
-        EDITION: edition,
-        VERSION: VERSION,
-        DOCKER_TAG: docker_tag,
-        MAKE_TARGET: make_target,
-        BRANCH: branch_name,
-        cmk_version: cmk_version_rc_aware,
-    );
+    def build_for_parallel = [:];
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
+
+    all_distros.each { item ->
+        def distro = item;
+        def stepName = "Update test for ${distro}";
+
+        build_for_parallel[stepName] = { ->
+            def run_condition = distro in distros;
+            println("Should ${distro} be tested? ${run_condition}");
+
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: true,
+            ) {
+                build(
+                    job: relative_job_name,
+                    propagate: true,  // Raise any errors
+                    parameters: [
+                        string(name: "DISTRO", value: item),
+                        string(name: "EDITION", value: edition),
+                        string(name: "VERSION", value: version),
+                        string(name: "DOCKER_TAG", value: docker_tag),
+                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
+                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                    ],
+                );
+            }
+        }
+    }
+
+    stage('Run update tests') {
+        parallel build_for_parallel;
+    }
 }
 
 return this;

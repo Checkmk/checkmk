@@ -192,6 +192,10 @@ msgstr " または "
 msgid " or int"
 msgstr " またはint"
 
+#, fuzzy
+msgid " seconds remaining)"
+msgstr "クレジット残"
+
 msgid " to:"
 msgstr " まで:"
 
@@ -680,8 +684,8 @@ msgstr ""
 "す。"
 
 #, fuzzy, python-format
-msgid "%s notification %s"
-msgstr "最終通知"
+msgid "%s notification %s (%d global %s, %d user %s)"
+msgstr "通知ルール%d（ユーザー%sのルール）を編集する"
 
 #, python-format
 msgid ""
@@ -3000,11 +3004,19 @@ msgid "Access key"
 msgstr "アクセスキー"
 
 #, fuzzy
+msgid "Access key + IAM role"
+msgstr "アクセスキー"
+
+#, fuzzy
 msgid "Access key ID"
 msgstr "アクセスキー"
 
 msgid "Access key ID is required but not specified."
 msgstr ""
+
+#, fuzzy
+msgid "Access key information"
+msgstr "ホスト情報"
 
 msgid "Access point name"
 msgstr "アクセスポイント名"
@@ -3276,6 +3288,10 @@ msgid "Activate automatic locking of user accounts"
 msgstr "ユーザーアカウントの自動ロックを有効にする"
 
 #, fuzzy
+msgid "Activate automation helper"
+msgstr "変更スケジューラをアクティブ化する"
+
+#, fuzzy
 msgid "Activate changes"
 msgstr "変更を有効にしました"
 
@@ -3424,18 +3440,6 @@ msgstr "アクティブ(匿名)"
 
 msgid "Active (files)"
 msgstr "アクティブ(ファイル)"
-
-#, fuzzy
-msgid "Active Calls"
-msgstr "アクティブパス"
-
-#, fuzzy
-msgid "Active Calls In"
-msgstr "アクティブパス"
-
-#, fuzzy
-msgid "Active Calls Out"
-msgstr "アクティブユニット"
 
 msgid "Active Connections"
 msgstr "アクティブな接続"
@@ -4531,22 +4535,6 @@ msgstr "管理者（「すべての定義済み条件への書き込みアクセ
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
-#, fuzzy
-msgid "Advanced - Number of retries"
-msgstr "再試行回数"
-
-#, fuzzy
-msgid "Advanced - Protocol"
-msgstr "高度なオプション"
-
-#, fuzzy
-msgid "Advanced - TCP Port number"
-msgstr "TCPポート番号"
-
-#, fuzzy
-msgid "Advanced - Timeout for connection"
-msgstr "接続あたりの平均リクエスト"
-
 msgid "Advanced condition simulation"
 msgstr "高度な条件シミュレーション"
 
@@ -5008,12 +4996,6 @@ msgstr "PGA自動ターゲットを集約する"
 
 msgid "Aggregate PGA target parameter"
 msgstr "PGAターゲットパラメータを集約します"
-
-msgid ""
-"Aggregate values of several data points of an OpenTelemetry metric from "
-"different time points. The aggregation function is applied to the values of "
-"the data points which have the same attributes."
-msgstr ""
 
 msgid "Aggregated assumed state"
 msgstr "集計された想定状態"
@@ -6058,6 +6040,10 @@ msgstr "常にOK"
 
 msgid "Always bulk"
 msgstr "常にバルク"
+
+#, fuzzy
+msgid "Always compute the rate"
+msgstr "完全な状態を再分類します"
 
 msgid "Always install Python with agent"
 msgstr "常にエージェントと一緒にPythonをインストールする"
@@ -7106,12 +7092,6 @@ msgstr "属性"
 msgid "Attributes to remove from hosts"
 msgstr "ホストから削除する属性"
 
-msgid "AudioCodes Alarms"
-msgstr ""
-
-msgid "AudioCodes SBC Calls"
-msgstr ""
-
 msgid "Audit log"
 msgstr "監査ログ"
 
@@ -7200,6 +7180,10 @@ msgstr "認証システムエラー"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "ウェブサービスへの認証に失敗しました。<br>メッセージ:<br>%s"
+
+#, fuzzy
+msgid "Authentication type"
+msgstr "認証タイプ"
 
 msgid "Authentication types"
 msgstr "認証タイプ"
@@ -7375,6 +7359,10 @@ msgstr "利用可能なデータに自動的に調整"
 msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
 
+#, fuzzy
+msgid "Automatically delete hosts without open telemetry data"
+msgstr "ピギーバックデータなしでホストを自動的に削除します"
+
 msgid "Automatically delete hosts without piggyback data"
 msgstr "ピギーバックデータなしでホストを自動的に削除します"
 
@@ -7433,10 +7421,6 @@ msgstr "オートメーションコール"
 
 msgid "Automation secret for machine accounts"
 msgstr "マシンアカウントの自動化の秘密"
-
-#, fuzzy
-msgid "Automation user"
-msgstr "自動化の秘密"
 
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
@@ -7553,16 +7537,8 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
-#, fuzzy
-msgid "Average Call Duration"
-msgstr "平均待ち時間"
-
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
-
-#, fuzzy
-msgid "Average Success Ratio"
-msgstr "Varnishバックエンド成功率"
 
 msgid "Average active check latency"
 msgstr "平均アクティブチェック待ち時間"
@@ -9570,6 +9546,13 @@ msgstr ""
 "ントアップデーターに代わって中央サイトと通信できるようにこのオプションを構成"
 "する必要があります。"
 
+msgid ""
+"By default the certificate validity in general will be checked. With this "
+"option you can choose to check additionally for the remeinaing time the "
+"certificate will be valid or ignore the certificate completely. Please use "
+"the latter as last resort and with caution!"
+msgstr ""
+
 #, python-format
 msgid ""
 "By default the server will try to contact the monitored host and pull the "
@@ -10557,6 +10540,10 @@ msgstr "いくつかの非ステータスクエリをキャッシュする"
 msgid "Cache size"
 msgstr "キャッシュサイズ"
 
+#, fuzzy
+msgid "Cache this section"
+msgstr "このセクションを無効にする"
+
 msgid "Cached"
 msgstr "キャッシュされた"
 
@@ -10568,10 +10555,6 @@ msgstr "キャッシュされたメモリ"
 
 msgid "Cached output of monitoring agent"
 msgstr "監視エージェントのキャッシュされた出力"
-
-#, fuzzy
-msgid "Cached times for single sections"
-msgstr "1秒あたりのキャッシュミス"
 
 msgid "Caches"
 msgstr "キャッシュ"
@@ -10611,21 +10594,6 @@ msgstr ""
 
 msgid "Calling final hooks"
 msgstr "最終フックの呼び出し"
-
-#, fuzzy
-msgid "Calls In"
-msgstr "発信者ID"
-
-msgid "Calls In/Out"
-msgstr ""
-
-#, fuzzy
-msgid "Calls Out"
-msgstr "ルールを呼び出す"
-
-#, fuzzy
-msgid "Calls per Second"
-msgstr "1秒あたりのページ数"
 
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
@@ -11488,6 +11456,10 @@ msgstr "チェックして警告"
 
 msgid "Check and display only"
 msgstr "チェックして表示するだけ"
+
+#, fuzzy
+msgid "Check certificate"
+msgstr "証明書のチェック"
 
 msgid "Check certificate validity"
 msgstr "証明書の有効性を確認する"
@@ -13345,6 +13317,9 @@ msgstr ""
 msgid "Compute range accoring to displayed data"
 msgstr "表示されたデータに応じて範囲を計算します"
 
+msgid "Compute rates for all monotonic counters"
+msgstr ""
+
 msgid "Computing differences"
 msgstr "計算の違い"
 
@@ -13994,6 +13969,10 @@ msgstr "リモートサイトに接続する"
 msgid "Connect to site url"
 msgstr "サイトのURLに接続する"
 
+#, fuzzy
+msgid "Connect to specific host"
+msgstr "特定のホストを確認する"
+
 msgid ""
 "Connect to the LDAP server with a SSL encrypted connection. The <a href="
 "\"wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities"
@@ -14018,10 +13997,6 @@ msgstr ""
 
 msgid "Connect to the local site"
 msgstr "ローカルサイトに接続する"
-
-#, fuzzy
-msgid "Connect to the remote site"
-msgstr "リモートサイトに接続する"
 
 msgid "Connect via TCP (IPv4)"
 msgstr "TCP経由で接続(IPv4)"
@@ -14120,9 +14095,6 @@ msgstr "セントラルエージェントベーカリーへの接続"
 msgid "Connection to remote Agent Bakery"
 msgstr "リモートエージェントベーカリーへの接続"
 
-msgid "Connection to the REST API"
-msgstr "REST APIへの接続"
-
 msgid "Connection type"
 msgstr "接続タイプ"
 
@@ -14160,6 +14132,10 @@ msgid "Connector type"
 msgstr "コネクタタイプ"
 
 msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
 msgstr ""
 
 #, python-format
@@ -15705,9 +15681,6 @@ msgstr "カスタムMBean"
 msgid "Custom MIBs"
 msgstr "カスタムMIB"
 
-msgid "Custom Notes"
-msgstr "カスタムノート"
-
 msgid "Custom SQL"
 msgstr "カスタムSQL"
 
@@ -16366,7 +16339,8 @@ msgstr "データ"
 msgid "Data directory"
 msgstr "データディレクトリ"
 
-msgid "Data engress"
+#, fuzzy
+msgid "Data egress"
 msgstr "データ入力"
 
 msgid "Data files"
@@ -17476,6 +17450,14 @@ msgstr "タググループを削除"
 msgid "Delete target #%d"
 msgstr "ターゲット#%dを削除"
 
+#, fuzzy
+msgid ""
+"Delete the hosts created by this connection whose open telemetry data is no "
+"longer present."
+msgstr ""
+"この接続によって作成され他ホストのうち、ピギーバックデータが存在しないホスト"
+"を削除します。"
+
 msgid ""
 "Delete the hosts created by this connection whose piggyback data is no "
 "longer present."
@@ -18561,10 +18543,6 @@ msgstr "無効 "
 
 msgid "Disabled (configured away by admin)"
 msgstr "無効にする（管理者が設定しない）"
-
-#, fuzzy
-msgid "Disabled Sections..."
-msgstr "無効なセクション"
 
 msgid "Disabled active checks"
 msgstr "アクティブチェックを無効にしました"
@@ -21400,9 +21378,6 @@ msgstr "有効（このサイトで有効）"
 msgid "Enabled (inactive on this site)"
 msgstr "有効（このサイトでは非アクティブ）"
 
-msgid "Enabled Sections... (only use in case of problems)"
-msgstr ""
-
 msgid "Enabled in time range"
 msgstr "時間範囲で有効"
 
@@ -22908,6 +22883,10 @@ msgstr "<tt>~/local/</tt>およびMKPの拡張機能"
 msgid "Extents"
 msgstr "エクステント"
 
+#, fuzzy
+msgid "External ID"
+msgstr "内部ID"
+
 msgid "External ID (optional)"
 msgstr "外部ID(オプション)"
 
@@ -23619,6 +23598,10 @@ msgstr "Livestatusのステータスを取得"
 
 msgid "Fetching replication status"
 msgstr "レプリケーションステータスの取得"
+
+#, fuzzy
+msgid "Fetching setting for individual sections"
+msgstr "個々のコアのグラフ"
 
 msgid "Fetching sync state"
 msgstr "同期状態の取得"
@@ -24780,10 +24763,6 @@ msgid "Free swap space"
 msgstr "空きスワップスペース"
 
 msgid "Free tapes"
-msgstr "フリーのテープ"
-
-#, fuzzy
-msgid "Free text"
 msgstr "フリーのテープ"
 
 #, fuzzy
@@ -26564,10 +26543,6 @@ msgid ""
 msgstr ""
 "ここでは、状態に応じて表示されるサービスを構成できます。これは、クエリレベル"
 "ではなく表示レベルのフィルタです。"
-
-#, fuzzy
-msgid "Here you can configured the credentials to be used."
-msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
 
 msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
@@ -29491,6 +29466,10 @@ msgstr "I/Oログは平均レイテンシを書き込みます"
 msgid "I/O-wait"
 msgstr "I/O-待ち時間"
 
+#, fuzzy
+msgid "IAM role (on EC2 instance only)"
+msgstr "IP - 範囲 - インスタンスID"
+
 msgid "IBM MQ"
 msgstr "IBM MQ"
 
@@ -29924,6 +29903,9 @@ msgstr "モニタリングで検索"
 msgid "Icons"
 msgstr "アイコン"
 
+msgid "Ideas Portal"
+msgstr ""
+
 msgid "Ident of the value"
 msgstr "値のID"
 
@@ -30269,6 +30251,14 @@ msgstr ""
 "す。この期間内に必要な回数に達しない場合、カウントはゼロにリセットされます。"
 
 msgid ""
+"If invalid certificates are trusted, any certificate for any site will be "
+"trusted for use. This includes expired certificates and introduces "
+"significant vulnerabilities such as man-in-the-middle attacks. Please use "
+"this option as a last resort and ideally in combination with an independent "
+"certificate check."
+msgstr ""
+
+msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
 msgstr ""
@@ -30349,6 +30339,14 @@ msgstr ""
 "提供された場合、サービス結果は優先ノードから発信されることが期待されます。結"
 "果が他のノードから発信された場合、サービスは少なくともWARNING状態になります"
 "（結果自体はOKであったとしても）。"
+
+#, fuzzy
+msgid ""
+"If sections can not be fetched or take a long time, you can configure them "
+"to be fetched not as often or not at all."
+msgstr ""
+"レポートの生成に時間がかかる場合は、バックグラウンドジョブで非同期に生成され"
+"るようにレポートを構成できます。"
 
 msgid ""
 "If set, all users with this role will be required to setup two factor "
@@ -30506,12 +30504,6 @@ msgstr ""
 "を配信し、その後、削除された行数を含む文脈行を出力します。[上記のメッセージ"
 "は n 回繰り返されました]。このフラグを設定すると、多くの重複行が生成された場"
 "合に、エージェントの出力サイズを小さくすることができます。"
-
-#, fuzzy
-msgid "If there are problems please use disabled sections."
-msgstr ""
-"<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認して"
-"ください。"
 
 msgid ""
 "If there is more than one plan testing the same application, then the "
@@ -31618,6 +31610,10 @@ msgstr "ステータスのないアラートルールは無視する"
 msgid "Ignore all alert rules within certain alert rule groups"
 msgstr "特定のアラートルールグループ内のすべてのアラートルールを無視する"
 
+#, fuzzy
+msgid "Ignore certificate"
+msgstr "SSL証明書エラーを無視する"
+
 msgid "Ignore certificate errors (insecure)"
 msgstr "証明書エラーを無視する(安全でない)"
 
@@ -32535,10 +32531,6 @@ msgstr ""
 "られます。このモードは、ロボットのテストスイートに含まれるテストが互いに関連"
 "していて、その実行順序も重要である場合に選択します。"
 
-#, fuzzy
-msgid "Indeterminate"
-msgstr "休憩"
-
 msgid "Index"
 msgstr "インデックス"
 
@@ -33396,6 +33388,10 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
+
+#, fuzzy
+msgid "Invalid metric"
+msgstr "無効なトピック"
 
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
@@ -34679,12 +34675,6 @@ msgid ""
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
 "<tt>cmk/os_family:linux</tt>です。"
-
-#, fuzzy
-msgid "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
-msgstr ""
-"ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
-"windows \"のように。"
 
 #, fuzzy
 msgid "Labels need to be unique."
@@ -36233,6 +36223,10 @@ msgstr ""
 "さまざまな状態のサービスの数とともに、ホストグループのメンバーを一覧表示しま"
 "す。"
 
+#, fuzzy
+msgid "Literal string"
+msgstr "固定範囲"
+
 msgid "Liters per second"
 msgstr "1秒あたりのリットル"
 
@@ -37107,10 +37101,6 @@ msgstr "SMS成功率の下位レベル"
 msgid "Lower levels for active connections"
 msgstr "アクティブな接続のレベル"
 
-#, fuzzy
-msgid "Lower levels for average success ratio"
-msgstr "SMS成功率の下位レベル"
-
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの下位レベル"
 
@@ -37574,9 +37564,6 @@ msgstr "単純なデバイスのメインメモリ使用量"
 msgid "Maintenance"
 msgstr "メンテナンス"
 
-msgid "Major"
-msgstr ""
-
 msgid "Major Page Faults"
 msgstr "メジャーページフォールト"
 
@@ -37991,10 +37978,6 @@ msgstr "マッププロビジョニングと電源の状態"
 
 msgid "Map roles"
 msgstr "マップの役割"
-
-#, fuzzy
-msgid "Map severity levels to alarm states"
-msgstr "再起動の上位レベル"
 
 msgid "Map states"
 msgstr "マップの状態"
@@ -39519,10 +39502,6 @@ msgstr "ミススケジュールされた期間（DaemonSetのみ）"
 msgid "Misscheduled replicas"
 msgstr "間違ってスケジュールされたレプリカ"
 
-#, fuzzy
-msgid "Missing catalog topic."
-msgstr "変数siteidがありません"
-
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "エージェント %s%s の構成ファイルがありません"
@@ -39971,6 +39950,10 @@ msgstr "フォルダ内の特定のファイルを監視する"
 msgid "Monitor temporary tablespace"
 msgstr "テンポラリーテーブルスペースを監視する"
 
+#, fuzzy
+msgid "Monitor the collector"
+msgstr "停止したコレクター"
+
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -40188,6 +40171,12 @@ msgstr "状態要件の監視"
 
 msgid "Monitoring status"
 msgstr "監視状況"
+
+msgid ""
+"Monitoring via an IAM role is recommended, however it requires the "
+"monitoring site to be located on an AWS EC2 instance with the according "
+"permissions to the accounts to be monitored."
+msgstr ""
 
 msgid "Month"
 msgstr "月"
@@ -41349,6 +41338,10 @@ msgstr "(決してない)"
 msgid "Never analyzed/vacuumed tables"
 msgstr "テーブルを分析/バキュームしたことはありません"
 
+#, fuzzy
+msgid "Never compute a rate"
+msgstr "配信されたメッセージレート"
+
 msgid "Never do discovery or activate changes in the following time ranges"
 msgstr "次の時間範囲では、変更を検出したりアクティブ化したりしないでください"
 
@@ -42141,6 +42134,9 @@ msgstr "None"
 msgid "None (linear)"
 msgstr "なし（リニア）"
 
+msgid "None (on EC2 instance only)"
+msgstr ""
+
 msgid "None (silent)"
 msgstr "なし(サイレント)"
 
@@ -42507,14 +42503,20 @@ msgid "Notes"
 msgstr "ノート"
 
 #, fuzzy
-msgid "Notes URL"
+msgid "Notes (URL)"
 msgstr "ノート"
 
-msgid "Notes URL for Hosts"
+#, fuzzy
+msgid "Notes (URL) for Hosts"
 msgstr "ホストのメモURL"
 
-msgid "Notes URL for Services"
+#, fuzzy
+msgid "Notes (URL) for Services"
 msgstr "サービスのメモURL"
+
+#, fuzzy
+msgid "Notes URL"
+msgstr "ノート"
 
 msgid "Nothing changed"
 msgstr "何も変わっていません"
@@ -42970,6 +42972,10 @@ msgstr "保持する構成スナップショットの数"
 msgid "Number of connected clients"
 msgstr "接続されているクライアントの数"
 
+#, fuzzy
+msgid "Number of connection retries"
+msgstr "接続数"
+
 msgid "Number of connections"
 msgstr "接続数"
 
@@ -43291,9 +43297,9 @@ msgstr "ランの数:"
 msgid "Number of search results"
 msgstr "検索結果の数"
 
-msgid ""
-"Number of seconds for a single connection attempt before timeout occurs."
-msgstr ""
+#, fuzzy
+msgid "Number of seconds for a single connection attempt before it times out."
+msgstr "イベントソケットへの保留中の接続の最大数"
 
 msgid "Number of seconds to wait for a TCP connection"
 msgstr "TCP接続待ちの秒数"
@@ -44046,6 +44052,14 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "次の期間中の一括通知のみ"
 
+#, fuzzy
+msgid ""
+"Only care about hosts that receive data from resources which name matches "
+"one of these regular expressions."
+msgstr ""
+"名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
+"ストのみを対象とします。"
+
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -44058,6 +44072,14 @@ msgid ""
 "installed."
 msgstr ""
 "コアMKPがインストールされているため、Robotmkのコア機能のみが表示されます。"
+
+#, fuzzy
+msgid ""
+"Only create hosts that receive open telemetry data from resources which name "
+"matches one of these regular expressions."
+msgstr ""
+"名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
+"ストのみを対象とします。"
 
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
@@ -44291,6 +44313,14 @@ msgstr "出力ハンドルを開く"
 msgid "Open slots"
 msgstr "空きスロット"
 
+#, fuzzy
+msgid "Open telemetry collector creation options"
+msgstr "状態構成を追加する"
+
+#, fuzzy
+msgid "Open telemetry hosts creation options"
+msgstr "ピギーバック作成オプション"
+
 msgid "Open the action menu"
 msgstr "アクションメニューを開く"
 
@@ -44339,14 +44369,15 @@ msgstr "状態構成を追加する"
 msgid "OpenTelemetry metric name"
 msgstr "状態構成を追加する"
 
-msgid "OpenTelemetry metrics (Experimental)"
-msgstr ""
-
 msgid "OpenVMS processes"
 msgstr "OpenVMSのプロセス"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPNクライアント"
+
+#, fuzzy
+msgid "Opentelemetry collector data"
+msgstr "状態構成を追加する"
 
 msgid "Operating CPU"
 msgstr "動作中のCPU"
@@ -44556,6 +44587,16 @@ msgid ""
 "Optionally, restrict host creation using regular expressions."
 "<br><b>Important:</b><br>This only applies to hosts created by this "
 "connection, not the monitoring host ('Dummy host').<br><br>"
+msgstr ""
+"オプションで、正規表現を使ってホストの作成を制限します。<br><b>重要:</b><br>"
+"これはこの接続によって作成されたホストにのみ適用され、監視ホスト('Dummy "
+"host')には適用されません。<br><br>"
+
+#, fuzzy
+msgid ""
+"Optionally, restrict host creation using regular expressions."
+"<br><b>Important:</b><br>This only applies to hosts created by this "
+"connection, not the monitoring host.<br><br>"
 msgstr ""
 "オプションで、正規表現を使ってホストの作成を制限します。<br><b>重要:</b><br>"
 "これはこの接続によって作成されたホストにのみ適用され、監視ホスト('Dummy "
@@ -47987,10 +48028,6 @@ msgstr ""
 "入力します。例えば、週次レポートを月曜日00:00に作成する場合、<i>先週</i>を選"
 "択する必要があります。"
 
-#, fuzzy
-msgid "Please only define sections or disabled sections."
-msgstr "ブラウザの指示に従って認証を行ってください。"
-
 msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
@@ -48216,6 +48253,10 @@ msgstr "アプリケーション名を指定してください"
 msgid "Please specify at least on address"
 msgstr "少なくとも1つのアドレスを指定してください"
 
+#, fuzzy
+msgid "Please specify at least one \"Open telemetry hosts creation option\""
+msgstr "\"ピギーバック作成オプション\"を1つ以上指定してください"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "\"ピギーバック作成オプション\"を1つ以上指定してください"
 
@@ -48251,6 +48292,10 @@ msgid "Please specify at least one type of levels"
 msgstr "レベルの種類を少なくとも1つ指定してください"
 
 msgid "Please specify at least one value"
+msgstr "少なくとも1つの値を指定してください"
+
+#, fuzzy, python-format
+msgid "Please specify at least one value for \"%s\""
 msgstr "少なくとも1つの値を指定してください"
 
 msgid "Please specify host or hash."
@@ -48506,7 +48551,7 @@ msgid "Port number for communicating with the PLC"
 msgstr "PLCと通信するためのポート番号"
 
 #, fuzzy
-msgid "Port number for connection to the Rest API. Usually 8443 (TLS)"
+msgid "Port number for connection to the Rest API. Usually 443 (TLS)"
 msgstr "vSphereへのHTTPS接続のポート番号"
 
 msgid "Port number that 3par is listening on. The default is 8080."
@@ -49191,9 +49236,9 @@ msgstr "プロトコル"
 msgid "Protocol Overview"
 msgstr "プロトコルの概要"
 
-msgid ""
-"Protocol for the connection to the Rest API.https is highly recommended!!!"
-msgstr ""
+#, fuzzy
+msgid "Protocol for the connection to the Rest API."
+msgstr "vSphereへのHTTPS接続のポート番号"
 
 msgid "Protocol of Server"
 msgstr "サーバーのプロトコル"
@@ -49955,6 +50000,10 @@ msgstr "Raritan EMXラック: 温度"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: 入力フェーズ"
+
+#, fuzzy
+msgid "Rate computation"
+msgstr "トレンド計算"
 
 msgid "Rate of bytes sent to the Carbon connection"
 msgstr "カーボン接続に送信されるバイト数"
@@ -52574,10 +52623,6 @@ msgstr ""
 msgid "Rules for automatic execution of scripts upon alerts"
 msgstr "アラート時にスクリプトを自動実行するためのルール"
 
-#, fuzzy
-msgid "Rules for host names"
-msgstr "ホスト名の正規表現"
-
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr "ホストとサービスの問題に関する連絡先への通知のルール"
 
@@ -52648,6 +52693,10 @@ msgstr "ルールセット"
 
 msgid "Rulesets that contain rules with references to the changed tags"
 msgstr "変更されたタグへの参照を含むルールを含むルールセット"
+
+#, fuzzy
+msgid "Run Quick Setup Action"
+msgstr "クイックセットアップ"
 
 msgid "Run Quick Setup Stage Action"
 msgstr ""
@@ -52743,6 +52792,10 @@ msgstr ""
 
 msgid "Running On-Demand X instances"
 msgstr "オンデマンド X インスタンスの起動"
+
+#, fuzzy, python-format
+msgid "Running Quick setup %s action %s"
+msgstr "セッションの実行"
 
 #, python-format
 msgid "Running Quick setup %s stage %s action %s"
@@ -53345,6 +53398,10 @@ msgstr "SYN_RECV"
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
 
+#, fuzzy
+msgid "SaaS version: Skip request ID verification"
+msgstr "ライセンス解除:リクエストID認証をスキップ"
+
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSMイベント統計"
 
@@ -53869,78 +53926,10 @@ msgstr "秘密鍵"
 msgid "Section"
 msgstr "セクション"
 
-#, fuzzy
-msgid "Section ArrayControllers"
-msgstr "アレイ(コントローラー)"
-
 msgid "Section Content"
 msgstr "セクションの内容"
 
-#, fuzzy
-msgid "Section Drives"
-msgstr "セクション"
-
-#, fuzzy
-msgid "Section EthernetInterfaces"
-msgstr "ファイバチャネルインターフェイス"
-
-#, fuzzy
-msgid "Section FirmwareInventory"
-msgstr "インベントリ"
-
-#, fuzzy
-msgid "Section HostBusAdapters"
-msgstr "接続状態"
-
-#, fuzzy
-msgid "Section LogicalDrives"
-msgstr "アラームの選択"
-
-#, fuzzy
-msgid "Section Memory"
-msgstr "セクション名"
-
 msgid "Section Name"
-msgstr "セクション名"
-
-#, fuzzy
-msgid "Section NetworkAdapters"
-msgstr "ネットワークアダプタ"
-
-#, fuzzy
-msgid "Section NetworkInterfaces"
-msgstr "ネットワークインターフェース"
-
-#, fuzzy
-msgid "Section PhysicalDrives"
-msgstr "物理ディスク"
-
-#, fuzzy
-msgid "Section Power"
-msgstr "送信力"
-
-#, fuzzy
-msgid "Section Processors"
-msgstr "プロセッサー"
-
-#, fuzzy
-msgid "Section SimpleStorage"
-msgstr "セクション名"
-
-#, fuzzy
-msgid "Section SmartStorage"
-msgstr "セクション名"
-
-#, fuzzy
-msgid "Section Storage"
-msgstr "セクション名"
-
-#, fuzzy
-msgid "Section Thermal"
-msgstr "セクション名"
-
-#, fuzzy
-msgid "Section Volumes"
 msgstr "セクション名"
 
 msgid "Section name"
@@ -56887,9 +56876,6 @@ msgstr "サイトのバックアップ"
 msgid "Site backup targets"
 msgstr "サイトのバックアップターゲット"
 
-msgid "Site base URL"
-msgstr "サイトベースURL"
-
 msgid "Site certificate validity"
 msgstr "サイト証明書の有効性"
 
@@ -57405,6 +57391,15 @@ msgid ""
 "Some luns, e.g. jfs formatted, tend to report incorrect used space values"
 msgstr ""
 "一部のLUN(jfs形式など)は、誤った使用済みスペース値を報告する傾向があります"
+
+msgid ""
+"Some metrics are more meaningful when their rate is considered (such as "
+"dropped network packages, for example). By default, the plugin computes the "
+"rate in case the metric is a monotonic counter. This is of course just a "
+"heuristic and might not work for all metrics: The uptime, for example, would "
+"be reported as '1.0 s/s', which is not too useful. You can override the "
+"default behavior here."
+msgstr ""
 
 msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
@@ -59514,6 +59509,10 @@ msgstr "SLESライセンスのステータス"
 msgid "Status of the SLES subscription"
 msgstr "SLESサブスクリプションのステータス"
 
+#, fuzzy
+msgid "Status page"
+msgstr "変更されました"
+
 msgid "Status passive checks"
 msgstr "ステータスパッシブチェック"
 
@@ -59958,6 +59957,10 @@ msgstr "リクエストIDの認証に成功"
 msgid "Successfully verified signature"
 msgstr "署名の検証に成功"
 
+#, fuzzy
+msgid "Suggest a product improvement"
+msgstr "パフォーマンスの向上"
+
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
 
@@ -60165,7 +60168,8 @@ msgstr "Symantec Brightmaiキュー"
 msgid "Symbol"
 msgstr ""
 
-msgid "Symmetric encryption (Linux, Windows)"
+#, fuzzy
+msgid "Symmetric encryption (Linux, Solaris, Windows)"
 msgstr "対称型暗号化（Linux、Windows）"
 
 #, fuzzy
@@ -61574,6 +61578,11 @@ msgstr ""
 "名を持つビューを作成すると、ビューはそれをオーバーライドします(シャドウ処理し"
 "ます)。"
 
+msgid ""
+"The IP address the receiver should listen on. To listen only locally, use "
+"'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
+msgstr ""
+
 msgid "The Index of the Overcurrent Protector"
 msgstr "過電流プロテクターのインデックス"
 
@@ -62304,6 +62313,13 @@ msgstr ""
 "チェックはデフォルトでリダイレクトに従います。このオプションを有効にすること"
 "で、特定の動作を強制したり、リダイレクト時に特定の状態を設定したりすることが"
 "できます。"
+
+msgid ""
+"The check will use any IP address protocol by default. Selecting a specific "
+"protocol or use the primary of a host will enforce the usage of your choice. "
+"This gives you more control if you want to ensure the availability of you "
+"web endpoint through either IPv4 or IPv6."
+msgstr ""
 
 msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
@@ -63232,6 +63248,28 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "ホスト名属性を列に割り当てる必要があります。"
 
+#, python-brace-format
+msgid ""
+"The host name computation computes the name of the host that should have the "
+"corresponding Checkmk services. The computation is done by the OpenTelemetry "
+"collector and the result is stored in the \"{attr}\" attribute. For every "
+"rule configured here, the provided fields are concatenated in the order they "
+"are listed. The first rule that results in a non-empty value is used. For "
+"example:\n"
+"{startol}A first rule consisting of one field \"Value of attribute: service."
+"name\" will set \"{attr}\" to the value of that attribute, if it is present. "
+"This attribute will be set to the prometheus scrape jobs name, for example."
+"{newli}A second rule consisting of one field \"Value of attribute: container."
+"name\" will set \"{attr}\" to the value of that attribute, if it is present "
+"and \"{attr}\" has not been set by the previous rule.{newli}A third rule "
+"consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"{attr}\" to \"VALUEsome_suffix\", "
+"if the attribute is present and \"{attr}\" has not been set by the previous "
+"rules.{newli}A last rule consisting of one field \"Literal string: "
+"fallback_host\" will set all \"{attr}\" attributes that are not yet filled "
+"to \"fallback_host\".{endol}"
+msgstr ""
+
 #, fuzzy
 msgid "The host name is missing."
 msgstr "ホスト名がありません。"
@@ -63387,6 +63425,13 @@ msgid ""
 msgstr ""
 "インスタンス名、データベース名、テーブルスペース名の組み合わせは以下のように"
 "なります。 db2wps8:WPSCOMT8.USERSPACE1"
+
+#, fuzzy
+msgid ""
+"The interval the connection will be executed to check the available open "
+"telemetry data and update the configuration."
+msgstr ""
+"使用可能なピギーバックを確認し、構成を更新するために接続が実行される間隔。"
 
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -66792,6 +66837,14 @@ msgstr "この接続は現在有効になっています"
 msgid "This connection is currently not being used for synchronization."
 msgstr "この接続は現在、同期に使用されていません。"
 
+#, fuzzy
+msgid ""
+"This connector can be used to automatically create hosts based on "
+"Opentelemetry collector data."
+msgstr ""
+"このコネクターを使用し、自身のデータをもとにホストを自動作成することができま"
+"す。"
+
 msgid ""
 "This connector can be used to automatically create hosts based on my data."
 msgstr ""
@@ -68850,6 +68903,19 @@ msgstr ""
 "定します。使用率の割合は、CPUの総数を基準にして計算されます "
 
 msgid ""
+"This rule configures the Redfish integration to query PDUs via the Redfish "
+"REST API"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This rule configures the Redfish integration to query management controller "
+"via the Redfish REST API"
+msgstr ""
+"このルールは、HP MSAのWebインターフェイスを通じてデータを収集する通常の"
+"Checkmk Agentではなく、HP MSA Agentを選択します"
+
+msgid ""
 "This rule configures the storage scheme of historic metric data for hosts. "
 "Please note that these settings only apply to <i>new</i> hosts. Existing "
 "RRDs can be changed via the command line, see the <a href='https://docs."
@@ -69060,14 +69126,6 @@ msgid ""
 msgstr ""
 "このルールは、FreeIPMI respを介してデータを収集する通常のCheckmkエージェント"
 "の代わりに、Agent IPMIセンサーを選択します。IPMItoolコマンド"
-
-#, fuzzy
-msgid ""
-"This rule selects the Agent Redfish instead of the normal Check_MK Agent "
-"which collects the data through the Redfish REST API"
-msgstr ""
-"このルールは、HP MSAのWebインターフェイスを通じてデータを収集する通常の"
-"Checkmk Agentではなく、HP MSA Agentを選択します"
 
 msgid ""
 "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk "
@@ -70633,6 +70691,11 @@ msgstr "時間範囲の同期"
 msgid "Time range to consider"
 msgstr "考慮すべき時間範囲"
 
+#, fuzzy
+msgid ""
+"Time range to continue to consider outdated open telemetry data as valid."
+msgstr "古いピギーバックデータを有効なものだとみなしつづける時間範囲。"
+
 msgid "Time range to continue to consider outdated piggyback data as valid."
 msgstr "古いピギーバックデータを有効なものだとみなしつづける時間範囲。"
 
@@ -70645,6 +70708,27 @@ msgid ""
 msgstr ""
 "ピギーバック元が他のホストのピギーバックデータのみを送信する間、ホストを保持"
 "する時間範囲。"
+
+#, fuzzy
+msgid ""
+"Time range to prevent host deletion after site startup, e.g. when booting "
+"the Checkmk server. This is caused by the 'tmp' directory which needs more "
+"time to initialize and can result in missing data from some sources."
+msgstr ""
+"Checkmk サーバの起動時など、サイト起動後にホストが削除されないようにするため"
+"の時間範囲。これは'tmp'ディレクトリが初期化により多くの時間を必要とし、いくつ"
+"かのソースからのピギーバック情報が欠落することが原因です。"
+
+#, fuzzy
+msgid ""
+"Time range to prevent host deletion after site startup, e.g. when booting "
+"the Checkmk server. This is caused by the 'tmp' directory which needs more "
+"time to initialize and can result in missing open telemetry information from "
+"some sources."
+msgstr ""
+"Checkmk サーバの起動時など、サイト起動後にホストが削除されないようにするため"
+"の時間範囲。これは'tmp'ディレクトリが初期化により多くの時間を必要とし、いくつ"
+"かのソースからのピギーバック情報が欠落することが原因です。"
 
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
@@ -70903,6 +70987,10 @@ msgstr ""
 "への接続を確立できない場合は、到達不能と見なされます。注意:これは、エージェン"
 "トが出力を生成するために必要な時間を<b>制限しません</b>。このルールを使用し"
 "て、ホストごとにタイムアウトを指定できます。"
+
+#, fuzzy
+msgid "Timeout for connection"
+msgstr "接続あたりの平均リクエスト"
 
 msgid "Timeout for requests in seconds."
 msgstr "リクエストのタイムアウト(秒単位)。"
@@ -74822,6 +74910,10 @@ msgstr "不明なパス"
 msgid "Unknown match type: %s"
 msgstr "不明な一致タイプ:%s"
 
+#, fuzzy
+msgid "Unknown metric"
+msgstr "不明なユーザー"
+
 #, python-format
 msgid "Unknown metric type %s"
 msgstr "不明なメトリックのタイプ %s"
@@ -76358,10 +76450,6 @@ msgstr "DNS名/IPアドレスとしてエイリアスを使用します"
 msgid "Use the catalog of check plug-ins."
 msgstr "チェックプラグインのカタログを使用する。"
 
-#, fuzzy
-msgid "Use the credentials of an automation user"
-msgstr "automationユーザーの認証情報を使用する"
-
 msgid "Use the credentials of the 'automation' user"
 msgstr "automationユーザーの認証情報を使用する"
 
@@ -76446,10 +76534,6 @@ msgid "Use the status of the Checkmk Agent"
 msgstr "Checkmkエージェントのステータスを使用する"
 
 msgid "Use the status of the service..."
-msgstr "サービスのステータスを使用します..."
-
-#, fuzzy
-msgid "Use the value of the key"
 msgstr "サービスのステータスを使用します..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
@@ -76726,19 +76810,6 @@ msgstr ""
 "この設定を使用して、Livestatusプロキシを使用して接続されているサイトのパラ"
 "メーターを指定します。これらのオプションは、カスタム設定が設定されていないす"
 "べての接続で使用されます。"
-
-msgid ""
-"Use this setting to tell the dynamic configuration to which Checkmk REST API "
-"to talk to for creating hosts and so on. This setting controls on which "
-"sites the objects will be created. In single site setups you can set this to "
-"\"local site\".In distributed setups you will have to configure the REST API "
-"of the central Setup site from the view of the remote site."
-msgstr ""
-"この設定を使用して、ホストの作成などのためにどのCheckmk REST APIと通信するか"
-"を動的構成に指示します。この設定は、オブジェクトが作成されるサイトを制御しま"
-"す。単一サイト設定では、これを\"ローカルサイト\"に設定できます。分散設定で"
-"は、リモートサイトのビューから中央セットアップサイトのREST APIを設定する必要"
-"があります。"
 
 msgid "Use this syslog application for all created events"
 msgstr "作成されたすべてのイベントにこのsyslogアプリケーションを使用します"
@@ -77973,6 +78044,10 @@ msgstr "'%s'と同等でなければならない"
 msgid "Value must be string"
 msgstr "値は文字列であること"
 
+#, fuzzy
+msgid "Value of attribute"
+msgstr "役割属性"
+
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "{diff_path} の値が{val_t1} から {val_t2}に変更されました。"
@@ -78713,6 +78788,10 @@ msgid "Waiting for new master initialization"
 msgstr "新しいマスターの初期化を待っています"
 
 msgid "Waiting for other switches to come online"
+msgstr "他のスイッチがオンラインになるのを待っています"
+
+#, fuzzy
+msgid "Waiting for previous cycle to complete"
 msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
@@ -82405,6 +82484,19 @@ msgstr ""
 "定のバージョンを強制することができます。Webサーバーが必要なHTTPバージョンをサ"
 "ポートしていない場合、接続は失敗することに注意してください。"
 
+#, fuzzy
+msgid ""
+"You may enter any fully qualified domain name or valid IP address here if "
+"you need to a different server to connect to rather than the one specified "
+"in the URL. The name must not contain any further information, like port or "
+"protocol. You may use macros in this field. The most common ones are "
+"$HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+"ここに入力できるのは、完全修飾ドメイン名または有効なIPアドレスです。この名前"
+"には、ポートやプロトコルのような追加情報を含んではいけません。このフィールド"
+"ではマクロを使うことができます。最も一般的なものは$HOSTNAME$、$HOSTALIAS"
+"$、$HOSTADDRESS$です。"
+
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
 "name must not contain any further information, like port or protocol. You "
@@ -83859,7 +83951,7 @@ msgstr "時間"
 msgid "htpasswd"
 msgstr "htpasswd"
 
-msgid "http"
+msgid "http (insecure)"
 msgstr ""
 
 msgid "https"
@@ -85236,6 +85328,214 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Active Calls"
+#~ msgstr "アクティブパス"
+
+#, fuzzy
+#~ msgid "Active Calls In"
+#~ msgstr "アクティブパス"
+
+#, fuzzy
+#~ msgid "Active Calls Out"
+#~ msgstr "アクティブユニット"
+
+#, fuzzy
+#~ msgid "Average Call Duration"
+#~ msgstr "平均待ち時間"
+
+#, fuzzy
+#~ msgid "Average Success Ratio"
+#~ msgstr "Varnishバックエンド成功率"
+
+#, fuzzy
+#~ msgid "Calls In"
+#~ msgstr "発信者ID"
+
+#, fuzzy
+#~ msgid "Calls Out"
+#~ msgstr "ルールを呼び出す"
+
+#, fuzzy
+#~ msgid "Calls per Second"
+#~ msgstr "1秒あたりのページ数"
+
+#, fuzzy
+#~ msgid "Indeterminate"
+#~ msgstr "休憩"
+
+#, fuzzy
+#~ msgid ""
+#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+#~ msgstr ""
+#~ "ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
+#~ "windows \"のように。"
+
+#, fuzzy
+#~ msgid "Lower levels for average success ratio"
+#~ msgstr "SMS成功率の下位レベル"
+
+#, fuzzy
+#~ msgid "Map severity levels to alarm states"
+#~ msgstr "再起動の上位レベル"
+
+#~ msgid "Custom Notes"
+#~ msgstr "カスタムノート"
+
+#, fuzzy
+#~ msgid "Free text"
+#~ msgstr "フリーのテープ"
+
+#, fuzzy
+#~ msgid "Missing catalog topic."
+#~ msgstr "変数siteidがありません"
+
+#, fuzzy
+#~ msgid "Rules for host names"
+#~ msgstr "ホスト名の正規表現"
+
+#, fuzzy
+#~ msgid "Use the value of the key"
+#~ msgstr "サービスのステータスを使用します..."
+
+#, fuzzy, python-format
+#~ msgid "%s notification %s"
+#~ msgstr "最終通知"
+
+#, fuzzy
+#~ msgid "Advanced - Number of retries"
+#~ msgstr "再試行回数"
+
+#, fuzzy
+#~ msgid "Advanced - Protocol"
+#~ msgstr "高度なオプション"
+
+#, fuzzy
+#~ msgid "Advanced - TCP Port number"
+#~ msgstr "TCPポート番号"
+
+#, fuzzy
+#~ msgid "Automation user"
+#~ msgstr "自動化の秘密"
+
+#, fuzzy
+#~ msgid "Cached times for single sections"
+#~ msgstr "1秒あたりのキャッシュミス"
+
+#, fuzzy
+#~ msgid "Connect to the remote site"
+#~ msgstr "リモートサイトに接続する"
+
+#~ msgid "Connection to the REST API"
+#~ msgstr "REST APIへの接続"
+
+#, fuzzy
+#~ msgid "Disabled Sections..."
+#~ msgstr "無効なセクション"
+
+#, fuzzy
+#~ msgid "Here you can configured the credentials to be used."
+#~ msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
+
+#, fuzzy
+#~ msgid "If there are problems please use disabled sections."
+#~ msgstr ""
+#~ "<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認し"
+#~ "てください。"
+
+#, fuzzy
+#~ msgid "Please only define sections or disabled sections."
+#~ msgstr "ブラウザの指示に従って認証を行ってください。"
+
+#, fuzzy
+#~ msgid "Section ArrayControllers"
+#~ msgstr "アレイ(コントローラー)"
+
+#, fuzzy
+#~ msgid "Section Drives"
+#~ msgstr "セクション"
+
+#, fuzzy
+#~ msgid "Section EthernetInterfaces"
+#~ msgstr "ファイバチャネルインターフェイス"
+
+#, fuzzy
+#~ msgid "Section FirmwareInventory"
+#~ msgstr "インベントリ"
+
+#, fuzzy
+#~ msgid "Section HostBusAdapters"
+#~ msgstr "接続状態"
+
+#, fuzzy
+#~ msgid "Section LogicalDrives"
+#~ msgstr "アラームの選択"
+
+#, fuzzy
+#~ msgid "Section Memory"
+#~ msgstr "セクション名"
+
+#, fuzzy
+#~ msgid "Section NetworkAdapters"
+#~ msgstr "ネットワークアダプタ"
+
+#, fuzzy
+#~ msgid "Section NetworkInterfaces"
+#~ msgstr "ネットワークインターフェース"
+
+#, fuzzy
+#~ msgid "Section PhysicalDrives"
+#~ msgstr "物理ディスク"
+
+#, fuzzy
+#~ msgid "Section Power"
+#~ msgstr "送信力"
+
+#, fuzzy
+#~ msgid "Section Processors"
+#~ msgstr "プロセッサー"
+
+#, fuzzy
+#~ msgid "Section SimpleStorage"
+#~ msgstr "セクション名"
+
+#, fuzzy
+#~ msgid "Section SmartStorage"
+#~ msgstr "セクション名"
+
+#, fuzzy
+#~ msgid "Section Storage"
+#~ msgstr "セクション名"
+
+#, fuzzy
+#~ msgid "Section Thermal"
+#~ msgstr "セクション名"
+
+#, fuzzy
+#~ msgid "Section Volumes"
+#~ msgstr "セクション名"
+
+#~ msgid "Site base URL"
+#~ msgstr "サイトベースURL"
+
+#, fuzzy
+#~ msgid "Use the credentials of an automation user"
+#~ msgstr "automationユーザーの認証情報を使用する"
+
+#~ msgid ""
+#~ "Use this setting to tell the dynamic configuration to which Checkmk REST "
+#~ "API to talk to for creating hosts and so on. This setting controls on "
+#~ "which sites the objects will be created. In single site setups you can "
+#~ "set this to \"local site\".In distributed setups you will have to "
+#~ "configure the REST API of the central Setup site from the view of the "
+#~ "remote site."
+#~ msgstr ""
+#~ "この設定を使用して、ホストの作成などのためにどのCheckmk REST APIと通信する"
+#~ "かを動的構成に指示します。この設定は、オブジェクトが作成されるサイトを制御"
+#~ "します。単一サイト設定では、これを\"ローカルサイト\"に設定できます。分散設"
+#~ "定では、リモートサイトのビューから中央セットアップサイトのREST APIを設定す"
+#~ "る必要があります。"
 
 #, fuzzy
 #~ msgid "Assignee filters"

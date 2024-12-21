@@ -29852,6 +29852,10 @@ msgstr "Info"
 msgid "Info:"
 msgstr "Info:"
 
+#, fuzzy
+msgid "Information"
+msgstr "Informell"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -53558,6 +53562,10 @@ msgstr "Zustand der SLES Lizenz"
 
 msgid "Status of the SLES subscription"
 msgstr "Zustand der SLES Subskription"
+
+#, fuzzy
+msgid "Status page"
+msgstr "Zustandsänderung"
 
 msgid "Status passive checks"
 msgstr "Zustand passive Checks"

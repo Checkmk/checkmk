@@ -128,7 +128,9 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             yield from _util_perfdata(core, total_perc, core_index, this_time, params)
 
 
-# ALREADY MIGRATED
+# ALREADY MIGRATED. Remaining callsites:
+# * lparstat_aix
+# * statgrab_cpu
 def check_cpu_util_unix(
     values: CPUInfo,
     params: Mapping[str, Any],

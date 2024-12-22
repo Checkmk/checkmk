@@ -208,7 +208,7 @@ def check_cpu_util_unix(
     params: Mapping,
     this_time: float,
     value_store: MutableMapping,
-    cores: list[CPUInfo],
+    cores: Sequence[CPUInfo],
     values_counter: bool,
 ) -> CheckResult:
     if values_counter:
@@ -375,16 +375,6 @@ def _util_perfdata(
             levels_avg,
             "Core %s (%d-min average)" % (core, time_avg),
         )
-
-
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   '----------------------------------------------------------------------'
 
 
 def _cpu_util_time(

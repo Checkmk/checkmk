@@ -5,21 +5,26 @@
 
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
-
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
-
-check_info = {}
+from cmk.plugins.lib.cpu_util import check_cpu_util_unix, CPUInfo
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0
@@ -84,35 +89,40 @@ def parse_ucd_cpu_util(string_table: StringTable) -> Section | None:
     return Section(error=error or None, cpu_ticks=cpu_ticks, io=io)
 
 
-def inventory_ucd_cpu_util(section: Section) -> LegacyDiscoveryResult:
-    yield None, {}
+def inventory_ucd_cpu_util(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_ucd_cpu_util(
-    _no_item: None, params: Mapping[str, Any], section: Section
-) -> LegacyCheckResult:
-    now = time.time()
-    value_store = get_value_store()
+def check_ucd_cpu_util(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_ucd_cpu_util_with_context(params, section, time.time(), get_value_store())
 
+
+def check_ucd_cpu_util_with_context(
+    params: Mapping[str, Any],
+    section: Section,
+    now: float,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
     if section.error and section.error != "systemStats":
-        yield 1, f"Error: {section.error}"
+        yield Result(state=State.WARN, summary=f"Error: {section.error}")
 
-    yield from check_cpu_util_unix(section.cpu_ticks, params)
+    yield from check_cpu_util_unix(
+        cpu_info=section.cpu_ticks,
+        params=params,
+        this_time=now,
+        value_store=value_store,
+        cores=(),
+        values_counter=True,
+    )
 
     if section.io is None:
         return
 
-    yield (
-        0,
-        "",
-        [
-            ("read_blocks", get_rate(value_store, "io_received", now, section.io.received)),
-            ("write_blocks", get_rate(value_store, "io_send", now, section.io.send)),
-        ],
-    )
+    yield Metric("read_blocks", get_rate(value_store, "io_received", now, section.io.received))
+    yield Metric("write_blocks", get_rate(value_store, "io_send", now, section.io.send))
 
 
-check_info["ucd_cpu_util"] = LegacyCheckDefinition(
+snmp_section_ucd_cpu_util = SimpleSNMPSection(
     name="ucd_cpu_util",
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(
@@ -120,8 +130,13 @@ check_info["ucd_cpu_util"] = LegacyCheckDefinition(
         oids=["2", "50", "51", "52", "53", "54", "56", "57", "58", "61"],
     ),
     parse_function=parse_ucd_cpu_util,
+)
+
+check_plugin_ucd_cpu_util = CheckPlugin(
+    name="ucd_cpu_util",
     service_name="CPU utilization",
     discovery_function=inventory_ucd_cpu_util,
     check_function=check_ucd_cpu_util,
     check_ruleset_name="cpu_iowait",
+    check_default_parameters={},
 )

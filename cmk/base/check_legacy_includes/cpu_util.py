@@ -48,7 +48,7 @@ CPUInfo = cpu_util.CPUInfo
 
 
 # ALREADY MIGRATED
-def util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
+def _util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
     value_store = get_value_store()
     # Compute jiffi-differences of all relevant counters
     diff_values = []
@@ -113,7 +113,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
     if "core_util_time_total" in params:
         threshold, warn, crit = params["core_util_time_total"]
-        yield cpu_util_time(this_time, "total", util, threshold, warn, crit)
+        yield _cpu_util_time(this_time, "total", util, threshold, warn, crit)
 
     if cores and any(
         x in params
@@ -139,7 +139,7 @@ def check_cpu_util_unix(
     value_store = get_value_store()
 
     if values_counter:
-        diff_values = util_counter(values, this_time)
+        diff_values = _util_counter(values, this_time)
         sum_jiffies = diff_values.total_sum
         if sum_jiffies == 0:
             raise IgnoreResultsError("Too short time difference since last check")
@@ -229,7 +229,7 @@ def _check_single_core_util(util, metric, levels, infoname):
 def _util_perfdata(core, total_perc, core_index, this_time, params):
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
-        yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)
+        yield _cpu_util_time(this_time, core, total_perc, threshold, warn, crit)
 
     config_single_avg = params.get("average_single", {})
 
@@ -282,7 +282,7 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
 
 
 # ALREADY MIGRATED
-def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
+def _cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
     core_state_name = "cpu.util.core.high.%s" % core
     value_store = get_value_store()
     if perc > threshold:

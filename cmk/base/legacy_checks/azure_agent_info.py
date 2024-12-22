@@ -9,10 +9,9 @@
 import json
 import time
 
-from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store
+from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR
 
 check_info = {}
 

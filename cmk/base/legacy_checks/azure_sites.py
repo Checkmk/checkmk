@@ -7,13 +7,15 @@
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     get_data_or_go_stale,
-    iter_resource_attributes,
-    parse_resources,
 )
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import Service
-from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+from cmk.plugins.lib.azure import (
+    get_service_labels_from_resource_tags,
+    iter_resource_attributes,
+    parse_resources,
+)
 
 check_info = {}
 

@@ -4,20 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import collections
+from collections.abc import Mapping
 
-from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_resources
+from cmk.base.check_legacy_includes.azure import get_data_or_go_stale
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.lib.azure import parse_resources
 
 check_info = {}
 
+Section = Mapping[str, Mapping]
 
-def parse_azure_usagedetails(string_table):
-    parsed = {}
-    for detail in list(parse_resources(string_table).values()):
+
+def parse_azure_usagedetails(string_table: StringTable) -> Section:
+    parsed: dict[str, dict] = {}
+    for detail in parse_resources(string_table).values():
         props = detail.properties
         service_name = props["ResourceType"].split("/")[0]
         data = parsed.setdefault(
@@ -39,7 +47,9 @@ def parse_azure_usagedetails(string_table):
     return parsed
 
 
-def check_azure_usagedetails(item, params, section):
+def check_azure_usagedetails(
+    item: str, params: Mapping[str, object], section: Section
+) -> LegacyCheckResult:
     data = get_data_or_go_stale(item, section)
     for currency, amount in list(data.get("costs", {}).items()):
         levels = params.get("levels")
@@ -48,7 +58,7 @@ def check_azure_usagedetails(item, params, section):
     yield 0, "Subscription: %s" % data["subscription_id"]
 
 
-def discover_azure_usagedetails(section):
+def discover_azure_usagedetails(section: Section) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

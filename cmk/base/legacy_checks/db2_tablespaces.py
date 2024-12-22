@@ -6,11 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-
 import cmk.plugins.lib.db
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
 check_info = {}
 

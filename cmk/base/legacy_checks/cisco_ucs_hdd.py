@@ -8,7 +8,7 @@
 from collections.abc import Iterable, Iterator, Mapping
 from typing import Any, Final, NamedTuple
 
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
@@ -37,7 +37,7 @@ def parse_cisco_ucs_hdd(string_table: StringTable) -> Section:
         disk_id: HDD(
             disk_id,
             model,
-            *map_operability[r_operability],
+            *MAP_OPERABILITY[r_operability],
             serial,
             int(r_size or 0) * 1024**2,
             vendor,

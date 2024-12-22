@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -24,7 +24,7 @@ def inventory_cisco_ucs_system(info):
 
 def check_cisco_ucs_system(_no_item, _no_params, info):
     model, serial, status = info[0]
-    state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
+    state, state_readable = MAP_OPERABILITY.get(status, (3, "Unknown, status code %s" % status))
     return state, f"Status: {state_readable}, Model: {model}, SN: {serial}"
 
 

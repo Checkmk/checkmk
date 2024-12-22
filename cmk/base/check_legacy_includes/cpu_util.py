@@ -129,7 +129,6 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
 
 # ALREADY MIGRATED. Remaining callsites:
-# * lparstat_aix
 # * statgrab_cpu
 def check_cpu_util_unix(
     values: CPUInfo,

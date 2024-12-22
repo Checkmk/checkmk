@@ -7,6 +7,7 @@
 from tests.unit.cmk.gui.conftest import (
     flask_app,
     gui_cleanup_after_test,
+    load_plugins,
     request_context,
     with_admin,
     with_admin_login,

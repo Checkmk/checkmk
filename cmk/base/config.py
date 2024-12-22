@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: F405
+
 from __future__ import annotations
 
 import contextlib
@@ -134,7 +136,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legac
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     convert_legacy_sections,
 )
-from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
 

@@ -732,7 +732,11 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app(patch_omd_site: None, use_fakeredis_client: None) -> Iterator[Flask]:
+def flask_app(
+    patch_omd_site: None,
+    use_fakeredis_client: None,
+    load_plugins: None,
+) -> Iterator[Flask]:
     """Initialize a Flask app for testing purposes.
 
     Register a global htmllib.html() instance, just like in the regular GUI.

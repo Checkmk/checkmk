@@ -5,11 +5,18 @@
 
 
 import time
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
 
 check_info = {}
@@ -25,9 +32,22 @@ check_info = {}
 #    UCD-SNMP-MIB::ssCpuRawSoftIRQ.0 = Counter32: 277402
 
 
-def parse_ucd_cpu_util(string_table):
+@dataclass(frozen=True)
+class _IO:
+    received: int
+    send: int
+
+
+@dataclass(frozen=True)
+class Section:
+    error: str | None
+    cpu_ticks: CPUInfo
+    io: _IO | None
+
+
+def parse_ucd_cpu_util(string_table: StringTable) -> Section | None:
     if not string_table:
-        return {}
+        return None
 
     (
         error,
@@ -42,53 +62,54 @@ def parse_ucd_cpu_util(string_table):
         raw_cpu_softirq,
     ) = string_table[0]
 
-    raw_cpu_ticks = [
-        raw_cpu_user or None,
-        raw_cpu_nice or None,
-        raw_cpu_system or None,
-        raw_cpu_idle or None,
-        raw_cpu_wait or None,
-        raw_cpu_interrupt or None,
-        raw_cpu_softirq or None,
-    ]
-
     try:
-        return {
-            "error": error or None,
-            "cpu_ticks": CPUInfo("cpu", *raw_cpu_ticks),
-            "raw_io_send": raw_io_send,
-            "raw_io_received": raw_io_received,
-        }
+        cpu_ticks = CPUInfo(
+            "cpu",
+            raw_cpu_user or None,
+            raw_cpu_nice or None,
+            raw_cpu_system or None,
+            raw_cpu_idle or None,
+            raw_cpu_wait or None,
+            raw_cpu_interrupt or None,
+            raw_cpu_softirq or None,
+        )
     except ValueError:
         return None
 
+    try:
+        io = _IO(int(raw_io_received), int(raw_io_send))
+    except ValueError:
+        io = None
 
-def inventory_ucd_cpu_util(info):
-    if info:
-        yield None, {}
+    return Section(error=error or None, cpu_ticks=cpu_ticks, io=io)
 
 
-def check_ucd_cpu_util(item, params, parsed):
+def inventory_ucd_cpu_util(section: Section) -> LegacyDiscoveryResult:
+    yield None, {}
+
+
+def check_ucd_cpu_util(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
     now = time.time()
     value_store = get_value_store()
-    error = parsed["error"]
-    if error is not None and error != "systemStats":
-        yield 1, "Error: %s" % error
 
-    cpu_ticks = parsed["cpu_ticks"]
-    yield from check_cpu_util_unix(cpu_ticks, params)
+    if section.error and section.error != "systemStats":
+        yield 1, f"Error: {section.error}"
 
-    try:
-        raw_io_received = int(parsed["raw_io_received"])
-        raw_io_send = int(parsed["raw_io_send"])
-    except ValueError:
+    yield from check_cpu_util_unix(section.cpu_ticks, params)
+
+    if section.io is None:
         return
 
-    perfdata = [
-        ("read_blocks", get_rate(value_store, "io_received", now, raw_io_received), None, None),
-        ("write_blocks", get_rate(value_store, "io_send", now, raw_io_send), None, None),
-    ]
-    yield 0, "", perfdata
+    yield (
+        0,
+        "",
+        [
+            ("read_blocks", get_rate(value_store, "io_received", now, section.io.received)),
+            ("write_blocks", get_rate(value_store, "io_send", now, section.io.send)),
+        ],
+    )
 
 
 check_info["ucd_cpu_util"] = LegacyCheckDefinition(

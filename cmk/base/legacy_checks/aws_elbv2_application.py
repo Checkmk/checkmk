@@ -11,6 +11,7 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_http_errors,
     check_aws_metrics,
     inventory_aws_generic_single,
+    MetricInfo,
 )
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
@@ -109,32 +110,27 @@ _aws_elbv2_application_connection_types = [
 
 
 def check_aws_elbv2_application_connections(item, params, parsed):
-    metric_infos = []
-
-    for cw_metric_name, (info_name, key) in zip(
-        _aws_elbv2_application_connection_types,
+    return check_aws_metrics(
         [
-            ("Active", "active"),
-            ("New", "new"),
-            ("Rejected", "rejected"),
-            ("TLS errors", "tls_errors"),
-        ],
-    ):
-        if key == "tls_errors":
-            metric_name = "aws_client_tls_errors"
-        else:
-            metric_name = "aws_%s_connections" % key
-
-        metric_infos.append(
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": metric_name,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
-        )
-
-    return check_aws_metrics(metric_infos)
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_client_tls_errors"
+                if key == "tls_errors"
+                else f"aws_{key}_connections",
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
+            for cw_metric_name, (info_name, key) in zip(
+                _aws_elbv2_application_connection_types,
+                [
+                    ("Active", "active"),
+                    ("New", "new"),
+                    ("Rejected", "rejected"),
+                    ("TLS errors", "tls_errors"),
+                ],
+            )
+        ]
+    )
 
 
 def discover_aws_elbv2_application_connections(p):
@@ -270,12 +266,12 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
             human_readable_func = aws_get_counts_rate_human_readable
 
         metric_infos.append(
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": metric_name,
-                "info_name": info_name,
-                "human_readable_func": human_readable_func,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name=metric_name,
+                info_name=info_name,
+                human_readable_func=human_readable_func,
+            )
         )
 
     return check_aws_metrics(metric_infos)

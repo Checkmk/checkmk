@@ -204,7 +204,22 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
             name="about_checkmk",
             title=_("About Checkmk"),
             icon="about_checkmk",
-            items=get_about_checkmk_items(),
+            items=[
+                TopicMenuItem(
+                    name="info",
+                    title=_("Info"),
+                    url="info.py",
+                    sort_index=10,
+                    icon="checkmk_logo_min",
+                ),
+                TopicMenuItem(
+                    name="change_log",
+                    title=_("Change log (Werks)"),
+                    url="change_log.py",
+                    sort_index=20,
+                    icon="checkmk_logo_min",
+                ),
+            ],
         ),
     ]
 
@@ -232,36 +247,3 @@ def license_status() -> HTML | str:
             target="main",
         )
     return HTMLWriter.render_br() + status_message
-
-
-def get_about_checkmk_items() -> list[TopicMenuItem]:
-    items = [
-        TopicMenuItem(
-            name="info",
-            title=_("Information"),
-            url="info.py",
-            sort_index=20,
-            icon="about_checkmk",
-        ),
-        TopicMenuItem(
-            name="werks",
-            title=_("Werks"),
-            url="werks.py",
-            sort_index=30,
-            icon="about_checkmk",
-        ),
-    ]
-
-    if edition() == Edition.CSE:
-        items.insert(
-            0,
-            TopicMenuItem(
-                name="saas_status_page",
-                title=_("Status page"),
-                url="https://status.checkmk.cloud",
-                target="_blank",
-                sort_index=10,
-                icon="status",
-            ),
-        )
-    return items

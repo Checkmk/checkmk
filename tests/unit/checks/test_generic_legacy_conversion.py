@@ -1065,7 +1065,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "sophos_disk",
         "sophos_memory",
         "sophos_messages",
-        "statgrab_cpu",
         "steelhead_connections",
         "steelhead_peers",
         "steelhead_status",

@@ -9,8 +9,15 @@ from typing import TypedDict
 from cmk.agent_based.v2 import (
     AgentSection,
     Attributes,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     InventoryPlugin,
     InventoryResult,
+    Metric,
+    Result,
+    Service,
+    State,
     StringTable,
 )
 
@@ -92,4 +99,28 @@ def inventory_lparstat_aix(section: Section) -> InventoryResult:
 inventory_plugin_lparstat_aix = InventoryPlugin(
     name="lparstat_aix",
     inventory_function=inventory_lparstat_aix,
+)
+
+
+def inventory_lparstat(section: Section) -> DiscoveryResult:
+    if section.get("util"):
+        yield Service()
+
+
+def check_lparstat(section: Section) -> CheckResult:
+    if section.get("update_required"):
+        yield Result(state=State.UNKNOWN, summary="Please upgrade your AIX agent.")
+        return
+
+    utilization = section.get("util", {})
+    for name, (value, uom) in utilization.items():
+        yield Result(state=State.OK, summary=f"{name.title()}: {value}{uom}")
+        yield Metric(name, value)
+
+
+check_plugin_lparstat_aix = CheckPlugin(
+    name="lparstat_aix",
+    service_name="lparstat",
+    discovery_function=inventory_lparstat,
+    check_function=check_lparstat,
 )

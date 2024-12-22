@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
@@ -26,31 +26,6 @@ check_info = {}
 # |                                                                  |
 # | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
 # +------------------------------------------------------------------+
-
-
-def inventory_lparstat(section: Section) -> Iterable[tuple[None, dict]]:
-    if section.get("util"):
-        yield None, {}
-
-
-def check_lparstat(
-    _no_item: int, _no_params: Mapping[str, Any], section: Section
-) -> LegacyCheckResult:
-    if section.get("update_required"):
-        yield 3, "Please upgrade your AIX agent."
-        return
-
-    utilization = section.get("util", {})
-    for name, (value, uom) in utilization.items():
-        yield 0, f"{name.title()}: {value}{uom}", [(name, value)]
-
-
-check_info["lparstat_aix"] = LegacyCheckDefinition(
-    name="lparstat_aix",
-    service_name="lparstat",
-    discovery_function=inventory_lparstat,
-    check_function=check_lparstat,
-)
 
 
 def inventory_lparstat_aix_cpu(section: Section) -> list[tuple[None, dict]]:

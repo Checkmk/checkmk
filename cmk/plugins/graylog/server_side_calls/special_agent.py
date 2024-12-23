@@ -41,15 +41,15 @@ class Params(BaseModel):
 
 def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = [
-        "-P",
+        "--proto",
         params.protocol,
-        "-m",
+        "--sections",
         ",".join(params.sections),
-        "-t",
+        "--since",
         f"{params.since:.0f}",
-        "-u",
+        "--user",
         params.user,
-        "-s",
+        "--password",
         params.password.unsafe(),
         "--display_node_details",
         params.display_node_details,
@@ -60,7 +60,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
     ]
 
     if params.port:
-        command_arguments += ["-p", f"{params.port}"]
+        command_arguments += ["--port", f"{params.port}"]
 
     if params.source_since:
         command_arguments += ["--source_since", f"{params.source_since:.0f}"]

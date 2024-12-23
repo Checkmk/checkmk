@@ -9,10 +9,12 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-format-python",
             cmd: "make -C tests test-format-python-docker",
+            // output_file can not be used here as the venv and bazel setup
+            // would be part of it as well, leading to unwanted output
         ]);
 
         // TODO this is not the correct parser to analyse the output
-        test_jenkins_helper.analyse_issues("CLANG", "");
+        test_jenkins_helper.analyse_issues("RUFFFORMAT", "ruff_check_and_format.txt");
     }
 }
 

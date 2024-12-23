@@ -24,11 +24,6 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
         pytest.param("help_rest_api_docs", "/check_mk/api/doc/", id="rest_api_docs"),
         pytest.param("help_rest_api_gui", "/check_mk/api/.*/ui/", id="rest_api_gui"),
         pytest.param(
-            "help_suggest_product_improvement",
-            "ideas.checkmk.com",
-            id="suggest_product_improvement",
-        ),
-        pytest.param(
             "help_saas_status_page",
             "status.checkmk.com",
             id="saas_status_page",

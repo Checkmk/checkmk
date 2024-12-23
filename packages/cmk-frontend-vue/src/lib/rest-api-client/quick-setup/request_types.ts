@@ -7,7 +7,7 @@
 /**
  * Stage data
  */
-interface QuickSetupStageRequest {
+export interface QuickSetupStageRequest {
   form_data: object
 }
 

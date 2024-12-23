@@ -7,7 +7,7 @@
 import type { ValidationMessages } from '@/form'
 import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 
-export interface QuickSetupStageOverviewResponse {
+interface QuickSetupStageOverviewResponse {
   title: string
   sub_title: string | null
 }
@@ -21,7 +21,7 @@ export interface Errors extends StageErrors {
   stage_index?: number | null
 }
 
-export interface QuickSetupButton {
+interface QuickSetupButton {
   id: string
   label: string
   aria_label?: string | null
@@ -39,13 +39,13 @@ export interface QuickSetupStageStructure {
   prev_button?: QuickSetupButton
 }
 
-export interface QuickSetupActionResponse {
+export interface QuickSetupStageActionResponse {
   stage_recap: ComponentSpec[]
   validation_errors: Errors
   background_job_exception: string | null
 }
 
-export interface QuickSetupCompleteStageResponse {
+interface QuickSetupCompleteStageResponse {
   title: string
   sub_title?: string | null
   components: ComponentSpec[]
@@ -53,7 +53,7 @@ export interface QuickSetupCompleteStageResponse {
   prev_button?: QuickSetupButton
 }
 
-export interface QuickSetupBaseResponse {
+interface QuickSetupBaseResponse {
   quick_setup_id: string
   actions: Action[]
   prev_button?: QuickSetupButton | null
@@ -70,7 +70,10 @@ export interface QuickSetupGuidedResponse extends QuickSetupBaseResponse {
   stage: QuickSetupStageStructure
 }
 
+export type QuickSetupResponse = QuickSetupGuidedResponse | QuickSetupOverviewResponse
+
 export interface QuickSetupCompleteResponse {
   redirect_url: string
   all_stage_errors: Errors[]
+  background_job_exception: string | null
 }

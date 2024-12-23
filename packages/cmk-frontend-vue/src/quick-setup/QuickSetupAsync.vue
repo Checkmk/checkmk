@@ -26,12 +26,6 @@ import type {
   DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import type {
-  Action,
-  QuickSetupActionResponse,
-  QuickSetupGuidedResponse,
-  QuickSetupStageStructure
-} from './rest-api/response_types'
 import { isValidationError, isAllStagesValidationError } from './rest-api/errors'
 import { asStringArray } from './utils'
 import type {
@@ -40,6 +34,12 @@ import type {
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import usePersistentRef from '@/lib/usePersistentRef'
+import type {
+  Action,
+  QuickSetupGuidedResponse,
+  QuickSetupStageActionResponse,
+  QuickSetupStageStructure
+} from '@/lib/rest-api-client/quick-setup/response_schemas'
 
 /**
  * Type definition for internal stage storage
@@ -98,15 +98,10 @@ const nextStage = async (actionId: string) => {
     userInput.push(formData)
   }
 
-  let actionResponse: QuickSetupActionResponse | null = null
+  let actionResponse: QuickSetupStageActionResponse | null = null
 
   try {
-    actionResponse = await validateAndRecapStage(
-      props.quick_setup_id,
-      actionId,
-      userInput,
-      props.objectId
-    )
+    actionResponse = await validateAndRecapStage(props.quick_setup_id, actionId, userInput)
   } catch (err: unknown) {
     handleError(err)
   }

@@ -29852,10 +29852,6 @@ msgstr "Info"
 msgid "Info:"
 msgstr "Info:"
 
-#, fuzzy
-msgid "Information"
-msgstr "Informell"
-
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -53562,10 +53558,6 @@ msgstr "Zustand der SLES Lizenz"
 
 msgid "Status of the SLES subscription"
 msgstr "Zustand der SLES Subskription"
-
-#, fuzzy
-msgid "Status page"
-msgstr "Zustandsänderung"
 
 msgid "Status passive checks"
 msgstr "Zustand passive Checks"
@@ -78000,6 +77992,14 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#, fuzzy
+#~ msgid "Information"
+#~ msgstr "Informell"
+
+#, fuzzy
+#~ msgid "Status page"
+#~ msgstr "Zustandsänderung"
 
 #~ msgid "Checkmk Cloud"
 #~ msgstr "Checkmk Cloud"

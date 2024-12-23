@@ -6,7 +6,8 @@ def get_agent_plugin_python_versions(String git_dir=".") {
     dir(git_dir) {
         def versions = (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS")
                 ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS from defines.make"));
-        return versions.split(" ");
+        // Python 2.7 tests fail if they run in parallel with 3.x tests
+        return versions.replace("2.7 ", "").split(" ");
     }
 }
 
@@ -34,6 +35,15 @@ def main() {
                 }]
             }
             parallel test_builds;
+
+            // Python 2.7 tests fail if they run in parallel with 3.x tests
+            stage("Test for python2.7") {
+                // Here we need the docker registry as we are using python:VERSION docker images
+                // which are stored on nexus.
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    sh("make -C tests test-agent-plugin-unit-py2.7-docker");
+                }
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ def main() {
         "test-composition-single-f12less",
         "test-composition-single-f12less-cme",
         "test-integration-single-f12less-cme",
+        "test-update-single-f12less",
     ];
 
     print(

@@ -77,6 +77,7 @@ class RelativeUrl(fields.String):
             validator = validate.URL(
                 schemes=set(self.must_startwith_one),
                 error=self.error_messages["invalid"],
+                require_tld=False,
             )
             self.validators.insert(0, validator)
 

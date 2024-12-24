@@ -29903,9 +29903,6 @@ msgstr "モニタリングで検索"
 msgid "Icons"
 msgstr "アイコン"
 
-msgid "Ideas Portal"
-msgstr ""
-
 msgid "Ident of the value"
 msgstr "値のID"
 
@@ -59957,10 +59954,6 @@ msgstr "リクエストIDの認証に成功"
 msgid "Successfully verified signature"
 msgstr "署名の検証に成功"
 
-#, fuzzy
-msgid "Suggest a product improvement"
-msgstr "パフォーマンスの向上"
-
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
 
@@ -85328,6 +85321,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Suggest a product improvement"
+#~ msgstr "パフォーマンスの向上"
 
 #, fuzzy
 #~ msgid "Active Calls"

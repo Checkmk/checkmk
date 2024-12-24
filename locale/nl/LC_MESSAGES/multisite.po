@@ -30980,9 +30980,6 @@ msgstr "Zoeken in Toezicht"
 msgid "Icons"
 msgstr "Pictogrammen"
 
-msgid "Ideas Portal"
-msgstr ""
-
 msgid "Ident of the value"
 msgstr "Identificatie van de waarde"
 
@@ -61474,10 +61471,6 @@ msgstr "Verzoek-ID met succes geverifieerd"
 msgid "Successfully verified signature"
 msgstr "Succesvol geverifieerde handtekening"
 
-#, fuzzy
-msgid "Suggest a product improvement"
-msgstr "Prestatieverbeteringen"
-
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
 
@@ -87529,6 +87522,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Suggest a product improvement"
+#~ msgstr "Prestatieverbeteringen"
 
 #, fuzzy
 #~ msgid "Active Calls"

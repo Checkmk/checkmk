@@ -31011,9 +31011,6 @@ msgstr "Căutare în Monitorizare"
 msgid "Icons"
 msgstr "Icoane"
 
-msgid "Ideas Portal"
-msgstr ""
-
 msgid "Ident of the value"
 msgstr "Ident al valorii"
 
@@ -61639,10 +61636,6 @@ msgstr "ID-ul cererii a fost verificat cu succes"
 msgid "Successfully verified signature"
 msgstr "Semnătură verificată cu succes"
 
-#, fuzzy
-msgid "Suggest a product improvement"
-msgstr "Îmbunătățiri de performanță"
-
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
@@ -87706,6 +87699,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Suggest a product improvement"
+#~ msgstr "Îmbunătățiri de performanță"
 
 #, fuzzy
 #~ msgid "Active Calls"

@@ -31250,9 +31250,6 @@ msgstr "Recherche dans le monitoring"
 msgid "Icons"
 msgstr "Icônes"
 
-msgid "Ideas Portal"
-msgstr ""
-
 msgid "Ident of the value"
 msgstr "Ident de la valeur"
 
@@ -62042,10 +62039,6 @@ msgstr "Vérification réussie de l'ID de la demande"
 msgid "Successfully verified signature"
 msgstr "Signature vérifiée avec succès"
 
-#, fuzzy
-msgid "Suggest a product improvement"
-msgstr "Amélioration des performances"
-
 msgid "Suggested tutorial videos"
 msgstr "Vidéos tutorielles suggérées"
 
@@ -88396,6 +88389,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Suggest a product improvement"
+#~ msgstr "Amélioration des performances"
 
 #, fuzzy
 #~ msgid "Active Calls"

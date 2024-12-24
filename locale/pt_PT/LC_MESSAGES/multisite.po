@@ -30979,9 +30979,6 @@ msgstr "Pesquisa em Monitorização"
 msgid "Icons"
 msgstr "Ícones"
 
-msgid "Ideas Portal"
-msgstr ""
-
 msgid "Ident of the value"
 msgstr "Ident do valor"
 
@@ -61472,10 +61469,6 @@ msgstr "ID do pedido verificado com êxito"
 msgid "Successfully verified signature"
 msgstr "Assinatura verificada com sucesso"
 
-#, fuzzy
-msgid "Suggest a product improvement"
-msgstr "Melhorias de desempenho"
-
 msgid "Suggested tutorial videos"
 msgstr "Vídeos tutoriais sugeridos"
 
@@ -87426,6 +87419,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Suggest a product improvement"
+#~ msgstr "Melhorias de desempenho"
 
 #, fuzzy
 #~ msgid "Active Calls"

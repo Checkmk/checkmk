@@ -1,0 +1,10 @@
+Title: site management: Fix url validation
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1735040979
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+This fix allows hostnames without TLD on URLs when creating a site using the site management endpoints

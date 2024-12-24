@@ -270,6 +270,7 @@ def test_redirects_work_with_standard_port(checkmk: CheckmkApp) -> None:
     )[-1].decode("utf-8")
 
 
+@pytest.mark.skipif(True, reason="Read timeout, CMK-20951")
 def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
     # Use some free address port to be able to bind to. For the moment there is no
     # conflict with others, since this test is executed only once at the same time.

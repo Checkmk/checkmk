@@ -187,6 +187,16 @@ def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
     assert resp.json["extensions"] == config
 
 
+def test_create_site_connection_url_without_tld(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    url = "http://myhost:7323/myhost/check_mk/"
+
+    config["configuration_connection"]["url_of_remote_site"] = url
+    clients.SiteManagement.create(site_config=config)
+    resp = clients.SiteManagement.get(site_id=site_id)
+    assert resp.json["extensions"] == config
+
+
 def test_update_site_connection(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)

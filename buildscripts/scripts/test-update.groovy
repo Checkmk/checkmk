@@ -2,6 +2,8 @@
 
 /// file: test-update.groovy
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def main() {
     check_job_parameters([
         "VERSION",

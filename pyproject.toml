@@ -8,8 +8,6 @@ select = ["A", "ARG", "E", "F", "W", "C90", "PL", "RUF100", "UP", "SLF"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
-  # Ignore findings which are incompatible with our "import" techonology.
-  "F401", # 'FOO' imported but unused
   # We should probably have a look at these findings.
   "E731", # do not assign a lambda expression, use a def
   "E741", # ambiguous variable name 'FOO'

@@ -7,7 +7,6 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from . import _perfometer
 from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import graph_specification_registry

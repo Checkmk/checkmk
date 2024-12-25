@@ -8,17 +8,15 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import textwrap
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, cast, Self
+from typing import Any, Self
 
 from livestatus import SiteId
 
-import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths

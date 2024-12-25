@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import time
 import xml.dom.minidom
 from collections.abc import Mapping
 from datetime import timedelta

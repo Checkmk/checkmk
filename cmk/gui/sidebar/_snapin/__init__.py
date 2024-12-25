@@ -39,7 +39,6 @@ from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
 from ._tactical_overview import TacticalOverviewSnapin
-from ._views import ajax_export_views
 from ._views import default_view_menu_topics as default_view_menu_topics
 from ._views import view_menu_items as view_menu_items
 

@@ -2,16 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Literal
-from unittest.mock import ANY, patch
-
-import pytest
 
 from cmk.gui.form_specs.private import Labels, World
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
-
-from cmk.rulesets.v1 import Help, Title
 
 labels = {"cmk/check_mk_server": "yes"}
 

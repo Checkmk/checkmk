@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for Setup internals and the Setup plugins"""
 
+# ruff: noqa: F401
+
 # TODO: More feature related splitting up would be better
 
 import abc

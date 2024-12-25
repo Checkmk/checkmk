@@ -20,10 +20,8 @@ from .dashlet import (
     dashlet_registry,
     DashletConfig,
     DashletRegistry,
-    FigureDashletPage,
     IFrameDashlet,
     LinkedViewDashletConfig,
-    register_dashlets,
     StaticTextDashletConfig,
     ViewDashletConfig,
 )

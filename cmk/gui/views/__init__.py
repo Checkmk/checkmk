@@ -13,25 +13,16 @@ from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
-from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0 import painters
-from cmk.gui.painter.v0.base import painter_registry, register_painter
-from cmk.gui.painter_options import painter_option_registry
-from cmk.gui.permissions import (
-    declare_dynamic_permissions,
-    declare_permission,
-    PermissionSection,
-    PermissionSectionRegistry,
-)
+from cmk.gui.painter.v0.base import register_painter
+from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
-from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import icon, inventory
 from .command import register_legacy_command
 from .icon import Icon, icon_and_action_registry
 from .inventory import register_table_views_and_columns
-from .sorter import register_sorter, register_sorters, sorter_registry
+from .sorter import register_sorter
 from .store import multisite_builtin_views
 from .view_choices import format_view_title
 

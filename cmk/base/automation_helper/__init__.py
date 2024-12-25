@@ -8,7 +8,6 @@
 import os
 import signal
 from contextlib import nullcontext
-from pathlib import Path
 
 from setproctitle import setproctitle
 

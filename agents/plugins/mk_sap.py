@@ -42,7 +42,7 @@ import sys
 import time
 
 try:
-    from typing import Any  # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 

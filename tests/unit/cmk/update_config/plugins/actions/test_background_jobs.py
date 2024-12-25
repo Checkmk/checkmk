@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.gui.test_background_job import job_base_dir  # pylint: disable=unused-import
+from tests.unit.cmk.gui.test_background_job import job_base_dir  # noqa: F401
 
 from cmk.update_config.plugins.actions.background_jobs import UpdateBackgroundJobs
 

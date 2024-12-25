@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # pylint: disable=unused-import
+from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,
 )
 

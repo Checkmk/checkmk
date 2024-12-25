@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 
 import pytest
 
@@ -15,7 +15,6 @@ from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, Uniqu
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import (
-    CallableValidator,
     QuickSetup,
     QuickSetupAction,
     QuickSetupStage,

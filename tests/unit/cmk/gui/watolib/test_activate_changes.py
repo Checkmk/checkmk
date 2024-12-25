@@ -16,7 +16,7 @@ from unittest.mock import patch
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from tests.unit.testlib.rabbitmq import get_expected_definition
 from tests.unit.testlib.utils import reset_registries

@@ -20,7 +20,6 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb.session  # pylint: disable=unused-import
 from cmk.gui import config, userdb
 from cmk.gui.auth import (
     check_auth,

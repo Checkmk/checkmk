@@ -6,11 +6,8 @@
 import abc
 import enum
 import os
-import signal
 import sys
 from contextlib import nullcontext, redirect_stdout, suppress
-from types import FrameType
-from typing import NoReturn
 
 import cmk.ccc.debug
 from cmk.ccc import version as cmk_version

@@ -225,21 +225,6 @@ result_type_registry.register(AutodiscoveryResult)
 
 
 @dataclass
-class SetAutochecksResult(ABCAutomationResult):
-    @staticmethod
-    def automation_call() -> str:
-        return "set-autochecks"
-
-
-result_type_registry.register(SetAutochecksResult)
-
-
-SetAutochecksTable = dict[
-    tuple[str, Item], tuple[ServiceName, Mapping[str, object], Labels, list[HostName]]
-]
-
-
-@dataclass
 class SetAutochecksV2Result(ABCAutomationResult):
     @staticmethod
     def automation_call() -> str:

@@ -50,7 +50,6 @@ def test_registered_automations() -> None:
         "rename-hosts",
         "restart",
         "scan-parents",
-        "set-autochecks",
         "set-autochecks-v2",
         "update-dns-cache",
         "update-host-labels",

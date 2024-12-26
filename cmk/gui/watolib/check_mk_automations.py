@@ -20,7 +20,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.events.event_context import EventContext
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -217,22 +217,6 @@ def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
     return _deserialize(
         _automation_serialized("autodiscovery", siteid=site_id),
         results.AutodiscoveryResult,
-    )
-
-
-def set_autochecks(
-    site_id: SiteId,
-    host_name: HostName,
-    checks: SetAutochecksTable,
-) -> results.SetAutochecksResult:
-    return _deserialize(
-        _automation_serialized(
-            "set-autochecks",
-            siteid=site_id,
-            args=[host_name],
-            indata=checks,
-        ),
-        results.SetAutochecksResult,
     )
 
 

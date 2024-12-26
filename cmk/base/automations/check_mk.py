@@ -104,8 +104,6 @@ from cmk.automations.results import (
     ServiceDiscoveryResult,
     ServiceInfo,
     SetAutochecksInput,
-    SetAutochecksResult,
-    SetAutochecksTable,
     SetAutochecksV2Result,
     SpecialAgentResult,
     UpdateDNSCacheResult,
@@ -132,7 +130,6 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     AutocheckEntry,
-    AutocheckServiceWithNodes,
     autodiscovery,
     automation_discovery,
     CheckPreview,
@@ -142,10 +139,7 @@ from cmk.checkengine.discovery import (
     DiscoverySettings,
     get_check_preview,
     set_autochecks_for_effective_host,
-    set_autochecks_of_cluster,
-    set_autochecks_of_real_hosts,
 )
-from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
@@ -955,6 +949,9 @@ def _make_get_effective_host_of_autocheck_callback(
 
 class AutomationSetAutochecksV2(DiscoveryAutomation):
     cmd = "set-autochecks-v2"
+    # This is an incompatibly changed version of the set-autochecks command.
+    # The last version to support the old 'set-autochecks' was 2.4
+    # Consider changing the name back to 'set-autochecks' in 2.6
     needs_config = True
     needs_checks = True
 
@@ -1006,76 +1003,6 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
 
 
 automations.register(AutomationSetAutochecksV2())
-
-
-class AutomationSetAutochecks(DiscoveryAutomation):
-    # DEPRECATED: This automation is deprecated and will be removed in 2.5
-    cmd = "set-autochecks"
-    needs_config = True
-    needs_checks = False
-
-    # Set the new list of autochecks. This list is specified by a
-    # table of (checktype, item). No parameters are specified. Those
-    # are either (1) kept from existing autochecks or (2) computed
-    # from a new inventory.
-    def execute(
-        self,
-        args: list[str],
-        called_from_automation_helper: bool,
-    ) -> SetAutochecksResult:
-        hostname = HostName(args[0])
-        new_items: SetAutochecksTable = ast.literal_eval(sys.stdin.read())
-
-        config_cache = config.get_config_cache()
-
-        if not called_from_automation_helper:
-            # Not loading all checks improves performance of the calls and as a result the
-            # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
-            # because we already have calculated service names. For clusters we have to load all
-            # checks for config_cache.set_autochecks, because it needs to calculate the
-            # service_descriptions of existing services to decided whether or not they are clustered
-            # (See autochecks.set_autochecks_of_cluster())
-            if hostname in config_cache.hosts_config.clusters:
-                config.load_all_plugins(
-                    local_checks_dir=local_checks_dir,
-                    checks_dir=checks_dir,
-                )
-
-        new_services = [
-            AutocheckServiceWithNodes(
-                DiscoveredItem[AutocheckEntry](
-                    previous=AutocheckEntry(
-                        CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
-                    ),
-                    new=None,
-                ),
-                found_on_nodes,
-            )
-            for (raw_check_plugin_name, item), (
-                _descr,
-                params,
-                raw_service_labels,
-                found_on_nodes,
-            ) in new_items.items()
-        ]
-
-        if hostname in config_cache.hosts_config.clusters:
-            set_autochecks_of_cluster(
-                config_cache.nodes(hostname),
-                hostname,
-                # The set-autochecks automation will do nothing in clustered mode.
-                # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
-                {hostname: new_services},
-                _make_get_effective_host_of_autocheck_callback(config_cache, {}),
-            )
-        else:
-            set_autochecks_of_real_hosts(hostname, new_services)
-
-        self._trigger_discovery_check(config_cache, hostname)
-        return SetAutochecksResult()
-
-
-automations.register(AutomationSetAutochecks())
 
 
 class AutomationUpdateHostLabels(DiscoveryAutomation):

@@ -18,7 +18,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
@@ -374,56 +374,6 @@ def test_automation_discovery_preview_host(site: Site) -> None:
     assert isinstance(result.nodes_check_table, dict)
     for _h, node_check_table in result.nodes_check_table.items():
         assert isinstance(node_check_table, list)
-
-
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_set_autochecks(site: Site) -> None:
-    hostname = HostName("blablahost")
-    new_items: SetAutochecksTable = {
-        ("df", "xxx"): ("Filesystem xxx", {}, {"xyz": "123"}, [hostname]),
-        ("uptime", None): ("Uptime", {}, {}, [hostname]),
-    }
-
-    try:
-        assert isinstance(
-            _execute_automation(
-                site,
-                "set-autochecks",
-                args=[hostname],
-                stdin=repr(new_items),
-            ),
-            results.SetAutochecksResult,
-        )
-
-        autochecks_file = f"var/check_mk/autochecks/{hostname}.mk"
-        assert site.file_exists(autochecks_file)
-
-        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
-        services = [
-            (
-                (str(s.check_plugin_name), s.item),
-                s.parameters,
-                s.service_labels,
-            )
-            for s in data
-        ]
-        assert sorted(services) == [
-            (
-                ("df", "xxx"),
-                {},
-                {"xyz": "123"},
-            ),
-            (
-                ("uptime", None),
-                {},
-                {},
-            ),
-        ]
-
-        assert site.file_exists("var/check_mk/autochecks/%s.mk" % hostname)
-    finally:
-        if site.file_exists("var/check_mk/autochecks/%s.mk" % hostname):
-            site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
 @pytest.mark.usefixtures("test_cfg")

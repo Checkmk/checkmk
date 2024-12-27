@@ -85,7 +85,7 @@ def main() {
             ) {
                 def job = build(
                     job: relative_job_name,
-                    propagate: true,  // Raise any errors
+                    propagate: false,  // Not raise any errors
                     parameters: [
                         string(name: "DISTRO", value: item),
                         string(name: "EDITION", value: EDITION),
@@ -103,6 +103,10 @@ def main() {
                     target: "${checkout_dir}/test-results",
                     fingerprintArtifacts: true
                 );
+
+                if (job.result != 'SUCCESS') {
+                    raise("${relative_job_name} failed with result: ${job.result}");
+                }
             }
         }
     }

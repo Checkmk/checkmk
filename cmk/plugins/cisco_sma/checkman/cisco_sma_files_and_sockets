@@ -1,0 +1,16 @@
+title: Cisco SMA DNS files and sockets
+agents: snmp
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of files and sockets that are open
+ on Cisco Security Management Appliance (SMA).
+
+ The created metric is checked against configurable levels.
+
+ It reads the value provided by the following OID
+ from ASYNCOS-MAIL-MIB openFilesOrSockets .1.3.6.1.4.1.15497.1.1.1.19
+
+discovery:
+ One service is created.

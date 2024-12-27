@@ -50,9 +50,10 @@ def main() {
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
-    /* groovylint-disable LineLength */
-    def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
-    /* groovylint-enable LineLength */
+
+    def checkout_hash = checkout_commit_id.substring(0, 6);
+    def workspace_hash = String.format("%06x", WORKSPACE.hashCode());
+    def container_name = "build-cmk-package-${distro}-${edition}-${workspace_hash}-${checkout_hash}";
 
     def bazel_log_prefix = "bazel_log_";
 

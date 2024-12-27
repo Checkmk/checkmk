@@ -18,7 +18,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import (
     Catalog,
     CommentTextArea,
@@ -28,7 +27,6 @@ from cmk.gui.form_specs.private import (
     Topic,
 )
 from cmk.gui.form_specs.private.catalog import TopicElement
-from cmk.gui.form_specs.vue.visitors import DefaultValue
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.valuespec import Migrate as ValueSpecMigrate
@@ -90,7 +88,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
             },
         )
 
-    def form_spec(self, method: str) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    def form_spec(self, method: str) -> Catalog:
         try:
             param_form_spec = self._entries[method]()._form_spec()
         except KeyError:
@@ -110,72 +108,48 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                     % (method, e),
                 )
 
-        def _add_method_key(value: object) -> object:
-            if not isinstance(value, dict):
-                return value
-
-            if parameter_properties := value.get("parameter_properties"):
-                if isinstance(parameter_properties, DefaultValue):
-                    return value
-                if "method_parameters" not in parameter_properties:
-                    value["parameter_properties"] = {"method_parameters": parameter_properties}
-
-            return value
-
-        def _remove_method_key(value: object) -> object:
-            if not isinstance(value, dict):
-                return value
-            if parameter_properties := value.get("parameter_properties"):
-                if "method_parameters" in parameter_properties:
-                    value["parameter_properties"] = parameter_properties["method_parameters"]
-            return value
-
-        return TransformDataForLegacyFormatOrRecomposeFunction(
-            from_disk=_add_method_key,
-            to_disk=_remove_method_key,
-            wrapped_form_spec=Catalog(
-                elements={
-                    "general": Topic(
-                        title=Title("Parameter properties"),
-                        elements={
-                            "description": TopicElement(
-                                parameter_form=String(
-                                    title=Title("Description"),
-                                    field_size=FieldSize.LARGE,
-                                    custom_validate=[not_empty()],
+        return Catalog(
+            elements={
+                "general": Topic(
+                    title=Title("Parameter properties"),
+                    elements={
+                        "description": TopicElement(
+                            parameter_form=String(
+                                title=Title("Description"),
+                                field_size=FieldSize.LARGE,
+                                custom_validate=[not_empty()],
+                            ),
+                            required=True,
+                        ),
+                        "comment": TopicElement(
+                            parameter_form=CommentTextArea(
+                                title=Title("Comment"),
+                            )
+                        ),
+                        "docu_url": TopicElement(
+                            parameter_form=String(
+                                title=Title("Documentation URL"),
+                                help_text=Help(
+                                    "An optional URL pointing to documentation or any other page. This will be "
+                                    "displayed as an icon and open "
+                                    "a new page when clicked. You can use either global URLs (beginning with "
+                                    "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                                    "URLs (that are relative to <tt>check_mk/</tt>)."
                                 ),
-                                required=True,
-                            ),
-                            "comment": TopicElement(
-                                parameter_form=CommentTextArea(
-                                    title=Title("Comment"),
-                                )
-                            ),
-                            "docu_url": TopicElement(
-                                parameter_form=String(
-                                    title=Title("Documentation URL"),
-                                    help_text=Help(
-                                        "An optional URL pointing to documentation or any other page. This will be "
-                                        "displayed as an icon and open "
-                                        "a new page when clicked. You can use either global URLs (beginning with "
-                                        "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                                        "URLs (that are relative to <tt>check_mk/</tt>)."
-                                    ),
-                                )
-                            ),
-                        },
-                    ),
-                    "parameter_properties": Topic(
-                        title=Title("Parameter properties"),
-                        elements={
-                            "method_parameters": TopicElement(
-                                required=True,
-                                parameter_form=param_form_spec,
-                            ),
-                        },
-                    ),
-                }
-            ),
+                            )
+                        ),
+                    },
+                ),
+                "parameter_properties": Topic(
+                    title=Title("Parameter properties"),
+                    elements={
+                        "method_parameters": TopicElement(
+                            required=True,
+                            parameter_form=param_form_spec,
+                        ),
+                    },
+                ),
+            }
         )
 
     def _construct_form_spec_from_valuespec(self, method: str) -> Dictionary:

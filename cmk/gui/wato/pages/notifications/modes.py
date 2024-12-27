@@ -44,7 +44,6 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import Catalog, LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
@@ -3631,7 +3630,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return _("Created new notification parameter")
         return _("Changed notification parameter #%s") % edit_nr
 
-    def _form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    def _form_spec(self) -> Catalog:
         return notification_parameter_registry.form_spec(self._method())
 
     def action(self) -> ActionResult:

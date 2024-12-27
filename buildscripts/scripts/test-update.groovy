@@ -41,6 +41,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
+        |all_distros:.............. │${all_distros}│
         |edition:.................. │${edition}│
         |cross_edition_target:..... │${cross_edition_target}│
         |branch_name:.............. │${branch_name}│
@@ -64,6 +65,10 @@ def main() {
 
         build_for_parallel[stepName] = { ->
             def run_condition = distro in distros;
+            if (cross_edition_target && distro != "ubuntu-22.04") {
+                // see CMK-18366
+                run_condition = false;
+            }
             println("Should ${distro} be tested? ${run_condition}");
 
             /// this makes sure the whole parallel thread is marked as skipped

@@ -75,6 +75,7 @@ def check_logwatch_ec(
         None,
         params,
         {None: section},
+        service_name_template=check_plugin_logwatch_ec.service_name,
         value_store=get_value_store(),
         message_forwarder=MessageForwarder(None, HostName(params["host_name"])),
     )
@@ -87,6 +88,7 @@ def cluster_check_logwatch_ec(
         None,
         params,
         {k: v for k, v in section.items() if v is not None},
+        service_name_template=check_plugin_logwatch_ec.service_name,
         value_store=get_value_store(),
         message_forwarder=MessageForwarder(None, HostName(params["host_name"])),
     )
@@ -121,6 +123,7 @@ def check_logwatch_ec_single(
         item,
         params,
         {None: section},
+        service_name_template=check_plugin_logwatch_ec_single.service_name,
         value_store=get_value_store(),
         message_forwarder=MessageForwarder(item, HostName(params["host_name"])),
     )
@@ -136,6 +139,7 @@ def cluster_check_logwatch_ec_single(
         item,
         params,
         {k: v for k, v in section.items() if v is not None},
+        service_name_template=check_plugin_logwatch_ec_single.service_name,
         value_store=get_value_store(),
         message_forwarder=MessageForwarder(item, HostName(params["host_name"])),
     )
@@ -287,6 +291,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     params: logwatch.ParameterLogwatchEc,
     parsed: logwatch.ClusterSection,
     *,
+    service_name_template: str,
     value_store: MutableMapping[str, Any],
     message_forwarder: MessageForwarderProto,
 ) -> CheckResult:
@@ -346,7 +351,9 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         lines = _filter_accumulated_lines(parsed, logfile, seen_batches)
 
         # Determine logwatch patterns specifically for this logfile
-        rules_for_this_file = logwatch.RulesetAccess.logwatch_rules_all(host_name, logfile)
+        rules_for_this_file = logwatch.RulesetAccess.logwatch_rules_all(
+            host_name=host_name, service_name_template=service_name_template, logfile=logfile
+        )
         logfile_reclassify_settings = (
             logwatch.compile_reclassify_params(rules_for_this_file) if reclassify else None
         )

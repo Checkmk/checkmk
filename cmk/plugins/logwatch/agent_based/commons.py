@@ -145,13 +145,15 @@ class RulesetAccess:
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
-    def logwatch_rules_all(host_name: str, logfile: str) -> Sequence[ParameterLogwatchRules]:
+    def logwatch_rules_all(
+        *, host_name: str, service_name_template: str, logfile: str
+    ) -> Sequence[ParameterLogwatchRules]:
         # We're using the logfile to match the ruleset, not necessarily the "item"
         # (which might be the group). However: the ruleset matcher expects this to be the item.
         # As a result, the following will all fail (hidden in `service_extra_conf`):
         #
         # Fail #1: Look up the discovered labels
-        # Mitigatie this by never discovering any labels.
+        # Mitigate this by never discovering any labels.
         #
         # Fail #2: Compute the correct service description
         # This will be wrong if the logfile is grouped.

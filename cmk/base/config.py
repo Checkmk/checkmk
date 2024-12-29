@@ -228,15 +228,15 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         return {s.check_plugin_name for s in self.values()}
 
 
-class IgnoredServices(Container[ServiceName]):
+class IgnoredActiveServices(Container[ServiceName]):
     def __init__(self, config_cache: ConfigCache, host_name: HostName) -> None:
         self._config_cache = config_cache
         self._host_name = host_name
 
-    def __contains__(self, _item: object) -> bool:
-        if not isinstance(_item, ServiceName):
+    def __contains__(self, service_name: object) -> bool:
+        if not isinstance(service_name, ServiceName):
             return False
-        return self._config_cache.service_ignored(self._host_name, _item)
+        return self._config_cache.service_ignored(self._host_name, service_name)
 
 
 def _aggregate_check_table_services(
@@ -391,11 +391,11 @@ def _get_clustered_services(
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
-            description = service_description(
+            service_name = service_description(
                 config_cache.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
             )
-            return not config_cache.service_ignored(node_name, description) and (
-                config_cache.effective_host(node_name, description) == cluster_name
+            return not config_cache.service_ignored(node_name, service_name) and (
+                config_cache.effective_host(node_name, service_name) == cluster_name
             )
 
         yield from configure_autochecks(
@@ -1509,26 +1509,26 @@ def compute_check_parameters(
 
 def _get_configured_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
+    host_name: HostName,
     plugin_name: CheckPluginName,
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
-    descr = service_description(matcher, host, plugin_name, item)
+    descr = service_description(matcher, host_name, plugin_name, item)
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
-            for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
+            for p in _get_checkgroup_parameters(matcher, host_name, str(ruleset_name), item, descr)
         ]
     )
 
 
 def _get_checkgroup_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
+    host_name: HostName,
     checkgroup: RulesetName,
     item: Item,
     descr: ServiceName,
@@ -1540,12 +1540,12 @@ def _get_checkgroup_parameters(
     try:
         # checks without an item
         if item is None and checkgroup not in service_rule_groups:
-            return matcher.get_host_values(host, rules)
+            return matcher.get_host_values(host_name, rules)
 
         # checks with an item need service-specific rules
-        return matcher.get_checkgroup_ruleset_values(host, descr, item, rules)
+        return matcher.get_checkgroup_ruleset_values(host_name, descr, item, rules)
     except MKGeneralException as e:
-        raise MKGeneralException(f"{e} (on host {host}, checkgroup {checkgroup})")
+        raise MKGeneralException(f"{e} (on host {host_name}, checkgroup {checkgroup})")
 
 
 def lookup_mgmt_board_ip_address(
@@ -2539,7 +2539,7 @@ class ConfigCache:
 
     def custom_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
         custom_checks_ = self.custom_checks(host_name)
-        ignored_services = IgnoredServices(self, host_name)
+        ignored_services = IgnoredActiveServices(self, host_name)
 
         def make_check_source(desc: str) -> str:
             return "ignored_custom" if desc in ignored_services else "custom"

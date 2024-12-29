@@ -546,7 +546,7 @@ def _active_check_preview_rows(
     host_name: HostName,
     ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
-    ignored_services = config.IgnoredServices(config_cache, host_name)
+    ignored_services = config.IgnoredActiveServices(config_cache, host_name)
 
     def make_check_source(desc: str) -> str:
         return "ignored_active" if desc in ignored_services else "active"

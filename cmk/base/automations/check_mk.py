@@ -903,7 +903,15 @@ def _make_get_effective_host_of_autocheck_callback(
             host,
             precomputed_service_descriptions.get((host, entry.check_plugin_name, entry.item))
             or config.service_description(
-                config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
+                config_cache.ruleset_matcher,
+                host,
+                entry.check_plugin_name,
+                service_name_template=(
+                    None
+                    if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                    else p.service_name
+                ),
+                item=entry.item,
             ),
         )
 

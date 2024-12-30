@@ -392,7 +392,15 @@ def _get_clustered_services(
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
             service_name = service_description(
-                config_cache.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+                config_cache.ruleset_matcher,
+                node_name,
+                entry.check_plugin_name,
+                service_name_template=(
+                    None
+                    if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                    else p.service_name
+                ),
+                item=entry.item,
             )
             return not config_cache.service_ignored(node_name, service_name) and (
                 config_cache.effective_host(node_name, service_name) == cluster_name
@@ -1166,7 +1174,17 @@ def _make_service_description_cb(
     """
 
     def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return service_description(matcher, hostname, check_plugin_name, item)
+        return service_description(
+            matcher,
+            hostname,
+            check_plugin_name,
+            service_name_template=(
+                None
+                if (p := agent_based_register.get_check_plugin(check_plugin_name)) is None
+                else p.service_name
+            ),
+            item=item,
+        )
 
     return callback
 
@@ -1175,18 +1193,21 @@ def service_description(
     matcher: RulesetMatcher,
     hostname: HostName,
     check_plugin_name: CheckPluginName,
+    *,
+    service_name_template: str | None,
     item: Item,
 ) -> ServiceName:
-    check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if check_plugin is None:
-        if item:
-            return f"Unimplemented check {check_plugin_name} / {item}"
-        return f"Unimplemented check {check_plugin_name}"
+    if service_name_template is None:
+        return (
+            f"Unimplemented check {check_plugin_name} / {item}"
+            if item
+            else f"Unimplemented check {check_plugin_name}"
+        )
 
     return get_final_service_description(
         _format_item_with_template(
             *_get_service_description_template_and_item(
-                check_plugin_name, check_plugin.service_name, item
+                check_plugin_name, service_name_template, item
             )
         ),
         get_service_translations(matcher, hostname),
@@ -1495,7 +1516,12 @@ def compute_check_parameters(
 
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(
-            matcher, host, plugin_name, check_plugin.check_ruleset_name, item
+            matcher,
+            host,
+            plugin_name,
+            service_name_template=check_plugin.service_name,
+            ruleset_name=check_plugin.check_ruleset_name,
+            item=item,
         )
 
     return TimespecificParameters(
@@ -1511,12 +1537,21 @@ def _get_configured_parameters(
     matcher: RulesetMatcher,
     host_name: HostName,
     plugin_name: CheckPluginName,
+    *,  # the following are all the same type :-(
+    service_name_template: str,
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
-    descr = service_description(matcher, host_name, plugin_name, item)
+    descr = service_description(
+        matcher,
+        host_name,
+        plugin_name,
+        service_name_template=service_name_template,
+        item=item,
+    )
+
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
@@ -1721,7 +1756,15 @@ class AutochecksConfigurer:
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
         return service_description(
-            self._config_cache.ruleset_matcher, host_name, entry.check_plugin_name, entry.item
+            self._config_cache.ruleset_matcher,
+            host_name,
+            entry.check_plugin_name,
+            service_name_template=(
+                None
+                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                else p.service_name
+            ),
+            item=entry.item,
         )
 
 
@@ -2132,7 +2175,16 @@ class ConfigCache:
                 )
                 if (
                     descr := service_description(
-                        self.ruleset_matcher, hostname, check_plugin_name, item
+                        self.ruleset_matcher,
+                        hostname,
+                        check_plugin_name,
+                        service_name_template=(
+                            None
+                            if (p := agent_based_register.get_check_plugin(check_plugin_name))
+                            is None
+                            else p.service_name
+                        ),
+                        item=item,
                     )
                 )
             },
@@ -3713,7 +3765,15 @@ class ConfigCache:
         return self.effective_host(
             node_name,
             service_description(
-                self.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+                self.ruleset_matcher,
+                node_name,
+                entry.check_plugin_name,
+                service_name_template=(
+                    None
+                    if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                    else p.service_name
+                ),
+                item=entry.item,
             ),
         )
 

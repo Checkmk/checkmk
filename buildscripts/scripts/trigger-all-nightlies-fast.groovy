@@ -44,6 +44,8 @@ def main() {
                 // see checkmk_ci decision log
                 if (edition != "cloud" && edition != "managed") {
                     build(job: "${base_folder}/trigger-cmk-build-chain-${edition}", parameters: this_job_parameters);
+                } else {
+                    println("Not triggering a job for edition ${edition}.");
                 }
             }
         }

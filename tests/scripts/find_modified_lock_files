@@ -7,7 +7,7 @@ set -e
 # TODO: enable this test also for package-lock.json (CMK-11132)
 FILES_NOT_ALLOWED_TO_BE_MODIFIED="package.json\|Cargo.lock"
 
-MODIFIED_FILES=$(git status -s | grep '^ M')
+MODIFIED_FILES=$(git status -s | grep '^ M' || true)
 NOT_ALLOWED_TO_BE_MODIFIED_FILES=$(echo "${MODIFIED_FILES}" | grep ${FILES_NOT_ALLOWED_TO_BE_MODIFIED} || true)
 echo -e "The following files are modified: \n${MODIFIED_FILES}"
 

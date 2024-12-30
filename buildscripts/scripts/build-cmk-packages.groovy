@@ -309,7 +309,10 @@ def main() {
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
                         inside_container(
-                            image: docker.image("${distro}:${docker_tag}"),
+                            // supplying the registry explicitly might not be needed but it looks like image.inside() will
+                            // first try to use the image without registry and only if that didn't work falls back to the
+                            // fully qualified name
+                            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
                             args: [
                                 "--ulimit nofile=16384:32768",
                                 "-v ${checkout_dir}:${checkout_dir}:ro",

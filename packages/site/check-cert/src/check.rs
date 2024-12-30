@@ -534,7 +534,30 @@ pub struct Collection {
 }
 
 impl Collection {
-    pub fn join(&mut self, other: &mut Collection) {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add(&mut self, cr: CheckResult<Real>) {
+        self.state = std::cmp::max(self.state, cr.state);
+        if let Some(ref summary) = cr.summary {
+            self.summary.push(match cr.metrics {
+                None => CheckView::new(cr.state, summary, None),
+                Some(ref metrics) => CheckView::new(cr.state, summary, metrics.levels.clone()),
+            })
+        }
+        if let Some(ref details) = cr.details.or(cr.summary) {
+            self.details.push(match cr.metrics {
+                None => CheckView::new(cr.state, details, None),
+                Some(ref metrics) => CheckView::new(cr.state, details, metrics.levels.clone()),
+            })
+        }
+        if let Some(ref metrics) = cr.metrics {
+            self.metrics.push(metrics.clone())
+        }
+    }
+
+    pub fn join(&mut self, other: &mut Self) {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
         self.details.append(&mut other.details);
@@ -586,7 +609,9 @@ impl Display for Collection {
 
 impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
-        Self::from(&mut vec![check_result.into()])
+        let mut out = Collection::new();
+        out.add(check_result.into());
+        out
     }
 }
 
@@ -595,26 +620,7 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
         check_results
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
-                out.state = std::cmp::max(out.state, cr.state);
-                if let Some(ref summary) = cr.summary {
-                    out.summary.push(match cr.metrics {
-                        None => CheckView::new(cr.state, summary, None),
-                        Some(ref metrics) => {
-                            CheckView::new(cr.state, summary, metrics.levels.clone())
-                        }
-                    })
-                }
-                if let Some(ref details) = cr.details.or(cr.summary) {
-                    out.details.push(match cr.metrics {
-                        None => CheckView::new(cr.state, details, None),
-                        Some(ref metrics) => {
-                            CheckView::new(cr.state, details, metrics.levels.clone())
-                        }
-                    })
-                }
-                if let Some(ref metrics) = cr.metrics {
-                    out.metrics.push(metrics.clone())
-                }
+                out.add(cr);
                 out
             })
     }

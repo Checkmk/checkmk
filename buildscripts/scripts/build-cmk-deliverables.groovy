@@ -54,8 +54,8 @@ def main() {
     def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
 
-    def upload_to_testbuilds = true;//! branch_base_folder.startsWith("Testing");
-    def deploy_to_website = false;// !params.SKIP_DEPLOY_TO_WEBSITE;
+    def upload_to_testbuilds = ! branch_base_folder.startsWith("Testing");
+    def deploy_to_website = ! params.SKIP_DEPLOY_TO_WEBSITE;
 
     print(
         """

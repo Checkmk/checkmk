@@ -4,10 +4,6 @@
 
 /// This job will trigger other jobs
 
-/// Jenkins artifacts:  Those of child jobs
-/// Other artifacts:    Those of child jobs
-/// Depends on:         Nothing
-
 import java.time.LocalDate
 
 def main() {
@@ -31,35 +27,35 @@ def main() {
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters_common = [
-        [$class: 'StringParameterValue', name: 'EDITION', value: edition],
+        stringParam(name: 'EDITION', value: edition),
 
         // TODO perhaps use `params` + [EDITION]?
         // FIXME: all parameters from all triggered jobs have to be handled here
-        [$class: 'StringParameterValue',  name: 'VERSION', value: VERSION],
-        [$class: 'StringParameterValue',  name: 'OVERRIDE_DISTROS', value: params.OVERRIDE_DISTROS],
-        [$class: 'BooleanParameterValue', name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE],
-        [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY],
-        [$class: 'BooleanParameterValue', name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_DOCKER_TAG_BUILD', value: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD],
-        [$class: 'BooleanParameterValue', name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG],
-        [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
-        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
-        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
-        [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
-        [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: effective_git_ref],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
+        stringParam(name: 'VERSION', value: VERSION),
+        stringParam(name: 'OVERRIDE_DISTROS', value: params.OVERRIDE_DISTROS),
+        booleanParam(name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE),
+        booleanParam(name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY),
+        booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS),
+        stringParam(name: 'CIPARAM_OVERRIDE_DOCKER_TAG_BUILD', value: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD),
+        booleanParam(name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG),
+        booleanParam(name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG),
+        booleanParam(name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY),
+        booleanParam(name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY),
+        booleanParam(name: 'BUILD_CLOUD_IMAGES', value: true),
+        stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+        stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
-        [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
+        booleanParam(name: 'PUBLISH_IN_MARKETPLACE', value: false),
     ];
 
     job_parameters_use_case = [
-        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
+        stringParam(name: 'USE_CASE', value: use_case),
+        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
     ];
 
     job_parameters_fips = [
-        [$class: 'StringParameterValue',  name: 'USE_CASE', value: 'fips'],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: "fips"],
+        stringParam(name: 'USE_CASE', value: 'fips'),
+        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: "fips"),
     ];
 
     job_parameters = job_parameters_common + job_parameters_use_case;
@@ -100,7 +96,7 @@ def main() {
             condition: true,
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/build-cmk-packages",
+            job: "${base_folder}/build-cmk-deliverables",
             parameters: job_parameters
         );
     }

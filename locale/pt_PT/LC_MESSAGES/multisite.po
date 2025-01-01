@@ -30489,6 +30489,10 @@ msgstr "Informações"
 msgid "Info:"
 msgstr "Informação:"
 
+#, fuzzy
+msgid "Information"
+msgstr "Informações"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -54794,6 +54798,10 @@ msgstr "Status da licença SLES"
 
 msgid "Status of the SLES subscription"
 msgstr "Status da assinatura do SLES"
+
+#, fuzzy
+msgid "Status page"
+msgstr "Mudou"
 
 msgid "Status passive checks"
 msgstr "Status de verificações passivas"
@@ -79758,14 +79766,6 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
-
-#, fuzzy
-#~ msgid "Information"
-#~ msgstr "Informações"
-
-#, fuzzy
-#~ msgid "Status page"
-#~ msgstr "Mudou"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

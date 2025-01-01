@@ -29330,6 +29330,10 @@ msgstr "インフォ"
 msgid "Info:"
 msgstr "注意:"
 
+#, fuzzy
+msgid "Information"
+msgstr "情報"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr "最近24時間のイベントおよびイベントに対するアクションに関する情報。"
@@ -53272,6 +53276,10 @@ msgstr "SLESライセンスのステータス"
 
 msgid "Status of the SLES subscription"
 msgstr "SLESサブスクリプションのステータス"
+
+#, fuzzy
+msgid "Status page"
+msgstr "変更されました"
 
 msgid "Status passive checks"
 msgstr "ステータスパッシブチェック"
@@ -77639,14 +77647,6 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
-
-#, fuzzy
-#~ msgid "Information"
-#~ msgstr "情報"
-
-#, fuzzy
-#~ msgid "Status page"
-#~ msgstr "変更されました"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

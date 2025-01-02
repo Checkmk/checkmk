@@ -5,32 +5,6 @@
 /// Runs `test-gui-e2e-f12less` for specified editions
 /// in separate builds paralelly
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import java.util.Base64
-import groovy.json.JsonSlurperClassic
-
-/// Process Gerrit comments with embedded arguments
-/// - future: allow YAML rather than JSON
-/// - future: also parse git commit message
-/// Format:
-/// start: trigger-test-gui-e2e
-/// ---
-/// {
-///   "editions": ["cse", "cee"]
-/// }
-/// ---
-///
-def arguments_from_comments() {
-    def comment_msg = new String(Base64.getDecoder().decode(env.GERRIT_EVENT_COMMENT_TEXT ?: ""));
-    currentBuild.description += "<br>Gerrit comment:<br>---<br><b>${comment_msg}</b><br>---";
-
-    def matcher = comment_msg =~ /(?s)\n---\n(.*)\n---/;
-    if (! matcher.find()) {
-        return [];
-    }
-    def arg_text = matcher.group(1);
-    currentBuild.description += "<br>Args from comment:<br>---<br><tt><b>${arg_text.replace("\n", "<br>")}</b></tt><br>---";
-    return (new groovy.json.JsonSlurperClassic()).parseText(arg_text);
-}
 
 def main() {
     /// make sure the listed parameters are set

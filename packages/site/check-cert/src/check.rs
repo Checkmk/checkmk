@@ -499,12 +499,12 @@ pub fn pretty_levels(text: &str, levels: Levels<Real>, uom: &str) -> String {
 }
 
 #[derive(Debug)]
-struct CheckView {
+struct CheckResultView {
     state: State,
     text: String,
 }
 
-impl CheckView {
+impl CheckResultView {
     fn new(state: State, text: &str) -> Self {
         Self {
             state,
@@ -513,7 +513,7 @@ impl CheckView {
     }
 }
 
-impl Display for CheckView {
+impl Display for CheckResultView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         match self.state.as_sym() {
             None => write!(f, "{}", self.text),
@@ -525,8 +525,8 @@ impl Display for CheckView {
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
-    summary: Vec<CheckView>,
-    details: Vec<CheckView>,
+    summary: Vec<CheckResultView>,
+    details: Vec<CheckResultView>,
     metrics: Vec<Metric<Real>>,
 }
 
@@ -538,10 +538,10 @@ impl Collection {
     pub fn add(&mut self, cr: CheckResult<Real>) {
         self.state = std::cmp::max(self.state, cr.state);
         if let Some(ref summary) = cr.summary {
-            self.summary.push(CheckView::new(cr.state, summary))
+            self.summary.push(CheckResultView::new(cr.state, summary))
         }
         if let Some(ref details) = cr.details.or(cr.summary) {
-            self.details.push(CheckView::new(cr.state, details))
+            self.details.push(CheckResultView::new(cr.state, details))
         }
         if let Some(ref metrics) = cr.metrics {
             self.metrics.push(metrics.clone())

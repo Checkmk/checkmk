@@ -1727,7 +1727,7 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
@@ -1769,7 +1769,7 @@ fn to_backup_entry_odbc(
         .get_value_by_name(row, "is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,

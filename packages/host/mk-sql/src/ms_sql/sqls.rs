@@ -215,8 +215,8 @@ BEGIN
                      (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120)
                      AS last_backup_date,
       cast(b.type as nvarchar(max)) as type,
-      cast(b.machine_name as nvarchar(max)),
-      isnull(rep.is_primary_replica,0) as is_primary_replica,
+      cast(b.machine_name as nvarchar(max)) as machine_name,
+      isnull(convert(nvarchar(40), rep.is_primary_replica), '''') as is_primary_replica,
       rep.is_local,
       isnull(convert(nvarchar(40), rep.replica_id), '''') AS replica_id,
       cast(db.name as nvarchar(max)) AS database_name

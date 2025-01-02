@@ -330,9 +330,9 @@ fn check_validity_not_after(
                 .value(time_to_expiration)
                 .uom("s".parse().unwrap())
                 .levels(Some(levels))
-                .build(),
-        )
-        .map(|x| Real::from(x.whole_seconds() as isize)),
+                .build()
+                .map(|x| Real::from(x.whole_seconds() as isize)),
+        ),
     })
 }
 

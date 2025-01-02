@@ -36,8 +36,8 @@ fn check_response_time(
                 .value(response_time)
                 .uom("s".parse().unwrap())
                 .levels(Some(levels))
-                .build(),
+                .build()
+                .map(|x| Real::from(x.as_secs_f64())),
         )
-        .map(|x| Real::from(x.as_secs_f64()))
     })
 }

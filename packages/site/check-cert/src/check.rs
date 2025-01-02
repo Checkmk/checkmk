@@ -9,8 +9,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 use typed_builder::TypedBuilder;
 
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq, PartialOrd))]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Real {
     Integer(isize),
     Double(f64),
@@ -450,25 +449,6 @@ where
             as_option(details),
             Some(metrics),
         )
-    }
-}
-
-impl<T> CheckResult<T>
-where
-    T: Clone + PartialOrd,
-{
-    pub fn map<F, U>(self, f: F) -> CheckResult<U>
-    where
-        F: FnMut(T) -> U,
-        F: Copy,
-        U: Clone + Default,
-    {
-        CheckResult {
-            state: self.state,
-            summary: self.summary,
-            details: self.details,
-            metrics: self.metrics.map(|m| m.map(f)),
-        }
     }
 }
 
@@ -1050,9 +1030,9 @@ mod test_from_levels_format {
             .build();
         let check = CheckResult::from_levels(
             pretty_levels("summary", levels.map(|x| x.into()), "ms"),
-            metric,
+            metric.map(Real::from),
         );
-        let check = Check::from(&mut vec![check.map(Real::from)]);
+        let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Ok);
         assert_eq!(
             format!("{}", check),
@@ -1071,9 +1051,9 @@ mod test_from_levels_format {
             .build();
         let check = CheckResult::notice_from_levels(
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
-            metric,
+            metric.map(Real::from),
         );
-        let check = Check::from(&mut vec![check.map(Real::from)]);
+        let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Ok);
         assert_eq!(
             format!("{}", check),
@@ -1092,9 +1072,9 @@ mod test_from_levels_format {
             .build();
         let check = CheckResult::notice_from_levels(
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
-            metric,
+            metric.map(Real::from),
         );
-        let check = Check::from(&mut vec![check.map(Real::from)]);
+        let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Warn);
         assert_eq!(
             format!("{}", check),
@@ -1113,9 +1093,9 @@ mod test_from_levels_format {
             .build();
         let check = CheckResult::notice_from_levels(
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
-            metric,
+            metric.map(Real::from),
         );
-        let check = Check::from(&mut vec![check.map(Real::from)]);
+        let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Crit);
         assert_eq!(
             format!("{}", check),

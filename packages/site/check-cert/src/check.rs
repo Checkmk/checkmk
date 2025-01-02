@@ -486,6 +486,18 @@ where
     }
 }
 
+pub fn pretty_levels(text: &str, levels: Levels<Real>) -> String {
+    format!(
+        "{text} (warn/crit {} {}/{})",
+        match levels.strategy {
+            LevelsStrategy::Upper => "at",
+            LevelsStrategy::Lower => "below",
+        },
+        levels.warn,
+        levels.crit,
+    )
+}
+
 #[derive(Debug)]
 enum CheckView {
     Text(State, String),
@@ -503,21 +515,14 @@ impl CheckView {
 
 impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        let levels_display = |levels: &Levels<Real>| {
-            let strategy_str = match levels.strategy {
-                LevelsStrategy::Upper => "at",
-                LevelsStrategy::Lower => "below",
-            };
-            format!("warn/crit {strategy_str} {}/{}", levels.warn, levels.crit)
-        };
         match self {
             Self::Text(state, text) => match state.as_sym() {
                 None => write!(f, "{text}"),
                 Some(sym) => write!(f, "{text} ({sym})"),
             },
-            Self::TextLevels(state, text, levels) => match state.as_sym() {
-                None => write!(f, "{text} ({})", levels_display(levels)),
-                Some(sym) => write!(f, "{text} ({}) ({sym})", levels_display(levels)),
+            Self::TextLevels(state, text, _levels) => match state.as_sym() {
+                None => write!(f, "{text}"),
+                Some(sym) => write!(f, "{text} ({sym})"),
             },
         }
     }
@@ -1042,17 +1047,21 @@ mod test_checker_format {
 
 #[cfg(test)]
 mod test_from_levels_format {
-    use super::{CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, State, Uom};
+    use super::{
+        pretty_levels, CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, State, Uom,
+    };
 
     #[test]
     fn test_check_ok() {
+        let levels = Levels::try_new(LevelsStrategy::Upper, 10, 20).unwrap();
         let metric = Metric::builder()
             .label("label")
             .value(5)
             .uom(Uom("ms".to_string()))
-            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .levels(Some(levels.clone()))
             .build();
-        let check = CheckResult::from_levels("summary", metric);
+        let check =
+            CheckResult::from_levels(pretty_levels("summary", levels.map(|x| x.into())), metric);
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Ok);
         assert_eq!(
@@ -1063,13 +1072,17 @@ mod test_from_levels_format {
 
     #[test]
     fn test_notice_ok() {
+        let levels = Levels::try_new(LevelsStrategy::Upper, 10, 20).unwrap();
         let metric = Metric::builder()
             .label("label")
             .value(5)
             .uom(Uom("ms".to_string()))
-            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .levels(Some(levels.clone()))
             .build();
-        let check = CheckResult::notice_from_levels("notice", metric);
+        let check = CheckResult::notice_from_levels(
+            pretty_levels("notice", levels.map(|x| x.into())),
+            metric,
+        );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Ok);
         assert_eq!(
@@ -1080,13 +1093,17 @@ mod test_from_levels_format {
 
     #[test]
     fn test_notice_warn() {
+        let levels = Levels::try_new(LevelsStrategy::Upper, 10, 20).unwrap();
         let metric = Metric::builder()
             .label("label")
             .value(15)
             .uom(Uom("ms".to_string()))
-            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .levels(Some(levels.clone()))
             .build();
-        let check = CheckResult::notice_from_levels("notice", metric);
+        let check = CheckResult::notice_from_levels(
+            pretty_levels("notice", levels.map(|x| x.into())),
+            metric,
+        );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
         assert_eq!(
@@ -1097,13 +1114,17 @@ mod test_from_levels_format {
 
     #[test]
     fn test_notice_crit() {
+        let levels = Levels::try_new(LevelsStrategy::Upper, 10, 20).unwrap();
         let metric = Metric::builder()
             .label("label")
             .value(50)
             .uom(Uom("ms".to_string()))
-            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .levels(Some(levels.clone()))
             .build();
-        let check = CheckResult::notice_from_levels("notice", metric);
+        let check = CheckResult::notice_from_levels(
+            pretty_levels("notice", levels.map(|x| x.into())),
+            metric,
+        );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Crit);
         assert_eq!(

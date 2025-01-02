@@ -501,15 +501,11 @@ pub fn pretty_levels(text: &str, levels: Levels<Real>) -> String {
 #[derive(Debug)]
 enum CheckView {
     Text(State, String),
-    TextLevels(State, String, Levels<Real>),
 }
 
 impl CheckView {
-    fn new(state: State, text: &str, levels: Option<Levels<Real>>) -> Self {
-        match levels {
-            None => CheckView::Text(state, text.to_string()),
-            Some(levels) => CheckView::TextLevels(state, text.to_string(), levels),
-        }
+    fn new(state: State, text: &str) -> Self {
+        CheckView::Text(state, text.to_string())
     }
 }
 
@@ -517,10 +513,6 @@ impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         match self {
             Self::Text(state, text) => match state.as_sym() {
-                None => write!(f, "{text}"),
-                Some(sym) => write!(f, "{text} ({sym})"),
-            },
-            Self::TextLevels(state, text, _levels) => match state.as_sym() {
                 None => write!(f, "{text}"),
                 Some(sym) => write!(f, "{text} ({sym})"),
             },
@@ -544,16 +536,10 @@ impl Collection {
     pub fn add(&mut self, cr: CheckResult<Real>) {
         self.state = std::cmp::max(self.state, cr.state);
         if let Some(ref summary) = cr.summary {
-            self.summary.push(match cr.metrics {
-                None => CheckView::new(cr.state, summary, None),
-                Some(ref metrics) => CheckView::new(cr.state, summary, metrics.levels.clone()),
-            })
+            self.summary.push(CheckView::new(cr.state, summary))
         }
         if let Some(ref details) = cr.details.or(cr.summary) {
-            self.details.push(match cr.metrics {
-                None => CheckView::new(cr.state, details, None),
-                Some(ref metrics) => CheckView::new(cr.state, details, metrics.levels.clone()),
-            })
+            self.details.push(CheckView::new(cr.state, details))
         }
         if let Some(ref metrics) = cr.metrics {
             self.metrics.push(metrics.clone())

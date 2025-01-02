@@ -289,10 +289,6 @@ def main() {
 
                 lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                        def build_image = docker.image("${docker_registry_no_http}/${distro}:${docker_tag}");
-                        /// we need to pull the image because `inside_container` runs `docker inspect`
-                        /// before we could have pulled the image using `--pull always`
-                        build_image.pull();
                         // For the package build we need a higher ulimit
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
@@ -300,13 +296,14 @@ def main() {
                             // supplying the registry explicitly might not be needed but it looks like image.inside() will
                             // first try to use the image without registry and only if that didn't work falls back to the
                             // fully qualified name
-                            image: build_image,
+                            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
                             args: [
                                 "--ulimit nofile=16384:32768",
                                 "-v ${checkout_dir}:${checkout_dir}:ro",
                                 "--hostname ${distro}",
                             ],
                             init: true,
+                            pull: true,
                         ) {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");

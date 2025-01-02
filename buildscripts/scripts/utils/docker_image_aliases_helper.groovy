@@ -63,6 +63,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     def image = args.image ?: docker_reference_image();
     def privileged = args.get("priviliged", false).asBoolean();
     def init = args.get("init", false).asBoolean();
+    def pull = args.get("pull", false).asBoolean();
     def mount_reference_repo = args.get("mount_reference_repo", true).asBoolean();
     def mount_credentials = args.get("mount_credentials", false).asBoolean();
     def set_docker_group_id = args.get("set_docker_group_id", false).asBoolean();
@@ -73,6 +74,10 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     // calling `image_distro()` has to be done inside `withRegistry` in order to
     // have `image.imageName()` contain the registry
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        /// we don't just use `--pull always` here, because we also need it for `image_distro()`
+        if (pull && args.image) {
+            args.image.pull();
+        }
         // We need to separate the mounts into the container distro-wise, at least for the following tools
         // - pipenv pip's wheel cache does not separate its cache in terms of platform/distro, see:
         // https://github.com/pypa/pip/issues/5453

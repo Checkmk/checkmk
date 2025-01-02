@@ -114,13 +114,6 @@ def main() {
         }
     }
 
-    stage("Pull distro image") {
-        shout("Pull distro image");
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image("${distro}:${docker_tag}").pull();
-        }
-    }
-
     stage("(lock resources)") {
         lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
             def package_name = {
@@ -131,6 +124,7 @@ def main() {
                         // if that didn't work falls back to the fully qualified name
                         inside_container(
                             image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                            pull: true,
                             args: [
                                 "--name ${container_name}",
                                 " --hostname ${distro}",

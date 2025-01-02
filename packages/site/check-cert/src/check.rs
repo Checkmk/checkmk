@@ -41,6 +41,52 @@ impl Display for Real {
     }
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum State {
+    // See also: https://docs.checkmk.com/latest/en/devel_check_plugins.html
+    #[default]
+    Ok,
+    Warn,
+    Unknown,
+    Crit,
+}
+
+impl State {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Ok => "OK",
+            Self::Warn => "WARNING",
+            Self::Crit => "CRITICAL",
+            Self::Unknown => "UNKNOWN",
+        }
+    }
+
+    fn as_sym(&self) -> Option<&'static str> {
+        match self {
+            State::Ok => None,
+            State::Warn => Some("!"),
+            State::Crit => Some("!!"),
+            State::Unknown => Some("?"),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct Uom(String);
+
+impl FromStr for Uom {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.to_string()))
+    }
+}
+
+impl Display for Uom {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.0.fmt(f)
+    }
+}
+
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Bounds<T>
@@ -155,52 +201,6 @@ where
             State::Warn
         } else {
             State::Ok
-        }
-    }
-}
-
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct Uom(String);
-
-impl FromStr for Uom {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.to_string()))
-    }
-}
-
-impl Display for Uom {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum State {
-    // See also: https://docs.checkmk.com/latest/en/devel_check_plugins.html
-    #[default]
-    Ok,
-    Warn,
-    Unknown,
-    Crit,
-}
-
-impl State {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Ok => "OK",
-            Self::Warn => "WARNING",
-            Self::Crit => "CRITICAL",
-            Self::Unknown => "UNKNOWN",
-        }
-    }
-
-    fn as_sym(&self) -> Option<&'static str> {
-        match self {
-            State::Ok => None,
-            State::Warn => Some("!"),
-            State::Crit => Some("!!"),
-            State::Unknown => Some("?"),
         }
     }
 }

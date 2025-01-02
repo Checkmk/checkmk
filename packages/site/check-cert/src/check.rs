@@ -523,14 +523,14 @@ impl Display for CheckResultView {
 }
 
 #[derive(Debug, Default)]
-pub struct Collection {
+pub struct Check {
     state: State,
     summary: Vec<CheckResultView>,
     details: Vec<CheckResultView>,
     metrics: Vec<Metric<Real>>,
 }
 
-impl Collection {
+impl Check {
     pub fn new() -> Self {
         Self::default()
     }
@@ -556,7 +556,7 @@ impl Collection {
     }
 }
 
-impl Display for Collection {
+impl Display for Check {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         let summary = self
             .summary
@@ -598,27 +598,27 @@ impl Display for Collection {
     }
 }
 
-impl From<SimpleCheckResult> for Collection {
+impl From<SimpleCheckResult> for Check {
     fn from(check_result: SimpleCheckResult) -> Self {
-        let mut out = Collection::new();
+        let mut out = Check::new();
         out.add(check_result.into());
         out
     }
 }
 
-impl From<&mut Vec<CheckResult<Real>>> for Collection {
+impl From<&mut Vec<CheckResult<Real>>> for Check {
     fn from(check_results: &mut Vec<CheckResult<Real>>) -> Self {
         check_results
             .drain(..)
-            .fold(Collection::default(), |mut out, cr| {
+            .fold(Check::default(), |mut out, cr| {
                 out.add(cr);
                 out
             })
     }
 }
 
-pub fn exit_code(collection: &Collection) -> i32 {
-    match collection.state {
+pub fn exit_code(check: &Check) -> i32 {
+    match check.state {
         State::Ok => 0,
         State::Warn => 1,
         State::Crit => 2,
@@ -627,13 +627,13 @@ pub fn exit_code(collection: &Collection) -> i32 {
 }
 
 pub fn bail_out(message: impl Into<String>) -> ! {
-    let out = Collection::from(SimpleCheckResult::unknown(message));
+    let out = Check::from(SimpleCheckResult::unknown(message));
     println!("{}", out);
     std::process::exit(exit_code(&out))
 }
 
 pub fn abort(message: impl Into<String>) -> ! {
-    let out = Collection::from(SimpleCheckResult::crit(message));
+    let out = Check::from(SimpleCheckResult::crit(message));
     println!("{}", out);
     std::process::exit(exit_code(&out))
 }
@@ -790,7 +790,7 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_checker_format {
-    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult, State};
+    use super::{Check, CheckResult, Metric, Real, SimpleCheckResult, State};
 
     #[test]
     fn test_with_empty_str() {
@@ -810,37 +810,37 @@ mod test_checker_format {
 
     #[test]
     fn test_single_check_result_ok() {
-        let coll = Collection::from(SimpleCheckResult::ok("summary"));
-        assert_eq!(coll.state, State::Ok);
-        assert_eq!(format!("{}", coll), "summary\nsummary");
+        let check = Check::from(SimpleCheckResult::ok("summary"));
+        assert_eq!(check.state, State::Ok);
+        assert_eq!(format!("{}", check), "summary\nsummary");
     }
 
     #[test]
     fn test_single_check_result_warn() {
-        let coll = Collection::from(SimpleCheckResult::warn("summary"));
-        assert_eq!(coll.state, State::Warn);
-        assert_eq!(format!("{}", coll), "summary (!)\nsummary (!)");
+        let check = Check::from(SimpleCheckResult::warn("summary"));
+        assert_eq!(check.state, State::Warn);
+        assert_eq!(format!("{}", check), "summary (!)\nsummary (!)");
     }
 
     #[test]
     fn test_single_check_result_crit() {
-        let coll = Collection::from(SimpleCheckResult::crit("summary"));
-        assert_eq!(coll.state, State::Crit);
-        assert_eq!(format!("{}", coll), "summary (!!)\nsummary (!!)");
+        let check = Check::from(SimpleCheckResult::crit("summary"));
+        assert_eq!(check.state, State::Crit);
+        assert_eq!(format!("{}", check), "summary (!!)\nsummary (!!)");
     }
 
     #[test]
     fn test_single_check_result_unknown() {
-        let coll = Collection::from(SimpleCheckResult::unknown("summary"));
-        assert_eq!(coll.state, State::Unknown);
-        assert_eq!(format!("{}", coll), "summary (?)\nsummary (?)");
+        let check = Check::from(SimpleCheckResult::unknown("summary"));
+        assert_eq!(check.state, State::Unknown);
+        assert_eq!(format!("{}", check), "summary (?)\nsummary (?)");
     }
 
     #[test]
     fn test_no_check_results_is_ok() {
-        let coll = Collection::from(&mut vec![]);
-        assert_eq!(coll.state, State::Ok);
-        assert_eq!(format!("{}", coll), "OK");
+        let check = Check::from(&mut vec![]);
+        assert_eq!(check.state, State::Ok);
+        assert_eq!(format!("{}", check), "OK");
     }
 
     #[test]
@@ -848,9 +848,9 @@ mod test_checker_format {
         let cr1 = SimpleCheckResult::default();
         let cr2 = SimpleCheckResult::default();
         let cr3 = SimpleCheckResult::default();
-        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
-        assert_eq!(coll.state, State::Ok);
-        assert_eq!(format!("{}", coll), "OK");
+        let check = Check::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(check.state, State::Ok);
+        assert_eq!(format!("{}", check), "OK");
     }
 
     #[test]
@@ -858,10 +858,10 @@ mod test_checker_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::ok("summary 2");
         let cr3 = SimpleCheckResult::ok("summary 3");
-        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
-        assert_eq!(coll.state, State::Ok);
+        let check = Check::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(check.state, State::Ok);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2, summary 3\n\
             summary 1\n\
             summary 2\n\
@@ -874,10 +874,10 @@ mod test_checker_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::ok("summary 3");
-        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
-        assert_eq!(coll.state, State::Warn);
+        let check = Check::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(check.state, State::Warn);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2 (!), summary 3\n\
             summary 1\n\
             summary 2 (!)\n\
@@ -890,10 +890,10 @@ mod test_checker_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
-        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2 (!), summary 3 (!!)\n\
             summary 1\n\
             summary 2 (!)\n\
@@ -907,10 +907,10 @@ mod test_checker_format {
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         let cr4 = SimpleCheckResult::unknown("summary 4");
-        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()]);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()]);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)\n\
             summary 1\n\
             summary 2 (!)\n\
@@ -927,15 +927,15 @@ mod test_checker_format {
     }
 
     #[test]
-    fn test_collection_with_metrics() {
+    fn test_check_with_metrics() {
         let cr1 = CheckResult::ok("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
-        let coll = Collection::from(&mut vec);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;\n\
             summary 1\n\
             summary 2 (!)\n\
@@ -945,24 +945,24 @@ mod test_checker_format {
     }
 
     #[test]
-    fn test_joined_collection_with_metrics() {
-        let mut coll = Collection::default();
-        coll.join(&mut Collection::from(&mut vec![CheckResult::ok(
+    fn test_joined_check_with_metrics() {
+        let mut check = Check::default();
+        check.join(&mut Check::from(&mut vec![CheckResult::ok(
             "summary 1",
             m("m1", 13),
         )]));
-        coll.join(&mut Collection::from(&mut vec![CheckResult::warn(
+        check.join(&mut Check::from(&mut vec![CheckResult::warn(
             "summary 2",
             m("m2", 37),
         )]));
-        coll.join(&mut Collection::from(&mut vec![CheckResult::crit(
+        check.join(&mut Check::from(&mut vec![CheckResult::crit(
             "summary 3",
             m("m3", 42),
         )]));
-        let coll = coll;
-        assert_eq!(coll.state, State::Crit);
+        let check = check;
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;\n\
             summary 1\n\
             summary 2 (!)\n\
@@ -971,20 +971,20 @@ mod test_checker_format {
     }
 
     #[test]
-    fn test_collection_with_details() {
+    fn test_check_with_details() {
         let cr_ok = SimpleCheckResult::ok_with_details("summary ok", "details ok");
         let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn = SimpleCheckResult::warn_with_details("summary warn", "details warn");
         let cr_crit = SimpleCheckResult::crit_with_details("summary crit", "details crit");
-        let coll = Collection::from(&mut vec![
+        let check = Check::from(&mut vec![
             cr_ok.into(),
             cr_notice.into(),
             cr_warn.into(),
             cr_crit.into(),
         ]);
-        assert_eq!(coll.state, State::Crit);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary ok, summary warn (!), summary crit (!!)\n\
             details ok\n\
             notice\n\
@@ -994,17 +994,17 @@ mod test_checker_format {
     }
 
     #[test]
-    fn test_collection_with_metrics_and_details() {
+    fn test_check_with_metrics_and_details() {
         let cr_ok = SimpleCheckResult::ok("summary ok");
         let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn =
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit =
             CheckResult::crit_with_details("summary crit", "details crit", m("mcrit", 37));
-        let coll = Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             summary ok\n\
             notice\n\
@@ -1014,16 +1014,16 @@ mod test_checker_format {
     }
 
     #[test]
-    fn test_collection_with_heterogeneous_details() {
+    fn test_check_with_heterogeneous_details() {
         let cr_ok = SimpleCheckResult::ok("summary ok");
         let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn =
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit = CheckResult::crit("summary crit", m("mcrit", 37));
-        let coll = Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             summary ok\n\
             notice\n\
@@ -1036,7 +1036,7 @@ mod test_checker_format {
 #[cfg(test)]
 mod test_from_levels_format {
     use super::{
-        pretty_levels, CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, State, Uom,
+        pretty_levels, Check, CheckResult, Levels, LevelsStrategy, Metric, Real, State, Uom,
     };
 
     #[test]
@@ -1052,10 +1052,10 @@ mod test_from_levels_format {
             pretty_levels("summary", levels.map(|x| x.into()), "ms"),
             metric,
         );
-        let coll = Collection::from(&mut vec![check.map(Real::from)]);
-        assert_eq!(coll.state, State::Ok);
+        let check = Check::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(check.state, State::Ok);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "summary (warn/crit at 10 ms/20 ms) | label=5ms;10;20;;\nsummary (warn/crit at 10 ms/20 ms)"
         );
     }
@@ -1073,10 +1073,10 @@ mod test_from_levels_format {
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
-        let coll = Collection::from(&mut vec![check.map(Real::from)]);
-        assert_eq!(coll.state, State::Ok);
+        let check = Check::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(check.state, State::Ok);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "OK | label=5ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms)"
         );
     }
@@ -1094,10 +1094,10 @@ mod test_from_levels_format {
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
-        let coll = Collection::from(&mut vec![check.map(Real::from)]);
-        assert_eq!(coll.state, State::Warn);
+        let check = Check::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(check.state, State::Warn);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "notice (warn/crit at 10 ms/20 ms) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms) (!)"
         );
     }
@@ -1115,10 +1115,10 @@ mod test_from_levels_format {
             pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
-        let coll = Collection::from(&mut vec![check.map(Real::from)]);
-        assert_eq!(coll.state, State::Crit);
+        let check = Check::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(check.state, State::Crit);
         assert_eq!(
-            format!("{}", coll),
+            format!("{}", check),
             "notice (warn/crit at 10 ms/20 ms) (!!) | label=50ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms) (!!)"
         );
     }

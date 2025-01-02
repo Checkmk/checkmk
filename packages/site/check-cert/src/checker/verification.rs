@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{Collection, SimpleCheckResult};
+use crate::check::{Check, SimpleCheckResult};
 use typed_builder::TypedBuilder;
 
 mod verify {
@@ -51,10 +51,10 @@ pub struct Config<'a> {
     allow_self_signed: bool,
 }
 
-pub fn check(chain: &[Vec<u8>], config: Config) -> Collection {
+pub fn check(chain: &[Vec<u8>], config: Config) -> Check {
     assert!(!chain.is_empty());
 
-    Collection::from(check_verify_chain(
+    Check::from(check_verify_chain(
         chain,
         config.trust_store,
         config.allow_self_signed,

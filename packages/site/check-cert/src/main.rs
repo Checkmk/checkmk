@@ -223,20 +223,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::str::from_utf8(&to_pem(&chain[0])).expect("valid utf8")
     ));
     info(" 1/3 - check fetching process");
-    let mut collection = info::collect(
+    let mut check = info::collect(
         InfoConfig::builder()
             .server(&args.url)
             .port(args.port)
             .build(),
     );
-    collection.join(&mut fetcher_check::check(
+    check.join(&mut fetcher_check::check(
         elapsed,
         FetcherChecks::builder()
             .response_time(Some(response_time))
             .build(),
     ));
     info(" 2/3 - verify certificate with trust store");
-    collection.join(&mut verification::check(
+    check.join(&mut verification::check(
         &chain,
         VerifChecks::builder()
             .trust_store(&trust_store)
@@ -244,7 +244,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
     info(" 3/3 - check certificate");
-    collection.join(&mut certificate::check(
+    check.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
             .serial(args.serial)
@@ -266,6 +266,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
     info("check certificate... done");
 
-    println!("{}", collection);
-    std::process::exit(check::exit_code(&collection))
+    println!("{}", check);
+    std::process::exit(check::exit_code(&check))
 }

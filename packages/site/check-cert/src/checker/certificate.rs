@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, pretty_levels, CheckResult, Collection, Levels, Metric, Real, SimpleCheckResult,
+    self, pretty_levels, Check, CheckResult, Levels, Metric, Real, SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -69,7 +69,7 @@ fn format_oid(oid: &oid_registry::Oid) -> String {
     }
 }
 
-pub fn check(der: &[u8], config: Config) -> Collection {
+pub fn check(der: &[u8], config: Config) -> Check {
     let cert = match X509Certificate::from_der(der) {
         Ok((_rem, cert)) => cert,
         Err(_) => check::abort("Failed to parse certificate"),
@@ -78,7 +78,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
     let subject_cn = first_of(&mut cert.subject().iter_common_name());
     let issuer_cn = first_of(&mut cert.issuer().iter_common_name());
 
-    Collection::from(&mut unwrap_into!(
+    Check::from(&mut unwrap_into!(
         Some(check_subject_cn(subject_cn, config.subject_cn)),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {

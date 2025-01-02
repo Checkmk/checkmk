@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{pretty_levels, CheckResult, Collection, Levels, Metric, Real};
+use crate::check::{pretty_levels, Check, CheckResult, Levels, Metric, Real};
 use std::time::Duration;
 use typed_builder::TypedBuilder;
 
@@ -12,8 +12,8 @@ pub struct Config {
     response_time: Option<Levels<Duration>>,
 }
 
-pub fn check(response_time: Duration, config: Config) -> Collection {
-    Collection::from(&mut vec![check_response_time(
+pub fn check(response_time: Duration, config: Config) -> Check {
+    Check::from(&mut vec![check_response_time(
         response_time,
         config.response_time,
     )

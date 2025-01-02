@@ -85,7 +85,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Subject O";
             let value = first_of(&mut cert.subject().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -97,7 +97,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Subject OU";
             let value = first_of(&mut cert.subject().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -111,7 +111,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer O";
             let value = first_of(&mut cert.issuer().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -123,7 +123,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer OU";
             let value = first_of(&mut cert.issuer().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -135,7 +135,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer ST";
             let value = first_of(&mut cert.issuer().iter_state_or_province());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -147,7 +147,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer C";
             let value = first_of(&mut cert.issuer().iter_country());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -159,7 +159,7 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Certificate signature algorithm";
             let value = &cert.signature_algorithm.algorithm;
             if expected == value.to_string() {
-                SimpleCheckResult::notice(format!("{name}: {}", format_oid(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&format_oid(value))))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} ({value}) but expected {expected}",
@@ -195,7 +195,7 @@ fn check_subject_cn(subject_cn: &str, expected: Option<String>) -> SimpleCheckRe
         SimpleCheckResult::ok(format!("{name}: {subject_cn}")),
         |expected| {
             if expected == subject_cn {
-                SimpleCheckResult::ok(format!("{name}: {subject_cn}"))
+                SimpleCheckResult::ok(format!("{name}: {}", handle_empty(subject_cn)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
@@ -208,7 +208,7 @@ fn check_subject_cn(subject_cn: &str, expected: Option<String>) -> SimpleCheckRe
 
 fn check_issuer_cn(issuer_cn: &str, expected: Option<String>) -> SimpleCheckResult {
     let name = "Issuer CN";
-    let details = format!("{name}: {issuer_cn}");
+    let details = format!("{name}: {}", handle_empty(issuer_cn));
     expected.map_or(SimpleCheckResult::notice(&details), |expected| {
         if expected == issuer_cn {
             SimpleCheckResult::notice(&details)

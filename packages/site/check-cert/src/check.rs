@@ -486,9 +486,9 @@ where
     }
 }
 
-pub fn pretty_levels(text: &str, levels: Levels<Real>) -> String {
+pub fn pretty_levels(text: &str, levels: Levels<Real>, uom: &str) -> String {
     format!(
-        "{text} (warn/crit {} {}/{})",
+        "{text} (warn/crit {} {} {uom}/{} {uom})",
         match levels.strategy {
             LevelsStrategy::Upper => "at",
             LevelsStrategy::Lower => "below",
@@ -1048,13 +1048,15 @@ mod test_from_levels_format {
             .uom(Uom("ms".to_string()))
             .levels(Some(levels.clone()))
             .build();
-        let check =
-            CheckResult::from_levels(pretty_levels("summary", levels.map(|x| x.into())), metric);
+        let check = CheckResult::from_levels(
+            pretty_levels("summary", levels.map(|x| x.into()), "ms"),
+            metric,
+        );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Ok);
         assert_eq!(
             format!("{}", coll),
-            "summary (warn/crit at 10/20) | label=5ms;10;20;;\nsummary (warn/crit at 10/20)"
+            "summary (warn/crit at 10 ms/20 ms) | label=5ms;10;20;;\nsummary (warn/crit at 10 ms/20 ms)"
         );
     }
 
@@ -1068,14 +1070,14 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into())),
+            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Ok);
         assert_eq!(
             format!("{}", coll),
-            "OK | label=5ms;10;20;;\nnotice (warn/crit at 10/20)"
+            "OK | label=5ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms)"
         );
     }
 
@@ -1089,14 +1091,14 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into())),
+            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
         assert_eq!(
             format!("{}", coll),
-            "notice (warn/crit at 10/20) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10/20) (!)"
+            "notice (warn/crit at 10 ms/20 ms) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms) (!)"
         );
     }
 
@@ -1110,14 +1112,14 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into())),
+            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
             metric,
         );
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "notice (warn/crit at 10/20) (!!) | label=50ms;10;20;;\nnotice (warn/crit at 10/20) (!!)"
+            "notice (warn/crit at 10 ms/20 ms) (!!) | label=50ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms) (!!)"
         );
     }
 }

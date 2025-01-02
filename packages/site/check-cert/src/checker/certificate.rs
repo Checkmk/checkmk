@@ -2,7 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{self, CheckResult, Collection, Levels, Metric, Real, SimpleCheckResult};
+use crate::check::{
+    self, pretty_levels, CheckResult, Collection, Levels, Metric, Real, SimpleCheckResult,
+};
 use std::collections::HashSet;
 use std::convert::AsRef;
 use time::Duration;
@@ -315,9 +317,13 @@ fn check_validity_not_after(
     levels.map(|levels| match time_to_expiration {
         None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
         Some(time_to_expiration) => CheckResult::from_levels(
-            format!(
-                "Server certificate validity: {} day(s)",
-                time_to_expiration.whole_days(),
+            pretty_levels(
+                &format!(
+                    "Server certificate validity: {} day(s)",
+                    time_to_expiration.whole_days(),
+                ),
+                levels.clone().map(|x| Real::from(x.whole_days() as isize)),
+                "day(s)",
             ),
             Metric::builder()
                 .label("certificate_remaining_validity")

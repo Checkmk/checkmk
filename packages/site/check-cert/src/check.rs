@@ -499,23 +499,25 @@ pub fn pretty_levels(text: &str, levels: Levels<Real>) -> String {
 }
 
 #[derive(Debug)]
-enum CheckView {
-    Text(State, String),
+struct CheckView {
+    state: State,
+    text: String,
 }
 
 impl CheckView {
     fn new(state: State, text: &str) -> Self {
-        CheckView::Text(state, text.to_string())
+        Self {
+            state,
+            text: text.to_string(),
+        }
     }
 }
 
 impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        match self {
-            Self::Text(state, text) => match state.as_sym() {
-                None => write!(f, "{text}"),
-                Some(sym) => write!(f, "{text} ({sym})"),
-            },
+        match self.state.as_sym() {
+            None => write!(f, "{}", self.text),
+            Some(sym) => write!(f, "{} ({sym})", self.text),
         }
     }
 }

@@ -9,24 +9,6 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def smart_build(Map args) {
-    def build_instance = build(args + [propagate: false]);
-    def result = build_instance.getResult();
-    currentBuild.description += """\
-        <br>triggered <b><a href=${build_instance.getAbsoluteUrl()}>
-        ${build_instance.getFullProjectName()}
-        ${build_instance.getDisplayName()}
-        <strong style='color:${result=="SUCCESS" ? "green":"red"}'>${build_instance.getResult()}</strong>
-        </a></b>
-    """.stripIndent();
-    if (result != "SUCCESS") {
-        if (result == "UNSTABLE") {
-            unstable("Build was unstable: ${build_instance.getAbsoluteUrl()}");
-        }
-        error("Build ${build_instance.getAbsoluteUrl()}: ${result}");
-    }
-    return build_instance;
-}
 
 /// Builds all artifacts used for a given Checkmk edition
 def main() {

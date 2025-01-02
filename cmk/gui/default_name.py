@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 
 
@@ -16,3 +17,9 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
         if suggestion not in used_names_set:
             return suggestion
         nr += 1
+
+
+def unique_clone_increment_suggestion(to_clone: str, used_names: Iterable[str]) -> str:
+    template = re.sub("_[0-9]{1,}$", "", to_clone)
+
+    return unique_default_name_suggestion(template=template, used_names=used_names)

@@ -17,14 +17,13 @@ pub fn check(response_time: Duration, config: Config) -> Collection {
         response_time,
         config.response_time,
     )
-    .unwrap_or_default()
-    .map(|x| Real::from(x.as_secs_f64()))])
+    .unwrap_or_default()])
 }
 
 fn check_response_time(
     response_time: Duration,
     levels: Option<Levels<Duration>>,
-) -> Option<CheckResult<Duration>> {
+) -> Option<CheckResult<Real>> {
     levels.map(|levels| {
         CheckResult::notice_from_levels(
             format!("Response time: {} ms", response_time.as_millis()),
@@ -35,5 +34,6 @@ fn check_response_time(
                 .levels(Some(levels))
                 .build(),
         )
+        .map(|x| Real::from(x.as_secs_f64()))
     })
 }

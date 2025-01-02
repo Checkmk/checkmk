@@ -171,8 +171,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             cert.validity().time_to_expiration(),
             config.not_after,
             cert.validity().not_after,
-        )
-        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_seconds() as isize))),
+        ),
         check_max_validity(cert.validity(), config.max_validity),
     ))
 }
@@ -312,7 +311,7 @@ fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
     levels: Option<Levels<Duration>>,
     not_after: ASN1Time,
-) -> Option<CheckResult<Duration>> {
+) -> Option<CheckResult<Real>> {
     levels.map(|levels| match time_to_expiration {
         None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
         Some(time_to_expiration) => CheckResult::from_levels(
@@ -326,7 +325,8 @@ fn check_validity_not_after(
                 .uom("s".parse().unwrap())
                 .levels(Some(levels))
                 .build(),
-        ),
+        )
+        .map(|x| Real::from(x.whole_seconds() as isize)),
     })
 }
 

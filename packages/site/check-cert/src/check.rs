@@ -155,22 +155,6 @@ pub struct Levels<T> {
     crit: T,
 }
 
-impl<T> Display for Levels<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(
-            f,
-            "{}",
-            match self.strategy {
-                LevelsStrategy::Upper => format!("warn/crit at {}/{}", self.warn, self.crit),
-                LevelsStrategy::Lower => format!("warn/crit below {}/{}", self.warn, self.crit),
-            }
-        )
-    }
-}
-
 impl<T> Levels<T>
 where
     T: Clone + PartialOrd,
@@ -519,14 +503,21 @@ impl CheckView {
 
 impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        let levels_display = |levels: &Levels<Real>| {
+            let strategy_str = match levels.strategy {
+                LevelsStrategy::Upper => "at",
+                LevelsStrategy::Lower => "below",
+            };
+            format!("warn/crit {strategy_str} {}/{}", levels.warn, levels.crit)
+        };
         match self {
             Self::Text(state, text) => match state.as_sym() {
-                None => write!(f, "{}", text),
-                Some(sym) => write!(f, "{} ({})", text, sym),
+                None => write!(f, "{text}"),
+                Some(sym) => write!(f, "{text} ({sym})"),
             },
             Self::TextLevels(state, text, levels) => match state.as_sym() {
-                None => write!(f, "{} ({})", text, levels),
-                Some(sym) => write!(f, "{} ({}) ({})", text, levels, sym),
+                None => write!(f, "{text} ({})", levels_display(levels)),
+                Some(sym) => write!(f, "{text} ({}) ({sym})", levels_display(levels)),
             },
         }
     }

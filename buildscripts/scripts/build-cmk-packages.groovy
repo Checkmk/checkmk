@@ -136,22 +136,6 @@ def main() {
         }
     }
 
-    /// NOTE: the images referenced in the next step can only be considered
-    ///       up to date if the same node is being used as for the
-    ///       `build-build-images` job. For some reasons we can't just pull the
-    ///       latest image though, see
-    ///       https://review.lan.tribe29.com/c/check_mk/+/34634
-    ///       Anyway this whole upload/download mayhem hopfully evaporates with
-    ///       bazel..
-    shout("pull build images");
-    stage("Pull build images") {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            distros.each { distro ->
-                docker.image("${distro}:${docker_tag}").pull();
-            }
-        }
-    }
-
     shout("agents");
 
     def win_project_name_id = -1;
@@ -305,6 +289,10 @@ def main() {
 
                 lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                        def build_image = docker.image("${docker_registry_no_http}/${distro}:${docker_tag}");
+                        /// we need to pull the image because `inside_container` runs `docker inspect`
+                        /// before we could have pulled the image using `--pull always`
+                        build_image.pull();
                         // For the package build we need a higher ulimit
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
@@ -312,7 +300,7 @@ def main() {
                             // supplying the registry explicitly might not be needed but it looks like image.inside() will
                             // first try to use the image without registry and only if that didn't work falls back to the
                             // fully qualified name
-                            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                            image: build_image,
                             args: [
                                 "--ulimit nofile=16384:32768",
                                 "-v ${checkout_dir}:${checkout_dir}:ro",

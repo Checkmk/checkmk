@@ -2,8 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::convert::identity;
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::mem;
+use std::ops::Deref;
 use std::str::FromStr;
 use typed_builder::TypedBuilder;
 
@@ -78,6 +80,13 @@ impl FromStr for Uom {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self(s.to_string()))
+    }
+}
+
+impl Deref for Uom {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -252,9 +261,7 @@ where
             "{}={}{};{};{};{};{}",
             self.label,
             self.value,
-            self.uom
-                .as_ref()
-                .map_or(Default::default(), ToString::to_string),
+            self.uom.as_ref().map_or(&Default::default(), identity),
             self.levels
                 .as_ref()
                 .map_or(Default::default(), |v| v.warn.to_string()),

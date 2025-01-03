@@ -17,8 +17,10 @@ from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
     continue_per_users_choice,
+    disable_incomp_mkp,
     get_installer_and_package_map,
     get_path_config,
+    PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -37,19 +39,33 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         # In this case we have no mkp plugins available so bail out early
         if path_config is None:
             return
-        _installer, package_map = get_installer_and_package_map(path_config)
-        inactive_files = self._get_files()
-        if inactive_files:
-            for path in inactive_files:
-                package_id = package_map.get(path.resolve())
-                logger.error(_error_message_obsolete_file(path, package_id))
+        installer, package_map = get_installer_and_package_map(path_config)
+        # group the local_agent_based_plugins_dir files by package
+        grouped_files: dict[PackageID, list[Path]] = {}
+        inactive_files_not_in_package = []
+        for path in self._get_files():
+            if (package_id := package_map.get(path.resolve())) is not None:
+                grouped_files.setdefault(package_id, []).append(path)
+            else:
+                inactive_files_not_in_package.append(path)
+
+        if inactive_files_not_in_package:
+            _log_error_message_obsolete_files(logger, inactive_files_not_in_package)
             logger.error(
-                "The file(s) residing in `local/lib/check_mk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
+                "The above file(s) are not associated with any MKP and can thus not be removed automatically. "
                 "You must manually remove them in order to suppress future warnings."
             )
-            logger.error("See: %s\n", werk_reference_url(WerkReference.DECOMMISSION_V1_API))
             if not _continue_per_users_choice(conflict_mode):
                 raise MKUserError(None, "decommissioned file(s)")
+
+        for package_id, paths in grouped_files.items():
+            _log_error_message_obsolete_files(logger, paths)
+            logger.error(
+                f"The above file(s) are part of the extension package {package_id.name} {package_id.version}."
+            )
+            if disable_incomp_mkp(conflict_mode, package_id, installer, PACKAGE_STORE, path_config):
+                continue
+            raise MKUserError(None, "incompatible extension package")
 
 
 def _continue_per_users_choice(conflict_mode: ConflictMode) -> bool:
@@ -60,9 +76,13 @@ def _continue_per_users_choice(conflict_mode: ConflictMode) -> bool:
     )
 
 
-def _error_message_obsolete_file(path: Path, package_id: PackageID | None) -> str:
-    hint = "" if package_id is None else f"of package {package_id.name} [{package_id.version}] "
-    return f"Obsolete file: '{path}' {hint}"
+def _log_error_message_obsolete_files(logger: Logger, paths: Sequence[Path]) -> None:
+    for path in paths:
+        logger.error(f"Obsolete file: '{path}'")
+    logger.error(
+        "The file(s) residing in `local/lib/check_mk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
+    )
+    logger.error("See: %s", werk_reference_url(WerkReference.DECOMMISSION_V1_API))
 
 
 pre_update_action_registry.register(

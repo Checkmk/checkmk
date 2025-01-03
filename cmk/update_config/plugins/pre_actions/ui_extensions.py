@@ -21,6 +21,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     continue_on_incomp_local_file,
     disable_incomp_mkp,
     error_message_incomp_local_file,
+    error_message_incomp_package,
     get_installer_and_package_map,
     get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
@@ -61,17 +62,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
             if package_id in disabled_packages:
                 continue  # already dealt with
 
-            if disable_incomp_mkp(
-                logger,
-                conflict_mode,
-                module_name,
-                error,
-                package_id,
-                installer,
-                package_store,
-                path_config,
-                path,
-            ):
+            logger.error(error_message_incomp_package(path, package_id, error))
+            if disable_incomp_mkp(conflict_mode, package_id, installer, package_store, path_config):
                 disabled_packages.add(package_id)
                 remove_failed_plugin(path)
                 continue

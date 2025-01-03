@@ -6,7 +6,6 @@
 import enum
 import sys
 from collections.abc import Callable, Sequence
-from logging import Logger
 from pathlib import Path
 from termios import tcflush, TCIFLUSH
 from typing import Final
@@ -96,17 +95,12 @@ USER_INPUT_DISABLE: Final = ("d", "disable")
 
 
 def disable_incomp_mkp(
-    logger: Logger,
     conflict_mode: ConflictMode,
-    module_name: str,
-    error: BaseException,
     package_id: PackageID,
     installer: Installer,
     package_store: PackageStore,
     path_config: PathConfig,
-    path: Path,
 ) -> bool:
-    logger.error(error_message_incomp_package(path, package_id, error))
     if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
         conflict_mode is ConflictMode.ASK
         and _request_user_input_on_incompatible_file().lower() in USER_INPUT_DISABLE

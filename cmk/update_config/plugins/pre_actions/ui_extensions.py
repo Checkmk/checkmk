@@ -47,7 +47,6 @@ class PreUpdateUIExtensions(PreUpdateAction):
         # no ui stuff to update
         if path_config is None:
             return
-        package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()
         for path, _gui_part, module_name, error in get_failed_plugins():
@@ -63,7 +62,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 continue  # already dealt with
 
             logger.error(error_message_incomp_package(path, package_id, error))
-            if disable_incomp_mkp(conflict_mode, package_id, installer, package_store, path_config):
+            if disable_incomp_mkp(conflict_mode, package_id, installer, PACKAGE_STORE, path_config):
                 disabled_packages.add(package_id)
                 remove_failed_plugin(path)
                 continue

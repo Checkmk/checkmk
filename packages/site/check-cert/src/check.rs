@@ -502,12 +502,57 @@ impl Display for CheckResultView {
     }
 }
 
+#[derive(Debug)]
+struct DetailsView(CheckResultView);
+
+impl DetailsView {
+    fn new(state: State, text: &str) -> Self {
+        Self(CheckResultView::new(state, text))
+    }
+}
+
+impl Display for DetailsView {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.0.fmt(f)
+    }
+}
+
+#[derive(Debug)]
+struct SummaryView(CheckResultView);
+
+impl SummaryView {
+    fn new(state: State, text: &str) -> Self {
+        Self(CheckResultView::new(state, text))
+    }
+}
+
+impl Display for SummaryView {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.0.fmt(f)
+    }
+}
+
+#[derive(Debug)]
+struct MetricView(Metric<Real>);
+
+impl MetricView {
+    fn new(m: &Metric<Real>) -> Self {
+        Self(m.clone())
+    }
+}
+
+impl Display for MetricView {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.0.fmt(f)
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Check {
     state: State,
-    summary: Vec<CheckResultView>,
-    details: Vec<CheckResultView>,
-    metrics: Vec<Metric<Real>>,
+    summary: Vec<SummaryView>,
+    details: Vec<DetailsView>,
+    metrics: Vec<MetricView>,
 }
 
 impl Check {
@@ -518,13 +563,13 @@ impl Check {
     pub fn add(&mut self, cr: CheckResult<Real>) {
         self.state = std::cmp::max(self.state, cr.state);
         if let Some(ref summary) = cr.summary {
-            self.summary.push(CheckResultView::new(cr.state, summary))
+            self.summary.push(SummaryView::new(cr.state, summary))
         }
         if let Some(ref details) = cr.details.or(cr.summary) {
-            self.details.push(CheckResultView::new(cr.state, details))
+            self.details.push(DetailsView::new(cr.state, details))
         }
         if let Some(ref metrics) = cr.metrics {
-            self.metrics.push(metrics.clone())
+            self.metrics.push(MetricView::new(metrics))
         }
     }
 

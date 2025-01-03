@@ -2,7 +2,7 @@
 
 /// file: test-integration-packages.groovy
 
-/// Run integration tests for the Checkmk Docker image
+/// Run integration tests for the checkmk OS packages
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 

@@ -44,17 +44,18 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 package_id = package_map.get(path.resolve())
                 logger.error(_error_message_obsolete_file(path, package_id))
             logger.error(
-                "Found obsolete files. These files are disabled by updating to the new version."
+                "The file(s) residing in `local/lib/check_mk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
+                "You must manually remove them in order to suppress future warnings."
             )
             logger.error("See: %s\n", werk_reference_url(WerkReference.DECOMMISSION_V1_API))
             if not _continue_per_users_choice(conflict_mode):
-                raise MKUserError(None, "decommissioned files")
+                raise MKUserError(None, "decommissioned file(s)")
 
 
 def _continue_per_users_choice(conflict_mode: ConflictMode) -> bool:
     return continue_per_users_choice(
         conflict_mode,
-        "You can abort the update process (A) and remove the file(s) or continue the update (c).\n\n"
+        "You can abort the update process (A) or continue the update (c).\n"
         "Abort the update process? [A/c] \n",
     )
 

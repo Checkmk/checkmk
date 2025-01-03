@@ -4,10 +4,6 @@
 
 /// Run composition tests
 
-/// Jenkins artifacts: ???
-/// Other artifacts: ???
-/// Depends on: ???
-
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
@@ -27,8 +23,11 @@ def main() {
     def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
     def all_distros = versioning.get_distros(override: "all");
-    def distros_under_test = versioning.get_distros(edition: EDITION, use_case: use_case, override: OVERRIDE_DISTROS);
-
+    def selected_distros = versioning.get_distros(
+        edition: EDITION,
+        use_case: use_case,
+        override: OVERRIDE_DISTROS
+    );
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
@@ -46,76 +45,66 @@ def main() {
         |Run composition tests for<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
-        |distros: ${distros_under_test}<br>
+        |selected_distros: ${selected_distros}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |distros:...................│${distros_under_test}│
+        |selected_distros:........  │${selected_distros}│
         |branch_name:.............. │${branch_name}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |safe_branch_name:........  │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
-        |docker_tag:............... │${docker_tag}│
-        |checkout_dir:............. │${checkout_dir}│
+        |docker_tag:..............  │${docker_tag}│
         |===================================================
         """.stripMargin());
 
-    def build_for_parallel = [:];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
     def relative_job_name = "${base_folder}/builders/test-composition-single-f12less";
 
-    all_distros.each { item ->
-        def distro = item;
-        def stepName = "Composition test for ${distro}";
+    /// avoid failures due to leftover artifacts from prior runs
+    sh("rm -rf ${checkout_dir}/test-results");
 
-        build_for_parallel[stepName] = { ->
-            def run_condition = distro in distros_under_test;
-            println("Should ${distro} be tested? ${run_condition}");
+    def test_stages = all_distros.collectEntries { distro -> [
+        ("Test ${distro}") : {
+            def run_condition = distro in selected_distros;
 
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition){
-                Utils.markStageSkippedForConditional(stepName);
+                Utils.markStageSkippedForConditional("Test ${distro}");
             }
 
             smart_stage(
-                name: stepName,
+                name: "Test ${distro}",
                 condition: run_condition,
-                raiseOnError: true,
+                raiseOnError: false,
             ) {
-                def job = build(
+                def build_instance = smart_build(
                     job: relative_job_name,
-                    propagate: false,  // Not raise any errors
                     parameters: [
-                        string(name: "DISTRO", value: distro),
-                        string(name: "EDITION", value: EDITION),
-                        string(name: "VERSION", value: VERSION),
-                        string(name: "DOCKER_TAG", value: docker_tag),
-                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
-                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "DISTRO", value: distro),
+                        stringParam(name: "EDITION", value: EDITION),
+                        stringParam(name: "VERSION", value: VERSION),
+                        stringParam(name: "DOCKER_TAG", value: docker_tag),
+                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                     ],
                 );
-
                 copyArtifacts(
-                    projectName: relative_job_name,
-                    selector: specific(job.getId()), // buildNumber shall be a string
+                    projectName: build_instance.getFullProjectName(),
+                    selector: specific(build_instance.getId()), // buildNumber shall be a string
                     target: "${checkout_dir}/test-results",
                     fingerprintArtifacts: true
                 );
-
-                if (job.result != 'SUCCESS') {
-                    raise("${relative_job_name} failed with result: ${job.result}");
-                }
+                return build_instance.getResult();
             }
-        }
+        }]
     }
 
-    stage('Run composition tests') {
-        parallel build_for_parallel;
-    }
+    currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
 
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {

@@ -234,11 +234,13 @@ def main() {
         name: "Deploy to website",
         condition: upload_to_testbuilds && deploy_to_website,
     ) {
-        inside_container(ulimit_nofile: 1024) {
-            artifacts_helper.deploy_to_website(
-                cmk_version_rc_aware
-            );
-        }
+        smart_build(
+            job: "${branch_base_folder}/deploy_to_website",
+            parameters: [
+                stringParam(name: "VERSION", value: params.VERSION),
+                booleanParam(name: "CIPARAM_REMOVE_RC_CANDIDATES", value: params.CIPARAM_REMOVE_RC_CANDIDATES),
+            ]
+        );
     }
 
     smart_stage(name: "Cleanup leftovers") {

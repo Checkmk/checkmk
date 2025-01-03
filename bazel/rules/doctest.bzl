@@ -4,8 +4,7 @@
 load("@rules_python//python:defs.bzl", "py_test")
 
 DOCTEST_TPL = r"""
-import doctest, unittest
-
+import doctest
 
 def load_tests(loader, tests, ignore):
 {}
@@ -13,7 +12,14 @@ def load_tests(loader, tests, ignore):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import unittest, sys
+
+    # Handle result here because no doctest is not an error.
+    result = unittest.main(exit=False).result
+    if result.wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 """
 
 # TODO: Make `ELLIPSIS` optional?

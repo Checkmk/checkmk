@@ -143,12 +143,12 @@ def main() {
                     name: "System Tests for FIPS compliance",
                     condition: run_fips_tests,
                     raiseOnError: false,) {
-                smart_build(
+                build(
                     job: "${base_folder}/test-integration-fips",
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,
                 );
-                smart_build(
+                build(
                     job: "${base_folder}/test-composition-fips",
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,

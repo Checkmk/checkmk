@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -13,13 +13,13 @@ from cmk.agent_based.v2 import (
     OIDEnd,
     Result,
     Service,
-    SNMPSection,
+    SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
 
-from .lib import DETECT_AUDIOCODES
+from .lib import data_by_item, DETECT_AUDIOCODES
 
 ACTION_MAPPING = {
     "0": ("Invalid action", State.UNKNOWN),
@@ -59,71 +59,80 @@ class FRUModule:
     status: Status
 
 
-def parse_audiocodes_fru(string_table: Sequence[StringTable]) -> Mapping[str, FRUModule] | None:
-    if not all(string_table):
+def parse_audiocodes_fru(string_table: StringTable) -> Mapping[str, FRUModule] | None:
+    if not string_table:
         return None
 
-    name_by_module_index = {module[0]: f"{module[1]} {module[0]}" for module in string_table[0]}
-    modules_by_index = {
+    return {
         module[0]: FRUModule(
             action=Action(*ACTION_MAPPING[module[1]]),
             status=Status(*STATUS_MAPPING[module[2]]),
         )
-        for module in string_table[1]
-    }
-
-    return {
-        name: module
-        for module_idx, module in modules_by_index.items()
-        if (name := name_by_module_index.get(module_idx))
+        for module in string_table
     }
 
 
-snmp_section_audiocodes_fru = SNMPSection(
+snmp_section_audiocodes_fru = SimpleSNMPSection(
     name="audiocodes_fru",
     detect=DETECT_AUDIOCODES,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.2.1.47.1.1.1.1",
-            oids=[
-                OIDEnd(),
-                "2",
-            ],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.5003.9.10.10.4.21.1",
-            oids=[
-                OIDEnd(),
-                "13",  # acSysModuleFRUaction
-                "14",  # acSysModuleFRUstatus
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.5003.9.10.10.4.21.1",
+        oids=[
+            OIDEnd(),
+            "13",  # acSysModuleFRUaction
+            "14",  # acSysModuleFRUstatus
+        ],
+    ),
     parse_function=parse_audiocodes_fru,
 )
 
 
-def discover_audiocodes_fru(section: Mapping[str, FRUModule]) -> DiscoveryResult:
-    yield from (Service(item=module_name) for module_name in section)
+def discover_audiocodes_fru(
+    section_audiocodes_module_names: Mapping[str, str] | None,
+    section_audiocodes_fru: Mapping[str, FRUModule] | None,
+) -> DiscoveryResult:
+    if not section_audiocodes_module_names or not section_audiocodes_fru:
+        return
+
+    yield from (
+        Service(item=item)
+        for item in data_by_item(
+            section_audiocodes_module_names,
+            section_audiocodes_fru,
+        )
+    )
 
 
-def check_audiocodes_fru(item: str, section: Mapping[str, FRUModule]) -> CheckResult:
-    if (module := section.get(item)) is None:
+def check_audiocodes_fru(
+    item: str,
+    section_audiocodes_module_names: Mapping[str, str] | None,
+    section_audiocodes_fru: Mapping[str, FRUModule] | None,
+) -> CheckResult:
+    if not section_audiocodes_fru or not section_audiocodes_module_names:
+        return
+
+    if (
+        module_fru := data_by_item(
+            section_audiocodes_module_names,
+            section_audiocodes_fru,
+        ).get(item)
+    ) is None:
         return
 
     yield Result(
-        state=module.action.state,
-        summary=f"Action: {module.action.name}",
+        state=module_fru.action.state,
+        summary=f"Action: {module_fru.action.name}",
     )
     yield Result(
-        state=module.status.state,
-        summary=f"Status: {module.status.name}",
+        state=module_fru.status.state,
+        summary=f"Status: {module_fru.status.name}",
     )
 
 
 check_plugin_audiocodes_fru = CheckPlugin(
     name="audiocodes_fru",
     service_name="AudioCodes FRU %s",
+    sections=["audiocodes_module_names", "audiocodes_fru"],
     discovery_function=discover_audiocodes_fru,
     check_function=check_audiocodes_fru,
 )

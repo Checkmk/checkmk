@@ -26,6 +26,8 @@ from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 
+from cmk.crypto.password import Password
+
 logger = logging.getLogger()
 
 build_path = repo_path() / "docker_image"
@@ -239,7 +241,8 @@ class CheckmkApp:
         self.port = 5000
         self.agent_receiver_port = 8000
         self.api_version = "1.0"
-        self.api_user = "automation"
+        self.api_user = "cmkapi"
+        self.api_secret = Password.random(24).raw
 
         self.client = client
         self.name = name
@@ -270,6 +273,7 @@ class CheckmkApp:
             site=self.site_id,
             api_version=self.api_version,
         )
+        self._create_automation_user()
 
     @property
     def logs(self) -> str:
@@ -371,18 +375,18 @@ class CheckmkApp:
     def __exit__(self, exc_type, exc_value, traceback):
         self._teardown()
 
-    def automation_secret(
-        self,
-    ) -> str:
-        """Return the automation secret for a Checkmk docker instance."""
-        secret_rc, secret_output = self.container.exec_run(
-            f"cat '/omd/sites/{self.site_id}/var/check_mk/web/{self.api_user}/automation.secret'"
+    def _create_automation_user(self) -> None:
+        self.openapi.users.create(
+            username=self.api_user,
+            fullname="Automation user for tests",
+            password=self.api_secret,
+            email="automation@localhost",
+            contactgroups=[],
+            roles=["admin"],
+            is_automation_user=True,
         )
-        assert secret_rc == 0
-
-        assert (api_secret := str(secret_output.decode("utf-8").split("\n")[0]))
-
-        return api_secret
+        self.openapi.changes.activate_and_wait_for_completion()
+        self.openapi.set_authentication_header(user=self.api_user, password=self.api_secret)
 
     def install_agent(
         self, app: docker.models.containers.Container, agent_type: Literal["rpm", "deb"] = "deb"
@@ -425,7 +429,7 @@ class CheckmkApp:
             "--user",
             self.api_user,
             "--password",
-            self.automation_secret(),
+            self.api_secret,
             "--hostname",
             hostname,
             "--trust-cert",

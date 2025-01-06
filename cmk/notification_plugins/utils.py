@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, NamedTuple, NoReturn
+from typing import Any, Container, NamedTuple, NoReturn
 
 import requests
 from requests import JSONDecodeError
@@ -279,11 +279,17 @@ def post_request(
     return response
 
 
-def process_by_status_code(response: requests.Response, success_code: int = 200) -> int:
+def process_by_status_code(
+    response: requests.Response, success_code: int | Container[int] = 200
+) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
-    if status_code == success_code:
+    if isinstance(success_code, int):
+        if status_code == success_code:
+            sys.stderr.write(summary)
+            return 0
+    elif status_code in success_code:
         sys.stderr.write(summary)
         return 0
     if 500 <= status_code <= 599:

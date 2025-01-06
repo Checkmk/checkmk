@@ -184,4 +184,6 @@ def _get_section_facts(
 
 
 def main() -> int:
-    return process_by_status_code(post_request(_msteams_msg), 202)
+    # 200: old webhooks (deprecated)
+    # 202: workflows
+    return process_by_status_code(post_request(_msteams_msg), (200, 202))

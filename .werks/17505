@@ -1,0 +1,11 @@
+Title: Microsoft Teams: Fix failed notifications when using the old incoming webhooks
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1736333176
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+When using the (deprecated) incoming webhooks, successfully transmitted
+notifications would result in failed notifications. This is now fixed.

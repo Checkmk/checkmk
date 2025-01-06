@@ -321,6 +321,7 @@ def update_custom_parser(Map config = [:]) {
 /// Make sure we are on the correct node for FIPS tests
 def assert_fips_testing(use_case, node_labels) {
     if (use_case == "fips" && !node_labels.contains("fips")) {
+        // groovylint-disable-next-line ThrowException
         throw new Exception("FIPS testing requested but we're not running on a fips node.");
     }
 }

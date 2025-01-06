@@ -4,84 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     OIDEnd,
-    Result,
     Service,
     SimpleSNMPSection,
     SNMPTree,
-    State,
-    StringTable,
 )
 
-from .lib import data_by_item, DETECT_AUDIOCODES
-
-
-@dataclass(frozen=True, kw_only=True)
-class OPState:
-    name: str
-    state: State
-
-
-@dataclass(frozen=True, kw_only=True)
-class Presence:
-    name: str
-    state: State
-
-
-@dataclass(frozen=True, kw_only=True)
-class HAStatus:
-    name: str
-    state: State
-
-
-OPERATIONAL_STATE_MAPPING = {
-    "0": OPState(name="Invalid state", state=State.CRIT),
-    "1": OPState(name="Disabled", state=State.CRIT),
-    "2": OPState(name="Enabled", state=State.OK),
-}
-PRESENCE_MAPPING = {
-    "0": Presence(name="Invalid status", state=State.CRIT),
-    "1": Presence(name="Module present", state=State.OK),
-    "2": Presence(name="Module missing", state=State.CRIT),
-}
-
-HA_STATUS_MAPPING = {
-    "0": HAStatus(name="Invalid status", state=State.CRIT),
-    "1": HAStatus(name="Active - no HA", state=State.WARN),
-    "2": HAStatus(name="Active", state=State.OK),
-    "3": HAStatus(name="Redundant", state=State.OK),
-    "4": HAStatus(name="Stand alone", state=State.OK),
-    "5": HAStatus(name="Redundant - no HA", state=State.WARN),
-    "6": HAStatus(name="Not applicable", state=State.UNKNOWN),
-}
-
-
-@dataclass(frozen=True, kw_only=True)
-class Module:
-    op_state: OPState
-    presence: Presence
-    ha_status: HAStatus
-
-
-def parse_audiocodes_operational_state(string_table: StringTable) -> Mapping[str, Module] | None:
-    if not string_table:
-        return None
-
-    return {
-        module[0]: Module(
-            op_state=OPERATIONAL_STATE_MAPPING[module[1]],
-            presence=PRESENCE_MAPPING[module[2]],
-            ha_status=HA_STATUS_MAPPING[module[3]],
-        )
-        for module in string_table
-    }
-
+from .lib import (
+    check_audiocodes_operational_state as check_function,
+)
+from .lib import (
+    data_by_item,
+    DETECT_AUDIOCODES,
+    Module,
+    parse_audiocodes_operational_state,
+)
 
 snmp_section_audiocodes_operational_state = SimpleSNMPSection(
     name="audiocodes_operational_state",
@@ -131,18 +73,7 @@ def check_audiocodes_operational_state(
     ) is None:
         return
 
-    yield Result(
-        state=module.op_state.state,
-        summary=f"Operational state: {module.op_state.name}",
-    )
-    yield Result(
-        state=module.presence.state,
-        notice=f"Presence: {module.presence.name}",
-    )
-    yield Result(
-        state=module.ha_status.state,
-        summary=f"HA status: {module.ha_status.name}",
-    )
+    yield from check_function(module)
 
 
 check_plugin_audiocodes_operational_state = CheckPlugin(

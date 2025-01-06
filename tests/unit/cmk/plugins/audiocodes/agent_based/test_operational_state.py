@@ -7,13 +7,13 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.plugins.audiocodes.agent_based.lib import parse_audiocodes_operational_state
 from cmk.plugins.audiocodes.agent_based.module_names import (
     parse_module_names,
 )
 from cmk.plugins.audiocodes.agent_based.operational_state import (
     check_audiocodes_operational_state,
     discover_audiocodes_operational_state,
-    parse_audiocodes_operational_state,
 )
 
 _STRING_TABLE_OPERATIONAL_STATE = [

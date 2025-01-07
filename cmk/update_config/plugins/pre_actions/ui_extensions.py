@@ -23,6 +23,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     get_installer_and_package_map,
     get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
+    is_applicable_mkp,
     PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -47,7 +48,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
             return
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
-        disabled_packages: set[PackageID] = set()
+        dealt_with_packages: set[PackageID] = set()
+
         for path, _gui_part, module_name, error in get_failed_plugins():
             manifest = _get_package_manifest(package_map, str(path))
             # unpackaged files
@@ -57,8 +59,17 @@ class PreUpdateUIExtensions(PreUpdateAction):
                     continue
                 raise MKUserError(None, "incompatible local file")
 
-            if manifest.id in disabled_packages:
-                continue  # already dealt with
+            if manifest.id in dealt_with_packages:
+                continue
+
+            if not is_applicable_mkp(manifest):
+                dealt_with_packages.add(manifest.id)
+                logger.info(
+                    "[%s %s]: Ignoring problems (MKP will be disabled on target version)",
+                    manifest.name,
+                    manifest.version,
+                )
+                continue
 
             if disable_incomp_mkp(
                 logger,
@@ -71,7 +82,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 path_config,
                 path,
             ):
-                disabled_packages.add(manifest.id)
+                dealt_with_packages.add(manifest.id)
                 remove_failed_plugin(path)
                 continue
 

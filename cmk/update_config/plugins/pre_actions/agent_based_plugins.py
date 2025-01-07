@@ -20,6 +20,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
+    is_applicable_mkp,
     PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -43,7 +44,8 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             return False
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
-        disabled_packages: set[PackageID] = set()
+        dealt_with_packages: set[PackageID] = set()
+
         for module_name, error in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
             path = Path(traceback.extract_tb(error.__traceback__)[-1].filename)
             manifest = package_map.get(path.resolve())
@@ -54,8 +56,17 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                     continue
                 raise MKUserError(None, "incompatible local file")
 
-            if manifest.id in disabled_packages:
-                continue  # already dealt with
+            if manifest.id in dealt_with_packages:
+                continue
+
+            if not is_applicable_mkp(manifest):
+                dealt_with_packages.add(manifest.id)
+                logger.info(
+                    "[%s %s]: Ignoring problems (MKP will be disabled on target version)",
+                    manifest.name,
+                    manifest.version,
+                )
+                continue
 
             if disable_incomp_mkp(
                 logger,
@@ -68,7 +79,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 path_config,
                 path,
             ):
-                disabled_packages.add(manifest.id)
+                dealt_with_packages.add(manifest.id)
                 return True
 
             raise MKUserError(None, "incompatible local file")

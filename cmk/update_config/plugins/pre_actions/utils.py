@@ -11,7 +11,7 @@ from pathlib import Path
 from termios import tcflush, TCIFLUSH
 from typing import Final
 
-from cmk.utils import paths
+from cmk.utils import paths, version
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.visuals import invalidate_visuals_cache
 
@@ -187,3 +187,23 @@ def get_installer_and_package_map(
         for file in files
     }
     return installer, installed_files_package_map
+
+
+def is_applicable_mkp(manifest: Manifest) -> bool:
+    """Try to find out if this MKP is applicable to the version we upgrade to.
+    Assume yes if we can't find out.
+    """
+    target_version = version.Version.from_str(version.__version__)
+    try:
+        lower_bound_ok = target_version >= version.Version.from_str(manifest.version_min_required)
+    except ValueError:
+        lower_bound_ok = True
+
+    try:
+        upper_bound_ok = manifest.version_usable_until is None or (
+            version.Version.from_str(manifest.version_usable_until) > target_version
+        )
+    except ValueError:
+        upper_bound_ok = True
+
+    return lower_bound_ok and upper_bound_ok

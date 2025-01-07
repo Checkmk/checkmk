@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-10-29 06:00+0000\n"
+"PO-Revision-Date: 2025-01-07 06:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -78997,7 +78997,7 @@ msgstr "警告:このホストの構成は無効です!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "警告: このホストの設定は無効です: "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 
@@ -83836,7 +83836,7 @@ msgid "h"
 msgstr "h"
 
 msgid "handles"
-msgstr "ハンドル"
+msgstr "ハンドルする"
 
 msgid "height"
 msgstr "高さ"

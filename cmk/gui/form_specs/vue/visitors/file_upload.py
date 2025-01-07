@@ -14,10 +14,10 @@ from cmk.utils.render import filesize
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.encrypter import Encrypter
 
-from cmk.rulesets.v1 import Message, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import FileUpload
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as VueComponents
@@ -158,6 +158,12 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
         self, raw_value: object, parsed_value: FileUploadModel | InvalidValue
     ) -> tuple[VueComponents.FileUpload, FileUploadModel]:
         title, help_text = get_title_and_help(self.form_spec)
+        help_text = (
+            Help("Note: The maximum allowed file size is 10MB. ").localize(
+                translate_to_current_language
+            )
+            + help_text
+        )
         if isinstance(parsed_value, InvalidValue):
             parsed_value = FileUploadModel()
 

@@ -250,6 +250,7 @@ def _parse_label_groups_to_http_vars(
             {
                 f"{prefix}_{i}_vs_count": "%d" % len(group),
                 f"{prefix}_{i}_bool": group_operator,
+                f"{prefix}_indexof_{i}": str(i),
             }
         )
 
@@ -258,6 +259,7 @@ def _parse_label_groups_to_http_vars(
                 {
                     f"{prefix}_{i}_vs_{j}_bool": label_operator,
                     f"{prefix}_{i}_vs_{j}_vs": label,
+                    f"{prefix}_{i}_vs_indexof_{j}": str(j),
                 }
             )
 
@@ -273,7 +275,7 @@ def filter_http_vars_for_simple_label_group(
     connecting all of them by the same logical <operator>.
 
     >>> filter_http_vars_for_simple_label_group(["foo:bar", "check:mk"], "host")
-    {'host_labels_count': '1', 'host_labels_1_vs_count': '2', 'host_labels_1_bool': 'and', 'host_labels_1_vs_1_bool': 'and', 'host_labels_1_vs_1_vs': 'foo:bar', 'host_labels_1_vs_2_bool': 'and', 'host_labels_1_vs_2_vs': 'check:mk'}
+    {'host_labels_count': '1', 'host_labels_1_vs_count': '2', 'host_labels_1_bool': 'and', 'host_labels_indexof_1': '1', 'host_labels_1_vs_1_bool': 'and', 'host_labels_1_vs_1_vs': 'foo:bar', 'host_labels_1_vs_indexof_1': '1', 'host_labels_1_vs_2_bool': 'and', 'host_labels_1_vs_2_vs': 'check:mk', 'host_labels_1_vs_indexof_2': '2'}
     """
     return _parse_label_groups_to_http_vars(
         single_label_group_from_labels(labels, operator),

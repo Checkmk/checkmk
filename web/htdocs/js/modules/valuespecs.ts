@@ -289,11 +289,20 @@ export function listof_add(varprefix, magic, style) {
     var count_field = document.getElementById(
         varprefix + "_count"
     ) as HTMLInputElement;
-    var count = parseInt(count_field.value);
-    var str_count = "" + (count + 1);
-    count_field.value = str_count;
+    var count = parseInt(count_field.value) + 1;
 
-    var html_code = listof_get_new_entry_html_code(varprefix, magic, str_count);
+    // Make sure the new entry we're creating does not already exist. We cannot rely on the count
+    // value here -> increment the count until the according id does not exist
+    while (document.querySelector(`[id^=${varprefix}][id$="${count}"]`)) {
+        count += 1;
+    }
+    count_field.value = "" + count;
+
+    var html_code = listof_get_new_entry_html_code(
+        varprefix,
+        magic,
+        count_field.value
+    );
     var container = document.getElementById(varprefix + "_container");
 
     var new_child;

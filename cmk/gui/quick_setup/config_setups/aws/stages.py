@@ -125,7 +125,6 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and regions"),
-                run_in_background=True,
             )
         ],
     )
@@ -258,7 +257,6 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
-                run_in_background=True,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),
@@ -377,7 +375,6 @@ quick_setup_aws = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
-            run_in_background=True,
         ),
     ],
 )

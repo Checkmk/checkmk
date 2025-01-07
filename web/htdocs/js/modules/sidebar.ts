@@ -657,8 +657,7 @@ export function execute_sidebar_scheduler() {
     }
 
     if (g_sidebar_notify_interval !== null) {
-        const timestamp = new Date().getTime() / 1000;
-        if (timestamp % g_sidebar_notify_interval == 0) {
+        if (g_seconds_to_update == 0) {
             update_messages();
             if (g_may_ack) {
                 update_unack_incomp_werks();

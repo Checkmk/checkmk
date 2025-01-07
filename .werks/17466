@@ -1,0 +1,14 @@
+Title: Refresh user messages not only on page reload
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1736251760
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+Messages send via "Setup" - "Users" - "Send user messages" were only shown on
+page reload.
+
+New messages of methods "Show popup message" and "Show hint in the 'User' menu"
+are now shown on every sidebar status update (default: 30 seconds).

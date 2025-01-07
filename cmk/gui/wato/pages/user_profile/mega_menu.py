@@ -44,7 +44,7 @@ def register(
 
 
 def _get_current_theme_title() -> str:
-    return [title for theme_id, title in theme.theme_choices if theme_id == theme.get()][0]
+    return [title for theme_id, title in theme.theme_choices.items() if theme_id == theme.get()][0]
 
 
 def _get_sidebar_position() -> str:

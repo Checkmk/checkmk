@@ -119,11 +119,11 @@ def patch_theme() -> Iterator[None]:
             "cmk.gui.htmllib.html.HTMLGenerator._inject_vue_frontend",
         ),
         patch(
-            "cmk.gui.utils.theme.Theme.detect_icon_path",
+            "cmk.gui.theme.Theme.detect_icon_path",
             new=fake_detect_icon_path,
         ),
         patch(
-            "cmk.gui.utils.theme.Theme.get",
+            "cmk.gui.theme.Theme.get",
             return_value="modern-dark",
         ),
         patch(

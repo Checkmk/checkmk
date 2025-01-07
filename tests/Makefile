@@ -429,7 +429,7 @@ test-cycles:
 		    $$($(UVENV) scripts/find_cmk_namespace_package_paths.py) \
 		    $$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
-		--threshold 114 \
+		--threshold 116 \
 		--verbose
 
 test-cycles-docker:

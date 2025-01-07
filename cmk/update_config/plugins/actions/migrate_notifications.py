@@ -131,10 +131,7 @@ class MigrateNotifications(UpdateAction):
         validation_errors = visitor.validate(data)
         process_validation_messages(validation_errors)
 
-        # The catalog formspec uses "method_parameters" as additional nested key, we don't need it
-        disk_data = visitor.to_disk(data)
-        disk_data["parameter_properties"] = disk_data["parameter_properties"]["method_parameters"]
-        return disk_data
+        return visitor.to_disk(data)
 
 
 update_action_registry.register(

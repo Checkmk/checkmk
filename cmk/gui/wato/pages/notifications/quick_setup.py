@@ -1270,7 +1270,7 @@ def recipient() -> QuickSetupStage:
                                     ),
                                     UniqueCascadingSingleChoiceElement(
                                         parameter_form=CascadingSingleChoiceElementExtended(
-                                            name="custom_macros",
+                                            name="custom_macro",
                                             title=Title("Custom macros"),
                                             parameter_form=ListExtended(
                                                 prefill=DefaultValue([]),

@@ -10,8 +10,10 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
+    check_levels,
     equals,
     exists,
+    render,
     SNMPTree,
     startswith,
     StringTable,
@@ -56,7 +58,6 @@ def check_stormshield_cluster_node(item, params, info):
         _uptime,
     ) in info:
         if item == index:
-            warn, crit = params["quality"]
             if online == "0":
                 yield 2, "Member is %s" % online_mapping[online]
             else:
@@ -77,12 +78,12 @@ def check_stormshield_cluster_node(item, params, info):
                         forced_mapping[statusforced],
                     ),
                 )
-            if int(quality) < crit:
-                yield 2, "Quality: %s" % quality
-            elif int(quality) < warn:
-                yield 1, "Quality: %s" % quality
-            else:
-                yield 0, "Quality: %s" % quality
+            yield from check_levels(
+                float(quality),
+                levels_lower=params["quality"],
+                label="Quality",
+                render_func=render.percent,
+            )
 
             infotext = "Model: {}, Version: {}, Role: {}, Priority: {}, Serial: {}".format(
                 model,
@@ -116,6 +117,6 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
     check_function=check_stormshield_cluster_node,
     check_ruleset_name="stormshield_quality",
     check_default_parameters={
-        "quality": (80, 50),
+        "quality": ("fixed", (80.0, 50.0)),
     },
 )

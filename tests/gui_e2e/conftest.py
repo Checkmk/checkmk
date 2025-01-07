@@ -43,7 +43,9 @@ def fixture_test_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from get_site_factory(prefix="gui_e2e_").get_test_site()
+        yield from get_site_factory(prefix="gui_e2e_").get_test_site(
+            global_settings_update={"automation_helper_active": True},
+        )
 
 
 @pytest.fixture(name="credentials", scope="session")

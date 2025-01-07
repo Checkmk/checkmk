@@ -258,7 +258,6 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
-                run_in_background=True,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),

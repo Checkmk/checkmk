@@ -51,7 +51,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
@@ -1687,8 +1687,9 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         if target_page:
             if not isinstance(target_page, str):
                 target_page = target_page.page_url()
-            html.write_text_permissive(target_page)
-        html.write_text_permissive("\n%s" % ("true" if need_sidebar_reload else "false"))
+
+        response.set_content_type("text/plain")
+        response.set_data(f"{target_page or ""}\n{"true" if need_sidebar_reload else "false"}")
 
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod

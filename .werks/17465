@@ -1,0 +1,18 @@
+Title: Respect show more options in sidebar element dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1736234861
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+Dashlets of type "Sidebar element" did not respect the current show more
+options of the user.
+If you e.g. added a "Overview" element and the sidebar snapin was changed to
+"Show more", the dashlet content still showed only the default content.
+
+This has been fixed.
+
+Note: The dashlet still has to refresh to take the current settings of a
+sidebar element into account.

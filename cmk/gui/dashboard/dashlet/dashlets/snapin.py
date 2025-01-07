@@ -6,6 +6,7 @@
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import DropdownChoice
 
@@ -77,13 +78,18 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()
+        snapin_name = dashlet["snapin"]
 
         html.browser_reload = self.refresh_interval()
         html.html_head(_("Sidebar element"))
         html.open_body(class_="side", data_theme=theme.get())
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")
-        html.open_div(id_="snapin_container_%s" % dashlet["snapin"], class_="snapin")
+        show_more = user.get_show_more_setting(f"sidebar_snapin_{snapin_name}")
+        html.open_div(
+            id_=f"snapin_container_{snapin_name}",
+            class_=["snapin", ("more" if show_more else "less")],
+        )
         html.open_div(id_="snapin_%s" % dashlet["snapin"], class_="content")
         styles = snapin_instance.styles()
         if styles:

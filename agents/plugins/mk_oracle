@@ -72,7 +72,7 @@ OPTIONS:
 
   -t                    Just check the connection
 
-  -l, --log             Logs certain steps while execution.
+  -l, --log             Logs certain steps during execution.
                         Note: These sections are executed as synchronous sections
                         The logfile is in the folder \$MK_VARDIR/log.
 
@@ -92,19 +92,19 @@ CONFIGURATION:
   mk_oracle.cfg is in the folder \$MK_CONFDIR or \$MK_VARDIR.
 
   SYNC_SECTIONS="<section> ..."
-                        Specify which sections will be executed sychronously.
+                        Specify which sections will be executed synchronously.
                         Default is "$SYNC_SECTIONS"
 
   ASYNC_SECTIONS="<section> ..."
-                        Specify which sections will be executed asychronously.
+                        Specify which sections will be executed asynchronously.
                         Default is "$ASYNC_SECTIONS"
 
   SYNC_ASM_SECTIONS="<section> ..."
-                        Specify which ASM sections will be executed sychronously.
+                        Specify which ASM sections will be executed synchronously.
                         Default is "$SYNC_ASM_SECTIONS"
 
   ASYNC_ASM_SECTIONS="<section> ..."
-                        Specify which ASM sections will be executed asychronously.
+                        Specify which ASM sections will be executed asynchronously.
                         Default is "$ASYNC_ASM_SECTIONS"
 
   CACHE_MAXAGE=<age>    Interval for running async checks (in seconds).

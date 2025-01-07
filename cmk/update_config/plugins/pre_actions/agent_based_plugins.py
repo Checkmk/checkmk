@@ -20,6 +20,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     disable_incomp_mkp,
     get_installer_and_package_map,
     get_path_config,
+    is_applicable_mkp,
     PACKAGE_STORE,
     Resume,
 )
@@ -59,13 +60,21 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             if _continue_per_users_choice(conflict_mode).is_abort():
                 raise MKUserError(None, "decommissioned file(s)")
 
-        for manifest_, paths in grouped_files.items():
+        for manifest, paths in grouped_files.items():
+            if not is_applicable_mkp(manifest):
+                logger.info(
+                    "[%s %s]: Ignoring problems (MKP will be disabled on target version)",
+                    manifest.name,
+                    manifest.version,
+                )
+                continue
+
             _log_error_message_obsolete_files(logger, paths)
             logger.error(
-                f"The above file(s) are part of the extension package {manifest_.name} {manifest_.version}."
+                f"The above file(s) are part of the extension package {manifest.name} {manifest.version}."
             )
             if disable_incomp_mkp(
-                conflict_mode, manifest_.id, installer, PACKAGE_STORE, path_config
+                conflict_mode, manifest.id, installer, PACKAGE_STORE, path_config
             ):
                 continue
             raise MKUserError(None, "incompatible extension package")

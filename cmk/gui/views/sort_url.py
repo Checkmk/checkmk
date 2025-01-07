@@ -12,8 +12,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import painter_exists, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
-from cmk.gui.utils.theme import theme
 
 from .sorter import ParameterizedSorter, sorter_registry
 

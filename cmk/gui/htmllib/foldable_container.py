@@ -10,8 +10,8 @@ from contextlib import contextmanager
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 from .tag_rendering import HTMLContent
 

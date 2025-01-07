@@ -8,7 +8,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.utils.theme import theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.valuespec import DropdownChoice
 
 from ._snapin import snapin_registry

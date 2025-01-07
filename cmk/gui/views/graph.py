@@ -32,6 +32,7 @@ from cmk.gui.painter_options import (
     PainterOptionRegistry,
     PainterOptions,
 )
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -43,7 +44,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,

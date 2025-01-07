@@ -25,8 +25,8 @@ from cmk.gui.painter.v0.base import Cell, EmptyCell
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
 
 from .base import Layout

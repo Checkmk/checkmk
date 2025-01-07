@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.theme import Theme
+
+from ._theme_type import Theme
 
 theme = request_local_attr("theme", Theme)

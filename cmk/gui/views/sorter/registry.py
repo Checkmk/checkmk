@@ -16,8 +16,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import EmptyCell, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
-from cmk.gui.utils.theme import theme
 
 from .base import Sorter
 

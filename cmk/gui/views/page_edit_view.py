@@ -29,6 +29,7 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -43,7 +44,6 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,

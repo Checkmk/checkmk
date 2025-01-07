@@ -10,8 +10,8 @@ from typing import Any, TypedDict
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 
 class VueCell(TypedDict):

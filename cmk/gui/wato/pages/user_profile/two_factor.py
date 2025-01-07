@@ -58,6 +58,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session
 from cmk.gui.table import Table, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     TotpCredential,
     TwoFactorCredentials,
@@ -76,7 +77,6 @@ from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,

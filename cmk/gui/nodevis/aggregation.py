@@ -21,9 +21,9 @@ from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDe
 from cmk.gui.nodevis.utils import BILayoutManagement, get_toggle_layout_designer_page_menu_entry
 from cmk.gui.page_menu import make_display_options_dropdown, PageMenu, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.theme import theme
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry

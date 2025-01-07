@@ -6,7 +6,7 @@
 
 import traceback
 from pathlib import Path
-from typing import Any, Generic, Literal, Sequence, TypedDict, TypeVar
+from typing import Any, Literal, Sequence, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -115,10 +115,7 @@ def create_check_crash_dump(
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
-T = TypeVar("T")
-
-
-class CrashReportWithAgentOutput(Generic[T], crash_reporting.ABCCrashReport[T]):
+class CrashReportWithAgentOutput[T](crash_reporting.ABCCrashReport[T]):
     def __init__(
         self,
         crashdir: Path,

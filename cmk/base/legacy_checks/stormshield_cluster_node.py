@@ -5,9 +5,20 @@
 
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    check_levels,
+    equals,
+    exists,
+    render,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 check_info = {}
+
 
 online_mapping = {"1": "online", "0": "offline"}
 
@@ -48,7 +59,6 @@ def check_stormshield_cluster_node(item, params, info):
         _uptime,
     ) in info:
         if item == index:
-            warn, crit = params["quality"]
             if online == "0":
                 yield 2, "Member is %s" % online_mapping[online]
             else:
@@ -63,12 +73,12 @@ def check_stormshield_cluster_node(item, params, info):
                     0,
                     f"HA-State: {active_mapping[active]} ({forced_mapping[statusforced]})",
                 )
-            if int(quality) < crit:
-                yield 2, "Quality: %s" % quality
-            elif int(quality) < warn:
-                yield 1, "Quality: %s" % quality
-            else:
-                yield 0, "Quality: %s" % quality
+            yield from check_levels(
+                float(quality),
+                levels_lower=params["quality"],
+                label="Quality",
+                render_func=render.percent,
+            )
 
             infotext = f"Model: {model}, Version: {version}, Role: {license_}, Priority: {priority}, Serial: {serial}"
             yield 0, infotext
@@ -97,6 +107,6 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
     check_function=check_stormshield_cluster_node,
     check_ruleset_name="stormshield_quality",
     check_default_parameters={
-        "quality": (80, 50),
+        "quality": ("fixed", (80.0, 50.0)),
     },
 )

@@ -412,7 +412,7 @@ class IMAP(_Connection):
             try:
                 data = verified_result(self._imap.fetch(num, "(RFC822)"))
                 if isinstance(data[0], tuple):
-                    mails[num] = email.message_from_bytes(data[0][1])
+                    mails[num] = email.message_from_bytes(data[0][1])  # type: ignore[index]
             # TODO: this smells - seems like we intended to just skip this mail but this way
             #       we jump out of the for loop
             except Exception as exc:
@@ -477,7 +477,7 @@ class IMAP(_Connection):
         return (
             [
                 date
-                for mail_id in ids[0].split()
+                for mail_id in ids[0].split()  # type: ignore[union-attr]
                 for date in (self._fetch_timestamp(mail_id),)  # type: ignore[arg-type]  # FIXME
                 if before is None or date <= before
             ]
@@ -556,38 +556,41 @@ def _mutf_7_encode(string: str) -> bytes:
     return b"".join(res)
 
 
-def verified_result(data: object) -> Sequence[bytes] | Sequence[str]:
+def verified_result(data: object) -> Sequence[bytes | tuple[bytes, bytes]] | Sequence[str]:
     """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """
 
-    def _parse_bytes(raw: object) -> bytes:
-        if isinstance(raw, bytes):
-            return raw
-        raise TypeError(raw)
-
-    def _parse_str(raw: object) -> str:
-        if isinstance(raw, str):
-            return raw
-        raise TypeError(raw)
-
     if isinstance(data, tuple):
-        if isinstance(data[0], str):
-            if data[0] not in {"OK", "BYE"}:
-                raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
-            assert isinstance(data[1], list)
-            return [_parse_str(e) for e in data[1]]
-        if isinstance(data[0], bytes):
-            if not data[0].startswith(b"+OK"):
-                raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
-            assert isinstance(data[1], list)
-            return [_parse_bytes(e) for e in data[1]]
-        raise AssertionError()
+        if len(data) != 2:
+            raise AssertionError(f"Expected tuple with two elements, got {data!r}")
+        status, result = data
+        if (isinstance(status, str) and status not in {"OK", "BYE"}) or (
+            isinstance(status, bytes) and not status.startswith(b"+OK")
+        ):
+            raise RuntimeError(f"Server responded {data!r}")
+        assert isinstance(result, list)
+        if not result:
+            return result  # empty list
+        if not isinstance(result[0], (str, bytes, tuple)):
+            raise TypeError(f"Can not handle this datatype {result}")
+        type_first_element: tuple[type, type] | type = type(result[0])
+        if type_first_element in {tuple, bytes}:
+            # > Each [element] is either a bytes, or a tuple. If a tuple,
+            # > then the first part is the header of the response, and
+            # > the second part contains the data
+            # https://docs.python.org/3/library/imaplib.html#imap4-objects
+            type_first_element = (tuple, bytes)
+        if not all(isinstance(e, type_first_element) for e in result):
+            raise TypeError(f"Detected mixed types in {result}")
+        return result
+
     if isinstance(data, bytes):
         if not data.startswith(b"+OK"):
             raise RuntimeError("Server responded %r" % data)
         return []
-    raise TypeError(data)
+
+    raise TypeError(f"can not handle {data}")
 
 
 def make_send_connection(config: TRXConfig, timeout: int) -> SMTP | EWS:

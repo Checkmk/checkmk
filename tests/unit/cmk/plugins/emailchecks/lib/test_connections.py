@@ -14,21 +14,21 @@ from cmk.plugins.emailchecks.lib.connections import verified_result
     ["data", "result"],
     [
         # IMAP
-        # this following line is a bug, should not raise TypeError
-        (("OK", [b"wwwwwwwwwwwwww@gmail.com authenticated (Success)"]), TypeError),
-        (("OK", ["OK"]), ["OK"]),
+        (
+            ("OK", [b"wwwwwwwwwwwwww@gmail.com authenticated (Success)"]),
+            [b"wwwwwwwwwwwwww@gmail.com authenticated (Success)"],
+        ),
         (
             ("OK", [(b"1 (RFC822 {14630}", b"lots", b"data", b")")]),
-            # this is also a bug, should be:
-            # [(b"1 (RFC822 {14630}", b"lots", b"data", b")")],
-            TypeError,
+            [(b"1 (RFC822 {14630}", b"lots", b"data", b")")],
         ),
+        (("OK", ["payload"]), ["payload"]),
         # POP
         ((b"+OK message follows", [b"some payload"]), [b"some payload"]),
         # server returned an error
         (("NO", []), RuntimeError),
         ((b"NO", []), RuntimeError),
-        # probably just for making mypy happy
+        # not expected data
         ((None,), AssertionError),
         # POP without payload
         (b"+OK 1 236", []),
@@ -36,6 +36,10 @@ from cmk.plugins.emailchecks.lib.connections import verified_result
         (b"-ERR no such message", RuntimeError),
         # probably just for making mypy happy
         (None, TypeError),
+        # not sure if this really can happen
+        (("OK", []), []),
+        (("OK", [None]), TypeError),
+        (("OK", ["a", b"b"]), TypeError),
     ],
 )
 def test_verified_result(

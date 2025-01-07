@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "livestatus/ListColumn.h"
+#include "livestatus/RRDFetch.h"
 #include "livestatus/overload.h"
 
 class IHost;
@@ -30,8 +31,8 @@ struct RRDColumnArgs {
 
 class RRDDataMaker {
 public:
-    using C = std::chrono::system_clock;
-    using value_type = std::variant<C::time_point, unsigned long, double>;
+    using value_type =
+        std::variant<RRDFetchHeader::time_point, unsigned long, double>;
 
     RRDDataMaker(const ICore &core, RRDColumnArgs args)
         : core_{&core}, args_{std::move(args)} {}
@@ -60,7 +61,7 @@ namespace column::detail {
 template <>
 inline std::string serialize(const RRDDataMaker::value_type &v) {
     using C = std::chrono::system_clock;
-    return std::visit(mk::overload{[](C::time_point x) {
+    return std::visit(mk::overload{[](RRDFetchHeader::time_point x) {
                                        return std::to_string(C::to_time_t(x));
                                    },
                                    [](auto &&x) { return std::to_string(x); }},

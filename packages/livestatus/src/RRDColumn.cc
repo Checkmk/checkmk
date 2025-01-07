@@ -23,6 +23,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
+#include "livestatus/RRDFetch.h"
 
 using namespace std::string_view_literals;
 
@@ -127,8 +128,8 @@ std::pair<Metric::Name, std::string> getVarAndCF(std::string_view str) {
 }
 
 struct Data {
-    RRDDataMaker::C::time_point start;
-    RRDDataMaker::C::time_point end;
+    RRDFetchHeader::time_point start;
+    RRDFetchHeader::time_point end;
     unsigned long step{0};
     std::vector<double> values;
 

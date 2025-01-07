@@ -89,10 +89,7 @@ def test_start_cmkadmin_password(client: docker.DockerClient) -> None:
 
 
 def test_start_custom_site_id(client: docker.DockerClient) -> None:
-    with CheckmkApp(
-        client,
-        environment={"CMK_SITE_ID": "xyz"},
-    ) as cmk:
+    with CheckmkApp(client, site_id="xyz") as cmk:
         assert cmk.container.exec_run(["omd", "status"], user="xyz")[0] == 0
 
 

@@ -251,7 +251,9 @@ class CheckmkApp:
         self.site_id = site_id
         self.site_root = f"/omd/sites/{self.site_id}"
         self.version = version or version_from_env()
-        self.environment = {"CMK_PASSWORD": self.password} | (environment or {})
+        self.environment = {"CMK_PASSWORD": self.password, "CMK_SITE_ID": self.site_id} | (
+            environment or {}
+        )
         self.is_update = is_update
         self.ports = ports
         self.volumes = volumes or []

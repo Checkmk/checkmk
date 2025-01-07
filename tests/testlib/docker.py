@@ -234,10 +234,11 @@ class CheckmkApp:
         ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
         volumes: list[str] | None = None,
         volumes_from: list[str] | None = None,
+        password: str = "cmk",
     ):
         # docker container defaults
         self.username = "cmkadmin"
-        self.password = "cmk"
+        self.password = password
         self.port = 5000
         self.agent_receiver_port = 8000
         self.api_version = "1.0"

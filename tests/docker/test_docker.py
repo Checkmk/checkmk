@@ -78,10 +78,7 @@ def test_start_cmkadmin_password(client: docker.DockerClient) -> None:
     htpasswd = "/omd/sites/cmk/etc/htpasswd"
     cmk_admin = "cmkadmin"
     cmk_password = "blabla"
-    with CheckmkApp(
-        client,
-        environment={"CMK_PASSWORD": cmk_password},
-    ) as cmk:
+    with CheckmkApp(client, password=cmk_password) as cmk:
         assert (
             cmk.container.exec_run(["htpasswd", "-vb", htpasswd, cmk_admin, cmk_password])[0] == 0
         )

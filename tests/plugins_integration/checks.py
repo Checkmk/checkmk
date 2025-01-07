@@ -519,9 +519,9 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
                     == 0
                 )
 
-                logger.info("Activating changes & reloading core...")
-                site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
-
+                site.openapi.changes.activate_and_wait_for_completion(
+                    force_foreign_changes=True, strict=False
+                )
                 _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
                 wait_for_dcd_pend_changes(site)
 
@@ -632,8 +632,8 @@ def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: boo
 
 
 def wait_for_dcd_pend_changes(site: Site) -> None:
-    """Wait up to 60 seconds for DCD to activate changes."""
-    max_count = 60
+    """Wait up to 120 seconds for DCD to activate changes."""
+    max_count = 120
     count = 0
     while (n_pending_changes := len(site.openapi.changes.get_pending())) > 0 and count < max_count:
         logger.info(

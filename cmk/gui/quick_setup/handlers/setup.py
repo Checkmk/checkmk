@@ -371,7 +371,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 )
 
     def _run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
-        job_interface.send_progress_update(_("Starting Quick stage action..."))
+        job_interface.send_progress_update(_("Starting Quick setup action..."))
 
         register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]

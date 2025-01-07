@@ -44,7 +44,8 @@ def main() {
         use_case: params.USE_CASE,
         override: params.OVERRIDE_DISTROS);
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = "${currentBuild.fullProjectName.split("/")[0..-3].join("/")}";
+    def project_name_components = currentBuild.fullProjectName.split("/").toList();
+    def branch_base_folder = project_name_components[0..project_name_components.indexOf('checkmk') + 1].join('/');
 
     def cmk_version_rc_aware = versioning.get_cmk_version(
         versioning.safe_branch_name(scm),

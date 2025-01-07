@@ -13,7 +13,7 @@ from requests.structures import CaseInsensitiveDict
 from schemathesis import DataGenerationMethod
 from schemathesis.specs.openapi import schemas
 
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
 
 from tests.schemathesis_openapi import settings
 
@@ -181,7 +181,8 @@ def get_site() -> Iterator[Site]:
 def get_schema() -> schemas.BaseOpenAPISchema:
     """Return schema for parametrization."""
     site = next(get_site())
-    token = f"Bearer automation {site.get_automation_secret()}"
+
+    token = f"Bearer {AUTOMATION_USER} {site.get_automation_secret()}"
 
     @schemathesis.auths.register()
     class _Auth(schemathesis.auths.AuthProvider):

@@ -13,11 +13,12 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.theme import theme, theme_choices
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 
 

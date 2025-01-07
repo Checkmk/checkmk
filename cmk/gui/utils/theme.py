@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import os
 from pathlib import Path
 
@@ -17,13 +16,16 @@ from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.theme.choices import theme_choices
 
 
 class Theme:
     def __init__(self) -> None:
         self._default_theme = "facelift"
         self._theme = "facelift"
-        self.theme_choices: list[tuple[str, str]] = theme_choices()
+        self.theme_choices: list[tuple[str, str]] = theme_choices(
+            [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]
+        )
 
         if not self.theme_choices and current_app.debug:
             raise MKInternalError(_("No valid theme directories found."))
@@ -113,36 +115,6 @@ class Theme:
             edition(cmk.utils.paths.omd_root) is Edition.CME
             and self.base_dir().joinpath("images", f"{logo_name}.png").exists()
         )
-
-
-def theme_choices() -> list[tuple[str, str]]:
-    themes = {}
-
-    for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
-        if not base_dir.exists():
-            continue
-
-        theme_base_dir = base_dir / "htdocs" / "themes"
-        if not theme_base_dir.exists():
-            continue
-
-        for theme_dir in theme_base_dir.iterdir():
-            meta_file = theme_dir / "theme.json"
-            if not meta_file.exists():
-                continue
-
-            try:
-                theme_meta = json.loads(meta_file.open(encoding="utf-8").read())
-            except ValueError:
-                # Ignore broken meta files and show the directory name as title
-                theme_meta = {
-                    "title": theme_dir.name,
-                }
-
-            assert isinstance(theme_meta["title"], str)
-            themes[theme_dir.name] = theme_meta["title"]
-
-    return sorted(themes.items())
 
 
 theme = request_local_attr("theme", Theme)

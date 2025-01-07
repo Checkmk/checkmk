@@ -127,7 +127,7 @@ def patch_theme() -> Iterator[None]:
             return_value="modern-dark",
         ),
         patch(
-            "cmk.gui.utils.theme.theme_choices",
+            "cmk.gui.theme.choices.theme_choices",
             return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
         ),
     ):

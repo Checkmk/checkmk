@@ -91,6 +91,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
   position: relative;
 }
 
+.qs-stage-content__action > button {
+  margin-right: 8px;
+}
+
 .qs-stage-content__loading {
   display: flex;
   align-items: center;

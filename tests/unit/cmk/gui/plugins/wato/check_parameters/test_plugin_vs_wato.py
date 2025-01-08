@@ -270,12 +270,12 @@ class ErrorReporter:
 
     KNOWN_WATO_MISSING = {
         # type # instance # wato
-        ("check", "3ware_units", "raid"),
+        ("check", "3ware_units", "raid"),  # used to enforce the plugin
         ("check", "brocade_tm", "brocade_tm"),
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "lsi_array", "raid"),
-        ("check", "md", "raid"),
+        ("check", "lsi_array", "raid"),  # used to enforce the plugin
+        ("check", "md", "raid"),  # used to enforce the plugin
         ("check", "mongodb_replication_info", "mongodb_replication_info"),
         ("check", "moxa_iologik_register", "iologik_register"),
         ("check", "netstat", "tcp_connections"),

@@ -37,6 +37,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// Might also be taken from editions.yml - there we also have "saas" and "raw" but
     /// AFAIK there is no way to extract the editions we want to test generically, so we
@@ -46,9 +47,9 @@ def main() {
         edition: params.EDITION,
         use_case: params.USE_CASE,
         override: params.OVERRIDE_DISTROS);
+
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def project_name_components = currentBuild.fullProjectName.split("/").toList();
-    def branch_base_folder = project_name_components[0..project_name_components.indexOf('checkmk') + 1].join('/');
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def cmk_version_rc_aware = versioning.get_cmk_version(
         versioning.safe_branch_name(scm),

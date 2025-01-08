@@ -187,6 +187,25 @@ def main() {
         name: "Upload artifacts",
         condition: upload_to_testbuilds,
     ) {
+        /// File.eachFileRecurse works on Jenkins master node only, so we have to build it
+        /// on our own..
+        def files_to_upload = {
+            dir("${deliverables_dir}") {
+                cmd_output("ls *.{deb,rpm,cma,tar.gz} || true").split().toList();
+            }
+        }();
+        print("Found files to upload: ${files_to_upload}");
+
+        files_to_upload.each { filename ->
+            artifacts_helper.upload_via_rsync(
+                "${WORKSPACE}/deliverables",
+                "${cmk_version_rc_aware}",
+                "${filename}",
+                "${INTERNAL_DEPLOY_DEST}",
+                INTERNAL_DEPLOY_PORT,
+            );
+        }
+
         currentBuild.description += """\
             <p><a href='${INTERNAL_DEPLOY_URL}/${cmk_version}'>Download Artifacts</a></p>
             """.stripIndent();
@@ -202,7 +221,7 @@ def main() {
             );
 
             if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
-                // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
+                // uploads distro packages, source.tar.gz and hashes
                 artifacts_helper.upload_files_to_nexus(
                     "${deliverables_dir}/check-mk-saas-${cmk_version}*",
                     "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",

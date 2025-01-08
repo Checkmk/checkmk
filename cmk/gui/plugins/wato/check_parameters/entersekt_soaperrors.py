@@ -31,7 +31,7 @@ def _parameter_valuespec_entersekt_soaprrors():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="entersekt_soaprrors",
+        check_group_name="entersekt_soaperrors",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_entersekt_soaprrors,

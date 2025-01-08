@@ -25,7 +25,9 @@ from cmk.gui.watolib.rulesets import (
     RulesetCollection,
 )
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "entersekt_soaprrors": "entersekt_soaperrors",  # 2.4 -> 2.5
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 

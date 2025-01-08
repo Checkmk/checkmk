@@ -16,7 +16,7 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 
 check_info = {}
@@ -184,24 +184,14 @@ def inventory_entersekt_soaperrors(info):
         yield None, {}
 
 
-def check_entersekt_soaperrors(item, params, info):
-    if params:
-        (warn, crit) = params["levels"]
-    else:
-        (warn, crit) = (100, 200)
-    status = 3
-    infotext = "Item not found in SNMP output"
-    if int(info[0][3]) > crit:
-        status = 2
-        infotext = f"Number of errors is {int(info[0][3])} which is higher than {crit}"
-    elif int(info[0][3]) > warn:
-        status = 1
-        infotext = f"Number of errors is {int(info[0][3])} which is higher than {warn}"
-    else:
-        status = 0
-        infotext = "Number of errors is %s " % (info[0][3])
-    perfdata = [("Errors", int(info[0][3]), warn, crit)]
-    yield int(status), infotext, perfdata
+def check_entersekt_soaperrors(_no_item, params, info):
+    yield check_levels(
+        value=int(info[0][3]),
+        dsname="Errors",
+        params=params["levels"],
+        human_readable_func=str,
+        infoname="Number of errors",
+    )
 
 
 check_info["entersekt.soaperrors"] = LegacyCheckDefinition(

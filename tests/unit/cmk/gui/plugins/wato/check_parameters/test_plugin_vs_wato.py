@@ -249,7 +249,6 @@ class ErrorReporter:
         # type # name
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
-        ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
@@ -272,7 +271,6 @@ class ErrorReporter:
         # type # instance # wato
         ("check", "3ware_units", "raid"),  # used to enforce the plugin
         ("check", "brocade_tm", "brocade_tm"),
-        ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
         ("check", "lsi_array", "raid"),  # used to enforce the plugin
         ("check", "md", "raid"),  # used to enforce the plugin
         ("check", "mongodb_replication_info", "mongodb_replication_info"),

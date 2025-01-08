@@ -94,6 +94,17 @@ USER_INPUT_CONTINUE: Final = ("c", "continue")
 USER_INPUT_DISABLE: Final = ("d", "disable")
 
 
+class Resume(enum.Enum):
+    UPDATE = enum.auto()
+    ABORT = enum.auto()
+
+    def is_abort(self) -> bool:
+        return self is Resume.ABORT
+
+    def is_not_abort(self) -> bool:
+        return self is not Resume.ABORT
+
+
 def disable_incomp_mkp(
     conflict_mode: ConflictMode,
     package_id: PackageID,
@@ -101,10 +112,7 @@ def disable_incomp_mkp(
     package_store: PackageStore,
     path_config: PathConfig,
 ) -> bool:
-    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-        conflict_mode is ConflictMode.ASK
-        and _request_user_input_on_incompatible_file().lower() in USER_INPUT_DISABLE
-    ):
+    if _request_user_input_on_incompatible_file(conflict_mode).is_not_abort():
         if (
             disabled := disable(
                 installer,
@@ -121,12 +129,18 @@ def disable_incomp_mkp(
     return False
 
 
-def _request_user_input_on_incompatible_file() -> str:
-    return prompt(
-        "You can abort the update process (A) or disable the "
-        "extension package (d) and continue the update process.\n"
-        "Abort the update process? [A/d] \n"
-    )
+def _request_user_input_on_incompatible_file(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or disable the "
+                "extension package (d) and continue the update process.\n"
+                "Abort the update process? [A/d] \n"
+            )
 
 
 def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseException) -> str:
@@ -146,23 +160,20 @@ def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     )
 
 
-def continue_on_incomp_local_file(conflict_mode: ConflictMode) -> bool:
-    return continue_per_users_choice(
-        conflict_mode,
-        "You can abort the update process (A) and try to fix "
-        "the incompatibilities or continue the update (c).\n\n"
-        "Abort the update process? [A/c] \n",
-    )
-
-
 def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
     return f"Incompatible local file '{path}'.\nError: {error}\n\n"
 
 
-def continue_per_users_choice(conflict_mode: ConflictMode, prompt_text: str) -> bool:
-    if conflict_mode is ConflictMode.ASK:
-        return prompt(prompt_text).lower() in USER_INPUT_CONTINUE
-    return False
+def continue_per_users_choice(prompt_text: str) -> Resume:
+    if prompt(prompt_text).lower() in USER_INPUT_CONTINUE:
+        return Resume.UPDATE
+    return Resume.ABORT
+
+
+def _disable_per_users_choice(prompt_text: str) -> Resume:
+    if prompt(prompt_text).lower() in USER_INPUT_DISABLE:
+        return Resume.UPDATE
+    return Resume.ABORT
 
 
 def get_installer_and_package_map(

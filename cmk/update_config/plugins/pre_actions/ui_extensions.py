@@ -18,7 +18,7 @@ from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
-    continue_on_incomp_local_file,
+    continue_per_users_choice,
     disable_incomp_mkp,
     error_message_incomp_local_file,
     error_message_incomp_package,
@@ -26,6 +26,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
     PACKAGE_STORE,
+    Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -54,7 +55,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
             # unpackaged files
             if package_id is None:
                 logger.error(error_message_incomp_local_file(path, error))
-                if continue_on_incomp_local_file(conflict_mode):
+                if _continue_on_incomp_local_file(conflict_mode).is_not_abort():
                     continue
                 raise MKUserError(None, "incompatible local file")
 
@@ -74,6 +75,20 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 parse_perfometer(perfometer)
             except MKGeneralException as e:
                 sys.stderr.write(f"{e}\n")
+
+
+def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) and try to fix "
+                "the incompatibilities or continue the update (c).\n\n"
+                "Abort the update process? [A/c] \n",
+            )
 
 
 pre_update_action_registry.register(

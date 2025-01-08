@@ -21,6 +21,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     get_installer_and_package_map,
     get_path_config,
     PACKAGE_STORE,
+    Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -55,7 +56,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 "The above file(s) are not associated with any MKP and can thus not be removed automatically. "
                 "You must manually remove them in order to suppress future warnings."
             )
-            if not _continue_per_users_choice(conflict_mode):
+            if _continue_per_users_choice(conflict_mode).is_abort():
                 raise MKUserError(None, "decommissioned file(s)")
 
         for package_id, paths in grouped_files.items():
@@ -68,12 +69,17 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             raise MKUserError(None, "incompatible extension package")
 
 
-def _continue_per_users_choice(conflict_mode: ConflictMode) -> bool:
-    return continue_per_users_choice(
-        conflict_mode,
-        "You can abort the update process (A) or continue the update (c).\n"
-        "Abort the update process? [A/c] \n",
-    )
+def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue the update (c).\n"
+                "Abort the update process? [A/c] \n",
+            )
 
 
 def _log_error_message_obsolete_files(logger: Logger, paths: Sequence[Path]) -> None:

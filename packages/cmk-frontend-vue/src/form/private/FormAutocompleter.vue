@@ -20,6 +20,8 @@ const props = defineProps<{
   resestInputOnAdd: boolean
 }>()
 
+const inputValue = defineModel<string>()
+
 const emit = defineEmits<{
   (e: 'select', value: string): void
 }>()
@@ -100,7 +102,6 @@ const setBlur = (isSet: boolean) => {
   }, 200)
 }
 
-const inputValue = ref('')
 type AutocompleterResponse = Record<'choices', [string, string][]>
 const {
   input: autocompleterInput,
@@ -115,7 +116,7 @@ const selectedSuggestionIndex = ref<number>(-1)
 
 watch(inputValue, (newValue) => {
   showSuggestions.value = inputValue.value ? true : false
-  autocompleterInput.value = newValue
+  autocompleterInput.value = newValue || ''
 })
 
 watch(autocompleterOutput, (newValue) => {

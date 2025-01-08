@@ -24,6 +24,8 @@ import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
 import DemoFormAll from './DemoFormAll.vue'
+import DemoFormString from './DemoFormString.vue'
+import DemoFormListOfStrings from './DemoFormListOfStrings.vue'
 import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
@@ -133,6 +135,16 @@ const routes: Route[] = [
         path: 'formlist',
         name: 'FormList',
         component: DemoFormList
+      },
+      {
+        path: 'formstring',
+        name: 'FormString',
+        component: DemoFormString
+      },
+      {
+        path: 'formlistofstrings',
+        name: 'FormListOfStrings',
+        component: DemoFormListOfStrings
       },
       {
         path: 'formmetric',

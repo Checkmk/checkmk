@@ -53,6 +53,7 @@ const componentId = useId()
   <FormAutocompleter
     v-if="spec.autocompleter"
     :id="componentId"
+    v-model="value"
     :size="inputSizes[props.spec.field_size].width"
     :resest-input-on-add="false"
     :autocompleter="spec.autocompleter"
@@ -60,7 +61,6 @@ const componentId = useId()
     :show="true"
     :filter-on="[]"
     :show-icon="true"
-    @select="value = $event"
   />
   <FormValidation :validation="validation"></FormValidation>
 </template>

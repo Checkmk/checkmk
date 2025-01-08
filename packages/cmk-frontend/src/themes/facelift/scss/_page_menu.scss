@@ -109,10 +109,12 @@ div#top_heading {
       padding-top: 2px;
       div.text_container span {
         position: absolute;
-        right: 6px;
         bottom: 20px;
         font-size: $font-size-small;
         line-height: $font-size-small;
+        width: 25px;
+        margin-left: 8px;
+        text-align: center;
       }
       div.icon_container,
       div.icon_container > img.icon {

@@ -1073,7 +1073,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "storeonce4x_alerts",
         "storeonce4x_d2d_services",
         "stormshield_cluster",
-        "stormshield_cluster_node",
         "stormshield_cpu_temp",
         "stormshield_disk",
         "stormshield_info",

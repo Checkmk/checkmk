@@ -102,3 +102,40 @@ test('FormString displays required', async () => {
 
   screen.getByText('(required)')
 })
+
+test('FormString with autocompleter loads value', async () => {
+  render(FormString, {
+    props: {
+      spec: {
+        type: 'string',
+        title: '',
+        help: '',
+        validators: [],
+        label: 'ut_label',
+        input_hint: '',
+        field_size: 'MEDIUM',
+        autocompleter: {
+          data: {
+            ident: 'config_hostname',
+            params: {
+              show_independent_of_context: true,
+              strict: true,
+              escape_regex: true,
+              world: 'world',
+              context: {}
+            }
+          },
+          fetch_method: 'ajax_vs_autocomplete'
+        },
+        i18n_base: {
+          required: 'required'
+        }
+      },
+      data: 'some value',
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'ut_label' })
+  expect(element.value).toBe('some value')
+})

@@ -17,11 +17,11 @@ def provide_agent_updaters(version, edition, disable_cache) {
     // For now it's nearly JSON like and can be treated as such.
     def upstream_job_details = [
         "build-linux-agent-updater": [
-            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
             //       Windows for consistency)
-            relative_job_name: "checkmk/master/builders/build-linux-agent-updater",
+            relative_job_name: "checkmk/2.4.0/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
@@ -40,11 +40,11 @@ def provide_agent_updaters(version, edition, disable_cache) {
                 """.stripIndent(),
         ],
         "winagt-build": [
-            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
             //       Windows for consistency)
-            relative_job_name: "checkmk/master/winagt-build",
+            relative_job_name: "checkmk/2.4.0/winagt-build",
             dependency_paths: [
                 "agents/wnx",
                 "agents/windows",
@@ -76,11 +76,11 @@ def provide_agent_updaters(version, edition, disable_cache) {
                 """.stripIndent(),
         ],
         "winagt-build-modules": [
-            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
             //       Windows for consistency)
-            relative_job_name: "checkmk/master/winagt-build-modules",
+            relative_job_name: "checkmk/2.4.0/winagt-build-modules",
             dependency_paths: [
                 "agents/modules/windows",
             ],

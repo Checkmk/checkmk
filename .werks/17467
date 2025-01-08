@@ -1,0 +1,11 @@
+Title: Fix escaping of aggregation group painter
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1736338456
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+If you used e.g. "&" in Business Intelligence group names, the GUI showed "&amp".
+This has been fixed.

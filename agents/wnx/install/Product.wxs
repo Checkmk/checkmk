@@ -20,7 +20,7 @@ just to signal that real build script was not called -->
 <?define ServiceName = "CheckmkService"?>
 <?define ServiceDisplayName = "Checkmk Service"?>
 <!-- IMPORTANT NOTE 3: String below must start from 'Checkmk monitoring agent service - ', grep client to find why-->
-<?define ServiceDescription = "Checkmk monitoring agent service - 2.4"?>
+<?define ServiceDescription = "Checkmk monitoring agent service - 2.5"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"

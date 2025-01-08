@@ -59,7 +59,7 @@ private:
 constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
 constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
 // string below is patched by Makefile
-constexpr std::wstring_view kAgentProductName{L"Checkmk Agent 2.4"};
+constexpr std::wstring_view kAgentProductName{L"Checkmk Agent 2.5"};
 namespace api_err {
 constexpr std::string_view kLogFileName{"install_api.log"};
 constexpr std::string_view kFailMarker{"fail: "};

@@ -41,7 +41,7 @@ else
 SAAS              := no
 endif
 
-VERSION            := 2.4.0b1
+VERSION            := 2.5.0b1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)
@@ -50,7 +50,7 @@ PKG_VERSION        := $(VERSION)
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.4.0
+BRANCH_VERSION     := 2.5.0
 
 # return nothing if the branch name, e.g. "master" is not the version e.g. 2.4.0
 # this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does

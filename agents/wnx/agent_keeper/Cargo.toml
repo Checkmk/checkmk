@@ -3,16 +3,15 @@ name = "agent_keeper"
 version = "0.1.0"
 edition = "2021"
 
-
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
-lazy_static = "1.4.0"
-windows-service = "0.6.0"
+lazy_static = "1.5.0"
+windows-service = "0.7.0"
 cmk-agent-ctl = { path = "../../../packages/host/cmk-agent-ctl" }
 
 # as in  https://crates.io/crates/windows
 [dependencies.windows-sys]
-version = "0.48"
+version = "0.59"
 features = [
   "Win32_Foundation",
   "Win32_Security",

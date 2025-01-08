@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal
+from typing import cast, Literal, Union
 
 from pydantic import BaseModel
 
@@ -20,7 +20,7 @@ class AuthSts(BaseModel):
     external_id: str | None = None
 
 
-class Auth(AuthAccessKey, AuthSts): ...
+class AuthAccessKeySts(AuthAccessKey, AuthSts): ...
 
 
 class ProxyDetails(BaseModel):
@@ -47,13 +47,13 @@ ServiceConfig = Mapping[str, LimitsActivated | HostAssignment | Selection | None
 
 
 class AwsParams(BaseModel):
-    auth: (
-        tuple[Literal["access_key_sts"], Auth]
-        | tuple[Literal["access_key"], AuthAccessKey]
-        | tuple[Literal["sts"], AuthSts]
-        | Literal["none"]
-        | None
-    ) = None
+    auth: Union[
+        tuple[Literal["access_key_sts"], AuthAccessKeySts],
+        tuple[Literal["access_key"], AuthAccessKey],
+        tuple[Literal["sts"], AuthSts],
+        Literal["none"],
+        None,
+    ] = None
     proxy_details: ProxyDetails | None = None
     access: APIAccess | None = None
     global_services: Mapping[str, ServiceConfig] | None = None
@@ -153,7 +153,7 @@ def aws_arguments(
             args.extend(("--access-key-id", ak.access_key_id))
             args.extend(("--secret-access-key-reference", ak.secret_access_key))
         case ("access_key_sts", aksts):
-            assert isinstance(aksts, Auth)
+            assert isinstance(aksts, AuthAccessKeySts)
             args.extend(("--access-key-id", aksts.access_key_id))
             args.extend(("--secret-access-key-reference", aksts.secret_access_key))
             args.extend(("--assume-role", "--role-arn", aksts.role_arn_id))

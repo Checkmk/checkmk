@@ -6544,8 +6544,8 @@ class AWSSections(abc.ABC):
         """
         if hasattr(exception, "message"):
             return exception.message
-        else:
-            return repr(exception)
+
+        return repr(exception)
 
     def _write_exceptions(self, exceptions: Sequence) -> None:
         sys.stdout.write("<<<aws_exceptions>>>\n")

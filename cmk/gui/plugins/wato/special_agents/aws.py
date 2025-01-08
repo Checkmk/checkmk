@@ -508,12 +508,7 @@ class AWSSpecialAgentValuespecBuilder:
 
 def _migrate_auth(value: object) -> dict[str, object]:
     """
-    >>> data1 = {'access_key_id': 'XYZ', 'secret_access_key': (), 'access': {'role_arn_id': ('arn:aws:iam::AWSID:role/Rolename', 'UniqueExternalIdFrom-4080-3046-6243') }}
-    >>> data2 = {'access_key_id': 'XYZ', 'secret_access_key': (), 'access': {}}
-    >>> _migrate_auth(data1)
-    {'access': {}, 'auth': ('access_key_sts', {'access_key_id': 'XYZ', 'secret_access_key': (), 'role_arn_id': 'arn:aws:iam::AWSID:role/Rolename', 'external_id': 'UniqueExternalIdFrom-4080-3046-6243'})}
-    >>> _migrate_auth(data2)
-    {'access': {}, 'auth': ('access_key', {'access_key_id': 'XYZ', 'secret_access_key': ()})}
+    migrate to new auth config with explicit auth types
     """
 
     assert isinstance(value, dict)

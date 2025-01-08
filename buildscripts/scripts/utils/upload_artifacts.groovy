@@ -75,17 +75,15 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="", ADDIT
         || ADDITONAL_ARGS   = |${ADDITONAL_ARGS}|
         ||==========================================================================================
         """.stripMargin());
-    stage('Upload to download server') {
-        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
-            sh("""
-                rsync -av \
-                    ${ADDITONAL_ARGS} \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                    --exclude=${EXCLUDE_PATTERN} \
-                    ${SOURCE_PATH} \
-                    ${UPLOAD_DEST}
-            """);
-        }
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
+        sh("""
+            rsync -av \
+                ${ADDITONAL_ARGS} \
+                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                --exclude=${EXCLUDE_PATTERN} \
+                ${SOURCE_PATH} \
+                ${UPLOAD_DEST}
+        """);
     }
 }
 

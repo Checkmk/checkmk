@@ -15,13 +15,14 @@ from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
-    continue_on_incomp_local_file,
+    continue_per_users_choice,
     disable_incomp_mkp,
     error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
     is_applicable_mkp,
     PACKAGE_STORE,
+    Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -52,7 +53,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             # unpackaged files
             if manifest is None:
                 logger.error(error_message_incomp_local_file(path, error))
-                if continue_on_incomp_local_file(conflict_mode):
+                if _continue_on_incomp_local_file(conflict_mode).is_not_abort():
                     continue
                 raise MKUserError(None, "incompatible local file")
 
@@ -85,6 +86,20 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             raise MKUserError(None, "incompatible local file")
 
         return False
+
+
+def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) and try to fix "
+                "the incompatibilities or continue the update (c).\n\n"
+                "Abort the update process? [A/c] \n",
+            )
 
 
 pre_update_action_registry.register(

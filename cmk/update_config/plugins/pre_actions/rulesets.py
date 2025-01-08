@@ -6,7 +6,6 @@
 
 from collections.abc import Sequence
 from logging import Logger
-from typing import assert_never
 
 from cmk.utils import version
 from cmk.utils.log import VERBOSE
@@ -24,8 +23,8 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.actions.rulesets import REPLACED_RULESETS
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
-    prompt,
-    USER_INPUT_CONTINUE,
+    continue_per_users_choice,
+    Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -40,10 +39,7 @@ class PreUpdateRulesets(PreUpdateAction):
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
             logger.error(f"Exception while trying to load rulesets: {exc}\n\n")
-            if (
-                conflict_mode is ConflictMode.ASK
-                and _request_user_input_on_ruleset_exception().lower() in USER_INPUT_CONTINUE
-            ):
+            if _continue_on_ruleset_exception(conflict_mode).is_not_abort():
                 return None
             raise MKUserError(None, "an incompatible ruleset") from exc
 
@@ -65,25 +61,50 @@ class PreUpdateRulesets(PreUpdateAction):
                         ruleset.name,
                     )
                     logger.exception("This is the exception: ")
-                    if conflict_mode is ConflictMode.ASK:
-                        user_input = prompt(
-                            "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                        )
-                        if not user_input.lower() in USER_INPUT_CONTINUE:
-                            raise MKUserError(None, "broken ruleset")
+                    if _continue_on_broken_ruleset(conflict_mode).is_abort():
+                        raise MKUserError(None, "broken ruleset")
 
         if not result:
             raise MKUserError(None, "failed ruleset validation")
-
         return None
 
 
-def _request_user_input_on_ruleset_exception() -> str:
-    return prompt(
-        "You can abort the update process (A) and try to fix "
-        "the incompatibilities or try to continue the update (c).\n"
-        "Abort update? [A/c]\n"
-    )
+def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.UPDATE
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+            )
+
+
+def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+            )
+
+
+def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) and try to fix "
+                "the incompatibilities or try to continue the update (c).\n"
+                "Abort update? [A/c]\n"
+            )
 
 
 def _validate_rule_values(
@@ -147,21 +168,8 @@ def _validate_rule_values(
                     addition_info = []
                 error_message = _error_message(ruleset, folder, index, e, addition_info)
                 logger.error(error_message)
-                match conflict_mode:
-                    case ConflictMode.ABORT:
-                        return False
-                    case ConflictMode.ASK:
-                        if (
-                            prompt(
-                                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                            ).lower()
-                            not in USER_INPUT_CONTINUE
-                        ):
-                            return False
-                    case ConflictMode.KEEP_OLD | ConflictMode.INSTALL:
-                        continue
-                    case _:
-                        assert_never(conflict_mode)
+                if _continue_on_invalid_rule(conflict_mode).is_abort():
+                    return False
 
     return True
 

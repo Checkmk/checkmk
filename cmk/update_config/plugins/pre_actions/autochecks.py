@@ -18,6 +18,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     AUTOCHECK_REWRITE_PREACTION_SORT_INDEX,
     ConflictMode,
     continue_per_users_choice,
+    Resume,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -33,12 +34,12 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         for error in rewrite_yielding_errors(write=False):
             if error.plugin is None:
                 logger.error(f"{error.host_name}: {error.message}.")
-                if continue_per_users_choice(
-                    conflict_mode,
+                if _continue_on_failed_to_migrate(
                     " You can abort and fix this manually."
                     " If you continue, the affected service(s) will be lost, but can be rediscovered."
                     " Abort the update process? [A/c] \n",
-                ):
+                    conflict_mode,
+                ).is_not_abort():
                     continue
                 raise MKUserError(None, "Failed to migrate autochecks")
 
@@ -55,14 +56,23 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             all_messages = list(itertools.chain(*hosts.values()))
 
             logger.error(f"{plugin}: {all_messages[0]}. ")
-            if continue_per_users_choice(
-                conflict_mode,
+            if _continue_on_failed_to_migrate(
                 "You can abort and fix this manually. "
                 f"If you continue, {len(all_messages)} service(s) on {len(hosts)} host(s) will be lost, but can be rediscovered."
                 " Abort the update process? [A/c] \n",
-            ):
-                continue
-            raise MKUserError(None, "Failed to migrate autochecks")
+                conflict_mode,
+            ).is_abort():
+                raise MKUserError(None, "Failed to migrate autochecks")
+
+
+def _continue_on_failed_to_migrate(prompt: str, conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(prompt)
 
 
 pre_update_action_registry.register(

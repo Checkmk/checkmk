@@ -4,9 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export interface BackgroundJobSnapshotObject {
-  domain_type: 'background_job'
-  extensions: BackgroundJobSnapshot
+interface BackgroundJobStatus {
+  state: string
 }
 
 interface BackgroundJobSnapshot {
@@ -14,11 +13,12 @@ interface BackgroundJobSnapshot {
   active: boolean
 }
 
-interface BackgroundJobStatus {
-  state: string
-}
-
 export interface BackgroundJobSpawnResponse {
-  job_id: string
-  domain_type: 'background_job'
+  id: string
+  domainType: 'background_job'
+  extensions: BackgroundJobSnapshot
+}
+export interface BackgroundJobSnapshotObject {
+  domainType: 'background_job'
+  extensions: BackgroundJobSnapshot
 }

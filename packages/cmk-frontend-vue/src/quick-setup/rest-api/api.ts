@@ -20,7 +20,8 @@ import {
   quickSetup as quickSetupClient,
   backgroundJob as backgroundJobClient
 } from '@/lib/rest-api-client'
-import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_types'
+import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
+import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds between checks */
 export const BACKGROUND_JOB_CHECK_INTERVAL = 5000
@@ -137,13 +138,13 @@ const _saveOrEditQuickSetup = async (
       If the action is executed asynchronously, an object of the background_job domain is returned. 
       The result can be obtained after the job has finished executing.
     */
-  if ('domain_type' in data && data.domain_type === 'background_job') {
-    await _waitForBackgroundJobToFinish(data.job_id)
-    data = await quickSetupClient.fetchBackgroundJobResult(data.job_id)
+  if ('domainType' in data && data.domainType === 'background_job') {
+    await _waitForBackgroundJobToFinish(data.id)
+    data = await quickSetupClient.fetchBackgroundJobResult(data.id)
 
-    //It is possible that a 200 response carries error messages. This will raise later a CmkError
-    if (data?.background_job_exception) {
-      throw data.background_job_exception
+    //It is possible that a 200 response carries error messages. This must raise an arror
+    if (data?.background_job_exception || data?.all_stage_errors) {
+      throw _createAxiosError(data)
     }
   }
 
@@ -169,19 +170,19 @@ export const validateAndRecapStage = async (
     let data = await quickSetupClient.runStageAction(quickSetupId, actionId, stages)
 
     /*
-      If the action is executed synchronously, the response is a quick_setup domain object 
+      If the action is executed synchronously, the response is a quick_setup domain object
       with the stage recap.
 
-      If the action is executed asynchronously, an object of the background_job domain is returned. 
+      If the action is executed asynchronously, an object of the background_job domain is returned.
       The result can be obtained after the job has finished executing.
     */
-    if ('domain_type' in data && data.domain_type === 'background_job') {
-      await _waitForBackgroundJobToFinish(data.job_id)
-      data = await quickSetupClient.fetchStageBackgroundJobResult(data.job_id)
+    if ('domainType' in data && data.domainType === 'background_job') {
+      await _waitForBackgroundJobToFinish(data.id)
+      data = await quickSetupClient.fetchStageBackgroundJobResult(data.id)
 
-      //It is possible that a 200 response carries error messages. This will raise later a CmkError
-      if (data?.background_job_exception) {
-        throw data.background_job_exception
+      //It is possible that a 200 response carries error messages. This must raise an error
+      if (data?.background_job_exception || data?.validation_errors) {
+        throw _createAxiosError(data)
       }
     }
 
@@ -222,4 +223,21 @@ const _waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
 
     await wait(BACKGROUND_JOB_CHECK_INTERVAL)
   } while (isActive)
+}
+
+/**
+ * This function creates a dummy AxiosError with error information from the background job in order to process it on the error handler
+ *
+ * @param data response from axios call
+ * @returns AxiosError
+ */
+const _createAxiosError = (data: unknown): AxiosError => {
+  const err = new AxiosError(undefined, undefined, undefined, undefined, {
+    status: 400,
+    data: data,
+    statusText: 'Bad Request',
+    headers: {},
+    config: undefined as unknown as InternalAxiosRequestConfig
+  })
+  return err
 }

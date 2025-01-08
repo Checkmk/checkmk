@@ -15,7 +15,7 @@ import type {
   QuickSetupStageActionResponse,
   QuickSetupStageStructure
 } from './response_schemas'
-import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_types'
+import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_schemas'
 import type { BackgroundJobSpawnResponse } from '../background-job/response_schemas'
 
 const API_DOMAIN = 'quick_setup'

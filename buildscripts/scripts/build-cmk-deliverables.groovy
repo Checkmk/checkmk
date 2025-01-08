@@ -29,6 +29,7 @@ def main() {
         "INTERNAL_DEPLOY_URL",
         "INTERNAL_DEPLOY_DEST",
         "INTERNAL_DEPLOY_PORT",
+        "ARTIFACT_STORAGE",
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
         "BAZEL_CACHE_URL",
@@ -71,16 +72,21 @@ def main() {
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
+        |relative_deliverables_dir:......... │${relative_deliverables_dir}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |branch_base_folder:................ │${branch_base_folder}│
         |===================================================
         """.stripMargin());
 
-    def offsetForOrder = 0;
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
 
     def stages = [
         "Build source package": {
-            sleep(0.1 * offsetForOrder++);
+            sleep(0.1 * timeOffsetForOrder++);
 
             smart_stage(
                 name: "Build source package",
@@ -108,7 +114,7 @@ def main() {
             }
         },
         "Build BOM": {
-            sleep(0.1 * offsetForOrder++);
+            sleep(0.1 * timeOffsetForOrder++);
 
             smart_stage(
                 name: "Build BOM",
@@ -132,7 +138,7 @@ def main() {
 
     stages += all_distros.collectEntries { distro -> [
         ("${distro}") : {
-            sleep(0.1 * offsetForOrder++);
+            sleep(0.1 * timeOffsetForOrder++);
 
             def run_condition = distro in selected_distros;
             /// this makes sure the whole parallel thread is marked as skipped

@@ -37,7 +37,7 @@ AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after
 )
 
 
-def prompt(message: str) -> str:
+def _prompt(message: str) -> str:
     tcflush(sys.stdin, TCIFLUSH)
     return input(message)
 
@@ -166,7 +166,7 @@ def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
 
 
 def continue_per_users_choice(prompt_text: str) -> Resume:
-    while (response := prompt(prompt_text).lower()) not in [
+    while (response := _prompt(prompt_text).lower()) not in [
         *_USER_INPUT_CONTINUE,
         *_USER_INPUT_ABORT,
     ]:
@@ -177,7 +177,7 @@ def continue_per_users_choice(prompt_text: str) -> Resume:
 
 
 def _disable_per_users_choice(prompt_text: str) -> Resume:
-    while (response := prompt(prompt_text).lower()) not in [
+    while (response := _prompt(prompt_text).lower()) not in [
         *_USER_INPUT_DISABLE,
         *_USER_INPUT_ABORT,
     ]:

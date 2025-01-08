@@ -267,24 +267,26 @@ class ErrorReporter:
         ),  # deprecated since 2.2
     }
 
-    KNOWN_WATO_MISSING = {
+    ENFORCING_ONLY_RULESETS = {
+        # These plugins only have rules to be enforced (and configured),
+        # but no rules to configure discovered services.
+        # This may or may not be intentional and/or reasonable.
+        # If the plugins are discovered by default, it is likely to be unintentional.
         # type # instance # wato
-        ("check", "3ware_units", "raid"),  # used to enforce the plugin
-        ("check", "brocade_tm", "brocade_tm"),
-        ("check", "lsi_array", "raid"),  # used to enforce the plugin
-        ("check", "md", "raid"),  # used to enforce the plugin
-        ("check", "mongodb_replication_info", "mongodb_replication_info"),
-        ("check", "moxa_iologik_register", "iologik_register"),
+        ("check", "3ware_units", "raid"),
+        ("check", "lsi_array", "raid"),
+        ("check", "md", "raid"),
         ("check", "netstat", "tcp_connections"),
         ("check", "nvidia_errors", "hw_errors"),
-        ("check", "qlogic_fcport", "qlogic_fcport"),
-        ("check", "stormshield_policy", "stormshield"),
-        ("check", "stormshield_updates", "stormshield_updates"),
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
+    }
+
+    KNOWN_WATO_MISSING = {
+        # type # instance # wato
         ("discovery", "fileinfo", "fileinfo_groups"),
         ("discovery", "fileinfo_groups", "fileinfo_groups"),
         ("discovery", "sap_hana_fileinfo", "fileinfo_groups"),
@@ -299,7 +301,7 @@ class ErrorReporter:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
+        self._known_wato_missing = self.KNOWN_WATO_MISSING | self.ENFORCING_ONLY_RULESETS
 
     def failed(self) -> bool:
         return self._failed

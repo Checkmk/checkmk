@@ -299,5 +299,4 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
     service_name="FC Port %s",
     discovery_function=inventory_qlogic_fcport,
     check_function=check_qlogic_fcport,
-    check_ruleset_name="qlogic_fcport",
 )

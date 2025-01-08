@@ -40,7 +40,7 @@ def discover_mongodb_replication_info(section: Section) -> Iterable[tuple[None, 
         yield None, {}
 
 
-def check_mongodb_replication_info(item, params, info_dict):
+def check_mongodb_replication_info(_no_item, _no_params, info_dict):
     """
     just outputting long output and performance data for now.
     :param item:
@@ -146,5 +146,4 @@ check_info["mongodb_replication_info"] = LegacyCheckDefinition(
     service_name="MongoDB Replication Info",
     discovery_function=discover_mongodb_replication_info,
     check_function=check_mongodb_replication_info,
-    check_ruleset_name="mongodb_replication_info",
 )

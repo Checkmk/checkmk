@@ -1755,13 +1755,23 @@ class CommandScheduleDowntimes(Command):
     def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         tooltip_submission_disabled = _("Enter a comment to schedule downtime")
-        open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-        html.button("_down_host", _("Schedule downtime on host"), cssclass="hot disabled")
-        html.close_div()
-        if what == "service":
+
+        is_service = what == "service"
+
+        if is_service:
             open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-            html.button("_down_service", _("Schedule downtime on service"), cssclass="disabled")
+            html.button(
+                "_down_service", _("On service: Schedule downtime"), cssclass="hot disabled"
+            )
             html.close_div()
+
+        open_submit_button_container_div(tooltip=tooltip_submission_disabled)
+        html.button(
+            "_down_host",
+            _("On host: Schedule downtime"),
+            cssclass="disabled" + ("" if is_service else " hot"),
+        )
+        html.close_div()
 
         html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
         html.close_div()

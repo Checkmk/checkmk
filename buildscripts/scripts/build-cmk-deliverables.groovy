@@ -52,6 +52,7 @@ def main() {
         versioning.get_branch_version(checkout_dir),
         params.VERSION
     );
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
 
@@ -68,6 +69,8 @@ def main() {
         |USE_CASE:.......................... │${params.USE_CASE}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
         |SKIP_DEPLOY_TO_WEBSITE:............ │${params.SKIP_DEPLOY_TO_WEBSITE}│
+        |cmk_version:....................... │${cmk_version}│
+        |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
         |deploy_to_website:................. │${deploy_to_website}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |branch_base_folder:................ │${branch_base_folder}│

@@ -8,6 +8,7 @@
 import logging
 import os
 from pathlib import Path
+from random import randint, sample
 
 import docker  # type: ignore[import-untyped]
 import pytest
@@ -262,12 +263,13 @@ def test_redirects_work_with_standard_port(checkmk: CheckmkApp) -> None:
     )[-1].decode("utf-8")
 
 
-@pytest.mark.skipif(True, reason="Read timeout, CMK-20951")
 def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
-    # Use some free address port to be able to bind to. For the moment there is no
-    # conflict with others, since this test is executed only once at the same time.
-    # TODO: We'll have to use some branch specific port in the future.
-    address = ("127.3.3.7", 8555)
+    # Use some random address and port to be able to bind to.
+    # NOTE: In case we still run into conflicts, checking for
+    # available ports may be required.
+    rand_ip = ".".join(str(_) for _ in [127, 3] + sample(range(1, 255), 2))
+    rand_port = randint(1024, 65535)
+    address = (rand_ip, rand_port)
     address_txt = ":".join(map(str, address))
 
     with CheckmkApp(

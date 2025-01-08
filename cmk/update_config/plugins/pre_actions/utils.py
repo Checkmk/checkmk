@@ -90,8 +90,9 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
-USER_INPUT_CONTINUE: Final = ("c", "continue")
-USER_INPUT_DISABLE: Final = ("d", "disable")
+_USER_INPUT_ABORT: Final = ("a", "abort")
+_USER_INPUT_CONTINUE: Final = ("c", "continue")
+_USER_INPUT_DISABLE: Final = ("d", "disable")
 
 
 class Resume(enum.Enum):
@@ -165,13 +166,23 @@ def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
 
 
 def continue_per_users_choice(prompt_text: str) -> Resume:
-    if prompt(prompt_text).lower() in USER_INPUT_CONTINUE:
+    while (response := prompt(prompt_text).lower()) not in [
+        *_USER_INPUT_CONTINUE,
+        *_USER_INPUT_ABORT,
+    ]:
+        sys.stdout.write(f"Invalid input '{response}'.\n")
+    if response in _USER_INPUT_CONTINUE:
         return Resume.UPDATE
     return Resume.ABORT
 
 
 def _disable_per_users_choice(prompt_text: str) -> Resume:
-    if prompt(prompt_text).lower() in USER_INPUT_DISABLE:
+    while (response := prompt(prompt_text).lower()) not in [
+        *_USER_INPUT_DISABLE,
+        *_USER_INPUT_ABORT,
+    ]:
+        sys.stdout.write(f"Invalid input '{response}'.\n")
+    if response in _USER_INPUT_DISABLE:
         return Resume.UPDATE
     return Resume.ABORT
 

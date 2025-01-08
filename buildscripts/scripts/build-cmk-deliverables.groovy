@@ -18,6 +18,8 @@ def main() {
         ["OVERRIDE_DISTROS", false],
         ["USE_CASE", true],
         ["CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", false],
+
+        // kept for compatibility only
         ["SKIP_DEPLOY_TO_WEBSITE", false],
 
         ["DISABLE_CACHE", false],
@@ -57,7 +59,6 @@ def main() {
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
 
     def upload_to_testbuilds = ! branch_base_folder.startsWith("Testing");
-    def deploy_to_website = ! params.SKIP_DEPLOY_TO_WEBSITE;
 
     print(
         """
@@ -68,10 +69,8 @@ def main() {
         |VERSION:........................... │${params.VERSION}│
         |USE_CASE:.......................... │${params.USE_CASE}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
-        |SKIP_DEPLOY_TO_WEBSITE:............ │${params.SKIP_DEPLOY_TO_WEBSITE}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
-        |deploy_to_website:................. │${deploy_to_website}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |branch_base_folder:................ │${branch_base_folder}│
         |===================================================
@@ -228,19 +227,6 @@ def main() {
                 );
             }
         }
-    }
-
-    smart_stage(
-        name: "Deploy to website",
-        condition: upload_to_testbuilds && deploy_to_website,
-    ) {
-        smart_build(
-            job: "${branch_base_folder}/deploy_to_website",
-            parameters: [
-                stringParam(name: "VERSION", value: params.VERSION),
-                booleanParam(name: "CIPARAM_REMOVE_RC_CANDIDATES", value: params.CIPARAM_REMOVE_RC_CANDIDATES),
-            ]
-        );
     }
 
     smart_stage(name: "Cleanup leftovers") {

@@ -7,7 +7,7 @@
 # hooks can test the commit for validity.
 #
 # Optionally you can pass "diff" as the first parameter, then it will check the diff between
-# the local HEAD and the HEAD of origin/master.
+# the local HEAD and the HEAD of origin/2.4.0.
 #
 # You can use this script to lint your tree in a rebase like so:
 #
@@ -21,7 +21,7 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 UVENV=$REPO_PATH/scripts/run-uvenv
 
 if [ "$1" == "diff" ]; then
-    HEAD=origin/master..HEAD
+    HEAD=origin/2.4.0..HEAD
 else
     HEAD=HEAD
 fi

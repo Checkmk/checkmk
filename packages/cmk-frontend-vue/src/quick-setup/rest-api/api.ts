@@ -127,15 +127,20 @@ const _saveOrEditQuickSetup = async (
 ): Promise<QuickSetupCompleteResponse> => {
   const stages: QuickSetupStageRequest[] = formData.map((stage) => ({ form_data: stage }))
 
-  let data = objectId
-    ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
-    : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
+  let data = undefined
+  try {
+    data = objectId
+      ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
+      : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
+  } catch (error) {
+    throw processError(error)
+  }
 
   /*
-      If the action is executed synchronously, the response is a quick_setup domain object 
+      If the action is executed synchronously, the response is a quick_setup domain object
       with the stage recap.
 
-      If the action is executed asynchronously, an object of the background_job domain is returned. 
+      If the action is executed asynchronously, an object of the background_job domain is returned.
       The result can be obtained after the job has finished executing.
     */
   if ('domainType' in data && data.domainType === 'background_job') {

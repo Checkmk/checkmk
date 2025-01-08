@@ -148,6 +148,14 @@ DONT_STRIP = {
     # To make our debugging life easier, don't strip our Livestatus library.
     "liblivestatus.so*",
     "strip",
+    # When the library libLLVM-${llvm_version}-rust-${rust_version}-${rust_channel}.so is stripped, rustc (and other
+    # binaries which link against this library) will segfault.
+    # https://github.com/rust-lang/rust/issues/112286
+    "libLLVM*rust*.so*",
+    "libLLVM*.so*rust*",
+    # Stripping these rust libs leads to a segmentation fault on rustc 1.75 & 1.76.
+    "libstd-*.so",
+    "librustc_driver-*.so",
 }
 
 

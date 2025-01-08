@@ -177,16 +177,23 @@ strip_binaries() {
 }
 
 prepare_gplusplus_sources_list() {
-    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
-    # find the right repository name for the distro and version
-    # using "add-apt-repository" would require the installation of "software-properties-common"
-    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
-    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
-        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
-            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
-        fi
-    else
-        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
+    if [[ $(echo "$VERSION_NUMBER" | cut -f1 -d'.') -gt 22 ]]; then
+        return
+    fi
+
+    if [[ -z ${CI} ]]; then
+        print_debug "It is no CI build, install software-properties-common"
+
+        # https://tribe29.slack.com/archives/C01EA6ZBG58/p1736251952199259
+        # different results between manually adding to sources.list.d (fail)
+        # vs. using add-apt-repository (success) on finding g++-13 after
+        # installation
+        local PACKAGES_TO_INSTALL=(
+            "software-properties-common"
+        )
+        install_packages "${PACKAGES_TO_INSTALL[@]}"
+        add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        return
     fi
 }
 

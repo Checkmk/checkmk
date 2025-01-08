@@ -98,10 +98,10 @@ bazel "${ACTION}" \
     ${BAZEL_CONFIG_ARGS} \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
-    --action_env=CMK_BASE_BRANCH="master" \
+    --action_env=CMK_BASE_BRANCH="2.4.0" \
     ${RUSTUP_HOME:+--action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
-    --host_action_env=CMK_BASE_BRANCH="master" \
+    --host_action_env=CMK_BASE_BRANCH="2.4.0" \
     ${RUSTUP_HOME:+--host_action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \

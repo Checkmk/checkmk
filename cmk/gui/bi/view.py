@@ -618,7 +618,7 @@ class PainterAggrGroup(Painter):
         return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", escape_attribute(row["aggr_group"])
+        return "", HTML.with_escaping(row["aggr_group"])
 
 
 class PainterAggrName(Painter):

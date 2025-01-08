@@ -17,6 +17,7 @@ from cmk.gui.pagetypes import (
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
+    Resume,
 )
 from cmk.update_config.registry import (
     PreUpdateAction,
@@ -103,20 +104,22 @@ class PreUpdatePagetypes(PreUpdateAction, Generic[_TOverridable_co]):
                     f"Error while deserializing updated {self._element_name_for_logging}. ID: {element_id}. Owner: {user_id}. Error message:\n{exception}\n\n"
                 )
 
-        if encountered_update_errors and not continue_per_users_choice(
-            conflict_mode, _USER_PROMPT_IF_ERROR
-        ):
-            raise MKUserError(None, f"{self._element_name_for_logging} errors")
-        if encountered_deserialization_errors and not continue_per_users_choice(
-            conflict_mode, _USER_PROMPT_IF_ERROR
-        ):
-            raise MKUserError(None, f"{self._element_name_for_logging} errors")
+        if encountered_update_errors or encountered_deserialization_errors:
+            if _continue_per_users_choice(conflict_mode).is_abort():
+                raise MKUserError(None, f"{self._element_name_for_logging} errors")
 
 
-_USER_PROMPT_IF_ERROR = (
-    "You can abort the update process (A) or continue (c) the update. "
-    "Continuing might render your site in an invalid state. "
-    "It is possible that the errors shown above are due to configurations which were already invalid before the update. "
-    "You might be able to fix these elements by opening them in the UI and checking for errors. "
-    "Abort update? [A/c]\n"
-)
+def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue (c) the update. "
+                "Continuing might render your site in an invalid state. "
+                "It is possible that the errors shown above are due to configurations which were already invalid before the update. "
+                "You might be able to fix these elements by opening them in the UI and checking for errors. "
+                "Abort update? [A/c]\n"
+            )

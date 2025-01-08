@@ -272,7 +272,6 @@ class ErrorReporter:
         # type # instance # wato
         ("check", "3ware_units", "raid"),  # used to enforce the plugin
         ("check", "brocade_tm", "brocade_tm"),
-        ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
         ("check", "lsi_array", "raid"),  # used to enforce the plugin
         ("check", "md", "raid"),  # used to enforce the plugin

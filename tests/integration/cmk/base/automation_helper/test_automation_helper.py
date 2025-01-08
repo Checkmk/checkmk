@@ -75,7 +75,10 @@ def test_config_reloading_with_reloader(site: Site) -> None:
 def test_standard_workflow_involving_automations(site: Site) -> None:
     hostname = "aut-helper-test-host"
     try:
-        site.openapi.hosts.create(hostname)
+        site.openapi.hosts.create(
+            hostname,
+            attributes={"ipaddress": "127.0.0.1"},
+        )
         site.activate_changes_and_wait_for_core_reload()
         show_host_response = site.openapi.get(f"objects/host/{hostname}")
         show_host_response.raise_for_status()

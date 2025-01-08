@@ -56,7 +56,7 @@ BRANCH_VERSION     := 2.4.0
 # this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does
 # fallback to "master" instead of the branch version value above
 # set this to any value after creating a new (beta) branch
-BRANCH_NAME_IS_BRANCH_VERSION :=
+BRANCH_NAME_IS_BRANCH_VERSION := yes
 
 # This automatism did not work well in all cases. There were daily build jobs that used
 # e.g. 2020.02.08 as BRANCH_VERSION, even if they should use 1.7.0

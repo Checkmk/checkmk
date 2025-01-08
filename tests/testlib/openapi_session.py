@@ -297,12 +297,17 @@ class UsersAPI(BaseAPI):
         customer: None | str = None,
         roles: list[str] | None = None,
         is_automation_user: bool = False,
+        store_automation_secret: bool = False,
     ) -> None:
         if is_automation_user:
-            auth_option = {
+            auth_option: dict[str, str | bool] = {
                 "auth_type": "automation",
                 "secret": password,
             }
+            if store_automation_secret:
+                # This attribute came during 2.4 development. We use this API for older versions as
+                # well in test-update. So we should not set it in all requests!
+                auth_option["store_automation_secret"] = True
         else:
             auth_option = {
                 "auth_type": "password",

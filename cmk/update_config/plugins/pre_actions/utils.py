@@ -159,9 +159,9 @@ def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
     return f"Incompatible local file '{path}'.\nError: {error}\n\n"
 
 
-def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
+def continue_per_users_choice(conflict_mode: ConflictMode, prompt_text: str) -> bool:
     if conflict_mode is ConflictMode.ASK:
-        return prompt(propt_text).lower() in USER_INPUT_CONTINUE
+        return prompt(prompt_text).lower() in USER_INPUT_CONTINUE
     return False
 
 

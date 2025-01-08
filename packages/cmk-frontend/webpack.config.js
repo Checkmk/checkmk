@@ -51,6 +51,7 @@ module.exports = {
         mobile: "./src/js/mobile.ts",
         tracking_entry: "./src/js/tracking_entry.ts",
         side: "./src/js/side_index.ts",
+        fonts_lato: "./src/themes/facelift/fonts_lato.scss",
         facelift: "./src/themes/facelift/theme.scss",
         modern_dark: "./src/themes/modern-dark/theme.scss",
     },
@@ -141,6 +142,10 @@ module.exports = {
                         {
                             source: "src/themes/facelift/images",
                             destination: "dist/themes/facelift/images",
+                        },
+                        {
+                            source: "src/themes/facelift/fonts",
+                            destination: "dist/themes/facelift/fonts",
                         },
                         {
                             source: "src/themes/facelift/theme.json",

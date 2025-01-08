@@ -36,11 +36,9 @@ def hook_before_load_schema(
         json.dump(raw_schema, f, indent=2)
 
     # SCHEMA modifications
-    require_properties(raw_schema, "InputRuleObject", ["raw_value", "conditions"], "CMK-TODO")
-    require_properties(raw_schema, "CheckboxWithStrValue", ["state"], "CMK-TODO", merge=False)
-    require_properties(
-        raw_schema, "NotificationBulkingCheckbox", ["state"], "CMK-TODO", merge=False
-    )
+    require_properties(raw_schema, "InputRuleObject", ["raw_value", "conditions"], None)
+    require_properties(raw_schema, "CheckboxWithStrValue", ["state"], None, merge=False)
+    require_properties(raw_schema, "NotificationBulkingCheckbox", ["state"], None, merge=False)
 
     update_property(
         raw_schema,
@@ -73,14 +71,14 @@ def hook_before_load_schema(
         "HostExtensionsEffectiveAttributes",
         "snmp_community",
         {"nullable": True},
-        "CMK-TODO",
+        None,
     )
     update_property(
         raw_schema,
         "HostViewAttribute",
         "snmp_community",
         {"nullable": True},
-        "CMK-TODO",
+        None,
     )
 
     update_property(
@@ -162,7 +160,7 @@ def hook_before_load_schema(
             schema_name,
             "management_ipmi_credentials",
             {"nullable": True},
-            "CMK-TODO",
+            None,
         )
 
     update_property(
@@ -263,6 +261,7 @@ def hook_after_call(
                 valid_body=False,
                 body={},
                 set_body={"links": []},
+                ticket_id=None,
             )
         else:
             fix_response(
@@ -322,7 +321,7 @@ def hook_after_call(
         path="/objects/ruleset/{ruleset_name}",
         status_code=200,
         update_body={"extensions": {"folder": "/"}},
-        ticket_id="CMK-TODO",
+        ticket_id=None,
     )
     fix_response(
         case,
@@ -335,7 +334,7 @@ def hook_after_call(
         update_items={
             "value": {"href": "", "method": "GET", "rel": "", "type": "application/json"}
         },
-        ticket_id="CMK-TODO",
+        ticket_id=None,
     )
 
     # incomplete 404 responses
@@ -360,7 +359,7 @@ def hook_after_call(
         body={"detail": "There is no graph template with the id .*"},
         set_status_code=400,
         update_body={"title": "Bad Request", "status": 400},
-        ticket_id="CMK-TODO",
+        ticket_id=None,
     )
     fix_response(
         case,

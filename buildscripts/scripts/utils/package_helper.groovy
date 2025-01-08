@@ -10,6 +10,21 @@
 /// values which should not be here. If that gets on `master`, it should be gotten
 /// rid of as soon as possible
 
+
+/// Returns the Jenkins 'branch folder' of the currently running job, either with or without
+/// the 'Testing/..' prefix
+/// So "Testing/bla.blubb/checkmk/2.4.0/some_job" will result in
+/// "Testing/bla.blubb/checkmk/2.4.0" or "checkmk/2.4.0"
+def branch_base_folder(with_testing_prefix) {
+    def project_name_components = currentBuild.fullProjectName.split("/").toList();
+    def checkmk_index = project_name_components.indexOf('checkmk');
+    if (with_testing_prefix) {
+        return project_name_components[0..checkmk_index + 1].join('/');
+    }
+    return project_name_components[checkmk_index..checkmk_index + 1].join('/');
+}
+
+
 def provide_agent_updaters(version, edition, disable_cache) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -17,11 +32,13 @@ def provide_agent_updaters(version, edition, disable_cache) {
     // For now it's nearly JSON like and can be treated as such.
     def upstream_job_details = [
         "build-linux-agent-updater": [
-            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
+            // NOTE: We're stripping of "Testing/..." if present, because
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency)
-            relative_job_name: "checkmk/2.4.0/builders/build-linux-agent-updater",
+            //       Windows for consistency).
+            //       As 'soon' as this problem does not exist anymore we could run
+            //       relatively from 'builders/..'
+            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
@@ -40,11 +57,13 @@ def provide_agent_updaters(version, edition, disable_cache) {
                 """.stripIndent(),
         ],
         "winagt-build": [
-            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
+            // NOTE: We're stripping of "Testing/..." if present, because
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency)
-            relative_job_name: "checkmk/2.4.0/winagt-build",
+            //       Windows for consistency).
+            //       As 'soon' as this problem does not exist anymore we could run
+            //       relatively from 'builders/..'
+            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build",
             dependency_paths: [
                 "agents/wnx",
                 "agents/windows",
@@ -76,11 +95,13 @@ def provide_agent_updaters(version, edition, disable_cache) {
                 """.stripIndent(),
         ],
         "winagt-build-modules": [
-            // NOTE: actually the prefix 'checkmk/2.4.0/' should not be here, but
+            // NOTE: We're stripping of "Testing/..." if present, because
             //       Windows can't handle long folder names so we take the absolute
             //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency)
-            relative_job_name: "checkmk/2.4.0/winagt-build-modules",
+            //       Windows for consistency).
+            //       As 'soon' as this problem does not exist anymore we could run
+            //       relatively from 'builders/..'
+            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build-modules",
             dependency_paths: [
                 "agents/modules/windows",
             ],
@@ -124,6 +145,7 @@ def provide_agent_updaters(version, edition, disable_cache) {
         rm -rf ${checkout_dir}/agents/windows_tmp ${checkout_dir}/agents_tmp
     """);
 }
+
 
 def sign_package(source_dir, package_path) {
     print("FN sign_package(source_dir=${source_dir}, package_path=${package_path})");

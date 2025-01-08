@@ -17,6 +17,10 @@ from tests.schemathesis_openapi import settings
 logger = logging.getLogger(__name__)
 
 
+DEFAULT_CONTENT_TYPE = "application/json"
+PROBLEM_CONTENT_TYPE = "application/problem+json"
+
+
 def fix_response(
     case: schemathesis.models.Case,
     response: schemathesis.GenericResponse,
@@ -60,12 +64,10 @@ def fix_response(
     response_content_type_valid = (content_types is None) or (
         response_content_type is not None and response_content_type in content_types
     )
-    default_content_type = "application/json"
-    problem_content_type = "application/problem+json"
     if response.status_code >= 400:
-        auto_content_type = problem_content_type
+        auto_content_type = PROBLEM_CONTENT_TYPE
     else:
-        auto_content_type = default_content_type
+        auto_content_type = DEFAULT_CONTENT_TYPE
     if content_types and auto_content_type not in content_types:
         auto_content_type = list(content_types.keys())[0]
 
@@ -143,7 +145,7 @@ def fix_response(
             for header in update_headers:
                 current_header_value = response.headers.get(header)
                 expected_header_value = update_headers[header].format(
-                    auto=auto_content_type, problem=problem_content_type
+                    auto=auto_content_type, problem=PROBLEM_CONTENT_TYPE
                 )
                 if current_header_value != expected_header_value:
                     logger.warning(

@@ -10,7 +10,7 @@ import schemathesis
 from requests.structures import CaseInsensitiveDict
 
 from tests.schemathesis_openapi import settings
-from tests.schemathesis_openapi.response import fix_response
+from tests.schemathesis_openapi.response import fix_response, PROBLEM_CONTENT_TYPE
 from tests.schemathesis_openapi.schema import (
     add_formats_and_patterns,
     require_properties,
@@ -296,6 +296,22 @@ def hook_after_call(
         valid_content_type=False,
         update_headers={"Content-Type": "{auto}"},
         ticket_id="CMK-11886",
+    )
+    # generic: invalid 400 response Content-Type
+    fix_response(
+        case,
+        response,
+        status_code=400,
+        update_headers={"Content-Type": PROBLEM_CONTENT_TYPE},
+        ticket_id=None,
+    )
+    # generic: invalid 404 response Content-Type
+    fix_response(
+        case,
+        response,
+        status_code=404,
+        update_headers={"Content-Type": PROBLEM_CONTENT_TYPE},
+        ticket_id=None,
     )
 
     # incomplete 200 responses

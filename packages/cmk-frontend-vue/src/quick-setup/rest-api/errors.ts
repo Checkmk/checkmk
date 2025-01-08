@@ -11,15 +11,21 @@ import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
 import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
 // import type { Errors, StageErrors } from '@lib/rest./response_types'
 
-class QuickSetupAxiosError extends CmkError<AxiosError> {
+export class QuickSetupAxiosError extends CmkError<AxiosError> {
   override name = 'QuickSetupAxiosError'
   override getContext(): string {
     if (axios.isAxiosError(this.cause) && this.cause.response) {
       let moreContext = ''
+      if (this.cause.status === 502) {
+        moreContext =
+          '\n\nThe Checkmk server is temporarily unreachable, possibly due to high load. Please wait ' +
+          'a moment and try again.'
+      }
+
       const crashReportUrl = (this.cause.response.data as MaybeRestApiCrashReport).ext?.details
         ?.crash_report_url?.href
       if (crashReportUrl) {
-        moreContext = `\n\nCrash report: ${crashReportUrl}`
+        moreContext = `${moreContext}\n\nCrash report: ${crashReportUrl}`
       }
       const detail = (this.cause.response.data as MaybeRestApiError).detail
       const title = (this.cause.response.data as MaybeRestApiError).title

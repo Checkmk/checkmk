@@ -693,8 +693,7 @@ export function execute_sidebar_scheduler() {
     }
 
     if (g_sidebar_notify_interval !== null) {
-        const timestamp = new Date().getTime() / 1000;
-        if (timestamp % g_sidebar_notify_interval == 0) {
+        if (g_seconds_to_update == 0) {
             update_messages();
             if (g_may_ack) {
                 update_unack_incomp_werks();
@@ -1248,18 +1247,22 @@ function update_messages() {
 }
 
 export function update_message_trigger(msg_text: string, msg_count: number) {
-    const l = document.getElementById("messages_label")!;
-    if (msg_count === 0) {
-        l.style.display = "none";
-        return;
+    const l = document.getElementById("messages_label");
+    if (l) {
+        if (msg_count === 0) {
+            l.style.display = "none";
+            return;
+        }
+
+        l.innerText = msg_count.toString();
+        l.style.display = "inline";
     }
 
-    l.innerText = msg_count.toString();
-    l.style.display = "inline";
-
-    const user_messages = document.getElementById("messages_link_to")!;
-    const text_content = msg_count + " " + msg_text;
-    user_messages.textContent = text_content;
+    const user_messages = document.getElementById("messages_link_to");
+    if (user_messages) {
+        const text_content = msg_count + " " + msg_text;
+        user_messages.textContent = text_content;
+    }
 }
 
 function mark_message_read(

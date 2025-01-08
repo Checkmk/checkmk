@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -25,74 +26,81 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-online_mapping = {"1": "online", "0": "offline"}
 
-active_mapping = {"1": "passive", "2": "active"}
+@dataclass(frozen=True)
+class Node:
+    online: bool
+    state: Literal["active", "passive"]
+    forced: bool
+    quality: float
+    model: str
+    version: str
+    license: str
+    priority: str
+    serial: str
 
-forced_mapping = {"0": "not forced", "1": "forced"}
+
+Section = Mapping[str, Node]
 
 
-def inventory_stormshield_cluster_node(section: StringTable) -> DiscoveryResult:
-    for (
-        index,
-        _serial,
-        _online,
-        _model,
-        _version,
-        _license,
-        _quality,
-        _priority,
-        _statusforced,
-        _active,
-        _uptime,
-    ) in section:
-        yield Service(item=index)
+def parse_stormshield_cluster_node(string_table: StringTable) -> Section:
+    return {
+        index: Node(
+            online=online == "1",
+            state="active" if active == "2" else "passive",
+            forced=statusforced == "1",
+            quality=float(quality),
+            model=model,
+            version=version,
+            license=license,
+            priority=priority,
+            serial=serial,
+        )
+        for (
+            index,
+            serial,
+            online,
+            model,
+            version,
+            license,
+            quality,
+            priority,
+            statusforced,
+            active,
+            _uptime,
+        ) in string_table
+    }
+
+
+def inventory_stormshield_cluster_node(section: Section) -> DiscoveryResult:
+    yield from (Service(item=index) for index in section)
 
 
 def check_stormshield_cluster_node(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    for (
-        index,
-        serial,
-        online,
-        model,
-        version,
-        license_,
-        quality,
-        priority,
-        statusforced,
-        active,
-        _uptime,
-    ) in section:
-        if item == index:
-            if online == "0":
-                yield Result(state=State.CRIT, summary="Member is %s" % online_mapping[online])
-            else:
-                yield Result(state=State.OK, summary="Member is %s" % online_mapping[online])
-            if statusforced == "1":
-                yield Result(
-                    state=State.WARN,
-                    summary=f"HA-State: {active_mapping[active]} ({forced_mapping[statusforced]})",
-                )
-            else:
-                yield Result(
-                    state=State.OK,
-                    summary=f"HA-State: {active_mapping[active]} ({forced_mapping[statusforced]})",
-                )
-            yield from check_levels(
-                float(quality),
-                levels_lower=params["quality"],
-                label="Quality",
-                render_func=render.percent,
-            )
+    if (node := section.get(item)) is None:
+        return
 
-            infotext = f"Model: {model}, Version: {version}, Role: {license_}, Priority: {priority}, Serial: {serial}"
-            yield Result(state=State.OK, summary=infotext)
+    if node.online:
+        yield Result(state=State.OK, summary="Online")
+    else:
+        yield Result(state=State.CRIT, summary="Offline")
 
+    if node.forced:
+        yield Result(state=State.WARN, summary=f"HA-State: {node.state} (forced)")
+    else:
+        yield Result(state=State.OK, summary=f"HA-State: {node.state} (not forced)")
 
-def parse_stormshield_cluster_node(string_table: StringTable) -> StringTable:
-    return string_table
+    yield from check_levels(
+        node.quality, levels_lower=params["quality"], label="Quality", render_func=render.percent
+    )
+
+    yield Result(state=State.OK, summary=f"Model: {node.model}")
+    yield Result(state=State.OK, summary=f"Version: {node.version}")
+    yield Result(state=State.OK, summary=f"Role: {node.license}")
+    yield Result(state=State.OK, summary=f"Priority: {node.priority}")
+    yield Result(state=State.OK, summary=f"Serial: {node.serial}")
 
 
 snmp_section_stormshield_cluster_node = SimpleSNMPSection(

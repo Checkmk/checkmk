@@ -5,7 +5,7 @@
 
 import enum
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from logging import Logger
 from pathlib import Path
 from termios import tcflush, TCIFLUSH
@@ -178,10 +178,10 @@ def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> b
 
 def get_installer_and_package_map(
     path_config: PathConfig,
-) -> tuple[Installer, dict[Path, PackageID]]:
+) -> tuple[Installer, Mapping[Path, Manifest]]:
     installer = Installer(paths.installed_packages_dir)
     installed_files_package_map = {
-        Path(path_config.get_path(part)).resolve() / file: manifest.id
+        Path(path_config.get_path(part)).resolve() / file: manifest
         for manifest in installer.get_installed_manifests()
         for part, files in manifest.files.items()
         for file in files

@@ -46,15 +46,15 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         disabled_packages: set[PackageID] = set()
         for module_name, error in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
             path = Path(traceback.extract_tb(error.__traceback__)[-1].filename)
-            package_id = package_map.get(path.resolve())
+            manifest = package_map.get(path.resolve())
             # unpackaged files
-            if package_id is None:
+            if manifest is None:
                 logger.error(error_message_incomp_local_file(path, error))
                 if continue_on_incomp_local_file(conflict_mode):
                     continue
                 raise MKUserError(None, "incompatible local file")
 
-            if package_id in disabled_packages:
+            if manifest.id in disabled_packages:
                 continue  # already dealt with
 
             if disable_incomp_mkp(
@@ -62,13 +62,13 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 conflict_mode,
                 module_name,
                 error,
-                package_id,
+                manifest.id,
                 installer,
                 package_store,
                 path_config,
                 path,
             ):
-                disabled_packages.add(package_id)
+                disabled_packages.add(manifest.id)
                 return True
 
             raise MKUserError(None, "incompatible local file")

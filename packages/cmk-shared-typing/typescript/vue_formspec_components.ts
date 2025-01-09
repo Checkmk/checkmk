@@ -74,6 +74,7 @@ export type Dictionary = FormSpec & {
   layout: DictionaryLayout;
   i18n_base: I18NFormSpecBase;
 };
+export type DictionaryGroupLayout = "horizontal" | "vertical";
 export type DictionaryLayout = "one_column" | "two_columns";
 export type List = FormSpec & {
   type: "list";
@@ -327,6 +328,7 @@ export interface DictionaryGroup {
   key: string | null;
   title: string | null;
   help: string | null;
+  layout: DictionaryGroupLayout;
 }
 export interface SingleChoiceElement {
   name: string;

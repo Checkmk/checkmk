@@ -33,7 +33,8 @@ const stringFormSpec: FormSpec.String = {
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
   key: 'titlehelp',
   title: 'title',
-  help: 'help'
+  help: 'help',
+  layout: 'horizontal'
 }
 
 const spec: FormSpec.Dictionary = {

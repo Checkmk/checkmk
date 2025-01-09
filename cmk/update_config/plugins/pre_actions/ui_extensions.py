@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import parse_perfometer, perfometer_info
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
-from cmk.mkp_tool import PackageID
+from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
@@ -31,7 +31,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
-def _get_package_id(package_map: Mapping[Path, PackageID], rel_path: str) -> PackageID | None:
+def _get_package_manifest(package_map: Mapping[Path, Manifest], rel_path: str) -> Manifest | None:
     # What a knightmare, somebody please help.
     for path, package in package_map.items():
         if str(path).endswith(rel_path):
@@ -51,20 +51,22 @@ class PreUpdateUIExtensions(PreUpdateAction):
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()
         for path, _gui_part, module_name, error in get_failed_plugins():
-            package_id = _get_package_id(package_map, str(path))
+            manifest = _get_package_manifest(package_map, str(path))
             # unpackaged files
-            if package_id is None:
+            if manifest is None:
                 logger.error(error_message_incomp_local_file(path, error))
                 if _continue_on_incomp_local_file(conflict_mode).is_not_abort():
                     continue
                 raise MKUserError(None, "incompatible local file")
 
-            if package_id in disabled_packages:
+            if manifest.id in disabled_packages:
                 continue  # already dealt with
 
-            logger.error(error_message_incomp_package(path, package_id, error))
-            if disable_incomp_mkp(conflict_mode, package_id, installer, PACKAGE_STORE, path_config):
-                disabled_packages.add(package_id)
+            logger.error(error_message_incomp_package(path, manifest.id, error))
+            if disable_incomp_mkp(
+                conflict_mode, manifest.id, installer, PACKAGE_STORE, path_config
+            ):
+                disabled_packages.add(manifest.id)
                 remove_failed_plugin(path)
                 continue
 

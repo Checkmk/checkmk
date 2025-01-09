@@ -40,8 +40,6 @@ class NotificationParameterPagerDuty(NotificationParameter):
         # TODO register CSE specific version
         return DictionaryExtended(
             title=Title("Create notification with the following parameters"),
-            # optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
-            # hidden_keys=["webhook_url"],
             elements={
                 "routing_key": DictElement(
                     parameter_form=Password(
@@ -60,7 +58,8 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     parameter_form=FixedValue(
                         title=Title("API endpoint from PagerDuty V2"),
                         value="https://events.pagerduty.com/v2/enqueue",
-                    )
+                    ),
+                    required=True,
                 ),
                 "ignore_ssl": DictElement(
                     parameter_form=FixedValue(

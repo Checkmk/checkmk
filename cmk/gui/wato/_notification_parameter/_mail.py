@@ -219,7 +219,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     ),
                     MultipleChoiceElement(
                         name="context",
-                        title=Title("Complete variable list"),
+                        title=Title("Complete variable list (for testing)"),
                     ),
                 ],
                 prefill=DefaultValue(["abstime", "longoutput", "graph"]),

@@ -154,6 +154,7 @@ class TimeSpanI18n:
     minute: str
     hour: str
     day: str
+    validation_negative_number: str
 
 
 class TimeSpanTimeMagnitude(str, Enum):

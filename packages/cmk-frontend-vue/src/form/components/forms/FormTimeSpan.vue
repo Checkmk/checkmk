@@ -59,6 +59,12 @@ watch(
   values,
   (newValue) => {
     value.value = joinToSeconds(newValue)
+    localValidation.value = []
+    for (const [_magnitude, value] of Object.entries(newValue)) {
+      if (value <= 0 && localValidation.value.length === 0) {
+        localValidation.value = [props.spec.i18n.validation_negative_number]
+      }
+    }
   },
   { deep: true }
 )
@@ -80,6 +86,8 @@ function getPlaceholder(magnitude: Magnitude): string {
   }
   return ''
 }
+
+const localValidation = ref<Array<string>>([])
 </script>
 
 <template>
@@ -94,7 +102,7 @@ function getPlaceholder(magnitude: Magnitude): string {
     />
     {{ spec.i18n[magnitude] }}
   </label>
-  <FormValidation :validation="validation"></FormValidation>
+  <FormValidation :validation="[...validation, ...localValidation]" />
 </template>
 
 <style scoped>

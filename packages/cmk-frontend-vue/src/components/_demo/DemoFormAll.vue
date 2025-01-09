@@ -362,6 +362,7 @@ function getTimeSpan(name: string, options?: Partial<Omit<TimeSpan, 'type'>>): T
     label: getLabel(name),
     displayed_magnitudes: ['second', 'minute', 'hour'],
     i18n: {
+      validation_negative_number: 'i18n_validation_negative_number',
       millisecond: 'i18n millisecond',
       second: 'i18n second',
       minute: 'i18n minute',

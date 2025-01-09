@@ -389,6 +389,7 @@ export interface TimeSpanI18N {
   minute: string;
   hour: string;
   day: string;
+  validation_negative_number: string;
 }
 export interface MetricI18N {
   host_input_hint: string;

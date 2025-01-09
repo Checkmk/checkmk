@@ -131,10 +131,10 @@ $LONGHOSTOUTPUT$
                 title=Title("Body tail for service notifications"),
                 prefill=DefaultValue(
                     """Service:  $SERVICEDESC$
-+          Event:    $EVENT_TXT$
-+          Output:   $SERVICEOUTPUT$
-+          Perfdata: $SERVICEPERFDATA$
-+          $LONGSERVICEOUTPUT$
+Event:    $EVENT_TXT$
+Output:   $SERVICEOUTPUT$
+Perfdata: $SERVICEPERFDATA$
+$LONGSERVICEOUTPUT$
 """
                 ),
                 macro_support=True,

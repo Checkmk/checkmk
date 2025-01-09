@@ -105,7 +105,8 @@ def _elements_ascii(is_cse: bool) -> Mapping[str, DictElement[Any]]:
             parameter_form=MultilineText(
                 title=Title("Body head for both host and service notifications"),
                 prefill=DefaultValue(
-                    """Host:     $HOSTNAME$
+                    """\
+Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """
@@ -117,7 +118,8 @@ Address:  $HOSTADDRESS$
             parameter_form=MultilineText(
                 title=Title("Body tail for host notifications"),
                 prefill=DefaultValue(
-                    """Event:    $EVENT_TXT$
+                    """\
+Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
@@ -130,7 +132,8 @@ $LONGHOSTOUTPUT$
             parameter_form=MultilineText(
                 title=Title("Body tail for service notifications"),
                 prefill=DefaultValue(
-                    """Service:  $SERVICEDESC$
+                    """\
+Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$

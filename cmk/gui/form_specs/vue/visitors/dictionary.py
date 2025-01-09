@@ -6,12 +6,13 @@ import ast
 from collections.abc import Mapping
 from typing import Sequence
 
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1.form_specs._composed import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
@@ -102,10 +103,16 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                 group = None
 
             else:
+                layout = (
+                    dict_element.group.layout
+                    if isinstance(dict_element.group, DictGroupExtended)
+                    else DictionaryGroupLayout.horizontal
+                )
                 group = shared_type_defs.DictionaryGroup(
                     title=localize(dict_element.group.title),
                     help=localize(dict_element.group.help_text),
                     key=repr(dict_element.group.title) + repr(dict_element.group.help_text),
+                    layout=layout,
                 )
 
             if is_active:

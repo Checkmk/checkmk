@@ -28,10 +28,16 @@ const dictionaryVariants = cva('', {
     variant: {
       one_column: 'form-dictionary--one_column',
       two_columns: 'form-dictionary--two_columns'
+    },
+    group_layout: {
+      none: '',
+      horizontal: 'horizontal_groups',
+      vertical: 'vertical_groups'
     }
   },
   defaultVariants: {
-    variant: 'one_column'
+    variant: 'one_column',
+    group_layout: 'none'
   }
 })
 type DictionaryVariants = VariantProps<typeof dictionaryVariants>
@@ -45,6 +51,7 @@ interface ElementsGroup {
   groupKey: string
   title?: string
   help?: string
+  layout: FormSpec.DictionaryGroupLayout
   elems: ElementFromProps[]
 }
 
@@ -102,6 +109,7 @@ const extractGroups = (elements: FormSpec.DictionaryElement[]): ElementsGroup[] 
         groupKey: groupKey,
         title: element.group?.title || '',
         help: element.group?.help || '',
+        layout: element.group?.layout || 'horizontal',
         elems: []
       })
     }
@@ -209,7 +217,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div :class="dictionaryVariants({ variant })">
+          <div :class="dictionaryVariants({ variant, group_layout: group.layout })">
             <div
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
@@ -321,8 +329,10 @@ span.checkbox {
 }
 
 .form-dictionary--one_column {
-  display: flex;
   flex-direction: row;
   gap: 0.5em;
+  &.horizontal_groups {
+    display: flex;
+  }
 }
 </style>

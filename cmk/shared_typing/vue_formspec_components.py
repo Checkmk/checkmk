@@ -79,11 +79,17 @@ class I18nPassword:
     password_choice_invalid: str
 
 
+class DictionaryGroupLayout(str, Enum):
+    horizontal = "horizontal"
+    vertical = "vertical"
+
+
 @dataclass(kw_only=True)
 class DictionaryGroup:
     key: Optional[str]
     title: Optional[str]
     help: Optional[str]
+    layout: DictionaryGroupLayout
 
 
 class DictionaryLayout(str, Enum):

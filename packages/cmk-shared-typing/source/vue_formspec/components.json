@@ -348,9 +348,13 @@
                 },
                 "help": {
                     "type": ["string", "null"]
+                },
+                "layout": {
+                    "title": "DictionaryGroupLayout",
+                    "enum": ["horizontal", "vertical"]
                 }
             },
-            "required": ["key", "title", "help"]
+            "required": ["key", "title", "help", "layout"]
         },
         "dictionary_element": {
             "type": "object",

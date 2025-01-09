@@ -1,2 +1,2 @@
-pydantic
-pytest
+pydantic==2.10.3
+pytest==8.3.4

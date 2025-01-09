@@ -1,86 +1,86 @@
-3to2  # used for converting agent plugins from py3 to 2
-astroid  # used by testlib.pylint_checker_localization
-autoflake  # used to remove unused import statements
-azure-mgmt-resource  # used by the release process to publish the azure image to the marketplace
-azure-mgmt-compute  # used by the release process to add a new image version
-bandit  # used by test/Makefile's test-bandit target
-beautifulsoup4  # used by the GUI crawler and various tests
-boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
-botocore-stubs  # used for type checking, keep version in sync with botocore
-bson  # used by test_mk_mongodb unit test
+3to2==1.1.1 # used for converting agent plugins from py3 to 2
+astroid==3.3.6 # used by testlib.pylint_checker_localization
+autoflake==2.3.1 # used to remove unused import statements
+azure-mgmt-resource==23.2.0 # used by the release process to publish the azure image to the marketplace
+azure-mgmt-compute==33.0.0 # used by the release process to add a new image version
+bandit==1.8.0 # used by test/Makefile's test-bandit target
+beautifulsoup4==4.12.3 # used by the GUI crawler and various tests
+boto3-stubs[logs]==1.35.80 # used for type checking, keep version in sync with boto3
+botocore-stubs==1.35.80 # used for type checking, keep version in sync with botocore
+bson==0.5.10 # used by test_mk_mongodb unit test
 checkmk-dev-tools~=0.1.60  # provides tooling for build artifacts
 # Locked to 0.26.1 since 0.26.3 handled const strings differently
 # which broke inheritance.
 datamodel-code-generator==0.26.1  # used for cmk-shared-typing generation
-devpi-client # Managing the devpi server
-dill
-docker  # used by test_docker test and mk_docker agent plugin
-dockerpty  # used by dockerized tests for opening debug shells
-fakeredis[lua]  # used for testing code which uses Redis (lua is needed for faking features like "lock")
-flake8
-furo  # sphinx theme
-grequests  # redfixh server mocker for integration tests
-hypothesis    # used by unit tests
-hypothesis-jsonschema  # used by unit tests
-jsonschema
-libcst # concrete syntax trees for plugin migration helpers
-msrest
-multipart  # redfixh server mocker for integration tests
-mypy  # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
-mypy-protobuf # for mypy
-networkx # needed for py-import-cycles
-pexpect # used for update testing
-pipfile # for generating import names during int tests
-playwright  # used for in-browser testing
-polyfactory # used for generating mock data for unit tests
-pre-commit  # used to fix / find issues before committing changes
-py-import-cycles  # used in tests/Makefile
-pylint  # used by test/Makefile's test-pylint target
-pylint-pydantic
-pylsp-mypy  # mypy plugin for python-lsp-server
+devpi-client==7.2.0 # Managing the devpi server
+dill==0.3.9
+docker==7.1.0 # used by test_docker test and mk_docker agent plugin
+dockerpty==0.4.1 # used by dockerized tests for opening debug shells
+fakeredis[lua]==2.26.1 # used for testing code which uses Redis (lua is needed for faking features like "lock")
+flake8==7.1.1
+furo==2024.8.6 # sphinx theme
+grequests==0.7.0 # redfixh server mocker for integration tests
+hypothesis==6.122.3 # used by unit tests
+hypothesis-jsonschema==0.23.1 # used by unit tests
+jsonschema==4.23.0
+libcst==1.5.1 # concrete syntax trees for plugin migration helpers
+msrest==0.7.1
+multipart==1.2.1 # redfixh server mocker for integration tests
+mypy==1.13.0 # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
+mypy-protobuf==3.6.0 # for mypy
+networkx==3.4.2 # needed for py-import-cycles
+pexpect==4.9.0 # used for update testing
+pipfile==0.0.2 # for generating import names during int tests
+playwright==1.49.1 # used for in-browser testing
+polyfactory==2.18.1 # used for generating mock data for unit tests
+pre-commit==4.0.1 # used to fix / find issues before committing changes
+py-import-cycles==0.3.1 # used in tests/Makefile
+pylint==3.3.2 # used by test/Makefile's test-pylint target
+pylint-pydantic==0.3.4
+pylsp-mypy==0.6.9 # mypy plugin for python-lsp-server
 pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
-pytest
-pytest-html  # used to generate HTML reports for test suites
-pytest-mock  # used by quite a few unit/integration tests via the mocker fixture
-pytest-random-order  # used to test resiliency
-pytest-xdist # used to limit number of procs in e2e tests
-pytest-check # used to queue failed assertions and continue test execution
-pytest-opentelemetry # instrument pytest runs
-python-lsp-server  # Note: There are extras, but the default seems sensible.
-responses  # used for unit tests
-ruff
-schemathesis  # used for openapi tests
-semver
-sphinx  # used for the plugin API documentation
-sphinx-autoapi  # used for automatically generating plugin API documentation
-sphinx-autodoc-typehints  # used for the plugin API documentation
-sphinx-rtd-theme~=2.0.0  # used for the plugin API documentation # TODO: Unpin this here and in omd/Pipfile when "make -C doc/plugin-api html" works again without it.
-sphinxcontrib-plantuml  # used for the API and architecture
-sphinxcontrib-spelling
-telnetlib3  # used by Windows Agent tests
-time-machine # used by various unit tests. Substitute for freezegun
-twine # used to upload packages to internal PyPi mirror
-types-beautifulsoup4  # used for type checking
-types-docutils  # used for type checking
-types-jsonschema  # used for type checking
-types-lxml  # used for type checking
-types-mypy-extensions  # used for type checking
-types-oauthlib  # used for type checking
-types-paho-mqtt  # used for type checking
-types-paramiko  # used for type checking
-types-pillow  # used for type checking
-types-protobuf  # used for type checking
-types-psutil  # used for type checking
-types-pyasn1  # used for type checking
-types-pymssql  # used for type checking
-types-pymysql  # used for type checking
-types-pyopenssl  # used for type checking
-types-pysaml2  # used for type checking
-types-python-dateutil  # used for type checking
-types-pyyaml  # used for type checking
-types-redis  # used for type checking
-types-requests  # used for type checking
-types-setuptools  # used for type checking
-types-simplejson  # used for type checking
-types-urllib3  # used for type checking
-uvicorn
+pytest==8.3.4
+pytest-html==4.1.1 # used to generate HTML reports for test suites
+pytest-mock==3.14.0 # used by quite a few unit/integration tests via the mocker fixture
+pytest-random-order==1.1.1 # used to test resiliency
+pytest-xdist==3.6.1 # used to limit number of procs in e2e tests
+pytest-check==2.4.1 # used to queue failed assertions and continue test execution
+pytest-opentelemetry==1.0.1 # instrument pytest runs
+python-lsp-server==1.12.0 # Note: There are extras, but the default seems sensible.
+responses==0.25.3 # used for unit tests
+ruff==0.8.3
+schemathesis==3.38.10 # used for openapi tests
+semver==3.0.2
+sphinx==7.4.7 # used for the plugin API documentation
+sphinx-autoapi==3.4.0 # used for automatically generating plugin API documentation
+sphinx-autodoc-typehints==2.3.0 # used for the plugin API documentation
+sphinx-rtd-theme~=2.0.0  # used for the plugin API documentation
+sphinxcontrib-plantuml==0.30 # used for the API and architecture
+sphinxcontrib-spelling==8.0.0
+telnetlib3==2.0.4 # used by Windows Agent tests
+time-machine==2.16.0 # used by various unit tests. Substitute for freezegun
+twine==6.0.1 # used to upload packages to internal PyPi mirror
+types-beautifulsoup4==4.12.0.20241020 # used for type checking
+types-docutils==0.21.0.20241128 # used for type checking
+types-jsonschema==4.23.0.20241208 # used for type checking
+types-lxml==2024.12.13 # used for type checking
+types-mypy-extensions==1.0.0.20240311 # used for type checking
+types-oauthlib==3.2.0.20240806 # used for type checking
+types-paho-mqtt==1.6.0.20240321 # used for type checking
+types-paramiko==3.5.0.20240928 # used for type checking
+types-pillow==10.2.0.20240822 # used for type checking
+types-protobuf==5.29.1.20241207 # used for type checking
+types-psutil==6.1.0.20241102 # used for type checking
+types-pyasn1==0.6.0.20240913 # used for type checking
+types-pymssql==2.1.0 # used for type checking
+types-pymysql==1.1.0.20241103 # used for type checking
+types-pyopenssl==24.1.0.20240722 # used for type checking
+types-pysaml2==1.0.1 # used for type checking
+types-python-dateutil==2.9.0.20241206 # used for type checking
+types-pyyaml==6.0.12.20240917 # used for type checking
+types-redis==4.6.0.20241004 # used for type checking
+types-requests==2.32.0.20241016 # used for type checking
+types-setuptools==75.6.0.20241126 # used for type checking
+types-simplejson==3.19.0.20240801 # used for type checking
+types-urllib3==1.26.25.14 # used for type checking
+uvicorn==0.32.1

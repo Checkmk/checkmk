@@ -1,6 +1,6 @@
-GitPython
-lxml
-markdown
-types-markdown
-pydantic
-pytest
+gitpython==3.1.43
+lxml==4.9.3
+markdown==3.7
+types-markdown==3.7.0.20241204
+pydantic==2.10.3
+pytest==8.3.4

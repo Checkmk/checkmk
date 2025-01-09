@@ -107,7 +107,12 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import EmailAddress, LengthInRange, ValidationError
+from cmk.rulesets.v1.form_specs.validators import (
+    EmailAddress,
+    LengthInRange,
+    NumberInRange,
+    ValidationError,
+)
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.shared_typing.vue_formspec_components import (
     Autocompleter,
@@ -981,6 +986,7 @@ def notification_method() -> QuickSetupStage:
                         title=Title("Max. notifications per bulk"),
                         unit_symbol="notifications",
                         prefill=DefaultValue(1000),
+                        custom_validate=[NumberInRange(min_value=2, max_value=1000)],
                     ),
                 ),
                 "subject": DictElement(

@@ -14,7 +14,8 @@
 # 2 Total number of Terminal Services sessions.
 # 4 Number of active Terminal Services sessions.
 # 6 Number of inactive Terminal Services sessions.
-
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
@@ -22,7 +23,9 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_winperf_ts_sessions(info):
+def inventory_winperf_ts_sessions(
+    info: StringTable,
+) -> Iterable[tuple[str | None, Mapping[str, Any]]]:
     if len(info) > 1:
         return [(None, {})]
     return []
@@ -44,10 +47,10 @@ def check_winperf_ts_sessions(_unused, params, info):
     for val, key, title in [(active, "active", "Active"), (inactive, "inactive", "Inactive")]:
         txt = "%d %s" % (val, title)
         if key in params:
-            if val > params[key][0]:
+            if val > params[key][1]:
                 state = 2
                 txt += "(!!)"
-            elif val > params[key][1]:
+            elif val > params[key][0]:
                 state = max(state, 1)
                 txt += "(!)"
         state_txt.append(txt)

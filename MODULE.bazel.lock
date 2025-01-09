@@ -6801,7 +6801,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "9b156d4f99ad91b930ea339df3389e875d286646889c1fa6ac147c1cd3339061",
+          "@@//requirements_all_lock.txt": "fa22fc9eff744c74247cdfab583dec585c8d593a70ec559ed2e5dee2fc5ca914",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -9447,7 +9447,6 @@
                 "autoflake": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_autoflake\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "cssselect": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_cssselect\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "decorator": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_decorator\",\"target_platforms\":null,\"version\":\"3.12\"}]",
-                "dicttoxml": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_dicttoxml\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "dnspython": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_dnspython\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "dockerpty": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_dockerpty\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "gitpython": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_gitpython\",\"target_platforms\":null,\"version\":\"3.12\"}]",
@@ -14104,23 +14103,6 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "pexpect==4.9.0     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523     --hash=sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f"
-            }
-          },
-          "cmk_requirements_312_dicttoxml": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@cmk_requirements//{name}:{target}",
-              "environment": {
-                "CC": "gcc-13"
-              },
-              "extra_pip_args": [
-                "--index-url",
-                "https://pypi.org/simple"
-              ],
-              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
-              "repo": "cmk_requirements_312",
-              "requirement": "dicttoxml==1.7.16     --hash=sha256:6f36ce644881db5cd8940bee9b7cb3f3f6b7b327ba8a67d83d3e2caa0538bf9d     --hash=sha256:8677671496d0d38e66c7179f82a7e9059f94887777955dc71b0ac602ee637c26"
             }
           },
           "cmk_requirements_312_types_pymssql": {

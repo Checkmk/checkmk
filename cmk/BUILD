@@ -32,7 +32,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "botocore",
     "cryptography",
     "cython",
-    "dicttoxml",
     "docstring-parser",
     "exchangelib",  # missing wheel
     "feedparser",

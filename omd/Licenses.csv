@@ -102,7 +102,6 @@ Python module: azure-storage-blob,12.15.0,MIT,https://opensource.org/licenses/MI
 Python module: boto3,1.34.15,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: botocore,1.34.15,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: cython,0.29.34,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: dicttoxml,1.7.16,GPL-2.0,https://opensource.org/licenses/GPL-2.0,,
 Python module: docstring-parser,0.16,MIT,https://opensource.org/licenses/MIT,,
 Python module: exchangelib,5.2.1,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
 Python module: feedparser,6.0.10,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,

@@ -25,7 +25,6 @@ jira==3.8.0 # needed by jira
 msal==1.26.0 # needed by agent_azure
 pillow  # needed by reporting & CME logo image processing
 python-ldap==3.4.3 # needed by GUI (User sync), python-active-directory
-dicttoxml==1.7.16 # needed by GUI (API XML format)
 cython==3.0.11 # needed by numpy & pymssql
 numpy==1.26.4 # needed by GUI (metrics)
 reportlab==4.1.0 # needed by GUI (reporting)

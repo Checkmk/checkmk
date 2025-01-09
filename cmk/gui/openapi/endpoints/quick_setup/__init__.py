@@ -44,12 +44,14 @@ from cmk.gui.quick_setup.handlers.stage import (
     NextStageStructure,
     StageActionResult,
     start_quick_setup_stage_job,
-    validate_and_recap_stage,
+    validate_stage_formspecs,
+    verify_custom_validators_and_recap_stage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, StageIndex
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 
 from cmk import fields
 
@@ -239,6 +241,23 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
 
     stage_index = StageIndex(len(body["stages"]) - 1)
     stage_action = matching_stage_action(quick_setup.stages[stage_index](), stage_action_id)
+
+    built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    form_spec_map = build_formspec_map_from_stages(built_stages)
+    # Validate the stage formspec data; this is separate from the custom validators of the stage
+    # as the custom validators can potentially take a long time (and therefore be run in a
+    # background job)
+    errors = validate_stage_formspecs(
+        stage_index=stage_index,
+        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        quick_setup_formspec_map=form_spec_map,
+    )
+    if errors.exist():
+        return _serve_action_result(
+            StageActionResult(validation_errors=errors),
+            status_code=400,
+        )
+
     if stage_action.run_in_background:
         background_job_id = start_quick_setup_stage_job(
             quick_setup=quick_setup,
@@ -255,11 +274,13 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         response.location = urlparse(background_job_status_link["href"]).path
         return response
 
-    result = validate_and_recap_stage(
+    result = verify_custom_validators_and_recap_stage(
         quick_setup=quick_setup,
         stage_index=stage_index,
         stage_action_id=stage_action_id,
         input_stages=body["stages"],
+        form_spec_map=form_spec_map,
+        built_stages=built_stages,
     )
     return _serve_action_result(
         result, status_code=200 if result.validation_errors is None else 400

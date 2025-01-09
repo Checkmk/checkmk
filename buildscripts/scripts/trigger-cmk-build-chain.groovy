@@ -21,7 +21,8 @@ def main() {
     ]);
 
     def edition = JOB_BASE_NAME.split("-")[-1];
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+    def edition_base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+
     def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
 
     /// NOTE: this way ALL parameter are being passed through..
@@ -73,11 +74,11 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |edition:............... │${edition}│
-        |base_folder:........... │${base_folder}│
+        |edition_base_folder:... │${edition_base_folder}│
         |build_image:........... │${build_image}│
         |run_comp_tests:........ │${run_comp_tests}│
-        |run_int_tests:..........│${run_int_tests}│
-        |run_fips_tests:.........│${run_fips_tests}│
+        |run_int_tests:......... │${run_int_tests}│
+        |run_fips_tests:........ │${run_fips_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
         |use_case:.............. │${use_case}│
@@ -94,7 +95,7 @@ def main() {
             condition: true,
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/build-cmk-deliverables",
+            job: "${edition_base_folder}/build-cmk-deliverables",
             parameters: job_parameters
         );
     }
@@ -104,7 +105,7 @@ def main() {
             condition: build_image,
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/build-cmk-image",
+            job: "${edition_base_folder}/build-cmk-image",
             parameters: job_parameters
         );
     }
@@ -116,7 +117,7 @@ def main() {
                     condition: run_image_tests,
                     raiseOnError: false,) {
                 smart_build(
-                    job: "${base_folder}/test-integration-docker",
+                    job: "${edition_base_folder}/test-integration-docker",
                     parameters: job_parameters
                 );
             }
@@ -127,7 +128,7 @@ def main() {
                     condition: run_comp_tests,
                     raiseOnError: false,) {
                 smart_build(
-                    job: "${base_folder}/test-composition",
+                    job: "${edition_base_folder}/test-composition",
                     parameters: job_parameters
                 );
             }
@@ -138,12 +139,12 @@ def main() {
                     condition: run_fips_tests,
                     raiseOnError: false,) {
                 build(
-                    job: "${base_folder}/test-integration-fips",
+                    job: "${edition_base_folder}/test-integration-fips",
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,
                 );
                 build(
-                    job: "${base_folder}/test-composition-fips",
+                    job: "${edition_base_folder}/test-composition-fips",
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,
                 );
@@ -156,7 +157,7 @@ def main() {
             condition: run_int_tests,
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/test-integration-packages",
+            job: "${edition_base_folder}/test-integration-packages",
             parameters: job_parameters
         );
     }
@@ -166,7 +167,7 @@ def main() {
             condition: run_update_tests,
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/test-update",
+            job: "${edition_base_folder}/test-update",
             parameters: job_parameters
         );
     }
@@ -176,7 +177,7 @@ def main() {
             condition: success && edition == "saas",
             raiseOnError: false,) {
         smart_build(
-            job: "${base_folder}/trigger-saas-gitlab",
+            job: "${edition_base_folder}/trigger-saas-gitlab",
             parameters: job_parameters
         );
     }

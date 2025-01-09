@@ -7,7 +7,6 @@ from typing import Any, assert_never, cast, Literal
 
 from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
@@ -111,6 +110,8 @@ from cmk.rulesets.v1.form_specs.validators import (
     EmailAddress,
     LengthInRange,
     NumberInRange,
+    Url,
+    UrlProtocol,
     ValidationError,
 )
 from cmk.shared_typing.configuration_entity import ConfigEntityType
@@ -1466,13 +1467,6 @@ def sending_conditions() -> QuickSetupStage:
     )
 
 
-def _validate_documentation_url(value: str) -> None:
-    if not is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
-        raise ValidationError(
-            Message("Not a valid URL (Only http and https URLs are allowed)."),
-        )
-
-
 def general_properties() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -1518,9 +1512,11 @@ def general_properties() -> QuickSetupStage:
                         "documentation_url": DictElement(
                             required=True,
                             parameter_form=String(
-                                title=Title("Documentation"),
+                                title=Title("Documentation URL"),
                                 field_size=FieldSize.LARGE,
-                                custom_validate=(_validate_documentation_url,),
+                                custom_validate=[
+                                    Url(protocols=[UrlProtocol.HTTP, UrlProtocol.HTTPS]),
+                                ],
                             ),
                         ),
                     },

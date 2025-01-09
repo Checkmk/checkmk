@@ -35,7 +35,6 @@ install() {
         pyenv update
         pyenv install "${DESIRED_PYTHON_VERSION}" --skip-existing
         pyenv global "${DESIRED_PYTHON_VERSION}" # make pip3 available
-        install_pipenv
     else
         print_blue "Team CI recommends to install pyenv for easy use. It is currently not yet installed."
 
@@ -71,28 +70,8 @@ EOF
 
             pyenv install "${DESIRED_PYTHON_VERSION}"
             pyenv global "${DESIRED_PYTHON_VERSION}" # make pip3 available
-            install_pipenv
         fi
     fi
-}
-
-install_pipenv() {
-    PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
-    VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
-
-    pip3 install \
-        pipenv=="$PIPENV_VERSION" \
-        virtualenv=="$VIRTUALENV_VERSION"
-
-    # link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
-    #   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.
-    #   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
-    PIPENV_PATH=$(command -v pipenv)
-    print_debug "Creating symlink to /usr/bin or ${TARGET_DIR}/bin for OMD usage"
-    sudo ln -sf "${PIPENV_PATH}"* /usr/bin || sudo ln -sf "${PIPENV_PATH}"* "${TARGET_DIR}"/bin
-
-    test_package "pipenv --version" "$PIPENV_VERSION$"
-    test_package "pip3 freeze" "virtualenv"
 }
 
 install

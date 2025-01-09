@@ -462,8 +462,8 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Automatic formatting/sorting with ruff
 
-The `ruff` configuration file, `pyproject.toml`, lives in the root directory of the project repository, where `ruff` picks it up automatically.
-`ruff` itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python`.
+The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
+`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format-python`.
 
 This make target will then format your code base as well as sort the import statements.
 

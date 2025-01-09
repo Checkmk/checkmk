@@ -317,7 +317,6 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
-	    --prepend-path=`dirname $$(which pipenv)` \
 	    --prepend-path=`dirname $$(which python3)` \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \

@@ -31,8 +31,8 @@ onMounted(() => {
   }
 })
 
-function openInNewTab(url: string) {
-  window.open(url, '_blank')
+function openInSameTab(url: string) {
+  window.open(url, '_self')
 }
 </script>
 
@@ -45,7 +45,7 @@ function openInNewTab(url: string) {
       <p>{{ props.properties['i18n']['title'] }}</p>
       <p>{{ props.properties['i18n']['message'] }}</p>
       <div class="buttons">
-        <CmkButton variant="info" @click="openInNewTab(properties['setup_link'])">
+        <CmkButton variant="info" @click="openInSameTab(properties['setup_link'])">
           {{ properties['i18n']['setup_link_title'] }}
         </CmkButton>
         <CmkSpace />

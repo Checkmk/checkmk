@@ -692,10 +692,6 @@ devpi-common==4.0.4 \
     --hash=sha256:235a0a9a45c96e54c60ba6ba2f77d856cf90f1a69c1bee949887e9edc03a41cc \
     --hash=sha256:8a83b788ac821ade1e348d571db083575c5c5d92ba0932a3a8f75c6f8dde4d88
     # via devpi-client
-dicttoxml==1.7.16 \
-    --hash=sha256:6f36ce644881db5cd8940bee9b7cb3f3f6b7b327ba8a67d83d3e2caa0538bf9d \
-    --hash=sha256:8677671496d0d38e66c7179f82a7e9059f94887777955dc71b0ac602ee637c26
-    # via -r requirements_all.txt
 dill==0.3.9 \
     --hash=sha256:468dff3b89520b474c0397703366b7b95eebe6303f108adf9b19da1f702be87a \
     --hash=sha256:81aa267dddf68cbfe8029c42ca9ec6a4ab3b22371d1c450abc54422577b4512c

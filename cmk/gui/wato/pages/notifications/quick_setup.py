@@ -1512,8 +1512,8 @@ def general_properties() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("General properties"),
         sub_title=_(
-            "Review your notification rule before applying it. They will take effect right "
-            'away without "Activate changes".'
+            "Make your rule more recognizable with a meaningful description and other metadata. "
+            'Note: Notification rules take effect immediately without "Activate changes".'
         ),
         configure_components=_components,
         actions=[
@@ -1521,7 +1521,7 @@ def general_properties() -> QuickSetupStage:
                 id=ActionId("action"),
                 custom_validators=[],
                 recap=[recaps.recaps_form_spec],
-                next_button_label=_("Next step: Summary"),
+                next_button_label=_("Next step: Review all settings"),
             )
         ],
         prev_button_label=PREV_BUTTON_LABEL,

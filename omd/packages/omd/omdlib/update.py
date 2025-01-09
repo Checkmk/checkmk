@@ -173,11 +173,11 @@ class ManageUpdate:
             self.backup_dir.mkdir()
         except FileExistsError:
             sys.exit(
-                "An unknown error occured before the update could be started. The folder "
-                f"{self.backup_dir} contains data from a failed update attempt. This data should "
-                "have been written back to the site directory and then have been deleted. "
-                "Check whether any files need to be restored from this directory. Then this folder "
-                "can be deleted and the update can be retried."
+                f"The folder {self.backup_dir} contains data from a failed update attempt. This "
+                "only happens, if a serious error occured during a previous update attempt. "
+                f"Please contact support. "
+                "Since the root cause of this error is not known to OMD, the site is an "
+                "unknown state and both, restarting or updating the site, can have unknown effects.\n"
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         store(self.site_dir, "version", self.backup_dir)

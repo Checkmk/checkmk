@@ -12,6 +12,14 @@ git_override(
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
 )
 
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+git_override(
+    module_name = "bazel_clang_tidy",
+    # No tags, no releases.  Live on head.
+    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
+
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "0.37.0")

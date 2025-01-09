@@ -845,15 +845,21 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Experimental features"),
+            title=_("Experimental rendering"),
+            help=_("These settings only affect features that are currently under development."),
             elements=[
                 (
                     "render_mode",
                     DropdownChoice(
-                        title=_("Rendering mode for valuespecs and tables"),
+                        title=_("Form specs"),
+                        help=_(
+                            "Enable experimental rendering modes for form specs. Keep in mind that"
+                            "some form specs are always rendered in the frontend, regardless "
+                            "of this setting."
+                        ),
                         choices=[
-                            ("backend", "Backend"),
-                            ("frontend", "Frontend"),
+                            ("backend", "Backend (legacy rendering)"),
+                            ("frontend", "Frontend (vue rendering)"),
                             ("backend_and_frontend", "Backend and Frontend"),
                         ],
                     ),

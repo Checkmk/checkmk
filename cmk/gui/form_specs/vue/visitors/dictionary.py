@@ -115,7 +115,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                     layout=layout,
                 )
 
-            if is_active:
+            if is_active or dict_element.required:
                 vue_values[key_name] = element_vue_value
 
             elements_keyspec.append(
@@ -150,18 +150,19 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}
         element_validations = []
         for key_name, dict_element in self.form_spec.elements.items():
+            element_visitor = get_visitor(dict_element.parameter_form, self.options)
+
             if key_name not in parsed_value:
                 if dict_element.required:
                     element_validations.append(
                         shared_type_defs.ValidationMessage(
                             location=[key_name],
                             message=_("Required field missing"),
-                            invalid_value=None,
+                            invalid_value=element_visitor.to_vue(DEFAULT_VALUE)[1],
                         )
                     )
                 continue
 
-            element_visitor = get_visitor(dict_element.parameter_form, self.options)
             for validation in element_visitor.validate(parsed_value[key_name]):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(

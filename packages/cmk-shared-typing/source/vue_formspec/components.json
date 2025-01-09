@@ -549,58 +549,65 @@
                             "$ref": "#/$defs/autocompleter"
                         },
                         "i18n": {
-                            "type": "object",
-                            "title": "dual_list_choice_i18n",
-                            "properties": {
-                                "add": {
-                                    "type": "string"
-                                },
-                                "remove": {
-                                    "type": "string"
-                                },
-                                "add_all": {
-                                    "type": "string"
-                                },
-                                "remove_all": {
-                                    "type": "string"
-                                },
-                                "available_options": {
-                                    "type": "string"
-                                },
-                                "selected_options": {
-                                    "type": "string"
-                                },
-                                "selected": {
-                                    "type": "string"
-                                },
-                                "no_elements_available": {
-                                    "type": "string"
-                                },
-                                "no_elements_selected": {
-                                    "type": "string"
-                                },
-                                "autocompleter_loading": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "add",
-                                "remove",
-                                "add_all",
-                                "remove_all",
-                                "available_options",
-                                "selected_options",
-                                "selected",
-                                "no_elements_available",
-                                "no_elements_selected",
-                                "autocompleter_loading"
-                            ]
+                            "$ref": "#/$defs/multiple_choice_i18n"
                         }
                     },
                     "required": ["elements", "show_toggle_all", "i18n"]
                 }
             ],
             "required": ["type"]
+        },
+        "multiple_choice_i18n": {
+            "type": "object",
+            "title": "dual_list_choice_i18n",
+            "properties": {
+                "add": {
+                    "type": "string"
+                },
+                "remove": {
+                    "type": "string"
+                },
+                "add_all": {
+                    "type": "string"
+                },
+                "remove_all": {
+                    "type": "string"
+                },
+                "available_options": {
+                    "type": "string"
+                },
+                "selected_options": {
+                    "type": "string"
+                },
+                "selected": {
+                    "type": "string"
+                },
+                "no_elements_available": {
+                    "type": "string"
+                },
+                "no_elements_selected": {
+                    "type": "string"
+                },
+                "autocompleter_loading": {
+                    "type": "string"
+                },
+                "and_x_more": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "add",
+                "remove",
+                "add_all",
+                "remove_all",
+                "available_options",
+                "selected_options",
+                "selected",
+                "no_elements_available",
+                "no_elements_selected",
+                "autocompleter_loading",
+                "and_x_more"
+            ]
         },
         "checkbox_list_choice": {
             "type": "object",
@@ -621,9 +628,12 @@
                                 "$ref": "#/$defs/multiple_choice_element"
                             },
                             "default": []
+                        },
+                        "i18n": {
+                            "$ref": "#/$defs/multiple_choice_i18n"
                         }
                     },
-                    "required": ["type", "elements", "show_toggle_all"]
+                    "required": ["type", "elements", "show_toggle_all", "i18n"]
                 }
             ],
             "required": ["type"]

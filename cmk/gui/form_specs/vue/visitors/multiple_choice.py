@@ -85,18 +85,7 @@ class MultipleChoiceVisitor(
                     autocompleter=self.form_spec.elements
                     if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter)
                     else None,
-                    i18n=shared_type_defs.DualListChoiceI18n(
-                        add_all=_("Add all >>"),
-                        remove_all=_("<< Remove all"),
-                        add=_("Add >"),
-                        remove=_("< Remove"),
-                        available_options=_("Available options"),
-                        selected_options=_("Selected options"),
-                        selected=_("Selected"),
-                        no_elements_available=_("No elements available"),
-                        no_elements_selected=_("No elements selected"),
-                        autocompleter_loading=_("Loading"),
-                    ),
+                    i18n=self._get_i18n(),
                     show_toggle_all=self.form_spec.show_toggle_all,
                 ),
                 parsed_value.fallback_value
@@ -110,8 +99,24 @@ class MultipleChoiceVisitor(
                 help=help_text,
                 elements=elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
+                i18n=self._get_i18n(),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,
+        )
+
+    def _get_i18n(self) -> shared_type_defs.DualListChoiceI18n:
+        return shared_type_defs.DualListChoiceI18n(
+            add_all=_("Add all >>"),
+            remove_all=_("<< Remove all"),
+            add=_("Add >"),
+            remove=_("< Remove"),
+            available_options=_("Available options"),
+            selected_options=_("Selected options"),
+            selected=_("Selected"),
+            no_elements_available=_("No elements available"),
+            no_elements_selected=_("No elements selected"),
+            autocompleter_loading=_("Loading"),
+            and_x_more=_("and %s more"),
         )
 
     def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> list[str]:

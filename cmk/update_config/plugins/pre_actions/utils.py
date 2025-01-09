@@ -98,6 +98,7 @@ class ConflictMode(enum.StrEnum):
     INSTALL = "install"
     KEEP_OLD = "keepold"
     ABORT = "abort"
+    FORCE = "force"
 
 
 _USER_INPUT_ABORT: Final = ("a", "abort")
@@ -147,6 +148,8 @@ def disable_incomp_mkp(
 
 def _request_user_input_on_incompatible_file(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:

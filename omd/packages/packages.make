@@ -59,8 +59,7 @@ $(DEPS_INSTALL_BAZEL):
 	#openssl-install-intermediate target simultaneously enough to run into
 	#string-replacements which have been done before. So we don't add `--strict`
 	# for now
-	# TODO: Remove pipenv also from the omd builds
-	$(REPO_PATH)/omd/run-pipenv run cmk-dev binreplace \
+	$(REPO_PATH)/omd/run-binreplace \
 	    --regular-expression \
 	    --inplace \
 	    "/home/.*?/openssl.build_tmpdir/openssl/" \

@@ -72,6 +72,8 @@ class PreUpdateRulesets(PreUpdateAction):
 
 def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.UPDATE
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
@@ -84,6 +86,8 @@ def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
 
 def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
@@ -96,6 +100,8 @@ def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
 
 def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:

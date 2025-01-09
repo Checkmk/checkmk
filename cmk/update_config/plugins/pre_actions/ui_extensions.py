@@ -92,6 +92,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
 def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:

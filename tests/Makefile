@@ -16,6 +16,7 @@ THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
+SHFMT := $(SCRIPTS)/run-bazel.sh  run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -62,8 +63,10 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
-	test-docker test-docker-docker test-docker-sit test-docker-sit-docker \
-	test-format-python test-format-python-docker test-format-shell \
+	test-docker test-docker-docker \
+	test-docker-sit test-docker-sit-docker \
+	test-format-python test-format-python-docker \
+	test-format-shell test-format-shell-docker \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
@@ -147,10 +150,8 @@ bandit.ini:
 	  echo ) > bandit.ini
 	( echo exclude: /tests >> bandit.ini )
 
-# NOTE: Due to the (unnecessary) use of Docker, find-shell-files *must* emit
-# relative paths, which is inconsistent with find-python-files. :-/
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $$($(FIND_SHELL_FILES))
+	$(SHFMT) -w -i 4 -ci $(FIND_SHELL_FILES)
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -254,10 +255,11 @@ test-format-python-format: ../pyproject.toml
 test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
-# NOTE: Due to the (unnecessary) use of Docker, find-shell-files *must* emit
-# relative paths, which is inconsistent with find-python-files. :-/
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
+	$(SHFMT) -d -i 4 -ci $(FIND_SHELL_FILES)
+
+test-format-shell-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-shell
 
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
@@ -418,7 +420,7 @@ test-ruff-docker:
 	../scripts/run-in-docker.sh make --quiet test-ruff
 
 test-shellcheck:
-	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
+	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $(FIND_SHELL_FILES)
 
 test-shellcheck-docker:
 	../scripts/run-in-docker.sh make --quiet test-shellcheck

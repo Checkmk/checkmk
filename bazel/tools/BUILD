@@ -63,6 +63,19 @@ sh_binary(
     data = [":shellcheck_binary"],
 )
 
+copy_file(
+    name = "shfmt_binary",
+    src = "@shfmt//file",
+    out = "shfmt",
+)
+
+# Shell wrapper to execute shfmt in the callers working directory
+sh_binary(
+    name = "shfmt_bin",
+    srcs = ["run-shfmt"],
+    data = [":shfmt_binary"],
+)
+
 alias(
     name = "buildifier",
     actual = "@buildifier_prebuilt//:buildifier",

@@ -118,7 +118,7 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
             for ev in event_rule["match_service_event"]
         ]
 
-    if event_rule.get("match_ec", False):
+    if "match_ec" in event_rule and event_rule["match_ec"] is not False:
         specific_events["ec_alerts"] = True
 
     return "specific_events", specific_events
@@ -420,6 +420,9 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
                 else _non_status_change_events(ev)
                 for ev in specific_events["service_events"]
             ]
+
+        if "ec_alerts" in specific_events and "match_ec" not in event_rule:
+            event_rule["match_ec"] = ConditionEventConsoleAlertsType()
 
 
 def _set_event_console_filters(

@@ -33,7 +33,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    inside_container(ulimit_nofile: 1024) {
+    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         smart_stage(
             name: "Deploy to website",
         ) {

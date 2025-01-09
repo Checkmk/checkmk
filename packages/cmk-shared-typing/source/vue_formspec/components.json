@@ -1058,9 +1058,13 @@
                                 },
                                 "day": {
                                     "type": "string"
+                                },
+                                "validation_negative_number": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
+                                "validation_negative_number",
                                 "millisecond",
                                 "second",
                                 "minute",

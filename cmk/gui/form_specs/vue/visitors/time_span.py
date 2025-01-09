@@ -121,6 +121,7 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, float]):
                     minute=localize(Label("mins")),
                     hour=localize(Label("hours")),
                     day=localize(Label("days")),
+                    validation_negative_number=localize(Label("Negative values not allowed")),
                 ),
                 input_hint=compute_input_hint(self.form_spec.prefill),
             ),

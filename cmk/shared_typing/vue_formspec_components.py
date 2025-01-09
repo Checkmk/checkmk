@@ -121,6 +121,7 @@ class DualListChoiceI18n:
     no_elements_available: str
     no_elements_selected: str
     autocompleter_loading: str
+    and_x_more: str
 
 
 class CascadingSingleChoiceLayout(str, Enum):
@@ -404,6 +405,7 @@ class DualListChoice(FormSpec):
 
 @dataclass(kw_only=True)
 class CheckboxListChoice(FormSpec):
+    i18n: DualListChoiceI18n
     type: str = "checkbox_list_choice"
     elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
 

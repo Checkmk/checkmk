@@ -176,6 +176,7 @@ export type DualListChoice = (FormSpec & {
 export type CheckboxListChoice = FormSpec & {
   type: "checkbox_list_choice";
   elements: MultipleChoiceElement[];
+  i18n: DualListChoiceI18N;
 };
 export type TimeSpan = FormSpec & {
   type: "time_span";
@@ -382,6 +383,7 @@ export interface DualListChoiceI18N {
   no_elements_available: string;
   no_elements_selected: string;
   autocompleter_loading: string;
+  and_x_more: string;
 }
 export interface TimeSpanI18N {
   millisecond: string;

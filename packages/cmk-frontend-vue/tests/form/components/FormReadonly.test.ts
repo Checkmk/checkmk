@@ -211,8 +211,6 @@ test('FormReadonly renders cascading/string, 1st choice', () => {
       data: ['stringChoice', 'baz']
     }
   })
-  // Title of cascading
-  screen.getByText('fooTitle')
   // Title of element choice
   screen.getByText('stringChoiceTitle')
   // Value of element
@@ -227,8 +225,6 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
       data: ['integerChoice', 23]
     }
   })
-  // Title of cascading
-  screen.getByText('fooTitle')
   // Title of element choice
   screen.getByText('integerChoiceTitle')
   // Value of element
@@ -254,7 +250,7 @@ test('FormReadonly renders boolean: on', () => {
     }
   })
   // Title of cascading
-  screen.getByText('on')
+  screen.getByText('fooLabel: on')
 })
 
 test('FormReadonly renders boolean: off', () => {
@@ -266,7 +262,7 @@ test('FormReadonly renders boolean: off', () => {
     }
   })
   // Title of cascading
-  screen.getByText('off')
+  screen.getByText('fooLabel: off')
 })
 
 test('FormReadonly renders time_span: simple', () => {

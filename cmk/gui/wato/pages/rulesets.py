@@ -1519,7 +1519,8 @@ class ModeEditRuleset(WatoMode):
             case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
                 assert form_spec is not None
                 _show_rule_frontend(form_spec)
-                _show_rule_backend()
+                # html.write_html("<hr>")
+                # _show_rule_backend()
 
         # Comment
         table.cell(_("Description"), css=["description"])

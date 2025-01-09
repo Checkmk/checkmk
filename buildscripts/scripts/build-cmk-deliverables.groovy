@@ -18,10 +18,8 @@ def main() {
         ["OVERRIDE_DISTROS", false],
         ["USE_CASE", true],
         ["CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", false],
-
-        // kept for compatibility only
+        ["CIPARAM_REMOVE_RC_CANDIDATES", false],
         ["SKIP_DEPLOY_TO_WEBSITE", false],
-
         ["DISABLE_CACHE", false],
     ]);
 
@@ -60,7 +58,12 @@ def main() {
     def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
 
-    def upload_to_testbuilds = ! branch_base_folder.startsWith("Testing");
+    def upload_to_testbuilds = ! (branch_base_folder.startsWith("Testing"));
+    def deploy_to_website = (
+        upload_to_testbuilds
+        && (! currentBuild.fullProjectName.contains("/cv/"))
+        && (! params.SKIP_DEPLOY_TO_WEBSITE)
+    );
 
     print(
         """
@@ -70,11 +73,13 @@ def main() {
         |EDITION:........................... │${params.EDITION}│
         |VERSION:........................... │${params.VERSION}│
         |USE_CASE:.......................... │${params.USE_CASE}│
+        |CIPARAM_REMOVE_RC_CANDIDATES:...... │${params.CIPARAM_REMOVE_RC_CANDIDATES}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
         |relative_deliverables_dir:......... │${relative_deliverables_dir}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
+        |deploy_to_website:................. │${deploy_to_website}│
         |branch_base_folder:................ │${branch_base_folder}│
         |===================================================
         """.stripMargin());
@@ -88,7 +93,6 @@ def main() {
     def stages = [
         "Build source package": {
             sleep(0.1 * timeOffsetForOrder++);
-
             smart_stage(
                 name: "Build source package",
                 raiseOnError: false,
@@ -234,6 +238,25 @@ def main() {
                 );
             }
         }
+    }
+
+    smart_stage(
+        name: "Deploy to website",
+        condition: deploy_to_website,
+    ) {
+        smart_build(
+            job: "${branch_base_folder}/deploy_to_website",
+            parameters: [
+                stringParam(name: "VERSION", value: params.VERSION),
+                booleanParam(name: "CIPARAM_REMOVE_RC_CANDIDATES", value: params.CIPARAM_REMOVE_RC_CANDIDATES),
+
+                // default parameters
+                stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
+                stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
+                stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+            ]
+        );
     }
 
     smart_stage(name: "Cleanup leftovers") {

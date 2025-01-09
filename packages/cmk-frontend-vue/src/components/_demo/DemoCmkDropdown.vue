@@ -11,12 +11,23 @@ import CmkSpace from '@/components/CmkSpace.vue'
 defineProps<{ screenshotMode: boolean }>()
 
 const defaultSelected = ref<string>('init')
+const defaultSelected2 = ref<string>('init')
 const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)
 const defaultEmpty3 = ref<string | null>(null)
 </script>
 
 <template>
+  <CmkDropdown
+    v-model:selected-option="defaultSelected2"
+    :options="[{ name: 'init', title: 'single element' }]"
+    :show-filter="false"
+    input-hint="some input hint"
+    no-results-hint="no results hint"
+    component-id="some component id"
+    required-text="required"
+  />
+  <CmkSpace />
   <CmkDropdown
     v-model:selected-option="defaultSelected"
     :options="[

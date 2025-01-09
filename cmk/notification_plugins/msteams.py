@@ -157,10 +157,10 @@ def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str,
     if "PARAMETER_AFFECTED_HOST_GROUPS" in context:
         section_facts += [{"title": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]
 
-    if context["NOTIFICATIONAUTHOR"] != "":
+    if author := context.get("NOTIFICATIONAUTHOR"):
         section_facts += [
-            {"title": "Author", "value": context["NOTIFICATIONAUTHOR"]},
-            {"title": "Comment", "value": context["NOTIFICATIONCOMMENT"]},
+            {"title": "Author", "value": author},
+            {"title": "Comment", "value": context.get("NOTIFICATIONCOMMENT", "")},
         ]
 
     if section_facts:

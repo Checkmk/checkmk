@@ -245,7 +245,7 @@ def main() {
         condition: deploy_to_website,
     ) {
         smart_build(
-            job: "${branch_base_folder}/deploy_to_website",
+            job: "${branch_base_folder}/deploy-to-website",
             parameters: [
                 stringParam(name: "VERSION", value: params.VERSION),
                 booleanParam(name: "CIPARAM_REMOVE_RC_CANDIDATES", value: params.CIPARAM_REMOVE_RC_CANDIDATES),

@@ -1,0 +1,8 @@
+[toolchain]
+channel = "1.75" # must be in sync with install-rust-cargo.sh
+
+[toolchain.windows]
+targets = ["i686-pc-windows-msvc"]
+
+[toolchain.linux]
+targets = ["x86_64-unknown-linux-musl", "x86_64-unknown-linux-gnu"]

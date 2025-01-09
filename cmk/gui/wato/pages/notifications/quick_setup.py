@@ -445,7 +445,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
             ConditionalNotificationECAlertStageWidget(
                 items=[
                     Collapsible(
-                        title=_("Event console alert filters"),
+                        title=_("Event Console alert filters"),
                         items=[
                             FormSpecWrapper(
                                 id=FormSpecId("ec_alert_filters"),

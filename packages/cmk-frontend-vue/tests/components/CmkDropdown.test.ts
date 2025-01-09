@@ -191,7 +191,7 @@ test('dropdown does not show required if requiredText is not passed', async () =
   expect(dropdown.textContent).toBe('Select an option')
 })
 
-test('dropdown not clickable if only option is already selected', async () => {
+test('dropdown still clickable if only option is already selected', async () => {
   render(CmkDropdown, {
     props: {
       options: [{ title: 'Option 1', name: 'option1' }],
@@ -203,8 +203,8 @@ test('dropdown not clickable if only option is already selected', async () => {
   const dropdown = screen.getByRole('combobox', { name: 'Option 1' })
   await fireEvent.click(dropdown)
 
-  // Still only the "Option 1" from the combobox itself is visible
-  expect(screen.getByText('Option 1')).toHaveRole('combobox')
+  // show it twice: once as current value and second time as the only value to choose.
+  expect(screen.queryAllByText('Option 1')).toHaveLength(2)
 })
 
 test('dropdown clickable if only one option is available', async () => {

@@ -43,9 +43,7 @@ const selectedOptionTitle = computed(
   () => options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint
 )
 
-const noChoiceAvailable = computed(
-  () => options.length === 0 || (options.length === 1 && selectedOption.value === options[0]!.name)
-)
+const noChoiceAvailable = computed(() => options.length === 0)
 
 const suggestionsShown = ref(false)
 const suggestionsRef = ref<HTMLUListElement | null>(null)

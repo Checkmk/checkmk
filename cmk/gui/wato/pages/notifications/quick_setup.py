@@ -421,6 +421,19 @@ def _get_condition_choices() -> dict[str, ConditionGroup]:
     return choices
 
 
+def custom_recap_formspec_filter_for_hosts_and_services(
+    quick_setup_id: QuickSetupId,
+    stage_index: StageIndex,
+    all_stages_form_data: ParsedFormData,
+) -> Sequence[Widget]:
+    cleaned_stages_form_data = {
+        form_spec_wrapper_id: form_data
+        for form_spec_wrapper_id, form_data in all_stages_form_data.items()
+        if len(form_data) > 0
+    }
+    return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -805,7 +818,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
             QuickSetupStageAction(
                 id=ActionId("action"),
                 custom_validators=[],
-                recap=[recaps.recaps_form_spec],
+                recap=[custom_recap_formspec_filter_for_hosts_and_services],
                 next_button_label=_("Next step: Notification method (plug-in)"),
             )
         ],

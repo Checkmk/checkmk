@@ -12,7 +12,7 @@ description:
  file to forward the terminal service session related counters. Take a
  look at the windows monitoring documentation for details.
 
- It allows to set WARN and CRIT tresholds on the active and idle session.
+ It allows to set WARN and CRIT thresholds on the active and idle session.
 
 discovery:
  One service is created for each host.

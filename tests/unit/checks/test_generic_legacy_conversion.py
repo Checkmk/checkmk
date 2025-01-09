@@ -1201,7 +1201,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "winperf_cpuusage",
         "winperf_diskstat",
         "winperf_mem",
-        "winperf_ts_sessions",
         "wmi_webservices",
         "wmic_process",
         "wut_webtherm",

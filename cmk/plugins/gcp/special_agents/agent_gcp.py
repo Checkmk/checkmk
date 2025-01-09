@@ -106,22 +106,27 @@ class Client:
         if "`" in tableid:
             raise ValueError("tableid contains invalid character")
 
+        # the query is based on a example query from the official docs:
+        # https://cloud.google.com/billing/docs/how-to/export-data-bigquery-tables/standard-usage#sum-costs-per-invoice
+        # table id is similar to: <project_id>.<dataset_id>.gcp_billing_export_v1_<billing_account_id>
         query = (
             "SELECT "  # nosec B608 # BNS:d840de
-            "PROJECT.name, "
-            "PROJECT.id, "
-            "SUM(cost) AS cost, "
+            "project.name, "
+            "project.id, "
+            "(SUM(CAST(cost AS NUMERIC)) + SUM(IFNULL((SELECT SUM(CAST(c.amount AS NUMERIC)) FROM UNNEST(credits) c), 0))) AS cost, "
             "currency, "
             "invoice.month "
-            f"FROM `{tableid}`, UNNEST(credits) as c "
+            f"FROM `{tableid}`"
             'WHERE ('
             f'   invoice.month = "{first_of_month.strftime("%Y%m")}" '
             f'   OR invoice.month = "{first_of_previous_month.strftime("%Y%m")}" '
-            ')'
+            ') '
             f'AND DATE(_PARTITIONTIME) >= "{first_of_previous_month.strftime("%Y-%m-%d")}" '
-            'AND c.type != "SUSTAINED_USAGE_DISCOUNT" '
-            "GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month"
+            "AND project.name IS NOT NULL "
+            "GROUP BY project.name, project.id, currency, invoice.month "
+            "ORDER BY project.name, invoice.month"
         )
+
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()

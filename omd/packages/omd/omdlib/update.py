@@ -16,8 +16,11 @@ from types import TracebackType
 from typing import Literal, Self
 
 from omdlib.contexts import SiteContext
+from omdlib.crash_reporting import report_crash
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.version_info import VersionInfo
+
+from cmk.utils.paths import crash_dir
 
 
 def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
@@ -173,11 +176,11 @@ class ManageUpdate:
             self.backup_dir.mkdir()
         except FileExistsError:
             sys.exit(
-                "An unknown error occured before the update could be started. The folder "
-                f"{self.backup_dir} contains data from a failed update attempt. This data should "
-                "have been written back to the site directory and then have been deleted. "
-                "Check whether any files need to be restored from this directory. Then this folder "
-                "can be deleted and the update can be retried."
+                f"The folder {self.backup_dir} contains data from a failed update attempt. This "
+                "only happens, if a serious error occured during a previous update attempt. "
+                f"Please contact support. A crash report may be available in {crash_dir}. "
+                "Since the root cause of this error is not known to OMD, the site is an "
+                "unknown state and both, restarting or updating the site, can have unknown effects.\n"
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         store(self.site_dir, "version", self.backup_dir)
@@ -197,15 +200,24 @@ class ManageUpdate:
         exc_tb: TracebackType | None,
     ) -> Literal[False]:
         if exc_type is not None:
-            if self.populated_tmpfs:
-                # Always leave the tmpfs unmounted. We currently are in the context of the new
-                # version (symlink has been restored, but python3 interpreter and dynamic libraries
-                # are pointing to the new context. Thus, we only umount here.
-                unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
-            for relpath in HOOK_RELPATHS:
-                restore(self.site_dir, relpath, self.backup_dir)
-            _restore_version_meta_dir(self.site_dir, self.backup_dir)
-            restore(self.site_dir, "version", self.backup_dir)
-            restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            try:
+                if self.populated_tmpfs:
+                    # Always leave the tmpfs unmounted. We currently are in the context of the new
+                    # version (symlink has been restored, but python3 interpreter and dynamic libraries
+                    # are pointing to the new context. Thus, we only umount here.
+                    unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
+                for relpath in HOOK_RELPATHS:
+                    restore(self.site_dir, relpath, self.backup_dir)
+                _restore_version_meta_dir(self.site_dir, self.backup_dir)
+                restore(self.site_dir, "version", self.backup_dir)
+                restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            except Exception:
+                identity = report_crash()
+                sys.stderr.write(
+                    f"A serious error occured, which resulted in a crash with id: {identity}\n"
+                    "Please contact support with this crash id.\n"
+                    "Since the root cause of this error is not known to OMD, the site is an "
+                    "unknown state and both, restarting or updating the site, can have unknown effects.\n"
+                )
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception

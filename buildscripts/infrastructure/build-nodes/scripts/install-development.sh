@@ -98,7 +98,6 @@ setup_env_variables() {
     BRANCH_NAME=$(get_version "$SCRIPT_DIR" BRANCH_NAME)
     BRANCH_VERSION=$(get_version "$SCRIPT_DIR" BRANCH_VERSION)
     CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
-    PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
     VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
     export DISTRO="${DISTRO_NAME,,}-${VERSION_NUMBER}"
     # export NEXUS_ARCHIVES_URL here (as well) in case no creds have to be collected, e.g. CI build
@@ -106,7 +105,6 @@ setup_env_variables() {
     export BRANCH_NAME
     export BRANCH_VERSION
     export CLANG_VERSION
-    export PIPENV_VERSION
     export VIRTUALENV_VERSION
     export DISTRO_NAME
     export VERSION_NUMBER
@@ -119,7 +117,6 @@ setup_env_variables() {
     print_debug "BRANCH_NAME           = ${BRANCH_NAME}"
     print_debug "BRANCH_VERSION        = ${BRANCH_VERSION}"
     print_debug "CLANG_VERSION         = ${CLANG_VERSION}"
-    print_debug "PIPENV_VERSION        = ${PIPENV_VERSION}"
     print_debug "VIRTUALENV_VERSION    = ${VIRTUALENV_VERSION}"
     print_green "Env variables setup done"
 }
@@ -232,7 +229,6 @@ install_for_python_dev() {
         # not installed via pyenv, do it the oldschool way
         print_blue "All right, Python will be installed as done in the CI to $TARGET_DIR"
         install_python_and_teammates
-        "${SCRIPT_DIR}"/install-pipenv.sh
     fi
 
     print_green "Installation for Python development done"

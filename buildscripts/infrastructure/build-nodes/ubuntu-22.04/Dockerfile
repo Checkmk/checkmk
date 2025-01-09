@@ -175,9 +175,6 @@ RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
-COPY install-pipenv.sh /opt/
-RUN /opt/install-pipenv.sh
-
 COPY "${DISTRO_MK_FILE}" /opt/
 COPY install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh

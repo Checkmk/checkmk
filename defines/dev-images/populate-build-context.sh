@@ -30,7 +30,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-gnu-toolchain.sh \
         install-openssl.sh \
         install-patchelf.sh \
-        install-pipenv.sh \
         install-protobuf-cpp.sh \
         install-python.sh \
         install-rust-cargo.sh \

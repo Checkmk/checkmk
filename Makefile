@@ -22,7 +22,7 @@ endif
 # The CI environment variable should only be set by Jenkins
 CI ?= false
 
-.PHONY: announcement all build check-setup \
+.PHONY: announcement all build \
         clean dist documentation \
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
@@ -45,15 +45,6 @@ deb:
 
 cma:
 	$(MAKE) -C omd cma
-
-check-setup:
-	echo "From here on we check the successful setup of some parts ..."
-	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
-	  echo "Your PATH is missing '~/.local/bin' to work properly with pipenv."; \
-	  exit 1; \
-	else \
-		echo "Checks passed"; \
-	fi
 
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
@@ -200,7 +191,6 @@ buildclean:
 setup:
 	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
 	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
-	$(MAKE) check-setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n

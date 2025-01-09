@@ -65,8 +65,7 @@ export function validateValue(newValue: unknown, validators: Validator[]): strin
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'is_integer') {
-      const checkValue = newValue as string
-      if (!isInteger(checkValue)) {
+      if (!isInteger(newValue)) {
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'is_float') {
@@ -79,8 +78,11 @@ export function validateValue(newValue: unknown, validators: Validator[]): strin
   return errors
 }
 
-export function isInteger(value: string): boolean {
-  return /^-?\d+$/.test(value)
+export function isInteger(value: unknown): boolean {
+  if (typeof value !== 'number') {
+    return false
+  }
+  return Number.isInteger(value)
 }
 
 export function isFloat(value: string): boolean {

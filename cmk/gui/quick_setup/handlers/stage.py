@@ -110,7 +110,7 @@ def matching_stage_action(
     raise InvalidStageException(f"Stage action '{stage_action_id}' not found")
 
 
-def validate_stage(
+def verify_stage_custom_validators(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
     stage_index: StageIndex,
@@ -118,13 +118,7 @@ def validate_stage(
     stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
 ) -> ValidationErrors | None:
-    """Validate the form data of a Quick setup stage.
-
-    Notes:
-        * The validation process consists of three steps:
-            1. (Quick setup specific) Validate that all form spec keys are existing.
-            2. (Form spec specific) Validate the form data against the respective form spec.
-            3. (Quick setup specific) Validate against custom validators that are defined in the stage action.
+    """Verify that the custom validators pass of a Quick setup stage.
 
     Args:
         quick_setup:
@@ -146,10 +140,7 @@ def validate_stage(
             The form spec map of the quick setup across all stages. This map is based on the stages
             definition
     """
-    errors = validate_stage_formspecs(stage_index, stages_raw_formspecs, quick_setup_formspec_map)
-    if errors.exist():
-        return errors
-
+    errors = ValidationErrors(stage_index=stage_index)
     custom_validators = matching_stage_action(
         stages[stage_index], stage_action_id
     ).custom_validators
@@ -227,23 +218,22 @@ class StageActionResult(BaseModel, frozen=False):
         )
 
 
-def validate_and_recap_stage(
+def verify_custom_validators_and_recap_stage(
     quick_setup: QuickSetup,
     stage_index: StageIndex,
     stage_action_id: ActionId,
     input_stages: Sequence[dict],
+    form_spec_map: FormspecMap,
+    built_stages: Sequence[QuickSetupStage],
 ) -> StageActionResult:
-    built_stages_up_to_index = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index)
-
     response = StageActionResult()
     if (
-        errors := validate_stage(
+        errors := verify_stage_custom_validators(
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
             stage_index=stage_index,
             stage_action_id=stage_action_id,
-            stages=built_stages_up_to_index,
+            stages=built_stages,
             quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
@@ -253,7 +243,7 @@ def validate_and_recap_stage(
     response.stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
         stage_index=stage_index,
-        stages=built_stages_up_to_index,
+        stages=built_stages,
         stage_action_id=stage_action_id,
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,
@@ -313,11 +303,17 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
 
         register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
-        action_result = validate_and_recap_stage(
+        built_stages_up_to_index = [
+            stage() for stage in quick_setup.stages[: self._stage_index + 1]
+        ]
+        form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index)
+        action_result = verify_custom_validators_and_recap_stage(
             quick_setup=quick_setup,
             stage_index=self._stage_index,
             stage_action_id=self._action_id,
             input_stages=self._user_input_stages,
+            form_spec_map=form_spec_map,
+            built_stages=built_stages_up_to_index,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))

@@ -11,8 +11,7 @@ def main() {
     check_job_parameters([
         "VERSION",
         "OVERRIDE_DISTROS",
-        "SKIP_DEPLOY_TO_WEBSITE",
-        "DEPLOY_TO_WEBSITE_ONLY",
+        "CIPARAM_REMOVE_RC_CANDIDATES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
         "SET_LATEST_TAG",
@@ -33,8 +32,7 @@ def main() {
         // FIXME: all parameters from all triggered jobs have to be handled here
         stringParam(name: 'VERSION', value: VERSION),
         stringParam(name: 'OVERRIDE_DISTROS', value: params.OVERRIDE_DISTROS),
-        booleanParam(name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE),
-        booleanParam(name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY),
+        booleanParam(name: 'CIPARAM_REMOVE_RC_CANDIDATES', value: params.CIPARAM_REMOVE_RC_CANDIDATES),
         booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS),
         stringParam(name: 'CIPARAM_OVERRIDE_DOCKER_TAG_BUILD', value: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD),
         booleanParam(name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG),

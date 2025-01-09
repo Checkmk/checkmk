@@ -44,7 +44,7 @@ from cmk.gui.quick_setup.handlers.utils import (
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import (
-    build_quick_setup_formspec_map,
+    build_formspec_map_from_stages,
     stage_components,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -99,15 +99,6 @@ def _form_spec_validate(
         for form_spec_id, form_data in current_stage_form_data.items()
         if (errors := validate_value_from_frontend(expected_formspecs_map[form_spec_id], form_data))
     }
-
-
-def get_stages_and_formspec_map(
-    quick_setup: QuickSetup,
-    stage_index: StageIndex,
-) -> tuple[Sequence[QuickSetupStage], FormspecMap]:
-    stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
-    return stages, quick_setup_formspec_map
 
 
 def matching_stage_action(
@@ -242,10 +233,8 @@ def validate_and_recap_stage(
     stage_action_id: ActionId,
     input_stages: Sequence[dict],
 ) -> StageActionResult:
-    stages, form_spec_map = get_stages_and_formspec_map(
-        quick_setup=quick_setup,
-        stage_index=stage_index,
-    )
+    built_stages_up_to_index = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index)
 
     response = StageActionResult()
     if (
@@ -254,7 +243,7 @@ def validate_and_recap_stage(
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
             stage_index=stage_index,
             stage_action_id=stage_action_id,
-            stages=stages,
+            stages=built_stages_up_to_index,
             quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
@@ -264,7 +253,7 @@ def validate_and_recap_stage(
     response.stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
         stage_index=stage_index,
-        stages=stages,
+        stages=built_stages_up_to_index,
         stage_action_id=stage_action_id,
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,

@@ -2,11 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 
-from cmk.gui.quick_setup.handlers.stage import get_stages_and_formspec_map, recap_stage
+from cmk.gui.quick_setup.handlers.stage import recap_stage
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
+from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
@@ -49,16 +49,15 @@ def test_form_spec_recap() -> None:
     ]
     quick_setup = QuickSetupFactory.build(stages=setup_stages)
     quick_setup_registry.register(quick_setup)
+    stage_index = StageIndex(0)
 
-    stages, form_spec_map = get_stages_and_formspec_map(
-        quick_setup=quick_setup,
-        stage_index=StageIndex(0),
-    )
+    built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    form_spec_map = build_formspec_map_from_stages(built_stages)
 
     stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
-        stage_index=StageIndex(0),
-        stages=stages,
+        stage_index=stage_index,
+        stages=built_stages,
         stage_action_id=ActionId("action"),
         stages_raw_formspecs=[
             RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}})

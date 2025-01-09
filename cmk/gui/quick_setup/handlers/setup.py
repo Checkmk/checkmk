@@ -24,7 +24,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.stage import (
-    get_stages_and_formspec_map,
     NextStageStructure,
     validate_stage_formspecs,
 )
@@ -43,7 +42,10 @@ from cmk.gui.quick_setup.handlers.utils import (
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
-from cmk.gui.quick_setup.v0_unstable.predefined import stage_components
+from cmk.gui.quick_setup.v0_unstable.predefined import (
+    build_formspec_map_from_stages,
+    stage_components,
+)
 from cmk.gui.quick_setup.v0_unstable.setups import (
     FormspecMap,
     QuickSetup,
@@ -294,11 +296,8 @@ def validate_and_complete_quick_setup(
     object_id: str | None,
 ) -> CompleteActionResult:
     result = CompleteActionResult()
-    _, form_spec_map = get_stages_and_formspec_map(
-        quick_setup=quick_setup,
-        # TODO function should be optionally stage_index independent
-        stage_index=StageIndex(len(quick_setup.stages) - 1),
-    )
+    built_stages = [stage() for stage in quick_setup.stages]
+    form_spec_map = build_formspec_map_from_stages(built_stages)
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")

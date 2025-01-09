@@ -39,13 +39,13 @@ watch(
     newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
         validation.value.push(msg.message)
-        return
+      } else {
+        elementValidation.value.push({
+          location: msg.location.slice(1),
+          message: msg.message,
+          invalid_value: msg.invalid_value
+        })
       }
-      elementValidation.value.push({
-        location: msg.location.slice(1),
-        message: msg.message,
-        invalid_value: msg.invalid_value
-      })
     })
   },
   { immediate: true }
@@ -163,9 +163,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         :spec="activeElement.spec"
         :backend-validation="elementValidation"
       />
-
-      <FormValidation :validation="validation"></FormValidation>
     </template>
+    <FormValidation :validation="validation"></FormValidation>
   </span>
 </template>
 

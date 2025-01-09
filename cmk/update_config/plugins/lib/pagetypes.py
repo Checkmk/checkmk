@@ -111,6 +111,8 @@ class PreUpdatePagetypes(PreUpdateAction, Generic[_TOverridable_co]):
 
 def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:
     match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:

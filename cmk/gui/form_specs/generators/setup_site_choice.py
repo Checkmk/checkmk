@@ -8,17 +8,13 @@ from typing import TypeVar
 from cmk.ccc.site import omd_site
 
 from cmk.gui import site_config
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.site_config import configured_sites
 from cmk.gui.user_sites import activation_sites, site_choices
 
 from cmk.rulesets.v1 import Help, Label, Title
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
-    InvalidElementValidator,
-    SingleChoice,
-    SingleChoiceElement,
-)
+from cmk.rulesets.v1.form_specs import DefaultValue, InvalidElementValidator
 
 T = TypeVar("T")
 
@@ -42,11 +38,11 @@ def _compute_default_prefill() -> DefaultValue[str]:
     return DefaultValue(authorized_site_ids[0])
 
 
-def _compute_site_choices() -> Sequence[SingleChoiceElement]:
+def _compute_site_choices() -> Sequence[SingleChoiceElementExtended[str]]:
     return [
-        SingleChoiceElement(
-            choice[0],
-            Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
+        SingleChoiceElementExtended(
+            name=choice[0],
+            title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
         )
         for choice in site_choices(activation_sites())
     ]
@@ -56,16 +52,16 @@ def create_setup_site_choice(
     title: Title = Title("Site"),
     help_text: Help | None = None,
     label: Label | None = None,
-    elements: Sequence[SingleChoiceElement] | None = None,
+    elements: Sequence[SingleChoiceElementExtended[str]] | None = None,
     prefill: DefaultValue[str] | None = None,
     invalid_element_validation: InvalidElementValidator | None = None,
-) -> SingleChoice:
+) -> SingleChoiceExtended[str]:
     if elements is None:
         elements = _compute_site_choices()
     if prefill is None:
         prefill = _compute_default_prefill()
 
-    return SingleChoice(
+    return SingleChoiceExtended(
         title=title,
         help_text=help_text,
         label=label,

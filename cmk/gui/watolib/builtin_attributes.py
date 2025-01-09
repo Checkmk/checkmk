@@ -90,7 +90,6 @@ from cmk.rulesets.v1.form_specs import (
     InvalidElementValidator,
     List,
     MonitoredHost,
-    SingleChoice,
     String,
 )
 
@@ -1193,7 +1192,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             ),
         )
 
-    def form_spec(self) -> SingleChoice:
+    def form_spec(self) -> SingleChoiceExtended[str]:
         return create_setup_site_choice(
             title=Title("Monitored on site"),
             help_text=Help("Specify the site that should monitor this host."),

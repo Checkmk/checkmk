@@ -343,7 +343,8 @@ STAGES:
     - NAME: "Shell Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES
       DIR: "tests"
-      COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
+      COMMAND: "make --quiet test-format-shell-docker &> ${RESULTS}/shell-format.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
     - NAME: "Shellcheck"

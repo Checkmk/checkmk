@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "e56583de9440d95327c1aca83a46218344bd73ec8fe592945ea092fcff03eae2",
+  "moduleFileHash": "f199f0927d5e571d2bff622c012a52238988be0f77ab96cd8a9dd01d86cf4f5c",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -40,7 +40,8 @@
             "forked_cc_toolchain_config": "forked_cc_toolchain_config",
             "patch": "patch",
             "otel-collector": "otel-collector",
-            "shellcheck": "shellcheck"
+            "shellcheck": "shellcheck",
+            "shfmt": "shfmt"
           },
           "devImports": [],
           "tags": [
@@ -134,6 +135,24 @@
                 "file": "@@//:MODULE.bazel",
                 "line": 157,
                 "column": 13
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+              "attributeValues": {
+                "executable": true,
+                "sha256": "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
+                "urls": [
+                  "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64",
+                  "https://artifacts.lan.tribe29.com/repository/upstream-archives//shfmt_v3.10.0_linux_amd64"
+                ],
+                "name": "shfmt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 174,
+                "column": 10
               }
             }
           ],

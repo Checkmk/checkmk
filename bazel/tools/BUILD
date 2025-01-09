@@ -62,3 +62,16 @@ sh_binary(
     srcs = ["run-shellcheck"],
     data = [":shellcheck_binary"],
 )
+
+copy_file(
+    name = "shfmt_binary",
+    src = "@shfmt//file",
+    out = "shfmt",
+)
+
+# Shell wrapper to execute shfmt in the callers working directory
+sh_binary(
+    name = "shfmt_bin",
+    srcs = ["run-shfmt"],
+    data = [":shfmt_binary"],
+)

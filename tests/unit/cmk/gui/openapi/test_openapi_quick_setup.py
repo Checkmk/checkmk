@@ -720,7 +720,6 @@ class TestCompleteAction:
                 "button_id": "save",
                 "stages": [
                     {"form_data": {"id_1": "valid_data"}},
-                    {"form_data": {"id_2": "valid_data"}},
                 ],
             },
             follow_redirects=False,

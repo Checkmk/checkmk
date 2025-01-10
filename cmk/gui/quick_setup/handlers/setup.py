@@ -197,57 +197,20 @@ def quick_setup_overview_mode(
     )
 
 
-def validate_stages_formspecs(
-    stages_raw_formspecs: Sequence[RawFormData],
+def validate_stages_form_data(
+    stages_raw_form_data: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
 ) -> Sequence[ValidationErrors] | None:
     stages_errors = []
-    for stage_index in range(len(stages_raw_formspecs)):
+    for stage_index in range(len(stages_raw_form_data)):
         errors = validate_stage_formspecs(
             stage_index=StageIndex(stage_index),
-            stages_raw_formspecs=stages_raw_formspecs[: stage_index + 1],
+            stages_raw_formspecs=stages_raw_form_data[: stage_index + 1],
             quick_setup_formspec_map=quick_setup_formspec_map,
         )
         if errors.exist():
             stages_errors.append(errors)
     return stages_errors or None
-
-
-def validate_quick_setup(
-    quick_setup: QuickSetup,
-    action: QuickSetupAction,
-    stages_raw_formspecs: Sequence[RawFormData],
-    quick_setup_formspec_map: FormspecMap,
-) -> Sequence[ValidationErrors] | None:
-    """Validate the quick setup
-
-    The validation consists of:
-        1. validating the formspecs of each stage (the recheck in a guided mode context is
-        intended)
-        2. validating the custom validators of the quick setup action
-
-    Note:
-        The individual stage custom validators are intentionally not executed due to a potential
-        overlap in validation across stages
-    """
-    if (
-        stages_errors := validate_stages_formspecs(
-            stages_raw_formspecs=stages_raw_formspecs,
-            quick_setup_formspec_map=quick_setup_formspec_map,
-        )
-    ) is not None:
-        return stages_errors
-
-    errors = validate_custom_validators(
-        quick_setup_id=quick_setup.id,
-        custom_validators=action.custom_validators,
-        stages_raw_formspecs=stages_raw_formspecs,
-        quick_setup_formspec_map=quick_setup_formspec_map,
-    )
-    if errors.exist():
-        return [errors]
-
-    return None
 
 
 def complete_quick_setup(
@@ -288,37 +251,35 @@ class CompleteActionResult(BaseModel):
         )
 
 
-def validate_and_complete_quick_setup(
+def verify_custom_validators_and_complete_quick_setup(
     quick_setup: QuickSetup,
     action_id: ActionId,
     mode: QuickSetupActionMode,
     input_stages: Sequence[dict],
+    form_spec_map: FormspecMap,
     object_id: str | None,
 ) -> CompleteActionResult:
-    result = CompleteActionResult()
-    built_stages = [stage() for stage in quick_setup.stages]
-    form_spec_map = build_formspec_map_from_stages(built_stages)
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")
     stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in input_stages]
-    if all_stage_errors := validate_quick_setup(
-        quick_setup=quick_setup,
-        action=action,
+    errors = validate_custom_validators(
+        quick_setup_id=quick_setup.id,
+        custom_validators=action.custom_validators,
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
-    ):
-        result.all_stage_errors = all_stage_errors
-        return result
+    )
+    if errors.exist():
+        return CompleteActionResult(all_stage_errors=[errors])
 
-    result.redirect_url = complete_quick_setup(
+    redirect_url = complete_quick_setup(
         action=action,
         mode=mode,
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
         object_id=object_id,
     ).redirect_url
-    return result
+    return CompleteActionResult(redirect_url=redirect_url)
 
 
 class QuickSetupActionBackgroundJob(BackgroundJob):
@@ -374,11 +335,12 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
 
         register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
-        action_result = validate_and_complete_quick_setup(
+        action_result = verify_custom_validators_and_complete_quick_setup(
             quick_setup=quick_setup,
             action_id=self._action_id,
             mode=self._mode,
             input_stages=self._user_input_stages,
+            form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
             object_id=self._object_id,
         )
 

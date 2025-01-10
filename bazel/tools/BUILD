@@ -89,3 +89,8 @@ sh_binary(
     srcs = ["run-taplo"],
     data = [":taplo_unzip_and_make_executable"],
 )
+
+alias(
+    name = "buildifier",
+    actual = "@buildifier_prebuilt//:buildifier",
+)

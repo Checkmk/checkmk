@@ -139,7 +139,7 @@ def check_logwatch_node(
     """fall back to the cluster case with node=None"""
     host_name = params["host_name"]
     rules_params = logwatch.RulesetAccess.logwatch_rules_all(
-        host_name=host_name, service_name_template=check_plugin_logwatch.service_name, logfile=item
+        host_name=host_name, plugin=check_plugin_logwatch, logfile=item
     )
     yield from check_logwatch(item, rules_params, {None: section}, host_name)
 
@@ -151,7 +151,7 @@ def check_logwatch_cluster(
 ) -> CheckResult:
     host_name = params["host_name"]
     rules_params = logwatch.RulesetAccess.logwatch_rules_all(
-        host_name=host_name, service_name_template=check_plugin_logwatch.service_name, logfile=item
+        host_name=host_name, plugin=check_plugin_logwatch, logfile=item
     )
     yield from check_logwatch(
         item,
@@ -302,7 +302,7 @@ def check_logwatch_groups_node(
     """fall back to the cluster case with node=None"""
     params_rules = logwatch.RulesetAccess.logwatch_rules_all(
         host_name=params["host_name"],
-        service_name_template=check_plugin_logwatch_groups.service_name,
+        plugin=check_plugin_logwatch_groups,
         logfile=item,
     )
     yield from check_logwatch_groups(item, params, params_rules, {None: section})
@@ -315,7 +315,7 @@ def check_logwatch_groups_cluster(
 ) -> CheckResult:
     params_rules = logwatch.RulesetAccess.logwatch_rules_all(
         host_name=params["host_name"],
-        service_name_template=check_plugin_logwatch_groups.service_name,
+        plugin=check_plugin_logwatch_groups,
         logfile=item,
     )
     yield from check_logwatch_groups(

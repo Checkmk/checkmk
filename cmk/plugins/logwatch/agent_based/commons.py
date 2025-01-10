@@ -24,7 +24,7 @@ from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-v
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
 
 # Watch out! Matching the 'logwatch_rules' ruleset against labels will not
 # work as expected, if logfiles are grouped!
@@ -146,7 +146,7 @@ class RulesetAccess:
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
     def logwatch_rules_all(
-        *, host_name: str, service_name_template: str, logfile: str
+        *, host_name: str, plugin: CheckPlugin, logfile: str
     ) -> Sequence[ParameterLogwatchRules]:
         # We're using the logfile to match the ruleset, not necessarily the "item"
         # (which might be the group). However: the ruleset matcher expects this to be the item.

@@ -285,7 +285,7 @@ def test_check_logwatch_ec_common_single_node(
                 item,
                 params,
                 parsed,
-                service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -302,7 +302,7 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -325,7 +325,7 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -386,7 +386,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "log1",
                 DEFAULT_TEST_PARAMETERS,
                 cluster_section,
-                service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -488,7 +488,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
                 None,
                 params,
                 cluster_section,
-                service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -506,7 +506,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -522,7 +522,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -549,7 +549,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -572,7 +572,7 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
             {
                 "node1": SECTION1,
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
@@ -846,7 +846,7 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
                     },
                 ),
             },
-            service_name_template=logwatch_ec.check_plugin_logwatch_ec_single.service_name,
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store=value_store,
             message_forwarder=_FakeForwarder(),
         )

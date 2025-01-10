@@ -82,7 +82,7 @@ settings.register_profile("qa", None, **qa_settings)
 
 # ci settings profile
 ci_settings = deepcopy(default_settings)
-ci_settings.update({"derandomize": True, "verbosity": Verbosity.quiet})
+ci_settings.update({"derandomize": True, "max_examples": 10, "verbosity": Verbosity.quiet})
 settings.register_profile("ci", None, **ci_settings)
 
 # debug settings profile

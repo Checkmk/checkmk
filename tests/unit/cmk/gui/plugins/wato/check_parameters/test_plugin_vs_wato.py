@@ -274,9 +274,9 @@ class ErrorReporter:
         # If the plugins are discovered by default, it is likely to be unintentional.
         # type # instance # wato
         ("check", "3ware_units", "raid"),  # has no params, but can be enforced.
-        ("check", "lsi_array", "raid"),
-        ("check", "md", "raid"),
-        ("check", "netstat", "tcp_connections"),
+        ("check", "lsi_array", "raid"),  # has no params, but can be enforced.
+        ("check", "md", "raid"),  # has no params, but can be enforced.
+        ("check", "netstat", "tcp_connections"),  # can only be enforced, never discovered.
         ("check", "nvidia_errors", "hw_errors"),
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),

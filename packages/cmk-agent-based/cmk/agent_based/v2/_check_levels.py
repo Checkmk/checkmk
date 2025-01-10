@@ -20,7 +20,6 @@ PredictiveLevelsT = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
 
-# The name is part of the offial API, we have to live with the suppression.
 LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]
 
 

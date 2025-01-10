@@ -230,7 +230,10 @@ what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
 
 format-bazel:
-	scripts/run-buildifier --lint=fix --mode=fix
+	scripts/run-buildifier --mode=fix
+
+lint-bazel:
+	scripts/run-buildifier --lint=fix
 
 documentation:
 	echo Nothing to do here remove this target

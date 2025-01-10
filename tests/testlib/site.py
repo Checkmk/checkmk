@@ -1134,10 +1134,9 @@ class Site:
     def core_history_log_timeout(self) -> int:
         return 10 if self.core_name() == "cmc" else 30
 
-    def _create_automation_user(self) -> None:
-        username = AUTOMATION_USER
+    def _create_automation_user(self, username: str) -> None:
         self._automation_secret = Password.random(24)
-
+        logger.info("Creating test-user: '%s'.", username)
         self.openapi.users.create(
             username=username,
             fullname="Automation user for tests",
@@ -1152,7 +1151,11 @@ class Site:
     @tracer.start_as_current_span("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
-        self._create_automation_user()
+        username = AUTOMATION_USER
+        if self.openapi.users.get(username) is None:
+            self._create_automation_user(username)
+        else:
+            logger.info("Reusing existing test-user: '%s' (REUSE=1).", username)
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.version.is_saas_edition():

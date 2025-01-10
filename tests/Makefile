@@ -16,7 +16,8 @@ THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := $(SCRIPTS)/run-bazel.sh  run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+SHFMT := $(SCRIPTS)/run-bazel.sh run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+TAPLO := $(SCRIPTS)/run-bazel.sh run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -67,6 +68,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-docker-sit test-docker-sit-docker \
 	test-format-python test-format-python-docker \
 	test-format-shell test-format-shell-docker \
+	format-toml test-format-toml test-format-toml-docker \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
@@ -85,6 +87,7 @@ clean:
 help:
 	@echo "container-debug                     - Run container for manual test debugging"
 	@echo "format-shell                        - Format shell agents"
+	@echo "format-toml                         - Format toml files"
 	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
@@ -108,6 +111,8 @@ help:
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
+	@echo "test-format-toml                    - Run the toml formatting"
+	@echo "test-format-toml-docker             - Run the toml formatting in docker"
 	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
 	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
 	@echo "test-license-headers                - Run license headers tests"
@@ -260,6 +265,15 @@ test-format-shell:
 
 test-format-shell-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-shell
+
+format-toml:
+	$(TAPLO) format ../pyproject.toml
+
+test-format-toml:
+	$(TAPLO) format --check --diff ../pyproject.toml
+
+test-format-toml-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-toml
 
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check

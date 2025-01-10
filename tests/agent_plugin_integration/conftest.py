@@ -30,4 +30,4 @@ def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp]:
 
 @pytest.fixture(name="tmp_path_session", scope="session")
 def _tmp_path_session(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    return tmp_path_factory.mktemp("docker_sit")
+    return tmp_path_factory.mktemp("agent_plugin_integration")

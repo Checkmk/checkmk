@@ -65,7 +65,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
-	test-docker-sit test-docker-sit-docker \
+	test-integration-agent-plugin test-integration-agent-plugin-docker \
 	test-format-python test-format-python-docker \
 	test-format-shell test-format-shell-docker \
 	format-toml test-format-toml test-format-toml-docker \
@@ -104,8 +104,8 @@ help:
 	@echo "test-cycles-docker                  - Run cycles check in docker"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
-	@echo "test-docker-sit                     - Run docker system integration tests"
-	@echo "test-docker-sit-docker              - Run docker system integration tests in docker"
+	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
+	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
 	@echo "test-format-bazel                   - Run the Bazel formatting"
 	@echo "test-format-bazel-docker            - Run the Bazel formatting in docker"
 	@echo "test-format-python                  - Run formatting tests"
@@ -238,12 +238,12 @@ test-docker:
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
-test-docker-sit-docker:
+test-integration-agent-plugin-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-	    ../scripts/run-in-docker.sh make --quiet test-docker-sit
+	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
 
-test-docker-sit:
-	$(PYTEST) -x -T docker_sit --log-cli-level=INFO docker_sit
+test-integration-agent-plugin:
+	$(PYTEST) -x -T agent_plugin_integration --log-cli-level=INFO agent_plugin_integration
 
 test-format-python: test-format-python-sort test-format-python-format
 

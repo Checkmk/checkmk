@@ -36,7 +36,8 @@ from cmk.gui.quick_setup.handlers.setup import (
     QuickSetupAllStages,
     QuickSetupOverview,
     start_quick_setup_job,
-    validate_and_complete_quick_setup,
+    validate_stages_form_data,
+    verify_custom_validators_and_complete_quick_setup,
 )
 from cmk.gui.quick_setup.handlers.stage import (
     get_stage_structure,
@@ -373,6 +374,17 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             detail=f"Action with id '{action_id}' does not exist.",
         )
 
+    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])
+    errors = validate_stages_form_data(
+        stages_raw_form_data=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        quick_setup_formspec_map=form_spec_map,
+    )
+    if errors is not None:
+        return _serve_action_result(
+            CompleteActionResult(all_stage_errors=errors),
+            status_code=400,
+        )
+
     if action.run_in_background:
         background_job_id = start_quick_setup_job(
             quick_setup=quick_setup,
@@ -390,11 +402,12 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         response.location = urlparse(background_job_status_link["href"]).path
         return response
 
-    result = validate_and_complete_quick_setup(
+    result = verify_custom_validators_and_complete_quick_setup(
         quick_setup=quick_setup,
         action_id=action_id,
         mode=mode,
         input_stages=body["stages"],
+        form_spec_map=form_spec_map,
         object_id=object_id,
     )
 

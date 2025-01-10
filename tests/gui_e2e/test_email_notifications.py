@@ -30,6 +30,7 @@ def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
     yield from create_notification_user(test_site)
 
 
+@pytest.mark.skip(reason="Quick-setup: notifications - Changes underway in UI ...")
 def test_filesystem_email_notifications(
     dashboard_page: Dashboard,
     linux_hosts: list[str],

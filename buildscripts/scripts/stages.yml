@@ -476,7 +476,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
 
     - NAME: "Package cmk-events"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
       DIR: "packages/cmk-mkp-tool"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-events.txt"
       TEXT_ON_SKIP: "No cmk-events files changed"
@@ -504,7 +504,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
 
     - NAME: "Package cmk-mknotifyd"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
       DIR: "non-free/packages/cmk-mknotifyd"
       COMMAND: "../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mknotifyd.txt"
       TEXT_ON_SKIP: "No cmk-mknotifyd files changed"
@@ -539,7 +539,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
 
     - NAME: "Package cmk-werks"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
       DIR: "packages/cmk-werks"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: "No cmk-werks package files changed"

@@ -300,23 +300,30 @@ def _create_cmk_image(
             return image_name_with_tag  # already found, nothing to do.
 
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
+
+    container_label = {
+        "com.checkmk.build_time": f"{int(time.time()):d}",
+        "com.checkmk.build_id": base_image.short_id,
+        "com.checkmk.base_image": base_image_name_with_tag,
+        "com.checkmk.base_image_hash": base_image.short_id,
+        "com.checkmk.cmk_edition_short": version.edition.short,
+        "com.checkmk.cmk_version": version.version,
+        "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
+        "com.checkmk.cmk_branch": version.branch,
+        # override the base image label
+        "com.checkmk.image_type": "cmk-image",
+    }
+    # Add information about CI jobs creating these images for easier debugging
+    for env_info_key in ("CI_JOB_NAME", "CI_BUILD_NUMBER", "CI_BUILD_URL"):
+        if env_info_value := os.environ.get(env_info_key):
+            container_label[f"com.checkmk.{env_info_key.lower()}"] = env_info_value
+
     with _start(
         client,
         # TODO: Re-enable using dedicated container names, the following causes name conflicts:
         # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
-        labels={
-            "com.checkmk.build_time": f"{int(time.time()):d}",
-            "com.checkmk.build_id": base_image.short_id,
-            "com.checkmk.base_image": base_image_name_with_tag,
-            "com.checkmk.base_image_hash": base_image.short_id,
-            "com.checkmk.cmk_edition_short": version.edition.short,
-            "com.checkmk.cmk_version": version.version,
-            "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
-            "com.checkmk.cmk_branch": version.branch,
-            # override the base image label
-            "com.checkmk.image_type": "cmk-image",
-        },
+        labels=container_label,
         command=["tail", "-f", "/dev/null"],  # keep running
         host_config=client.api.create_host_config(
             cap_add=["SYS_ADMIN"],

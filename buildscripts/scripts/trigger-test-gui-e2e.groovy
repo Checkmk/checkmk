@@ -74,8 +74,8 @@ def main() {
     currentBuild.description += "<br>Selected editions: <b>${selected_editions.join(" ")}</b>";
 
     currentBuild.result = parallel(
-        all_editions.collectEntries { edition -> [
-            ("${edition}") : {
+        all_editions.collectEntries { edition ->
+            [("${edition}") : {
                 def run_condition = edition in selected_editions;
                 /// this makes sure the whole parallel thread is marked as skipped
                 if (! run_condition){
@@ -86,13 +86,13 @@ def main() {
                     condition: run_condition,
                     raiseOnError: false,
                 ) {
-                    build(
+                    smart_build(
                         job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
-                            string(name: 'EDITION', value: edition),
-                            string(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-                            string(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                            string(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: 'EDITION', value: edition),
+                            stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+                            stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
                         ]
                     );
                 }

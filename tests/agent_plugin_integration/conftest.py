@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 from collections.abc import Iterator
+from contextlib import nullcontext
 from pathlib import Path
 
 import docker  # type: ignore[import-untyped]
@@ -23,8 +25,12 @@ def _docker_client() -> docker.DockerClient:
 
 
 @pytest.fixture(name="checkmk", scope="session")
-def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp]:
-    with CheckmkApp(client, name="checkmk", ports={"8000/tcp": 9000}) as checkmk:
+def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp | None]:
+    with (
+        CheckmkApp(client, name="checkmk", ports={"8000/tcp": 9000})
+        if os.getenv("AGENT_PLUGIN_E2E", "0") == "1"
+        else nullcontext()
+    ) as checkmk:
         yield checkmk
 
 

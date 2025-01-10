@@ -76,6 +76,20 @@ sh_binary(
     data = [":shfmt_binary"],
 )
 
+genrule(
+    name = "taplo_unzip_and_make_executable",
+    srcs = ["@taplo.gz//file"],
+    outs = ["taplo"],
+    cmd = "gunzip -c $< > $@ && chmod +x $@",
+)
+
+# Shell wrapper to execute taplo in the callers working directory
+sh_binary(
+    name = "taplo_bin",
+    srcs = ["run-taplo"],
+    data = [":taplo_unzip_and_make_executable"],
+)
+
 alias(
     name = "buildifier",
     actual = "@buildifier_prebuilt//:buildifier",

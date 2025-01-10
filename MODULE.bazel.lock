@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "a0ea20e32465f4c1bb972b24519d36cdd706aff264e5a2df681881b73dd259a6",
+  "moduleFileHash": "fde26d609df565c723dbfe7f18b87aa56af412e6247b3b9c48594cc1799e93a8",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -41,7 +41,8 @@
             "patch": "patch",
             "otel-collector": "otel-collector",
             "shellcheck": "shellcheck",
-            "shfmt": "shfmt"
+            "shfmt": "shfmt",
+            "taplo.gz": "taplo.gz"
           },
           "devImports": [],
           "tags": [
@@ -152,6 +153,23 @@
               "location": {
                 "file": "@@//:MODULE.bazel",
                 "line": 166,
+                "column": 10
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+              "attributeValues": {
+                "sha256": "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+                "urls": [
+                  "https://github.com/tamasfe/taplo/releases/download/0.9.3/taplo-full-linux-x86.gz",
+                  "https://artifacts.lan.tribe29.com/repository/upstream-archives//taplo-full-linux-x86-0.9.3.gz"
+                ],
+                "name": "taplo.gz"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 178,
                 "column": 10
               }
             }

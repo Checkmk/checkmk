@@ -132,7 +132,10 @@ run_unit_tests() {
 }
 
 run_check_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
@@ -174,7 +177,10 @@ run_semgrep() {
 }
 
 run_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \

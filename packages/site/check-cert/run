@@ -156,12 +156,18 @@ run_cargo_cmd_with_explicit_package() {
 }
 
 run_check_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff Cargo.toml
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff Cargo.toml
     run_cargo_cmd_with_explicit_package fmt -- --check
 }
 
 run_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format Cargo.toml
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format Cargo.toml
     run_cargo_cmd_with_explicit_package fmt
 }
 

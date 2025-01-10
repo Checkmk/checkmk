@@ -84,10 +84,5 @@ COPY \
 RUN /opt/install-aws-cli.sh
 
 COPY \
-    install-taplo.sh \
-    /opt/
-RUN /opt/install-taplo.sh
-
-COPY \
     entrypoint.sh \
     /opt/

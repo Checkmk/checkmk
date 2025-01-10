@@ -273,7 +273,7 @@ class ErrorReporter:
         # This may or may not be intentional and/or reasonable.
         # If the plugins are discovered by default, it is likely to be unintentional.
         # type # instance # wato
-        ("check", "3ware_units", "raid"),
+        ("check", "3ware_units", "raid"),  # has no params, but can be enforced.
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "netstat", "tcp_connections"),

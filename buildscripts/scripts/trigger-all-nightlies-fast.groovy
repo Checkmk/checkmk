@@ -64,7 +64,7 @@ def main() {
                 }
             }
         ]}
-    }
+    );
 }
 
 return this;

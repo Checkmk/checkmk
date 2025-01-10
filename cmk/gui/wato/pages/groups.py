@@ -35,7 +35,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -139,7 +139,8 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(mode_url("%s_groups" % self.type_name))
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
@@ -158,7 +159,11 @@ class ModeGroups(WatoMode, abc.ABC):
             groups.delete_group(delname, self.type_name)
             self._groups = self._load_groups()
 
-        return redirect(mode_url("%s_groups" % self.type_name))
+        if request.var("mode") == "edit_host_group":
+            return redirect(mode_url("%s_groups" % self.type_name))
+
+        request.del_var("_transid")
+        return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
     def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")

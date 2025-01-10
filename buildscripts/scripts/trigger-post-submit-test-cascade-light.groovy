@@ -5,6 +5,11 @@
 /// Trigger post submit test cascade of lightweight jobs
 
 def main() {
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
     def all_lightweight_jobs = [
         "test-python3-pylint",
         "test-python3-ruff",
@@ -31,13 +36,12 @@ def main() {
         """.stripMargin());
 
     def build_for_parallel = [:];
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
 
     all_lightweight_jobs.each { item ->
         build_for_parallel[item] = { ->
             stage(item) {
                 build(
-                    job: "${base_folder}/${item}",
+                    job: "${branch_base_folder}/${item}",
                     propagate: true,  // Raise any errors
                     parameters: [
                         string(name: "CUSTOM_GIT_REF", value: effective_git_ref),

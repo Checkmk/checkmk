@@ -30,4 +30,4 @@ get_bazel_files() {
         \) -print
 }
 
-get_bazel_files | xargs "${REPO_PATH}"/scripts/run-bazel.sh run -- @buildifier_prebuilt//:buildifier --warnings=-module-docstring "$@"
+get_bazel_files | xargs "${REPO_PATH}"/scripts/run-bazel.sh run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"

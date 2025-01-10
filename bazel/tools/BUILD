@@ -62,3 +62,8 @@ sh_binary(
     srcs = ["run-shellcheck"],
     data = [":shellcheck_binary"],
 )
+
+alias(
+    name = "buildifier",
+    actual = "@buildifier_prebuilt//:buildifier",
+)

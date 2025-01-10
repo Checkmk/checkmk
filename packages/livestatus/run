@@ -143,7 +143,7 @@ run_unit_tests() {
 
 run_check_format() {
     run_clang_format --dry-run -Werror
-    "${BAZEL_CMD}" run -- @buildifier_prebuilt//:buildifier -mode=check -lint=warn "$(realpath BUILD)"
+    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=check -lint=warn "$(realpath BUILD)"
 }
 
 run_iwyu() {
@@ -156,7 +156,7 @@ run_clang_tidy() {
 
 run_format() {
     run_clang_format -i
-    "${BAZEL_CMD}" run -- @buildifier_prebuilt//:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
+    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
 }
 
 run_documentation() {

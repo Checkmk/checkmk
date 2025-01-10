@@ -26,7 +26,7 @@ class Package:
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("packages_path")
+    parser.add_argument("packages_path", nargs="+", help="Paths to the packages to collect")
     return parser.parse_args()
 
 
@@ -37,22 +37,23 @@ def parse_package(meta_file: Path, name: str) -> Package:
 
 
 def discover_packages(args: argparse.Namespace) -> Iterator[Package]:
-    for package_dir in Path(args.packages_path).iterdir():
-        if not package_dir.is_dir():
-            continue
-        meta_file = package_dir / "ci.json"
-        if not meta_file.exists():
-            sys.stderr.write(
-                f"Skipping {package_dir} as it does not contain a {meta_file} (yet). "
-                f"TODO: Add it to be discovered. \n"
-            )
-            continue
-        try:
-            package = parse_package(meta_file, package_dir.name)
-        except Exception as e:
-            sys.stderr.write(f"Skipping {package_dir} as it has invalid meta data: {e}\n")
-            continue
-        yield package
+    for packages_path in args.packages_path:
+        for package_dir in Path(packages_path).iterdir():
+            if not package_dir.is_dir():
+                continue
+            meta_file = package_dir / "ci.json"
+            if not meta_file.exists():
+                sys.stderr.write(
+                    f"Skipping {package_dir} as it does not contain a {meta_file} (yet). "
+                    f"TODO: Add it to be discovered. \n"
+                )
+                continue
+            try:
+                package = parse_package(meta_file, package_dir.name)
+            except Exception as e:
+                sys.stderr.write(f"Skipping {package_dir} as it has invalid meta data: {e}\n")
+                continue
+            yield package
 
 
 def main():

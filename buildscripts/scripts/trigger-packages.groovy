@@ -46,8 +46,7 @@ def preparation(packages_file) {
     stage("Preparation") {
         inside_container() {
             sh("rm -rf results; mkdir results");
-            sh("buildscripts/scripts/collect_packages.py packages > ${packages_file}");
-            sh("buildscripts/scripts/collect_packages.py non-free/packages >> ${packages_file}");
+            sh("buildscripts/scripts/collect_packages.py packages non-free/packages");
         }
     }
 }

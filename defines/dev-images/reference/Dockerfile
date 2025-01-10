@@ -91,10 +91,5 @@ COPY \
 RUN /opt/install-buildifier.sh
 
 COPY \
-    install-taplo.sh \
-    /opt/
-RUN /opt/install-taplo.sh
-
-COPY \
     entrypoint.sh \
     /opt/

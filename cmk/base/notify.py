@@ -752,7 +752,9 @@ def notify_rulebased(
     num_rule_matches = 0
     rule_info = []
 
-    for rule in itertools.chain(rules, user_notification_rules(config_contacts=config_contacts)):
+    for nr, rule in enumerate(
+        itertools.chain(rules, user_notification_rules(config_contacts=config_contacts))
+    ):
         contact_info = _get_contact_info_text(rule)
 
         why_not = rbn_match_rule(
@@ -780,6 +782,7 @@ def notify_rulebased(
                 host_parameters_cb,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
+                rule_nr=nr,
             )
 
     plugin_info = _process_notifications(
@@ -817,6 +820,7 @@ def _create_notifications(
     *,
     config_contacts: ConfigContacts,
     fallback_email: str,
+    rule_nr: int,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
     contacts = rbn_rule_contacts(
         rule,
@@ -886,11 +890,13 @@ def _create_notifications(
             else plugin_parameter_id
         )
 
-        final_parameters = rbn_finalize_plugin_parameters(
-            HostName(enriched_context["HOSTNAME"]),
-            plugin_name,
-            host_parameters_cb,
-            plugin_parameters,
+        final_parameters: NotifyPluginParamsDict = _rbn_finalize_plugin_parameters(
+            hostname=HostName(enriched_context["HOSTNAME"]),
+            plugin_name=plugin_name,
+            host_parameters_cb=host_parameters_cb,
+            rule_parameters=plugin_parameters,
+            rule_matching_nr=rule_nr,
+            rule_matching_text=rule["description"],
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -930,11 +936,13 @@ def _process_notifications(
                 logger.info("  Sending email to %s", fallback_emails)
 
                 plugin_name, fallback_params = fallback_format
-                fallback_params = rbn_finalize_plugin_parameters(
-                    HostName(enriched_context["HOSTNAME"]),
-                    plugin_name,
-                    host_parameters_cb,
-                    fallback_params,
+                fallback_params = _rbn_finalize_plugin_parameters(
+                    hostname=HostName(enriched_context["HOSTNAME"]),
+                    plugin_name=plugin_name,
+                    host_parameters_cb=host_parameters_cb,
+                    rule_parameters=fallback_params,
+                    rule_matching_nr=-1,
+                    rule_matching_text="No rule matched",
                 )
                 plugin_context = create_plugin_context(
                     enriched_context, fallback_params, get_http_proxy
@@ -1038,11 +1046,13 @@ def rbn_fallback_contacts(*, config_contacts: ConfigContacts, fallback_email: st
     return fallback_contacts
 
 
-def rbn_finalize_plugin_parameters(
+def _rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     rule_parameters: NotifyPluginParamsDict,
+    rule_matching_nr: int,
+    rule_matching_text: str,
 ) -> NotifyPluginParamsDict:
     parameters = dict(host_parameters_cb(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
@@ -1052,6 +1062,9 @@ def rbn_finalize_plugin_parameters(
     if plugin_name == "mail":
         parameters.setdefault("graphs_per_notification", 5)
         parameters.setdefault("notifications_with_graphs", 5)
+        # Added in 2.4.0 for HTML Mail templates
+        parameters.setdefault("matching_rule_nr", rule_matching_nr)
+        parameters.setdefault("matching_rule_text", rule_matching_text)
 
     return parameters
 

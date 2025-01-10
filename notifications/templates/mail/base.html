@@ -124,6 +124,9 @@
                                     {% include 'host_tags.html' %}
                                 {% endif %}
                                 {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
+                                {% if data.PARAMETER_NOTIFICATION_RULE %}
+                                    {% include 'matching_rule.html' %}
+                                {% endif %}
                                 <td>
                                 </tr>
                                 {{ macros.margin_tr() }}

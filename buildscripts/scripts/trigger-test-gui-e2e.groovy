@@ -17,23 +17,11 @@ def main() {
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
-    /// Might also be taken from editions.yml - there we also have 'saas' and 'raw' but
-    /// AFAIK there is no way to extract the editions we want to test generically, so we
-    /// hard-code these:
-    def editions_from_comment = arguments_from_comments()["editions"].collect {
-        [
-            "cee": "enterpise",
-            "cre": "raw",
-            "cme": "managed",
-            "cse": "saas",
-            "cce": "cloud",
-        ].get(it, it)
-    };
     def all_editions = ["enterprise", "cloud", "managed", "raw", "saas"];
     def selected_editions_default = ["enterprise", "cloud", "saas"];
     def selected_editions = (
         params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep()
-        ?: editions_from_comment
+        ?: job_params_from_comments.get("editions")
         ?: selected_editions_default
     );
 

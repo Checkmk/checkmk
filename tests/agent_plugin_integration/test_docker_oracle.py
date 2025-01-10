@@ -278,85 +278,84 @@ class OracleDatabase:
             f"{self.cmk_username}" in output.decode("UTF-8").lower()
         ), f"Error while checking user: {output.decode('UTF-8')}"
 
-        site_ip = self.checkmk.ip
-        assert site_ip and site_ip != "127.0.0.1", "Failed to detect IP of checkmk container!"
-
-        self.checkmk.install_agent(app=self.container, agent_type="rpm")
-
-        self.checkmk.install_agent_controller_daemon(app=self.container)
-
         self._install_oracle_plugin()
-
-        self.checkmk.openapi.hosts.create(
-            self.name,
-            folder="/",
-            attributes={
-                "ipaddress": self.ip,
-                "tag_address_family": "ip-v4-only",
-            },
-        )
-        self.checkmk.openapi.changes.activate_and_wait_for_completion()
-
-        # like tests.testlib.agent.register_controller(), but in the container
-        self.checkmk.register_agent(self.container, self.name)
-
-        logger.info("Waiting for controller to open TCP socket or push data")
-        # like tests.testlib.agent.wait_until_host_receives_data(), but in the container
-        cmk_dump_cmd = [
-            "su",
-            "-l",
-            self.checkmk.site_id,
-            "-c",
-            f'"{self.checkmk.site_root}/bin/cmk" -d "{self.name}"',
-        ]
-        try:
-            wait_until(
-                lambda: self.checkmk.container.exec_run(cmk_dump_cmd)[0] == 0,
-                timeout=300,
-                interval=20,
-            )
-        except TimeoutError as excp:
-            cmk_dump_rc, cmk_dump_output = self.checkmk.container.exec_run(cmk_dump_cmd)
-            logger.error(
-                '"%s" failed with rc=%s!\nOutput: %s',
-                " ".join(cmk_dump_cmd),
-                cmk_dump_rc,
-                cmk_dump_output,
-            )
-            raise excp
-
-        self.checkmk.openapi.service_discovery.run_discovery_and_wait_for_completion(
-            self.name, timeout=300
-        )
-        self.checkmk.openapi.changes.activate_and_wait_for_completion()
-
-        min_service_count = 10
-        logger.info(
-            "Wait until host %s has at least %s non-pending ORACLE services...",
-            self.name,
-            min_service_count,
-        )
-
-        def _host_has_prefixed_services(host_name: str, prefix: str, min_count: int) -> bool:
-            services = self.checkmk.openapi.services.get_host_services(
-                host_name,
-                columns=["description", "has_been_checked"],
-            )
-            prefixed_services = [
-                _ for _ in services if _["extensions"]["description"].upper().startswith(prefix)
-            ]
-            if len(prefixed_services) < min_count:
-                return False
-            return all(True for _ in prefixed_services if _["extensions"]["has_been_checked"])
-
-        wait_until(
-            lambda: _host_has_prefixed_services(self.name, self.SERVICE_PREFIX, min_service_count),
-            timeout=300,
-            interval=60,
-        )
-        self.checkmk.openapi.changes.activate_and_wait_for_completion()
-
         self._create_oracle_wallet()
+
+        if self.checkmk is not None:
+            site_ip = self.checkmk.ip
+            assert site_ip and site_ip != "127.0.0.1", "Failed to detect IP of checkmk container!"
+            self.checkmk.install_agent(app=self.container, agent_type="rpm")
+            self.checkmk.install_agent_controller_daemon(app=self.container)
+            self.checkmk.openapi.hosts.create(
+                self.name,
+                folder="/",
+                attributes={
+                    "ipaddress": self.ip,
+                    "tag_address_family": "ip-v4-only",
+                },
+            )
+            self.checkmk.openapi.changes.activate_and_wait_for_completion()
+
+            # like tests.testlib.agent.register_controller(), but in the container
+            self.checkmk.register_agent(self.container, self.name)
+
+            logger.info("Waiting for controller to open TCP socket or push data")
+            # like tests.testlib.agent.wait_until_host_receives_data(), but in the container
+            cmk_dump_cmd = [
+                "su",
+                "-l",
+                self.checkmk.site_id,
+                "-c",
+                f'"{self.checkmk.site_root}/bin/cmk" -d "{self.name}"',
+            ]
+            try:
+                wait_until(
+                    lambda: self.checkmk.container.exec_run(cmk_dump_cmd)[0] == 0,
+                    timeout=300,
+                    interval=20,
+                )
+            except TimeoutError as excp:
+                cmk_dump_rc, cmk_dump_output = self.checkmk.container.exec_run(cmk_dump_cmd)
+                logger.error(
+                    '"%s" failed with rc=%s!\nOutput: %s',
+                    " ".join(cmk_dump_cmd),
+                    cmk_dump_rc,
+                    cmk_dump_output,
+                )
+                raise excp
+
+            self.checkmk.openapi.service_discovery.run_discovery_and_wait_for_completion(
+                self.name, timeout=300
+            )
+            self.checkmk.openapi.changes.activate_and_wait_for_completion()
+
+            min_service_count = 10
+            logger.info(
+                "Wait until host %s has at least %s non-pending ORACLE services...",
+                self.name,
+                min_service_count,
+            )
+
+            def _host_has_prefixed_services(host_name: str, prefix: str, min_count: int) -> bool:
+                services = self.checkmk.openapi.services.get_host_services(
+                    host_name,
+                    columns=["description", "has_been_checked"],
+                )
+                prefixed_services = [
+                    _ for _ in services if _["extensions"]["description"].upper().startswith(prefix)
+                ]
+                if len(prefixed_services) < min_count:
+                    return False
+                return all(True for _ in prefixed_services if _["extensions"]["has_been_checked"])
+
+            wait_until(
+                lambda: _host_has_prefixed_services(
+                    self.name, self.SERVICE_PREFIX, min_service_count
+                ),
+                timeout=300,
+                interval=60,
+            )
+            self.checkmk.openapi.changes.activate_and_wait_for_completion()
 
         logger.info(self.container.logs().decode("utf-8").strip())
 
@@ -378,11 +377,23 @@ class OracleDatabase:
         with open(plugin_temp_path, "w", encoding="UTF-8") as plugin_file:
             plugin_file.write(plugin_script)
 
-        logger.info('Installing Oracle plugin "%s"...', plugin_source_path)
+        if self.checkmk is None:
+            logger.info('Creating agent plugin target folder "%s"...', self.cmk_plugin_dir)
+            rc, output = self.container.exec_run(
+                rf'mkdir -p "{self.cmk_plugin_dir.as_posix()}"', user="root"
+            )
+            assert rc == 0, f'Could not create folder "{self.cmk_plugin_dir}"! Reason: {output}'
+            logger.info('Creating agent plugin configuration folder "%s"...', self.cmk_cfg_dir)
+            rc, output = self.container.exec_run(
+                rf'mkdir -p "{self.cmk_cfg_dir.as_posix()}"', user="root"
+            )
+            assert rc == 0, f'Could not create "{self.cmk_cfg_dir}"! Reason: {output}'
+
+        logger.info('Installing Oracle plugin "%s" to "%s"...', plugin_source_path, self.cmk_plugin)
         assert copy_to_container(
             self.container, plugin_temp_path.as_posix(), self.cmk_plugin_dir
         ), "Failed to copy Oracle plugin!"
-        logger.info('Set ownership for Oracle plugin "%s"...', plugin_source_path)
+        logger.info('Setting ownership for Oracle plugin "%s"...', self.cmk_plugin)
         rc, output = self.container.exec_run(
             rf'chmod +x "{self.cmk_plugin.as_posix()}"', user="root"
         )
@@ -469,13 +480,63 @@ def test_docker_oracle(
         oracle.use_wallet()
     else:
         oracle.use_credentials()
-    rc, output = oracle.container.exec_run(
-        f"""bash -c '{oracle.cmk_plugin.as_posix()} -t'""", user="root"
-    )
-    assert rc == 0, (
+    rc, output = oracle.container.exec_run([oracle.cmk_plugin.as_posix(), "-t"], user="root")
+    agent_plugin_output = output.decode("utf-8")
+    assert rc == 0 and "test login works" in agent_plugin_output, (
         f"Oracle plugin could not connect to database using {auth_mode} authentication!\n"
-        f"{output.decode('utf-8')}"
+        f"{agent_plugin_output}"
     )
+    rc, output = oracle.container.exec_run(
+        f"""bash -c '{oracle.cmk_plugin.as_posix()}'""", user="root"
+    )
+    agent_plugin_output = output.decode("utf-8")
+    assert rc == 0, f"Oracle plugin failed!\n" f"{agent_plugin_output}"
+
+    raw_sections = [f"<<<{_.strip()}" for _ in agent_plugin_output.split("\n<<<")]
+    section_headers = [_.split("\n", 1)[0].strip() for _ in raw_sections]
+    empty_section_headers = [_.split("\n", 1)[0].strip() for _ in raw_sections if _.endswith(">>>")]
+    non_empty_section_headers = [_ for _ in section_headers if _ not in empty_section_headers]
+    actual_sections = list({_[3:-3].split(":", 1)[0] for _ in section_headers})
+    actual_non_empty_sections = list({_[3:-3].split(":", 1)[0] for _ in non_empty_section_headers})
+
+    expected_non_empty_sections = [
+        "oracle_instance",
+        "oracle_sessions",
+        "oracle_logswitches",
+        "oracle_undostat",
+        "oracle_processes",
+        "oracle_recovery_status",
+        "oracle_longactivesessions",
+        "oracle_performance",
+        "oracle_locks",
+        "oracle_systemparameter",
+        "oracle_instance",
+        "oracle_processes",
+    ]
+    expected_sections = expected_non_empty_sections + [
+        "oracle_recovery_area",
+        "oracle_dataguard_stats",
+        "oracle_tablespaces",
+        "oracle_rman",
+        "oracle_jobs",
+        "oracle_resumable",
+        "oracle_iostats",
+        "oracle_asm_diskgroup",
+    ]
+
+    missing_sections = [_ for _ in expected_sections if _ not in actual_sections]
+    assert len(missing_sections) == 0, f"Missing sections from agent output: {missing_sections}"
+
+    missing_non_empty_sections = [
+        _ for _ in expected_non_empty_sections if _ not in actual_non_empty_sections
+    ]
+    assert (
+        len(missing_non_empty_sections) == 0
+    ), f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
+
+    if checkmk is None:
+        return
+
     expected_services = [
         {"state": 0} | _
         for _ in [

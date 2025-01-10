@@ -17,6 +17,10 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -49,14 +53,14 @@ def main() {
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
-        |cross_edition_target:..... |${cross_edition_target}|
+        |cross_edition_target:..... │${cross_edition_target}|
         |checkout_dir:............. │${checkout_dir}│
+        |branch_base_folder:....... │${branch_base_folder}│
         |===================================================
         """.stripMargin());
 
     def build_for_parallel = [:];
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
-    def relative_job_name = "${base_folder}/builders/test-update-single-f12less";
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
     currentBuild.result = parallel(
         all_distros.collectEntries { distro ->
             [("${distro}") : {

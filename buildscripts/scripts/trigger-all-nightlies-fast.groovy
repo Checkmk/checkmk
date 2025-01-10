@@ -7,8 +7,12 @@
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/";
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
     def all_editions = versioning.get_editions();
     def editions_to_test = all_editions;
 
@@ -32,7 +36,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |editions:.............. │${editions_to_test}│
-        |base_folder:........... │${base_folder}│
+        |branch_base_folder:.... │${branch_base_folder}│
         |job_parameters:........ │${job_parameters}│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |===================================================
@@ -58,7 +62,7 @@ def main() {
                 raiseOnError: true,
             ) {
                 build(
-                    job: "${base_folder}/trigger-cmk-build-chain-${edition}",
+                    job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
                     propagate: true,  // Raise any errors
                     parameters: job_parameters,
                 );

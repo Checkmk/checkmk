@@ -52,16 +52,10 @@ def main() {
                 condition: run_condition,
                 raiseOnError: true,
             ) {
-                print(
-                    """
-                    |===== CONFIGURATION ===============================
-                    |this_job_parameters:... │${this_job_parameters}│
-                    |===================================================
-                    """.stripMargin());
                 build(
                     job: "${base_folder}/trigger-cmk-build-chain-${edition}",
                     propagate: true,  // Raise any errors
-                    parameters: this_job_parameters,
+                    parameters: job_parameters,
                 );
             }
         }

@@ -38,7 +38,7 @@ case "$1" in
         if [ -z "$THE_PID" ]; then
             echo 'not running.'
         elif ! kill -0 "$THE_PID"; then
-            echo 'found stale PID file, not running...'
+            echo 'not running (PID file orphaned).'
             rm -f "$PIDFILE"
         else
             echo -n "killing $THE_PID..."

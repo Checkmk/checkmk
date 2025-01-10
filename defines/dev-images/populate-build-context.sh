@@ -21,7 +21,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-packer.sh \
         install-make-dist-deps.sh \
         install-aws-cli.sh \
-        install-buildifier.sh \
         install-taplo.sh \
         install-bazel.sh \
         install-cmake.sh \

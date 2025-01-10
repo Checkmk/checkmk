@@ -160,3 +160,9 @@ exports_files([
         UPSTREAM_MIRROR_URL + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
     ],
 )
+
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
+)

@@ -352,19 +352,12 @@ install_for_bazel() {
     prepare_gplusplus_sources_list
 
     local PACKAGES_TO_INSTALL=(
-        "golang-go"
         "g++-$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)"
         # required by packages/glib and therfore transitive by python unit tests
         # this might not be installed if only bazel is installed
         "libglib2.0-dev"
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
-
-    # install_packages golang-go
-    "${SCRIPT_DIR}"/install-buildifier.sh
-
-    # buildifier is installed to /opt/bin by default
-    IMPORTANT_MESSAGES+=("Don't forget to call: export PATH=/opt/bin:\$PATH")
 
     print_green "Installation of Bazel/Bazelisk done"
 }

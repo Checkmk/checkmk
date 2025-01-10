@@ -1,8 +1,8 @@
+load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:binreplace_version_from_flag.bzl", "binreplace_version_from_flag")
 
 bin_paths = [

@@ -179,6 +179,30 @@ prepare_gplusplus_sources_list() {
     fi
 
     if [[ -z ${CI} ]]; then
+        outdated_gcc_directory="/opt/gcc-13.2.0"
+        # confirm removal of outdated /opt/gcc-13.2.0 directory
+        read -rp "Confirm removal of outdated symlinks from '$outdated_gcc_directory' to '/usr/bin' (y/n): " REMOVE_SYMLINKS
+        echo # (optional) move to a new line
+        if [[ $REMOVE_SYMLINKS =~ ^[Yy]$ ]]; then
+            for i in /usr/bin/*; do
+                # shellcheck disable=SC2010,SC2143
+                if [[ $(ls -la "$i" | grep "$outdated_gcc_directory") ]]; then
+                    print_blue "Unlinking $i"
+                    rm "$i"
+                fi
+            done
+            if [[ -d "$outdated_gcc_directory" ]]; then
+                read -rp "Confirm removal of unused '$outdated_gcc_directory' directory (y/n): " REMOVE_DIRECTORY
+                if [[ $REMOVE_DIRECTORY =~ ^[Yy]$ ]]; then
+                    rm -rf $outdated_gcc_directory
+                else
+                    print_blue "$outdated_gcc_directory will be kept"
+                fi
+            fi
+        else
+            # https://tribe29.slack.com/archives/C01EA6ZBG58/p1736439443305919?thread_ts=1736251952.199259&cid=C01EA6ZBG58
+            print_red "Existing symlinks might block new ones, created by PPA installed packages, leading to missing 'ar', 'as', 'ld', 'gcc', ... "
+        fi
         print_debug "It is no CI build, install software-properties-common"
 
         # https://tribe29.slack.com/archives/C01EA6ZBG58/p1736251952199259

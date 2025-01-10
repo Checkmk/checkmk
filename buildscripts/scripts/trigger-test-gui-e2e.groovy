@@ -37,6 +37,12 @@ def main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_EDITIONS",
     ]);
+
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
     /// Might also be taken from editions.yml - there we also have 'saas' and 'raw' but
     /// AFAIK there is no way to extract the editions we want to test generically, so we
     /// hard-code these:
@@ -56,14 +62,13 @@ def main() {
         ?: editions_from_comment
         ?: selected_editions_default
     );
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_editions:..... │${all_editions}│
-        |selected_edtions:. │${selected_editions}│
-        |base_folder:...... │${base_folder}│
+        |all_editions:....... │${all_editions}│
+        |selected_edtions:... │${selected_editions}│
+        |branch_base_folder:. │${branch_base_folder}│
         |===================================================
         """.stripMargin());
     currentBuild.description += "<br>Selected editions: <b>${selected_editions.join(" ")}</b>";
@@ -82,7 +87,7 @@ def main() {
                     raiseOnError: false,
                 ) {
                     build(
-                        job: "${base_folder}/builders/test-gui-e2e-f12less",
+                        job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
                             stringParam(name: 'EDITION', value: edition),
                             stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),

@@ -18,6 +18,10 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
@@ -61,8 +65,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
-    def relative_job_name = "${base_folder}/builders/test-composition-single-f12less";
+    def relative_job_name = "${branch_base_folder}/builders/test-composition-single-f12less";
 
     /// avoid failures due to leftover artifacts from prior runs
     sh("rm -rf ${checkout_dir}/test-results");

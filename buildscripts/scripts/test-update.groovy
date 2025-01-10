@@ -28,6 +28,9 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -60,6 +63,7 @@ def main() {
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
         |checkout_dir:............. │${checkout_dir}│
+        |branch_base_folder:....... │${branch_base_folder}│
         |make_target:.............. |${make_target}|
         |===================================================
         """.stripMargin());

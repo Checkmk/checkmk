@@ -5,6 +5,10 @@
 /// Trigger post submit test cascade of heavy jobs
 
 def main() {
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
     def job_names = [
         "trigger-build-upload-cmk-distro-package",
         "test-gui-crawl-f12less",
@@ -23,14 +27,12 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
-
     currentBuild.result = parallel(
         job_names.collectEntries { job_name ->
             [("${job_name}") : {
                 stage("Trigger ${job_name}") {
                     smart_build(
-                        job: "${base_folder}/${job_name}",
+                        job: "${branch_base_folder}/${job_name}",
                         parameters: [
                             stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
                             stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),

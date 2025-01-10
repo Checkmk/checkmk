@@ -1,10 +1,10 @@
+load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 
 exports_files([
     "requirements.txt",

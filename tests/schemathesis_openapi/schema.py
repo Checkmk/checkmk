@@ -11,6 +11,7 @@ from typing import Any
 import schemathesis
 from requests.structures import CaseInsensitiveDict
 from schemathesis import DataGenerationMethod
+from schemathesis.generation import GenerationConfig
 from schemathesis.specs.openapi import schemas
 
 from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
@@ -207,6 +208,8 @@ def get_schema() -> schemas.BaseOpenAPISchema:
         schema_filetype = "yaml"
     schema_filepath = f"{schema_filedir}/{schema_filename}.{schema_filetype}"
     schema_url = f"{api_url}/{schema_filename}.{schema_filetype}"
+    codec = os.getenv("SCHEMATHESIS_CODEC", "utf-8")
+    generation_config = GenerationConfig(codec=codec)
     if os.path.exists(schema_filepath):
         logger.info('Loading OpenAPI schema from file "%s"...', schema_filepath)
         schema = schemathesis.from_path(
@@ -216,6 +219,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
             validate_schema=validate_schema,
             data_generation_methods=data_generation_methods,
             code_sample_style=code_sample_style,
+            generation_config=generation_config,
         )
     else:
         logger.info('Loading OpenAPI schema from URL "%s"...', schema_url)
@@ -228,6 +232,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
             validate_schema=validate_schema,
             data_generation_methods=data_generation_methods,
             code_sample_style=code_sample_style,
+            generation_config=generation_config,
             headers={"Authorization": token},
         )
     schema = add_links(schema)

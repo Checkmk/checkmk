@@ -11,7 +11,6 @@ ENV \
 RUN apt-get update
 
 # default-jdk: needed for validating the compiled werks (see compile-all-werks.groovy)
-# golang-go: needed for install-buildifier.sh
 # libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 # lsb-release: needed for install_docker
 # msitools:  needed for `msiinfo` in test source package
@@ -83,12 +82,6 @@ COPY \
     install-aws-cli.sh \
     /opt/
 RUN /opt/install-aws-cli.sh
-
-# timing: real 0m6.492s user 0m11.914s sys 0m1.146s
-COPY \
-    install-buildifier.sh \
-    /opt/
-RUN /opt/install-buildifier.sh
 
 COPY \
     entrypoint.sh \

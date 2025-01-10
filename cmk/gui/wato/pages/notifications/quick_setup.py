@@ -1514,9 +1514,7 @@ def general_properties() -> QuickSetupStage:
                             parameter_form=String(
                                 title=Title("Documentation URL"),
                                 field_size=FieldSize.LARGE,
-                                custom_validate=[
-                                    Url(protocols=[UrlProtocol.HTTP, UrlProtocol.HTTPS]),
-                                ],
+                                custom_validate=[_validate_optional_url],
                             ),
                         ),
                     },
@@ -1541,6 +1539,14 @@ def general_properties() -> QuickSetupStage:
         ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
+
+
+def _validate_optional_url(value: str) -> None:
+    if not value:
+        return
+
+    url_validator_instance = Url(protocols=[UrlProtocol.HTTP, UrlProtocol.HTTPS])
+    url_validator_instance(value)
 
 
 def save_and_test_action(

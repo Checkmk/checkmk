@@ -151,8 +151,8 @@ def main() {
         }
     ];
 
-    stages += all_distros.collectEntries { distro -> [
-        ("${distro}") : {
+    stages += all_distros.collectEntries { distro ->
+        [("${distro}") : {
             sleep(0.1 * timeOffsetForOrder++);
 
             def run_condition = distro in selected_distros;

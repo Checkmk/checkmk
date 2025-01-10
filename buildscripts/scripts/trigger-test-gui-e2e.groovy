@@ -60,14 +60,13 @@ def main() {
                     condition: run_condition,
                     raiseOnError: false,
                 ) {
-                    build(
+                    smart_build(
                         job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
                             stringParam(name: 'EDITION', value: edition),
                             stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
                             stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                             stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                         ]
                     );
                 }

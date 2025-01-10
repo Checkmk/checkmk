@@ -59,8 +59,8 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def build_for_parallel = [:];
     def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
+
     currentBuild.result = parallel(
         all_distros.collectEntries { distro ->
             [("${distro}") : {
@@ -93,7 +93,6 @@ def main() {
                             stringParam(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
                             stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
                             stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                         ],
                     );
 

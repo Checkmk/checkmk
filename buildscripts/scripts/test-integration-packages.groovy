@@ -58,6 +58,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |all_distros:.............  │${all_distros}│
         |selected_distros:........  │${selected_distros}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:........  │${safe_branch_name}│
@@ -99,7 +100,6 @@ def main() {
                             stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
                             stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
                             stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                         ],
                     );
                     copyArtifacts(

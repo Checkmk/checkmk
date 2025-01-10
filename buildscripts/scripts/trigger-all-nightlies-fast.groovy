@@ -24,7 +24,6 @@ def main() {
     def job_parameters = [
         stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE),
         stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
     ];
 
     def override_editions = params.EDITIONS.trim() ?: "";
@@ -42,36 +41,29 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def build_for_parallel = [:];
-    all_editions.each { item ->
-        def edition = item;
-        def stepName = "Trigger ${edition}";
+    currentBuild.result = parallel(
+        all_editions.collectEntries { edition ->
+            [("${edition}") : {
+                def stepName = "Trigger ${edition}";
+                def run_condition = edition in editions_to_test;
 
-        build_for_parallel[stepName] = { ->
-            def run_condition = edition in editions_to_test;
-            println("Should ${edition} be triggered? ${run_condition}");
+                /// this makes sure the whole parallel thread is marked as skipped
+                if (! run_condition){
+                    Utils.markStageSkippedForConditional(stepName);
+                }
 
-            /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
-                Utils.markStageSkippedForConditional(stepName);
+                smart_stage(
+                    name: stepName,
+                    condition: run_condition,
+                    raiseOnError: true,
+                ) {
+                    smart_build(
+                        job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
+                        parameters: job_parameters,
+                    );
+                }
             }
-
-            smart_stage(
-                name: stepName,
-                condition: run_condition,
-                raiseOnError: true,
-            ) {
-                build(
-                    job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
-                    propagate: true,  // Raise any errors
-                    parameters: job_parameters,
-                );
-            }
-        }
-    }
-
-    stage('Run trigger all nightlies') {
-        parallel build_for_parallel;
+        ]}
     }
 }
 

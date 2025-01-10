@@ -20,6 +20,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     disable_incomp_mkp,
     get_installer_and_package_map,
     get_path_config,
+    is_applicable_mkp,
     PACKAGE_STORE,
     Resume,
 )
@@ -60,6 +61,14 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 raise MKUserError(None, "decommissioned file(s)")
 
         for manifest, paths in grouped_files.items():
+            if not is_applicable_mkp(manifest):
+                logger.info(
+                    "[%s %s]: Ignoring problems (MKP will be disabled on target version)",
+                    manifest.name,
+                    manifest.version,
+                )
+                continue
+
             _log_error_message_obsolete_files(logger, paths)
             logger.error(
                 f"The above file(s) are part of the extension package {manifest.name} {manifest.version}."

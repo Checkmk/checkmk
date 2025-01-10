@@ -208,8 +208,9 @@ def get_schema() -> schemas.BaseOpenAPISchema:
         schema_filetype = "yaml"
     schema_filepath = f"{schema_filedir}/{schema_filename}.{schema_filetype}"
     schema_url = f"{api_url}/{schema_filename}.{schema_filetype}"
+    allow_nulls = os.getenv("SCHEMATHESIS_ALLOW_NULLS", "0") == "1"
     codec = os.getenv("SCHEMATHESIS_CODEC", "utf-8")
-    generation_config = GenerationConfig(allow_x00=False, codec=codec)
+    generation_config = GenerationConfig(allow_x00=allow_nulls, codec=codec)
     if os.path.exists(schema_filepath):
         logger.info('Loading OpenAPI schema from file "%s"...', schema_filepath)
         schema = schemathesis.from_path(

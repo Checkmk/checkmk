@@ -236,7 +236,10 @@ class IgnoredActiveServices(Container[ServiceName]):
     def __contains__(self, service_name: object) -> bool:
         if not isinstance(service_name, ServiceName):
             return False
-        return self._config_cache.service_ignored(self._host_name, service_name)
+        return self._config_cache.service_ignored(
+            self._host_name,
+            service_name,
+        )
 
 
 def _aggregate_check_table_services(
@@ -335,7 +338,10 @@ class _ServiceFilter:
     def keep(self, service: ConfiguredService) -> bool:
         if self._skip_ignored and (
             self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
-            or self._config_cache.service_ignored(self._host_name, service.description)
+            or self._config_cache.service_ignored(
+                self._host_name,
+                service.description,
+            )
         ):
             return False
 
@@ -1485,19 +1491,19 @@ def _make_compute_check_parameters_cb(
     """
 
     def callback(
-        host: HostName,
+        host_name: HostName,
         plugin_name: CheckPluginName,
         item: Item,
         params: Mapping[str, object],
     ) -> TimespecificParameters:
-        return compute_check_parameters(matcher, host, plugin_name, item, params, None)
+        return compute_check_parameters(matcher, host_name, plugin_name, item, params, None)
 
     return callback
 
 
 def compute_check_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
+    host_name: HostName,
     plugin_name: CheckPluginName,
     item: Item,
     params: Mapping[str, object],
@@ -1517,7 +1523,7 @@ def compute_check_parameters(
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(
             matcher,
-            host,
+            host_name,
             plugin_name,
             service_name_template=check_plugin.service_name,
             ruleset_name=check_plugin.check_ruleset_name,

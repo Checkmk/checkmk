@@ -323,7 +323,10 @@ class RulesetMatcher:
         )
 
     def get_service_bool_value(
-        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
+        self,
+        hostname: HostName,
+        service_name: ServiceName,
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -332,17 +335,17 @@ class RulesetMatcher:
 
         """
         for value in self.get_service_ruleset_values(
-            self._service_match_object(hostname, description), ruleset
+            self._service_match_object(hostname, service_name), ruleset
         ):
             # See `get_host_bool_value()`.
             assert isinstance(value, bool)
             return value
-        return False  # no match. Do not ignore
+        return False
 
     def get_service_merged_dict(
         self,
         hostname: HostName,
-        description: ServiceName,
+        service_name: ServiceName,
         ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
@@ -352,7 +355,7 @@ class RulesetMatcher:
         return merge_parameters(
             list(
                 self.get_service_ruleset_values(
-                    self._service_match_object(hostname, description), ruleset
+                    self._service_match_object(hostname, service_name), ruleset
                 )
             ),
             default={},
@@ -361,21 +364,21 @@ class RulesetMatcher:
     def service_extra_conf(
         self,
         hostname: HostName,
-        description: ServiceName,
+        service_name: ServiceName,
         ruleset: Sequence[RuleSpec[TRuleValue]],
         service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
             self.get_service_ruleset_values(
-                self._service_match_object(hostname, description, service_labels), ruleset
+                self._service_match_object(hostname, service_name, service_labels), ruleset
             )
         )
 
     def get_checkgroup_ruleset_values(
         self,
         hostname: HostName,
-        description: ServiceName,
+        service_name: ServiceName,
         item: Item,
         ruleset: Sequence[RuleSpec[TRuleValue]],
         service_labels: Labels | None = None,
@@ -384,7 +387,7 @@ class RulesetMatcher:
             "RulesetMatcher_get_checkgroup_ruleset_values",
             attributes={
                 "cmk.host_name": hostname,
-                "cmk.service_name": description,
+                "cmk.service_name": service_name,
                 "cmk.item": repr(item),
                 "cmk.ruleset": repr(ruleset),
             },
@@ -393,7 +396,7 @@ class RulesetMatcher:
                 self.get_service_ruleset_values(
                     self._checkgroup_match_object(
                         hostname,
-                        description,
+                        service_name,
                         item,
                         service_labels,
                         span,

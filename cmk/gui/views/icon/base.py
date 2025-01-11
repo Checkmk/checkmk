@@ -17,9 +17,6 @@ from cmk.gui.utils.html import HTML
 
 
 class Icon(abc.ABC):
-    _custom_toplevel: bool | None = None
-    _custom_sort_index: int | None = None
-
     @classmethod
     def type(cls) -> str:
         return "icon"
@@ -30,17 +27,13 @@ class Icon(abc.ABC):
         raise NotImplementedError()
 
     @classmethod
-    def override_toplevel(cls, toplevel: bool) -> None:
-        cls._custom_toplevel = toplevel
-
-    @classmethod
-    def override_sort_index(cls, sort_index: int) -> None:
-        cls._custom_sort_index = sort_index
-
-    @classmethod
     @abc.abstractmethod
     def ident(cls) -> str:
         raise NotImplementedError()
+
+    def __init__(self) -> None:
+        self._custom_toplevel: bool | None = None
+        self._custom_sort_index: int | None = None
 
     @abc.abstractmethod
     def render(
@@ -94,3 +87,9 @@ class Icon(abc.ABC):
         if self._custom_sort_index is not None:
             return self._custom_sort_index
         return self.default_sort_index()
+
+    def override_toplevel(self, toplevel: bool) -> None:
+        self._custom_toplevel = toplevel
+
+    def override_sort_index(self, sort_index: int) -> None:
+        self._custom_sort_index = sort_index

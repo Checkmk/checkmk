@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-10-30 02:50+0000\n"
+"PO-Revision-Date: 2025-01-08 06:05+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -33494,6 +33494,10 @@ msgstr "1秒あたりのバイト数で表したサイト間帯域幅の下位�
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
 
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "電圧の低レベル"
+
 msgid "Lower warning level"
 msgstr "警告レベルを下げる"
 
@@ -37626,8 +37630,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "IDが<tt>%s </tt>のグラフはありません"
 
 msgid "No groups are defined yet."
@@ -37898,6 +37902,10 @@ msgstr "ノード統計"
 
 msgid "Node Status"
 msgstr "ノードステータス"
+
+#, fuzzy
+msgid "Node index"
+msgstr "インデックスを使用する"
 
 #, fuzzy
 msgid "Node labels"
@@ -39576,6 +39584,10 @@ msgid "On host name exclusion list."
 msgstr "%s 除外リスト。"
 
 #, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "ダウンタイムをスケジュールしますか?"
+
+#, fuzzy
 msgid "On recovery (OK/UP)"
 msgstr "コアの再起動またはリカバリー（OK/UP）時"
 
@@ -39599,6 +39611,10 @@ msgstr "選択したサイト"
 
 msgid "On selected users"
 msgstr "選択したユーザーについて"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "スケジュールされたダウンタイムを無視する"
 
 #, fuzzy, python-format
 msgid ""
@@ -47621,10 +47637,6 @@ msgstr "%d%sのダウンタイムをスケジュールする"
 msgid "Schedule downtime on host"
 msgstr "ホストでのダウンタイムのスケジュール"
 
-#, fuzzy
-msgid "Schedule downtime on service"
-msgstr "ホストでのダウンタイムのスケジュール"
-
 msgid "Schedule downtime?"
 msgstr "ダウンタイムをスケジュールしますか?"
 
@@ -53495,6 +53507,9 @@ msgstr "保存されたレポート"
 
 msgid "Stored reports"
 msgstr "保存されたレポート"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "まっすぐ"
@@ -76232,7 +76247,7 @@ msgid "h"
 msgstr "h"
 
 msgid "handles"
-msgstr "ハンドル"
+msgstr "ハンドルする"
 
 msgid "height"
 msgstr "高さ"
@@ -77647,6 +77662,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "ホストでのダウンタイムのスケジュール"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

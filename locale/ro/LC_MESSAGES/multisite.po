@@ -34789,6 +34789,10 @@ msgstr ""
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveluri mai mici ale numărului de conexiuni punct-la-sediu"
 
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Niveluri inferioare pentru tensiune"
+
 msgid "Lower warning level"
 msgstr "Nivel de avertizare mai scăzut"
 
@@ -38964,8 +38968,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nu este disponibil niciun grafic: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nu există niciun grafic cu ID-ul <tt>%s</tt>."
 
 msgid "No groups are defined yet."
@@ -39236,6 +39240,10 @@ msgstr "Statisticile nodurilor"
 
 msgid "Node Status"
 msgstr "Starea nodului"
+
+#, fuzzy
+msgid "Node index"
+msgstr "Indice de utilizare"
 
 #, fuzzy
 msgid "Node labels"
@@ -40951,6 +40959,10 @@ msgstr "Pe jos gazdă"
 msgid "On host name exclusion list."
 msgstr "%s pe lista de excludere."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Programarea timpilor morți?"
+
 msgid "On recovery (OK/UP)"
 msgstr "La recuperare (OK/UP)"
 
@@ -40974,6 +40986,10 @@ msgstr "Pe site-uri selectate"
 
 msgid "On selected users"
 msgstr "La utilizatorii selectați"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorați perioadele de întrerupere programate"
 
 #, fuzzy, python-format
 msgid ""
@@ -49091,9 +49107,6 @@ msgstr "Programarea timpului de oprire pentru %d %s"
 msgid "Schedule downtime on host"
 msgstr "Programarea timpului de oprire pe gazdă"
 
-msgid "Schedule downtime on service"
-msgstr "Programarea timpului de oprire a serviciului"
-
 msgid "Schedule downtime?"
 msgstr "Programarea timpilor morți?"
 
@@ -55157,6 +55170,9 @@ msgstr "Raport stocat"
 
 msgid "Stored reports"
 msgstr "Rapoarte stocate"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Drept"
@@ -80016,6 +80032,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programarea timpului de oprire a serviciului"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

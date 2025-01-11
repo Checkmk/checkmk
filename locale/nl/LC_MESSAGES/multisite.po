@@ -34754,6 +34754,10 @@ msgstr "Lagere niveaus op Site-to-site bandbreedte in bytes per seconde"
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Lagere niveaus voor het aantal Point-to-site verbindingen"
 
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Lagere spanningsniveaus"
+
 msgid "Lower warning level"
 msgstr "Lager waarschuwingsniveau"
 
@@ -38925,8 +38929,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Geen grafiek beschikbaar: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Geen grafiek met de ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -39202,6 +39206,10 @@ msgstr "Node Stats"
 
 msgid "Node Status"
 msgstr "Knooppuntstatus"
+
+#, fuzzy
+msgid "Node index"
+msgstr "Gebruik index"
 
 #, fuzzy
 msgid "Node labels"
@@ -40926,6 +40934,10 @@ msgstr "Op down host"
 msgid "On host name exclusion list."
 msgstr "%s op de uitsluit lijst."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Uitvaltijden plannen"
+
 msgid "On recovery (OK/UP)"
 msgstr ""
 
@@ -40949,6 +40961,10 @@ msgstr "Op geselecteerde plaatsen"
 
 msgid "On selected users"
 msgstr "Op geselecteerde gebruikers"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Negeer geplande downtimes"
 
 #, fuzzy, python-format
 msgid ""
@@ -49056,10 +49072,6 @@ msgid "Schedule downtime on host"
 msgstr "Plan downtime op host"
 
 #, fuzzy
-msgid "Schedule downtime on service"
-msgstr "Plan downtime op host"
-
-#, fuzzy
 msgid "Schedule downtime?"
 msgstr "Uitvaltijden plannen"
 
@@ -55028,6 +55040,9 @@ msgstr "Opgeslagen rapport"
 
 msgid "Stored reports"
 msgstr "Opgeslagen rapporten"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Recht"
@@ -79882,6 +79897,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Plan downtime op host"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

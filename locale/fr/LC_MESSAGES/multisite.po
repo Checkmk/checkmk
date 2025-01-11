@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-24 23:12+0000\n"
+"PO-Revision-Date: 2025-01-09 06:05+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/stable/"
 "fr/>\n"
 "Language: fr\n"
@@ -2311,13 +2311,12 @@ msgstr "Une règle avec cet ID existe déjà dans le pack de règles <b>%s</b>."
 msgid "A scheduled job on Microsoft SQL Server."
 msgstr "Un travail planifié sur Microsoft SQL Server."
 
-#, fuzzy
 msgid ""
 "A scheduler job is an object in an Oracle database which could be compared "
 "to a cron job on unix."
 msgstr ""
 "Un job scheduler est un objet dans une base de données ORACLE qui pourrait "
-"être comparé à un job cron sous Unix. "
+"être comparé à un job cron sous Unix."
 
 #, fuzzy
 msgid ""
@@ -3108,14 +3107,13 @@ msgid "Access to the module for analyzing and validating logfile patterns."
 msgstr ""
 "Accès au module d'analyse et de validation des modèles de fichiers journaux."
 
-#, fuzzy
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
 "only manage rules in folders he has permissions to."
 msgstr ""
 "Accès au module de gestion des règles Checkmk. Veuillez noter qu'un "
 "utilisateur ne peut gérer les règles que dans les dossiers pour lesquels il "
-"dispose de permissions. "
+"dispose de permissions."
 
 msgid ""
 "Access to the module for managing connections to remote monitoring sites."
@@ -4978,10 +4976,9 @@ msgstr "Mises à jour des agents"
 msgid "Agent updates are currently disabled"
 msgstr "Les mises à jour de l'agent sont actuellement désactivées"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Agent updates are disabled for host name %s:"
-msgstr ""
-"Les mises à jour de l'agent sont désactivées pour le nom d'hôte %s car il est"
+msgstr "Les mises à jour de l'agent sont désactivées pour le nom d'hôte %s :"
 
 msgid "Agent updates are enabled"
 msgstr "Les mises à jour de l'agent sont activées"
@@ -29948,14 +29945,13 @@ msgstr "Importer un fichier iCalendar pour créer une période de temps"
 msgid "Import state from Nagios core"
 msgstr "Importer l'état depuis le noyau de Nagios"
 
-#, fuzzy
 msgid ""
 "Important! This check is only for monitoring datafiles which were left in "
 "backup mode. (alter database datafile ... begin backup;)"
 msgstr ""
 "Important ! Cette vérification ne sert qu'à surveiller les fichiers de "
 "données qui ont été laissés en mode de sauvegarde. (alter base de données "
-"fichier de données ... commencer la sauvegarde ;) "
+"fichier de données ... commencer la sauvegarde ;)"
 
 #, python-format
 msgid "Imported %d hosts into the current folder."
@@ -35075,6 +35071,10 @@ msgstr ""
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveaux inférieurs sur le nombre de connexions point à site"
 
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Niveaux inférieurs de tension"
+
 msgid "Lower warning level"
 msgstr "Niveau d'alerte inférieur"
 
@@ -39281,8 +39281,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Aucun graphique disponible : %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Aucun graphique avec l'ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -39558,6 +39558,10 @@ msgstr "Statistiques des nœuds"
 
 msgid "Node Status"
 msgstr "Statut du nœud"
+
+#, fuzzy
+msgid "Node index"
+msgstr "Utiliser l'indice"
 
 #, fuzzy
 msgid "Node labels"
@@ -41298,6 +41302,10 @@ msgstr "L'hôte en bas"
 msgid "On host name exclusion list."
 msgstr "%s sur la liste d'exclusion."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Planifier un temps d'arrêt ?"
+
 msgid "On recovery (OK/UP)"
 msgstr ""
 
@@ -41321,6 +41329,10 @@ msgstr "Sur des sites sélectionnés"
 
 msgid "On selected users"
 msgstr "Sur les utilisateurs sélectionnés"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorer les temps d'arrêt programmés"
 
 #, fuzzy, python-format
 msgid ""
@@ -47194,16 +47206,17 @@ msgstr "Fichier distant"
 msgid "Remote instances %s"
 msgstr "Instances distantes %s"
 
-#, fuzzy
 msgid ""
 "Remote path to the directory where to put the file. If left empty, the file "
 "will be placed in the home directory of the user. The directory has to exist "
 "on the remote or the check will fail. Example: 'myDirectory' (The file will "
 "be uploaded to '~/myDirectory')."
 msgstr ""
-"Chemin distant où placer le fichier. Si vous laissez ce champ vide, le "
-"fichier sera placé dans le répertoire personnel de l'utilisateur. Exemple : "
-"'myDirectory'. "
+"Chemin distant vers le répertoire où placer le fichier. S'il est vide, le "
+"fichier sera placé dans le répertoire personnel de l'utilisateur. Le "
+"répertoire doit exister sur la machine distante, sinon la vérification "
+"échouera. Exemple : 'myDirectory' (le fichier sera téléchargé dans '~/"
+"myDirectory')."
 
 #, fuzzy
 msgid ""
@@ -49537,10 +49550,6 @@ msgid "Schedule downtime for %d %s"
 msgstr "Programmer un temps d'arrêt pour %d %s"
 
 msgid "Schedule downtime on host"
-msgstr "Planifier les temps d'arrêt sur l'hôte"
-
-#, fuzzy
-msgid "Schedule downtime on service"
 msgstr "Planifier les temps d'arrêt sur l'hôte"
 
 msgid "Schedule downtime?"
@@ -55589,6 +55598,9 @@ msgstr "Rapport stocké"
 
 msgid "Stored reports"
 msgstr "Rapports stockés"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Droit"
@@ -77856,9 +77868,9 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Vous avez la permission d'accéder à cet hôte."
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have reached your limit of %s. "
-msgstr "Vous avez sélectionné %d %s pour la migration : %s"
+msgstr ""
 
 #, python-format
 msgid "You have selected %d %s for migration: %s"
@@ -78305,9 +78317,9 @@ msgstr ""
 "checkmk.com/checkmk_support_contract.html\" target=\"_blank\">notre site "
 "web</a>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your current service limit is %s. "
-msgstr "Surveiller les limites du service"
+msgstr ""
 
 msgid "Your end date is before your start date."
 msgstr "Votre date de fin est antérieure à votre date de début."
@@ -78361,13 +78373,11 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at "
 "%s. "
 msgstr ""
-"Si vous souhaitez continuer à utiliser Checkmk, veuillez acheter une licence "
-"supportant %s ou contacter l'équipe de vente de Checkmk à %s."
 
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
@@ -78384,9 +78394,9 @@ msgstr ""
 msgid "Your license has expired on %s."
 msgstr "Votre %s a été sauvegardé."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your license has expired on %s. "
-msgstr "Votre %s a été sauvegardé."
+msgstr "Votre licence a expiré le %s. "
 
 #, python-format
 msgid ""
@@ -80732,6 +80742,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Planifier les temps d'arrêt sur l'hôte"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

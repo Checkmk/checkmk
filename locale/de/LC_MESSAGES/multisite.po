@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-12-19 06:05+0000\n"
+"PO-Revision-Date: 2025-01-10 06:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -10118,7 +10118,7 @@ msgid "Carbon queue usage"
 msgstr "Warteschlangenauslastung des Carbon"
 
 msgid "Carbon queue usage rate"
-msgstr "Auslastungsfrequenz der Warteschlange des Carbon"
+msgstr "Auslastungsrate der Warteschlange für Carbon"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU-Temperatur"
@@ -15699,7 +15699,7 @@ msgid "Deduplication percent completed"
 msgstr "Deduplizierung (Prozent) abgeschlossen"
 
 msgid "Deduplication rate"
-msgstr "Deduplizierungsgrad"
+msgstr "Deduplizierungsrate"
 
 msgid "Deduplication remaining size"
 msgstr "Deduplizierung der restlichen Größe"
@@ -20142,13 +20142,13 @@ msgstr ""
 "Prüfung nicht die Inventareinstellungen für Switch-Ports."
 
 msgid "Enc-In frames rate"
-msgstr "Enc-In Framerate"
+msgstr "Enc-In Frame-Rate"
 
 msgid "Enc-Ins"
 msgstr "Enc-Ins"
 
 msgid "Enc-Out frames rate"
-msgstr "Enc-Out Framerate"
+msgstr "Enc-Out Frame-Rate"
 
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
@@ -29852,9 +29852,8 @@ msgstr "Info"
 msgid "Info:"
 msgstr "Info:"
 
-#, fuzzy
 msgid "Information"
-msgstr "Informell"
+msgstr "Information"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29977,7 +29976,7 @@ msgid "Input multicast packets"
 msgstr "Eingehende Multicastpakete"
 
 msgid "Input non-unicast packets"
-msgstr "Eingehende Nichtunicast-Pakete"
+msgstr "Eingehende Non-Unicast-Pakete"
 
 msgid "Input parameters"
 msgstr "Eingabeparameter"
@@ -29996,7 +29995,7 @@ msgid "Input traffic"
 msgstr "Eingehender Datenverkehr"
 
 msgid "Input unicast packets"
-msgstr "Eingehende Unicastpakete"
+msgstr "Eingehende Unicast-Pakete"
 
 msgid "Inputs"
 msgstr "Eingänge"
@@ -32142,7 +32141,7 @@ msgid "Levels for rate of fragmented packets"
 msgstr "Level für Rate fragmentierter Pakete"
 
 msgid "Levels for rate of incoming IPv4 packets blocked"
-msgstr "Level die Rate blockierter eingehender IPv4-Pakete"
+msgstr "Level für Rate blockierter eingehender IPv4-Pakete"
 
 msgid "Levels for rate of normalized packets"
 msgstr "Level für Rate normalisierter Pakete"
@@ -32158,7 +32157,7 @@ msgid "Levels for rate of short packets"
 msgstr "Level für Rate kurzer Pakete"
 
 msgid "Levels for rate of uncorrectable errors"
-msgstr "Level für unkorrigierbare Fehler"
+msgstr "Level für Rate unkorrigierbarer Fehler"
 
 msgid "Levels for remaining supply"
 msgstr "Level für restliches Verbrauchsmaterial"
@@ -33964,7 +33963,7 @@ msgid "Lower levels for the number of registered desktops"
 msgstr "Untergrenzen für die Anzahl der registrierten Desktops"
 
 msgid "Lower levels for total error rate"
-msgstr "Untergrenzen für die Gesamtfehlerquote"
+msgstr "Untergrenzen für die Gesamtfehlerrate"
 
 msgid "Lower levels for unallocated space"
 msgstr "Untergrenzen für unallozierten Speicher"
@@ -33983,6 +33982,9 @@ msgstr "Untergrenzen der Site-to-Site Bandbreite in Bytes pro Sekunde"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Untergrenzen für die Anzahl der Pint-to-Site Verbindungen"
+
+msgid "Lower levels on quality"
+msgstr "Untergrenzen der Qualität"
 
 msgid "Lower warning level"
 msgstr "Untere Warngrenze"
@@ -34997,7 +34999,7 @@ msgid "Max Cache Age"
 msgstr "Maximales Cachealter"
 
 msgid "Max Perm used"
-msgstr "Max Perm used"
+msgstr "max. genutzter Dauerspeicher"
 
 msgid "Max age of the oldest snapshot"
 msgstr "Höchstalter des ältesten Snapshot"
@@ -38056,8 +38058,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Kein Graph verfügbar: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Kein Graph mit der ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -38326,6 +38328,9 @@ msgstr "Knoten-Statistiken"
 msgid "Node Status"
 msgstr "Knoten-Zustand"
 
+msgid "Node index"
+msgstr "Index des Knotens"
+
 msgid "Node labels"
 msgstr "Knoten-Labels"
 
@@ -38403,7 +38408,7 @@ msgid "Non-resident items"
 msgstr "Nicht-Residente Elemente"
 
 msgid "Non-unicast packet rates"
-msgstr "Nicht-Unicastpakete: Raten"
+msgstr "Raten der Non-Unicast-Pakete"
 
 msgid "Noncritical event rate"
 msgstr "Rate nicht kritischer Ereignisse"
@@ -39997,6 +40002,10 @@ msgstr "Bei Host DOWN"
 msgid "On host name exclusion list."
 msgstr "Auf der Host-Namen-Ausschlussliste."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Wartungszeit planen?"
+
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"
 
@@ -40020,6 +40029,10 @@ msgstr "Bei ausgewählten Instanzen"
 
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignoriere Wartungszeiten"
 
 #, python-format
 msgid ""
@@ -41120,10 +41133,10 @@ msgid "Output multicast packets"
 msgstr "Ausgehende Multicast-Pakete"
 
 msgid "Output non-unicast octets"
-msgstr "Ausgehende Nicht-Unicast-Oktette"
+msgstr "Ausgehende Non-Unicast-Oktette"
 
 msgid "Output non-unicast packets"
-msgstr "Ausgehende Nicht-Unicast-Pakete"
+msgstr "Ausgehende Non-Unicast-Pakete"
 
 msgid ""
 "Output of `dpkg -l`. See the corresponding commandline help for more details."
@@ -47161,7 +47174,7 @@ msgid "Rules in folder"
 msgstr "Regeln im Ordner"
 
 msgid "Rules matching pattern"
-msgstr ""
+msgstr "Pattern der Regelübereinstimmung"
 
 msgid "Rules of VPC security group"
 msgstr "Regeln der VPC-Sicherheitsgruppe"
@@ -47900,9 +47913,6 @@ msgstr "Wartungszeit für %d %s planen"
 
 msgid "Schedule downtime on host"
 msgstr "Wartungszeit für Host planen"
-
-msgid "Schedule downtime on service"
-msgstr "Wartungszeit für Service planen"
 
 msgid "Schedule downtime?"
 msgstr "Wartungszeit planen?"
@@ -49993,7 +50003,7 @@ msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
 "detect broadcast storms and other unwanted traffic."
 msgstr ""
-"Level auf Nicht-Unicast-Paketen sind optional. Mit Ihnen können Sie "
+"Level auf Non-Unicast-Paketen sind optional. Mit Ihnen können Sie "
 "Broadcaststürme und anderen unerwünschten Verkehr erkennen."
 
 msgid ""
@@ -53563,9 +53573,8 @@ msgstr "Zustand der SLES Lizenz"
 msgid "Status of the SLES subscription"
 msgstr "Zustand der SLES Subskription"
 
-#, fuzzy
 msgid "Status page"
-msgstr "Zustandsänderung"
+msgstr "Statusseite"
 
 msgid "Status passive checks"
 msgstr "Zustand passive Checks"
@@ -53785,6 +53794,9 @@ msgstr "Gespeicherter Bericht"
 
 msgid "Stored reports"
 msgstr "Gespeicherte Berichte"
+
+msgid "Stormshield quality"
+msgstr "Stormshield Qualität"
 
 msgid "Straight"
 msgstr "Gerade"
@@ -56775,10 +56787,10 @@ msgid ""
 "here and are available in the sidebar snap-in <i>Event Console performance</"
 "i>"
 msgstr ""
-"Der Event Daemon führt Statistiken über die Anzahl von Nachrichten, Treffer "
-"für Ereignisregeln und anderen Dingen. Diese Werte werden im hier "
-"festgelegten Zeitintervall aktualisiert und im Seitenleisten-Snapin <i>Event "
-"Console Leistungsdaten</i> angezeigt"
+"Der Event Daemon führt Statistiken über die Rate an Nachrichten, Treffer für "
+"Ereignisregeln und anderen Dingen. Diese Werte werden im hier festgelegten "
+"Zeitintervall aktualisiert und im Seitenleisten-Snapin <i>Event Console "
+"Leistungsdaten</i> angezeigt"
 
 msgid ""
 "The event socket is an alternative way for sending events to the Event "
@@ -59932,9 +59944,9 @@ msgid ""
 "discards))*100</b> "
 msgstr ""
 "Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
-"die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> der "
+"die <b>prozentuale Verwerfrate</b> oder die <b>absolute Verwerfrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-Unicast + "
+"Verwerfrate wird nach der Formel <b>(Verwerfungen / (Unicast + Non-Unicast + "
 "Fehler))*100</b> berechnet "
 
 msgid ""
@@ -59944,7 +59956,7 @@ msgid ""
 "computed by the formula <b>(errors / (unicast + non-unicast + errors))*100</"
 "b> "
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-Unicast + "
@@ -59956,10 +59968,10 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Paketrate wird nach der Formel <b>(broadcast / (unicast + non-unicast))*100</"
+"Paketrate wird nach der Formel <b>(Broadcast / (Unicast + Non-Unicast))*100</"
 "b> berechnet"
 
 msgid ""
@@ -59968,9 +59980,9 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(multicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
-"überwachten Schnittstelle die angegebenen Grenzen erreicht.Die prozentuale "
+"überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Paketrate wird nach der Formel <b>(Multicast / (Unicast + Nicht-"
 "Unicast))*100</b> berechnet"
 
@@ -59980,10 +59992,10 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARN oder CRIT geht, wenn die "
-"<b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Paketrate wird nach der Formel <b>(unicast / (unicast + non-unicast))*100</"
+"Paketrate wird nach der Formel <b>(Unicast / (Unicast + Non-Unicast))*100</"
 "b> berechnet"
 
 msgid ""
@@ -60635,7 +60647,7 @@ msgid ""
 "database server as well as the connection rate."
 msgstr ""
 "Dieser Check überwacht die Anzahl der aktiven Verbindungen zu einem MySQL "
-"Datenbank Server."
+"Datenbank Server ebenso wie die Verbindungsrate."
 
 msgid ""
 "This check monitors the number of log switches of an Oracle database "
@@ -68799,7 +68811,7 @@ msgid "Upper levels for SMS Spending"
 msgstr "Obergrenzen für SMS Spending"
 
 msgid "Upper levels for SMS Success Rate"
-msgstr "Obergrenzen für SMS Success Rate"
+msgstr "Obergrenzen für SMS Erfolgsrate"
 
 msgid "Upper levels for SSL handshake time"
 msgstr "Obergrenzen für SSL Handshake-Zeit"
@@ -76130,7 +76142,7 @@ msgid "check plug-ins"
 msgstr "Check-Plugins"
 
 msgid "check."
-msgstr "check."
+msgstr "Check."
 
 msgid "children"
 msgstr "Children"
@@ -78000,6 +78012,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Wartungszeit für Service planen"
 
 #~ msgid "Checkmk Cloud"
 #~ msgstr "Checkmk Cloud"

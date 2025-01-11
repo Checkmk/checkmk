@@ -34729,6 +34729,10 @@ msgstr ""
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Níveis mais baixos em número de ligações ponto a ponto"
 
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Níveis mais baixos para Tensão"
+
 msgid "Lower warning level"
 msgstr "Nível de aviso inferior"
 
@@ -38905,8 +38909,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nenhum gráfico disponível: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nenhum gráfico com o ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -39180,6 +39184,10 @@ msgstr "Estatísticas de Nó"
 
 msgid "Node Status"
 msgstr "Estado do Nó"
+
+#, fuzzy
+msgid "Node index"
+msgstr "Use o índice"
 
 #, fuzzy
 msgid "Node labels"
@@ -40885,6 +40893,10 @@ msgstr "No anfitrião inferior"
 msgid "On host name exclusion list."
 msgstr "%s na lista de exclusões."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Programar o tempo de inatividade?"
+
 msgid "On recovery (OK/UP)"
 msgstr ""
 
@@ -40908,6 +40920,10 @@ msgstr "Em locais selecionados"
 
 msgid "On selected users"
 msgstr "Em usuários selecionados"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorar os tempos de paragem programados"
 
 #, fuzzy, python-format
 msgid ""
@@ -49038,10 +49054,6 @@ msgstr "Programar o tempo de inatividade para %d %s"
 msgid "Schedule downtime on host"
 msgstr "Programar o tempo de inatividade no host"
 
-#, fuzzy
-msgid "Schedule downtime on service"
-msgstr "Programar o tempo de inatividade no host"
-
 msgid "Schedule downtime?"
 msgstr "Programar o tempo de inatividade?"
 
@@ -55020,6 +55032,9 @@ msgstr "Relatório armazenado"
 
 msgid "Stored reports"
 msgstr "Relatórios guardados"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Direto"
@@ -79766,6 +79781,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programar o tempo de inatividade no host"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud"

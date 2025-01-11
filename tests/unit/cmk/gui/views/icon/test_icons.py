@@ -163,7 +163,7 @@ def test_config_icon_registered(monkeypatch: pytest.MonkeyPatch) -> None:
             },
         )
         update_icons_from_configuration()
-    assert "config_icon" in icon_registry.get_multisite_icons()
+    assert "config_icon" in icon_registry.all_icons()
 
 
 @pytest.mark.usefixtures("load_config")
@@ -204,4 +204,4 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
             },
         )
         update_icons_from_configuration()
-    assert icon_registry.get_multisite_icons()["test_icon"].toplevel() is True
+    assert icon_registry.all_icons()["test_icon"].toplevel() is True

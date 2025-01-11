@@ -29,10 +29,5 @@ class IconRegistry(Registry[type[Icon]]):
 icon_and_action_registry = IconRegistry()
 
 
-def get_multisite_icons() -> dict[str, Icon]:
-    icons = {}
-
-    for icon_class in icon_and_action_registry.values():
-        icons[icon_class.ident()] = icon_class()
-
-    return icons
+def all_icons() -> dict[str, Icon]:
+    return {ident: cls() for ident, cls in icon_and_action_registry.items()}

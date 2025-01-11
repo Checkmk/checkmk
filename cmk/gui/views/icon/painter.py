@@ -27,7 +27,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
 from .base import Icon
-from .registry import get_multisite_icons
+from .registry import all_icons
 
 IconObjectType = Literal["host", "service"]
 
@@ -190,7 +190,7 @@ def _process_icons(
     user_icon_ids: list[str],
 ) -> list[ABCIconEntry]:
     icons: list[ABCIconEntry] = []
-    for icon_id, icon in get_multisite_icons().items():
+    for icon_id, icon in all_icons().items():
         if icon.toplevel() != toplevel:
             continue
 
@@ -310,7 +310,7 @@ def iconpainter_columns(what: IconObjectType, toplevel: bool | None) -> list[Col
             ]
         )
 
-    for icon in get_multisite_icons().values():
+    for icon in all_icons().values():
         if toplevel is None or toplevel == icon.toplevel():
             cols.update([what + "_" + c for c in icon.columns()])
             cols.update(["host_" + c for c in icon.host_columns()])

@@ -13,7 +13,13 @@ from cmk.utils import paths
 
 import cmk.gui.permissions
 import cmk.gui.views
-from cmk.gui.views.icon import Icon, icon_and_action_registry
+from cmk.gui.config import active_config
+from cmk.gui.views.icon import (
+    config_icons,
+    Icon,
+    icon_and_action_registry,
+    update_icons_from_configuration,
+)
 from cmk.gui.views.icon import registry as icon_registry
 
 
@@ -134,3 +140,68 @@ def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.Mo
     registry.register(TestIcon)
 
     assert "test_icon" in icon_registry.icon_and_action_registry
+
+
+@pytest.mark.usefixtures("load_config")
+def test_config_icon_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
+    monkeypatch.setattr(config_icons, "icon_and_action_registry", registry)
+
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "user_icons_and_actions",
+            {
+                "config_icon": {
+                    "icon": "icon",
+                    "title": "Config Icon",
+                    "sort_index": 10,
+                    "toplevel": True,
+                },
+            },
+        )
+        update_icons_from_configuration()
+    assert "config_icon" in icon_registry.get_multisite_icons()
+
+
+@pytest.mark.usefixtures("load_config")
+def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
+    monkeypatch.setattr(config_icons, "icon_and_action_registry", registry)
+
+    class TestIcon(Icon):
+        @classmethod
+        def ident(cls):
+            return "test_icon"
+
+        @classmethod
+        def title(cls) -> str:
+            return "Test icon"
+
+        def default_sort_index(self):
+            return 50
+
+        def host_columns(self):
+            return []
+
+        def render(self, what, row, tags, custom_vars):
+            return "agents", "Title", "url"
+
+    registry.register(TestIcon)
+
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "builtin_icon_visibility",
+            {
+                "test_icon": {
+                    "toplevel": True,
+                },
+            },
+        )
+        update_icons_from_configuration()
+    assert icon_registry.get_multisite_icons()["test_icon"].toplevel() is True

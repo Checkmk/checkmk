@@ -15,7 +15,13 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
-from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
+from cmk.gui.type_defs import (
+    BuiltinIconVisibility,
+    GroupSpec,
+    IconSpec,
+    TrustedCertificateAuthorities,
+    UserSpec,
+)
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
@@ -473,7 +479,7 @@ class CREConfig:
     )
 
     # Contains user specified icons and actions for hosts and services
-    user_icons_and_actions: dict = field(default_factory=dict)
+    user_icons_and_actions: dict[str, IconSpec] = field(default_factory=dict)
 
     # Defintions of custom attributes to be used for services
     custom_service_attributes: dict = field(default_factory=dict)
@@ -489,7 +495,7 @@ class CREConfig:
     )
 
     # Override toplevel and sort_index settings of built-in icons
-    builtin_icon_visibility: dict = field(default_factory=dict)
+    builtin_icon_visibility: dict[str, BuiltinIconVisibility] = field(default_factory=dict)
 
     trusted_certificate_authorities: TrustedCertificateAuthorities = field(
         default_factory=lambda: TrustedCertificateAuthorities(

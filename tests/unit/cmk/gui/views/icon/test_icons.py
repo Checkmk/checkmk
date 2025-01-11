@@ -14,6 +14,7 @@ from cmk.utils import paths
 import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.config import active_config
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
 from cmk.gui.views.icon import (
     Icon,
     icon_and_action_registry,
@@ -149,12 +150,14 @@ def test_config_icon_registered(monkeypatch: pytest.MonkeyPatch) -> None:
             active_config,
             "user_icons_and_actions",
             {
-                "config_icon": {
-                    "icon": "icon",
-                    "title": "Config Icon",
-                    "sort_index": 10,
-                    "toplevel": True,
-                },
+                "config_icon": IconSpec(
+                    {
+                        "icon": "icon",
+                        "title": "Config Icon",
+                        "sort_index": 10,
+                        "toplevel": True,
+                    }
+                ),
             },
         )
         assert "config_icon" in icon_registry.all_icons()
@@ -191,9 +194,11 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
             active_config,
             "builtin_icon_visibility",
             {
-                "test_icon": {
-                    "toplevel": True,
-                },
+                "test_icon": BuiltinIconVisibility(
+                    {
+                        "toplevel": True,
+                    }
+                ),
             },
         )
         assert icon_registry.all_icons()["test_icon"].toplevel() is True

@@ -731,3 +731,16 @@ class Key(BaseModel):
 
 
 GlobalSettings = Mapping[str, Any]
+
+
+class IconSpec(TypedDict):
+    icon: str
+    title: NotRequired[str]
+    url: NotRequired[tuple[str, str]]
+    toplevel: NotRequired[bool]
+    sort_index: NotRequired[int]
+
+
+class BuiltinIconVisibility(TypedDict):
+    toplevel: NotRequired[bool]
+    sort_index: NotRequired[int]

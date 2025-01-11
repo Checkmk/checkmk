@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-07 09:11+0000\n"
+"PO-Revision-Date: 2025-01-10 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3519,6 +3519,15 @@ msgstr "Aktiv (anonym)"
 msgid "Active (files)"
 msgstr "Aktiv (Dateien)"
 
+msgid "Active Calls"
+msgstr "Aktive Aufrufe"
+
+msgid "Active Calls In"
+msgstr "Aktive eingehende Aufrufe"
+
+msgid "Active Calls Out"
+msgstr "Aktive ausgehende Aufrufe"
+
 msgid "Active Connections"
 msgstr "Aktive Verbindungen"
 
@@ -6167,7 +6176,7 @@ msgid "Always bulk"
 msgstr "Immer aktiv"
 
 msgid "Always compute the rate"
-msgstr "Den Trend immer berechnen"
+msgstr "Die Rate immer berechnen"
 
 msgid "Always install Python with agent"
 msgstr "Installiere Python immer mit dem Agenten"
@@ -7238,6 +7247,12 @@ msgstr "Attribute"
 msgid "Attributes to remove from hosts"
 msgstr "Von Hosts zu entfernende Attribute"
 
+msgid "AudioCodes Alarms"
+msgstr "AudioCodes Alarme"
+
+msgid "AudioCodes SBC Calls"
+msgstr "AudioCodes SBC Aufrufe"
+
 msgid "Audit log"
 msgstr "Audit Log"
 
@@ -7692,8 +7707,14 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
+msgid "Average Call Duration"
+msgstr "Durchschnittliche Aufrufdauer"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
+
+msgid "Average Success Ratio"
+msgstr "Durchschnittliche Erfolgsrate"
 
 msgid "Average active check latency"
 msgstr "Durchschnittliche Latenz aktiver Checks"
@@ -9593,6 +9614,11 @@ msgid ""
 "certificate will be valid or ignore the certificate completely. Please use "
 "the latter as last resort and with caution!"
 msgstr ""
+"Standardmäßig wird die allgemeine Gültigkeit des Zertifikats geprüft. Mit "
+"dieser Option können Sie wählen, ob zusätzlich geprüft werden soll, wie "
+"lange das Zertifikat noch gültig ist, oder ob das Zertifikat komplett "
+"ignoriert werden soll. Bitte verwenden Sie letzteres nur als letzten Ausweg "
+"und mit Bedacht!"
 
 #, python-format
 msgid ""
@@ -10645,6 +10671,18 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
+msgid "Calls In"
+msgstr "Eingehende Aufrufe"
+
+msgid "Calls In/Out"
+msgstr "Eingehende/ausgehende Aufrufe"
+
+msgid "Calls Out"
+msgstr "Ausgehende Aufrufe"
+
+msgid "Calls per Second"
+msgstr "Aufrufe pro Sekunde"
+
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
 
@@ -11039,7 +11077,7 @@ msgid "Carbon queue usage"
 msgstr "Warteschlangenauslastung des Carbon"
 
 msgid "Carbon queue usage rate"
-msgstr "Auslastungsfrequenz der Warteschlange des Carbon"
+msgstr "Auslastungsrate der Warteschlange für Carbon"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU-Temperatur"
@@ -13027,9 +13065,6 @@ msgstr "Informationen sammeln über..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "Informationen von Checkmk-Instanzen für die Diagnoseanalyse sammeln."
 
-msgid "Collect performance data for disk latency"
-msgstr "Sammle Metriken für Datenträgerlatenzzeit"
-
 msgid "Collection Size"
 msgstr "Größe der Collection"
 
@@ -13371,9 +13406,6 @@ msgstr "Wiederherstellung fertigstellen"
 msgid "Complete tree"
 msgstr "Vollständiger Baum"
 
-msgid "Complete variable list"
-msgstr "Vollständige Variablenliste"
-
 msgid "Complete variable list (for testing)"
 msgstr "Vollständige Variablenliste (für Tests)"
 
@@ -13432,7 +13464,7 @@ msgid "Compute range accoring to displayed data"
 msgstr "Automatisch mit den angezeigten Werten skalieren"
 
 msgid "Compute rates for all monotonic counters"
-msgstr "Trends für alle monotonen Zähler berechnen"
+msgstr "Raten für alle monotonen Zähler berechnen"
 
 msgid "Computing differences"
 msgstr "Berechne Unterschiede"
@@ -13945,6 +13977,19 @@ msgstr ""
 "Konfigurieren Sie den Benutzer oder die Gruppe, der die Benachrichtigungen "
 "erhalten soll, indem Sie hier den Benutzer- oder Gruppenschlüssel eintragen. "
 "Der Schlüssel ist von der Pushover-Website erhältlich."
+
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Aktivieren Sie dies damit das Benachrichtigungs-Plugin sich direkt mit dem "
+"SMTP-Server verbindet. Dies hat den Vorteil, dass im Fehlerfall bessere "
+"Fehlermeldungen ausgegeben werden, erfordert aber mehr Konfiguration und ist "
+"streng synchron. Wir raten daher, diese Option nur bei Enterprise-"
+"Installationen zu verwenden, die den Benachrichtigungs-Spooler nutzen."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -16962,7 +17007,7 @@ msgid "Deduplication percent completed"
 msgstr "Deduplizierung (Prozent) abgeschlossen"
 
 msgid "Deduplication rate"
-msgstr "Deduplizierungsgrad"
+msgstr "Deduplizierungsrate"
 
 msgid "Deduplication remaining size"
 msgstr "Deduplizierung der restlichen Größe"
@@ -18445,6 +18490,10 @@ msgstr "Diagnose-Dump"
 msgid "Diagnostics dump started..."
 msgstr "Diagnose-Dump gestartet..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr "Das Wörterbuch enthält ungültige Schlüssel: %r"
+
 msgid "Did not changed"
 msgstr "Hat sich nicht geändert"
 
@@ -19881,9 +19930,6 @@ msgstr "Dokument Count-Delta"
 
 msgid "Document count growth per minute"
 msgstr "Zuwachs der Dokumentenanzahl pro Minute zählen"
-
-msgid "Documentation"
-msgstr "Dokumentation"
 
 msgid "Documentation URL"
 msgstr "URL zur Dokumentation"
@@ -21401,6 +21447,11 @@ msgstr ""
 "verschlüsselt. Zur Wiederherstellung benötigen Sie den privaten Schlüssel "
 "und das Passwort des Schlüssels."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Flap-Erkennung ein"
 
@@ -21630,13 +21681,13 @@ msgstr ""
 "Prüfung nicht die Inventareinstellungen für Switch-Ports."
 
 msgid "Enc-In frames rate"
-msgstr "Enc-In Framerate"
+msgstr "Enc-In Frame-Rate"
 
 msgid "Enc-Ins"
 msgstr "Enc-Ins"
 
 msgid "Enc-Out frames rate"
-msgstr "Enc-Out Framerate"
+msgstr "Enc-Out Frame-Rate"
 
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
@@ -22217,6 +22268,10 @@ msgstr ""
 "also die Gesamtgröße der gelöschten Einträge diese Zahl erreicht, wird die "
 "Historie der Event Console bereinigt."
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "Filter der Event Console Alerts"
+
 msgid "Event Console alerts"
 msgstr "Alerts der Event Console"
 
@@ -22292,9 +22347,6 @@ msgstr "Ereigniskommentar"
 
 msgid "Event console"
 msgstr "Event Console"
-
-msgid "Event console alert filters"
-msgstr "Filter der Event Console Alerts"
 
 msgid "Event console performance"
 msgstr "Leistung der Event Console"
@@ -22888,7 +22940,8 @@ msgstr "Erwarteter Zustand"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
-msgid "Experimental features"
+#, fuzzy
+msgid "Experimental rendering"
 msgstr "Experimentelle Funktionen"
 
 msgid "Expiration Date"
@@ -24700,6 +24753,10 @@ msgstr "Gabelungen"
 msgid "Form factor"
 msgstr "Formfaktor"
 
+#, fuzzy
+msgid "Form specs"
+msgstr "Für bestimmte SIDs"
+
 msgid "FormSpec and internal data structure mismatch"
 msgstr "FormSpec und interne Datenstruktur stimmen nicht überein"
 
@@ -25333,6 +25390,10 @@ msgstr "Platz für General Purpose SSD (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Gesamtplatz für General Purpose SSD (gp3)"
+
+#, python-format
+msgid "General value error: %s"
+msgstr "Genereller Wertfehler: %s"
 
 msgid "Generate"
 msgstr "Erzeugen"
@@ -28953,7 +29014,7 @@ msgid "Hostalias (regex)"
 msgstr "Host-Alias (regex)"
 
 msgid "Hostbustadapters"
-msgstr ""
+msgstr "Hostbustadapter"
 
 msgid "Hostname"
 msgstr "Host-Name"
@@ -29463,6 +29524,26 @@ msgstr "IP-Adresse"
 msgid "IP Address of Hosts"
 msgstr "IP-Adresse der Hosts"
 
+#, fuzzy
+msgid "IP Group Active Calls In"
+msgstr "Aktive eingehende Aufrufe"
+
+#, fuzzy
+msgid "IP Group Active Calls Out"
+msgstr "Aktive ausgehende Aufrufe"
+
+#, fuzzy
+msgid "IP Group Calls In"
+msgstr "Eingehende Aufrufe"
+
+#, fuzzy
+msgid "IP Group Calls In/Out"
+msgstr "Eingehende/ausgehende Aufrufe"
+
+#, fuzzy
+msgid "IP Group Calls Out"
+msgstr "Ausgehende Aufrufe"
+
 msgid "IP address"
 msgstr "IP-Adresse"
 
@@ -29517,6 +29598,9 @@ msgstr "IP-Sets"
 
 msgid "IP-Version"
 msgstr "IP Version"
+
+msgid "IP2Tel"
+msgstr ""
 
 msgid "IPC semaphore IDs"
 msgstr "IPC-Semaphoren IDs"
@@ -30053,6 +30137,12 @@ msgid ""
 "this option as a last resort and ideally in combination with an independent "
 "certificate check."
 msgstr ""
+"Wenn ungültige Zertifikate als vertrauenswürdig eingestuft werden, wird "
+"jedes Zertifikat für eine beliebige Instanz als vertrauenswürdig eingestuft. "
+"Dies schließt abgelaufene Zertifikate ein und führt zu erheblichen "
+"Schwachstellen wie Man-in-the-Middle-Angriffen. Bitte verwenden Sie diese "
+"Option als letzten Ausweg und idealerweise in Kombination mit einer "
+"unabhängigen Zertifikatsprüfung."
 
 msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
@@ -32407,6 +32497,9 @@ msgstr ""
 "Modus, wenn die Tests innerhalb der Roboter-Suite miteinander in Beziehung "
 "stehen und ihre Ausführungsreihenfolge ebenfalls wichtig ist."
 
+msgid "Indeterminate"
+msgstr "Unbestimmt"
+
 msgid "Index"
 msgstr "Index"
 
@@ -32660,7 +32753,7 @@ msgid "Input multicast packets"
 msgstr "Eingehende Multicastpakete"
 
 msgid "Input non-unicast packets"
-msgstr "Eingehende Nichtunicast-Pakete"
+msgstr "Eingehende Non-Unicast-Pakete"
 
 msgid "Input octets"
 msgstr "Eingabe-Oktets"
@@ -32685,7 +32778,7 @@ msgid "Input traffic"
 msgstr "Eingehender Datenverkehr"
 
 msgid "Input unicast packets"
-msgstr "Eingehende Unicastpakete"
+msgstr "Eingehende Unicast-Pakete"
 
 msgid "Inputs"
 msgstr "Eingänge"
@@ -33014,9 +33107,6 @@ msgstr "Ungültiges CSRF-Token (%r) für Sitzung (%r)"
 msgid "Invalid DCD command: %r"
 msgstr "Ungültiger DCD-Befehl: %r"
 
-msgid "Invalid FixedValue"
-msgstr "Ungültiger fester Wert"
-
 msgid "Invalid IP address"
 msgstr "Ungültige IP-Adresse"
 
@@ -33073,9 +33163,6 @@ msgstr "Ungültiges Automatisierungspasswort."
 msgid "Invalid back URL provided."
 msgstr "Fehlerhafte Rückkehradresse angegeben."
 
-msgid "Invalid boolean choice"
-msgstr "Ungültige boolesche Auswahl"
-
 msgid "Invalid call: No profiles set."
 msgstr "Ungültiger Anruf: Keine Profile gesetzt."
 
@@ -33099,9 +33186,15 @@ msgstr "Ungültiger Check-Parameter"
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
 
+msgid "Invalid choice"
+msgstr "Ungültige Auswahl"
+
 #, python-format
 msgid "Invalid choice %r"
 msgstr "Ungültige Auswahl %r"
+
+msgid "Invalid choice, falling back to False"
+msgstr "Ungültige Auswahl, Rückkehr zu 'False'"
 
 msgid "Invalid code provided"
 msgstr "Ungültiger Code angegeben"
@@ -33109,9 +33202,6 @@ msgstr "Ungültiger Code angegeben"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ungültige Farbangabe '%s'"
-
-msgid "Invalid conditions"
-msgstr "Ungültige Bedingungen"
 
 msgid "Invalid configuration bundle group type."
 msgstr "Ungültiger Konfigurationsbündel-Gruppentyp."
@@ -33128,19 +33218,32 @@ msgstr ""
 "Ungültiges benutzerdefiniertes Feld. Es sind nur die Zeichen a-z, A-Z, 0-9, "
 "_ und - erlaubt."
 
-msgid "Invalid data for list"
-msgstr "Ungültige Daten für die Liste"
+msgid "Invalid data"
+msgstr "Ungültige Daten"
+
+msgid "Invalid data format"
+msgstr "Ungültiges Datenformat"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Ungültige Datenquelle: %s"
 
+msgid "Invalid data. Missing filename"
+msgstr "Ungültige Daten. Dateiname fehlt"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Ungültige Datenquelle '%s' konfiguriert."
 
+msgid "Invalid datatype"
+msgstr "Ungültiger Datentyp"
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ungültiger Datentyp des Zeitstempels (muss int/float sein)."
+
+#, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Ungültiger Datentyp vom Wert: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -33156,9 +33259,6 @@ msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 #, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ungültiger Erweiterungstyp, unterstützte Typen sind: %s"
-
-msgid "Invalid file"
-msgstr "Ungültige Datei"
 
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
@@ -33179,12 +33279,6 @@ msgstr "Ungültiger Dateiname"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Es gibt kein Seitenelement vom Typ '%s'"
-
-msgid "Invalid float number"
-msgstr "Ungültige Gleitkommazahl"
-
-msgid "Invalid folder"
-msgstr "Ungültiger Ordner"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33233,9 +33327,6 @@ msgstr "Ungültiger Schlüssel"
 msgid "Invalid ident: %s"
 msgstr "Ungültiger Schlüssel: %s"
 
-msgid "Invalid integer number"
-msgstr "Ungültige Ganzzahl"
-
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
 
@@ -33245,18 +33336,12 @@ msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
 msgid "Invalid messaging method selected."
 msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 
-msgid "Invalid metric"
-msgstr "Ungültige Metrik"
-
 #, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 
-msgid "Invalid multiple choice value"
-msgstr "Ungültiger Wert für Mehrfachauswahl"
-
-msgid "Invalid optional choice"
-msgstr "Ungültige optionale Auswahl"
+msgid "Invalid number"
+msgstr "Ungültige Nummer"
 
 msgid "Invalid package part"
 msgstr "Ungültiger Teil im Paket"
@@ -33378,9 +33463,6 @@ msgstr "Ungültige Sicherung (zu klein)"
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
 
-msgid "Invalid string"
-msgstr "Ungültige Zeichenkette"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ungültige Merkmal ID. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>_</tt>, <tt>-</"
@@ -33422,9 +33504,6 @@ msgstr "Ungültiges Thema"
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
 
-msgid "Invalid tuple"
-msgstr "Ungültiges Tupel"
-
 msgid "Invalid type specified."
 msgstr "Ungültiger Typ angegeben."
 
@@ -33440,9 +33519,6 @@ msgstr "Ungültige Benutzereingabe"
 
 msgid "Invalid value for ack parameter."
 msgstr "Ungültiger Wert für ACK Parameter."
-
-msgid "Invalid value for valuespec"
-msgstr "Ungültiger Wert für valuespec"
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -35082,7 +35158,7 @@ msgid "Levels for rate of fragmented packets"
 msgstr "Level für Rate fragmentierter Pakete"
 
 msgid "Levels for rate of incoming IPv4 packets blocked"
-msgstr "Level die Rate blockierter eingehender IPv4-Pakete"
+msgstr "Level für Rate blockierter eingehender IPv4-Pakete"
 
 msgid "Levels for rate of normalized packets"
 msgstr "Level für Rate normalisierter Pakete"
@@ -35098,7 +35174,7 @@ msgid "Levels for rate of short packets"
 msgstr "Level für Rate kurzer Pakete"
 
 msgid "Levels for rate of uncorrectable errors"
-msgstr "Level für unkorrigierbare Fehler"
+msgstr "Level für Rate unkorrigierbarer Fehler"
 
 msgid "Levels for remaining supply"
 msgstr "Level für restliches Verbrauchsmaterial"
@@ -35907,6 +35983,9 @@ msgstr ""
 msgid "List crash reports of all sites"
 msgstr "Liste der Absturzberichte aller Instanzen"
 
+msgid "List element is not a number"
+msgstr "Dieses Listenelement ist keine Nummer"
+
 msgid "List grouped interfaces instead"
 msgstr "Stattdessen gruppierte Schnittstellen auflisten"
 
@@ -36010,7 +36089,7 @@ msgstr ""
 "verschiedenen Zuständen auf."
 
 msgid "Literal string"
-msgstr ""
+msgstr "Literal String"
 
 msgid "Liters per second"
 msgstr "Liter pro Sekunde"
@@ -36875,6 +36954,9 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 msgid "Lower levels for active connections"
 msgstr "Untergrenzen für aktive Verbindungen"
 
+msgid "Lower levels for average success ratio"
+msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
+
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
 
@@ -36930,7 +37012,7 @@ msgid "Lower levels for the time the service is active"
 msgstr "Untergrenzen für die Zeit, die der Service aktiv ist"
 
 msgid "Lower levels for total error rate"
-msgstr "Untergrenzen für die Gesamtfehlerquote"
+msgstr "Untergrenzen für die Gesamtfehlerrate"
 
 msgid "Lower levels for unallocated space"
 msgstr "Untergrenzen für unallozierten Speicher"
@@ -36949,6 +37031,9 @@ msgstr "Untergrenzen der Site-to-Site Bandbreite in Bytes pro Sekunde"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Untergrenzen für die Anzahl der Pint-to-Site Verbindungen"
+
+msgid "Lower levels on quality"
+msgstr "Untergrenzen der Qualität"
 
 msgid "Lower levels on the biggest input buffer"
 msgstr "Untergrenzen für größten Eingabepuffer"
@@ -37324,6 +37409,9 @@ msgstr "Hauptspeicherauslastung einfacher Geräte mit einzelnen Services"
 msgid "Maintenance"
 msgstr "Instandhaltung"
 
+msgid "Major"
+msgstr "Haupt-"
+
 msgid "Major Page Faults"
 msgstr "Wesentliche Seitenfehler"
 
@@ -37437,6 +37525,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "Benutzer kann Ansicht sortieren"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
@@ -37733,6 +37827,9 @@ msgstr "Bereitstellung und Energiezustand zuordnen"
 
 msgid "Map roles"
 msgstr "Rollen zuordnen"
+
+msgid "Map severity levels to alarm states"
+msgstr "Schwere-Levels den Alarmzuständen zuordnen"
 
 msgid "Map states"
 msgstr "Zustände übersetzen"
@@ -39883,6 +39980,9 @@ msgid ""
 "monitoring site to be located on an AWS EC2 instance with the according "
 "permissions to the accounts to be monitored."
 msgstr ""
+"Die Überwachung über eine IAM-Rolle wird empfohlen, erfordert jedoch, dass "
+"sich die Monitoring-Instanz auf einer AWS EC2-Instanz mit den entsprechenden "
+"Berechtigungen für die zu überwachenden Konten befindet."
 
 msgid "Month"
 msgstr "Monat"
@@ -40971,7 +41071,7 @@ msgid "Never analyzed/vacuumed tables"
 msgstr "Niemals ausgewertete/vakuumierte Tabellen"
 
 msgid "Never compute a rate"
-msgstr "Nie einen Trend berechnen"
+msgstr "Nie eine Rate berechnen"
 
 msgid "Never do discovery or activate changes in the following time ranges"
 msgstr ""
@@ -41119,14 +41219,15 @@ msgstr "Nächster Schritt: Benachrichtigungsmethode (Plugin)"
 msgid "Next step: Recipient"
 msgstr "Nächster Schritt: Empfänger"
 
+#, fuzzy
+msgid "Next step: Review all settings"
+msgstr "Nächster Schritt: Generelle Eigenschaften"
+
 msgid "Next step: Sending conditions"
 msgstr "Nächster Schritt: Bedingungen senden"
 
 msgid "Next step: Specify host/services"
 msgstr "Nächster Schritt: Host/Services festlegen"
-
-msgid "Next step: Summary"
-msgstr "Nächster Schritt: Zusammenfassung"
 
 msgid "Nginx Server"
 msgstr "Nginx-Server"
@@ -41343,8 +41444,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Kein Graph verfügbar: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Kein Graph mit der ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -41641,6 +41742,9 @@ msgstr "Knoten-Statistiken"
 msgid "Node Status"
 msgstr "Knoten-Zustand"
 
+msgid "Node index"
+msgstr "Index des Knotens"
+
 msgid "Node labels"
 msgstr "Knoten-Labels"
 
@@ -41718,7 +41822,7 @@ msgid "Non-resident items"
 msgstr "Nicht-Residente Elemente"
 
 msgid "Non-unicast packet rates"
-msgstr "Nicht-Unicastpakete: Raten"
+msgstr "Raten der Non-Unicast-Pakete"
 
 msgid "Noncritical event rate"
 msgstr "Rate nicht kritischer Ereignisse"
@@ -41733,7 +41837,7 @@ msgid "None (linear)"
 msgstr "Keine (linear)"
 
 msgid "None (on EC2 instance only)"
-msgstr ""
+msgstr "Keine (nur auf EC2-Instanz)"
 
 msgid "None (silent)"
 msgstr "Still"
@@ -41918,6 +42022,12 @@ msgstr "Nicht"
 msgid "Not Before: %s - Not After: %s"
 msgstr "Nicht vor: %s - nicht nach: %s"
 
+msgid "Not a list"
+msgstr "Dies ist keine Liste"
+
+msgid "Not a number"
+msgstr "Dies ist keine Nummer"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Keine gültige URL (nur http- und https-URLs sind zulässig)."
 
@@ -41926,6 +42036,9 @@ msgstr "Nicht alle Instanzen wurde angefragt. Es fehlen einige Informationen."
 
 msgid "Not an active member of the stack"
 msgstr "Kein aktives Stackmitglied"
+
+msgid "Not an integer number"
+msgstr "Dies ist keine Ganzzahl"
 
 msgid "Not authenticated"
 msgstr "Nicht authentifiziert"
@@ -42079,6 +42192,9 @@ msgstr ""
 "Abschnitte ein- oder ausschließen</a>. Beachten Sie, dass dies zu einer "
 "Erhöhung des SNMP-Verkehrs um ca. 5 % führen wird."
 
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "Hinweis: Die maximal erlaubte Dateigröße beträgt 10MB. "
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -42086,15 +42202,6 @@ msgstr ""
 "Notiz: Mit diesem Befehl können alle Ereignisse eines Hosts archiviert "
 "werden. Die Regel \"Prüfe Ereigniszustand in Event Console\" muss "
 "konfiguriert sein."
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"Hinweis: Die Aktivierung von Metriken für die Latenz kann zu "
-"Inkompatibilitäten mit bestehenden historischen Daten führen, wenn Sie "
-"PNP4Nagios im SINGLE-Modus betreiben."
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "Achtung: führt HTTP GET oder POST aus, nicht HEAD."
@@ -42426,6 +42533,12 @@ msgstr "Die Zahl ist kein Ganzzahlwert."
 msgid "Number of Active Sessions"
 msgstr "Anzahl von aktiven Sitzungen"
 
+msgid "Number of Attempted SIP/H323 calls"
+msgstr ""
+
+msgid "Number of Attempted SIP/H323 fax calls"
+msgstr ""
+
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Anzahl der Checkmk-Checkers ist kleiner als die Anzahl der CPUs"
 
@@ -42437,6 +42550,9 @@ msgstr "Spaltenanzahl"
 
 msgid "Number of Deadlocks / sec"
 msgstr "Anzahl von Deadlocks/Sek"
+
+msgid "Number of Destination Busy SIP/H323 calls"
+msgstr ""
 
 msgid "Number of Documents"
 msgstr "Anzahl von Dokumenten"
@@ -42462,6 +42578,16 @@ msgstr "Anzahl von Lotus Domino Benutzern"
 msgid "Number of Mails in Queue"
 msgstr "Anzahl von Mail in der Schlange"
 
+msgid "Number of No Answer SIP/H323 calls"
+msgstr ""
+
+msgid ""
+"Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
+msgstr ""
+
+msgid "Number of No capability match between peers on SIP/H323 calls"
+msgstr ""
+
 msgid "Number of Nodes"
 msgstr "Anzahl der Knoten"
 
@@ -42485,6 +42611,10 @@ msgstr "Anzahl von Ressourcen"
 
 msgid "Number of Running Bossock Fibers"
 msgstr "Bossock: Anzahl aktiver Fasern"
+
+#, fuzzy
+msgid "Number of SIP/H323 fax success calls"
+msgstr "Anzahl der Zugangspunkte"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Anzahl Transaktionen pro Minute auf einem Lotus Domino Server"
@@ -42616,6 +42746,9 @@ msgstr "Anzahl von Elementen zur Anzeige in der Schnellsuche"
 msgid "Number of entries"
 msgstr "Anzahl von Einträgen"
 
+msgid "Number of established (connected and voice activated) SIP/H323 calls"
+msgstr ""
+
 msgid "Number of events in defined timespan lower level"
 msgstr "Untergrenze der Anzahl der Ereignisse in definierter Zeitspanne"
 
@@ -42627,6 +42760,10 @@ msgstr "Anzahl der entzogenen Schlüssel"
 
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Nachrichten"
+
+#, fuzzy
+msgid "Number of failed SIP/H323 calls"
+msgstr "Anzahl von fehlgeschlagenen Pfaden"
 
 msgid "Number of failed jobs"
 msgstr "Anzahl von fehlgeschlagenen Aufträgen"
@@ -43422,6 +43559,10 @@ msgstr "Bei Host DOWN"
 msgid "On host name exclusion list."
 msgstr "Auf der Host-Namen-Ausschlussliste."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Wartungszeiten planen"
+
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"
 
@@ -43448,6 +43589,10 @@ msgstr "Bei ausgewählten Instanzen"
 
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignoriere Wartungszeiten"
 
 #, python-format
 msgid ""
@@ -45120,10 +45265,10 @@ msgid "Output multicast packets"
 msgstr "Ausgehende Multicast-Pakete"
 
 msgid "Output non-unicast octets"
-msgstr "Ausgehende Nicht-Unicast-Oktette"
+msgstr "Ausgehende Non-Unicast-Oktette"
 
 msgid "Output non-unicast packets"
-msgstr "Ausgehende Nicht-Unicast-Pakete"
+msgstr "Ausgehende Non-Unicast-Pakete"
 
 msgid "Output octets"
 msgstr "Ausgabe-Oktette"
@@ -46646,14 +46791,8 @@ msgstr "Leistungszähler"
 msgid "Performance data"
 msgstr "Metriken"
 
-msgid "Performance data for latency"
-msgstr "Metriken für Latenz"
-
 msgid "Performance data for protocols"
 msgstr "Metriken für Protokolle"
-
-msgid "Performance data for queue length"
-msgstr "Metriken für Wartenschlangenlänge"
 
 msgid ""
 "Performance data related to sizing, e.g. number of helpers, hosts, services"
@@ -48092,6 +48231,9 @@ msgstr "Prefetchingtreffer"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch Metadata Hitrate"
 
+msgid "Prefill value is an input hint"
+msgstr "Der vorgegebene Wert ist ein Eingabehinweis"
+
 msgid "Prefix"
 msgstr "Präfix"
 
@@ -49275,9 +49417,8 @@ msgstr "Raritan EMX Rack: Temperatur"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Eingabephasen"
 
-#, fuzzy
 msgid "Rate computation"
-msgstr "Trend-Berechnung"
+msgstr "Berechnung der Rate"
 
 msgid "Rate of bytes sent to the Carbon connection"
 msgstr "An die Carbon-Verbindung gesendete Byte-Rate"
@@ -49430,7 +49571,8 @@ msgstr "Lesezugriffe"
 msgid "Read operations /s"
 msgstr "Lesezugriffe pro Sekunde"
 
-msgid "Read queue-length"
+#, fuzzy
+msgid "Read queue length"
 msgstr "Länge der Lese-Warteschlange"
 
 msgid "Read recovery latency"
@@ -49678,10 +49820,10 @@ msgid "Redfish"
 msgstr "Redfish"
 
 msgid "Redfish Compatible Management Controller"
-msgstr ""
+msgstr "Redfish kompatible Management-Steuerung"
 
 msgid "Redfish Compatible Power Equipment (PDU)"
-msgstr ""
+msgstr "Redfish kompatible Stromversorgung (PDU)"
 
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Redfish Ethernet Interface Erkennung"
@@ -50530,9 +50672,6 @@ msgstr ""
 
 msgid "Render vertical rules between columns"
 msgstr "Vertikale Linien zwischen den Spalten zeichnen"
-
-msgid "Rendering mode for valuespecs and tables"
-msgstr "Rendering-Modus für Valuespecs und Tabellen"
 
 msgid "Repeat"
 msgstr "Wiederholen"
@@ -51484,13 +51623,6 @@ msgstr ""
 "Überprüfen Sie Ihre Konfiguration und führen Sie eine Vorschau der Service-"
 "Erkennung aus"
 
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
-"Überprüfen Sie Ihre Benachrichtigungsregel, bevor Sie sie anwenden. Sie wird "
-"sofort wirksam, ohne dass Sie \"Änderungen aktivieren\"."
-
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"
 
@@ -51822,7 +51954,7 @@ msgid "Rules in folder"
 msgstr "Regeln im Ordner"
 
 msgid "Rules matching pattern"
-msgstr ""
+msgstr "Pattern der Regelübereinstimmung"
 
 msgid "Rules of VPC security group"
 msgstr "Regeln der VPC-Sicherheitsgruppe"
@@ -52549,9 +52681,8 @@ msgstr "SYN_RECV"
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
 
-#, fuzzy
 msgid "SaaS version: Skip request ID verification"
-msgstr "Ungebundene Lizenz: Anfrage der ID-Verifizierung überspringen"
+msgstr "SaaS Version: Anfrage der ID-Verifizierung überspringen"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSM Ereignis-Metriken"
@@ -52694,9 +52825,6 @@ msgstr "Wartungszeit für %d %s planen"
 
 msgid "Schedule downtime on host"
 msgstr "Wartungszeit für Host planen"
-
-msgid "Schedule downtime on service"
-msgstr "Wartungszeit für Service planen"
 
 msgid "Schedule downtimes"
 msgstr "Wartungszeiten planen"
@@ -54940,7 +55068,7 @@ msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
 "detect broadcast storms and other unwanted traffic."
 msgstr ""
-"Level auf Nicht-Unicast-Paketen sind optional. Mit Ihnen können Sie "
+"Level auf Non-Unicast-Paketen sind optional. Mit Ihnen können Sie "
 "Broadcaststürme und anderen unerwünschten Verkehr erkennen."
 
 msgid ""
@@ -56499,6 +56627,12 @@ msgid ""
 "be reported as '1.0 s/s', which is not too useful. You can override the "
 "default behavior here."
 msgstr ""
+"Einige Metriken sind aussagekräftiger, wenn ihre Rate berücksichtigt wird "
+"(wie z. B. verworfene Netzwerkpakete). Standardmäßig berechnet das Plugin "
+"die Rate, wenn die Metrik ein monotoner Zähler ist. Dies ist natürlich nur "
+"eine Heuristik und funktioniert möglicherweise nicht für alle Metriken: Die "
+"Laufzeit zum Beispiel würde als '1.0 s/s' gemeldet, was nicht sehr nützlich "
+"ist. Sie können das Standardverhalten hier außer Kraft setzen."
 
 msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
@@ -57782,8 +57916,11 @@ msgstr "Gestartet am %s"
 msgid "Started at: %s."
 msgstr "Gestartet um: %s."
 
+msgid "Starting Quick setup action..."
+msgstr "Quick Setup Aktion wird gestartet..."
+
 msgid "Starting Quick stage action..."
-msgstr ""
+msgstr "Quick Stage Aktion wird gestartet..."
 
 msgid "Starting VMs"
 msgstr "VMs starten"
@@ -58632,9 +58769,8 @@ msgstr "Zustand der SLES Lizenz"
 msgid "Status of the SLES subscription"
 msgstr "Zustand der SLES Subskription"
 
-#, fuzzy
 msgid "Status page"
-msgstr "Zustandsänderung"
+msgstr "Statusseite"
 
 msgid "Status passive checks"
 msgstr "Zustand passive Checks"
@@ -58853,6 +58989,9 @@ msgstr "Gespeicherter Bericht"
 
 msgid "Stored reports"
 msgstr "Gespeicherte Berichte"
+
+msgid "Stormshield quality"
+msgstr "Stormshield Qualität"
 
 msgid "Straight"
 msgstr "Gerade"
@@ -59931,6 +60070,9 @@ msgstr ""
 "Schlüssel zu einer Teamintegration gehört, wird dieses Feld mit dem "
 "Besitzerteam überschrieben."
 
+msgid "Tel2IP"
+msgstr ""
+
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -60684,6 +60826,9 @@ msgid ""
 "The IP address the receiver should listen on. To listen only locally, use "
 "'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
 msgstr ""
+"Die IP-Adresse, die der Empfänger abhören soll. Um nur lokal zu hören, "
+"verwenden Sie '127.0.0.1' oder '::1'. Um alle Schnittstellen abzuhören, "
+"verwenden Sie '0.0.0.0' oder '::'."
 
 msgid "The Index of the Overcurrent Protector"
 msgstr "Der Index des Überspannungsschutzes"
@@ -61466,6 +61611,11 @@ msgid ""
 "This gives you more control if you want to ensure the availability of you "
 "web endpoint through either IPv4 or IPv6."
 msgstr ""
+"Bei der Prüfung wird standardmäßig ein beliebiges IP-Adressprotokoll "
+"verwendet. Durch die Auswahl eines bestimmten Protokolls oder die Verwendung "
+"des primären Protokolls eines Hosts wird die Verwendung Ihrer Wahl "
+"erzwungen. Dies gibt Ihnen mehr Kontrolle, wenn Sie die Verfügbarkeit Ihres "
+"Web-Endpunkts entweder über IPv4 oder IPv6 sicherstellen möchten."
 
 msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
@@ -62059,10 +62209,10 @@ msgid ""
 "here and are available in the sidebar snap-in <i>Event Console performance</"
 "i>"
 msgstr ""
-"Der Event Daemon führt Statistiken über die Anzahl von Nachrichten, Treffer "
-"für Ereignisregeln und anderen Dingen. Diese Werte werden im hier "
-"festgelegten Zeitintervall aktualisiert und im Seitenleisten-Snapin <i>Event "
-"Console Leistungsdaten</i> angezeigt"
+"Der Event Daemon führt Statistiken über die Rate an Nachrichten, Treffer für "
+"Ereignisregeln und anderen Dingen. Diese Werte werden im hier festgelegten "
+"Zeitintervall aktualisiert und im Seitenleisten-Snapin <i>Event Console "
+"Leistungsdaten</i> angezeigt"
 
 msgid ""
 "The event socket is an alternative way for sending events to the Event "
@@ -62483,6 +62633,26 @@ msgid ""
 "fallback_host\" will set all \"{attr}\" attributes that are not yet filled "
 "to \"fallback_host\".{endol}"
 msgstr ""
+"Die Berechnung des Host-Namens ermittelt den Namen des Hosts, der die "
+"entsprechenden Checkmk-Dienste haben sollte. Die Berechnung erfolgt durch "
+"den OpenTelemetry-Kollektor und das Ergebnis wird im Attribut \"{attr}\" "
+"gespeichert. Für jede hier konfigurierte Regel werden die angegebenen Felder "
+"in der Reihenfolge, in der sie aufgelistet sind, aneinandergereiht. Die "
+"erste Regel, die einen nicht leeren Wert ergibt, wird verwendet. Zum "
+"Beispiel:\n"
+"{startol}Eine erste Regel, die aus einem Feld \"Wert des Attributs: service."
+"name\" besteht, setzt \"{attr}\" auf den Wert dieses Attributs, wenn es "
+"vorhanden ist. Dieses Attribut wird zum Beispiel auf den Namen des "
+"prometheus scrape jobs gesetzt.{newli}Eine zweite Regel, die aus einem Feld "
+"\"Wert des Attributs: container.name\" besteht, setzt \"{attr}\" auf den "
+"Wert dieses Attributs, wenn es vorhanden ist und \"{attr}\" nicht durch die "
+"vorherige Regel gesetzt wurde. {newli}Eine dritte Regel, die aus zwei "
+"Feldern \"Wert des Ressourcenattributs: custom_attr\" und \"Literal string: "
+"some_suffix\" besteht, setzt \"{attr}\" auf \"VALUEsome_suffix\", wenn das "
+"Attribut vorhanden ist und \"{attr}\" nicht durch die vorherigen Regeln "
+"gesetzt wurde.{newli}Eine letzte Regel, die aus einem Feld \"Literal string: "
+"fallback_host\" besteht, setzt alle \"{attr}\"-Attribute, die noch nicht "
+"gefüllt sind, auf \"fallback_host\".{endol}"
 
 msgid "The host name is missing."
 msgstr "Der Host-Name fehlt."
@@ -62635,13 +62805,12 @@ msgstr ""
 "Der Instanzname, der Datenbankname und der Tablespace-Name, wie folgt "
 "zusammengesetzt: db2wps8:WPSCOMT8.USERSPACE1"
 
-#, fuzzy
 msgid ""
 "The interval the connection will be executed to check the available open "
 "telemetry data and update the configuration."
 msgstr ""
-"Das Intervall in dem die Verbindung ausgeführt wird, um nach neuen Piggyback-"
-"Daten zu suchen und die Konfiguration zu aktualisieren."
+"Das Intervall, in dem die Verbindung ausgeführt wird, um nach verfügbaren "
+"OpenTelemetry-Daten zu suchen und die Konfiguration zu aktualisieren."
 
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -65352,9 +65521,9 @@ msgid ""
 "discards))*100</b> "
 msgstr ""
 "Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
-"die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> der "
+"die <b>prozentuale Verwerfrate</b> oder die <b>absolute Verwerfrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-Unicast + "
+"Verwerfrate wird nach der Formel <b>(Verwerfungen / (Unicast + Non-Unicast + "
 "Fehler))*100</b> berechnet "
 
 msgid ""
@@ -65364,7 +65533,7 @@ msgid ""
 "computed by the formula <b>(errors / (unicast + non-unicast + errors))*100</"
 "b> "
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-Unicast + "
@@ -65376,10 +65545,10 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Paketrate wird nach der Formel <b>(broadcast / (unicast + non-unicast))*100</"
+"Paketrate wird nach der Formel <b>(Broadcast / (Unicast + Non-Unicast))*100</"
 "b> berechnet"
 
 msgid ""
@@ -65388,9 +65557,9 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(multicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf warning oder critical geht, wenn "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
-"überwachten Schnittstelle die angegebenen Grenzen erreicht.Die prozentuale "
+"überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Paketrate wird nach der Formel <b>(Multicast / (Unicast + Nicht-"
 "Unicast))*100</b> berechnet"
 
@@ -65400,10 +65569,10 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARN oder CRIT geht, wenn die "
-"<b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
+"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
-"Paketrate wird nach der Formel <b>(unicast / (unicast + non-unicast))*100</"
+"Paketrate wird nach der Formel <b>(Unicast / (Unicast + Non-Unicast))*100</"
 "b> berechnet"
 
 msgid ""
@@ -65587,6 +65756,10 @@ msgstr ""
 "Diese Einstellungen legen fest, wann ein Benutzer Services und Gruppen in "
 "der Benutzeroberfläche sehen darf. <b>Hinweis:</b> Dies hat <b>keine</"
 "b>Auswirkungen auf Benachrichtigungen."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -66069,7 +66242,7 @@ msgid ""
 "database server as well as the connection rate."
 msgstr ""
 "Dieser Check überwacht die Anzahl der aktiven Verbindungen zu einem MySQL "
-"Datenbank Server."
+"Datenbank Server ebenso wie die Verbindungsrate."
 
 msgid ""
 "This check monitors the number of log switches of an Oracle database "
@@ -66183,13 +66356,12 @@ msgid "This connection is currently not being used for synchronization."
 msgstr ""
 "Diese Verbindung wird momentan nicht für die Synchronisation verwendet."
 
-#, fuzzy
 msgid ""
 "This connector can be used to automatically create hosts based on "
 "Opentelemetry collector data."
 msgstr ""
-"Diese Verbindung kann genutzt werden um automatisiert Hosts auf Basis meiner "
-"Daten anzulegen."
+"Diese Verbindung kann genutzt werden, um automatisiert Hosts auf Basis von "
+"Daten des OpenTelemetry-Sammlers anzulegen."
 
 msgid ""
 "This connector can be used to automatically create hosts based on my data."
@@ -70200,11 +70372,10 @@ msgstr "Zeitraumsynchronisation"
 msgid "Time range to consider"
 msgstr "Zu berücksichtigender Zeitraum"
 
-#, fuzzy
 msgid ""
 "Time range to continue to consider outdated open telemetry data as valid."
 msgstr ""
-"Zeitraum, in dem veraltete Piggyback-Daten weiter als gültig behandelt "
+"Zeitraum, in dem veraltete OpenTelemetry-Daten weiter als gültig behandelt "
 "werden."
 
 msgid "Time range to continue to consider outdated piggyback data as valid."
@@ -70222,28 +70393,26 @@ msgstr ""
 "Zeitraum, in dem Hosts erhalten bleiben, wenn die Piggyback-Quelle nur "
 "Piggyback-Daten für andere Hosts sendet."
 
-#, fuzzy
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
 "the Checkmk server. This is caused by the 'tmp' directory which needs more "
 "time to initialize and can result in missing data from some sources."
 msgstr ""
-"Zeitraum, um das Löschen von Hosts nach dem Start der Website zu verhindern, "
+"Zeitraum, um das Löschen von Hosts nach dem Start der Instanz zu verhindern, "
 "z. B. beim Booten des Checkmk-Servers. Dies wird durch das 'tmp'-Verzeichnis "
 "verursacht, das mehr Zeit zur Initialisierung benötigt und zu fehlenden "
-"Piggyback-Informationen aus einigen Quellen führen kann."
+"Daten aus einigen Quellen führen kann."
 
-#, fuzzy
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
 "the Checkmk server. This is caused by the 'tmp' directory which needs more "
 "time to initialize and can result in missing open telemetry information from "
 "some sources."
 msgstr ""
-"Zeitraum, um das Löschen von Hosts nach dem Start der Website zu verhindern, "
+"Zeitraum, um das Löschen von Hosts nach dem Start der Instanz zu verhindern, "
 "z. B. beim Booten des Checkmk-Servers. Dies wird durch das 'tmp'-Verzeichnis "
 "verursacht, das mehr Zeit zur Initialisierung benötigt und zu fehlenden "
-"Piggyback-Informationen aus einigen Quellen führen kann."
+"OpenTelemetry-Daten aus einigen Quellen führen kann."
 
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
@@ -71049,6 +71218,10 @@ msgstr "Dokumente insgesamt"
 
 msgid "Total duration"
 msgstr "Gesamtdauer"
+
+#, fuzzy
+msgid "Total duration of SIP/H323 calls"
+msgstr "Gesamtdauer: "
 
 msgid "Total duration: "
 msgstr "Gesamtdauer: "
@@ -73688,9 +73861,6 @@ msgstr ""
 "gemeinsame Basis DN für die Benutzerbasis DN \"%s\" und die Gruppenbasis DN "
 "\"%s\" gefunden)"
 
-msgid "Unable to transform value"
-msgstr "Wert kann nicht umgewandelt werden"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Fehler beim Hochladen des Symbols: %s"
@@ -74483,7 +74653,7 @@ msgid "Upper levels for SMS Spending"
 msgstr "Obergrenzen für SMS Spending"
 
 msgid "Upper levels for SMS Success Rate"
-msgstr "Obergrenzen für SMS Success Rate"
+msgstr "Obergrenzen für SMS Erfolgsrate"
 
 msgid "Upper levels for SSL handshake time"
 msgstr "Obergrenzen für SSL Handshake-Zeit"
@@ -76170,6 +76340,9 @@ msgstr "Benutzer, Rollen und Berechtigungen"
 msgid "Users: User Management"
 msgstr "Benutzer: Benutzer-Verwaltung"
 
+msgid "Using default value"
+msgstr "Standardwert verwenden"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -76875,9 +77048,8 @@ msgstr "Wert muss einer von '%s' sein"
 msgid "Value must be string"
 msgstr "Wert muss ein String sein"
 
-#, fuzzy
 msgid "Value of attribute"
-msgstr "Rollen-Attribut"
+msgstr "Wert des Attributs"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -79784,7 +79956,8 @@ msgstr "Schreibzugriffe"
 msgid "Write operations/s"
 msgstr "Schreibzugriffe/s"
 
-msgid "Write queue-length"
+#, fuzzy
+msgid "Write queue length"
 msgstr "Länge der Schreib-Warteschlange"
 
 msgid "Write retransmission"
@@ -81472,7 +81645,6 @@ msgstr ""
 "Verbindung fehlschlägt, wenn der Webserver die erforderliche HTTP-Version "
 "nicht unterstützt."
 
-#, fuzzy
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here if "
 "you need to a different server to connect to rather than the one specified "
@@ -81481,9 +81653,11 @@ msgid ""
 "$HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 "Sie können hier einen beliebigen voll qualifizierten Domänennamen oder eine "
-"gültige IP-Adresse eingeben. Der Name darf keine weiteren Informationen, wie "
-"Port oder Protokoll, enthalten. Sie können in diesem Feld Makros verwenden. "
-"Die gebräuchlichsten sind $HOSTNAME$, $HOSTALIAS$ oder $HOSTADDRESS$."
+"gültige IP-Adresse eingeben, wenn Sie eine Verbindung zu einem anderen "
+"Server als dem in der URL angegebenen herstellen möchten. Der Name darf "
+"keine weiteren Informationen, wie Port oder Protokoll, enthalten. Sie können "
+"in diesem Feld Makros verwenden. Die gebräuchlichsten sind $HOSTNAME$, "
+"$HOSTALIAS$ oder $HOSTADDRESS$."
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
@@ -82387,7 +82561,7 @@ msgid "check plug-ins"
 msgstr "Check-Plugins"
 
 msgid "check."
-msgstr "check."
+msgstr "Check."
 
 msgid "children"
 msgstr "Children"
@@ -84307,6 +84481,82 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "Complete variable list"
+#~ msgstr "Vollständige Variablenliste"
+
+#~ msgid "Documentation"
+#~ msgstr "Dokumentation"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Sammle Metriken für Datenträgerlatenzzeit"
+
+#~ msgid "Next step: Summary"
+#~ msgstr "Nächster Schritt: Zusammenfassung"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Hinweis: Die Aktivierung von Metriken für die Latenz kann zu "
+#~ "Inkompatibilitäten mit bestehenden historischen Daten führen, wenn Sie "
+#~ "PNP4Nagios im SINGLE-Modus betreiben."
+
+#~ msgid "Performance data for latency"
+#~ msgstr "Metriken für Latenz"
+
+#~ msgid "Performance data for queue length"
+#~ msgstr "Metriken für Wartenschlangenlänge"
+
+#~ msgid "Rendering mode for valuespecs and tables"
+#~ msgstr "Rendering-Modus für Valuespecs und Tabellen"
+
+#~ msgid ""
+#~ "Review your notification rule before applying it. They will take effect "
+#~ "right away without \"Activate changes\"."
+#~ msgstr ""
+#~ "Überprüfen Sie Ihre Benachrichtigungsregel, bevor Sie sie anwenden. Sie "
+#~ "wird sofort wirksam, ohne dass Sie \"Änderungen aktivieren\"."
+
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Wartungszeit für Service planen"
+
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Ungültiger fester Wert"
+
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Ungültige boolesche Auswahl"
+
+#~ msgid "Invalid conditions"
+#~ msgstr "Ungültige Bedingungen"
+
+#~ msgid "Invalid data for list"
+#~ msgstr "Ungültige Daten für die Liste"
+
+#~ msgid "Invalid file"
+#~ msgstr "Ungültige Datei"
+
+#~ msgid "Invalid folder"
+#~ msgstr "Ungültiger Ordner"
+
+#~ msgid "Invalid metric"
+#~ msgstr "Ungültige Metrik"
+
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Ungültiger Wert für Mehrfachauswahl"
+
+#~ msgid "Invalid optional choice"
+#~ msgstr "Ungültige optionale Auswahl"
+
+#~ msgid "Invalid string"
+#~ msgstr "Ungültige Zeichenkette"
+
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Ungültiger Wert für valuespec"
+
+#~ msgid "Unable to transform value"
+#~ msgstr "Wert kann nicht umgewandelt werden"
+
 #~ msgid "If a version difference is detected this state will be used."
 #~ msgstr ""
 #~ "Wenn ein Versionsunterschied festgestellt wird, wird dieser Zustand "
@@ -84322,56 +84572,11 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Suggest a product improvement"
 #~ msgstr "Performance-Verbesserungen"
 
-#~ msgid "Active Calls"
-#~ msgstr "Aktive Aufrufe"
-
-#~ msgid "Active Calls In"
-#~ msgstr "Aktive eingehende Aufrufe"
-
-#~ msgid "Active Calls Out"
-#~ msgstr "Aktive ausgehende Aufrufe"
-
-#~ msgid "AudioCodes Alarms"
-#~ msgstr "AudioCodes Alarme"
-
-#~ msgid "AudioCodes SBC Calls"
-#~ msgstr "AudioCodes SBC Aufrufe"
-
-#~ msgid "Average Call Duration"
-#~ msgstr "Durchschnittliche Aufrufdauer"
-
-#~ msgid "Average Success Ratio"
-#~ msgstr "Durchschnittliche Erfolgsrate"
-
-#~ msgid "Calls In"
-#~ msgstr "Eingehende Aufrufe"
-
-#~ msgid "Calls In/Out"
-#~ msgstr "Eingehende/ausgehende Aufrufe"
-
-#~ msgid "Calls Out"
-#~ msgstr "Ausgehende Aufrufe"
-
-#~ msgid "Calls per Second"
-#~ msgstr "Aufrufe pro Sekunde"
-
-#~ msgid "Indeterminate"
-#~ msgstr "Unbestimmt"
-
 #~ msgid ""
 #~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
 #~ msgstr ""
 #~ "Labels müssen das Format [SCHLÜSSEL]:[WERT] haben. Zum Beispiel os:"
 #~ "windows."
-
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
-
-#~ msgid "Major"
-#~ msgstr "Haupt-"
-
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "Schwere-Levels den Alarmzuständen zuordnen"
 
 #~ msgid "Custom Notes"
 #~ msgstr "Benutzernotizen"
@@ -85161,20 +85366,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ "nebeneinander oder untereinander dargestellt. Mit dieser Option können "
 #~ "Sie eine Darstellung untereinander erzwingen."
 
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "Aktivieren Sie dies damit das Benachrichtigungs-Plugin sich direkt mit "
-#~ "dem SMTP-Server verbindet. Dies hat den Vorteil, dass im Fehlerfall "
-#~ "bessere Fehlermeldungen ausgegeben werden, erfordert aber mehr "
-#~ "Konfiguration und ist streng synchron. Wir raten daher, diese Option nur "
-#~ "bei Enterprise-Installationen zu verwenden, die den Benachrichtigungs-"
-#~ "Spooler nutzen."
-
 #~ msgid "Display additional information"
 #~ msgstr "Ergänzende Informationen anzeigen"
 
@@ -85516,9 +85707,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "(unused)"
 #~ msgstr "(unbenutzt)"
-
-#~ msgid "Host match list"
-#~ msgstr "Liste der Host-Bedingungen"
 
 #~ msgid "Item match list"
 #~ msgstr "Liste der Item-Übereinstimmungen"

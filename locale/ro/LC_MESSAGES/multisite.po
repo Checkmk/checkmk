@@ -3597,6 +3597,18 @@ msgstr "Activ (anonim)"
 msgid "Active (files)"
 msgstr "Activ (fișiere)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "Trasee active"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "Trasee active"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "Unitate activă"
+
 msgid "Active Connections"
 msgstr "Conexiuni Active"
 
@@ -7428,6 +7440,12 @@ msgstr "Atribute"
 msgid "Attributes to remove from hosts"
 msgstr "Atributele care trebuie eliminate din gazde"
 
+msgid "AudioCodes Alarms"
+msgstr ""
+
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "Jurnal de audit"
 
@@ -7886,8 +7904,16 @@ msgstr "Disponibil până la"
 msgid "Average"
 msgstr "Media"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "Latență medie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Întârziere medie a cozii de așteptare de ieșire"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Rata de succes a backend-ului Varnish"
 
 msgid "Average active check latency"
 msgstr "Latența medie de verificare activă"
@@ -11073,6 +11099,22 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Apelarea cârligelor finale"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "Identificarea apelantului"
+
+#, fuzzy
+msgid "Calls In/Out"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "Pagini pe secundă"
+
 msgid "Can be used until version:"
 msgstr "Poate fi utilizat până la versiunea:"
 
@@ -13514,9 +13556,6 @@ msgstr ""
 "Colectează informații de pe site-urile Checkmk pentru analiza de "
 "diagnosticare."
 
-msgid "Collect performance data for disk latency"
-msgstr "Colectați date de performanță pentru latența discului"
-
 msgid "Collection Size"
 msgstr "Dimensiunea colecției"
 
@@ -13862,10 +13901,6 @@ msgstr "Finalizați restaurarea"
 
 msgid "Complete tree"
 msgstr "Arbore complet"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "Lista completă de variabile (pentru testare)"
 
 msgid "Complete variable list (for testing)"
 msgstr "Lista completă de variabile (pentru testare)"
@@ -14449,6 +14484,20 @@ msgstr ""
 "Configurați utilizatorul sau grupul care să primească notificările, "
 "furnizând aici cheia de utilizator sau de grup. Cheia poate fi obținută de "
 "pe site-ul Pushover."
+
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configurarea acestui lucru pentru ca pluginul de notificare să se conecteze "
+"direct la serverul smtp. Acest lucru are avantajul de a oferi mesaje de "
+"eroare mai bune în caz de eroare, dar necesită mai multă configurare și este "
+"strict sincronă, așa că vă recomandăm să o utilizați numai în cazul "
+"instalațiilor de întreprindere care utilizează spoolerul de notificare."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -19134,6 +19183,10 @@ msgstr "Descărcare de diagnosticare"
 msgid "Diagnostics dump started..."
 msgstr "A început descărcarea de diagnosticare..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Nu s-a schimbat"
 
@@ -20680,10 +20733,6 @@ msgstr "Numărul de documente delta"
 msgid "Document count growth per minute"
 msgstr "Creșterea numărului de documente pe minut"
 
-#, fuzzy
-msgid "Documentation"
-msgstr "URL de documentare"
-
 msgid "Documentation URL"
 msgstr "URL de documentare"
 
@@ -22216,6 +22265,11 @@ msgstr ""
 "de rezervă. Veți avea nevoie de cheia privată și de fraza de acces pentru a "
 "decripta copia de rezervă."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Activați detectarea clapetei"
 
@@ -23031,6 +23085,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "Alertele din consola de evenimente"
+
 msgid "Event Console alerts"
 msgstr "Alertele din consola de evenimente"
 
@@ -23108,10 +23166,6 @@ msgstr "Comentariu la eveniment"
 
 msgid "Event console"
 msgstr "Consola de evenimente"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "Alertele din consola de evenimente"
 
 msgid "Event console performance"
 msgstr "Performanța consolei de evenimente"
@@ -23719,7 +23773,8 @@ msgstr "Starea așteptată"
 msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
 
-msgid "Experimental features"
+#, fuzzy
+msgid "Experimental rendering"
 msgstr "Caracteristici experimentale"
 
 #, fuzzy
@@ -25604,6 +25659,10 @@ msgstr "Rețele"
 msgid "Form factor"
 msgstr "Factor de formă"
 
+#, fuzzy
+msgid "Form specs"
+msgstr "Pentru SID-uri specifice"
+
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -26245,6 +26304,10 @@ msgstr "Spațiu SSD de uz general (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Spațiu SSD cu scop general (gp3)"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Eroare generală"
 
 msgid "Generate"
 msgstr "Generați"
@@ -30767,6 +30830,26 @@ msgstr "Adresa IP"
 msgid "IP Address of Hosts"
 msgstr "Adresa IP a gazdei"
 
+#, fuzzy
+msgid "IP Group Active Calls In"
+msgstr "Trasee active"
+
+#, fuzzy
+msgid "IP Group Active Calls Out"
+msgstr "Unitate activă"
+
+#, fuzzy
+msgid "IP Group Calls In"
+msgstr "Identificarea apelantului"
+
+#, fuzzy
+msgid "IP Group Calls In/Out"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "IP Group Calls Out"
+msgstr "Apelarea unei reguli"
+
 msgid "IP address"
 msgstr "Adresa IP"
 
@@ -30830,6 +30913,9 @@ msgstr "Seturi IP"
 
 msgid "IP-Version"
 msgstr "IP-Versiune"
+
+msgid "IP2Tel"
+msgstr ""
 
 msgid "IPC semaphore IDs"
 msgstr "ID-urile de semaforizare IPC"
@@ -33762,6 +33848,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Pauză"
+
 msgid "Index"
 msgstr "Index"
 
@@ -34395,10 +34485,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Comandă DCD invalidă: %r."
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Identificator invalid"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Adresa IPv4 invalidă: %s"
 
@@ -34455,10 +34541,6 @@ msgstr "Secret de automatizare invalid."
 msgid "Invalid back URL provided."
 msgstr "URL-ul de întoarcere furnizat nu este valid."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Subiect nevalabil"
-
 msgid "Invalid call: No profiles set."
 msgstr "Apel invalid: Nu sunt stabilite profiluri."
 
@@ -34482,9 +34564,17 @@ msgstr "Parametru de control invalid"
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Subiect nevalabil"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Subiect nevalabil"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Invalidarea tuturor codurilor de rezervă"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34493,10 +34583,6 @@ msgstr "URL-ul de întoarcere furnizat nu este valid."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specificație de culoare invalidă '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Acțiune invalidă"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34516,19 +34602,35 @@ msgstr ""
 "_ și -."
 
 #, fuzzy
-msgid "Invalid data for list"
-msgstr "Sursă de date invalidă: %s"
+msgid "Invalid data"
+msgstr "Identificator invalid"
+
+#, fuzzy
+msgid "Invalid data format"
+msgstr "Format de dată invalid: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Sursă de date invalidă: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Nume de fișier invalid"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Sursă de date invalidă '%s' configurată."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Test nevalabil."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipul de date invalid al timestamp-ului: trebuie să fie int sau float."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Sursă de date invalidă: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -34544,10 +34646,6 @@ msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Nume de fișier invalid"
 
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
@@ -34568,14 +34666,6 @@ msgstr "Nume de fișier invalid"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Tip de element fixel nevalabil '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Nume de fișier invalid"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Identificator invalid"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34623,10 +34713,6 @@ msgstr "Identificator invalid"
 msgid "Invalid ident: %s"
 msgstr "Identificator invalid: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Nume de fișier invalid"
-
 msgid "Invalid login credentials."
 msgstr "Datele de autentificare nevalabile."
 
@@ -34636,21 +34722,13 @@ msgstr "Pagină de manual invalidă: Nu a reușit să obțină titlul"
 msgid "Invalid messaging method selected."
 msgstr "Metoda de mesagerie nevalabilă selectată."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Subiect nevalabil"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Subiect nevalabil"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Subiect nevalabil"
+msgid "Invalid number"
+msgstr "Nume de fișier invalid"
 
 msgid "Invalid package part"
 msgstr "Parte de pachet invalidă"
@@ -34770,10 +34848,6 @@ msgstr "Instantaneu invalid (prea mic)"
 msgid "Invalid start time given"
 msgstr "Ora de începere invalidă dată"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Acțiune invalidă"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
@@ -34817,10 +34891,6 @@ msgstr "Subiect nevalabil"
 msgid "Invalid transaction"
 msgstr "Tranzacție invalidă"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Test nevalabil."
-
 msgid "Invalid type specified."
 msgstr "Tipul specificat nu este valid."
 
@@ -34836,10 +34906,6 @@ msgid "Invalid user input"
 msgstr "Intrare invalidă a utilizatorului"
 
 msgid "Invalid value for ack parameter."
-msgstr "Valoare invalidă pentru parametrul ack."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Valoare invalidă pentru parametrul ack."
 
 #, python-format
@@ -37406,6 +37472,10 @@ msgstr ""
 msgid "List crash reports of all sites"
 msgstr "Lista rapoartelor de accident ale tuturor siturilor"
 
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Acest element de raport nu există."
+
 msgid "List grouped interfaces instead"
 msgstr "Listează în schimb interfețele grupate"
 
@@ -38384,6 +38454,10 @@ msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 msgid "Lower levels for active connections"
 msgstr "Niveluri pentru conexiuni active"
 
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
+
 msgid "Lower levels for burst balance"
 msgstr "Niveluri inferioare pentru echilibru în explozie"
 
@@ -38470,6 +38544,10 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveluri mai mici ale numărului de conexiuni punct-la-sediu"
+
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Niveluri inferioare pentru tensiune"
 
 #, fuzzy
 msgid "Lower levels on the biggest input buffer"
@@ -38859,6 +38937,9 @@ msgstr ""
 msgid "Maintenance"
 msgstr "Întreținere"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Defecțiuni majore ale paginii"
 
@@ -38978,6 +39059,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "Faceți vizualizarea sortabilă în funcție de utilizator"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr "Face ca pictograma să apară în coloană în loc de meniul derulant."
@@ -39278,6 +39365,10 @@ msgstr "Harta de aprovizionare și stări de putere"
 
 msgid "Map roles"
 msgstr "Roluri pe hartă"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Niveluri superioare pentru reporniri"
 
 msgid "Map states"
 msgstr "Harta statelor"
@@ -42834,16 +42925,16 @@ msgid "Next step: Recipient"
 msgstr "Destinatarul"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "Proprietăți generale"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "conexiuni în așteptare"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "Tipul de comentariu (gazdă/serviciu)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "Rezumat al statului gazdă"
 
 msgid "Nginx Server"
 msgstr "Server Nginx"
@@ -43066,8 +43157,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nu este disponibil niciun grafic: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nu există niciun grafic cu ID-ul <tt>%s</tt>."
 
 msgid "No groups are defined yet."
@@ -43377,6 +43468,10 @@ msgid "Node Status"
 msgstr "Starea nodului"
 
 #, fuzzy
+msgid "Node index"
+msgstr "Indice de utilizare"
+
+#, fuzzy
 msgid "Node labels"
 msgstr "Etichete de noduri"
 
@@ -43658,6 +43753,14 @@ msgstr "Nu"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Lista de corespondență a gazdelor"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Numărul portului"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr ""
 "Nu este o adresă URL validă (sunt permise doar adresele URL http și https)."
@@ -43667,6 +43770,10 @@ msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
 
 msgid "Not an active member of the stack"
 msgstr "Nu este un membru activ al stivei"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Nume de fișier invalid"
 
 msgid "Not authenticated"
 msgstr "Nu este autentificat"
@@ -43821,6 +43928,10 @@ msgstr ""
 "secțiunile SNMP</a>. Rețineți că acest lucru va duce la o creștere a "
 "traficului SNMP de aproximativ 5%."
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "Valoarea maximă admisă este %s."
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -43828,15 +43939,6 @@ msgstr ""
 "Notă: Cu această comandă puteți arhiva toate evenimentele unei gazde. "
 "Necesită o regulă \"Check event state in Event Console\" pentru a fi "
 "configurată."
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"Notă: activarea datelor de performanță pentru latență ar putea cauza "
-"incompatibilități cu datele istorice existente dacă executați PNP4Nagios în "
-"modul SINGLE."
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr ""
@@ -44187,6 +44289,12 @@ msgstr "Parametrul \"%s\" nu este un număr întreg."
 msgid "Number of Active Sessions"
 msgstr "Numărul de sesiuni active"
 
+msgid "Number of Attempted SIP/H323 calls"
+msgstr ""
+
+msgid "Number of Attempted SIP/H323 fax calls"
+msgstr ""
+
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr ""
 "Numărul de verificatoare Checkmk este mai mic decât numărul de procesoare"
@@ -44199,6 +44307,9 @@ msgstr "Număr de coloane"
 
 msgid "Number of Deadlocks / sec"
 msgstr "Numărul de blocaje / sec"
+
+msgid "Number of Destination Busy SIP/H323 calls"
+msgstr ""
 
 msgid "Number of Documents"
 msgstr "Număr de documente"
@@ -44225,6 +44336,16 @@ msgstr "Numărul de utilizatori Lotus Domino"
 msgid "Number of Mails in Queue"
 msgstr "Numărul de mailuri în coadă"
 
+msgid "Number of No Answer SIP/H323 calls"
+msgstr ""
+
+msgid ""
+"Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
+msgstr ""
+
+msgid "Number of No capability match between peers on SIP/H323 calls"
+msgstr ""
+
 msgid "Number of Nodes"
 msgstr "Numărul de noduri"
 
@@ -44250,6 +44371,10 @@ msgstr "Numărul de resurse"
 
 msgid "Number of Running Bossock Fibers"
 msgstr "Numărul de fibre Bossock care rulează"
+
+#, fuzzy
+msgid "Number of SIP/H323 fax success calls"
+msgstr "Numărul de puncte de acces"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Numărul de tranzacții pe minut pe un server Lotus Domino"
@@ -44383,6 +44508,9 @@ msgstr "Numărul de elemente care trebuie afișate în căutarea rapidă"
 msgid "Number of entries"
 msgstr "Numărul de intrări"
 
+msgid "Number of established (connected and voice activated) SIP/H323 calls"
+msgstr ""
+
 msgid "Number of events in defined timespan lower level"
 msgstr "Numărul de evenimente în intervalul de timp definit nivel inferior"
 
@@ -44394,6 +44522,10 @@ msgstr "Numărul de chei evacuate"
 
 msgid "Number of expected messages"
 msgstr "Numărul de mesaje așteptate"
+
+#, fuzzy
+msgid "Number of failed SIP/H323 calls"
+msgstr "Numărul de trasee eșuate"
 
 msgid "Number of failed jobs"
 msgstr "Numărul de lucrări eșuate"
@@ -45217,6 +45349,10 @@ msgstr "Pe jos gazdă"
 msgid "On host name exclusion list."
 msgstr "%s pe lista de excludere."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Programarea perioadelor de oprire"
+
 msgid "On recovery (OK/UP)"
 msgstr "La recuperare (OK/UP)"
 
@@ -45244,6 +45380,10 @@ msgstr "Pe site-uri selectate"
 
 msgid "On selected users"
 msgstr "La utilizatorii selectați"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorați perioadele de întrerupere programate"
 
 #, fuzzy, python-format
 msgid ""
@@ -48715,16 +48855,8 @@ msgstr "Contoare de performanță"
 msgid "Performance data"
 msgstr "Date de performanță"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "Date de performanță pentru latență"
-
 msgid "Performance data for protocols"
 msgstr "Date de performanță pentru protocoale"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "Date de performanță pentru lungimea cozilor de așteptare"
 
 #, fuzzy
 msgid ""
@@ -50222,6 +50354,9 @@ msgstr "Prefetch hituri"
 msgid "Prefetch metadata hit ratio"
 msgstr "Rata de succes a metadatelor de preextragere"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Prefix"
 
@@ -51630,7 +51765,7 @@ msgid "Read operations /s"
 msgstr "Operațiuni de citire /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "Lungime coadă de citire"
 
 msgid "Read recovery latency"
@@ -52763,9 +52898,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 msgid "Repeat"
 msgstr "Repetați"
 
@@ -53735,11 +53867,6 @@ msgstr "Configurație la distanță"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
-
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
@@ -55005,9 +55132,6 @@ msgstr "Programarea timpului de oprire pentru %d %s"
 
 msgid "Schedule downtime on host"
 msgstr "Programarea timpului de oprire pe gazdă"
-
-msgid "Schedule downtime on service"
-msgstr "Programarea timpului de oprire a serviciului"
 
 msgid "Schedule downtimes"
 msgstr "Programarea perioadelor de oprire"
@@ -60268,6 +60392,10 @@ msgstr "A început la %s"
 msgid "Started at: %s."
 msgstr "A început la: %s."
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "Sesiuni de alergare"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -61393,6 +61521,9 @@ msgstr "Raport stocat"
 
 msgid "Stored reports"
 msgstr "Rapoarte stocate"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Drept"
@@ -62520,6 +62651,9 @@ msgid ""
 msgstr ""
 "Numele echipei care va fi responsabilă de alertă. Dacă API Key aparține unei "
 "integrări de echipă, acest câmp va fi suprascris cu echipa proprietară."
+
+msgid "Tel2IP"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -68159,6 +68293,10 @@ msgstr ""
 "notificărilor."
 
 msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
+
+msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
 "decides whether the state of an object is <b>flapping</b>. Each object keeps "
 "are value called <i>flappiness</i>. This value is increased by 1.0 each time "
@@ -73702,6 +73840,10 @@ msgid "Total duration"
 msgstr "Durata totală"
 
 #, fuzzy
+msgid "Total duration of SIP/H323 calls"
+msgstr "Durata totală"
+
+#, fuzzy
 msgid "Total duration: "
 msgstr "Durata totală"
 
@@ -76805,10 +76947,6 @@ msgstr ""
 "pentru DN-ul de bază al utilizatorului \"%s\" și DN-ul de bază al grupului "
 "\"%s\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Nu a reușit să redea valoarea:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Nu se poate încărca pictograma: %s."
@@ -79383,6 +79521,10 @@ msgstr "Utilizatori, roluri și permisiuni"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "Gestionarea utilizatorilor"
+
+#, fuzzy
+msgid "Using default value"
+msgstr "Valoarea implicită"
 
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
@@ -83179,7 +83321,7 @@ msgid "Write operations/s"
 msgstr "Operațiuni de scriere/s"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "Lungime coadă de scriere"
 
 msgid "Write retransmission"
@@ -87690,6 +87832,89 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "Lista completă de variabile (pentru testare)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "URL de documentare"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Colectați date de performanță pentru latența discului"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "Rezumat al statului gazdă"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Notă: activarea datelor de performanță pentru latență ar putea cauza "
+#~ "incompatibilități cu datele istorice existente dacă executați PNP4Nagios "
+#~ "în modul SINGLE."
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "Date de performanță pentru latență"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "Date de performanță pentru lungimea cozilor de așteptare"
+
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programarea timpului de oprire a serviciului"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Identificator invalid"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Acțiune invalidă"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Sursă de date invalidă: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Nume de fișier invalid"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Identificator invalid"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Acțiune invalidă"
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Valoare invalidă pentru parametrul ack."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Nu a reușit să redea valoarea:"
+
+#, fuzzy
 #~ msgid "Jenkins version"
 #~ msgstr "conexiuni în așteptare"
 
@@ -87702,55 +87927,11 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr "Îmbunătățiri de performanță"
 
 #, fuzzy
-#~ msgid "Active Calls"
-#~ msgstr "Trasee active"
-
-#, fuzzy
-#~ msgid "Active Calls In"
-#~ msgstr "Trasee active"
-
-#, fuzzy
-#~ msgid "Active Calls Out"
-#~ msgstr "Unitate activă"
-
-#, fuzzy
-#~ msgid "Average Call Duration"
-#~ msgstr "Latență medie"
-
-#, fuzzy
-#~ msgid "Average Success Ratio"
-#~ msgstr "Rata de succes a backend-ului Varnish"
-
-#, fuzzy
-#~ msgid "Calls In"
-#~ msgstr "Identificarea apelantului"
-
-#, fuzzy
-#~ msgid "Calls Out"
-#~ msgstr "Apelarea unei reguli"
-
-#, fuzzy
-#~ msgid "Calls per Second"
-#~ msgstr "Pagini pe secundă"
-
-#, fuzzy
-#~ msgid "Indeterminate"
-#~ msgstr "Pauză"
-
-#, fuzzy
 #~ msgid ""
 #~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
 #~ msgstr ""
 #~ "Etichetele trebuie să fie în formatul \"[KEY]:[VALUE]\". De exemplu, \"os:"
 #~ "windows\"."
-
-#, fuzzy
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
-
-#, fuzzy
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "Niveluri superioare pentru reporniri"
 
 #~ msgid "Custom Notes"
 #~ msgstr "Note personalizate"
@@ -88450,21 +88631,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ "mod plutitor în apropiere. Puteți activa această opțiune pentru a afișa "
 #~ "graficele unele printre altele."
 
-#, fuzzy
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "Configurarea acestui lucru pentru ca pluginul de notificare să se "
-#~ "conecteze direct la serverul smtp. Acest lucru are avantajul de a oferi "
-#~ "mesaje de eroare mai bune în caz de eroare, dar necesită mai multă "
-#~ "configurare și este strict sincronă, așa că vă recomandăm să o utilizați "
-#~ "numai în cazul instalațiilor de întreprindere care utilizează spoolerul "
-#~ "de notificare."
-
 #~ msgid "Display additional information"
 #~ msgstr "Afișarea de informații suplimentare"
 
@@ -88799,9 +88965,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "(unused)"
 #~ msgstr "(nefolosit)"
-
-#~ msgid "Host match list"
-#~ msgstr "Lista de corespondență a gazdelor"
 
 #~ msgid "Item match list"
 #~ msgstr "Lista de corespondență a elementelor"

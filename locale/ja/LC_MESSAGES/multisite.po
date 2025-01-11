@@ -3441,6 +3441,18 @@ msgstr "アクティブ(匿名)"
 msgid "Active (files)"
 msgstr "アクティブ(ファイル)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "アクティブパス"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "アクティブパス"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "アクティブユニット"
+
 msgid "Active Connections"
 msgstr "アクティブな接続"
 
@@ -7092,6 +7104,12 @@ msgstr "属性"
 msgid "Attributes to remove from hosts"
 msgstr "ホストから削除する属性"
 
+msgid "AudioCodes Alarms"
+msgstr ""
+
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "監査ログ"
 
@@ -7537,8 +7555,16 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "平均待ち時間"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Varnishバックエンド成功率"
 
 msgid "Average active check latency"
 msgstr "平均アクティブチェック待ち時間"
@@ -10595,6 +10621,22 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "最終フックの呼び出し"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "発信者ID"
+
+#, fuzzy
+msgid "Calls In/Out"
+msgstr "ルールを呼び出す"
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "ルールを呼び出す"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "1秒あたりのページ数"
+
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
 
@@ -12915,9 +12957,6 @@ msgstr "情報を収集する..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "診断分析のためにCheckmkサイトの情報を収集します。"
 
-msgid "Collect performance data for disk latency"
-msgstr "ディスク遅延のパフォーマンスデータを収集する"
-
 msgid "Collection Size"
 msgstr "コレクションのサイズ"
 
@@ -13257,10 +13296,6 @@ msgstr "復元を完了します"
 
 msgid "Complete tree"
 msgstr "完全なツリー"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "完全な変数リスト(テスト用)"
 
 msgid "Complete variable list (for testing)"
 msgstr "完全な変数リスト(テスト用)"
@@ -13815,6 +13850,18 @@ msgstr ""
 "ここでユーザーまたはグループのキーを指定して、通知を受信するようにユーザーま"
 "たはグループを構成します。キーはプッシュオーバーのウェブサイトから入手できま"
 "す。"
+
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発生"
+"時により良いエラーメッセージを提供するという利点があります。しかし、より多く"
+"の設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商用版の"
+"インストール時のみ使用することをお勧めします。"
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -18280,6 +18327,10 @@ msgstr "診断ダンプ"
 msgid "Diagnostics dump started..."
 msgstr "診断ダンプが開始されました..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "変更されていません"
 
@@ -19701,10 +19752,6 @@ msgstr "ドキュメント数のデルタ"
 
 msgid "Document count growth per minute"
 msgstr "1分あたりのドキュメント数の増加"
-
-#, fuzzy
-msgid "Documentation"
-msgstr "ドキュメントURL"
 
 msgid "Documentation URL"
 msgstr "ドキュメントURL"
@@ -21216,6 +21263,11 @@ msgstr ""
 "れたtarアーカイブは、バックアップ中に指定されたキーを使用して暗号化されます。"
 "バックアップを復号化するには、秘密鍵とパスフレーズが必要になります。"
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "フラップ検出を有効にする"
 
@@ -22003,6 +22055,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "イベントコンソールアラート"
+
 msgid "Event Console alerts"
 msgstr "イベントコンソールアラート"
 
@@ -22080,10 +22136,6 @@ msgstr "イベントコメント"
 
 msgid "Event console"
 msgstr "イベントコンソール"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "イベントコンソールアラート"
 
 msgid "Event console performance"
 msgstr "イベントコンソールのパフォーマンス"
@@ -22681,7 +22733,8 @@ msgstr "期待される状態"
 msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
-msgid "Experimental features"
+#, fuzzy
+msgid "Experimental rendering"
 msgstr "実験的機能"
 
 #, fuzzy
@@ -24541,6 +24594,10 @@ msgstr "ネットワーク"
 msgid "Form factor"
 msgstr "フォーム ファクタ"
 
+#, fuzzy
+msgid "Form specs"
+msgstr "特定のSIDの場合"
+
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -25174,6 +25231,10 @@ msgstr "汎用SSD (gp2) スペース"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "汎用SSD (gp3) スペース"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "一般的なエラー"
 
 msgid "Generate"
 msgstr "生成する"
@@ -29658,6 +29719,26 @@ msgstr "IPアドレス"
 msgid "IP Address of Hosts"
 msgstr "ホストのIPアドレス"
 
+#, fuzzy
+msgid "IP Group Active Calls In"
+msgstr "アクティブパス"
+
+#, fuzzy
+msgid "IP Group Active Calls Out"
+msgstr "アクティブユニット"
+
+#, fuzzy
+msgid "IP Group Calls In"
+msgstr "発信者ID"
+
+#, fuzzy
+msgid "IP Group Calls In/Out"
+msgstr "ルールを呼び出す"
+
+#, fuzzy
+msgid "IP Group Calls Out"
+msgstr "ルールを呼び出す"
+
 msgid "IP address"
 msgstr "IPアドレス"
 
@@ -29720,6 +29801,9 @@ msgstr "IPセット"
 
 msgid "IP-Version"
 msgstr "IPバージョン"
+
+msgid "IP2Tel"
+msgstr ""
 
 msgid "IPC semaphore IDs"
 msgstr "IPCセマフォID"
@@ -32525,6 +32609,10 @@ msgstr ""
 "られます。このモードは、ロボットのテストスイートに含まれるテストが互いに関連"
 "していて、その実行順序も重要である場合に選択します。"
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "休憩"
+
 msgid "Index"
 msgstr "インデックス"
 
@@ -33147,10 +33235,6 @@ msgid "Invalid DCD command: %r"
 msgstr "無効なDCDコマンド: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "無効なID"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "無効なIPv4アドレス:%s"
 
@@ -33206,10 +33290,6 @@ msgstr "オートメーションシークレットが無効です。"
 msgid "Invalid back URL provided."
 msgstr "無効なバックURLが提供されました。"
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "無効なトピック"
-
 msgid "Invalid call: No profiles set."
 msgstr "無効な呼び出し:プロファイルが設定されていません。"
 
@@ -33233,9 +33313,17 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "無効なトピック"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "無効なトピック"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "全てのバックアップコードを無効にする"
 
 msgid "Invalid code provided"
 msgstr "不正なコード"
@@ -33243,10 +33331,6 @@ msgstr "不正なコード"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "無効な色指定 '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "無効なアクション"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -33264,20 +33348,36 @@ msgid ""
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
 #, fuzzy
-msgid "Invalid data for list"
+msgid "Invalid data"
+msgstr "無効なID"
+
+#, fuzzy
+msgid "Invalid data format"
 msgstr "無効なデータソース: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "無効なデータソース: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "無効なファイル名"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "無効なデータソース '%s' が指定されました。"
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "無効なテスト。"
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 "タイムスタンプのデータ型が無効です:intまたはfloatである必要があります。"
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "無効なデータソース: %s"
 
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
@@ -33293,10 +33393,6 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "無効なファイル名"
 
 msgid "Invalid file name"
 msgstr "無効なファイル名"
@@ -33317,14 +33413,6 @@ msgstr "無効なファイル名"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "無効なfixel要素タイプ '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "無効なファイル名"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "無効なID"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33370,10 +33458,6 @@ msgstr "無効なID"
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "無効なファイル名"
-
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
 
@@ -33383,21 +33467,13 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "無効なトピック"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "無効なトピック"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "無効なトピック"
+msgid "Invalid number"
+msgstr "無効なファイル名"
 
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
@@ -33516,10 +33592,6 @@ msgstr "スナップショットが無効です(小さすぎます)"
 msgid "Invalid start time given"
 msgstr "無効な開始時刻が指定されました"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "無効なアクション"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
@@ -33559,10 +33631,6 @@ msgstr "無効なトピック"
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "無効なテスト。"
-
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
 
@@ -33578,10 +33646,6 @@ msgid "Invalid user input"
 msgstr "無効なユーザー入力"
 
 msgid "Invalid value for ack parameter."
-msgstr "ackパラメーターの値が無効です。"
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "ackパラメーターの値が無効です。"
 
 #, python-format
@@ -36116,6 +36180,10 @@ msgstr ""
 msgid "List crash reports of all sites"
 msgstr "すべてのサイトのクラッシュレポートを一覧表示する"
 
+#, fuzzy
+msgid "List element is not a number"
+msgstr "このレポート要素は存在しません。"
+
 msgid "List grouped interfaces instead"
 msgstr "代わりに、グループ化されたインターフェイスを一覧表示します"
 
@@ -37091,6 +37159,10 @@ msgstr "SMS成功率の下位レベル"
 msgid "Lower levels for active connections"
 msgstr "アクティブな接続のレベル"
 
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "SMS成功率の下位レベル"
+
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの下位レベル"
 
@@ -37169,6 +37241,10 @@ msgstr "1秒あたりのバイト数で表したサイト間帯域幅の下位�
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "電圧の低レベル"
 
 #, fuzzy
 msgid "Lower levels on the biggest input buffer"
@@ -37554,6 +37630,9 @@ msgstr "単純なデバイスのメインメモリ使用量"
 msgid "Maintenance"
 msgstr "メンテナンス"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "メジャーページフォールト"
 
@@ -37666,6 +37745,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "ビューをユーザーで並べ替え可能にする"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr "ドロップダウンメニューの代わりにアイコンを列に表示します。"
@@ -37968,6 +38053,10 @@ msgstr "マッププロビジョニングと電源の状態"
 
 msgid "Map roles"
 msgstr "マップの役割"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "再起動の上位レベル"
 
 msgid "Map states"
 msgstr "マップの状態"
@@ -41488,16 +41577,16 @@ msgid "Next step: Recipient"
 msgstr "受信者"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "一般的なプロパティ"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "保留中の接続"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "コメントタイプ(ホスト/サービス)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "ホスト状態概要"
 
 msgid "Nginx Server"
 msgstr "Nginxサーバー"
@@ -41719,8 +41808,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "IDが<tt>%s </tt>のグラフはありません"
 
 msgid "No groups are defined yet."
@@ -42030,6 +42119,10 @@ msgid "Node Status"
 msgstr "ノードステータス"
 
 #, fuzzy
+msgid "Node index"
+msgstr "インデックスを使用する"
+
+#, fuzzy
 msgid "Node labels"
 msgstr "ノードラベル"
 
@@ -42299,6 +42392,14 @@ msgstr "ない"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "ホストマッチリスト"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "ポート番号"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "有効なURLでない（httpとhttpsのURLのみ使用可能）。"
 
@@ -42308,6 +42409,10 @@ msgstr ""
 
 msgid "Not an active member of the stack"
 msgstr "スタックのアクティブなメンバーではありません"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "無効なファイル名"
 
 msgid "Not authenticated"
 msgstr "認証されていません"
@@ -42459,6 +42564,10 @@ msgstr ""
 "外する</a>を使用してセクション<tt> if64adm </tt>をアクティブにします。これに"
 "より、SNMPトラフィックが約5%増加することに注意してください。"
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "最大許容値は %sです。"
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -42466,15 +42575,6 @@ msgstr ""
 "注意:このコマンドを使用すると、1つのホストのすべてのイベントをアーカイブする"
 "ことができます。「イベント コンソールでイベントの状態を確認する(Check event "
 "state in Event Console)」ルールが設定されている必要があります。"
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"注意:PNP4NagiosをSINGLEモードで動作させる場合、レイテンシーのパフォーマンス"
-"データを有効にすると、既存のヒストリカルデータと互換性がなくなる可能性があり"
-"ます。"
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "注: これはHEADではなくHTTP GETまたはPOSTを実行します。"
@@ -42819,6 +42919,12 @@ msgstr "パラメータ \"%s\" は整数ではありません。"
 msgid "Number of Active Sessions"
 msgstr "アクティブなセッションの数"
 
+msgid "Number of Attempted SIP/H323 calls"
+msgstr ""
+
+msgid "Number of Attempted SIP/H323 fax calls"
+msgstr ""
+
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Checkmkチェッカーの数がCPUの数より少ない"
 
@@ -42830,6 +42936,9 @@ msgstr "列の数"
 
 msgid "Number of Deadlocks / sec"
 msgstr "デッドロックの数/秒"
+
+msgid "Number of Destination Busy SIP/H323 calls"
+msgstr ""
 
 msgid "Number of Documents"
 msgstr "ドキュメントの数"
@@ -42856,6 +42965,16 @@ msgstr "LotusDominoユーザーの数"
 msgid "Number of Mails in Queue"
 msgstr "キュー内のメールの数"
 
+msgid "Number of No Answer SIP/H323 calls"
+msgstr ""
+
+msgid ""
+"Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
+msgstr ""
+
+msgid "Number of No capability match between peers on SIP/H323 calls"
+msgstr ""
+
 msgid "Number of Nodes"
 msgstr "ノードの数"
 
@@ -42881,6 +43000,10 @@ msgstr "リソースの数"
 
 msgid "Number of Running Bossock Fibers"
 msgstr "Running Bossock Fibersの数"
+
+#, fuzzy
+msgid "Number of SIP/H323 fax success calls"
+msgstr "アクセスポイントの数"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Lotus Dominoサーバーの1分あたりのトランザクション数"
@@ -43014,6 +43137,9 @@ msgstr "クイック検索に表示する要素の数"
 msgid "Number of entries"
 msgstr "エントリー数"
 
+msgid "Number of established (connected and voice activated) SIP/H323 calls"
+msgstr ""
+
 msgid "Number of events in defined timespan lower level"
 msgstr "定義された期間の下位レベルのイベント数"
 
@@ -43025,6 +43151,10 @@ msgstr "退去キー数"
 
 msgid "Number of expected messages"
 msgstr "予想されるメッセージの数"
+
+#, fuzzy
+msgid "Number of failed SIP/H323 calls"
+msgstr "失敗したパスの数"
 
 msgid "Number of failed jobs"
 msgstr "失敗したジョブの数"
@@ -43836,6 +43966,10 @@ msgid "On host name exclusion list."
 msgstr "%s 除外リスト。"
 
 #, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "ダウンタイムをスケジュールする"
+
+#, fuzzy
 msgid "On recovery (OK/UP)"
 msgstr "コアの再起動またはリカバリー（OK/UP）時"
 
@@ -43863,6 +43997,10 @@ msgstr "選択したサイト"
 
 msgid "On selected users"
 msgstr "選択したユーザーについて"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "スケジュールされたダウンタイムを無視する"
 
 #, fuzzy, python-format
 msgid ""
@@ -47300,16 +47438,8 @@ msgstr "パフォーマンスカウンター"
 msgid "Performance data"
 msgstr "パフォーマンスデータ"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "レイテンシーのパフォーマンスデータ"
-
 msgid "Performance data for protocols"
 msgstr "プロトコルのパフォーマンスデータ"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "キューの長さのパフォーマンスデータ"
 
 #, fuzzy
 msgid ""
@@ -48757,6 +48887,9 @@ msgstr "プリフェッチヒット"
 msgid "Prefetch metadata hit ratio"
 msgstr "プリフェッチメタデータヒット率"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "プレフィックス"
 
@@ -50167,7 +50300,7 @@ msgid "Read operations /s"
 msgstr "読み取り操作 /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "キューの長さを読み取る"
 
 msgid "Read recovery latency"
@@ -51297,9 +51430,6 @@ msgstr "要素の上にタイトルとリンクを含むタイトルバーをレ
 msgid "Render vertical rules between columns"
 msgstr "列間に垂直ルールをレンダリングする"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 #, fuzzy
 msgid "Repeat"
 msgstr "繰り返す:"
@@ -52264,11 +52394,6 @@ msgstr "リモート設定"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
-
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
@@ -53528,10 +53653,6 @@ msgid "Schedule downtime for %d %s"
 msgstr "%d%sのダウンタイムをスケジュールする"
 
 msgid "Schedule downtime on host"
-msgstr "ホストでのダウンタイムのスケジュール"
-
-#, fuzzy
-msgid "Schedule downtime on service"
 msgstr "ホストでのダウンタイムのスケジュール"
 
 msgid "Schedule downtimes"
@@ -58615,6 +58736,10 @@ msgstr "%s で開始"
 msgid "Started at: %s."
 msgstr "開始: %s。"
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "セッションの実行"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -59714,6 +59839,9 @@ msgstr "保存されたレポート"
 
 msgid "Stored reports"
 msgstr "保存されたレポート"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "まっすぐ"
@@ -60835,6 +60963,9 @@ msgid ""
 msgstr ""
 "アラートを担当するチーム名。APIキーがチーム統合に属している場合、このフィール"
 "ドはオーナーチームで上書きされます。"
+
+msgid "Tel2IP"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66242,6 +66373,10 @@ msgstr ""
 "<b>全く</b>影響しません。"
 
 msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
+
+msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
 "decides whether the state of an object is <b>flapping</b>. Each object keeps "
 "are value called <i>flappiness</i>. This value is increased by 1.0 each time "
@@ -71518,6 +71653,10 @@ msgid "Total duration"
 msgstr "総所要直"
 
 #, fuzzy
+msgid "Total duration of SIP/H323 calls"
+msgstr "総所要直"
+
+#, fuzzy
 msgid "Total duration: "
 msgstr "総所要直"
 
@@ -74692,10 +74831,6 @@ msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "値のレンダリングに失敗しました:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "アイコンをアップロードできません:%s"
@@ -77193,6 +77328,10 @@ msgstr "ユーザー、役割と権限"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "ユーザー管理"
+
+#, fuzzy
+msgid "Using default value"
+msgstr "デフォルト値"
 
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
@@ -80875,7 +81014,7 @@ msgid "Write operations/s"
 msgstr "書き込み操作/秒"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "書き込みキューの長さ"
 
 #, fuzzy
@@ -85312,6 +85451,90 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "完全な変数リスト(テスト用)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "ドキュメントURL"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "ディスク遅延のパフォーマンスデータを収集する"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "ホスト状態概要"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "注意:PNP4NagiosをSINGLEモードで動作させる場合、レイテンシーのパフォーマン"
+#~ "スデータを有効にすると、既存のヒストリカルデータと互換性がなくなる可能性が"
+#~ "あります。"
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "レイテンシーのパフォーマンスデータ"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "キューの長さのパフォーマンスデータ"
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "ホストでのダウンタイムのスケジュール"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "無効なID"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "無効なアクション"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "無効なデータソース: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "無効なファイル名"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "無効なID"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "無効なアクション"
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "ackパラメーターの値が無効です。"
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "値のレンダリングに失敗しました:"
+
+#, fuzzy
 #~ msgid "Jenkins version"
 #~ msgstr "保留中の接続"
 
@@ -85324,55 +85547,11 @@ msgstr ""
 #~ msgstr "パフォーマンスの向上"
 
 #, fuzzy
-#~ msgid "Active Calls"
-#~ msgstr "アクティブパス"
-
-#, fuzzy
-#~ msgid "Active Calls In"
-#~ msgstr "アクティブパス"
-
-#, fuzzy
-#~ msgid "Active Calls Out"
-#~ msgstr "アクティブユニット"
-
-#, fuzzy
-#~ msgid "Average Call Duration"
-#~ msgstr "平均待ち時間"
-
-#, fuzzy
-#~ msgid "Average Success Ratio"
-#~ msgstr "Varnishバックエンド成功率"
-
-#, fuzzy
-#~ msgid "Calls In"
-#~ msgstr "発信者ID"
-
-#, fuzzy
-#~ msgid "Calls Out"
-#~ msgstr "ルールを呼び出す"
-
-#, fuzzy
-#~ msgid "Calls per Second"
-#~ msgstr "1秒あたりのページ数"
-
-#, fuzzy
-#~ msgid "Indeterminate"
-#~ msgstr "休憩"
-
-#, fuzzy
 #~ msgid ""
 #~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
 #~ msgstr ""
 #~ "ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
 #~ "windows \"のように。"
-
-#, fuzzy
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "SMS成功率の下位レベル"
-
-#, fuzzy
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "再起動の上位レベル"
 
 #~ msgid "Custom Notes"
 #~ msgstr "カスタムノート"
@@ -86049,18 +86228,6 @@ msgstr ""
 #~ "デフォルトでは、電子メール内のすべての複数のグラフが近くに浮かんで表示され"
 #~ "ます。このオプションを有効にすると、グラフを相互に表示できます。"
 
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発"
-#~ "生時により良いエラーメッセージを提供するという利点があります。しかし、より"
-#~ "多くの設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商"
-#~ "用版のインストール時のみ使用することをお勧めします。"
-
 #~ msgid "Display additional information"
 #~ msgstr "追加情報の表示"
 
@@ -86404,9 +86571,6 @@ msgstr ""
 
 #~ msgid "(unused)"
 #~ msgstr "(未使用)"
-
-#~ msgid "Host match list"
-#~ msgstr "ホストマッチリスト"
 
 #~ msgid "Item match list"
 #~ msgstr "アイテムマッチリスト"

@@ -3554,6 +3554,18 @@ msgstr "Attivo (anonimo)"
 msgid "Active (files)"
 msgstr "Attivo (file)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "Percorsi attivi"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "Percorsi attivi"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "Unità attiva"
+
 msgid "Active Connections"
 msgstr "Connessioni attive"
 
@@ -7360,6 +7372,12 @@ msgstr "Attributi"
 msgid "Attributes to remove from hosts"
 msgstr "Attributi da rimuovere dagli host"
 
+msgid "AudioCodes Alarms"
+msgstr ""
+
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "Registro di controllo"
 
@@ -7820,8 +7838,16 @@ msgstr "Disponibile fino a"
 msgid "Average"
 msgstr "Media"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "Latenza media"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Ritardo medio della coda in uscita"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Rapporto di successo di Varnish Backend"
 
 msgid "Average active check latency"
 msgstr "Latenza media del controllo attivo"
@@ -10940,6 +10966,22 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Chiamata dei ganci finali"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "ID chiamante"
+
+#, fuzzy
+msgid "Calls In/Out"
+msgstr "Chiamare una regola"
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "Chiamare una regola"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "Pagine al secondo"
+
 msgid "Can be used until version:"
 msgstr "Può essere usato fino alla versione:"
 
@@ -13366,9 +13408,6 @@ msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr ""
 "Raccogliere le informazioni dei siti Checkmk per l'analisi diagnostica."
 
-msgid "Collect performance data for disk latency"
-msgstr "Raccogliere dati sulle prestazioni per la latenza del disco"
-
 msgid "Collection Size"
 msgstr "Dimensione della collezione"
 
@@ -13716,10 +13755,6 @@ msgstr "Completare il ripristino"
 
 msgid "Complete tree"
 msgstr "Albero completo"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "Elenco completo delle variabili (per i test)"
 
 msgid "Complete variable list (for testing)"
 msgstr "Elenco completo delle variabili (per i test)"
@@ -14300,6 +14335,20 @@ msgstr ""
 "Configura l'utente o il gruppo per ricevere le notifiche fornendo qui la "
 "chiave dell'utente o del gruppo. La chiave può essere ottenuta dal sito web "
 "di Pushover."
+
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configurare questo per far sì che il plugin di notifica si connetta "
+"direttamente al server smtp. Questo ha il vantaggio di fornire migliori "
+"messaggi di errore in caso di errore, ma richiede più configurazione ed è "
+"strettamente sincrono, quindi si consiglia l'uso solo su installazioni "
+"aziendali che utilizzano lo spooler di notifica."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -18930,6 +18979,10 @@ msgstr "Dump di diagnostica"
 msgid "Diagnostics dump started..."
 msgstr "Il dump della diagnostica è iniziato..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Non è cambiato"
 
@@ -20467,10 +20520,6 @@ msgstr "Delta del conteggio dei documenti"
 msgid "Document count growth per minute"
 msgstr "Crescita del numero di documenti al minuto"
 
-#, fuzzy
-msgid "Documentation"
-msgstr "URL della documentazione"
-
 msgid "Documentation URL"
 msgstr "URL della documentazione"
 
@@ -21983,6 +22032,11 @@ msgstr ""
 "Avrai bisogno della chiave privata e della passphrase per decifrare il "
 "backup."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Abilita il rilevamento delle alette"
 
@@ -22784,6 +22838,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "Avvisi della console eventi"
+
 msgid "Event Console alerts"
 msgstr "Avvisi della console eventi"
 
@@ -22861,10 +22919,6 @@ msgstr "Commento dell'evento"
 
 msgid "Event console"
 msgstr "Console degli eventi"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "Avvisi della console eventi"
 
 msgid "Event console performance"
 msgstr "Prestazioni della console degli eventi"
@@ -23468,7 +23522,7 @@ msgid "Expected update interval"
 msgstr "Intervallo di aggiornamento previsto"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Caratteristica dell'impresa"
 
 #, fuzzy
@@ -25342,6 +25396,10 @@ msgstr "Reti"
 msgid "Form factor"
 msgstr "Fattore di forma"
 
+#, fuzzy
+msgid "Form specs"
+msgstr "Per i SID specifici"
+
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -25979,6 +26037,10 @@ msgstr "Spazio SSD per uso generale (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Spazio SSD per usi generali (gp3)"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Errore generale"
 
 msgid "Generate"
 msgstr "Genera"
@@ -30479,6 +30541,26 @@ msgstr "Indirizzo IP"
 msgid "IP Address of Hosts"
 msgstr "Indirizzo IP dell'host"
 
+#, fuzzy
+msgid "IP Group Active Calls In"
+msgstr "Percorsi attivi"
+
+#, fuzzy
+msgid "IP Group Active Calls Out"
+msgstr "Unità attiva"
+
+#, fuzzy
+msgid "IP Group Calls In"
+msgstr "ID chiamante"
+
+#, fuzzy
+msgid "IP Group Calls In/Out"
+msgstr "Chiamare una regola"
+
+#, fuzzy
+msgid "IP Group Calls Out"
+msgstr "Chiamare una regola"
+
 msgid "IP address"
 msgstr "Indirizzo IP"
 
@@ -30540,6 +30622,9 @@ msgstr "Set IP"
 
 msgid "IP-Version"
 msgstr "IP-Version"
+
+msgid "IP2Tel"
+msgstr ""
 
 msgid "IPC semaphore IDs"
 msgstr "ID semaforo IPC"
@@ -33407,6 +33492,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Intervallo"
+
 msgid "Index"
 msgstr "Indice"
 
@@ -34028,10 +34117,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Comando DCD non valido: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Identità non valida"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Indirizzo IPv4 non valido: %s"
 
@@ -34088,10 +34173,6 @@ msgstr "Segreto di automazione non valido."
 msgid "Invalid back URL provided."
 msgstr "URL di ritorno non valido fornito."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Argomento non valido"
-
 msgid "Invalid call: No profiles set."
 msgstr "Chiamata non valida: Nessun profilo impostato."
 
@@ -34115,9 +34196,17 @@ msgstr "Parametro di controllo non valido"
 msgid "Invalid check type"
 msgstr "Tipo di controllo non valido"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Argomento non valido"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Argomento non valido"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Invalidare tutti i codici di backup"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34126,10 +34215,6 @@ msgstr "URL di ritorno non valido fornito."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specifica di colore non valida '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Azione non valida"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34147,19 +34232,35 @@ msgid ""
 msgstr "ID tag non valido. Sono ammessi solo i caratteri a-z, A-Z, 0-9, _ e -."
 
 #, fuzzy
-msgid "Invalid data for list"
-msgstr "Origine dati non valida: %s"
+msgid "Invalid data"
+msgstr "Identità non valida"
+
+#, fuzzy
+msgid "Invalid data format"
+msgstr "Formato di data non valido: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Origine dati non valida: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Nome del file non valido"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Sorgente dati non valida '%s' configurata."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Test non valido."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo di dato non valido del timestamp: deve essere int o float."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Origine dati non valida: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -34175,10 +34276,6 @@ msgstr "Callable non valido previsto per %s a idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tipo di perfometro non valido: %s"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Nome del file non valido"
 
 msgid "Invalid file name"
 msgstr "Nome del file non valido"
@@ -34199,14 +34296,6 @@ msgstr "Nome del file non valido"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Tipo di elemento fixel non valido '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Nome del file non valido"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Identità non valida"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34256,10 +34345,6 @@ msgstr "Identità non valida"
 msgid "Invalid ident: %s"
 msgstr "Identità non valida: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Nome del file non valido"
-
 msgid "Invalid login credentials."
 msgstr "Credenziali di accesso non valide."
 
@@ -34269,21 +34354,13 @@ msgstr "Pagina man non valida: Impossibile ottenere il titolo"
 msgid "Invalid messaging method selected."
 msgstr "È stato selezionato un metodo di messaggistica non valido."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Argomento non valido"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tipo di perfometro non valido: %s"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Argomento non valido"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Argomento non valido"
+msgid "Invalid number"
+msgstr "Nome del file non valido"
 
 msgid "Invalid package part"
 msgstr "Parte di pacchetto non valida"
@@ -34403,10 +34480,6 @@ msgstr "Istantanea non valida (troppo piccola)"
 msgid "Invalid start time given"
 msgstr "Ora di inizio non valida indicata"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Azione non valida"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "ID tag non valido. Sono ammessi solo i caratteri a-z, A-Z, 0-9, _ e -."
 
@@ -34447,10 +34520,6 @@ msgstr "Argomento non valido"
 msgid "Invalid transaction"
 msgstr "Transazione non valida"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Test non valido."
-
 msgid "Invalid type specified."
 msgstr "Tipo specificato non valido."
 
@@ -34466,10 +34535,6 @@ msgid "Invalid user input"
 msgstr "Inserimento utente non valido"
 
 msgid "Invalid value for ack parameter."
-msgstr "Valore non valido per il parametro ack."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Valore non valido per il parametro ack."
 
 #, python-format
@@ -37027,6 +37092,10 @@ msgstr ""
 msgid "List crash reports of all sites"
 msgstr "Elenco dei rapporti sugli incidenti di tutti i siti"
 
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Questo elemento di rapporto non esiste."
+
 msgid "List grouped interfaces instead"
 msgstr "Elenca invece le interfacce raggruppate"
 
@@ -38004,6 +38073,10 @@ msgstr "Livelli più bassi per la percentuale di successo degli SMS"
 msgid "Lower levels for active connections"
 msgstr "Livelli per le connessioni attive"
 
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "Livelli più bassi per la percentuale di successo degli SMS"
+
 msgid "Lower levels for burst balance"
 msgstr "Livelli più bassi per l'equilibrio della raffica"
 
@@ -38085,6 +38158,10 @@ msgstr ""
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Livelli più bassi sul numero di connessioni Point-to-site"
+
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Livelli inferiori per la tensione"
 
 #, fuzzy
 msgid "Lower levels on the biggest input buffer"
@@ -38472,6 +38549,9 @@ msgstr ""
 msgid "Maintenance"
 msgstr "Manutenzione"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Errori di pagina importanti"
 
@@ -38585,6 +38665,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "Rendere la vista ordinabile per utente"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr "Fa apparire l'icona nella colonna invece del menu a discesa."
@@ -38883,6 +38969,10 @@ msgstr "Mappatura del provisioning e degli stati di alimentazione"
 
 msgid "Map roles"
 msgstr "Ruoli della mappa"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Livelli superiori per i riavvii"
 
 msgid "Map states"
 msgstr "Stati della mappa"
@@ -42391,16 +42481,16 @@ msgid "Next step: Recipient"
 msgstr "Destinatario"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "Proprietà generali"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "connessioni in sospeso"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "Tipo di commento (host/servizio)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "Riepilogo dello stato dell'host"
 
 msgid "Nginx Server"
 msgstr "Server Nginx"
@@ -42621,8 +42711,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nessun grafico disponibile: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nessun grafico con l'ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -42930,6 +43020,10 @@ msgid "Node Status"
 msgstr "Stato del nodo"
 
 #, fuzzy
+msgid "Node index"
+msgstr "Utilizzare l'indice"
+
+#, fuzzy
 msgid "Node labels"
 msgstr "Etichette dei nodi"
 
@@ -43208,6 +43302,14 @@ msgstr "Non"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Elenco degli abbinamenti dell'host"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Numero di porta"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Non è un URL valido (sono ammessi solo URL http e https)."
 
@@ -43216,6 +43318,10 @@ msgstr "Non tutti i siti sono stati interrogati. Mancano alcune informazioni."
 
 msgid "Not an active member of the stack"
 msgstr "Non è un membro attivo della pila"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Nome del file non valido"
 
 msgid "Not authenticated"
 msgstr "Non autenticato"
@@ -43369,6 +43475,10 @@ msgstr ""
 "sezioni SNMP</a>. Si noti che questo porterà ad un aumento del traffico SNMP "
 "di circa il 5%."
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "Il valore massimo consentito è %s."
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -43376,15 +43486,6 @@ msgstr ""
 "Nota: con questo comando puoi archiviare tutti gli eventi di un host. Ha "
 "bisogno di una regola \"Controlla lo stato degli eventi in Event Console\" "
 "da configurare."
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"Nota: abilitare i dati sulle prestazioni per la latenza potrebbe causare "
-"incompatibilità con i dati storici esistenti se si sta eseguendo PNP4Nagios "
-"in modalità SINGLE."
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "Nota: questo fa ancora un HTTP GET o POST, non un HEAD."
@@ -43730,6 +43831,12 @@ msgstr "Il parametro \"%s\" non è un intero."
 msgid "Number of Active Sessions"
 msgstr "Numero di sessioni attive"
 
+msgid "Number of Attempted SIP/H323 calls"
+msgstr ""
+
+msgid "Number of Attempted SIP/H323 fax calls"
+msgstr ""
+
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Il numero di Checkmk checker è inferiore al numero di CPU"
 
@@ -43741,6 +43848,9 @@ msgstr "Numero di colonne"
 
 msgid "Number of Deadlocks / sec"
 msgstr "Numero di deadlock / sec"
+
+msgid "Number of Destination Busy SIP/H323 calls"
+msgstr ""
 
 msgid "Number of Documents"
 msgstr "Numero di documenti"
@@ -43767,6 +43877,16 @@ msgstr "Numero di utenti Lotus Domino"
 msgid "Number of Mails in Queue"
 msgstr "Numero di messaggi in coda"
 
+msgid "Number of No Answer SIP/H323 calls"
+msgstr ""
+
+msgid ""
+"Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
+msgstr ""
+
+msgid "Number of No capability match between peers on SIP/H323 calls"
+msgstr ""
+
 msgid "Number of Nodes"
 msgstr "Numero di nodi"
 
@@ -43792,6 +43912,10 @@ msgstr "Numero di risorse"
 
 msgid "Number of Running Bossock Fibers"
 msgstr "Numero di fibre Bossock in esecuzione"
+
+#, fuzzy
+msgid "Number of SIP/H323 fax success calls"
+msgstr "Numero di punti di accesso"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Numero di transazioni al minuto su un server Lotus Domino"
@@ -43925,6 +44049,9 @@ msgstr "Numero di elementi da mostrare nella ricerca rapida"
 msgid "Number of entries"
 msgstr "Numero di voci"
 
+msgid "Number of established (connected and voice activated) SIP/H323 calls"
+msgstr ""
+
 msgid "Number of events in defined timespan lower level"
 msgstr "Numero di eventi in un arco di tempo definito livello inferiore"
 
@@ -43936,6 +44063,10 @@ msgstr "Numero di chiavi sfrattate"
 
 msgid "Number of expected messages"
 msgstr "Numero di messaggi attesi"
+
+#, fuzzy
+msgid "Number of failed SIP/H323 calls"
+msgstr "Numero di percorsi falliti"
 
 msgid "Number of failed jobs"
 msgstr "Numero di lavori falliti"
@@ -44759,6 +44890,10 @@ msgstr "Su ospite giù"
 msgid "On host name exclusion list."
 msgstr "%s nella lista di esclusione."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Programmare i tempi di inattività"
+
 msgid "On recovery (OK/UP)"
 msgstr ""
 
@@ -44786,6 +44921,10 @@ msgstr "Su siti selezionati"
 
 msgid "On selected users"
 msgstr "Su utenti selezionati"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorare i tempi di inattività programmati"
 
 #, fuzzy, python-format
 msgid ""
@@ -48236,16 +48375,8 @@ msgstr "Contatori di prestazioni"
 msgid "Performance data"
 msgstr "Dati sulle prestazioni"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "Dati sulle prestazioni per la latenza"
-
 msgid "Performance data for protocols"
 msgstr "Dati sulle prestazioni dei protocolli"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "Dati sulle prestazioni per la lunghezza della coda"
 
 #, fuzzy
 msgid ""
@@ -49722,6 +49853,9 @@ msgstr "Risultati del prefetch"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch metadata hit ratio"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Prefisso"
 
@@ -51117,7 +51251,7 @@ msgid "Read operations /s"
 msgstr "Leggere le operazioni /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "Leggere la lunghezza della coda"
 
 msgid "Read recovery latency"
@@ -52240,9 +52374,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Rendere le regole verticali tra le colonne"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 msgid "Repeat"
 msgstr "Ripetere"
 
@@ -53212,11 +53343,6 @@ msgstr "Configurazione remota"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Salvare & eseguire il rilevamento dei servizi"
-
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "Giri al minuto"
@@ -54476,9 +54602,6 @@ msgstr "Tempo di inattività programmato per %d %s"
 
 msgid "Schedule downtime on host"
 msgstr "Programmare il tempo di inattività sull'host"
-
-msgid "Schedule downtime on service"
-msgstr "Programmare i tempi di inattività del servizio"
 
 msgid "Schedule downtimes"
 msgstr "Programmare i tempi di inattività"
@@ -59616,6 +59739,10 @@ msgstr "Iniziato a %s"
 msgid "Started at: %s."
 msgstr "Iniziato a: %s."
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "Sessioni di corsa"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -60722,6 +60849,9 @@ msgstr "Rapporto memorizzato"
 
 msgid "Stored reports"
 msgstr "Rapporti memorizzati"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Dritto"
@@ -61845,6 +61975,9 @@ msgstr ""
 "Nomi dei team che saranno responsabili dell'allarme. Se la chiave API "
 "appartiene a un'integrazione di squadra, questo campo sarà sovrascritto con "
 "la squadra proprietaria."
+
+msgid "Tel2IP"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -67405,6 +67538,10 @@ msgstr ""
 "<b>nessun</b> impatto sulle notifiche."
 
 msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
+
+msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
 "decides whether the state of an object is <b>flapping</b>. Each object keeps "
 "are value called <i>flappiness</i>. This value is increased by 1.0 each time "
@@ -72857,6 +72994,10 @@ msgid "Total duration"
 msgstr "Durata totale"
 
 #, fuzzy
+msgid "Total duration of SIP/H323 calls"
+msgstr "Durata totale"
+
+#, fuzzy
 msgid "Total duration: "
 msgstr "Durata totale"
 
@@ -75967,10 +76108,6 @@ msgstr ""
 "comune per il DN di base dell'utente \"%s\" e il DN di base del gruppo \"%s"
 "\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Fallito il rendering del valore:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Impossibile caricare l'icona: %s"
@@ -78512,6 +78649,10 @@ msgstr "Utenti, ruoli e autorizzazioni"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "Gestione degli utenti"
+
+#, fuzzy
+msgid "Using default value"
+msgstr "Valore predefinito"
 
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
@@ -82274,7 +82415,7 @@ msgid "Write operations/s"
 msgstr "Scrittura Operazioni/s"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "Lunghezza della coda di scrittura"
 
 msgid "Write retransmission"
@@ -86743,6 +86884,89 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
 
 #, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "Elenco completo delle variabili (per i test)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "URL della documentazione"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Raccogliere dati sulle prestazioni per la latenza del disco"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "Riepilogo dello stato dell'host"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Nota: abilitare i dati sulle prestazioni per la latenza potrebbe causare "
+#~ "incompatibilità con i dati storici esistenti se si sta eseguendo "
+#~ "PNP4Nagios in modalità SINGLE."
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "Dati sulle prestazioni per la latenza"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "Dati sulle prestazioni per la lunghezza della coda"
+
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programmare i tempi di inattività del servizio"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Identità non valida"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Azione non valida"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Origine dati non valida: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Nome del file non valido"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Identità non valida"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Azione non valida"
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Valore non valido per il parametro ack."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Fallito il rendering del valore:"
+
+#, fuzzy
 #~ msgid "Jenkins version"
 #~ msgstr "connessioni in sospeso"
 
@@ -86755,55 +86979,11 @@ msgstr "Usa SSL per la connessione."
 #~ msgstr "Miglioramenti delle prestazioni"
 
 #, fuzzy
-#~ msgid "Active Calls"
-#~ msgstr "Percorsi attivi"
-
-#, fuzzy
-#~ msgid "Active Calls In"
-#~ msgstr "Percorsi attivi"
-
-#, fuzzy
-#~ msgid "Active Calls Out"
-#~ msgstr "Unità attiva"
-
-#, fuzzy
-#~ msgid "Average Call Duration"
-#~ msgstr "Latenza media"
-
-#, fuzzy
-#~ msgid "Average Success Ratio"
-#~ msgstr "Rapporto di successo di Varnish Backend"
-
-#, fuzzy
-#~ msgid "Calls In"
-#~ msgstr "ID chiamante"
-
-#, fuzzy
-#~ msgid "Calls Out"
-#~ msgstr "Chiamare una regola"
-
-#, fuzzy
-#~ msgid "Calls per Second"
-#~ msgstr "Pagine al secondo"
-
-#, fuzzy
-#~ msgid "Indeterminate"
-#~ msgstr "Intervallo"
-
-#, fuzzy
 #~ msgid ""
 #~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
 #~ msgstr ""
 #~ "Le etichette devono avere il formato \"[CHIAVE]:[VALORE]\". Ad esempio "
 #~ "\"os:windows\"."
-
-#, fuzzy
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "Livelli più bassi per la percentuale di successo degli SMS"
-
-#, fuzzy
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "Livelli superiori per i riavvii"
 
 #~ msgid "Custom Notes"
 #~ msgstr "Note personalizzate"
@@ -87464,20 +87644,6 @@ msgstr "Usa SSL per la connessione."
 #~ "vengono visualizzati vicini e fluttuanti. Puoi abilitare questa opzione "
 #~ "per mostrare i grafici tra di loro."
 
-#, fuzzy
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "Configurare questo per far sì che il plugin di notifica si connetta "
-#~ "direttamente al server smtp. Questo ha il vantaggio di fornire migliori "
-#~ "messaggi di errore in caso di errore, ma richiede più configurazione ed è "
-#~ "strettamente sincrono, quindi si consiglia l'uso solo su installazioni "
-#~ "aziendali che utilizzano lo spooler di notifica."
-
 #~ msgid "Display additional information"
 #~ msgstr "Visualizzazione di informazioni aggiuntive"
 
@@ -87813,9 +87979,6 @@ msgstr "Usa SSL per la connessione."
 
 #~ msgid "(unused)"
 #~ msgstr "(inutilizzato)"
-
-#~ msgid "Host match list"
-#~ msgstr "Elenco degli abbinamenti dell'host"
 
 #~ msgid "Item match list"
 #~ msgstr "Lista di corrispondenza degli articoli"

@@ -3577,6 +3577,18 @@ msgstr "Actief (anoniem)"
 msgid "Active (files)"
 msgstr "Actief (bestanden)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "Actieve paden"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "Actieve paden"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "Actieve eenheid"
+
 msgid "Active Connections"
 msgstr "Actieve verbindingen"
 
@@ -7417,6 +7429,12 @@ msgstr "Attributen"
 msgid "Attributes to remove from hosts"
 msgstr "Attributen te verwijderen uit hosts"
 
+msgid "AudioCodes Alarms"
+msgstr ""
+
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "Auditlogboek"
 
@@ -7884,8 +7902,16 @@ msgstr "Beschikbaar tot"
 msgid "Average"
 msgstr "Gemiddeld"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "Gemiddelde latentie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Gemiddelde Uitgaande wachtrijvertraging"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Varnish Backend Succes Ratio"
 
 msgid "Average active check latency"
 msgstr "Gemiddelde actieve controle latentie"
@@ -11043,6 +11069,22 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Definitieve haken oproepen"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "Beller ID"
+
+#, fuzzy
+msgid "Calls In/Out"
+msgstr "Noem een regel"
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "Noem een regel"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "Pagina's per seconde"
+
 msgid "Can be used until version:"
 msgstr "Kan gebruikt worden tot versie:"
 
@@ -13489,9 +13531,6 @@ msgstr "Verzamel informatie over..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "Verzamel informatie van Checkmk sites voor diagnostische analyse."
 
-msgid "Collect performance data for disk latency"
-msgstr "Verzamel prestatiegegevens voor schijflatentie"
-
 msgid "Collection Size"
 msgstr "Collectie Omvang"
 
@@ -13847,10 +13886,6 @@ msgstr "Voltooi de restauratie"
 
 msgid "Complete tree"
 msgstr "Volledige boom"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "Volledige lijst van variabelen (voor testen)"
 
 msgid "Complete variable list (for testing)"
 msgstr "Volledige lijst van variabelen (voor testen)"
@@ -14436,6 +14471,20 @@ msgstr ""
 "Configureer de gebruiker of groep die de meldingen moet ontvangen door hier "
 "de gebruikers- of groepssleutel op te geven. De sleutel kan worden verkregen "
 "op de Pushover website."
+
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configureer dit om de meldingsplugin direct verbinding te laten maken met de "
+"smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft in "
+"geval van een fout, maar het vereist meer configuratie en is strikt "
+"synchroon, dus we adviseren het alleen te gebruiken op bedrijfsinstallaties "
+"die de notificatie spooler gebruiken."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -19108,6 +19157,10 @@ msgstr "Diagnostiek dump"
 msgid "Diagnostics dump started..."
 msgstr "Diagnostiek dump gestart..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Niet veranderd"
 
@@ -20642,10 +20695,6 @@ msgstr "Aantal documenten delta"
 msgid "Document count growth per minute"
 msgstr "Aantal documenten groeit per minuut"
 
-#, fuzzy
-msgid "Documentation"
-msgstr "Documentatie URL"
-
 msgid "Documentation URL"
 msgstr "Documentatie URL"
 
@@ -22172,6 +22221,11 @@ msgstr ""
 "opgegeven sleutel. U hebt de private sleutel en de passphrase nodig om de "
 "backup te decoderen."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Klepdetectie inschakelen"
 
@@ -22985,6 +23039,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "Event Console waarschuwingen"
+
 msgid "Event Console alerts"
 msgstr "Event Console waarschuwingen"
 
@@ -23063,10 +23121,6 @@ msgstr "Evenement commentaar"
 
 msgid "Event console"
 msgstr "Gebeurtenis console"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "Event Console waarschuwingen"
 
 msgid "Event console performance"
 msgstr "Prestaties gebeurtenisconsole"
@@ -23672,7 +23726,7 @@ msgid "Expected update interval"
 msgstr "Verwacht update-interval"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Ondernemingsfunctie"
 
 #, fuzzy
@@ -25559,6 +25613,10 @@ msgstr "Netwerken"
 msgid "Form factor"
 msgstr "Vormfactor"
 
+#, fuzzy
+msgid "Form specs"
+msgstr "Voor specifieke SID's"
+
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -26204,6 +26262,10 @@ msgstr "General Purpose SSD (gp2) ruimte"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "General Purpose SSD (gp3) ruimte"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Algemene fout"
 
 msgid "Generate"
 msgstr "Genereer"
@@ -30735,6 +30797,26 @@ msgstr "IP-adres"
 msgid "IP Address of Hosts"
 msgstr "IP-adres van gastheer"
 
+#, fuzzy
+msgid "IP Group Active Calls In"
+msgstr "Actieve paden"
+
+#, fuzzy
+msgid "IP Group Active Calls Out"
+msgstr "Actieve eenheid"
+
+#, fuzzy
+msgid "IP Group Calls In"
+msgstr "Beller ID"
+
+#, fuzzy
+msgid "IP Group Calls In/Out"
+msgstr "Noem een regel"
+
+#, fuzzy
+msgid "IP Group Calls Out"
+msgstr "Noem een regel"
+
 msgid "IP address"
 msgstr "IP-adres"
 
@@ -30796,6 +30878,9 @@ msgstr "IP-reeksen"
 
 msgid "IP-Version"
 msgstr "IP-versie"
+
+msgid "IP2Tel"
+msgstr ""
 
 msgid "IPC semaphore IDs"
 msgstr "IPC semafoor ID's"
@@ -33682,6 +33767,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Pauze"
+
 msgid "Index"
 msgstr "Index"
 
@@ -34308,10 +34397,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Ongeldig DCD commando: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Ongeldige ident"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Ongeldig IPv4 adres: %s"
 
@@ -34370,10 +34455,6 @@ msgstr "Ongeldig automatiseringsgeheim."
 msgid "Invalid back URL provided."
 msgstr "Ongeldige URL teruggegeven."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Ongeldig onderwerp"
-
 msgid "Invalid call: No profiles set."
 msgstr "Ongeldige oproep: Geen profielen ingesteld."
 
@@ -34397,9 +34478,17 @@ msgstr "Ongeldige controleparameter"
 msgid "Invalid check type"
 msgstr "Ongeldig controletype"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Ongeldig onderwerp"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34408,10 +34497,6 @@ msgstr "Ongeldige URL teruggegeven."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ongeldige kleurspecificatie '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Ongeldige actie"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34430,19 +34515,35 @@ msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
 #, fuzzy
-msgid "Invalid data for list"
+msgid "Invalid data"
+msgstr "Ongeldige ident"
+
+#, fuzzy
+msgid "Invalid data format"
 msgstr "Ongeldige gegevensbron: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Ongeldige gegevensbron: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Ongeldige bestandsnaam"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Ongeldige datasource '%s' geconfigureerd."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Ongeldige test."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Ongeldige gegevensbron: %s"
 
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
@@ -34458,10 +34559,6 @@ msgstr "Ongeldig verwacht callable voor %s op idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Ongeldige bestandsnaam"
 
 msgid "Invalid file name"
 msgstr "Ongeldige bestandsnaam"
@@ -34483,14 +34580,6 @@ msgstr "Ongeldige bestandsnaam"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Ongeldig fixel element type '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Ongeldige bestandsnaam"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Ongeldige ident"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34538,10 +34627,6 @@ msgstr "Ongeldige ident"
 msgid "Invalid ident: %s"
 msgstr "Ongeldige ident: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Ongeldige bestandsnaam"
-
 msgid "Invalid login credentials."
 msgstr "Ongeldige inloggegevens."
 
@@ -34551,21 +34636,13 @@ msgstr "Ongeldige man pagina: Mislukt om de titel te krijgen"
 msgid "Invalid messaging method selected."
 msgstr "Ongeldige berichtmethode geselecteerd."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Ongeldig onderwerp"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Ongeldig onderwerp"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Ongeldig onderwerp"
+msgid "Invalid number"
+msgstr "Ongeldige bestandsnaam"
 
 msgid "Invalid package part"
 msgstr "Ongeldig pakketonderdeel"
@@ -34686,10 +34763,6 @@ msgstr "Ongeldige momentopname (te klein)"
 msgid "Invalid start time given"
 msgstr "Ongeldige starttijd gegeven"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Ongeldige actie"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
@@ -34731,10 +34804,6 @@ msgstr "Ongeldig onderwerp"
 msgid "Invalid transaction"
 msgstr "Ongeldige transactie"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Ongeldige test."
-
 msgid "Invalid type specified."
 msgstr "Ongeldig type opgegeven."
 
@@ -34750,10 +34819,6 @@ msgid "Invalid user input"
 msgstr "Ongeldige gebruikersinvoer"
 
 msgid "Invalid value for ack parameter."
-msgstr "Ongeldige waarde voor ack parameter."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Ongeldige waarde voor ack parameter."
 
 #, python-format
@@ -37345,6 +37410,10 @@ msgstr ""
 msgid "List crash reports of all sites"
 msgstr "Lijst van crashmeldingen van alle locaties"
 
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Dit rapportelement bestaat niet."
+
 msgid "List grouped interfaces instead"
 msgstr "In plaats daarvan gegroepeerde interfaces weergeven"
 
@@ -38330,6 +38399,10 @@ msgstr "Lagere niveaus voor SMS-succespercentage"
 msgid "Lower levels for active connections"
 msgstr "Niveaus voor actieve verbindingen"
 
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "Lagere niveaus voor SMS-succespercentage"
+
 msgid "Lower levels for burst balance"
 msgstr "Lagere niveaus voor burst balans"
 
@@ -38411,6 +38484,10 @@ msgstr "Lagere niveaus op Site-to-site bandbreedte in bytes per seconde"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Lagere niveaus voor het aantal Point-to-site verbindingen"
+
+#, fuzzy
+msgid "Lower levels on quality"
+msgstr "Lagere spanningsniveaus"
 
 #, fuzzy
 msgid "Lower levels on the biggest input buffer"
@@ -38802,6 +38879,9 @@ msgstr "Hoofdgeheugengebruik van eenvoudige toestellen"
 msgid "Maintenance"
 msgstr "Onderhoud"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Belangrijke pagina fouten"
 
@@ -38912,6 +38992,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "Maak weergave sorteerbaar op gebruiker"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
@@ -39220,6 +39306,10 @@ msgstr "Voorziening en vermogenstoestanden in kaart brengen"
 
 msgid "Map roles"
 msgstr "Kaartrollen"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Bovenste niveaus voor herstarten"
 
 msgid "Map states"
 msgstr "Kaart staten"
@@ -42761,16 +42851,16 @@ msgid "Next step: Recipient"
 msgstr "Ontvanger"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "Algemene eigenschappen"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "in behandeling zijnde verbindingen"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "Type opmerking (host/dienst)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "Samenvatting van de toestand van de gastheer"
 
 msgid "Nginx Server"
 msgstr "Nginx Server"
@@ -42996,8 +43086,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Geen grafiek beschikbaar: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Geen grafiek met de ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -43311,6 +43401,10 @@ msgid "Node Status"
 msgstr "Knooppuntstatus"
 
 #, fuzzy
+msgid "Node index"
+msgstr "Gebruik index"
+
+#, fuzzy
 msgid "Node labels"
 msgstr "Knooppunt Labels"
 
@@ -43588,6 +43682,14 @@ msgstr "Niet"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Host wedstrijd lijst"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Poortnummer"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Geen geldige URL (Alleen http en https URL's zijn toegestaan)."
 
@@ -43596,6 +43698,10 @@ msgstr "Niet alle locaties zijn bevraagd. Sommige informatie ontbreekt."
 
 msgid "Not an active member of the stack"
 msgstr "Geen actief lid van de stapel"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Ongeldige bestandsnaam"
 
 msgid "Not authenticated"
 msgstr "Niet geauthenticeerd"
@@ -43750,6 +43856,10 @@ msgstr ""
 "secties</a>. Merk op dat dit zal leiden tot een toename van het SNMP verkeer "
 "met ongeveer 5%."
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -43757,15 +43867,6 @@ msgstr ""
 "Opmerking: Met dit commando kun je alle events van één host archiveren. Er "
 "moet een regel \"Controleer gebeurtenis status in Event Console\" "
 "geconfigureerd zijn."
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"Opmerking: het inschakelen van prestatiegegevens voor de latentie kan "
-"onverenigbaarheden veroorzaken met bestaande historische gegevens als u "
-"PNP4Nagios in SINGLE modus uitvoert."
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "Opmerking: dit doet nog steeds een HTTP GET of POST, geen HEAD."
@@ -44117,6 +44218,12 @@ msgstr "De parameter \"%s\" is geen geheel getal."
 msgid "Number of Active Sessions"
 msgstr "Aantal actieve sessies"
 
+msgid "Number of Attempted SIP/H323 calls"
+msgstr ""
+
+msgid "Number of Attempted SIP/H323 fax calls"
+msgstr ""
+
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Aantal Checkmk checkers is minder dan aantal CPU's"
 
@@ -44128,6 +44235,9 @@ msgstr "Aantal kolommen"
 
 msgid "Number of Deadlocks / sec"
 msgstr "Aantal impasses / sec"
+
+msgid "Number of Destination Busy SIP/H323 calls"
+msgstr ""
 
 msgid "Number of Documents"
 msgstr "Aantal documenten"
@@ -44154,6 +44264,16 @@ msgstr "Aantal Lotus Domino-gebruikers"
 msgid "Number of Mails in Queue"
 msgstr "Aantal mails in wachtrij"
 
+msgid "Number of No Answer SIP/H323 calls"
+msgstr ""
+
+msgid ""
+"Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
+msgstr ""
+
+msgid "Number of No capability match between peers on SIP/H323 calls"
+msgstr ""
+
 msgid "Number of Nodes"
 msgstr "Aantal knooppunten"
 
@@ -44179,6 +44299,10 @@ msgstr "Aantal middelen"
 
 msgid "Number of Running Bossock Fibers"
 msgstr "Aantal lopende Bossock-vezels"
+
+#, fuzzy
+msgid "Number of SIP/H323 fax success calls"
+msgstr "Aantal toegangspunten"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Aantal transacties per minuut op een Lotus Domino server"
@@ -44312,6 +44436,9 @@ msgstr "Aantal elementen om te tonen in Quicksearch"
 msgid "Number of entries"
 msgstr "Aantal inzendingen"
 
+msgid "Number of established (connected and voice activated) SIP/H323 calls"
+msgstr ""
+
 msgid "Number of events in defined timespan lower level"
 msgstr "Aantal gebeurtenissen in een bepaalde tijdspanne lager niveau"
 
@@ -44323,6 +44450,10 @@ msgstr "Aantal uitgezette sleutels"
 
 msgid "Number of expected messages"
 msgstr "Aantal verwachte berichten"
+
+#, fuzzy
+msgid "Number of failed SIP/H323 calls"
+msgstr "Aantal mislukte paden"
 
 msgid "Number of failed jobs"
 msgstr "Aantal mislukte opdrachten"
@@ -45162,6 +45293,10 @@ msgstr "Op down host"
 msgid "On host name exclusion list."
 msgstr "%s op de uitsluit lijst."
 
+#, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Uitvaltijden plannen"
+
 msgid "On recovery (OK/UP)"
 msgstr ""
 
@@ -45189,6 +45324,10 @@ msgstr "Op geselecteerde plaatsen"
 
 msgid "On selected users"
 msgstr "Op geselecteerde gebruikers"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Negeer geplande downtimes"
 
 #, fuzzy, python-format
 msgid ""
@@ -48660,16 +48799,8 @@ msgstr "Prestatiestellers"
 msgid "Performance data"
 msgstr "Prestatiegegevens"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "Prestatiegegevens voor latentie"
-
 msgid "Performance data for protocols"
 msgstr "Prestatiegegevens voor protocollen"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "Prestatiegegevens voor wachtrijlengte"
 
 #, fuzzy
 msgid ""
@@ -50155,6 +50286,9 @@ msgstr "Prefetch hits"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch metadata hit ratio"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Voorvoegsel"
 
@@ -51561,7 +51695,7 @@ msgid "Read operations /s"
 msgstr "Lees Operaties /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "Lees Queue-Lengte"
 
 msgid "Read recovery latency"
@@ -52696,9 +52830,6 @@ msgstr "Render de titelbalk inclusief titel en link boven het element."
 msgid "Render vertical rules between columns"
 msgstr "Verticale regels tussen kolommen weergeven"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 #, fuzzy
 msgid "Repeat"
 msgstr "herhalen:"
@@ -53663,11 +53794,6 @@ msgstr "Configuratie op afstand"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Save & run service discovery"
-
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
@@ -54933,10 +55059,6 @@ msgid "Schedule downtime for %d %s"
 msgstr "Geplande uitvaltijd voor %d %s"
 
 msgid "Schedule downtime on host"
-msgstr "Plan downtime op host"
-
-#, fuzzy
-msgid "Schedule downtime on service"
 msgstr "Plan downtime op host"
 
 msgid "Schedule downtimes"
@@ -60114,6 +60236,10 @@ msgstr "Begonnen op %s"
 msgid "Started at: %s."
 msgstr "Begonnen op: %s."
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "Lopende sessies"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -61225,6 +61351,9 @@ msgstr "Opgeslagen rapport"
 
 msgid "Stored reports"
 msgstr "Opgeslagen rapporten"
+
+msgid "Stormshield quality"
+msgstr ""
 
 msgid "Straight"
 msgstr "Recht"
@@ -62369,6 +62498,9 @@ msgstr ""
 "Team namen die verantwoordelijk zullen zijn voor de waarschuwing. Als de API "
 "Sleutel tot een team integratie behoort, zal dit veld overschreven worden "
 "met de eigenaar team."
+
+msgid "Tel2IP"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -67968,6 +68100,10 @@ msgstr ""
 "<b>geen</b> invloed op meldingen."
 
 msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
+
+msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
 "decides whether the state of an object is <b>flapping</b>. Each object keeps "
 "are value called <i>flappiness</i>. This value is increased by 1.0 each time "
@@ -73453,6 +73589,10 @@ msgid "Total duration"
 msgstr "Totale duur"
 
 #, fuzzy
+msgid "Total duration of SIP/H323 calls"
+msgstr "Totale duur"
+
+#, fuzzy
 msgid "Total duration: "
 msgstr "Totale duur"
 
@@ -76630,10 +76770,6 @@ msgstr ""
 "Kan geneste groepen niet synchroniseren (geen gemeenschappelijke basis DN "
 "gevonden voor gebruiker basis DN \"%s\" en groep basis DN \"%s\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Mislukt om waarde te renderen:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Kan pictogram niet uploaden: %s"
@@ -79200,6 +79336,10 @@ msgstr "Gebruikers, rollen en machtigingen"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "Gebruikersbeheer"
+
+#, fuzzy
+msgid "Using default value"
+msgstr "Standaardwaarde"
 
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
@@ -82993,7 +83133,7 @@ msgid "Write operations/s"
 msgstr "Schrijfbewerkingen/s"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "Schrijf wachtrij-lengte"
 
 #, fuzzy
@@ -87513,6 +87653,90 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "Volledige lijst van variabelen (voor testen)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "Documentatie URL"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Verzamel prestatiegegevens voor schijflatentie"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "Samenvatting van de toestand van de gastheer"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Opmerking: het inschakelen van prestatiegegevens voor de latentie kan "
+#~ "onverenigbaarheden veroorzaken met bestaande historische gegevens als u "
+#~ "PNP4Nagios in SINGLE modus uitvoert."
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "Prestatiegegevens voor latentie"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "Prestatiegegevens voor wachtrijlengte"
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Plan downtime op host"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Ongeldige ident"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Ongeldige actie"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Ongeldige gegevensbron: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Ongeldige bestandsnaam"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Ongeldige ident"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Ongeldige actie"
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Ongeldige waarde voor ack parameter."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Mislukt om waarde te renderen:"
+
+#, fuzzy
 #~ msgid "Jenkins version"
 #~ msgstr "in behandeling zijnde verbindingen"
 
@@ -87525,55 +87749,11 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgstr "Prestatieverbeteringen"
 
 #, fuzzy
-#~ msgid "Active Calls"
-#~ msgstr "Actieve paden"
-
-#, fuzzy
-#~ msgid "Active Calls In"
-#~ msgstr "Actieve paden"
-
-#, fuzzy
-#~ msgid "Active Calls Out"
-#~ msgstr "Actieve eenheid"
-
-#, fuzzy
-#~ msgid "Average Call Duration"
-#~ msgstr "Gemiddelde latentie"
-
-#, fuzzy
-#~ msgid "Average Success Ratio"
-#~ msgstr "Varnish Backend Succes Ratio"
-
-#, fuzzy
-#~ msgid "Calls In"
-#~ msgstr "Beller ID"
-
-#, fuzzy
-#~ msgid "Calls Out"
-#~ msgstr "Noem een regel"
-
-#, fuzzy
-#~ msgid "Calls per Second"
-#~ msgstr "Pagina's per seconde"
-
-#, fuzzy
-#~ msgid "Indeterminate"
-#~ msgstr "Pauze"
-
-#, fuzzy
 #~ msgid ""
 #~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
 #~ msgstr ""
 #~ "Labels moeten zijn in het formaat \"[KEY]:[VALUE]\". Bijvoorbeeld \"os:"
 #~ "windows\"."
-
-#, fuzzy
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "Lagere niveaus voor SMS-succespercentage"
-
-#, fuzzy
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "Bovenste niveaus voor herstarten"
 
 #~ msgid "Custom Notes"
 #~ msgstr "Aangepaste notities"
@@ -88237,20 +88417,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ "elkaar getoond. U kunt deze optie aanzetten om de grafieken onder elkaar "
 #~ "te tonen."
 
-#, fuzzy
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "Configureer dit om de meldingsplugin direct verbinding te laten maken met "
-#~ "de smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft "
-#~ "in geval van een fout, maar het vereist meer configuratie en is strikt "
-#~ "synchroon, dus we adviseren het alleen te gebruiken op "
-#~ "bedrijfsinstallaties die de notificatie spooler gebruiken."
-
 #~ msgid "Display additional information"
 #~ msgstr "Aanvullende informatie weergeven"
 
@@ -88592,9 +88758,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "(unused)"
 #~ msgstr "(ongebruikt)"
-
-#~ msgid "Host match list"
-#~ msgstr "Host wedstrijd lijst"
 
 #~ msgid "Item match list"
 #~ msgstr "Item overeenstemmingslijst"

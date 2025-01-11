@@ -5,11 +5,12 @@
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission
 
 from .base import Icon
+from .config_icons import config_based_icons, update_builtin_icons_from_config
 
 
 class IconRegistry(Registry[type[Icon]]):
@@ -30,4 +31,7 @@ icon_and_action_registry = IconRegistry()
 
 
 def all_icons() -> dict[str, Icon]:
-    return {ident: cls() for ident, cls in icon_and_action_registry.items()}
+    return update_builtin_icons_from_config(
+        {ident: cls() for ident, cls in icon_and_action_registry.items()},
+        active_config.builtin_icon_visibility,
+    ) | config_based_icons(active_config.user_icons_and_actions)

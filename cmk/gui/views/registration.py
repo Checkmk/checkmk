@@ -79,7 +79,6 @@ def register(
         icon.icon_and_action_registry,
         painter_registry,
         permission_section_registry,
-        register_post_config_load_hook,
     )
     inventory_registration.register(
         page_registry,

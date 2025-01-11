@@ -5,14 +5,10 @@
 
 # pylint: disable=protected-access
 
-from typing import NotRequired, TypedDict
+
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
 
 from .base import Icon
-
-
-class BuiltinIconVisibility(TypedDict):
-    toplevel: NotRequired[bool]
-    sort_index: NotRequired[int]
 
 
 def update_builtin_icons_from_config(
@@ -31,7 +27,7 @@ def update_builtin_icons_from_config(
     return icons
 
 
-def config_based_icons(user_icons_and_actions: dict[str, dict]) -> dict[str, Icon]:
+def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str, Icon]:
     return {
         icon_id: type(
             "CustomIcon%s" % icon_id.title(),

@@ -295,18 +295,6 @@ def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     }
 
 
-# The saved configuration for user connections is a bit inconsistent, let's fix
-# this here once and for all.
-def fix_user_connections() -> None:
-    for cfg in active_config.user_connections:
-        # Although our current configuration always seems to have a 'disabled'
-        # entry, this might not have always been the case.
-        cfg.setdefault("disabled", False)
-        # Only migrated configurations have a 'type' entry, all others are
-        # implictly LDAP connections.
-        cfg.setdefault("type", "ldap")
-
-
 def locked_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())

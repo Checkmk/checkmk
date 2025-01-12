@@ -7,12 +7,16 @@
 # status@item_count@item[1].name@item[1].value@...item[n].name@item[n].value@$
 # Beware, though: Item names are not always unique!
 
+from collections.abc import Mapping, Sequence
 
-def parse_ddn_s2a_api_response(info):
-    response_string = " ".join(info[0])
+from cmk.agent_based.v2 import StringTable
+
+
+def parse_ddn_s2a_api_response(string_table: StringTable) -> Mapping[str, Sequence[str]]:
+    response_string = " ".join(string_table[0])
     raw_fields = response_string.split("@")
 
-    parsed: dict = {}
+    parsed: dict[str, list[str]] = {}
     for field_name, field_value in zip(raw_fields[2:-2:2], raw_fields[3:-1:2]):
         parsed.setdefault(field_name, []).append(field_value)
     return parsed

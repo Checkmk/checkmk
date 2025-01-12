@@ -6,21 +6,25 @@
 
 # mypy: disable-error-code="list-item"
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_value_store, IgnoreResultsError
+from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, StringTable
 
 check_info = {}
 
+type SectionStatsDelay = Mapping[str, Sequence[str] | Sequence[int] | Sequence[float]]
 
-def parse_ddn_s2a_statsdelay(string_table):
-    parsed = parse_ddn_s2a_api_response(string_table)
+
+def parse_ddn_s2a_statsdelay(string_table: StringTable) -> SectionStatsDelay:
+    parsed: dict[str, Sequence[str] | Sequence[int] | Sequence[float]] = {
+        **parse_ddn_s2a_api_response(string_table)
+    }
 
     for key in ["host_reads", "host_writes", "disk_reads", "disk_writes"]:
-        parsed[key] = list(map(int, parsed[key]))
+        parsed[key] = [int(e) for e in parsed[key]]
 
     # Regarding the special treatment of the >10.0 value here: This API does not provide
     # more detailed information than this. We assume a value of 30, but we really have no way

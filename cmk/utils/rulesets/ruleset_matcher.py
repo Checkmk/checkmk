@@ -334,8 +334,9 @@ class RulesetMatcher:
         Depending on the value the outcome is negated or not.
 
         """
+        mo = self._service_match_object(hostname, service_name)
         for value in self.get_service_ruleset_values(
-            self._service_match_object(hostname, service_name), ruleset
+            hostname, service_name, mo.service_labels, ruleset
         ):
             # See `get_host_bool_value()`.
             assert isinstance(value, bool)
@@ -352,11 +353,10 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
+        mo = self._service_match_object(hostname, service_name)
         return merge_parameters(
             list(
-                self.get_service_ruleset_values(
-                    self._service_match_object(hostname, service_name), ruleset
-                )
+                self.get_service_ruleset_values(hostname, service_name, mo.service_labels, ruleset)
             ),
             default={},
         )
@@ -369,10 +369,9 @@ class RulesetMatcher:
         service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
+        mo = self._service_match_object(hostname, service_name, service_labels)
         return list(
-            self.get_service_ruleset_values(
-                self._service_match_object(hostname, service_name, service_labels), ruleset
-            )
+            self.get_service_ruleset_values(hostname, service_name, mo.service_labels, ruleset)
         )
 
     def get_checkgroup_ruleset_values(
@@ -392,28 +391,31 @@ class RulesetMatcher:
                 "cmk.ruleset": repr(ruleset),
             },
         ) as span:
+            mo = self._checkgroup_match_object(
+                hostname,
+                service_name,
+                item,
+                service_labels,
+                span,
+            )
             return list(
                 self.get_service_ruleset_values(
-                    self._checkgroup_match_object(
-                        hostname,
-                        service_name,
-                        item,
-                        service_labels,
-                        span,
-                    ),
+                    hostname,
+                    item,
+                    mo.service_labels,
                     ruleset,
                 )
             )
 
     def get_service_ruleset_values(
         self,
-        match_object: RulesetMatchObject,
+        host_name: HostName,
+        match_text: ServiceName | Item,
+        service_labels: Labels,
         ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> Iterator[TRuleValue]:
         """Returns a generator of the values of the matched rules"""
-        with_foreign_hosts = (
-            match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
-        )
+        with_foreign_hosts = host_name not in self.ruleset_optimizer.all_processed_hosts()
         optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(ruleset, with_foreign_hosts)
 
         for (
@@ -423,20 +425,16 @@ class RulesetMatcher:
             service_label_groups_cache_id,
             service_description_condition,
         ) in optimized_ruleset:
-            if match_object.service_description is None:
+            if match_text is None:
                 continue
 
-            if match_object.host_name not in hosts:
+            if host_name not in hosts:
                 continue
 
             service_cache_id = (
                 (
-                    match_object.service_description,
-                    hash(
-                        None
-                        if match_object.service_labels is None
-                        else frozenset(match_object.service_labels.items())
-                    ),
+                    match_text,
+                    hash(None if service_labels is None else frozenset(service_labels.items())),
                 ),
                 service_description_condition,
                 service_label_groups_cache_id,
@@ -445,8 +443,11 @@ class RulesetMatcher:
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
-                match = matches_service_conditions(
-                    service_description_condition, service_label_groups, match_object
+                match = _matches_service_conditions(
+                    service_description_condition,
+                    service_label_groups,
+                    match_text,
+                    service_labels,
                 )
                 self._service_match_cache[service_cache_id] = match
 
@@ -960,7 +961,9 @@ class RulesetOptimizer:
         return merge_parameters(
             list(
                 self._ruleset_matcher.get_service_ruleset_values(
-                    RulesetMatchObject(hostname, service_desc, {}),
+                    hostname,
+                    service_desc,
+                    {},
                     self._label_manager.service_label_rules,
                 )
             ),
@@ -1092,19 +1095,16 @@ def _and_or_not_group_match(
             return given_group_match and not new_single_match
 
 
-def matches_service_conditions(
+def _matches_service_conditions(
     service_description_condition: tuple[bool, Pattern[str]],
     service_labels_condition: LabelGroups,
-    match_object: RulesetMatchObject,
+    match_text: ServiceName | Item,
+    service_labels: Labels,
 ) -> bool:
-    if not _matches_service_description_condition(
-        service_description_condition, match_object.service_description
-    ):
+    if not _matches_service_description_condition(service_description_condition, match_text):
         return False
 
-    if service_labels_condition and not matches_labels(
-        match_object.service_labels, service_labels_condition
-    ):
+    if service_labels_condition and not matches_labels(service_labels, service_labels_condition):
         return False
 
     return True

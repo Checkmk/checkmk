@@ -27,9 +27,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
-
 
 def test_ruleset_match_object_host_name() -> None:
     obj = RulesetMatchObject(host_name=HostName("abc"), service_description=None, service_labels={})
@@ -730,64 +727,42 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
 
 
 @pytest.mark.parametrize(
-    "hostname,service_description,expected_result",
+    "hostname,service_description,service_labels,expected_result",
     [
         # Funny service name because the plug-in isn't loaded.
         # We could patch config.service_description, but this is easier:
         (
             HostName("host1"),
             ServiceName("Unimplemented check cpu_load"),
+            {
+                "os": "linux",
+                "abc": "xä",
+                "hu": "ha",
+            },
             ["os_linux", "abc", "BLA"],
         ),
-        (HostName("host2"), ServiceName("Unimplemented check cpu_load"), ["hu", "BLA"]),
+        (HostName("host2"), ServiceName("Unimplemented check cpu_load"), {}, ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_service_ruleset_values_labels(
     monkeypatch: MonkeyPatch,
     hostname: HostName,
     service_description: ServiceName,
+    service_labels: Mapping[str, str],
     expected_result: Sequence[str],
 ) -> None:
     ts = Scenario()
-
     ts.add_host(HostName("host1"))
-    ts.set_autochecks(
-        HostName("host1"),
-        [
-            AutocheckEntry(
-                CheckPluginName("cpu_load"),
-                None,
-                {},
-                {
-                    "os": "linux",
-                    "abc": "xä",
-                    "hu": "ha",
-                },
-            )
-        ],
-    )
-
     ts.add_host(HostName("host2"))
-    ts.set_autochecks(
-        HostName("host2"),
-        [
-            AutocheckEntry(
-                CheckPluginName("cpu_load"),
-                None,
-                {},
-                {},
-            ),
-        ],
-    )
-
-    config_cache = ts.apply(monkeypatch)
-    matcher = config_cache.ruleset_matcher
+    matcher = ts.apply(monkeypatch).ruleset_matcher
 
     assert (
         list(
             matcher.get_service_ruleset_values(
-                matcher._service_match_object(hostname, service_description),
-                ruleset=service_label_ruleset,
+                hostname,
+                service_description,
+                service_labels,
+                service_label_ruleset,
             )
         )
         == expected_result

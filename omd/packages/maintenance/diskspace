@@ -182,62 +182,50 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
 
 def _cleanup_host_directory_for_local_hosts(
     cleanup_abandoned_host_files: int, unaffected_hosts: set[str], base_path: str
-) -> list[str]:
+) -> set[str]:
     """
     First find all directories not related to a known host.
     """
     if not os.path.isdir(base_path):
-        return []
+        return set()
 
-    unrelated_dirs: list[str] = []
-    for host_dir in os.listdir(base_path):
-        if host_dir not in unaffected_hosts:
-            unrelated_dirs.append(host_dir)
+    abandoned = {host_dir for host_dir in os.listdir(base_path) if host_dir not in unaffected_hosts}
 
-    cleaned_up_hosts = _check_threshold_and_delete(
-        cleanup_abandoned_host_files, unrelated_dirs, base_path
-    )
-
-    return cleaned_up_hosts
+    return _check_threshold_and_delete(cleanup_abandoned_host_files, abandoned, base_path)
 
 
 def _cleanup_host_directory_for_remote_hosts(
     cleanup_abandoned_host_files: int, cleaned_up_remote_hosts: set, base_path: str
-) -> list:
+) -> set[str]:
     """
     Find all directories existing on the local site and return a list of all
     matching hosts that are known on remote sites
     """
     if not os.path.isdir(base_path):
-        return []
+        return set()
 
-    unrelated_dirs = []
-    for host_dir in os.listdir(base_path):
-        if host_dir in cleaned_up_remote_hosts:
-            unrelated_dirs.append(host_dir)
+    abandoned = {
+        host_dir for host_dir in os.listdir(base_path) if host_dir in cleaned_up_remote_hosts
+    }
 
-    cleaned_up_hosts = _check_threshold_and_delete(
-        cleanup_abandoned_host_files, unrelated_dirs, base_path
-    )
-
-    return cleaned_up_hosts
+    return _check_threshold_and_delete(cleanup_abandoned_host_files, abandoned, base_path)
 
 
 def _check_threshold_and_delete(
-    cleanup_abandoned_host_files: int, abandoned_hosts: list[str], base_path: str
-) -> list:
+    cleanup_abandoned_host_files: int, abandoned_hosts: set[str], base_path: str
+) -> set[str]:
     """
     Find the latest modified file for each directory. When the latest
     modified file is older than the threshold, delete all files including
     the host base directory.
     """
-    cleaned_up_hosts = []
+    cleaned_up_hosts = set()
     for unrelated_dir in abandoned_hosts:
         path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
         if mtime < time.time() - cleanup_abandoned_host_files:
             _delete_files_and_base_directory(path, "abandoned host")
-            cleaned_up_hosts.append(unrelated_dir)
+            cleaned_up_hosts.add(unrelated_dir)
         else:
             _verbose("Found abandoned host path (but not old enough): %s" % path)
 

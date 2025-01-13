@@ -394,6 +394,15 @@ def _start_cleanup_unused_definitions(
     }:
         yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
 
+    for queue in set(
+        binding.destination
+        for binding in old_definitions.bindings
+        if binding.destination_type == "queue" and binding not in new_definitions.bindings
+    ):
+        # removed bindings are not correctly actualized in rabbitmq
+        # we delete the queue to remove the bindings
+        yield rabbitmqctl_process(("delete_queue", queue), wait=False)
+
     # currently only shovels, but we don't have to care here
     for param in set(old_definitions.parameters) - set(new_definitions.parameters):
         yield rabbitmqctl_process(

@@ -4,22 +4,26 @@
 // source code package.
 
 #include <cstddef>
+#include <ios>
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 /// The four consolidation functions from
 /// https://oss.oetiker.ch/rrdtool/doc/rrdfetch.en.html
 struct CF {
     virtual ~CF() = default;
+    [[nodiscard]] virtual std::string string() const = 0;
     [[nodiscard]] virtual double init() = 0;
     virtual void handle(double value) = 0;
 };
 
+std::ostream &operator<<(std::ostream &os, const CF &cf);
+
 class MaxCF : public CF {
 public:
-    MaxCF() = default;
-    ~MaxCF() override = default;
+    [[nodiscard]] std::string string() const override { return "MAX"; };
     [[nodiscard]] double init() override;
     void handle(double value) override;
 
@@ -29,8 +33,7 @@ private:
 
 class MinCF : public CF {
 public:
-    MinCF() = default;
-    ~MinCF() override = default;
+    [[nodiscard]] std::string string() const override { return "MIN"; };
     [[nodiscard]] double init() override;
     void handle(double value) override;
 
@@ -40,8 +43,7 @@ private:
 
 class AvgCF : public CF {
 public:
-    AvgCF() = default;
-    ~AvgCF() override = default;
+    [[nodiscard]] std::string string() const override { return "AVERAGE"; };
     [[nodiscard]] double init() override;
     void handle(double value) override;
 
@@ -52,8 +54,7 @@ private:
 
 class LastCF : public CF {
 public:
-    LastCF() = default;
-    ~LastCF() override = default;
+    [[nodiscard]] std::string string() const override { return "LAST"; };
     [[nodiscard]] double init() override;
     void handle(double value) override;
 

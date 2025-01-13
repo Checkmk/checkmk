@@ -19586,6 +19586,10 @@ msgstr "Identificação do disco"
 msgid "Disk IO"
 msgstr "Disco IO"
 
+#, fuzzy
+msgid "Disk IO Utilization"
+msgstr "Utilização do disco"
+
 msgid "Disk IO discovery"
 msgstr "Descoberta do Disco IO"
 
@@ -26326,6 +26330,10 @@ msgid "Generic check plug-ins"
 msgstr "Plugins de verificação genéricos"
 
 msgid "Generic numeric value"
+msgstr "Valor numérico genérico"
+
+#, fuzzy
+msgid "Generic percentage value"
 msgstr "Valor numérico genérico"
 
 #, fuzzy

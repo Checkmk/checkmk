@@ -19598,6 +19598,10 @@ msgstr "Schijf-ID"
 msgid "Disk IO"
 msgstr "Schijf IO"
 
+#, fuzzy
+msgid "Disk IO Utilization"
+msgstr "Schijfgebruik"
+
 msgid "Disk IO discovery"
 msgstr "Schijf IO ontdekking"
 
@@ -26328,6 +26332,10 @@ msgid "Generic check plug-ins"
 msgstr "Algemene controle plugins"
 
 msgid "Generic numeric value"
+msgstr "Generieke numerieke waarde"
+
+#, fuzzy
+msgid "Generic percentage value"
 msgstr "Generieke numerieke waarde"
 
 #, fuzzy

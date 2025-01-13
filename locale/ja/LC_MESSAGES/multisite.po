@@ -18749,6 +18749,10 @@ msgstr "ディスクID"
 msgid "Disk IO"
 msgstr "ディスクIO"
 
+#, fuzzy
+msgid "Disk IO Utilization"
+msgstr "ディスク使用率"
+
 msgid "Disk IO discovery"
 msgstr "ディスクIOの検出"
 
@@ -25300,6 +25304,10 @@ msgid "Generic check plug-ins"
 msgstr "一般的なチェックプラグイン"
 
 msgid "Generic numeric value"
+msgstr "一般的な数値"
+
+#, fuzzy
+msgid "Generic percentage value"
 msgstr "一般的な数値"
 
 #, fuzzy

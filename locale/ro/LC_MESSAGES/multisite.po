@@ -19617,6 +19617,10 @@ msgstr "ID disc"
 msgid "Disk IO"
 msgstr "Disk IO"
 
+#, fuzzy
+msgid "Disk IO Utilization"
+msgstr "Utilizarea discului"
+
 msgid "Disk IO discovery"
 msgstr "Descoperirea IO disc"
 
@@ -26369,6 +26373,10 @@ msgid "Generic check plug-ins"
 msgstr "Plugin-uri de verificare generică"
 
 msgid "Generic numeric value"
+msgstr "Valoare numerică generică"
+
+#, fuzzy
+msgid "Generic percentage value"
 msgstr "Valoare numerică generică"
 
 #, fuzzy

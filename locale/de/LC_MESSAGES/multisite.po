@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-10 06:00+0000\n"
+"PO-Revision-Date: 2025-01-13 11:16+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2652,7 +2652,7 @@ msgid "API key"
 msgstr "API-Schlüssel"
 
 msgid "API key for iLert alert server"
-msgstr "API Schlüssel für den 'iLert alert server'"
+msgstr "API-Schlüssel für den 'iLert alert server'"
 
 msgid "API key header"
 msgstr "Header des API-Schlüssels"
@@ -3520,13 +3520,13 @@ msgid "Active (files)"
 msgstr "Aktiv (Dateien)"
 
 msgid "Active Calls"
-msgstr "Aktive Aufrufe"
+msgstr "Aktive Anrufe"
 
 msgid "Active Calls In"
-msgstr "Aktive eingehende Aufrufe"
+msgstr "Aktive eingehende Anrufe"
 
 msgid "Active Calls Out"
-msgstr "Aktive ausgehende Aufrufe"
+msgstr "Aktive ausgehende Anrufe"
 
 msgid "Active Connections"
 msgstr "Aktive Verbindungen"
@@ -3974,7 +3974,7 @@ msgid "Add job"
 msgstr "Job hinzufügen"
 
 msgid "Add key"
-msgstr "API-Schlüssel hinzufügen"
+msgstr "Schlüssel hinzufügen"
 
 msgid "Add limits"
 msgstr "Grenzen hinzufügen"
@@ -7251,7 +7251,7 @@ msgid "AudioCodes Alarms"
 msgstr "AudioCodes Alarme"
 
 msgid "AudioCodes SBC Calls"
-msgstr "AudioCodes SBC Aufrufe"
+msgstr "AudioCodes SBC Anrufe"
 
 msgid "Audit log"
 msgstr "Audit Log"
@@ -7708,7 +7708,7 @@ msgid "Average"
 msgstr "Durchschnitt"
 
 msgid "Average Call Duration"
-msgstr "Durchschnittliche Aufrufdauer"
+msgstr "Durchschnittliche Anrufdauer"
 
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
@@ -10672,13 +10672,13 @@ msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
 msgid "Calls In"
-msgstr "Eingehende Aufrufe"
+msgstr "Eingehende Anrufe"
 
 msgid "Calls In/Out"
-msgstr "Eingehende/ausgehende Aufrufe"
+msgstr "Eingehende/ausgehende Anrufe"
 
 msgid "Calls Out"
-msgstr "Ausgehende Aufrufe"
+msgstr "Ausgehende Anrufe"
 
 msgid "Calls per Second"
 msgstr "Aufrufe pro Sekunde"
@@ -18915,6 +18915,10 @@ msgstr "Platten-ID"
 msgid "Disk IO"
 msgstr "Festplatten-E/A"
 
+#, fuzzy
+msgid "Disk IO Utilization"
+msgstr "Festplattenauslastung"
+
 msgid "Disk IO discovery"
 msgstr "Erkennung Festplatten-E/A"
 
@@ -21451,6 +21455,9 @@ msgid ""
 "Enable experimental rendering modes for form specs. Keep in mind thatsome "
 "form specs are always rendered in the frontend, regardless of this setting."
 msgstr ""
+"Aktivieren Sie experimentelle Rendering-Modi für Formularvorlagen. Beachten "
+"Sie, dass einige Formularvorgaben immer im Frontend gerendert werden, "
+"unabhängig von dieser Einstellung."
 
 msgid "Enable flap detection"
 msgstr "Flap-Erkennung ein"
@@ -22268,9 +22275,8 @@ msgstr ""
 "also die Gesamtgröße der gelöschten Einträge diese Zahl erreicht, wird die "
 "Historie der Event Console bereinigt."
 
-#, fuzzy
 msgid "Event Console alert filters"
-msgstr "Filter der Event Console Alerts"
+msgstr "Alert-Filter der Event Console"
 
 msgid "Event Console alerts"
 msgstr "Alerts der Event Console"
@@ -22940,9 +22946,8 @@ msgstr "Erwarteter Zustand"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
-#, fuzzy
 msgid "Experimental rendering"
-msgstr "Experimentelle Funktionen"
+msgstr "Experimentelles Rendern"
 
 msgid "Expiration Date"
 msgstr "Ablaufdatum"
@@ -24753,9 +24758,8 @@ msgstr "Gabelungen"
 msgid "Form factor"
 msgstr "Formfaktor"
 
-#, fuzzy
 msgid "Form specs"
-msgstr "Für bestimmte SIDs"
+msgstr "Formularvorgaben"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr "FormSpec und interne Datenstruktur stimmen nicht überein"
@@ -25453,6 +25457,10 @@ msgid "Generic check plug-ins"
 msgstr "Generische Check-Plugins"
 
 msgid "Generic numeric value"
+msgstr "Generischer numerischer Wert"
+
+#, fuzzy
+msgid "Generic percentage value"
 msgstr "Generischer numerischer Wert"
 
 msgid "Generic plug-in display options"
@@ -29524,25 +29532,20 @@ msgstr "IP-Adresse"
 msgid "IP Address of Hosts"
 msgstr "IP-Adresse der Hosts"
 
-#, fuzzy
 msgid "IP Group Active Calls In"
-msgstr "Aktive eingehende Aufrufe"
+msgstr "Aktive eingehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP Group Active Calls Out"
-msgstr "Aktive ausgehende Aufrufe"
+msgstr "Aktive ausgehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP Group Calls In"
-msgstr "Eingehende Aufrufe"
+msgstr "Eingehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP Group Calls In/Out"
-msgstr "Eingehende/ausgehende Aufrufe"
+msgstr "Eingehende/ausgehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP Group Calls Out"
-msgstr "Ausgehende Aufrufe"
+msgstr "Ausgehende IP Group Aufrufe"
 
 msgid "IP address"
 msgstr "IP-Adresse"
@@ -29600,7 +29603,7 @@ msgid "IP-Version"
 msgstr "IP Version"
 
 msgid "IP2Tel"
-msgstr ""
+msgstr "IP2Tel"
 
 msgid "IPC semaphore IDs"
 msgstr "IPC-Semaphoren IDs"
@@ -37531,6 +37534,9 @@ msgid ""
 "metadata. Note: Notification rules take effect immediately without "
 "\"Activate changes\"."
 msgstr ""
+"Machen Sie Ihre Regel mit einer aussagekräftigen Beschreibung und anderen "
+"Metadaten besser erkennbar. Hinweis: Benachrichtigungsregeln werden ohne "
+"\"Änderungen aktivieren\" sofort wirksam."
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
@@ -41219,9 +41225,8 @@ msgstr "Nächster Schritt: Benachrichtigungsmethode (Plugin)"
 msgid "Next step: Recipient"
 msgstr "Nächster Schritt: Empfänger"
 
-#, fuzzy
 msgid "Next step: Review all settings"
-msgstr "Nächster Schritt: Generelle Eigenschaften"
+msgstr "Nächster Schritt: Überprüfung aller Einstellungen"
 
 msgid "Next step: Sending conditions"
 msgstr "Nächster Schritt: Bedingungen senden"
@@ -41444,9 +41449,11 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Kein Graph verfügbar: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
-msgstr "Kein Graph mit der ID <tt>%s</tt>"
+msgstr ""
+"Es wurde kein Graph mit der ID <tt>%s</tt> für den Benutzer <tt>%s</tt> "
+"gefunden"
 
 msgid "No groups are defined yet."
 msgstr "Keine Gruppe definiert."
@@ -42534,10 +42541,10 @@ msgid "Number of Active Sessions"
 msgstr "Anzahl von aktiven Sitzungen"
 
 msgid "Number of Attempted SIP/H323 calls"
-msgstr ""
+msgstr "Anzahl der versuchten SIP/H323 Anrufe"
 
 msgid "Number of Attempted SIP/H323 fax calls"
-msgstr ""
+msgstr "Anzahl der versuchten SIP/H323 Faxanrufe"
 
 msgid "Number of Checkmk checkers is less than number of CPUs"
 msgstr "Anzahl der Checkmk-Checkers ist kleiner als die Anzahl der CPUs"
@@ -42552,7 +42559,7 @@ msgid "Number of Deadlocks / sec"
 msgstr "Anzahl von Deadlocks/Sek"
 
 msgid "Number of Destination Busy SIP/H323 calls"
-msgstr ""
+msgstr "Anzahl der besetzten SIP/H323-Anrufe"
 
 msgid "Number of Documents"
 msgstr "Anzahl von Dokumenten"
@@ -42579,14 +42586,18 @@ msgid "Number of Mails in Queue"
 msgstr "Anzahl von Mail in der Schlange"
 
 msgid "Number of No Answer SIP/H323 calls"
-msgstr ""
+msgstr "Anzahl nicht angenommener SIP/H323-Anrufe"
 
 msgid ""
 "Number of No Route SIP/H323 calls. Most likely to be due to wrong number"
 msgstr ""
+"Anzahl der nicht weitergeleiteten SIP/H323-Anrufe. Höchstwahrscheinlich "
+"aufgrund einer falschen Nummer"
 
 msgid "Number of No capability match between peers on SIP/H323 calls"
 msgstr ""
+"Anzahl der nicht übereinstimmenden Fähigkeiten zwischen Peers bei SIP/H323-"
+"Anrufen"
 
 msgid "Number of Nodes"
 msgstr "Anzahl der Knoten"
@@ -42612,9 +42623,8 @@ msgstr "Anzahl von Ressourcen"
 msgid "Number of Running Bossock Fibers"
 msgstr "Bossock: Anzahl aktiver Fasern"
 
-#, fuzzy
 msgid "Number of SIP/H323 fax success calls"
-msgstr "Anzahl der Zugangspunkte"
+msgstr "Anzahl erfolgreicher SIP/H323 Faxanrufe"
 
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Anzahl Transaktionen pro Minute auf einem Lotus Domino Server"
@@ -42748,6 +42758,7 @@ msgstr "Anzahl von Einträgen"
 
 msgid "Number of established (connected and voice activated) SIP/H323 calls"
 msgstr ""
+"Anzahl der aufgebauten (verbundenen und sprachaktivierten) SIP/H323-Anrufe"
 
 msgid "Number of events in defined timespan lower level"
 msgstr "Untergrenze der Anzahl der Ereignisse in definierter Zeitspanne"
@@ -42761,9 +42772,8 @@ msgstr "Anzahl der entzogenen Schlüssel"
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Nachrichten"
 
-#, fuzzy
 msgid "Number of failed SIP/H323 calls"
-msgstr "Anzahl von fehlgeschlagenen Pfaden"
+msgstr "Anzahl fehlgeschlagener SIP/H323 Anrufe"
 
 msgid "Number of failed jobs"
 msgstr "Anzahl von fehlgeschlagenen Aufträgen"
@@ -43559,9 +43569,8 @@ msgstr "Bei Host DOWN"
 msgid "On host name exclusion list."
 msgstr "Auf der Host-Namen-Ausschlussliste."
 
-#, fuzzy
 msgid "On host: Schedule downtime"
-msgstr "Wartungszeiten planen"
+msgstr "Für den Host: Wartungszeit planen"
 
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"
@@ -43590,9 +43599,8 @@ msgstr "Bei ausgewählten Instanzen"
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
 
-#, fuzzy
 msgid "On service: Schedule downtime"
-msgstr "Ignoriere Wartungszeiten"
+msgstr "Für den Service: Wartungszeit planen"
 
 #, python-format
 msgid ""
@@ -48385,7 +48393,7 @@ msgid "Printed pages"
 msgstr "Gedruckte Seiten"
 
 msgid "Printer Input Units"
-msgstr "Drucker-Papierfächer"
+msgstr "Druckereingabeeinheit"
 
 msgid "Printer Name"
 msgstr "Druckername"
@@ -49171,16 +49179,16 @@ msgid "REST API"
 msgstr "REST-API"
 
 msgid "REST API communication"
-msgstr "REST API-Kommunikation"
+msgstr "REST-API-Kommunikation"
 
 msgid "REST API documentation"
 msgstr "REST-API-Dokumentation"
 
 msgid "REST API interactive GUI"
-msgstr "REST API interaktive Ansicht"
+msgstr "REST-API interaktive Ansicht"
 
 msgid "REST API introduction"
-msgstr "Einführung in die REST API"
+msgstr "Einführung in die REST-API"
 
 msgid "REST API specification successfully generated"
 msgstr "REST-API Spezifikation erfolgreich erstellt"
@@ -49571,7 +49579,6 @@ msgstr "Lesezugriffe"
 msgid "Read operations /s"
 msgstr "Lesezugriffe pro Sekunde"
 
-#, fuzzy
 msgid "Read queue length"
 msgstr "Länge der Lese-Warteschlange"
 
@@ -51925,7 +51932,7 @@ msgid "Rule type"
 msgstr "Regeltyp"
 
 msgid "Rule value representation for REST API"
-msgstr "Regelwertdarstellung für REST API"
+msgstr "Regelwertdarstellung für REST-API"
 
 msgid "Rule-ID"
 msgstr "Regel-ID"
@@ -60071,7 +60078,7 @@ msgstr ""
 "Besitzerteam überschrieben."
 
 msgid "Tel2IP"
-msgstr ""
+msgstr "Tel2IP"
 
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
@@ -61921,7 +61928,7 @@ msgid "The credential does not exist"
 msgstr "Diese Zugangsdaten sind nicht vorhanden"
 
 msgid "The credentials for api calls with authentication."
-msgstr "Die Anmeldedaten für Api-Aufrufe mit Authentifizierung."
+msgstr "Die Anmeldedaten für API-Aufrufe mit Authentifizierung."
 
 msgid ""
 "The critical problems that make this aggregation non-OK have been "
@@ -63552,9 +63559,9 @@ msgid ""
 "10 seconds. Please note that this is not a total timeout, instead it is "
 "applied to each API call."
 msgstr ""
-"Der Netzwerktimeout in Sekunden bei der Kommunikationen über UPNP. Der "
-"Standardwert ist 10 Sekunden. Bitte beachten Sie, dass dies nicht ein "
-"Gesamttimeout ist, sondern auf jeden einzelnen API-Aufruf angewendet wird."
+"Der Netzwerk-Timeout in Sekunden bei der Kommunikationen über UPNP. Der "
+"Standardwert ist 10 Sekunden. Bitte beachten Sie, dass dies nicht ein Gesamt-"
+"Timeout ist, sondern auf jeden einzelnen API-Aufruf angewendet wird."
 
 msgid ""
 "The network timeout in seconds when communicating with AppDynamics.The "
@@ -64013,7 +64020,7 @@ msgid "The port on which the ntopng instance is reachable."
 msgstr "Der Port unter dem die ntopng Instanz erreichbar ist."
 
 msgid "The port that is used for the api call."
-msgstr "Der Port, der für den Api-Aufruf verwendet wird."
+msgstr "Der Port, der für den API-Aufruf verwendet wird."
 
 msgid "The port the DBMS listens to"
 msgstr "Der TCP-Port des Datenbankservers"
@@ -65130,13 +65137,13 @@ msgstr ""
 "soll."
 
 msgid "The username that should be used for accessing the RabbitMQ API."
-msgstr "Der Benutzername der zum Zugriff auf die RabbitMQ API verwendet wird."
+msgstr "Der Benutzername der zum Zugriff auf die RabbitMQ-API verwendet wird."
 
 msgid ""
 "The username that should be used for accessing the jenkins API. Has to have "
 "read permissions at least."
 msgstr ""
-"Der Benutzername der zum Zugriff auf die Jenkins API verwendet wird. Muss "
+"Der Benutzername, der zum Zugriff auf die Jenkins-API verwendet wird. Muss "
 "mindestens Lesezugriff haben."
 
 msgid "The username used for broker authentication."
@@ -65760,6 +65767,8 @@ msgstr ""
 msgid ""
 "These settings only affect features that are currently under development."
 msgstr ""
+"Diese Einstellungen wirken sich nur auf Funktionen aus, die sich derzeit in "
+"der Entwicklung befinden."
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -66766,7 +66775,7 @@ msgid ""
 "tt>"
 msgstr ""
 "Der in der URL benutzte Anwendungsname. Wenn Sie zum Beispiel den "
-"Anwendungsnamen <tt>foobar</tt> eingeben, würde die REST API mit der "
+"Anwendungsnamen <tt>foobar</tt> eingeben, würde die REST-API mit der "
 "folgenden URL kontaktiert werden: <tt>/controller/rest/applications/foobar/"
 "metric-data</tt>"
 
@@ -68163,7 +68172,7 @@ msgid ""
 "settings here."
 msgstr ""
 "Dieser Regelsatz erlaubt das Abfragen eines AppDynamics-Servers nach "
-"Information über laufendende Java-Anwendungen mittels der AppDynamics REST "
+"Information über laufendende Java-Anwendungen mittels der AppDynamics REST-"
 "API. Hier können Sie Ihre Verbindungseinstellungen konfigurieren."
 
 msgid "This rule allows querying the Jolokia web API."
@@ -68800,7 +68809,7 @@ msgid ""
 "Agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "Diese Regel aktiviert den Agenten für UCS Bladecenter anstelle des normalen "
-"Checkmk-Agenten. Dadurch wird der Host via der UCS Bladecenter Web API "
+"Checkmk-Agenten. Dadurch wird der Host via der UCS Bladecenter Web-API "
 "überwacht"
 
 msgid "This rule selects the special agent for Salesforce."
@@ -68872,7 +68881,7 @@ msgid ""
 "Agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "Dieser Regelsatz wählt den NetApp-Spezialagenten anstelle des normalen "
-"Checkmk-Agenten und ermöglicht das Monitoring über die NetApp Ontap REST API."
+"Checkmk-Agenten und ermöglicht das Monitoring über die NetApp Ontap REST-API."
 
 msgid ""
 "This rule sets limits to the current number of connections through a Check "
@@ -71219,9 +71228,8 @@ msgstr "Dokumente insgesamt"
 msgid "Total duration"
 msgstr "Gesamtdauer"
 
-#, fuzzy
 msgid "Total duration of SIP/H323 calls"
-msgstr "Gesamtdauer: "
+msgstr "Gesamtdauer der SIP/H323 Anrufe"
 
 msgid "Total duration: "
 msgstr "Gesamtdauer: "
@@ -77529,7 +77537,7 @@ msgstr ""
 "Besuchen Sie unsere %s, um mehr über Checkmk und über die %s zu erfahren."
 
 msgid "Vista API"
-msgstr "Vista API"
+msgstr "Vista-API"
 
 msgid "Visual levels for the availability"
 msgstr "Visuelle Level für die Verfügbarkeit"
@@ -79956,7 +79964,6 @@ msgstr "Schreibzugriffe"
 msgid "Write operations/s"
 msgstr "Schreibzugriffe/s"
 
-#, fuzzy
 msgid "Write queue length"
 msgstr "Länge der Schreib-Warteschlange"
 

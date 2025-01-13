@@ -2059,7 +2059,7 @@ class ABCEditRuleMode(WatoMode):
 
         # Check permissions on folders
         new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
-        if not isinstance(self, ModeNewRule):
+        if not isinstance(self, (ModeNewRule, ModeCloneRule)):
             self._folder.permissions.need_permission("write")
         new_rule_folder.permissions.need_permission("write")
 

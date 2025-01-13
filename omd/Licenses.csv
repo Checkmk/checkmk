@@ -1,210 +1,1697 @@
 Name,Version,License,Link License Text,Repository path,Comment
 asio,1.24.0,BSL-1.0,https://opensource.org/licenses/BSL-1.0,third_party/asio/asio-1.24.0-patched.tar.gz,
-charset-normalizer,3.2.0,MIT,https://opensource.org/licenses/MIT,non-free/cmk-update-agent/src/pip-32/charset-normalizer-3.2.0.tar.gz,
-charset-normalizer,3.2.0,MIT,https://opensource.org/licenses/MIT,non-free/cmk-update-agent/src/pip/charset-normalizer-3.2.0.tar.gz,
-cpp-httplib,0.11.3,MIT,https://opensource.org/licenses/MIT,omd/packages/httplib/cpp-httplib-0.13.3.tar.gz,
+cpp-httplib,0.13.3,MIT,https://opensource.org/licenses/MIT,omd/packages/httplib/cpp-httplib-0.13.3.tar.gz,
 fmt,10.2.1,MIT,https://opensource.org/licenses/MIT,third_party/fmt/fmt-10.2.1.tar.gz,
-googletest,1.10.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,third_party/googletest/googletest-71140c3ca7-patched.tar.gz,
-mod_wsgi,4.9.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/mod_wsgi/mod_wsgi-4.9.4.tar.gz,
-nagvis,1.9.40,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/nagvis/nagvis-1.9.40.tar.gz,
+freetds,1.4.22,GPL-2.0-or-later,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+googletest,71140c3ca7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,third_party/googletest/googletest-71140c3ca7-patched.tar.gz,
+heirloom_pkgtools,070227,Caldera AND CDDL-1.0,"http://www.lemis.com/grog/UNIX/ancient-source-all.pdf
+https://opensource.org/licenses/cddl1",,
+heirloommailx,12.5,BSD-4-Clause-UC AND MIT AND MPL-1.1,"http://www.freebsd.org/copyright/license.html
+https://opensource.org/licenses/MIT
+http://www.mozilla.org/MPL/MPL-1.1.html",,
+lcab,1.0b12,GPL-2.0,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+libgsf,1.14.44,LGPL-2.1-only,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
+mod_fcgid,2.3.9,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+mod_wsgi,4.9.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+monitoring_plugins,2.4.0,GPL-3.0,https://www.gnu.org/licenses/gpl-3.0-standalone.html,,
+msitools,0.94,LGPL-2.1-or-later,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
+nagios,3.5.1,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+nagvis,1.9.42,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,omd/packages/nagvis/nagvis-1.9.42.tar.gz,
+nagvis,1.9.44,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,omd/packages/nagvis/nagvis-1.9.44.tar.gz,
+netsnmp,5.9.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+nrpe,3.2.1,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
 openhardwaremonitor,0.9.6,MPL-2.0,https://opensource.org/licenses/MPL-2.0,third_party/openhardwaremonitor/openhardwaremonitor-0.9.6.zip,
-Perl module: Archive-Zip,1.68,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: base,2.18,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
+openssl,3.0.15,OpenSSL,http://www.openssl.org/source/license.html,,
+patch,2.7.6,GPL-3.0-or-later,https://www.gnu.org/licenses/gpl-3.0-standalone.html,,
+Perl module: Archive-Zip,1.68,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: base,2.18,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 Perl module: Capture-Tiny,0.27,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Perl module: Carp-Clan,6.04,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Class-Accessor,0.34,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Class-MethodMaker,2.22,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Class-Singleton,1.5,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: common-sense,3.73,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Config-General,2.56,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Crypt-Blowfish_PP,1.12,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Data-Dumper,2.154,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: DateTime,1.18,Artistic-2.0,https://opensource.org/licenses/Artistic-2.0,,
-Perl module: DateTime-Locale,0.45,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: DateTime-TimeZone,1.88,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Digest-MD5,2.54,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Digest-SHA1,2.13,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: ExtUtils-CBuilder,0.280220,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: ExtUtils-Constant,0.23,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: ExtUtils-MakeMaker,7.04,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: ExtUtils-ParseXS,3.24,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
+Perl module: Carp-Clan,6.04,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Class-Accessor,0.34,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Class-MethodMaker,2.22,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Class-Singleton,1.5,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: common-sense,3.73,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Config-General,2.56,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Config-Tiny,2.20,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Crypt-Blowfish_PP,1.12,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: crypt_ssleay,0.72,Artistic-2.0,http://www.perlfoundation.org/artistic_license_2_0,,
+Perl module: Data-Dumper,2.154,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: DateTime,1.18,Artistic-2.0,http://www.perlfoundation.org/artistic_license_2_0,,
+Perl module: DateTime-Locale,0.45,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: DateTime-TimeZone,1.88,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Digest-MD5,2.54,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Digest-SHA1,2.13,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: ExtUtils-CBuilder,0.280220,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: ExtUtils-Constant,0.23,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: ExtUtils-MakeMaker,7.04,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: ExtUtils-ParseXS,3.24,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 Perl module: File-SearchPath,0.06,GPL-2.0-or-later,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
-Perl module: Getopt-Long,2.43,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: HTML-Parser,3.71,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: HTTP-Cookies,6.01,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: HTTP-Date,6.02,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: HTTP-Message,6.06,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: IO,1.25,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: IPC-Cmd,0.92,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: JSON,2.90,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: JSON-PP,2.27300,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: JSON-XS,3.01,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: libwww-perl,6.13,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: List-AllUtils,0.09,Artistic-2.0,https://opensource.org/licenses/Artistic-2.0,,
-Perl module: Locale-Maketext-Simple,0.21,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,Also MIT
-Perl module: LWP-Protocol-https,6.10,GPL-1.0,https://spdx.org/licenses/GPL-1.0.html,,
-Perl module: Math-Calc-Units,1.07,GPL-2.0,https://opensource.org/licenses/GPL-2.0,,
-Perl module: Module-Build,0.4007,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-CoreList,5.20150420,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Find,0.12,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Implementation,0.09,Artistic-2.0,https://opensource.org/licenses/Artistic-2.0,,
-Perl module: Module-Install,1.16,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Load,0.32,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Load-Conditional,0.64,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Metadata,1.000027,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Module-Runtime,0.014,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Monitoring-Livestatus,0.74,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Monitoring-Plugin,0.38,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Nagios-Plugin,0.36,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Net-HTTP,6.07,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Params-Check,0.38,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Params-Util,1.07,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Params-Validate,1.18,Artistic-2.0,https://opensource.org/licenses/Artistic-2.0,,
-Perl module: parent,0.232,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Path-Class,0.35,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: PathTools,3.47,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Perl-OSType,1.008,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Scalar-List-Utils,1.42,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Socket,2.019,Artistic-1.0-Perl OR GPL-1.0-or-later,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Sub-Exporter-Progressive,0.001011,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Sub-Install,0.928,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Sys-SigAction,0.21,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Term-Clui,1.70,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Term-ProgressBar,2.17,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Term-ReadLine-Gnu,1.25,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
+Perl module: Getopt-Long,2.43,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: HTML-Parser,3.71,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: HTTP-Cookies,6.01,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: HTTP-Date,6.02,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: HTTP-Message,6.06,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: IO,1.25,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: IPC-Cmd,0.92,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: JSON,2.90,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: JSON-PP,2.27300,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: JSON-XS,3.01,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: libwww-perl,6.13,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: List-AllUtils,0.09,Artistic-2.0,http://www.perlfoundation.org/artistic_license_2_0,,
+Perl module: Locale-Maketext-Simple,0.21,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: LWP-Protocol-https,6.10,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Math-Calc-Units,1.07,Artistic-1.0 OR GPL-2.0-only,"https://opensource.org/licenses/Artistic-1.0
+https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",,
+Perl module: Module-Build,0.4007,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-CoreList,5.20150420,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Find,0.12,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Implementation,0.09,Artistic-2.0,http://www.perlfoundation.org/artistic_license_2_0,,
+Perl module: Module-Install,1.16,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Load,0.32,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Load-Conditional,0.64,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Metadata,1.000027,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Module-Runtime,0.014,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Monitoring-Livestatus,0.74,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Monitoring-Plugin,0.38,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Nagios-Plugin,0.36,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Net-HTTP,6.07,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Params-Check,0.38,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Params-Util,1.07,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Params-Validate,1.18,Artistic-2.0,http://www.perlfoundation.org/artistic_license_2_0,,
+Perl module: parent,0.232,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Path-Class,0.35,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: PathTools,3.47,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Perl-OSType,1.008,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Scalar-List-Utils,1.42,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Socket,2.019,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Sub-Exporter-Progressive,0.001011,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Sub-Install,0.928,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Sys-SigAction,0.21,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Term-Clui,1.70,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Term-ProgressBar,2.17,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Term-ReadLine-Gnu,1.25,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 Perl module: Term-ShellUI,0.92,MIT,https://opensource.org/licenses/MIT,,
-Perl module: Term-Size,0.207,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,dual licensed with own text or artistic
-Perl module: TermReadKey,2.37,Artistic-1.0,http://www.perl.com/perl/misc/Artistic.html,,
-Perl module: Test-Cmd,1.08,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Test-Simple,1.001014,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Text-ParseWords,3.29,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: Time-HiRes,1.9726,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
+Perl module: Term-Size,0.207,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: TermReadKey,2.37,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Test-Cmd,1.08,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Test-Simple,1.001014,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Text-ParseWords,3.29,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: Time-HiRes,1.9726,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 Perl module: Try-Tiny,0.22,MIT,https://opensource.org/licenses/MIT,,
-Perl module: Types-Serialiser,1.0,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: URI,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: version,0.9924,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-LibXML,2.0134,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-NamespaceSupport,1.11,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-Parser,2.44,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-SAX,0.99,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-SAX-Base,1.08,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-Simple,2.20,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: XML-Twig,3.52,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-Perl module: YAML-Tiny,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,,
-PyInstaller,3.6,GPL-2.0,https://opensource.org/licenses/GPL-2.0,non-free/cmk-update-agent/src/pip-32/PyInstaller-3.6.tar.gz,
-PyInstaller,3.6,GPL-2.0,https://opensource.org/licenses/GPL-2.0,non-free/cmk-update-agent/src/pip/PyInstaller-3.6.tar.gz,
-Python,3.12.1,PSF-2.0,https://spdx.org/licenses/PSF-2.0.html,omd/packages/Python/Python-3.12.1.tar.xz,
+Perl module: Types-Serialiser,1.0,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: URI,1.67,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: version,0.9924,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-LibXML,2.0134,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-NamespaceSupport,1.11,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-Parser,2.44,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-SAX,0.99,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-SAX-Base,1.08,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: XML-Simple,2.20,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+Perl module: YAML-Tiny,1.67,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+pnp4nagios,0.6.26,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+python,3.12.3,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python,3.12.6,PSF-2.0,https://opensource.org/licenses/Python-2.0,omd/packages/Python/Python-3.12.6.tar.xz,
+Python module: aiohappyeyeballs,2.4.4,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: aiohttp,3.10.5,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: aiosignal,1.3.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: altgraph,0.17,MIT,https://opensource.org/licenses/MIT,,
+Python module: altgraph,0.17,MIT,https://opensource.org/licenses/MIT,,
 Python module: annotated-types,0.5.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: annotated-types,0.7.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: anyio,4.6.2.post1,MIT,https://opensource.org/licenses/MIT,,
 Python module: apispec,6.4.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: apispec-oneofschema,3.0.0,MIT,https://opensource.org/licenses/MIT,,
-Python module: azure-identity,1.12.0,MIT,https://opensource.org/licenses/MIT,,
-Python module: azure-storage-blob,12.15.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: attrs,24.2.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: azure-core,1.32.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: azure-identity,1.17.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: azure-storage-blob,12.21.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: bcrypt,4.1.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: black,24.3.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: blinker,1.9.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: boto3,1.34.15,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: botocore,1.34.15,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: cryptography,42.0.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,also BSD-3-Clause
-Python module: cython,0.29.34,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: dicttoxml,1.7.16,GPL-2.0,https://opensource.org/licenses/GPL-2.0,,
+Python module: cached-property,2.0.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: cachetools,5.5.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: certifi,2024.7.4,MPL-2.0,https://opensource.org/licenses/MPL-2.0,,
+Python module: certifi,2024.7.4,MPL-2.0,https://opensource.org/licenses/MPL-2.0,,
+Python module: certifi,2024.8.30,MPL-2.0,https://opensource.org/licenses/MPL-2.0,,
+Python module: cffi,1.14.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: cffi,1.14.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: cffi,1.17.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: charset-normalizer,3.2.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: charset-normalizer,3.4.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: click,8.1.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: cryptography,2.9.2,Apache-2.0 OR BSD-3-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSD-3-Clause",,
+Python module: cryptography,2.9.2,Apache-2.0 OR BSD-3-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSD-3-Clause",,
+Python module: cryptography,42.0.4,Apache-2.0 OR BSD-3-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSD-3-Clause",,
+Python module: cryptography,44.0.0,Apache-2.0 OR BSD-3-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSD-3-Clause",,
+Python module: cython,3.0.11,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: decorator,5.1.1,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: defusedxml,0.7.1,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: dicttoxml,1.7.16,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+Python module: dnspython,2.7.0,ISC,https://opensource.org/licenses/ISC,,
 Python module: docstring-parser,0.15,MIT,https://opensource.org/licenses/MIT,,
-Python module: exchangelib,5.2.1,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
-Python module: feedparser,6.0.10,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
-Python module: fido2,1.1.2,BSD 2-Clause AND MPL-2.0 AND Apache-2.0,https://opensource.org/licenses/bsd-license.php,,
+Python module: elementpath,4.6.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: exchangelib,5.4.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: fastapi,0.115.5,MIT,https://opensource.org/licenses/MIT,,
+Python module: feedparser,6.0.10,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: fido2,1.1.2,BSD-2-Clause AND MPL-2.0 AND Apache-2.0,"https://opensource.org/licenses/BSD-2-Clause
+https://opensource.org/licenses/MPL-2.0
+https://opensource.org/licenses/Apache-2.0",,
 Python module: flask,3.0.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: frozenlist,1.5.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: gitdb,4.0.11,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: gitpython,3.1.43,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: google-api-core,2.10.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-api-python-client,2.154.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: google-auth,2.17.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: icalendar,5.0.7,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
-Python module: idna,3.4,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: google-auth-httplib2,0.2.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-cloud-access-context-manager,0.1.14,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-cloud-asset,3.14.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-cloud-monitoring,2.11.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-cloud-org-policy,1.4.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: google-cloud-os-config,1.12.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: googleapis-common-protos,1.56.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: grpc-google-iam-v1,0.12.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: grpcio,1.68.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: grpcio-status,1.48.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: gssapi,1.9.0,ISC,https://opensource.org/licenses/ISC,,
+Python module: gunicorn,23.0.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: h11,0.14.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: httplib2,0.22.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: icalendar,5.0.7,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: idna,3.10,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: idna,3.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: idna,3.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: isodate,0.7.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: itsdangerous,2.1.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: jinja2,3.1.3,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: jira,3.5.0,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
+Python module: jira,3.5.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
 Python module: jmespath,1.0.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: jsonpatch,1.33,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: jsonpath-rw,1.4.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: jsonpointer,3.0.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: jsonschema,4.23.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: jsonschema-path,0.3.3,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: jsonschema-specifications,2023.12.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: krb5,0.7.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: kubernetes,21.7.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: lazy-object-proxy,1.10.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
 Python module: lxml,4.9.3,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: lxml,5.3.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: markdown,3.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: markupsafe,2.1.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: marshmallow,3.19.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: marshmallow-oneofschema,3.0.1,MIT,https://opensource.org/licenses/MIT,,
 Python module: meraki,1.41.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: more-itertools,9.1.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: msal,1.26.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: msal-extensions,1.1.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: multidict,6.0.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: mypy-extensions,1.0.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: netapp-ontap,9.14.1.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: numpy,1.26.2,MIT AND BSD-3-Clause AND Zlib,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: numpy,1.26.2,MIT AND BSD-3-Clause AND Zlib,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/BSD-3-Clause
+https://opensource.org/license/Zlib",,
 Python module: oauthlib,3.2.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: openapi-schema-validator,0.6.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: openapi-spec-validator,0.7.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: opsgenie-sdk,2.1.5,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: paho-mqtt,1.6.1,EPL-2.0,https://opensource.org/licenses/EPL-2.0,,also BSD-3-Clause
-Python module: paramiko,3.4.0,LGPL-2.1-or-later,https://opensource.org/licenses/LGPL-2.1,,
+Python module: packaging,24.2,Apache-2.0 OR BSD-2-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSD-2-Clause",,
+Python module: paho-mqtt,1.6.1,BSD-3-Clause OR EPL-2.0,"https://opensource.org/licenses/BSD-3-Clause
+https://www.eclipse.org/legal/epl-2.0",,
+Python module: paramiko,3.4.0,LGPL-2.1-or-later,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
+Python module: pathable,0.4.3,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: pathspec,0.12.1,MPL-2.0,https://opensource.org/licenses/MPL-2.0,,
 Python module: pbr,5.11.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: pillow,10.4.0,HPND,https://opensource.org/licenses/HPND,,
+Python module: platformdirs,4.3.6,MIT,https://opensource.org/licenses/MIT,,
 Python module: ply,3.11,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: portalocker,2.10.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: proto-plus,1.25.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: protobuf,3.20.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: psutil,5.9.4,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: psycopg2-binary,2.9.6,LGPL-3.0-or-later,https://www.gnu.org/licenses/lgpl+gpl-3.0.txt,,
-Python module: pyasn1,0.4.8,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
-Python module: pyasn1-modules,0.2.8,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
+Python module: psycopg2-binary,2.9.6,LGPL-3.0-or-later,https://www.gnu.org/licenses/lgpl-3.0-standalone.html,,
+Python module: pyasn1,0.4.8,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: pyasn1-modules,0.2.8,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: pyasyncore,1.0.4,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: pycparser,2.20,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: pycparser,2.20,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: pycparser,2.22,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: pydantic,2.10.2,MIT,https://opensource.org/licenses/MIT,,
 Python module: pydantic,2.5.2,MIT,https://opensource.org/licenses/MIT,,
 Python module: pydantic-core,2.14.5,MIT,https://opensource.org/licenses/MIT,,
+Python module: pydantic-core,2.27.1,MIT,https://opensource.org/licenses/MIT,,
 Python module: pyghmi,1.5.60,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: pymssql,2.2.11,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,,
+Python module: pygments,2.18.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: PyInstaller,3.6,GPL-2.0-or-later,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+Python module: pyjwt,2.10.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: pymssql,2.3.1,LGPL-2.1,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
 Python module: pymysql,1.0.3,MIT,https://opensource.org/licenses/MIT,,
+Python module: pynacl,1.5.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: pyopenssl,24.0.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: pyparsing,3.0.9,MIT,https://opensource.org/licenses/MIT,,
-Python module: pypdf,4.0.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: pypdf,4.3.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: pyprof2calltree,1.4.5,MIT,https://opensource.org/licenses/MIT,,
 Python module: pyrsistent,0.19.3,MIT,https://opensource.org/licenses/MIT,,
-Python module: pysmb,1.2.9.1,Zlib,https://opensource.org/licenses/Zlib,,
-Python module: pysmi-lextudio,1.1.13,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
-Python module: pysnmp-lextudio,5.0.31,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
+Python module: pysaml2,7.5.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: pysmb,1.2.9.1,Zlib,https://opensource.org/license/Zlib,,
+Python module: pysmi-lextudio,1.1.13,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: pysnmp-lextudio,5.0.31,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: pysnmpcrypto,0.0.4,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: PySocks,1.7.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: PySocks,1.7.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: pyspnego,0.11.2,MIT,https://opensource.org/licenses/MIT,,
 Python module: python-active-directory,2.0.1,MIT,https://opensource.org/licenses/MIT,,
-Python module: python-dateutil,2.8.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,also Apache-2.0
-Python module: python-ldap,3.4.3,PSF-2.0,https://spdx.org/licenses/PSF-2.0.html,,
+Python module: python-dateutil,2.8.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: python-dateutil,2.9.0.post0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: python-ldap,3.4.3,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: python-multipart,0.0.19,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: python-snap7,1.3,MIT,https://opensource.org/licenses/MIT,,
 Python module: pytz,2023.3,MIT,https://opensource.org/licenses/MIT,,
 Python module: pyyaml,6.0.1,MIT,https://opensource.org/licenses/MIT,,
-Python module: recurring-ical-events,2.0.2,LGPL-3.0,https://opensource.org/licenses/LGPL-3.0,,
+Python module: recurring-ical-events,2.0.2,LGPL-3.0,https://www.gnu.org/licenses/lgpl-3.0-standalone.html,,
+Python module: redfish,3.2.6,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: redis,4.5.4,MIT,https://opensource.org/licenses/MIT,,
+Python module: referencing,0.35.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: reportlab,3.6.13,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: requests,2.31.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: requests,2.31.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: requests,2.32.3,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: requests-kerberos,0.14.0,ISC,https://opensource.org/licenses/ISC,,
+Python module: requests-ntlm,1.3.0,ISC,https://opensource.org/licenses/ISC,,
 Python module: requests-oauthlib,1.3.1,ISC,https://opensource.org/licenses/ISC,,
+Python module: requests-toolbelt,1.0.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: requests-unixsocket,0.3.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: rfc3339-validator,0.1.4,MIT,https://opensource.org/licenses/MIT,,
 Python module: roman,4.0,CNRI-Python-GPL-Compatible,http://www.python.org/download/releases/1.6.1/download_win/,,
-Python module: rrdtool,0.1.16,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,,
+Python module: rpds-py,0.18.1,MIT,https://opensource.org/licenses/MIT,,
+Python module: rrdtool,0.1.16,LGPL-2.1,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
+Python module: rsa,4.9,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: s3transfer,0.10.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: sapnwrfc,0.19,LGPL-2.1-only,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,,
 Python module: setproctitle,1.3.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: setuptools,46.4.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: setuptools,46.4.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: setuptools,75.6.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: setuptools-scm,4.1.2,MIT,https://opensource.org/licenses/MIT,,
+Python module: sgmllib3k,1.0.0,Python-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: six,1.15.0,MIT,https://opensource.org/licenses/MIT,,
+Python module: six,1.15.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: six,1.16.0,MIT,https://opensource.org/licenses/MIT,,
-Python module: snmpsim-lextudio,1.0.5,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
+Python module: smmap,5.0.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: sniffio,1.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Python module: snmpsim-lextudio,1.0.5,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: starlette,0.41.3,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: tenacity,8.2.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: typing-extensions,4.9.0,PSF-2.0,https://spdx.org/licenses/PSF-2.0.html,,
+Python module: tqdm,4.67.1,MPL-2.0 AND MIT,"https://opensource.org/licenses/MPL-2.0
+https://opensource.org/licenses/MIT",,
+Python module: typing-extensions,4.12.2,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: typing-extensions,4.9.0,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+Python module: tzdata,2024.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Python module: tzlocal,5.2,MIT,https://opensource.org/licenses/MIT,,
+Python module: uritemplate,4.1.1,BSD-3-Clause OR Apache-2.0,"https://opensource.org/licenses/BSD-3-Clause
+https://opensource.org/licenses/Apache-2.0",,
+Python module: urllib3,1.25.9,MIT,https://opensource.org/licenses/MIT,,
+Python module: urllib3,1.25.9,MIT,https://opensource.org/licenses/MIT,,
+Python module: urllib3,1.26.20,MIT,https://opensource.org/licenses/MIT,,
+Python module: urllib3,2.2.3,MIT,https://opensource.org/licenses/MIT,,
+Python module: uvicorn,0.32.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: vcrpy,6.0.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: websocket-client,1.5.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: werkzeug,3.0.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: wrapt,1.15.0,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
+Python module: werkzeug,3.0.6,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: wheel,0.34.2,MIT,https://opensource.org/licenses/MIT,,
+Python module: wheel,0.34.2,MIT,https://opensource.org/licenses/MIT,,
+Python module: wrapt,1.15.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
+Python module: x-wr-timezone,0.0.7,LGPL-3.0-or-later,https://www.gnu.org/licenses/lgpl-3.0-standalone.html,,
+Python module: xmlschema,2.5.1,MIT,https://opensource.org/licenses/MIT,,
 Python module: xmltodict,0.13.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: yarl,1.9.3,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: zipp,3.15.0,MIT,https://opensource.org/licenses/MIT,,
-RCC,17.18.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-re2,2022-12,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,third_party/re2/re2-2022-12-01.tar.gz,
-rrdtool,1.7.2,GPL-2.0,https://opensource.org/licenses/GPL-2.0,third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz,
-sapnwrfc,0.19,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,agents/sap/sapnwrfc-0.19.tar.gz,
-xinetd,2.3.15.4,xinetd,https://spdx.org/licenses/xinetd.html,omd/packages/xinetd/xinetd-2.3.15.4.tar.xz,
+rcc,17.29.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/robotmk/robotmk_http.bzl,
+re2,2022-12-01,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,third_party/re2/re2-2022-12-01.tar.gz,
+redis,6.2.6,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+robotmk,v2.0.3,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+rrdtool,1.7.2,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+rules_foreign_cc,0.9.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+rules_pkg,0.9.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: addr2line,0.19.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: addr2line,0.21.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: addr2line,0.24.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: adler,1.0.2,0BSD OR MIT OR Apache-2.0,"http://landley.net/toybox/license.html
+https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: adler2,2.0.0,0BSD OR MIT OR Apache-2.0,"http://landley.net/toybox/license.html
+https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: aead,0.5.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: aes,0.8.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: aes-gcm,0.10.3,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: ahash,0.8.11,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: aho-corasick,1.1.2,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: aho-corasick,1.1.3,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: allocator-api2,0.2.16,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: android-activity,0.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: android-properties,0.2.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: android-tzdata,0.1.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: android_system_properties,0.1.5,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstream,0.3.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstream,0.6.13,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstream,0.6.14,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstream,0.6.15,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstream,0.6.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle,1.0.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle,1.0.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle,1.0.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle,1.0.7,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle,1.0.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-parse,0.2.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-parse,0.2.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-parse,0.2.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-parse,0.2.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-query,1.0.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-query,1.0.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-query,1.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-query,1.1.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-wincon,1.0.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-wincon,3.0.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-wincon,3.0.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anstyle-wincon,3.0.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anyhow,1.0.75,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anyhow,1.0.80,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anyhow,1.0.81,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: anyhow,1.0.89,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: arraydeque,0.5.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs,0.3.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs,0.5.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs,0.6.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs-derive,0.1.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs-derive,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs-derive,0.5.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs-impl,0.1.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asn1-rs-impl,0.2.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: assert_cmd,2.0.13,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: assertor,0.0.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: async-channel,1.9.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-channel,2.2.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-executor,1.5.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-executor,1.8.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-global-executor,2.3.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-global-executor,2.4.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-io,1.13.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-io,2.3.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-lock,2.8.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-lock,3.3.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-native-tls,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: async-std,1.12.0,Apache-2.0 AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-task,4.4.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-task,4.7.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: async-trait,0.1.69,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: async-trait,0.1.77,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: asynchronous-codec,0.6.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: atoi,2.0.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: atomic-waker,1.1.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: atomic-waker,1.1.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: autocfg,1.1.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: autocfg,1.4.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: backtrace,0.3.67,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: backtrace,0.3.69,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: backtrace,0.3.74,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: base64,0.13.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: base64,0.21.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: base64,0.21.7,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: base64ct,1.6.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: bincode,1.3.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: bitflags,1.3.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bitflags,2.4.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bitflags,2.4.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bitflags,2.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bitflags,2.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: block-buffer,0.10.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: block2,0.5.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: blocking,1.3.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: blocking,1.5.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: bstr,1.10.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bstr,1.9.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bumpalo,3.13.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: bumpalo,3.15.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: byteorder,1.5.0,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: bytes,1.4.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: bytes,1.5.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: calloop,0.12.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: cc,1.0.79,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cc,1.0.90,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cc,1.1.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cesu8,1.1.0,Apache-2.0 AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: cfg-if,1.0.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cfg_aliases,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: chrono,0.4.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: chrono,0.4.35,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cipher,0.4.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap,4.3.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap,4.4.14,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap,4.4.18,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap,4.5.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_builder,4.3.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_builder,4.4.14,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_builder,4.4.18,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_builder,4.5.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_derive,4.3.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_derive,4.4.7,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_derive,4.5.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_lex,0.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_lex,0.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: clap_lex,0.7.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: colorchoice,1.0.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: colorchoice,1.0.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: colorchoice,1.0.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: combine,4.6.7,MIT,https://opensource.org/licenses/MIT,,
+Rust module: concurrent-queue,2.2.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: concurrent-queue,2.4.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: concurrent-queue,2.5.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: connection-string,0.2.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: convert_case,0.4.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: core-foundation,0.9.3,MIT  AND  Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: core-foundation,0.9.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: core-foundation-sys,0.8.4,MIT  AND  Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: core-foundation-sys,0.8.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: core-graphics,0.23.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: core-graphics-types,0.1.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cpufeatures,0.2.12,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: crc32fast,1.3.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: crc32fast,1.4.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: crossbeam-utils,0.8.16,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: crossbeam-utils,0.8.19,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: crypto-common,0.1.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ctr,0.9.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: cursor-icon,1.1.0,MIT OR Apache-2.0 OR Zlib,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/license/Zlib",,
+Rust module: darling,0.13.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: darling_core,0.13.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: darling_macro,0.13.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: data-encoding,2.4.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: data-encoding,2.5.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: data-encoding,2.6.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: der-parser,7.0.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: der-parser,8.2.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: der-parser,9.0.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: deranged,0.3.11,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: deranged,0.3.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: derive_more,0.99.17,MIT,https://opensource.org/licenses/MIT,,
+Rust module: difflib,0.4.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: digest,0.10.7,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: dispatch,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: displaydoc,0.2.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: displaydoc,0.2.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: dlib,0.5.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: doc-comment,0.3.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: dpi,0.1.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: either,1.10.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: encoding,0.2.33,MIT,https://opensource.org/licenses/MIT,,
+Rust module: encoding-index-japanese,1.20141219.5,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding-index-korean,1.20141219.5,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding-index-simpchinese,1.20141219.5,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding-index-singlebyte,1.20141219.5,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding-index-tradchinese,1.20141219.5,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding_index_tests,0.1.4,CC0-1.0,https://creativecommons.org/publicdomain/zero/1.0/legalcode,,
+Rust module: encoding_rs,0.8.33,(Apache-2.0 OR MIT) AND BSD-3-Clause,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT
+https://opensource.org/licenses/BSD-3-Clause",,
+Rust module: enumflags2,0.7.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: enumflags2_derive,0.7.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: equivalent,1.0.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: errno,0.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: errno,0.3.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: errno,0.3.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: errno-dragonfly,0.1.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: event-listener,2.5.3,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: event-listener,4.0.3,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: event-listener,5.2.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: event-listener-strategy,0.4.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: event-listener-strategy,0.5.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: faccess,0.2.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: fastrand,1.9.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: fastrand,2.0.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: fastrand,2.1.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: flate2,1.0.27,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: flate2,1.0.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: flexi_logger,0.24.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: flexi_logger,0.27.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: float-cmp,0.9.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: fnv,1.0.7,Apache-2.0  AND  MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: foreign-types,0.3.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: foreign-types,0.5.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: foreign-types-macros,0.2.3,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: foreign-types-shared,0.1.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: foreign-types-shared,0.3.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: form_urlencoded,1.2.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: form_urlencoded,1.2.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-channel,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-channel,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-core,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-core,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-executor,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-io,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-io,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-lite,1.13.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: futures-lite,2.2.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: futures-macro,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-macro,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-sink,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-sink,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-task,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-task,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-util,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: futures-util,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: generic-array,0.14.7,MIT,https://opensource.org/licenses/MIT,,
+Rust module: gethostname,0.2.3,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: getrandom,0.1.16,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: getrandom,0.2.10,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: getrandom,0.2.12,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ghash,0.5.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: gimli,0.27.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: gimli,0.28.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: gimli,0.31.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: glob,0.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: gloo-timers,0.2.6,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: h2,0.3.26,MIT,https://opensource.org/licenses/MIT,,
+Rust module: hashbrown,0.14.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: hashlink,0.8.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: heck,0.4.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: heck,0.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: hermit-abi,0.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: hermit-abi,0.3.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: hmac,0.12.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: http,0.2.12,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: http,0.2.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: http-body,0.4.5,MIT,https://opensource.org/licenses/MIT,,
+Rust module: http-body,0.4.6,MIT,https://opensource.org/licenses/MIT,,
+Rust module: httparse,1.8.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: httpdate,1.0.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: hyper,0.14.27,MIT,https://opensource.org/licenses/MIT,,
+Rust module: hyper,0.14.28,MIT,https://opensource.org/licenses/MIT,,
+Rust module: hyper-rustls,0.24.1,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: hyper-rustls,0.24.2,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: hyper-tls,0.5.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: iana-time-zone,0.1.57,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: iana-time-zone,0.1.60,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: iana-time-zone-haiku,0.1.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ident_case,1.0.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: idna,0.4.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: idna,0.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: indexmap,2.1.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: indexmap,2.2.5,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: indexmap,2.2.6,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: inout,0.1.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: instant,0.1.12,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Rust module: io-lifetimes,1.0.11,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: ipnet,2.8.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ipnet,2.9.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: is-terminal,0.4.7,MIT,https://opensource.org/licenses/MIT,,
+Rust module: is_elevated,0.1.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: is_terminal_polyfill,1.70.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: is_terminal_polyfill,1.70.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: itoa,1.0.10,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: itoa,1.0.11,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: itoa,1.0.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: jni,0.21.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: jni-sys,0.3.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: jobserver,0.1.31,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: js-sys,0.3.64,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: js-sys,0.3.69,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: kv-log-macro,1.0.7,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: lazy_static,1.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: lazy_static,1.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: libc,0.2.153,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: libc,0.2.159,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: libloading,0.8.3,ISC,https://opensource.org/licenses/ISC,,
+Rust module: libredox,0.0.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: linux-raw-sys,0.3.8,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: linux-raw-sys,0.4.13,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: linux-raw-sys,0.4.14,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: lock_api,0.4.10,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: lock_api,0.4.11,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: log,0.4.20,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: log,0.4.21,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: mail_slot,0.1.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: matchers,0.1.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: md5,0.6.1,Apache-2.0 AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: memchr,2.6.3,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: memchr,2.7.1,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: memchr,2.7.4,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: memoffset,0.6.5,MIT,https://opensource.org/licenses/MIT,,
+Rust module: mime,0.3.17,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: mime_guess,2.0.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: minimal-lexical,0.2.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: miniz_oxide,0.6.2,MIT OR Zlib OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/license/Zlib
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: miniz_oxide,0.7.1,MIT OR Zlib OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/license/Zlib
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: miniz_oxide,0.7.2,MIT OR Zlib OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/license/Zlib
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: miniz_oxide,0.8.0,MIT OR Zlib OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/license/Zlib
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: mio,0.8.11,MIT,https://opensource.org/licenses/MIT,,
+Rust module: native-tls,0.2.11,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ndk,0.9.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ndk-context,0.1.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ndk-sys,0.6.0+11769913,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: nix,0.24.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: nom,7.1.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: normalize-line-endings,0.3.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: nu-ansi-term,0.46.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: num-bigint,0.4.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-bigint,0.4.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-conv,0.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-integer,0.1.45,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-integer,0.1.46,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-traits,0.2.16,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-traits,0.2.18,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num-traits,0.2.19,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num_cpus,1.16.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num_enum,0.7.2,BSD-3-Clause OR MIT OR Apache-2.0,"https://opensource.org/licenses/BSD-3-Clause
+https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: num_enum_derive,0.7.2,BSD-3-Clause OR MIT OR Apache-2.0,"https://opensource.org/licenses/BSD-3-Clause
+https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: objc-sys,0.3.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: objc2,0.5.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: objc2-app-kit,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: objc2-core-data,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: objc2-encode,4.0.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: objc2-foundation,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: object,0.30.4,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: object,0.32.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: object,0.36.5,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: odbc-api,7.2.3,MIT,https://opensource.org/licenses/MIT,,
+Rust module: odbc-sys,0.24.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: oid-registry,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: oid-registry,0.6.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: oid-registry,0.7.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: once_cell,1.17.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: once_cell,1.19.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: once_cell,1.20.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: opaque-debug,0.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl,0.10.62,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: openssl,0.10.64,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: openssl,0.10.66,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: openssl-macros,0.1.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl-probe,0.1.5,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl-src,300.2.1+3.2.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl-src,300.2.3+3.2.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl-src,300.3.2+3.3.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: openssl-sys,0.9.101,MIT,https://opensource.org/licenses/MIT,,
+Rust module: openssl-sys,0.9.103,MIT,https://opensource.org/licenses/MIT,,
+Rust module: openssl-sys,0.9.98,MIT,https://opensource.org/licenses/MIT,,
+Rust module: orbclient,0.3.47,MIT,https://opensource.org/licenses/MIT,,
+Rust module: os_info,3.7.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: overload,0.1.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: parking,2.1.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: parking,2.2.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: parking_lot,0.12.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: parking_lot_core,0.9.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: parking_lot_core,0.9.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: password-hash,0.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pbkdf2,0.12.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: percent-encoding,2.3.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: percent-encoding,2.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pin-project,1.1.5,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: pin-project-internal,1.1.5,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: pin-project-lite,0.2.13,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: pin-utils,0.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: piper,0.2.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pkg-config,0.3.27,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pkg-config,0.3.30,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pkg-config,0.3.31,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pmutil,0.6.1,Apache-2.0 AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: polling,2.8.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: polling,3.5.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: polling,3.7.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: polyval,0.6.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: powerfmt,0.2.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ppv-lite86,0.2.17,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates,3.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates,3.1.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates-core,1.0.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates-core,1.0.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates-tree,1.0.11,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: predicates-tree,1.0.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: pretty-hex,0.3.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: proc-macro-crate,3.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: proc-macro2,1.0.66,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: proc-macro2,1.0.76,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: proc-macro2,1.0.78,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: proc-macro2,1.0.79,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: proc-macro2,1.0.86,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: quote,1.0.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: quote,1.0.35,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: quote,1.0.36,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: quote,1.0.37,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand,0.7.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand,0.8.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand_chacha,0.2.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand_chacha,0.3.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand_core,0.5.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand_core,0.6.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rand_hc,0.2.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: raw-window-handle,0.6.1,MIT OR Apache-2.0 OR Zlib,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/license/Zlib",,
+Rust module: redox_syscall,0.3.5,MIT,https://opensource.org/licenses/MIT,,
+Rust module: redox_syscall,0.4.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: regex,1.10.3,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: regex-automata,0.1.10,Unlicense AND MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: regex-automata,0.4.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: regex-automata,0.4.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: regex-syntax,0.6.29,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: regex-syntax,0.8.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: reqwest,0.11.20,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: reqwest,0.11.25,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: reqwest,0.11.27,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: ring,0.16.20,ISC,https://opensource.org/licenses/ISC,,
+Rust module: ring,0.17.8,ISC,https://opensource.org/licenses/ISC,,
+Rust module: rpassword,6.0.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: rustc-demangle,0.1.23,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rustc-demangle,0.1.24,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rustc_version,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rusticata-macros,4.1.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: rustix,0.37.27,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: rustix,0.38.31,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: rustix,0.38.32,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: rustix,0.38.37,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: rustls,0.21.10,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: rustls,0.21.7,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: rustls-native-certs,0.6.3,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: rustls-pemfile,1.0.3,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: rustls-pemfile,1.0.4,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: rustls-webpki,0.101.4,ISC,https://opensource.org/licenses/ISC,,
+Rust module: rustls-webpki,0.101.7,ISC,https://opensource.org/licenses/ISC,,
+Rust module: ryu,1.0.15,Apache-2.0 OR BSL-1.0,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSL-1.0",,
+Rust module: ryu,1.0.17,Apache-2.0 OR BSL-1.0,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/BSL-1.0",,
+Rust module: salsa20,0.10.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: same-file,1.0.6,Unlicense AND MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: schannel,0.1.22,MIT,https://opensource.org/licenses/MIT,,
+Rust module: schannel,0.1.23,MIT,https://opensource.org/licenses/MIT,,
+Rust module: scopeguard,1.2.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: scrypt,0.11.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: sct,0.7.0,Apache-2.0 AND ISC AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: sct,0.7.1,Apache-2.0 OR ISC OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/ISC
+https://opensource.org/licenses/MIT",,
+Rust module: security-framework,2.9.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: security-framework-sys,2.9.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: semver,1.0.22,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde,1.0.188,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde,1.0.197,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde,1.0.210,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_derive,1.0.188,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_derive,1.0.197,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_derive,1.0.210,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_json,1.0.105,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_json,1.0.114,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_urlencoded,0.7.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_with,1.14.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: serde_with_macros,1.5.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: sha2,0.10.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: sharded-slab,0.1.7,MIT,https://opensource.org/licenses/MIT,,
+Rust module: shlex,1.3.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: signal-hook-registry,1.4.1,Apache-2.0 AND MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: slab,0.4.9,MIT,https://opensource.org/licenses/MIT,,
+Rust module: smallvec,1.11.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: smallvec,1.13.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: smallvec,1.13.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: smol_str,0.2.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: socket2,0.4.10,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: socket2,0.4.9,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: socket2,0.5.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: spin,0.5.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: spin,0.9.8,MIT,https://opensource.org/licenses/MIT,,
+Rust module: string_enum,0.4.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: string_enum,0.4.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: strsim,0.10.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: strsim,0.11.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: subtle,2.5.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Rust module: swc_macros_common,0.3.8,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: swc_macros_common,0.3.9,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: syn,1.0.109,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.31,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.48,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.52,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.53,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.71,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: syn,2.0.79,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: sync_wrapper,0.1.2,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: synstructure,0.12.6,MIT,https://opensource.org/licenses/MIT,,
+Rust module: synstructure,0.13.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: system-configuration,0.5.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: system-configuration,0.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: system-configuration-sys,0.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: system-configuration-sys,0.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tempfile,3.10.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tempfile,3.13.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tempfile,3.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: termtree,0.4.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: thiserror,1.0.40,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror,1.0.57,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror,1.0.58,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror,1.0.59,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror,1.0.64,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror-impl,1.0.40,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror-impl,1.0.57,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror-impl,1.0.58,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror-impl,1.0.59,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thiserror-impl,1.0.64,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: thread_local,1.1.8,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tiberius,0.12.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time,0.3.28,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time,0.3.34,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time,0.3.36,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time-core,0.1.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time-core,0.1.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time-macros,0.2.14,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time-macros,0.2.17,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: time-macros,0.2.18,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tinyvec,1.6.0,Zlib OR Apache-2.0 OR MIT,"https://opensource.org/license/Zlib
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: tinyvec_macros,0.1.1,MIT OR Apache-2.0 OR Zlib,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/license/Zlib",,
+Rust module: tokio,1.28.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio,1.36.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-macros,2.1.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-macros,2.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-native-tls,0.3.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-rustls,0.24.1,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tokio-socks,0.5.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-util,0.7.10,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tokio-util,0.7.8,MIT,https://opensource.org/licenses/MIT,,
+Rust module: toml,0.5.11,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: toml_datetime,0.6.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: toml_edit,0.21.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: tower-service,0.3.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing,0.1.37,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing,0.1.40,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing-attributes,0.1.27,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing-core,0.1.31,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing-core,0.1.32,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing-log,0.2.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: tracing-subscriber,0.3.18,MIT,https://opensource.org/licenses/MIT,,
+Rust module: try-lock,0.2.4,MIT,https://opensource.org/licenses/MIT,,
+Rust module: try-lock,0.2.5,MIT,https://opensource.org/licenses/MIT,,
+Rust module: typed-builder,0.18.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: typed-builder-macro,0.18.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: typenum,1.17.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicase,2.7.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-bidi,0.3.13,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-bidi,0.3.15,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-ident,1.0.12,(MIT OR Apache-2.0) AND Unicode-DFS-2016,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://www.unicode.org/license.txt",,
+Rust module: unicode-ident,1.0.13,(MIT OR Apache-2.0) AND Unicode-DFS-2016,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://www.unicode.org/license.txt",,
+Rust module: unicode-ident,1.0.9,(MIT OR Apache-2.0) AND Unicode-DFS-2016,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://www.unicode.org/license.txt",,
+Rust module: unicode-normalization,0.1.22,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-normalization,0.1.23,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-segmentation,1.11.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-xid,0.2.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: unicode-xid,0.2.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: universal-hash,0.5.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: untrusted,0.7.1,ISC,https://opensource.org/licenses/ISC,,
+Rust module: untrusted,0.9.0,ISC,https://opensource.org/licenses/ISC,,
+Rust module: url,2.4.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: url,2.5.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: utf8parse,0.2.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: utf8parse,0.2.2,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: uuid,1.4.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: uuid,1.7.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: valuable,0.1.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: value-bag,1.4.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: value-bag,1.8.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: vcpkg,0.2.15,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: version_check,0.9.4,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wait-timeout,0.2.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: waker-fn,1.1.0,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: waker-fn,1.1.1,Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: walkdir,2.5.0,Unlicense AND MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: want,0.3.1,MIT,https://opensource.org/licenses/MIT,,
+Rust module: wasi,0.11.0+wasi-snapshot-preview1,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: wasi,0.9.0+wasi-snapshot-preview1,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,"https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: wasm-bindgen,0.2.87,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen,0.2.92,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-backend,0.2.87,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-backend,0.2.92,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-futures,0.4.37,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-futures,0.4.42,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-macro,0.2.87,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-macro,0.2.92,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-macro-support,0.2.87,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-macro-support,0.2.92,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-shared,0.2.87,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: wasm-bindgen-shared,0.2.92,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: web-sys,0.3.64,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: web-sys,0.3.69,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: web-time,1.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: webpki-roots,0.25.4,MPL-2.0,https://opensource.org/licenses/MPL-2.0,,
+Rust module: widestring,1.0.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: widestring,1.1.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: winapi,0.3.9,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: winapi-i686-pc-windows-gnu,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: winapi-util,0.1.8,Unlicense OR MIT,"https://opensource.org/licenses/unlicense
+https://opensource.org/licenses/MIT",,
+Rust module: winapi-x86_64-pc-windows-gnu,0.4.0,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: winauth,0.0.4,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-core,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-service,0.6.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-sys,0.45.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-sys,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-sys,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-sys,0.59.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows-targets,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_gnullvm,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_aarch64_msvc,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnu,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_gnullvm,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_i686_msvc,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnu,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_gnullvm,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.42.2,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.48.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.48.5,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.52.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.52.4,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: windows_x86_64_msvc,0.52.6,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: winit,0.30.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
+Rust module: winnow,0.5.40,MIT,https://opensource.org/licenses/MIT,,
+Rust module: winreg,0.50.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: winreg,0.52.0,MIT,https://opensource.org/licenses/MIT,,
+Rust module: x509-parser,0.13.2,MIT AND Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: x509-parser,0.15.1,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: x509-parser,0.16.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: xkbcommon-dl,0.4.2,MIT,https://opensource.org/licenses/MIT,,
+Rust module: xkeysym,0.2.0,MIT OR Apache-2.0 OR Zlib,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/license/Zlib",,
+Rust module: yaml-rust2,0.8.0,MIT OR Apache-2.0,"https://opensource.org/licenses/MIT
+https://opensource.org/licenses/Apache-2.0",,
+Rust module: zerocopy,0.7.32,BSD-2-Clause OR Apache-2.0 OR MIT,"https://opensource.org/licenses/BSD-2-Clause
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+Rust module: zerocopy-derive,0.7.32,BSD-2-Clause OR Apache-2.0 OR MIT,"https://opensource.org/licenses/BSD-2-Clause
+https://opensource.org/licenses/Apache-2.0
+https://opensource.org/licenses/MIT",,
+simpleini,2af65fc,MIT,https://opensource.org/licenses/MIT,third_party/simpleini/simpleini-2af65fc.tar.gz,
+snap7,1.4.2,LGPL-3.0-only,https://www.gnu.org/licenses/lgpl-3.0-standalone.html,,
+stunnel,5.63,GPL-2.0-or-later,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
+xinetd,2.3.15.4,xinetd,https://fedoraproject.org/wiki/Licensing/Xinetd_License,,
+XML-Twig,3.52,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
+https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
+xmlsec1,1.2.37,MIT,https://opensource.org/licenses/MIT,,
 yaml-cpp,9a362420,MIT,https://opensource.org/licenses/MIT,third_party/yaml-cpp/yaml-cpp.9a362420.tar.gz,
 ,,,,,
 Icons,,,,,
-Classic Icons,,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,web/htdocs/images/icon_*,
-Facelift Icons,,Icons8,https://icons8.com/download/Icons8_License.pdf,web/htdocs/images/icon_*,
-Kubernetes Logo,,CC-BY-4.0,https://creativecommons.org/licenses/by/4.0/,web/htdocs/themes/facelift/images/icon_kubernetes.svg,
+kubernetes-logo,,Apache-2.0 OR CC-BY-4.0,"https://opensource.org/licenses/Apache-2.0
+https://creativecommons.org/licenses/by/4.0/legalcode",web/htdocs/themes/facelift/images/icon_kubernetes.svg,
+nuvola-icons,,LGPL-2.1-only,https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html,web/htdocs/images/icons,
 ,,,,,
 JavaScript and CSS,,,,,
-colorpicker,,MIT,https://opensource.org/licenses/MIT,"web/htdocs/js/colorpicker.js
-web/htdocs/js/colorpicker_min.js",
-jquery.mobile,1.4.5,MIT,https://opensource.org/licenses/MIT,web/htdocs/jquery/,Dual licensed under the MIT or GPL Version 2 licenses.
-redoc.standalone,2.0.0-rc.44,MIT,https://opensource.org/licenses/MIT,web/htdocs/openapi/redoc.standalone.js,
+colorpicker,ec614a74e808a39b51a9f6883476aad6e77066f8,MIT,https://opensource.org/licenses/MIT,web/htdocs/js/modules/colorpicker.js,
+jquery-mobile,1.4.5,MIT,https://opensource.org/licenses/MIT,web/htdocs/jquery/jquery.mobile-1.4.5.js,
+redoc,2.0.0-rc.44,MIT,https://opensource.org/licenses/MIT,web/htdocs/openapi/redoc.standalone.js,
+swagger-ui,3.46.0,MIT,https://opensource.org/licenses/MIT,web/htdocs/openapi/swagger-ui-3/swagger-ui-standalone-preset.js,
 ,,,,,
 JavaScript dependencies,,,,,
 @juggle/resize-observer,3.4.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 @ranfdev/deepobj,1.0.2,MIT,https://opensource.org/licenses/MIT,,
 @yaireo/tagify,4.17.9,MIT,https://opensource.org/licenses/MIT,,
-@zxcvbn-ts/core,2.0.3,MIT,https://opensource.org/licenses/MIT,,
-@zxcvbn-ts/language-common,2.0.1,MIT,https://opensource.org/licenses/MIT,,
-@zxcvbn-ts/language-en,2.0.1,MIT,https://opensource.org/licenses/MIT,,
+@zxcvbn-ts/core,3.0.4,MIT,https://opensource.org/licenses/MIT,,
+@zxcvbn-ts/language-common,3.0.4,MIT,https://opensource.org/licenses/MIT,,
+@zxcvbn-ts/language-en,3.0.2,MIT,https://opensource.org/licenses/MIT,,
 ansi-regex,5.0.1,MIT,https://opensource.org/licenses/MIT,,
 ansi-styles,4.3.0,MIT,https://opensource.org/licenses/MIT,,
 camelcase,5.3.1,MIT,https://opensource.org/licenses/MIT,,
@@ -293,7 +1780,9 @@ dijkstrajs,1.0.3,MIT,https://opensource.org/licenses/MIT,,
 element-closest-polyfill,1.0.6,ISC,https://opensource.org/licenses/ISC,,
 emoji-regex,8.0.0,MIT,https://opensource.org/licenses/MIT,,
 encode-utf8,1.0.3,MIT,https://opensource.org/licenses/MIT,,
+fastest-levenshtein,1.0.16,MIT,https://opensource.org/licenses/MIT,,
 find-up,4.1.0,MIT,https://opensource.org/licenses/MIT,,
+fsevents,2.1.2,MIT,https://opensource.org/licenses/MIT,,
 get-caller-file,2.0.5,ISC,https://opensource.org/licenses/ISC,,
 iconv-lite,0.4.24,MIT,https://opensource.org/licenses/MIT,,
 iconv-lite,0.6.3,MIT,https://opensource.org/licenses/MIT,,

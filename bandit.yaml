@@ -96,10 +96,6 @@ skips:
   - B318  # xml_bad_minidom same as above
   - B104  # hardcoded_bind_all_interfaces -> high false-positive rate ref: CMK-15199
 
-# medium severity tests excluded for now; enable step-by-step
-
-  - B302  # marshal
-
 ### (optional) plugin settings - some test plugins require configuration data
 ### that may be given here, per-plugin. All bandit test plugins have a built in
 ### set of sensible defaults and these will be used if no configuration is

@@ -288,7 +288,7 @@ class BIStructureFetcher:
 
     def _marshal_load_data(self, filepath: Path) -> dict:
         with open(filepath, "rb") as f:
-            return marshal.load(f)
+            return marshal.load(f)  # nosec B302 # BNS:ccacbd
 
 
 #   .--BIState Fetcher-----------------------------------------------------.

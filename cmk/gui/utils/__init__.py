@@ -69,7 +69,7 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
                 elif file_path.suffix == ".pyc":
                     with file_path.open("rb") as pyc:
                         code_bytes = pyc.read()[8:]
-                    code = marshal.loads(code_bytes)
+                    code = marshal.loads(code_bytes)  # nosec B302 # BNS:4607da
                     exec(code, globalvars)  # nosec B102 # BNS:aee528
 
             except Exception as e:

@@ -182,7 +182,7 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
 
 
 def _cleanup_host_directory_for_local_hosts(
-    cleanup_abandoned_host_files: int, cleanup_hosts: set[HostName], base_path: str
+    cleanup_abandoned_host_files: int, unaffected_hosts: set[HostName], base_path: str
 ) -> list[HostName]:
     """
     First find all directories not related to a known host.
@@ -192,7 +192,7 @@ def _cleanup_host_directory_for_local_hosts(
 
     unrelated_dirs: list[str] = []
     for host_dir in os.listdir(base_path):
-        if host_dir not in cleanup_hosts:
+        if host_dir not in unaffected_hosts:
             unrelated_dirs.append(host_dir)
 
     cleaned_up_hosts = _check_threshold_and_delete(

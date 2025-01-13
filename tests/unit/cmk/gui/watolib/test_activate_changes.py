@@ -116,12 +116,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             # CMK-20769
-            ReplicationPath(
-                ty="file",
-                ident="otel_collector",
-                site_path="etc/check_mk/otel_collector.d/wato/otel_collector.mk",
-                excludes=[],
-            ),
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato", []),
         ]
 
     expected += [
@@ -189,12 +184,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
             # CMK-20769
-            ReplicationPath(
-                ty="file",
-                ident="otel_collector",
-                site_path="etc/check_mk/otel_collector.d/wato/otel_collector.mk",
-                excludes=[],
-            ),
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato/", []),
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:

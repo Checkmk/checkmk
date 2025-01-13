@@ -27,27 +27,26 @@ class Params(BaseModel):
     login: Login | None = None
 
 
+def _get_login_options(login: Login | None) -> tuple[()] | tuple[str, str, str, str, str]:
+    return (
+        ("--user", login.user, f"--password {login.password.unsafe()}", "--mode", login.mode)
+        if login
+        else ()
+    )
+
+
 def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
-    command_arguments = ["--server", host_config.primary_ip_config.address]
-
-    command_arguments += ["--%s" % "port", "%s" % params.port] if params.port else []
-    command_arguments += ["--%s" % "suburi", "%s" % params.suburi] if params.suburi else []
-    command_arguments += ["--%s" % "instance", "%s" % params.instance] if params.instance else []
-    command_arguments += ["--%s" % "protocol", "%s" % params.protocol] if params.protocol else []
-
-    if not params.login:
-        yield SpecialAgentCommand(command_arguments=command_arguments)
-        return
-
-    command_arguments += [
-        "--user",
-        params.login.user,
-        f"--password {params.login.password.unsafe()}",
-        "--mode",
-        params.login.mode,
-    ]
-
-    yield SpecialAgentCommand(command_arguments=command_arguments)
+    yield SpecialAgentCommand(
+        command_arguments=[
+            "--server",
+            host_config.primary_ip_config.address,
+            *(["--%s" % "port", "%s" % params.port] if params.port else []),
+            *(["--%s" % "suburi", "%s" % params.suburi] if params.suburi else []),
+            *(["--%s" % "instance", "%s" % params.instance] if params.instance else []),
+            *(["--%s" % "protocol", "%s" % params.protocol] if params.protocol else []),
+            *_get_login_options(params.login),
+        ]
+    )
 
 
 special_agent_jolokia = SpecialAgentConfig(

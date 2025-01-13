@@ -183,9 +183,6 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
 def _cleanup_host_directories(
     retention_time: int, unaffected_hosts: set[str], base_path: str
 ) -> set[str]:
-    """
-    First find all directories not related to a known host.
-    """
     if not os.path.isdir(base_path):
         return set()
 
@@ -219,7 +216,6 @@ def _do_automation_call(
     hosts_to_cleanup: set,
     automation_call: Literal["delete-hosts", "delete-hosts-known-remote"],
 ) -> None:
-    """Call automation command"""
     command: list[str] = ["check_mk", "--automation", automation_call] + list(hosts_to_cleanup)
     _verbose('Calling "%s"' % " ".join(command))
     with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
@@ -269,8 +265,6 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         )
     )
 
-    # Now call Check_MK to clean up other files for the hosts which we have
-    # cleaned up abandoned files for.
     if cleaned_up_deleted_hosts := cleaned_up - all_hosts:
         _do_automation_call(cleaned_up_deleted_hosts, "delete-hosts")
     if cleaned_up_remote_hosts := cleaned_up & (all_hosts - local_site_hosts):
@@ -296,23 +290,11 @@ def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> 
         )
     )
 
-    # Now call Check_MK to clean up other files for the hosts which we have
-    # cleaned up abandoned files for.
     if cleaned_up_non_local_hosts:
         _do_automation_call(cleaned_up_non_local_hosts, "delete-hosts")
 
 
 def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -> None:
-    """
-    The mechanism is like this:
-    - Get the list of configured hosts (also temporarily disabled ones)
-      - On central (or standalone) sites: Get all hosts
-      - On remote sites: Get only the hosts that are known on the local site
-    - Scan known paths for files related unknown hosts.
-    - Check the age of the found files and delete them when they are too old
-    - Additionally call the Checkmk automation to clean up files from paths
-      which are internal to Checkmk.
-    """
     if not cleanup_abandoned_host_files:
         return
 

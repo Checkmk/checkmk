@@ -180,7 +180,7 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
     return None
 
 
-def _cleanup_host_directory_for_local_hosts(
+def _cleanup_host_directories(
     cleanup_abandoned_host_files: int, unaffected_hosts: set[str], base_path: str
 ) -> set[str]:
     """
@@ -190,23 +190,6 @@ def _cleanup_host_directory_for_local_hosts(
         return set()
 
     abandoned = {host_dir for host_dir in os.listdir(base_path) if host_dir not in unaffected_hosts}
-
-    return _check_threshold_and_delete(cleanup_abandoned_host_files, abandoned, base_path)
-
-
-def _cleanup_host_directory_for_remote_hosts(
-    cleanup_abandoned_host_files: int, cleaned_up_remote_hosts: set, base_path: str
-) -> set[str]:
-    """
-    Find all directories existing on the local site and return a list of all
-    matching hosts that are known on remote sites
-    """
-    if not os.path.isdir(base_path):
-        return set()
-
-    abandoned = {
-        host_dir for host_dir in os.listdir(base_path) if host_dir in cleaned_up_remote_hosts
-    }
 
     return _check_threshold_and_delete(cleanup_abandoned_host_files, abandoned, base_path)
 
@@ -268,66 +251,45 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
 
-    cleaned_up_deleted_hosts = (
-        _cleanup_host_directory_for_remote_hosts(
+    cleaned_up = (
+        _cleanup_host_directories(
             retention_time,
-            all_hosts,
+            local_site_hosts,
             "%s/inventory_archive" % var_dir,
         )
-        | _cleanup_host_directory_for_remote_hosts(
+        | _cleanup_host_directories(
             retention_time,
-            all_hosts,
+            local_site_hosts,
             "%s/var/pnp4nagios/perfdata" % omd_root,
         )
-        | _cleanup_host_directory_for_remote_hosts(
+        | _cleanup_host_directories(
             retention_time,
-            all_hosts,
+            local_site_hosts,
             "%s/rrd" % var_dir,
         )
     )
 
     # Now call Check_MK to clean up other files for the hosts which we have
     # cleaned up abandoned files for.
-    if cleaned_up_deleted_hosts:
+    if cleaned_up_deleted_hosts := cleaned_up - all_hosts:
         _do_automation_call(cleaned_up_deleted_hosts, "delete-hosts")
-
-    # Now call Check_MK to clean up files for hosts that still have files local
-    # but are only known on remote sites
-    remote_site_hosts = all_hosts - local_site_hosts
-    cleaned_up_remote_hosts = (
-        _cleanup_host_directory_for_remote_hosts(
-            retention_time,
-            remote_site_hosts,
-            "%s/inventory_archive" % var_dir,
-        )
-        | _cleanup_host_directory_for_remote_hosts(
-            retention_time,
-            remote_site_hosts,
-            "%s/var/pnp4nagios/perfdata" % omd_root,
-        )
-        | _cleanup_host_directory_for_remote_hosts(
-            retention_time,
-            remote_site_hosts,
-            "%s/rrd" % var_dir,
-        )
-    )
-    if cleaned_up_remote_hosts:
+    if cleaned_up_remote_hosts := cleaned_up & (all_hosts - local_site_hosts):
         _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
 
 
 def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> None:
     cleaned_up_non_local_hosts = (
-        _cleanup_host_directory_for_local_hosts(
+        _cleanup_host_directories(
             retention_time,
             local_site_hosts,
             "%s/inventory_archive" % var_dir,
         )
-        | _cleanup_host_directory_for_local_hosts(
+        | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
             "%s/var/pnp4nagios/perfdata" % omd_root,
         )
-        | _cleanup_host_directory_for_local_hosts(
+        | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
             "%s/rrd" % var_dir,

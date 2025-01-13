@@ -104,7 +104,7 @@ def main() {
                         fingerprintArtifacts: true
                     );
                 }
-            ]}
+            }]
         }
     ).values().every { it } ? "SUCCESS" : "FAILURE";
 

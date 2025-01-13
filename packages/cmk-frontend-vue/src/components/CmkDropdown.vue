@@ -220,6 +220,7 @@ function wrap(index: number, length: number): number {
 .cmk-dropdown {
   display: inline-block;
   position: relative;
+  white-space: nowrap;
 }
 
 .cmk-dropdown__button {

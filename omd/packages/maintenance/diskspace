@@ -225,7 +225,7 @@ def _cleanup_host_directory_for_remote_hosts(
 
 
 def _check_threshold_and_delete(
-    cleanup_abandoned_host_files: int, unrelated_dirs: list[str], base_path: str
+    cleanup_abandoned_host_files: int, abandoned_hosts: list[str], base_path: str
 ) -> list:
     """
     Find the latest modified file for each directory. When the latest
@@ -233,7 +233,7 @@ def _check_threshold_and_delete(
     the host base directory.
     """
     cleaned_up_hosts = []
-    for unrelated_dir in unrelated_dirs:
+    for unrelated_dir in abandoned_hosts:
         path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
         if mtime < time.time() - cleanup_abandoned_host_files:

@@ -237,7 +237,7 @@ def _execute_site_sync(
         )
 
     except Exception as e:
-        logger.error("Exception (%s, discovered_host_label_sync)", site_id, exc_info=True)
+        logger.error("Failed to get discovered host labels from site %s: %s", site_id, e)
         return SiteResult(
             site_id=site_id,
             success=False,

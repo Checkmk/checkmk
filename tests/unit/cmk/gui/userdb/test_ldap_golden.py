@@ -183,10 +183,13 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         UserId("bob"): {"connector": connector.id},
         UserId("david"): {"connector": connector.id, "alias": "dave"},
     }
-    ldap_users = {"carol": {"connector": connector.id}, "david": {"connector": connector.id}}
+    ldap_users = {
+        "carol": {"connector": connector.id},
+        "david": {"connector": connector.id},
+        "alice": {"connector": connector.id},
+    }
 
     def assert_expected_users(users_to_save: Users, _now: datetime.datetime) -> None:
-        # bob is gone, carol is added, davids alias stays the same
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
         assert UserId("bob") not in users_to_save
@@ -195,6 +198,8 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         assert users_to_save[UserId("carol")]["alias"] == "carol"
         assert UserId("david") in users_to_save
         assert users_to_save[UserId("david")]["alias"] == "dave"
+        assert UserId("alice@LDAP_SUFFIX") in users_to_save
+        assert users_to_save[UserId("alice@LDAP_SUFFIX")]["connector"] == connector.id
 
     mocker.patch.object(connector, "get_users", return_value=ldap_users)
     connector.do_sync(

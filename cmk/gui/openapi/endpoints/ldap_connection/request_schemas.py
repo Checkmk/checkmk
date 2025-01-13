@@ -946,6 +946,19 @@ class LDAPConnectionConfigRequest(BaseSchema):
         load_default={"sync_interval": {"days": 0, "hours": 0, "minutes": 5}},
     )
 
+    @post_load
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        group_base_dn = data["groups"]["group_base_dn"]
+        for key, grouplist in data["sync_plugins"].get("groups_to_roles", {}).items():
+            if key == "state":
+                continue
+            for group in grouplist:
+                if not group["group_dn"].lower().endswith(group_base_dn.lower()):
+                    raise ValidationError(
+                        f"The configured group_dn '{group['group_dn']}' must end with the group_base_dn '{group_base_dn}'."
+                    )
+        return data
+
 
 GENERAL_PROPERTIES_EXAMPLE = {
     "id": "ldap_1",

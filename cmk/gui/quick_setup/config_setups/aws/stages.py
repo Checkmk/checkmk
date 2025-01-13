@@ -384,6 +384,7 @@ quick_setup_aws = QuickSetup(
             label=_("Save & go to Activate changes"),
             action=action,
             run_in_background=True,
+            custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         ),
     ],
 )

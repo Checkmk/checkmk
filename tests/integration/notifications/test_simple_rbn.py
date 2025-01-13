@@ -71,6 +71,7 @@ def fixture_test_user(site: Site) -> Iterator[None]:
         contactgroups=["all"],
         customer="global" if site.version.is_managed_edition() else None,
     )
+    site.activate_changes_and_wait_for_core_reload()
 
     all_users = site.openapi.users.get_all()
     assert len(all_users) == len(initial_users) + 1
@@ -79,6 +80,7 @@ def fixture_test_user(site: Site) -> Iterator[None]:
         yield
     finally:
         site.openapi.users.delete(username)
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(name="host")

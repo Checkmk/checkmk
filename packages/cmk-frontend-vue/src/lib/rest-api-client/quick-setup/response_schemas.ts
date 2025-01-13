@@ -39,10 +39,25 @@ export interface QuickSetupStageStructure {
   prev_button?: QuickSetupButton
 }
 
+interface BackgroundJobException {
+  message: string
+  traceback: string
+}
+
 export interface QuickSetupStageActionResponse {
   stage_recap: ComponentSpec[]
   validation_errors: Errors
-  background_job_exception: string | null
+  background_job_exception: BackgroundJobException | null
+}
+
+export class QuickSetupStageActionValidationResponse {
+  validation_errors: Errors
+  background_job_exception: BackgroundJobException | null
+
+  constructor(data: QuickSetupStageActionResponse) {
+    this.validation_errors = data.validation_errors
+    this.background_job_exception = data.background_job_exception
+  }
 }
 
 interface QuickSetupCompleteStageResponse {
@@ -75,5 +90,15 @@ export type QuickSetupResponse = QuickSetupGuidedResponse | QuickSetupOverviewRe
 export interface QuickSetupCompleteResponse {
   redirect_url: string
   all_stage_errors: Errors[]
-  background_job_exception: string | null
+  background_job_exception: BackgroundJobException | null
+}
+
+export class QuickSetupCompleteActionValidationResponse {
+  all_stage_errors: Errors[]
+  background_job_exception: BackgroundJobException | null
+
+  constructor(data: QuickSetupCompleteResponse) {
+    this.all_stage_errors = data.all_stage_errors
+    this.background_job_exception = data.background_job_exception
+  }
 }

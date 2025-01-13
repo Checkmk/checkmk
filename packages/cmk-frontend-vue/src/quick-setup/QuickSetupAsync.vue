@@ -6,14 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
-import { formatError } from '@/lib/error.ts'
+import { CmkError, formatError } from '@/lib/error.ts'
 import {
-  saveQuickSetup,
   getOverview,
   getAllStages,
-  editQuickSetup,
   validateAndRecapStage,
-  getStageStructure
+  getStageStructure,
+  saveOrEditQuickSetup
 } from './rest-api/api'
 import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
@@ -26,7 +25,6 @@ import type {
   DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import { isValidationError, isAllStagesValidationError } from './rest-api/errors'
 import { asStringArray } from './utils'
 import type {
   StageData,
@@ -34,11 +32,12 @@ import type {
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import usePersistentRef from '@/lib/usePersistentRef'
-import type {
-  Action,
-  QuickSetupGuidedResponse,
-  QuickSetupStageActionResponse,
-  QuickSetupStageStructure
+import {
+  QuickSetupCompleteActionValidationResponse,
+  QuickSetupStageActionValidationResponse,
+  type Action,
+  type QuickSetupGuidedResponse,
+  type QuickSetupStageStructure
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
 
 /**
@@ -98,24 +97,26 @@ const nextStage = async (actionId: string) => {
     userInput.push(formData)
   }
 
-  let actionResponse: QuickSetupStageActionResponse | null = null
-
   try {
-    actionResponse = await validateAndRecapStage(props.quick_setup_id, actionId, userInput)
+    const actionResponse = await validateAndRecapStage(props.quick_setup_id, actionId, userInput)
+    loading.value = false
+
+    if (actionResponse instanceof QuickSetupStageActionValidationResponse) {
+      handleValidationError(actionResponse, thisStageNumber)
+      handleBackgroundJobError(actionResponse)
+      return
+    }
+
+    stages.value[thisStageNumber]!.form_spec_errors =
+      actionResponse.validation_errors?.formspec_errors || {}
+    stages.value[thisStageNumber]!.errors = actionResponse.validation_errors?.stage_errors || []
+    stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
   } catch (err: unknown) {
-    handleError(err)
-  }
-
-  loading.value = false
-  if (!actionResponse) {
+    handleExceptionError(err)
     return
+  } finally {
+    loading.value = false
   }
-
-  //Clear form_spec_errors and other_errors from thisStageNumber
-  stages.value[thisStageNumber]!.form_spec_errors = {}
-  stages.value[thisStageNumber]!.errors = []
-
-  stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
 
   //If we have not finished the quick setup yet, but still on the, regular step
   if (nextStageNumber < numberOfStages.value - 1) {
@@ -127,7 +128,7 @@ const nextStage = async (actionId: string) => {
         props.objectId
       )
     } catch (err: unknown) {
-      handleError(err)
+      handleExceptionError(err)
     }
 
     const acts: QuickSetupStageAction[] = stages.value[nextStageNumber]?.actions || []
@@ -308,27 +309,27 @@ const save = async (buttonId: string) => {
   }
 
   try {
-    if (props.objectId) {
-      preventLeaving.value = false
-      const { redirect_url: redirectUrl } = await editQuickSetup(
-        props.quick_setup_id,
-        buttonId,
-        userInput,
-        props.objectId
-      )
-      window.location.href = redirectUrl
+    preventLeaving.value = false
+    const data = await saveOrEditQuickSetup(
+      props.quick_setup_id,
+      buttonId,
+      userInput,
+      props.objectId
+    )
+    loading.value = true
+
+    if (data instanceof QuickSetupCompleteActionValidationResponse) {
+      handleAllStagesValidationError(data)
+      handleBackgroundJobError(data)
+      return
     } else {
-      preventLeaving.value = false
-      const { redirect_url: redirectUrl } = await saveQuickSetup(
-        props.quick_setup_id,
-        buttonId,
-        userInput
-      )
-      window.location.href = redirectUrl
+      window.location.href = data.redirect_url
     }
   } catch (err: unknown) {
     loading.value = false
-    handleError(err)
+    handleExceptionError(err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -383,22 +384,47 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const handleError = (err: unknown) => {
-  if (isAllStagesValidationError(err)) {
-    const errs = err
+const handleValidationError = (
+  actionResponse: QuickSetupStageActionValidationResponse,
+  thisStageNumber: number
+) => {
+  stages.value[thisStageNumber]!.form_spec_errors =
+    actionResponse.validation_errors?.formspec_errors || {}
+  stages.value[thisStageNumber]!.errors = actionResponse.validation_errors?.stage_errors || []
+}
 
-    for (const stageError of errs.all_stage_errors || []) {
-      const stageIndex =
-        typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
-          ? stageError.stage_index
-          : stages.value.length - 1
+const handleAllStagesValidationError = (data: QuickSetupCompleteActionValidationResponse) => {
+  const errs = data.all_stage_errors || []
+  for (const stageError of errs) {
+    const stageIndex =
+      typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
+        ? stageError.stage_index
+        : stages.value.length - 1
 
-      stages.value[stageIndex]!.errors = stageError.stage_errors
-      stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
+    stages.value[stageIndex]!.errors = stageError.stage_errors
+    stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
+  }
+}
+
+const handleBackgroundJobError = (
+  data: QuickSetupStageActionValidationResponse | QuickSetupCompleteActionValidationResponse
+) => {
+  if (data.background_job_exception) {
+    globalError.value = {
+      type: 'DetailedError',
+      message: data.background_job_exception.message,
+      details: data.background_job_exception.traceback
     }
-  } else if (isValidationError(err)) {
-    stages.value[quickSetupHook.stage.value]!.errors = err.stage_errors || []
-    stages.value[quickSetupHook.stage.value]!.form_spec_errors = err.formspec_errors || {}
+  }
+}
+
+const handleExceptionError = (err: unknown) => {
+  if (err instanceof CmkError) {
+    globalError.value = {
+      type: 'DetailedError',
+      message: err.message,
+      details: formatError(err)
+    }
   } else if (err instanceof Error) {
     const message =
       'An unknown error occurred. Refresh the page to try again. If the problem persists, reach out to the Checkmk support.'

@@ -268,33 +268,6 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
-def _get_configured_hosts() -> tuple[set, set, bool]:
-    """
-    Get local known hosts for all kind of sites (central and remote).
-    For central sites, get also all known hosts, even the ones that are
-    assigned to remote sites.
-    """
-    local_site_hosts: set = set()
-    all_hosts: set = set()
-
-    is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
-
-    if not is_wato_remote_site:
-        all_hosts.update(
-            subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"], encoding="utf-8"
-            ).splitlines()
-        )
-
-    local_site_hosts.update(
-        subprocess.check_output(
-            ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
-        ).splitlines()
-    )
-
-    return all_hosts, local_site_hosts, is_wato_remote_site
-
-
 def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -> None:
     """
     The mechanism is like this:
@@ -309,8 +282,23 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
     if not cleanup_abandoned_host_files:
         return
 
+    is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
+
     try:
-        all_hosts, local_site_hosts, is_wato_remote_site = _get_configured_hosts()
+        if not is_wato_remote_site:
+            all_hosts = set(
+                subprocess.check_output(
+                    ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                    encoding="utf-8",
+                ).splitlines()
+            )
+        else:
+            all_hosts = set()
+        local_site_hosts = set(
+            subprocess.check_output(
+                ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
+            ).splitlines()
+        )
     except subprocess.CalledProcessError as e:
         _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return

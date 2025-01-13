@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from time import time
 from typing import get_args, Literal
 
-from livestatus import MultiSiteConnection, OnlySites, SiteId
+from livestatus import lqencode, MultiSiteConnection, OnlySites, SiteId
 
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
@@ -200,7 +200,7 @@ def update_and_acknowledge(
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};{ack};{change_comment};{change_contact}"
+        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};{ack};{lqencode(change_comment)};{lqencode(change_contact)}"
         send_command(connection, cmd, site)
     return sites_with_ids
 

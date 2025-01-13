@@ -1,0 +1,12 @@
+Title: Fix filtering and sorting for host, services, contact group views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1736755465
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+Sorting by clicking the table column header did not sort entries in the Host, Service, and Contact group views, and applied filters were reset.
+
+Now filtering and sorting functions work as expected.

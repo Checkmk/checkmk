@@ -10,7 +10,7 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
 from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
@@ -20,7 +20,6 @@ from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
-    DictGroup,
     Dictionary,
     FieldSize,
     FixedValue,
@@ -33,6 +32,7 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 from ._helpers import _get_url_prefix_setting
 
@@ -163,8 +163,9 @@ def _header_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
 def _content_elements() -> dict[str, DictElement[Any]]:
     return {
         "insert_html_section": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=MultilineText(
                 title=Title("Custom HTML section (e.g. title, description…)"),
@@ -174,8 +175,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
         ),
         # TODO should be old ListChoice style
         "elements": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=MultipleChoice(
                 title=Title("Additional details"),
@@ -229,8 +231,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
         ),
         "contact_groups": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=FixedValue(
                 title=Title("Show contact groups"),
@@ -239,8 +242,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
         ),
         "svc_labels": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=FixedValue(
                 title=Title("Show service labels"),
@@ -249,8 +253,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
         ),
         "host_labels": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=FixedValue(
                 title=Title("Show host labels"),
@@ -259,8 +264,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
         ),
         "host_tags": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=FixedValue(
                 title=Title("Show host tags"),
@@ -269,8 +275,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
         ),
         "graphs_per_notification": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=Integer(
                 title=Title("Number of graphs per notification (default: 5)"),
@@ -291,8 +298,9 @@ def _bulk_elements() -> dict[str, DictElement[Any]]:
     return {
         "bulk_sort_order": _bulk_sort_order(),
         "notifications_with_graphs": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Bulk notifications"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=Integer(
                 title=Title("Number of graphs per event (default: 5)"),
@@ -316,8 +324,9 @@ def _bulk_elements() -> dict[str, DictElement[Any]]:
 def _testing_elements() -> dict[str, DictElement[Any]]:
     return {
         "notification_rule": DictElement(
-            group=DictGroup(
+            group=DictGroupExtended(
                 title=Title("Troubleshooting/testing settings"),
+                layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=FixedValue(
                 title=Title("Show notification rule that triggered the notification"),
@@ -330,8 +339,9 @@ def _testing_elements() -> dict[str, DictElement[Any]]:
 
 def _from_address_element(is_cse: bool) -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=Dictionary(
             title=Title('Custom sender ("From")'),
@@ -355,8 +365,9 @@ def _from_address_element(is_cse: bool) -> DictElement[Any]:
 
 def _reply_to() -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=Dictionary(
             title=Title('Custom recipient of "Reply to"'),
@@ -379,8 +390,9 @@ def _reply_to() -> DictElement[Any]:
 
 def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=FixedValue(
             title=Title("Hide other recipients: Send individual notifications to each recipient"),
@@ -406,8 +418,9 @@ def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
 
 def _host_subject() -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=String(
             title=Title("Subject line for host notifications"),
@@ -425,8 +438,9 @@ def _host_subject() -> DictElement[Any]:
 
 def _service_subject() -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=String(
             title=Title("Subject line for service notifications"),
@@ -444,8 +458,9 @@ def _service_subject() -> DictElement[Any]:
 
 def _bulk_sort_order() -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title("Bulk notifications"),
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=SingleChoice(
             title=Title("Notification sort order for bulk notifications"),

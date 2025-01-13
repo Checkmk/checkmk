@@ -90,6 +90,10 @@ sh_binary(
     data = [":taplo_unzip_and_make_executable"],
 )
 
+# TODO: Should we use buildifier more in the way aspect does?
+# Currenlty, we try to find all "bazel" files with run-buildifier or run buildifier on a package level.
+# rules_lint however does the discovery by itself, see:
+# https://docs.aspect.build/workflows/features/buildifier
 alias(
     name = "buildifier",
     actual = "@buildifier_prebuilt//:buildifier",

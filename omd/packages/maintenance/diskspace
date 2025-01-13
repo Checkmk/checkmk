@@ -14,7 +14,6 @@ from typing import Any, Literal
 
 from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root, var_dir
 from cmk.utils.render import fmt_bytes
 
@@ -207,57 +206,32 @@ def _oldest_candidate(file_infos: dict) -> str | None:
     return None
 
 
-def _cleanup_host_directory_for_local_hosts(
-    cleanup_hosts: set[HostName], base_path: str
-) -> list[HostName]:
+def _cleanup_host_directories(unaffected_hosts: set[str], base_path: str) -> set[str]:
     """
     First find all directories not related to a known host.
     """
     if not os.path.isdir(base_path):
-        return []
+        return set()
 
-    unrelated_dirs: list[str] = []
-    for host_dir in os.listdir(base_path):
-        if host_dir not in cleanup_hosts:
-            unrelated_dirs.append(host_dir)
+    abandoned = {host_dir for host_dir in os.listdir(base_path) if host_dir not in unaffected_hosts}
 
-    cleaned_up_hosts = _check_threshold_and_delete(unrelated_dirs, base_path)
-
-    return cleaned_up_hosts
+    return _check_threshold_and_delete(abandoned, base_path)
 
 
-def _cleanup_host_directory_for_remote_hosts(cleaned_up_remote_hosts: set, base_path: str) -> list:
-    """
-    Find all directories existing on the local site and return a list of all
-    matching hosts that are known on remote sites
-    """
-    if not os.path.isdir(base_path):
-        return []
-
-    unrelated_dirs = []
-    for host_dir in os.listdir(base_path):
-        if host_dir in cleaned_up_remote_hosts:
-            unrelated_dirs.append(host_dir)
-
-    cleaned_up_hosts = _check_threshold_and_delete(unrelated_dirs, base_path)
-
-    return cleaned_up_hosts
-
-
-def _check_threshold_and_delete(unrelated_dirs: list[str], base_path: str) -> list:
+def _check_threshold_and_delete(abandoned_hosts: set[str], base_path: str) -> set[str]:
     """
     Find the latest modified file for each directory. When the latest
     modified file is older than the threshold, delete all files including
     the host base directory.
     """
     assert cleanup_abandoned_host_files is not None
-    cleaned_up_hosts = []
-    for unrelated_dir in unrelated_dirs:
+    cleaned_up_hosts = set()
+    for unrelated_dir in abandoned_hosts:
         path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
         if mtime < time.time() - cleanup_abandoned_host_files:
             _delete_files_and_base_directory(path, "abandoned host")
-            cleaned_up_hosts.append(unrelated_dir)
+            cleaned_up_hosts.add(unrelated_dir)
         else:
             _verbose("Found abandoned host path (but not old enough): %s" % path)
 
@@ -288,32 +262,61 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
-def _get_configured_hosts() -> tuple[set, set, bool]:
-    """
-    Get local known hosts for all kind of sites (central and remote).
-    For central sites, get also all known hosts, even the ones that are
-    assigned to remote sites.
-    """
-    local_site_hosts: set = set()
-    all_hosts: set = set()
-
-    is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
-
-    if not is_wato_remote_site:
-        all_hosts.update(
+def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) -> None:
+    try:
+        all_hosts = set(
             subprocess.check_output(
                 ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
                 encoding="utf-8",
             ).splitlines()
         )
+    except subprocess.CalledProcessError as e:
+        _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
+        return
 
-    local_site_hosts.update(
-        subprocess.check_output(
-            ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
-        ).splitlines()
+    cleaned_up = (
+        _cleanup_host_directories(
+            all_hosts,
+            "%s/inventory_archive" % var_dir,
+        )
+        | _cleanup_host_directories(
+            local_site_hosts,
+            "%s/var/pnp4nagios/perfdata" % omd_root,
+        )
+        | _cleanup_host_directories(
+            local_site_hosts,
+            "%s/rrd" % var_dir,
+        )
     )
 
-    return all_hosts, local_site_hosts, is_wato_remote_site
+    # Now call Check_MK to clean up other files for the hosts which we have
+    # cleaned up abandoned files for.
+    if cleaned_up_deleted_hosts := cleaned_up - all_hosts:
+        _do_automation_call(cleaned_up_deleted_hosts, "delete-hosts")
+    if cleaned_up_remote_hosts := cleaned_up & (all_hosts - local_site_hosts):
+        _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
+
+
+def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> None:
+    cleaned_up_non_local_hosts = (
+        _cleanup_host_directories(
+            local_site_hosts,
+            "%s/inventory_archive" % var_dir,
+        )
+        | _cleanup_host_directories(
+            local_site_hosts,
+            "%s/var/pnp4nagios/perfdata" % omd_root,
+        )
+        | _cleanup_host_directories(
+            local_site_hosts,
+            "%s/rrd" % var_dir,
+        )
+    )
+
+    # Now call Check_MK to clean up other files for the hosts which we have
+    # cleaned up abandoned files for.
+    if cleaned_up_non_local_hosts:
+        _do_automation_call(cleaned_up_non_local_hosts, "delete-hosts")
 
 
 def _do_cleanup_abandoned_host_files() -> None:
@@ -328,8 +331,14 @@ def _do_cleanup_abandoned_host_files() -> None:
     if not cleanup_abandoned_host_files:
         return
 
+    is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
+
     try:
-        all_hosts, local_site_hosts, is_wato_remote_site = _get_configured_hosts()
+        local_site_hosts = set(
+            subprocess.check_output(
+                ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
+            ).splitlines()
+        )
     except subprocess.CalledProcessError as e:
         _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
@@ -338,44 +347,10 @@ def _do_cleanup_abandoned_host_files() -> None:
         _verbose("Found no hosts. Be careful and not cleaning up anything.")
         return
 
-    cleanup_hosts = all_hosts if not is_wato_remote_site else local_site_hosts
-
-    # Base directories where each host has a sub-directory below with
-    # host related files inside
-    path_patterns: list[str] = [
-        "%s/inventory_archive" % var_dir,
-        "%s/rrd" % var_dir,
-        "%s/var/pnp4nagios/perfdata" % omd_root,
-    ]
-
-    cleaned_up_local_hosts: set = set()
-    for base_path in path_patterns:
-        cleaned_up_local_hosts.update(
-            _cleanup_host_directory_for_local_hosts(
-                cleanup_hosts,
-                base_path,
-            )
-        )
-
-    # Now call Check_MK to clean up other files for the hosts which we have
-    # cleaned up abandoned files for.
-    if cleaned_up_local_hosts:
-        _do_automation_call(cleaned_up_local_hosts, "delete-hosts")
-
-    # Now call Check_MK to clean up files for hosts that still have files local
-    # but are only known on remote sites
-    if all_hosts:
-        remote_site_hosts = all_hosts - local_site_hosts
-        cleaned_up_remote_hosts: set = set()
-        for base_path in path_patterns:
-            cleaned_up_remote_hosts.update(
-                _cleanup_host_directory_for_remote_hosts(
-                    remote_site_hosts,
-                    base_path,
-                )
-            )
-        if cleaned_up_remote_hosts:
-            _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
+    if is_wato_remote_site:
+        _do_cleanup_remote_site(cleanup_abandoned_host_files, local_site_hosts)
+    else:
+        _do_cleanup_central_site(cleanup_abandoned_host_files, local_site_hosts)
 
 
 def _cleanup_aged() -> None:

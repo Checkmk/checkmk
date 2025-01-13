@@ -215,8 +215,8 @@ BEGIN
                      (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120)
                      AS last_backup_date,
       cast(b.type as nvarchar(max)) as type,
-      cast(b.machine_name as nvarchar(max)),
-      isnull(rep.is_primary_replica,0) as is_primary_replica,
+      cast(b.machine_name as nvarchar(max)) as machine_name,
+      isnull(convert(nvarchar(40), rep.is_primary_replica), '''') as is_primary_replica,
       rep.is_local,
       isnull(convert(nvarchar(40), rep.replica_id), '''') AS replica_id,
       cast(db.name as nvarchar(max)) AS database_name
@@ -281,11 +281,12 @@ cast(DATABASEPROPERTYEX(name, 'Status') as nvarchar(max)) AS Status, \
 FROM master.dbo.sysdatabases";
 
     pub const IS_CLUSTERED: &str =
-        "SELECT cast( SERVERPROPERTY('IsClustered') as nvarchar) AS is_clustered";
+        "SELECT cast( SERVERPROPERTY('IsClustered') as nvarchar(max)) AS is_clustered";
     pub const CLUSTER_NODES: &str =
-        "SELECT cast(nodename as NVARCHAR) as nodename FROM sys.dm_os_cluster_nodes";
+        "SELECT cast(nodename as NVARCHAR(max)) as nodename FROM sys.dm_os_cluster_nodes";
+
     pub const CLUSTER_ACTIVE_NODES: &str =
-        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as nvarchar) AS active_node";
+        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as nvarchar(max)) AS active_node";
 
     pub const CONNECTIONS: &str = "SELECT name AS DbName, \
       cast((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) as bigint) AS NumberOfConnections  \

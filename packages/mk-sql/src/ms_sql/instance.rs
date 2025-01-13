@@ -766,7 +766,7 @@ impl SqlInstance {
                                 self.generate_datafiles_section(endpoint, chunk, query, sep),
                             ),
                             names::CLUSTERS => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
+                                self.generate_clusters_section(endpoint, chunk, query, sep),
                             ),
                             _ => format!("{} not implemented\n", section.name()).to_string(),
                         }
@@ -1001,7 +1001,7 @@ impl SqlInstance {
         }
         let (nodes, active_node) = self.get_cluster_nodes(client, query).await?;
         Ok(Some(format!(
-            "{}{sep}{}{sep}{}{sep}{}",
+            "{}{sep}{}{sep}{}{sep}{}\n",
             self.name,
             database.replace(' ', "_"),
             active_node,
@@ -1022,7 +1022,7 @@ impl SqlInstance {
         query: &str,
     ) -> Result<(String, String)> {
         let answers = &run_custom_query(client, query).await?;
-        if answers.len() > 2 && !answers[0].is_empty() && !answers[1].is_empty() {
+        if answers.len() >= 2 && !answers[1].is_empty() {
             return Ok((answers[0].get_node_names(), answers[1].get_active_node()));
         }
         Ok((String::default(), String::default()))
@@ -1212,7 +1212,7 @@ impl SqlInstance {
             Some(UniAnswer::Block(block)) => block
                 .rows
                 .iter()
-                .map(|row| row.get(0).cloned().unwrap_or_default())
+                .map(|row| row.first().cloned().unwrap_or_default())
                 .collect::<Vec<String>>(),
             None => {
                 log::error!("Databases answer is empty");
@@ -1727,7 +1727,7 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
@@ -1769,7 +1769,7 @@ fn to_backup_entry_odbc(
         .get_value_by_name(row, "is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,

@@ -508,12 +508,19 @@ impl ConnectionTls {
         if tls.is_badvalue() {
             return Ok(None);
         }
+        let ca = tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?;
+        let client_certificate = tls
+            .get_string(keys::CLIENT_CERTIFICATE)
+            .map(|s| s.into())
+            .context("bad/Missing CLIENT_CERTIFICATE")?;
+        log::info!(
+            "Using ca '{}' client certificate: '{}'",
+            ca.display(),
+            client_certificate,
+        );
         Ok(Some(Self {
-            ca: tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?,
-            client_certificate: tls
-                .get_string(keys::CLIENT_CERTIFICATE)
-                .map(|s| s.into())
-                .context("bad/Missing CLIENT_CERTIFICATE")?,
+            ca,
+            client_certificate,
         }))
     }
     pub fn ca(&self) -> &Path {
@@ -1512,14 +1519,24 @@ connection:
     #[test]
     fn test_get_additional_registry_instances() {
         // nothing found
+        fn print_array(a: &[CustomInstance]) -> String {
+            a.iter()
+                .map(|i| format!("{}: {}-{}", i.name(), i.conn().port(), i.is_tcp()))
+                .collect::<Vec<String>>()
+                .join(", ")
+        }
         let auth = Authentication::default();
         let conn = Connection::default();
         let found: Vec<CustomInstance> = vec![];
         let full = get_additional_registry_instances(&found, &auth, &conn);
         let full = filter_from_custom_instances(full);
         assert_eq!(full.len(), 3);
-        assert!(full.iter().all(|i| i.is_tcp()));
-        assert!(full.iter().all(|i| i.conn().port() >= Port(1433)));
+        assert!(full.iter().all(|i| i.is_tcp()), "{:?}", print_array(&full));
+        assert!(
+            full.iter().all(|i| i.conn().port() >= Port(1433)),
+            "{:?}",
+            print_array(&full)
+        );
 
         // one is found
         let found: Vec<CustomInstance> = vec![CustomInstance {

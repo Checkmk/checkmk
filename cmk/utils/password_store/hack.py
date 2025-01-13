@@ -79,6 +79,7 @@ HACK_AGENTS = {
     "ipmi_sensors": True,
     "ruckus_spot": True,
     "kube": True,
+    "otel": False,  # needs no secret
 }
 
 

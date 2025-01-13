@@ -7,20 +7,14 @@
 
 """Dynamic registration of host tag painters and sorters based on the site configuration"""
 
-from collections.abc import Mapping
-from functools import partial
-
 from cmk.utils.tags import TagGroupID
 
 from cmk.gui.config import active_config, Config
-from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Painter, painter_registry
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
-
-from .sorter import Sorter, sorter_registry
 
 
 def register_tag_plugins() -> None:
@@ -29,7 +23,6 @@ def register_tag_plugins() -> None:
     ):
         return  # No re-register needed :-)
     _register_host_tag_painters(config=active_config)
-    _register_host_tag_sorters(config=active_config)
     setattr(register_tag_plugins, "_config_hash", _calc_config_hash(config=active_config))
 
 
@@ -81,33 +74,6 @@ def _register_host_tag_painters(*, config: Config) -> None:
 
 def _paint_host_tag(row: Row, tgid: TagGroupID, *, config: Config) -> CellSpec:
     return "", _get_tag_group_value(row, "host", tgid, config=config)
-
-
-def _register_host_tag_sorters(*, config: Config) -> None:
-    for tag_group in config.tags.tag_groups:
-        sorter_registry.register(
-            Sorter(
-                ident=f"host_tag_{tag_group.id}",
-                title=_("Host tag:") + " " + tag_group.title,
-                columns=["host_tags"],
-                load_inv=False,
-                sort_function=partial(_cmp_host_tag, tag_group_id=tag_group.id),
-            )
-        )
-
-
-def _cmp_host_tag(
-    r1: Row,
-    r2: Row,
-    *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
-    tag_group_id: TagGroupID,
-) -> int:
-    host_tag_1 = _get_tag_group_value(r1, "host", tag_group_id, config=config)
-    host_tag_2 = _get_tag_group_value(r2, "host", tag_group_id, config=config)
-    return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
 def _get_tag_group_value(row: Row, what: str, tag_group_id: TagGroupID, *, config: Config) -> str:

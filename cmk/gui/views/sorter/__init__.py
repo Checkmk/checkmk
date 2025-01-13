@@ -16,6 +16,7 @@ from .helpers import (
     compare_ips,
 )
 from .registry import (
+    all_sorters,
     declare_1to1_sorter,
     declare_simple_sorter,
     register_sorter,
@@ -30,6 +31,7 @@ __all__ = [
     "ParameterizedSorter",
     "SorterEntry",
     "SorterRegistry",
+    "all_sorters",
     "cmp_custom_variable",
     "cmp_insensitive_string",
     "cmp_ip_address",

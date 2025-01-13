@@ -35,11 +35,6 @@ def _error(message: str) -> None:
     sys.stderr.write(f"ERROR: {message}\n")
 
 
-def _terminate(message: str) -> None:
-    _error(message)
-    sys.exit(1)
-
-
 def _log(message: str) -> None:
     sys.stdout.write(f"{message}\n")
 
@@ -394,7 +389,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except SystemExit:  # pylint: disable=try-except-raise
-        raise
     except Exception:
-        _terminate(f"Unexpected exception: {traceback.format_exc()}")
+        _error(f"Unexpected exception: {traceback.format_exc()}")
+        sys.exit(1)

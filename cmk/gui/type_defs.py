@@ -227,7 +227,7 @@ class UserSpec(TypedDict, total=False):
     num_failed_logins: int
     pager: str
     password: PasswordHash
-    roles: NotRequired[list[str]]
+    roles: list[str]
     serial: int
     service_notification_options: str
     store_automation_secret: bool

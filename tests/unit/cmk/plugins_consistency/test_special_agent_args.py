@@ -49,6 +49,13 @@ from cmk.special_agents import (
     agent_storeonce4x,
 )
 
+agent_otel: ModuleType | None
+try:
+    from cmk.plugins.otel.special_agents.cce import agent_otel
+except ImportError:
+    agent_otel = None
+
+
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "three_par": None,
     "activemq": agent_activemq,
@@ -86,6 +93,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp_ontap": agent_netapp_ontap,
+    "otel": agent_otel,
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,
@@ -108,8 +116,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "vsphere": None,
     "kube": agent_kube,
 }
-
-UNMIGRATED: set[str] = set()
 
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
@@ -221,15 +227,14 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "gcp_status": [],
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
+    "otel": ["HOSTNAME"],
 }
 
 
-def test_all_agents_tested() -> None:
-    agents = load_special_agents(raise_errors=True)
-    # TODO CMK-20557 Quickfix: otel is part of cce
-    migrated = {agent.name for agent in agents.values()} - {"otel"}
-    assert not migrated & UNMIGRATED
-    assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)
+def test_all_agents_considered() -> None:
+    assert set(TESTED_SA_MODULES) == {
+        plugin.name for plugin in load_special_agents(raise_errors=True).values()
+    }
 
 
 @pytest.mark.parametrize(

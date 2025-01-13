@@ -1,0 +1,21 @@
+Title: Fix Livestatus injection via REST-API
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1736774626
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+Prior to this fix, a REST API endpoint improperly handled escaping of data received through POST requests. This vulnerability allowed users with the <code>update_and_acknowledge</code> permission for events to inject arbitrary Livestatus commands via the affected endpoint.
+
+<strong>Affected Versions</strong>:
+
+LI: 2.4.0 (beta)
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS score of 6.0 (Medium) with the following CVSS vector: <code>CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N</code>, and assigned <code>CVE-2024-38865</code>.

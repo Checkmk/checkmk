@@ -6,6 +6,8 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, cast, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
+from pydantic import BaseModel
+
 from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
@@ -140,3 +142,8 @@ def validate_custom_validators(
             )
         )
     return errors
+
+
+class BackgroundJobException(BaseModel):
+    message: str
+    traceback: str

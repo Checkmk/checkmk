@@ -8,11 +8,23 @@ from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
 
-BACKGROUND_JOB_EXCEPTION = fields.String(
-    example="An exception message",
-    description="The exception message if the action was run in the background and raised "
-    "an unexpected exception",
-    allow_none=True,
+
+class BackgroundJobException(BaseSchema):
+    message = fields.String(
+        example="An exception message",
+        description="The exception message",
+    )
+    traceback = fields.String(
+        example="The traceback of the background job exception",
+        description="The traceback of the exception",
+    )
+
+
+BACKGROUND_JOB_EXCEPTION = fields.Nested(
+    BackgroundJobException,
+    description="The exception details if the action was run in the background and raised an "
+    "unexpected exception",
+    example={},
 )
 
 
@@ -211,7 +223,6 @@ class QuickSetupCompleteResponse(BaseSchema):
         example="http://save/url",
         description="The url to redirect to after saving the quicksetup",
     )
-
     all_stage_errors = fields.List(
         fields.Nested(
             Errors,
@@ -222,5 +233,4 @@ class QuickSetupCompleteResponse(BaseSchema):
         description="A list of stage errors",
         example=[],
     )
-
     background_job_exception = BACKGROUND_JOB_EXCEPTION

@@ -150,9 +150,7 @@ class OracleDatabase:
         wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
         cmd = ["mkstore", "-wrl", self.wallet_dir.as_posix(), "-create"]
         rc, output = self.container.exec_run(
-            f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""",
-            user="root",
-            privileged=True,
+            f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""", user="root"
         )
         assert rc == 0, f"Error during wallet creation: {output.decode('UTF-8')}"
         logger.info("Creating Oracle wallet credential...")
@@ -164,9 +162,7 @@ class OracleDatabase:
             f"localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}",
         ]
         rc, output = self.container.exec_run(
-            f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""",
-            user="root",
-            privileged=True,
+            f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""", user="root"
         )
         assert rc == 0, f"Error during wallet credential creation: {output.decode('UTF-8')}"
 
@@ -388,7 +384,7 @@ class OracleDatabase:
         ), "Failed to copy Oracle plugin!"
         logger.info('Set ownership for Oracle plugin "%s"...', plugin_source_path)
         rc, output = self.container.exec_run(
-            rf'chmod +x "{self.cmk_plugin.as_posix()}"', user="root", privileged=True
+            rf'chmod +x "{self.cmk_plugin.as_posix()}"', user="root"
         )
         assert rc == 0, f"Error while setting ownership: {output.decode('UTF-8')}"
         logger.info("Installing Oracle plugin configuration files...")
@@ -398,9 +394,7 @@ class OracleDatabase:
 
         logger.info("Create a link to Perl...")
         rc, output = self.container.exec_run(
-            r"""bash -c 'ln -s "${ORACLE_HOME}/perl/bin/perl" "/usr/bin/perl"'""",
-            user="root",
-            privileged=True,
+            r"""bash -c 'ln -s "${ORACLE_HOME}/perl/bin/perl" "/usr/bin/perl"'""", user="root"
         )
         assert rc == 0, f"Error while creating a link to Perl: {output.decode('UTF-8')}"
 
@@ -420,9 +414,7 @@ class OracleDatabase:
             self.container, path, self.tns_admin_dir
         ), f'Failed to copy "{path}"!'
         rc, output = self.container.exec_run(
-            rf'cp "{self.cmk_credentials_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"',
-            user="root",
-            privileged=True,
+            rf'cp "{self.cmk_credentials_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"', user="root"
         )
         assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
 
@@ -446,9 +438,7 @@ class OracleDatabase:
             self.container, path, self.tns_admin_dir
         ), f'Failed to copy "{path}"!'
         rc, output = self.container.exec_run(
-            rf'cp "{self.cmk_wallet_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"',
-            user="root",
-            privileged=True,
+            rf'cp "{self.cmk_wallet_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"', user="root"
         )
         assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
 
@@ -480,9 +470,7 @@ def test_docker_oracle(
     else:
         oracle.use_credentials()
     rc, output = oracle.container.exec_run(
-        f"""bash -c '{oracle.cmk_plugin.as_posix()} -t'""",
-        user="root",
-        privileged=True,
+        f"""bash -c '{oracle.cmk_plugin.as_posix()} -t'""", user="root"
     )
     assert rc == 0, (
         f"Oracle plugin could not connect to database using {auth_mode} authentication!\n"

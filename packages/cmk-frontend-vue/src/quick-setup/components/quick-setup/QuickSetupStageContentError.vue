@@ -12,6 +12,7 @@ import {
 } from './quick_setup_types'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 
 const details = ref<boolean>(false)
 const props = defineProps<{ errors: QuickSetupStageContent['errors'] }>()
@@ -26,15 +27,13 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 
 <template>
   <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
-    <strong>
-      {{ error.message }}
-    </strong>
+    <CmkHtml :html="error.message" />
     <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
     <div v-else>
       <pre>{{ error.details }}</pre>
     </div>
   </CmkAlertBox>
   <CmkAlertBox v-if="validationErrors.length > 0" variant="error">
-    <p v-for="error in validationErrors" :key="error">{{ error }}</p>
+    <CmkHtml v-for="error in validationErrors" :key="error" :html="error" />
   </CmkAlertBox>
 </template>

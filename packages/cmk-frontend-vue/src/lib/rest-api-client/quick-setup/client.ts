@@ -7,16 +7,20 @@
  * Get guided stages or overview stages
  */
 
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 import { API_ROOT } from '../constants'
-import type {
-  QuickSetupCompleteResponse,
-  QuickSetupResponse,
-  QuickSetupStageActionResponse,
-  QuickSetupStageStructure
+import {
+  QuickSetupCompleteActionValidationResponse,
+  QuickSetupStageActionValidationResponse,
+  type QuickSetupCompleteResponse,
+  type QuickSetupResponse,
+  type QuickSetupStageActionResponse,
+  type QuickSetupStageStructure
 } from './response_schemas'
 import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_schemas'
 import type { BackgroundJobSpawnResponse } from '../background-job/response_schemas'
+
+import { argumentError } from '../errors'
 
 const API_DOMAIN = 'quick_setup'
 const OVERVIEW_MODE = 'overview'
@@ -43,8 +47,12 @@ export const getOverviewModeOrGuidedMode = async (
     query['mode'] = OVERVIEW_MODE
   }
 
-  const { data } = await axios.get(url, { params: query })
-  return data
+  try {
+    const { data } = await axios.get(url, { params: query })
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -62,8 +70,12 @@ export const getStageStructure = async (
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/quick_setup_stage/${stageIndex}`
   const query: Record<string, string> = objectId ? { object_id: objectId } : {}
 
-  const { data } = await axios.get(url, { params: query })
-  return data
+  try {
+    const { data } = await axios.get(url, { params: query })
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -72,17 +84,28 @@ export const getStageStructure = async (
  * @param actionId string
  * @param stages QuickSetupStageActionRequest[]
  * @param objectId? string | null
- * @returns Promise<QuickSetupStageActionResponse | BackgroundJobSpawnResponse>
+ * @returns Promise<QuickSetupStageActionResponse | BackgroundJobSpawnResponse | QuickSetupStageActionValidationResponse>
  */
 export const runStageAction = async (
   quickSetupId: string,
   stageActionId: string,
   stages: QuickSetupStageRequest[]
-): Promise<QuickSetupStageActionResponse | BackgroundJobSpawnResponse> => {
+): Promise<
+  | QuickSetupStageActionResponse
+  | BackgroundJobSpawnResponse
+  | QuickSetupStageActionValidationResponse
+> => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-stage-action/invoke`
 
-  const { data } = await axios.post(url, { stage_action_id: stageActionId, stages })
-  return data
+  try {
+    const { data } = await axios.post(url, { stage_action_id: stageActionId, stages })
+    return data
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.data?.validation_errors) {
+      return new QuickSetupStageActionValidationResponse(error.response.data)
+    }
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -99,8 +122,12 @@ export const runQuickSetupAction = async (
 ): Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse> => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-action/invoke`
 
-  const { data } = await axios.post(url, { button_id: actionId, stages })
-  return data
+  try {
+    const { data } = await axios.post(url, { button_id: actionId, stages })
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -109,7 +136,7 @@ export const runQuickSetupAction = async (
  * @param actionId string
  * @param stages QuickSetupStageActionRequest[]
  * @param objectId string
- * @returns Promise<QuickSetupCompleteResponse>
+ * @returns Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse>
  */
 export const editQuickSetup = async (
   quickSetupId: string,
@@ -119,8 +146,12 @@ export const editQuickSetup = async (
 ): Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse> => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/edit/invoke?object_id=${objectId}`
 
-  const { data } = await axios.put(url, { button_id: actionId, stages })
-  return data
+  try {
+    const { data } = await axios.put(url, { button_id: actionId, stages })
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -128,7 +159,7 @@ export const editQuickSetup = async (
  * @param quickSetupId string
  * @param actionId string
  * @param stages QuickSetupStageActionRequest[]
- * @returns Promise<QuickSetupCompleteResponse>
+ * @returns Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse>
  */
 export const saveQuickSetup = async (
   quickSetupId: string,
@@ -137,8 +168,12 @@ export const saveQuickSetup = async (
 ): Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse> => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/save/invoke`
 
-  const { data } = await axios.put(url, { button_id: actionId, stages })
-  return data
+  try {
+    const { data } = await axios.put(url, { button_id: actionId, stages })
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
@@ -146,38 +181,41 @@ export const saveQuickSetup = async (
  * @param jobId string
  * @returns Promise<QuickSetupCompleteResponse>
  */
-export const fetchBackgroundJobResult = (jobId: string): Promise<QuickSetupCompleteResponse> => {
-  const url = `${API_ROOT}/objects/${API_DOMAIN}_action_result/${jobId}`
+export const fetchBackgroundJobResult = async (
+  jobId: string
+): Promise<QuickSetupCompleteResponse | QuickSetupCompleteActionValidationResponse> => {
+  try {
+    const { data } = await axios.get(`${API_ROOT}/objects/${API_DOMAIN}_action_result/${jobId}`)
 
-  return _fetchBackgroundJobResult(url) as Promise<QuickSetupCompleteResponse>
+    if (data?.all_stage_errors || data?.background_job_exception) {
+      return new QuickSetupCompleteActionValidationResponse(data)
+    }
+
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
+  }
 }
 
 /**
  * Fetch the quick setup stage action background job result
  * @param jobId string
- * @returns Promise<QuickSetupStageActionResponse>
+ * @returns Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse>
  */
-export const fetchStageBackgroundJobResult = (
+export const fetchStageBackgroundJobResult = async (
   jobId: string
-): Promise<QuickSetupStageActionResponse> => {
-  const url = `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}`
+): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
+  try {
+    const { data } = await axios.get(
+      `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}`
+    )
 
-  return _fetchBackgroundJobResult(url) as Promise<QuickSetupStageActionResponse>
-}
+    if (data?.validation_errors || data?.background_job_exception) {
+      return new QuickSetupStageActionValidationResponse(data)
+    }
 
-/**
- * Get background job result and check if there is an error
- * @param url string
- * @returns unknown
- * @throws string
- */
-const _fetchBackgroundJobResult = async (url: string): Promise<unknown> => {
-  const result = await axios.get(url)
-
-  //It is possible that a 200 response carries error messages. This will raise a CmkError
-  if (result.data?.background_job_exception) {
-    throw result.data.background_job_exception
+    return data
+  } catch (error) {
+    throw argumentError(error as Error)
   }
-
-  return result.data
 }

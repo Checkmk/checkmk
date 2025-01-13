@@ -3,17 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { processError } from './errors'
 import type { StageData } from '../components/quick-setup/widgets/widget_types'
 
 import { wait } from '@/lib/utils'
-import type {
-  QuickSetupCompleteResponse,
-  QuickSetupGuidedResponse,
-  QuickSetupOverviewResponse,
-  QuickSetupResponse,
-  QuickSetupStageActionResponse,
-  QuickSetupStageStructure
+import {
+  QuickSetupCompleteActionValidationResponse,
+  QuickSetupStageActionValidationResponse,
+  type QuickSetupCompleteResponse,
+  type QuickSetupGuidedResponse,
+  type QuickSetupOverviewResponse,
+  type QuickSetupResponse,
+  type QuickSetupStageActionResponse,
+  type QuickSetupStageStructure
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
 
 import {
@@ -21,7 +22,7 @@ import {
   backgroundJob as backgroundJobClient
 } from '@/lib/rest-api-client'
 import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
-import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import type { BackgroundJobSpawnResponse } from '@/lib/rest-api-client/background-job/response_schemas'
 
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds between checks */
 export const BACKGROUND_JOB_CHECK_INTERVAL = 5000
@@ -72,43 +73,7 @@ const _getOverviewOrAllStages = async (
   mode: 'overview' | 'guided',
   objectId: string | null = null
 ): Promise<QuickSetupResponse> => {
-  try {
-    return await quickSetupClient.getOverviewModeOrGuidedMode(quickSetupId, mode, objectId)
-  } catch (error) {
-    throw processError(error)
-  }
-}
-
-/**
- * Save a new quick setup configuration
- * @param quickSetupId string
- * @param buttonId string
- * @param formData StageData[]
- * @returns Promise<QuickSetupCompleteResponse>
- */
-export const saveQuickSetup = async (
-  quickSetupId: string,
-  buttonId: string,
-  formData: StageData[]
-): Promise<QuickSetupCompleteResponse> => {
-  return _saveOrEditQuickSetup(quickSetupId, buttonId, formData)
-}
-
-/**
- * Save an existing quick setup configuration
- * @param quickSetupId string
- * @param buttonId string
- * @param formData StageData[]
- * @param objectId string
- * @returns Promise<QuickSetupCompleteResponse>
- */
-export const editQuickSetup = async (
-  quickSetupId: string,
-  buttonId: string,
-  formData: StageData[],
-  objectId: string
-): Promise<QuickSetupCompleteResponse> => {
-  return _saveOrEditQuickSetup(quickSetupId, buttonId, formData, objectId)
+  return await quickSetupClient.getOverviewModeOrGuidedMode(quickSetupId, mode, objectId)
 }
 
 /**
@@ -117,43 +82,35 @@ export const editQuickSetup = async (
  * @param buttonId string
  * @param formData StageData[]
  * @param objectId? string
- * @returns Promise<QuickSetupCompleteResponse>
+ * @returns Promise<QuickSetupCompleteResponse | QuickSetupCompleteActionValidationResponse>
  */
-const _saveOrEditQuickSetup = async (
+export const saveOrEditQuickSetup = async (
   quickSetupId: string,
   buttonId: string,
   formData: StageData[],
-  objectId?: string
-): Promise<QuickSetupCompleteResponse> => {
+  objectId: string | null = null
+): Promise<QuickSetupCompleteResponse | QuickSetupCompleteActionValidationResponse> => {
   const stages: QuickSetupStageRequest[] = formData.map((stage) => ({ form_data: stage }))
 
-  let data = undefined
-  try {
-    data = objectId
-      ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
-      : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
-  } catch (error) {
-    throw processError(error)
-  }
+  const data = objectId
+    ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
+    : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
 
-  /*
-      If the action is executed synchronously, the response is a quick_setup domain object
-      with the stage recap.
+  if (data instanceof QuickSetupCompleteActionValidationResponse) {
+    return data
+  } else if (isBackgroundJob(data)) {
+    /*
+    If the action is executed synchronously, the response is a quick_setup domain object
+    with the stage recap.
 
-      If the action is executed asynchronously, an object of the background_job domain is returned.
-      The result can be obtained after the job has finished executing.
-    */
-  if ('domainType' in data && data.domainType === 'background_job') {
+    If the action is executed asynchronously, an object of the background_job domain is returned.
+    The result can be obtained after the job has finished executing.
+  */
     await _waitForBackgroundJobToFinish(data.id)
-    data = await quickSetupClient.fetchBackgroundJobResult(data.id)
-
-    //It is possible that a 200 response carries error messages. This must raise an arror
-    if (data?.background_job_exception || data?.all_stage_errors) {
-      throw _createAxiosError(data)
-    }
+    return await quickSetupClient.fetchBackgroundJobResult(data.id)
+  } else {
+    return data as QuickSetupCompleteResponse
   }
-
-  return data as QuickSetupCompleteResponse
 }
 
 /**
@@ -168,32 +125,25 @@ export const validateAndRecapStage = async (
   quickSetupId: string,
   actionId: string,
   formData: StageData[]
-): Promise<QuickSetupStageActionResponse> => {
+): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
   const stages = formData.map((stage) => ({ form_data: stage }))
 
-  try {
-    let data = await quickSetupClient.runStageAction(quickSetupId, actionId, stages)
+  const data = await quickSetupClient.runStageAction(quickSetupId, actionId, stages)
 
+  if (data instanceof QuickSetupStageActionValidationResponse) {
+    return data
+  } else if (isBackgroundJob(data)) {
     /*
-      If the action is executed synchronously, the response is a quick_setup domain object
-      with the stage recap.
+    If the action is executed synchronously, the response is a quick_setup domain object
+    with the stage recap.
 
-      If the action is executed asynchronously, an object of the background_job domain is returned.
-      The result can be obtained after the job has finished executing.
-    */
-    if ('domainType' in data && data.domainType === 'background_job') {
-      await _waitForBackgroundJobToFinish(data.id)
-      data = await quickSetupClient.fetchStageBackgroundJobResult(data.id)
-
-      //It is possible that a 200 response carries error messages. This must raise an error
-      if (data?.background_job_exception || data?.validation_errors) {
-        throw _createAxiosError(data)
-      }
-    }
-
+    If the action is executed asynchronously, an object of the background_job domain is returned.
+    The result can be obtained after the job has finished executing.
+  */
+    await _waitForBackgroundJobToFinish(data.id)
+    return await quickSetupClient.fetchStageBackgroundJobResult(data.id)
+  } else {
     return data as QuickSetupStageActionResponse
-  } catch (err) {
-    throw processError(err)
   }
 }
 
@@ -230,19 +180,11 @@ const _waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
   } while (isActive)
 }
 
-/**
- * This function creates a dummy AxiosError with error information from the background job in order to process it on the error handler
- *
- * @param data response from axios call
- * @returns AxiosError
- */
-const _createAxiosError = (data: unknown): AxiosError => {
-  const err = new AxiosError(undefined, undefined, undefined, undefined, {
-    status: 400,
-    data: data,
-    statusText: 'Bad Request',
-    headers: {},
-    config: undefined as unknown as InternalAxiosRequestConfig
-  })
-  return err
+const isBackgroundJob = (data: unknown): data is BackgroundJobSpawnResponse => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'domainType' in data &&
+    data.domainType === 'background_job'
+  )
 }

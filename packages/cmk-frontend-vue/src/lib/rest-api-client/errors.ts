@@ -5,10 +5,10 @@
  */
 import axios from 'axios'
 import type { AxiosError } from 'axios'
-import { CmkError } from '@/lib/error.ts'
 
 import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
 import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
+import { CmkError } from '../error'
 // import type { Errors, StageErrors } from '@lib/rest./response_types'
 
 export class QuickSetupAxiosError extends CmkError<AxiosError> {
@@ -58,40 +58,13 @@ export interface AllStagesValidationError extends RestApiError, OrUndefined<Stag
 
 /**
  * Returns a record representation of an error to be shown to the user
- * @param err unknown
- * @returns ValidationError | AllStagesValidationError | CmkError<unknown> | QuickSetupAxiosError
+ * @param err Error
+ * @returns CmkError<unknown> | QuickSetupAxiosError
  */
-export const processError = (
-  err: unknown
-): ValidationError | AllStagesValidationError | CmkError<unknown> | QuickSetupAxiosError => {
+export const argumentError = (err: Error): CmkError | QuickSetupAxiosError => {
   if (axios.isAxiosError(err)) {
-    if (err.response?.status === 400) {
-      if (err.response.data?.validation_errors) {
-        const responseErrors = err.response.data?.validation_errors
-        const responseDetail = err.response.data?.detail
-        return {
-          type: 'validation',
-          formspec_errors:
-            responseErrors?.formspec_errors || responseDetail?.formspec_errors || undefined,
-          stage_errors: responseErrors?.stage_errors || responseDetail?.stage_errors || undefined
-        }
-      } else if (err.response.data?.all_stage_errors) {
-        return {
-          type: 'validation_all_stages',
-          all_stage_errors: err.response.data.all_stage_errors,
-          formspec_errors: undefined,
-          stage_errors: undefined
-        }
-      } else {
-        return {
-          type: 'validation',
-          stage_errors: err.response.data?.detail,
-          formspec_errors: undefined
-        }
-      }
-    } else {
-      return new QuickSetupAxiosError(err?.response?.data?.title || err.message, err)
-    }
+    const msg = err.response?.data?.detail || err.response?.data?.title || err.message
+    return new QuickSetupAxiosError(msg, err)
   } else {
     return new CmkError('Unknown error has occurred', err)
   }

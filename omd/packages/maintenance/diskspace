@@ -14,7 +14,6 @@ from typing import Any, Literal
 
 from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import diskspace_config_dir, omd_root, var_dir
 from cmk.utils.render import fmt_bytes
 
@@ -182,8 +181,8 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
 
 
 def _cleanup_host_directory_for_local_hosts(
-    cleanup_abandoned_host_files: int, unaffected_hosts: set[HostName], base_path: str
-) -> list[HostName]:
+    cleanup_abandoned_host_files: int, unaffected_hosts: set[str], base_path: str
+) -> list[str]:
     """
     First find all directories not related to a known host.
     """

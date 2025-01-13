@@ -29,6 +29,7 @@ from cmk.gui.quick_setup.handlers.stage import (
 )
 from cmk.gui.quick_setup.handlers.utils import (
     Action,
+    BackgroundJobException,
     Button,
     form_spec_parse,
     get_stage_components_from_widget,
@@ -232,7 +233,7 @@ def complete_quick_setup(
 class CompleteActionResult(BaseModel):
     all_stage_errors: Sequence[ValidationErrors] | None = None
     redirect_url: str | None = None
-    background_job_exception: str | None = None
+    background_job_exception: BackgroundJobException | None = None
 
     @classmethod
     def load_from_job_result(cls, job_id: str) -> "CompleteActionResult":
@@ -325,10 +326,14 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 job_interface.get_logger().debug(
                     "Exception raised while the Quick setup stage action: %s", e
                 )
-                job_interface.send_exception(str(e))
-                CompleteActionResult(background_job_exception=traceback.format_exc()).save_to_file(
-                    job_interface.get_work_dir()
-                )
+                exception_message = str(e)
+                job_interface.send_exception(exception_message)
+                CompleteActionResult(
+                    background_job_exception=BackgroundJobException(
+                        message=exception_message,
+                        traceback=traceback.format_exc(),
+                    )
+                ).save_to_file(job_interface.get_work_dir())
 
     def _run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Starting Quick setup action..."))

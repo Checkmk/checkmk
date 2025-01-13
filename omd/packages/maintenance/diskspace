@@ -268,6 +268,80 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
+def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) -> None:
+    try:
+        all_hosts = set(
+            subprocess.check_output(
+                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                encoding="utf-8",
+            ).splitlines()
+        )
+    except subprocess.CalledProcessError as e:
+        _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
+        return
+
+    # Base directories where each host has a subdirectory below with host related files inside
+    path_patterns: list[str] = [
+        "%s/inventory_archive" % var_dir,
+        "%s/rrd" % var_dir,
+        "%s/var/pnp4nagios/perfdata" % omd_root,
+    ]
+
+    cleaned_up_deleted_hosts: set = set()
+    for base_path in path_patterns:
+        cleaned_up_deleted_hosts.update(
+            _cleanup_host_directory_for_local_hosts(
+                retention_time,
+                all_hosts,
+                base_path,
+            )
+        )
+
+    # Now call Check_MK to clean up other files for the hosts which we have
+    # cleaned up abandoned files for.
+    if cleaned_up_deleted_hosts:
+        _do_automation_call(cleaned_up_deleted_hosts, "delete-hosts")
+
+    # Now call Check_MK to clean up files for hosts that still have files local
+    # but are only known on remote sites
+    remote_site_hosts = all_hosts - local_site_hosts
+    cleaned_up_remote_hosts: set = set()
+    for base_path in path_patterns:
+        cleaned_up_remote_hosts.update(
+            _cleanup_host_directory_for_remote_hosts(
+                retention_time,
+                remote_site_hosts,
+                base_path,
+            )
+        )
+    if cleaned_up_remote_hosts:
+        _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
+
+
+def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> None:
+    # Base directories where each host has a subdirectory below with host related files inside
+    path_patterns: list[str] = [
+        "%s/inventory_archive" % var_dir,
+        "%s/rrd" % var_dir,
+        "%s/var/pnp4nagios/perfdata" % omd_root,
+    ]
+
+    cleaned_up_non_local_hosts: set = set()
+    for base_path in path_patterns:
+        cleaned_up_non_local_hosts.update(
+            _cleanup_host_directory_for_local_hosts(
+                retention_time,
+                local_site_hosts,
+                base_path,
+            )
+        )
+
+    # Now call Check_MK to clean up other files for the hosts which we have
+    # cleaned up abandoned files for.
+    if cleaned_up_non_local_hosts:
+        _do_automation_call(cleaned_up_non_local_hosts, "delete-hosts")
+
+
 def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -> None:
     """
     The mechanism is like this:
@@ -285,15 +359,6 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
     is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
 
     try:
-        if not is_wato_remote_site:
-            all_hosts = set(
-                subprocess.check_output(
-                    ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
-                    encoding="utf-8",
-                ).splitlines()
-            )
-        else:
-            all_hosts = set()
         local_site_hosts = set(
             subprocess.check_output(
                 ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
@@ -307,45 +372,10 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
         _verbose("Found no hosts. Be careful and not cleaning up anything.")
         return
 
-    cleanup_hosts = all_hosts if not is_wato_remote_site else local_site_hosts
-
-    # Base directories where each host has a subdirectory below with host related files inside
-    path_patterns: list[str] = [
-        "%s/inventory_archive" % var_dir,
-        "%s/rrd" % var_dir,
-        "%s/var/pnp4nagios/perfdata" % omd_root,
-    ]
-
-    cleaned_up_local_hosts: set = set()
-    for base_path in path_patterns:
-        cleaned_up_local_hosts.update(
-            _cleanup_host_directory_for_local_hosts(
-                cleanup_abandoned_host_files,
-                cleanup_hosts,
-                base_path,
-            )
-        )
-
-    # Now call Check_MK to clean up other files for the hosts which we have
-    # cleaned up abandoned files for.
-    if cleaned_up_local_hosts:
-        _do_automation_call(cleaned_up_local_hosts, "delete-hosts")
-
-    # Now call Check_MK to clean up files for hosts that still have files local
-    # but are only known on remote sites
-    if all_hosts:
-        remote_site_hosts = all_hosts - local_site_hosts
-        cleaned_up_remote_hosts: set = set()
-        for base_path in path_patterns:
-            cleaned_up_remote_hosts.update(
-                _cleanup_host_directory_for_remote_hosts(
-                    cleanup_abandoned_host_files,
-                    remote_site_hosts,
-                    base_path,
-                )
-            )
-        if cleaned_up_remote_hosts:
-            _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
+    if is_wato_remote_site:
+        _do_cleanup_remote_site(cleanup_abandoned_host_files, local_site_hosts)
+    else:
+        _do_cleanup_central_site(cleanup_abandoned_host_files, local_site_hosts)
 
 
 def _cleanup_aged(max_file_age: int | None) -> None:

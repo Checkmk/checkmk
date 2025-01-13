@@ -66,7 +66,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
 from .layout import layout_registry
-from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
+from .sorter import all_sorters, ParameterizedSorter, Sorter
 from .store import get_all_views
 from .view_choices import view_choices
 
@@ -968,7 +968,7 @@ def infos_needed_by_plugin(plugin: Painter | Sorter, add_columns: list | None = 
 
 
 def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(sorter_registry, ds_name)
+    return _allowed_for_datasource(all_sorters(active_config), ds_name)
 
 
 def painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
@@ -998,13 +998,15 @@ def _allowed_for_datasource(collection: PainterRegistry, ds_name: str) -> Mappin
 
 
 @overload
-def _allowed_for_datasource(collection: SorterRegistry, ds_name: str) -> Mapping[str, Sorter]: ...
+def _allowed_for_datasource(
+    collection: Mapping[str, Sorter], ds_name: str
+) -> Mapping[str, Sorter]: ...
 
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def _allowed_for_datasource(
-    collection: PainterRegistry | SorterRegistry,
+    collection: PainterRegistry | Mapping[str, Sorter],
     ds_name: str,
 ) -> Mapping[str, Sorter | Painter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()

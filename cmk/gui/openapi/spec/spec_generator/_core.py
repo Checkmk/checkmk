@@ -510,7 +510,7 @@ def _make_spec() -> apispec.APISpec:
     spec = apispec.APISpec(
         "Checkmk REST-API",
         __version__,
-        "3.0.2",
+        "3.1.1",
         plugins=[
             MarshmallowPlugin(),
             apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]

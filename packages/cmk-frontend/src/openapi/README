@@ -1,0 +1,8 @@
+To update redoc:
+
+wget https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js
+wget https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js.LICENSE.txt
+
+Then modify the redoc.standalone.js file to remove references to web sources (by also downloading them).
+You can usually see which ones you need to download by checking the console (you should Content Security Policy errors).
+https://cdn.redoc.ly/redoc/logo-mini.svg -> logo-mini.svg

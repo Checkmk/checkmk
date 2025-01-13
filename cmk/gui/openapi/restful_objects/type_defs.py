@@ -328,6 +328,8 @@ def translate_to_openapi_keys(
             schema["minimum"] = schema_num_minimum
         if schema_num_maximum is not None:
             schema["maximum"] = schema_num_maximum
+    if not required and location == "path":
+        raise ValueError(f"Path parameters must be required. In {name} - {description}")
     raw_values: OpenAPIParameter = {
         "name": name,
         "in": location,
@@ -336,7 +338,12 @@ def translate_to_openapi_keys(
     if description is not None:
         raw_values["description"] = description
     if allow_empty is not None:
-        raw_values["allowEmptyValue"] = allow_empty
+        if location == "query":
+            raw_values["allowEmptyValue"] = allow_empty
+        elif allow_empty is True:
+            raise ValueError(
+                f"allowEmptyValue can only be set to true for query parameters. In {name} - {description}"
+            )
     if example is not None:
         raw_values["example"] = example
     if schema:

@@ -10,3 +10,4 @@ ROOT=/omd/sites/$SITE
 
 echo "OpenAPI f12d"
 install -m 755 index.html "$ROOT/share/check_mk/web/htdocs/openapi/"
+install -m 755 redoc.standalone.js "$ROOT/share/check_mk/web/htdocs/openapi/"

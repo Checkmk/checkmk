@@ -125,8 +125,12 @@ def marshmallow_to_openapi(
                 {
                     "description": field.metadata.get("description"),
                     "example": field.metadata.get("example"),
-                    "required": field.required,
-                    "allow_empty": field.allow_none,
+                    "required": (
+                        field.required or location == "path"
+                    ),  # path parameters are always required
+                    "allow_empty": (
+                        field.allow_none if location == "query" else None
+                    ),  # only allowed for query parameters
                     "schema_enum": field.metadata.get("enum"),
                     "schema_string_format": field.metadata.get("format"),
                     "schema_string_pattern": field.metadata.get("pattern"),

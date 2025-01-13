@@ -1538,8 +1538,6 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
             f"{counters_dir}/{hostname}",
             f"{tcp_cache_dir}/{hostname}",
             f"{var_dir}/persisted/{hostname}",
-            f"{var_dir}/inventory/{hostname}",
-            f"{var_dir}/inventory/{hostname}.gz",
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:

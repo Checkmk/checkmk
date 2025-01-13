@@ -7,11 +7,16 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <limits>
 
 namespace {
 constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+}
+
+std::ostream &operator<<(std::ostream &os, const CF &cf) {
+    return os << cf.string();
 }
 
 double MaxCF::init() {

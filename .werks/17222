@@ -1,0 +1,17 @@
+Title: HW/SW inventory: Retain inventory history on central site
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1736779496
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+This change affects customers, which are monitoring hosts on a remote site.
+Previously, the <code>Inventory history of host</code> would sporadically disappear on the central site, even though it was shown correctly on the remote site.
+This was due to an incorrect implementation of the diskspace utility.
+This implementation assumed that the historic data was only needed on the remote site.
+With this change, diskspace will only consider deleting the inventory history of hosts, which have been deleted.
+
+The faulty behaviour was introduced in <a href="https://checkmk.com/werk/13242">#Werk 13422</a>.
+A similar, but different issue, is addressed in <a href="https://checkmk.com/werk/17223">#Werk 17223</a>.

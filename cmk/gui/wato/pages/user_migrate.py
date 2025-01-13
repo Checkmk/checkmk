@@ -242,8 +242,13 @@ class ModeUserMigrate(WatoMode):
             for attribute in attributes:
                 if attribute not in all_users[user_id]:
                     continue
-                # TODO Expected TypedDict key to be string literal [misc]
-                all_users[user_id].pop(attribute, None)  # type: ignore[misc]
+
+                match attribute:
+                    case "roles":
+                        all_users[user_id]["roles"] = []
+                    case _:
+                        # TODO Expected TypedDict key to be string literal [misc]
+                        all_users[user_id].pop(attribute, None)  # type: ignore[misc]
 
             all_users[user_id]["connector"] = connector
             if connector == "htpasswd":

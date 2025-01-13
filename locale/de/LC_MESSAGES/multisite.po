@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-10 06:05+0000\n"
+"PO-Revision-Date: 2025-01-13 11:17+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2555,7 +2555,7 @@ msgid "API key"
 msgstr "API-Schlüssel"
 
 msgid "API key for iLert alert server"
-msgstr "API Schlüssel für den 'iLert alert server'"
+msgstr "API-Schlüssel für den 'iLert alert server'"
 
 msgid "API key from password store"
 msgstr "API Schlüssel aus dem Passwortspeicher"
@@ -3800,7 +3800,7 @@ msgid "Add job"
 msgstr "Job hinzufügen"
 
 msgid "Add key"
-msgstr "API-Schlüssel hinzufügen"
+msgstr "Schlüssel hinzufügen"
 
 msgid "Add limits"
 msgstr "Grenzen hinzufügen"
@@ -38058,9 +38058,11 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Kein Graph verfügbar: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
-msgstr "Kein Graph mit der ID <tt>%s</tt>"
+msgstr ""
+"Es wurde kein Graph mit der ID <tt>%s</tt> für den Benutzer <tt>%s</tt> "
+"gefunden"
 
 msgid "No groups are defined yet."
 msgstr "Keine Gruppe definiert."
@@ -40002,9 +40004,8 @@ msgstr "Bei Host DOWN"
 msgid "On host name exclusion list."
 msgstr "Auf der Host-Namen-Ausschlussliste."
 
-#, fuzzy
 msgid "On host: Schedule downtime"
-msgstr "Wartungszeit planen?"
+msgstr "Für den Host: Wartungszeit planen"
 
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"
@@ -40030,9 +40031,8 @@ msgstr "Bei ausgewählten Instanzen"
 msgid "On selected users"
 msgstr "Bei ausgewählten Benutzern"
 
-#, fuzzy
 msgid "On service: Schedule downtime"
-msgstr "Ignoriere Wartungszeiten"
+msgstr "Für den Service: Wartungszeit planen"
 
 #, python-format
 msgid ""
@@ -43838,7 +43838,7 @@ msgid "Printed pages"
 msgstr "Gedruckte Seiten"
 
 msgid "Printer Input Units"
-msgstr "Drucker-Papierfächer"
+msgstr "Druckereingabeeinheit"
 
 msgid "Printer Name"
 msgstr "Druckername"
@@ -44614,16 +44614,16 @@ msgid "REST API"
 msgstr "REST-API"
 
 msgid "REST API communication"
-msgstr "REST API-Kommunikation"
+msgstr "REST-API-Kommunikation"
 
 msgid "REST API documentation"
 msgstr "REST-API-Dokumentation"
 
 msgid "REST API interactive GUI"
-msgstr "REST API interaktive Ansicht"
+msgstr "REST-API interaktive Ansicht"
 
 msgid "REST API introduction"
-msgstr "Einführung in die REST API"
+msgstr "Einführung in die REST-API"
 
 msgid "REST API specification successfully generated"
 msgstr "REST-API Spezifikation erfolgreich erstellt"
@@ -47145,7 +47145,7 @@ msgid "Rule type"
 msgstr "Regeltyp"
 
 msgid "Rule value representation for REST API"
-msgstr "Regelwertdarstellung für REST API"
+msgstr "Regelwertdarstellung für REST-API"
 
 msgid "Rule-ID"
 msgstr "Regel-ID"
@@ -56494,7 +56494,7 @@ msgid "The credential does not exist"
 msgstr "Diese Zugangsdaten sind nicht vorhanden"
 
 msgid "The credentials for api calls with authentication."
-msgstr "Die Anmeldedaten für Api-Aufrufe mit Authentifizierung."
+msgstr "Die Anmeldedaten für API-Aufrufe mit Authentifizierung."
 
 msgid ""
 "The critical problems that make this aggregation non-OK have been "
@@ -58047,9 +58047,9 @@ msgid ""
 "10 seconds. Please note that this is not a total timeout, instead it is "
 "applied to each API call."
 msgstr ""
-"Der Netzwerktimeout in Sekunden bei der Kommunikationen über UPNP. Der "
-"Standardwert ist 10 Sekunden. Bitte beachten Sie, dass dies nicht ein "
-"Gesamttimeout ist, sondern auf jeden einzelnen API-Aufruf angewendet wird."
+"Der Netzwerk-Timeout in Sekunden bei der Kommunikationen über UPNP. Der "
+"Standardwert ist 10 Sekunden. Bitte beachten Sie, dass dies nicht ein Gesamt-"
+"Timeout ist, sondern auf jeden einzelnen API-Aufruf angewendet wird."
 
 msgid ""
 "The network timeout in seconds when communicating with AppDynamics.The "
@@ -58508,7 +58508,7 @@ msgid "The port on which the ntopng instance is reachable."
 msgstr "Der Port unter dem die ntopng Instanz erreichbar ist."
 
 msgid "The port that is used for the api call."
-msgstr "Der Port, der für den Api-Aufruf verwendet wird."
+msgstr "Der Port, der für den API-Aufruf verwendet wird."
 
 msgid "The port the DBMS listens to"
 msgstr "Der TCP-Port des Datenbankservers"
@@ -59578,13 +59578,13 @@ msgstr ""
 "soll."
 
 msgid "The username that should be used for accessing the RabbitMQ API."
-msgstr "Der Benutzername der zum Zugriff auf die RabbitMQ API verwendet wird."
+msgstr "Der Benutzername der zum Zugriff auf die RabbitMQ-API verwendet wird."
 
 msgid ""
 "The username that should be used for accessing the jenkins API. Has to have "
 "read permissions at least."
 msgstr ""
-"Der Benutzername der zum Zugriff auf die Jenkins API verwendet wird. Muss "
+"Der Benutzername, der zum Zugriff auf die Jenkins-API verwendet wird. Muss "
 "mindestens Lesezugriff haben."
 
 msgid "The username used for broker authentication."
@@ -61138,7 +61138,7 @@ msgid ""
 "tt>"
 msgstr ""
 "Der in der URL benutzte Anwendungsname. Wenn Sie zum Beispiel den "
-"Anwendungsnamen <tt>foobar</tt> eingeben, würde die REST API mit der "
+"Anwendungsnamen <tt>foobar</tt> eingeben, würde die REST-API mit der "
 "folgenden URL kontaktiert werden: <tt>/controller/rest/applications/foobar/"
 "metric-data</tt>"
 
@@ -62490,7 +62490,7 @@ msgid ""
 "settings here."
 msgstr ""
 "Dieser Regelsatz erlaubt das Abfragen eines AppDynamics-Servers nach "
-"Information über laufendende Java-Anwendungen mittels der AppDynamics REST "
+"Information über laufendende Java-Anwendungen mittels der AppDynamics REST-"
 "API. Hier können Sie Ihre Verbindungseinstellungen konfigurieren."
 
 msgid "This rule allows querying the Jolokia web API."
@@ -63107,7 +63107,7 @@ msgid ""
 "Agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "Diese Regel aktiviert den Agenten für UCS Bladecenter anstelle des normalen "
-"Checkmk-Agenten. Dadurch wird der Host via der UCS Bladecenter Web API "
+"Checkmk-Agenten. Dadurch wird der Host via der UCS Bladecenter Web-API "
 "überwacht"
 
 msgid "This rule selects the special agent for Salesforce."
@@ -63180,7 +63180,7 @@ msgid ""
 "Agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "Dieser Regelsatz wählt den NetApp-Spezialagenten anstelle des normalen "
-"Checkmk-Agenten und ermöglicht das Monitoring über die NetApp Ontap REST API."
+"Checkmk-Agenten und ermöglicht das Monitoring über die NetApp Ontap REST-API."
 
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
@@ -71205,7 +71205,7 @@ msgstr ""
 "Besuchen Sie unsere %s, um mehr über Checkmk und über die %s zu erfahren."
 
 msgid "Vista API"
-msgstr "Vista API"
+msgstr "Vista-API"
 
 msgid "Visual levels for the availability"
 msgstr "Visuelle Level für die Verfügbarkeit"

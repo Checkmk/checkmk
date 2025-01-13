@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="list-item"
-
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -14,12 +13,18 @@ from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAge
 from cmk.server_side_calls.v1._utils import Secret
 
 
+class Login(BaseModel):
+    user: str
+    password: Secret
+    mode: Literal["basic", "digest"]
+
+
 class Params(BaseModel):
     port: int | None = None
     suburi: str | None = None
     instance: str | None = None
     protocol: str | None = None
-    login: Mapping[str, str | Secret] | None = None
+    login: Login | None = None
 
 
 def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
@@ -34,17 +39,12 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         yield SpecialAgentCommand(command_arguments=command_arguments)
         return
 
-    user = params.login["user"]
-    password = params.login["password"]
-    assert isinstance(password, Secret)
-    mode = params.login["mode"]
-
     command_arguments += [
         "--user",
-        user,
-        f"--password {password.unsafe()}",
+        params.login.user,
+        f"--password {params.login.password.unsafe()}",
         "--mode",
-        mode,
+        params.login.mode,
     ]
 
     yield SpecialAgentCommand(command_arguments=command_arguments)

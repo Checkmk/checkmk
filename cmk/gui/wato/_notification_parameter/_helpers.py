@@ -8,6 +8,7 @@ from typing import Any
 
 from cmk.ccc.site import url_prefix
 
+from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, TextInput, Transform
 
@@ -17,11 +18,11 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
-    DictGroup,
     FixedValue,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import Url, UrlProtocol
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 
 def notification_macro_help() -> str:
@@ -128,8 +129,9 @@ def _get_url_prefix_setting(
     is_cse: bool = False, default_value: str = "automatic_https", group_title: str | None = None
 ) -> DictElement[Any]:
     return DictElement(
-        group=DictGroup(
+        group=DictGroupExtended(
             title=Title(group_title) if group_title else None,  # pylint: disable=localization-of-non-literal-string
+            layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=CascadingSingleChoice(
             title=Title("URL prefix for links to Checkmk"),

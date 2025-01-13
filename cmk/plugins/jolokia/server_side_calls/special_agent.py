@@ -27,9 +27,9 @@ class Params(BaseModel):
     login: Login | None = None
 
 
-def _get_login_options(login: Login | None) -> tuple[()] | tuple[str, str, str, str, str]:
+def _get_login_options(login: Login | None) -> tuple[()] | tuple[str, str, str, Secret, str, str]:
     return (
-        ("--user", login.user, f"--password {login.password.unsafe()}", "--mode", login.mode)
+        ("--user", login.user, "--password", login.password.unsafe(), "--mode", login.mode)
         if login
         else ()
     )

@@ -1,0 +1,23 @@
+Title: ldap: user not being assigned the correct role
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1736757417
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+Given the following scenario:
+
+<ol>
+<li>Two ldap connections configured</li>
+<li>Both ldap instances have a user with the same name</li>
+<li>The connectors are configured with a suffix</li>
+<li>The connectors have "Create users only on login" enabled.</li>
+</ol>
+
+
+we found that when the second user logged in, they were granted
+access but the correct user role was not being assigned.
+
+This werk now fixes this issue.

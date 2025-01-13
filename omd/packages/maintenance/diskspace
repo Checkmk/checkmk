@@ -181,7 +181,7 @@ def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
 
 
 def _cleanup_host_directories(
-    cleanup_abandoned_host_files: int, unaffected_hosts: set[str], base_path: str
+    retention_time: int, unaffected_hosts: set[str], base_path: str
 ) -> set[str]:
     """
     First find all directories not related to a known host.
@@ -191,11 +191,11 @@ def _cleanup_host_directories(
 
     abandoned = {host_dir for host_dir in os.listdir(base_path) if host_dir not in unaffected_hosts}
 
-    return _check_threshold_and_delete(cleanup_abandoned_host_files, abandoned, base_path)
+    return _check_threshold_and_delete(retention_time, abandoned, base_path)
 
 
 def _check_threshold_and_delete(
-    cleanup_abandoned_host_files: int, abandoned_hosts: set[str], base_path: str
+    retention_time: int, abandoned_hosts: set[str], base_path: str
 ) -> set[str]:
     """
     Find the latest modified file for each directory. When the latest
@@ -206,7 +206,7 @@ def _check_threshold_and_delete(
     for unrelated_dir in abandoned_hosts:
         path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
-        if mtime < time.time() - cleanup_abandoned_host_files:
+        if mtime < time.time() - retention_time:
             _delete_files_and_base_directory(path, "abandoned host")
             cleaned_up_hosts.add(unrelated_dir)
         else:

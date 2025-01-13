@@ -32,7 +32,7 @@ plugins: dict[str, dict[str, Any]] = {}
 
 
 def _error(message: str) -> None:
-    sys.stderr.write("ERROR: %s\n" % message)
+    sys.stderr.write(f"ERROR: {message}\n")
 
 
 def _terminate(message: str) -> None:
@@ -41,7 +41,7 @@ def _terminate(message: str) -> None:
 
 
 def _log(message: str) -> None:
-    sys.stdout.write("%s\n" % message)
+    sys.stdout.write(f"{message}\n")
 
 
 def _verbose(message: str) -> None:
@@ -108,7 +108,7 @@ def _load_plugins() -> None:
             plugins[file_name] = {}
 
             path = base_dir / file_name
-            _verbose("Loading plugin: %s" % path)
+            _verbose(f"Loading plugin: {path}")
             try:
                 exec(  # nosec B102 # BNS:aee528
                     path.read_text(),
@@ -143,7 +143,7 @@ def _delete_file(path: str, reason: str) -> bool:
 
         # Also delete any .info files which are connected to the RRD file
         if path.endswith(".rrd"):
-            path = "%sinfo" % path[:-3]
+            path = f"{path[:-3]}info"
             if os.path.exists(path):
                 _log(f"Deleting file ({reason}): {path}")
                 os.unlink(path)
@@ -207,7 +207,7 @@ def _check_threshold_and_delete(
             _delete_files_and_base_directory(path, "abandoned host")
             cleaned_up_hosts.add(unrelated_dir)
         else:
-            _verbose("Found abandoned host path (but not old enough): %s" % path)
+            _verbose(f"Found abandoned host path (but not old enough): {path}")
 
     return cleaned_up_hosts
 
@@ -217,7 +217,7 @@ def _do_automation_call(
     automation_call: Literal["delete-hosts", "delete-hosts-known-remote"],
 ) -> None:
     command: list[str] = ["check_mk", "--automation", automation_call] + list(hosts_to_cleanup)
-    _verbose('Calling "%s"' % " ".join(command))
+    _verbose('Calling "{}"'.format(" ".join(command)))
     with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
         if p.wait() != 0:
             assert p.stdout is not None
@@ -244,24 +244,24 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
             ).splitlines()
         )
     except subprocess.CalledProcessError as e:
-        _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
+        _verbose(f"Failed to get site hosts ({e}). Skipping abandoned host files cleanup")
         return
 
     cleaned_up = (
         _cleanup_host_directories(
             retention_time,
             all_hosts,
-            "%s/inventory_archive" % var_dir,
+            f"{var_dir}/inventory_archive",
         )
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            "%s/var/pnp4nagios/perfdata" % omd_root,
+            f"{omd_root}/var/pnp4nagios/perfdata",
         )
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            "%s/rrd" % var_dir,
+            f"{var_dir}/rrd",
         )
     )
 
@@ -276,17 +276,17 @@ def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> 
         _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            "%s/inventory_archive" % var_dir,
+            f"{var_dir}/inventory_archive",
         )
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            "%s/var/pnp4nagios/perfdata" % omd_root,
+            f"{omd_root}/var/pnp4nagios/perfdata",
         )
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            "%s/rrd" % var_dir,
+            f"{var_dir}/rrd",
         )
     )
 
@@ -307,7 +307,7 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
             ).splitlines()
         )
     except subprocess.CalledProcessError as e:
-        _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
+        _verbose(f"Failed to get site hosts ({e}). Skipping abandoned host files cleanup")
         return
 
     if not local_site_hosts:
@@ -337,10 +337,10 @@ def _cleanup_aged(max_file_age: int | None) -> None:
                 if _delete_file(path, "too old"):
                     del plugin["file_infos"][path]
             else:
-                _verbose("Not deleting %s" % path)
+                _verbose(f"Not deleting {path}")
 
     bytes_free: int = _get_free_space()
-    _verbose("Free space (after file age cleanup): %s" % fmt_bytes(bytes_free))
+    _verbose(f"Free space (after file age cleanup): {fmt_bytes(bytes_free)}")
 
 
 def _cleanup_oldest_files(min_free_bytes_and_age: tuple[int, int] | None) -> None:
@@ -353,7 +353,7 @@ def _cleanup_oldest_files(min_free_bytes_and_age: tuple[int, int] | None) -> Non
     bytes_free: int = _get_free_space()
     if not opt_force and bytes_free >= min_free_bytes:
         _verbose(
-            "Free space is above threshold of %s. Nothing to be done." % fmt_bytes(min_free_bytes)
+            f"Free space is above threshold of {fmt_bytes(min_free_bytes)}. Nothing to be done."
         )
         return
 
@@ -361,7 +361,7 @@ def _cleanup_oldest_files(min_free_bytes_and_age: tuple[int, int] | None) -> Non
     # all sites. To ensure that not only one single site is always
     # cleaning up, we add a random wait before cleanup.
     sleep_sec = float(random.randint(0, 10000)) / 1000
-    _verbose("Sleeping for %0.3f seconds" % sleep_sec)
+    _verbose(f"Sleeping for {sleep_sec:0.3f} seconds")
     time.sleep(sleep_sec)
 
     # Loop all cleanup plugins to find the oldest candidate per plugin
@@ -372,7 +372,7 @@ def _cleanup_oldest_files(min_free_bytes_and_age: tuple[int, int] | None) -> Non
             _delete_file(oldest, plugin_name + ": my oldest")
 
     bytes_free = _get_free_space()
-    _verbose("Free space (after min free space space cleanup): %s" % fmt_bytes(bytes_free))
+    _verbose(f"Free space (after min free space space cleanup): {fmt_bytes(bytes_free)}")
 
 
 def main() -> None:
@@ -385,7 +385,7 @@ def main() -> None:
 
     # get used disk space of the sites volume
     bytes_free = _get_free_space()
-    _verbose("Free space: %s" % fmt_bytes(bytes_free))
+    _verbose(f"Free space: {fmt_bytes(bytes_free)}")
 
     _cleanup_aged(config.max_file_age)
     _cleanup_oldest_files(config.min_free_bytes)
@@ -397,4 +397,4 @@ if __name__ == "__main__":
     except SystemExit:  # pylint: disable=try-except-raise
         raise
     except Exception:
-        _terminate("Unexpected exception: %s" % traceback.format_exc())
+        _terminate(f"Unexpected exception: {traceback.format_exc()}")

@@ -70,6 +70,7 @@ RUN zypper ref -s \
     pango-devel \
     patch \
     postgresql16-server-devel \
+    ps \
     readline-devel \
     rpcbind \
     rpm-build \

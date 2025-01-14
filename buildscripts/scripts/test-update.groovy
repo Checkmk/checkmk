@@ -17,7 +17,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);

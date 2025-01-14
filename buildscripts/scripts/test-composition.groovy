@@ -16,7 +16,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     // TODO: we should always use USE_CASE directly from the job parameters

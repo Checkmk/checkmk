@@ -126,8 +126,6 @@ RUN /opt/install-valgrind.sh
 COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY install-python.sh /opt/
-RUN /opt/install-python.sh
 
 # install GDB after Python as it requires shared object files, see CMK-15854
 COPY install-gdb.sh /opt/
@@ -162,7 +160,6 @@ ENV \
 RUN /opt/install-gnu-toolchain.sh link-only
 RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
-RUN /opt/install-python.sh link-only
 RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 

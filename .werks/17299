@@ -1,0 +1,10 @@
+Title: Windows agent reports the version of custom exe plugin as n/a
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1736844398
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+For any exe plugin the version is reported as n/a.

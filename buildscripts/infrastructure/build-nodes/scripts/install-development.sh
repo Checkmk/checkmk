@@ -180,6 +180,7 @@ prepare_gplusplus_sources_list() {
 
     if [[ -z ${CI} ]]; then
         outdated_gcc_directory="/opt/gcc-13.2.0"
+        outdated_sources_list_file="/etc/apt/sources.list.d/g++-13.list"
         # confirm removal of outdated /opt/gcc-13.2.0 directory
         read -rp "Confirm removal of outdated symlinks from '$outdated_gcc_directory' to '/usr/bin' (y/n): " REMOVE_SYMLINKS
         echo # (optional) move to a new line
@@ -203,6 +204,15 @@ prepare_gplusplus_sources_list() {
             # https://tribe29.slack.com/archives/C01EA6ZBG58/p1736439443305919?thread_ts=1736251952.199259&cid=C01EA6ZBG58
             print_red "Existing symlinks might block new ones, created by PPA installed packages, leading to missing 'ar', 'as', 'ld', 'gcc', ... "
         fi
+
+        if [[ -e "$outdated_sources_list_file" ]]; then
+            print_blue "Found outdated '$outdated_sources_list_file' file. Installation of g++ with 'apt-get' in the next step will be incomplete or fail if not removed"
+            read -rp "Confirm removal of outdated file '$outdated_sources_list_file' (y/n): " REMOVE_OUTDATED_GCC_LIST_FILE
+            if [[ $REMOVE_OUTDATED_GCC_LIST_FILE =~ ^[Yy]$ ]]; then
+                rm "$outdated_sources_list_file"
+            fi
+        fi
+
         print_debug "It is no CI build, install software-properties-common"
 
         # https://tribe29.slack.com/archives/C01EA6ZBG58/p1736251952199259

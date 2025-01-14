@@ -513,10 +513,14 @@ TEST(WmiProviderTest, BasicWmi) {
 }
 
 TEST(WmiProviderTest, DelayOnFailDefault) {
-    for (const auto name :
-         {kOhm, kWmiCpuLoad, kWmiWebservices, kDotNetClrMemory, kMsExch}) {
+    for (const auto name : {kOhm, kWmiWebservices, kMsExch}) {
         Wmi b(name, ',');
         EXPECT_EQ(b.delayOnFail(), 3600s)
+            << "bad delay for section by default " << name;
+    }
+    for (const auto name : {kWmiCpuLoad, kDotNetClrMemory}) {
+        Wmi b(name, ',');
+        EXPECT_EQ(b.delayOnFail(), 0s)
             << "bad delay for section by default " << name;
     }
 }

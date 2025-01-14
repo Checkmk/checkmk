@@ -93,19 +93,11 @@ class UUIDLinkManager:
 
         For push agents we need to create the target dir; otherwise not.
         """
-        existing_link = self._find_and_cleanup_existing_links(hostname, uuid)
-        target_dir = self._data_source_dir / (
-            f"{hostname}" if push_configured else f"inactive/{hostname}"
-        )
-
-        if existing_link is not None and existing_link.target == target_dir:
+        if existing_link := self._find_and_cleanup_existing_links(hostname, uuid):
+            self._update_link_target_if_necessary(existing_link, push_configured)
             return
 
-        self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
-        source = self._received_outputs_dir / f"{uuid}"
-
-        source.unlink(missing_ok=True)
-        source.symlink_to(relpath(target_dir, self._received_outputs_dir))
+        self._create_link(uuid, self._target_dir(hostname, push_configured))
 
     def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> UUIDLink | None:
         found: UUIDLink | None = None
@@ -126,11 +118,9 @@ class UUIDLinkManager:
                     continue
                 link.unlink()
             else:
-                self.create_link(
-                    link.hostname,
-                    link.uuid,
-                    push_configured=connection_mode_from_host_config(host_config)
-                    is HostAgentConnectionMode.PUSH,
+                self._update_link_target_if_necessary(
+                    link,
+                    connection_mode_from_host_config(host_config) is HostAgentConnectionMode.PUSH,
                 )
 
     @staticmethod
@@ -156,3 +146,18 @@ class UUIDLinkManager:
             renamed.append((old_name, new_name))
 
         return sorted(renamed)
+
+    def _create_link(self, uuid: UUID, target_dir: Path) -> None:
+        self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
+        source = self._received_outputs_dir / f"{uuid}"
+        source.unlink(missing_ok=True)
+        source.symlink_to(relpath(target_dir, self._received_outputs_dir))
+
+    def _target_dir(self, hostname: HostName, is_push_host: bool) -> Path:
+        return self._data_source_dir / (f"{hostname}" if is_push_host else f"inactive/{hostname}")
+
+    def _update_link_target_if_necessary(self, existing_link: UUIDLink, is_push_host: bool) -> None:
+        target_dir = self._target_dir(existing_link.hostname, is_push_host)
+        if existing_link.target == target_dir:
+            return
+        self._create_link(existing_link.uuid, target_dir)

@@ -53,7 +53,9 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
             return nested_validations
 
         # Stage 3: Execute validators of the element itself
-        return compute_validation_errors(self._validators(), self._to_disk(raw_value, parsed_value))
+        return compute_validation_errors(
+            self._validators(), parsed_value, self._to_disk(raw_value, parsed_value)
+        )
 
     @final
     def to_disk(self, raw_value: object) -> DataForDisk:

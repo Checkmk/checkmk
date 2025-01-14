@@ -62,12 +62,14 @@ def parse(string_table: StringTable) -> Section:
     all_rows = sorted([json.loads(line[0]) for line in string_table[1:]], key=keyfunc)
     section = {}
     for project_id, rows in groupby(all_rows, key=keyfunc):
-        month_costs = sorted([Cost.model_validate(r) for r in rows], key=lambda c: c.month)
+        month_costs = sorted(
+            [Cost.model_validate(r) for r in rows], key=lambda c: c.month, reverse=True
+        )
         if len(month_costs) > 1:
             cost = ProjectCost(
-                current_month=month_costs[1],
-                previous_month=month_costs[0],
-                project=month_costs[0].project,
+                current_month=month_costs[0],
+                previous_month=month_costs[1],
+                project=month_costs[1].project,
             )
         else:
             cost = ProjectCost(

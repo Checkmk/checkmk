@@ -54,8 +54,10 @@ def _section() -> Section:
 
 
 def test_gcp_multi_month(section: Section) -> None:
-    # this is a bug, should have discovered both la and th!
-    assert list(sorted(discover(parse(TABLE_MULTI_MONTH)))) == [Service(item="la")]
+    assert list(sorted(discover(parse(TABLE_MULTI_MONTH)))) == [
+        Service(item="la"),
+        Service(item="th"),
+    ]
 
 
 def test_gcp_cost_discovery(section: Section) -> None:

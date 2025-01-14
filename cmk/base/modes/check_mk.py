@@ -2316,7 +2316,6 @@ class GetSubmitter(Protocol):
         dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
-        keepalive: bool,
     ) -> Submitter: ...
 
 
@@ -2441,7 +2440,6 @@ def mode_check(
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
-                    keepalive=keepalive,
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
             )

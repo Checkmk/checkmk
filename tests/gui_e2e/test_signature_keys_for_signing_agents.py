@@ -136,7 +136,10 @@ def test_upload_signing_keys(
 
     # all ok
     upload_function(logged_in_page, "Some description", "SecureP4ssword", pem_content)
-    expect(logged_in_page.main_area.get_text(fingerprint.upper())).to_be_visible()
+    expect(
+        logged_in_page.main_area.get_text(fingerprint.upper()),
+        f"Previously uploaded signature key '{fingerprint.upper()[:10]}...' not found.",
+    ).to_be_visible()
 
     delete_key(logged_in_page, fingerprint)
 
@@ -144,7 +147,14 @@ def test_upload_signing_keys(
 def test_generate_key(logged_in_page: LoginPage) -> None:
     """Add a key, aka let Checkmk generate it."""
     go_to_signature_page(logged_in_page)
+
+    # clean up from previous runs (and ensure it actually was deleted)
+    # todo: remove redundant deletion and replace by "try...finally (will be done in a follow-up)"
     delete_key(logged_in_page, "e2e-test")
+    expect(
+        logged_in_page.main_area.get_text("e2e-test"),
+        "Cleanup of key 'e2e-test' failed.",
+    ).not_to_be_visible()
 
     logged_in_page.click_and_wait(
         logged_in_page.main_area.get_suggestion("Generate key"), navigate=True
@@ -158,18 +168,26 @@ def test_generate_key(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
 
     logged_in_page.main_area.get_input("key_p_alias").fill("e2e-test")
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("12345678")
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("123456789012")
     logged_in_page.main_area.get_suggestion("Create").click()
-    expect(logged_in_page.main_area.get_text("e2e-test")).to_be_visible()
+    expect(
+        logged_in_page.main_area.get_text("e2e-test"),
+        "Unable to find the key 'e2e-test' in the list of keys (the main area).",
+    ).to_be_visible()
 
+    # now remove the key again (and ensure it was actually deleted)
     delete_key(logged_in_page, "e2e-test")
+    expect(
+        logged_in_page.main_area.get_text("e2e-test"),
+        "Cleanup of key 'e2e-test' failed.",
+    ).not_to_be_visible()
 
 
 @pytest.fixture(name="with_key")
 def with_key_fixture(
     logged_in_page: LoginPage, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[str]:
-    """Create a signing key via the GUI, yield and then delete it again."""
+    """Create a signature key via the GUI, yield and then delete it again."""
     key_name = "with_key_fixture"
     password = Password("foo")
     combined_file = (
@@ -177,7 +195,10 @@ def with_key_fixture(
         + self_signed_cert.certificate.dump_pem().str
     )
     send_pem_file(logged_in_page, key_name, password.raw, combined_file)
-    expect(logged_in_page.main_area.get_text(key_name)).to_be_visible()
+    expect(
+        logged_in_page.main_area.get_text(key_name),
+        f"Creation of signature key '{key_name}' failed.",
+    ).to_be_visible()
 
     yield key_name
 
@@ -207,9 +228,9 @@ def test_download_key(logged_in_page: LoginPage, with_key: str) -> None:
 
 
 def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str) -> None:
-    """Go to agents and click bake and sign.
+    """Go to agents and click "bake and sign."
 
-    Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
+    "Bake and sign" starts an asynchronous background job, which is why we run "wait_for_bakery()".
     If the job finished, the success is reported and the test can continue."""
     logged_in_page.click_and_wait(
         logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"),
@@ -235,9 +256,10 @@ def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str
 
     # wait for completion and verify status
     wait_for_bakery(test_site)
-    expect(logged_in_page.main_area.get_text("Agent baking successful")).to_be_visible(
-        timeout=30000
-    )
+    expect(
+        logged_in_page.main_area.get_text("Agent baking successful"),
+        "Message box with text 'Agent baking successful' was not found.",
+    ).to_be_visible()
 
 
 def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
@@ -250,9 +272,11 @@ def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
         navigate=True,
     )
 
-    expect(logged_in_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
-    )
-    expect(logged_in_page.main_area.get_suggestion("Sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
-    )
+    expect(
+        logged_in_page.main_area.get_suggestion("Bake and sign agents"),
+        "The 'bake and sign agents' button should be disabled after key deletion, but isn't.",
+    ).to_have_class(re.compile("disabled"))
+    expect(
+        logged_in_page.main_area.get_suggestion("Sign agents"),
+        "The 'sign agents' button should be disabled after key deletion, but isn't.",
+    ).to_have_class(re.compile("disabled"))

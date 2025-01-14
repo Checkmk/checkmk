@@ -17,6 +17,10 @@ RUN yum -y --enablerepo=extras install \
 RUN sed -i 's/metalink=/#metalink=/g' /etc/yum.repos.d/epel*
 RUN sed -i 's|^#.*baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel*
 
+RUN sed -i 's|baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch|baseurl=https://archives.fedoraproject.org/pub/archive/epel/7/$basearch|g' /etc/yum.repos.d/epel.repo
+RUN sed -i 's|baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch/debug|baseurl=https://archives.fedoraproject.org/pub/archive/epel/7/$basearch/debug|g' /etc/yum.repos.d/epel.repo
+RUN sed -i 's|baseurl=http://download.fedoraproject.org/pub/epel/7/SRPMS|baseurl=https://archives.fedoraproject.org/pub/archive/epel/7/SRPMS|g' /etc/yum.repos.d/epel.repo
+
 RUN yum -y install \
     centos-release-scl-rh
 

@@ -291,6 +291,10 @@ def _parameter_valuespec_azure_databases():
                     ],
                 ),
             ),
+            (
+                "deadlocks_levels",
+                SimpleLevels(Float, title=_("Average deadlock count")),
+            ),
         ],
     )
 

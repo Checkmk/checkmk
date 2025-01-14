@@ -10,6 +10,8 @@
 /// Other artifacts: ???
 /// Depends on: image aliases for upstream OS images on Nexus, ???
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def main() {
     check_job_parameters([
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",
@@ -83,39 +85,43 @@ def main() {
             }
         }
 
-        // TODO: here it would be nice to iterate through all known distros
-        //       and use a conditional_stage(distro in distros) approach
         def stages = all_distros.collectEntries { distro ->
             [("${distro}") : {
-                    conditional_stage("Build\n${distro}", distro in distros) {
-                        def image_name = "${distro}:${vers_tag}";
-                        def distro_mk_file_name = "${real_distro_name[distro].toUpperCase().replaceAll('-', '_')}.mk";
-                        def docker_build_args = (""
-                            + " --build-arg DISTRO_IMAGE_BASE='${distro_base_image_id[distro]}'"
-                            + " --build-arg DISTRO_MK_FILE='${distro_mk_file_name}'"
-                            + " --build-arg DISTRO='${distro}'"
-                            + " --build-arg VERS_TAG='${vers_tag}'"
-                            + " --build-arg BRANCH_VERSION='${branch_version}'"
+                def run_condition = distro in distros;
 
-                            + " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'"
-                            + " --build-arg NEXUS_ARCHIVES_URL='${NEXUS_ARCHIVES_URL}'"
-                            + " --build-arg NEXUS_USERNAME='${NEXUS_USERNAME}'"
-                            + " --build-arg NEXUS_PASSWORD='${NEXUS_PASSWORD}'"
-                            + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
+                /// this makes sure the whole parallel thread is marked as skipped
+                if (! run_condition){
+                    Utils.markStageSkippedForConditional(stepName);
+                }
 
-                            + " -f 'buildscripts/infrastructure/build-nodes/${distro}/Dockerfile'"
-                            + " temp-build-context"
-                        );
+                smart_stage("Build\n${distro}", run_condition) {
+                    def image_name = "${distro}:${vers_tag}";
+                    def distro_mk_file_name = "${real_distro_name[distro].toUpperCase().replaceAll('-', '_')}.mk";
+                    def docker_build_args = (""
+                        + " --build-arg DISTRO_IMAGE_BASE='${distro_base_image_id[distro]}'"
+                        + " --build-arg DISTRO_MK_FILE='${distro_mk_file_name}'"
+                        + " --build-arg DISTRO='${distro}'"
+                        + " --build-arg VERS_TAG='${vers_tag}'"
+                        + " --build-arg BRANCH_VERSION='${branch_version}'"
 
-                        if (params.BUILD_IMAGE_WITHOUT_CACHE) {
-                            docker_build_args = "--no-cache " + docker_build_args;
-                        }
-                        dir("${checkout_dir}") {
-                            docker.build(image_name, docker_build_args);
-                        }
+                        + " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'"
+                        + " --build-arg NEXUS_ARCHIVES_URL='${NEXUS_ARCHIVES_URL}'"
+                        + " --build-arg NEXUS_USERNAME='${NEXUS_USERNAME}'"
+                        + " --build-arg NEXUS_PASSWORD='${NEXUS_PASSWORD}'"
+                        + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
+
+                        + " -f 'buildscripts/infrastructure/build-nodes/${distro}/Dockerfile'"
+                        + " temp-build-context"
+                    );
+
+                    if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                        docker_build_args = "--no-cache " + docker_build_args;
+                    }
+                    dir("${checkout_dir}") {
+                        docker.build(image_name, docker_build_args);
                     }
                 }
-            ]
+            }]
         }
         def images = parallel(stages);
 

@@ -11,6 +11,14 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.gcp.agent_based.gcp_cost import check, discover, parse, Section
 
+TABLE_MULTI_MONTH = [
+    ['{"query_month": "202501"}'],
+    ['{"project": "th", "id": "th", "month": "202501", "amount": 4.2, "currency": "EUR"}'],
+    ['{"project": "th", "id": "th", "month": "202411", "amount": 0.039882, "currency": "EUR"}'],
+    ['{"project": "th", "id": "th", "month": "202412", "amount": 7.0, "currency": "EUR"}'],
+    ['{"project": "La", "id": "la", "month": "202501", "amount": 0.00, "currency": "EUR"}'],
+]
+
 
 @pytest.fixture(name="section")
 def _section() -> Section:
@@ -43,6 +51,11 @@ def _section() -> Section:
         ],
     ]
     return parse(table)
+
+
+def test_gcp_multi_month(section: Section) -> None:
+    # this is a bug, should have discovered both la and th!
+    assert list(sorted(discover(parse(TABLE_MULTI_MONTH)))) == [Service(item="la")]
 
 
 def test_gcp_cost_discovery(section: Section) -> None:

@@ -1933,7 +1933,7 @@ def mode_check_discovery(
 
 
 def register_mode_check_discovery(
-    *, active_check_handler: Callable[[HostName, str], object], keepalive: bool
+    *, active_check_handler: Callable[[HostName, str], object]
 ) -> None:
     modes.register(
         Mode(
@@ -1941,7 +1941,7 @@ def register_mode_check_discovery(
             handler_function=partial(
                 mode_check_discovery,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -1958,7 +1958,7 @@ def register_mode_check_discovery(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *_: None, keepalive=False)
+    register_mode_check_discovery(active_check_handler=lambda *_: None)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -2464,7 +2464,6 @@ def register_mode_check(
     get_submitter_: GetSubmitter,
     *,
     active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
 ) -> None:
     modes.register(
         Mode(
@@ -2473,7 +2472,7 @@ def register_mode_check(
                 mode_check,
                 get_submitter_,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOST [IPADDRESS]",
@@ -2515,7 +2514,7 @@ def register_mode_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *_: None, keepalive=False)
+    register_mode_check(get_submitter, active_check_handler=lambda *_: None)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2916,9 +2915,7 @@ def mode_inventory_as_check(
 
 
 def register_mode_inventory_as_check(
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
+    *, active_check_handler: Callable[[HostName, str], object]
 ) -> None:
     modes.register(
         Mode(
@@ -2926,7 +2923,7 @@ def register_mode_inventory_as_check(
             handler_function=partial(
                 mode_inventory_as_check,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOST",
@@ -2975,10 +2972,7 @@ def register_mode_inventory_as_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(
-        active_check_handler=lambda *_: None,
-        keepalive=False,
-    )
+    register_mode_inventory_as_check(active_check_handler=lambda *_: None)
 
 # .
 #   .--inventorize-marked-hosts--------------------------------------------.

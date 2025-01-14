@@ -10,8 +10,8 @@ from collections.abc import Collection, Iterable
 from datetime import datetime
 from typing import Any
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -32,6 +32,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_delete_link,
     makeactionuri,
+    makeuri,
     makeuri_contextless,
 )
 from cmk.gui.watolib.custom_attributes import (
@@ -472,10 +473,12 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if not request.var("_delete"):
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         delname = request.get_ascii_input_mandatory("_delete")
         for index, attr in enumerate(self._attrs):

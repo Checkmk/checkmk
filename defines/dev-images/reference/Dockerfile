@@ -19,7 +19,6 @@ RUN apt-get update
 
 RUN apt-get install -y \
     default-jdk-headless \
-    golang-go \
     jq \
     libenchant-2-dev \
     lsb-release \

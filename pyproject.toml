@@ -105,7 +105,12 @@ cmc_proto = ["cmc_proto"]
 testlib = ["tests.testlib"]
 integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
 compositiontests = ["tests.composition"]
-unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+unittests = [
+  "tests.unit",
+  "tests.plugins_integration",
+  "tests.plugins_siteless",
+  "tests.update",
+]
 uitests = ["tests.gui_crawl", "tests.gui_e2e"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]

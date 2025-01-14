@@ -145,6 +145,7 @@ test_types = [
     "update",
     "schemathesis_openapi",
     "plugins_integration",
+    "plugins_siteless",
     "extension_compatibility",
     "testlib",
 ]

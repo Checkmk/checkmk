@@ -66697,14 +66697,15 @@ msgstr "Autentificare cu jeton"
 msgid "Token based authentication"
 msgstr "Autentificare bazată pe token"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Perioada de toleranță pentru 'activarea' stării"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Perioada de toleranță pentru 'dezactivarea' statului"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
 
 msgid "Tools install state"
 msgstr "Instrumente de instalare de stat"

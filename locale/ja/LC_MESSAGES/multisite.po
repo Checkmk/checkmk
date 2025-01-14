@@ -64524,14 +64524,15 @@ msgstr "トークン認証"
 msgid "Token based authentication"
 msgstr "トークン認証"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "\"リロード\"状態での試用期間"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "”アクティブ”状態の許容期間"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "\"停止\"状態の許容期間"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "\"リロード\"状態での試用期間"
 
 msgid "Tools install state"
 msgstr "ツールのインストール状態"

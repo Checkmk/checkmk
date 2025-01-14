@@ -66432,14 +66432,15 @@ msgstr "Autenticação por Token"
 msgid "Token based authentication"
 msgstr "Autenticação por Token"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Período de tolerância para 'recarregar' estado"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Período de tolerância para o estado de 'activação'"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Período de tolerância para 'desactivar' o estado"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Período de tolerância para 'recarregar' estado"
 
 msgid "Tools install state"
 msgstr "Estado de instalação das ferramentas"

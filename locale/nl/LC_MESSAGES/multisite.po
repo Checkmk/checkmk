@@ -66481,14 +66481,15 @@ msgstr "Token authenticatie"
 msgid "Token based authentication"
 msgstr "Token authenticatie"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Tolerantieperiode voor 'herladen' staat"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Tolerantieperiode voor 'activerende' toestand"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Tolerantieperiode voor 'deactivering' toestand"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Tolerantieperiode voor 'herladen' staat"
 
 #, fuzzy
 msgid "Tools install state"

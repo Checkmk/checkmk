@@ -67175,14 +67175,15 @@ msgstr "Authentification par jeton"
 msgid "Token based authentication"
 msgstr "Authentification par jeton"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Période de tolérance pour 'recharger' ; l'État"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Période de tolérance pour l’activation de l’état"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Période de tolérance pour 'désactiver' ; l’état"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Période de tolérance pour 'recharger' ; l'État"
 
 #, fuzzy
 msgid "Tools install state"

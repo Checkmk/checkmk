@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 /// The four consolidation functions from
@@ -62,6 +63,6 @@ private:
     double counter_ = std::numeric_limits<double>::quiet_NaN();
 };
 
-std::vector<double> rrd_consolidate(const std::unique_ptr<CF> &f,
-                                    const std::vector<double> &input,
-                                    std::size_t act_step, std::size_t target);
+[[nodiscard]] std::pair<std::vector<double>, std::size_t> rrd_consolidate(
+    const std::unique_ptr<CF> &f, const std::vector<double> &input,
+    std::size_t act_step, std::size_t target);

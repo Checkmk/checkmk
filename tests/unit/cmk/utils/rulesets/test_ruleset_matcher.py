@@ -749,7 +749,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
 
     assert (
         list(
-            matcher.get_service_ruleset_values(
+            matcher._get_service_ruleset_values(
                 hostname,
                 service_description,
                 discovered_labels,

@@ -253,7 +253,7 @@ class RulesetMatcher:
         Depending on the value the outcome is negated or not.
 
         """
-        for value in self.get_service_ruleset_values(
+        for value in self._get_service_ruleset_values(
             hostname, service_name, service_labels, ruleset
         ):
             # See `get_host_bool_value()`.
@@ -273,7 +273,7 @@ class RulesetMatcher:
 
         """
         return merge_parameters(
-            list(self.get_service_ruleset_values(hostname, service_name, service_labels, ruleset)),
+            list(self._get_service_ruleset_values(hostname, service_name, service_labels, ruleset)),
             default={},
         )
 
@@ -286,7 +286,7 @@ class RulesetMatcher:
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
-            self.get_service_ruleset_values(hostname, service_name, service_labels, ruleset)
+            self._get_service_ruleset_values(hostname, service_name, service_labels, ruleset)
         )
 
     def get_checkgroup_ruleset_values(
@@ -305,7 +305,7 @@ class RulesetMatcher:
             },
         ):
             return list(
-                self.get_service_ruleset_values(
+                self._get_service_ruleset_values(
                     hostname,
                     item,
                     service_labels,
@@ -313,7 +313,7 @@ class RulesetMatcher:
                 )
             )
 
-    def get_service_ruleset_values(
+    def _get_service_ruleset_values(
         self,
         host_name: HostName,
         match_text: ServiceName | Item,
@@ -862,13 +862,11 @@ class RulesetOptimizer:
 
     def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
         return merge_parameters(
-            list(
-                self._ruleset_matcher.get_service_ruleset_values(
-                    hostname,
-                    service_desc,
-                    {},
-                    self._label_manager.service_label_rules,
-                )
+            self._ruleset_matcher.service_extra_conf(
+                hostname,
+                service_desc,
+                {},
+                self._label_manager.service_label_rules,
             ),
             default={},
         )

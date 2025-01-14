@@ -49,11 +49,13 @@ from cmk.special_agents import (
     agent_storeonce4x,
 )
 
-agent_otel: ModuleType | None
+agent_otel: ModuleType | None = None
 try:
-    from cmk.plugins.otel.special_agents.cce import agent_otel
+    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+        agent_otel,
+    )
 except ImportError:
-    agent_otel = None
+    pass
 
 
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
@@ -93,7 +95,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp_ontap": agent_netapp_ontap,
-    "otel": agent_otel,
+    **({} if agent_otel is None else {"otel": agent_otel}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,

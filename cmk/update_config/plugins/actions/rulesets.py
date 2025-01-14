@@ -81,7 +81,7 @@ def validate_rule_values(
                 "Detected %s issue(s) in loaded rulesets. This is a problem with the plug-in implementation.\n"
                 "To correct these issues, fix either the `migrate` or `custom_validate` attribute."
             ),
-            n_invalid,
+            n_broken,
         )
 
 

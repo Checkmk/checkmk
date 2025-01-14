@@ -88,13 +88,18 @@ def main() {
         def stages = all_distros.collectEntries { distro ->
             [("${distro}") : {
                 def run_condition = distro in distros;
+                def image = false;
 
                 /// this makes sure the whole parallel thread is marked as skipped
                 if (! run_condition){
-                    Utils.markStageSkippedForConditional(stepName);
+                    Utils.markStageSkippedForConditional("${distro}");
                 }
 
-                smart_stage("Build\n${distro}", run_condition) {
+                smart_stage(
+                    name: "Build ${distro}",
+                    condition: run_condition,
+                    raiseOnError: true,
+                ) {
                     def image_name = "${distro}:${vers_tag}";
                     def distro_mk_file_name = "${real_distro_name[distro].toUpperCase().replaceAll('-', '_')}.mk";
                     def docker_build_args = (""
@@ -118,25 +123,25 @@ def main() {
                         docker_build_args = "--no-cache " + docker_build_args;
                     }
                     dir("${checkout_dir}") {
-                        docker.build(image_name, docker_build_args);
+                        image = docker.build(image_name, docker_build_args);
                     }
                 }
-            }]
-        }
-        def images = parallel(stages);
 
-        conditional_stage('upload images', publish_images) {
-            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-                images.each { distro, image ->
-                    if (image) {
+                smart_stage(
+                    name: "Upload ${distro}",
+                    condition: run_condition && publish_images,
+                    raiseOnError: true,
+                ) {
+                    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                         image.push();
                         if (safe_branch_name ==~ /master|\d\.\d\.\d/) {
                             image.push("${safe_branch_name}-latest");
                         }
                     }
                 }
-            }
+            }]
         }
+        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
     /// build and use reference image in order to check if it's working at all

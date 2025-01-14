@@ -531,21 +531,14 @@ class ModeConfigurationBundle(WatoMode):
                 )
 
     def _verify_special_agent_vars(self) -> None:
-        if not all(
-            [
-                self._bundle_references.rules,
-                self._bundle_references.hosts,
-            ]
-        ):
-            raise MKUserError(
-                None,
-                _("The configuration bundle does not contain all required objects."),
+        if not valid_special_agent_bundle(self._bundle_references):
+            raise MKGeneralException(
+                _(
+                    "The configuration bundle '%s' is not valid. "
+                    "This likely means that parts of it were removed or not properly created."
+                )
+                % self._bundle_id,
             )
-
-        assert self._bundle_references.rules
-        assert len(self._bundle_references.rules) == 1
-        assert self._bundle_references.hosts
-        assert len(self._bundle_references.hosts) == 1
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

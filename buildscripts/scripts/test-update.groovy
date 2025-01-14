@@ -17,7 +17,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"

@@ -101,7 +101,8 @@ class Client:
         return self.asset().list_assets(request)
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
-        prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
+        first_of_month = self.date.replace(day=1)
+        first_of_previous_month = (first_of_month - datetime.timedelta(days=1)).replace(day=1)
         if "`" in tableid:
             raise ValueError("tableid contains invalid character")
 
@@ -113,7 +114,11 @@ class Client:
             "currency, "
             "invoice.month "
             f"FROM `{tableid}`, UNNEST(credits) as c "
-            f'WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" '
+            'WHERE ('
+            f'   invoice.month = "{first_of_month.strftime("%Y%m")}" '
+            f'   OR invoice.month = "{first_of_previous_month.strftime("%Y%m")}" '
+            ')'
+            f'AND DATE(_PARTITIONTIME) >= "{first_of_previous_month.strftime("%Y-%m-%d")}" '
             'AND c.type != "SUSTAINED_USAGE_DISCOUNT" '
             "GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month"
         )

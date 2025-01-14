@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
@@ -63,6 +64,7 @@ from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
@@ -92,7 +94,7 @@ from ._roles import load_roles
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
 from ._user_sync import user_sync_config
-from .store import load_cached_profile, release_users_lock
+from .store import load_cached_profile, load_users, release_users_lock, save_users
 
 
 def register(
@@ -220,6 +222,13 @@ def _get_ad_locator():
             return six.ensure_text(sites_list[0][1])
 
     return FasterDetectLocator()
+
+
+def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
+    html.show_error(
+        "<b>" + connection_id + " - " + title + "</b>"
+        "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
+    )
 
 
 class LDAPUserConnector(UserConnector):
@@ -1193,6 +1202,40 @@ class LDAPUserConnector(UserConnector):
 
         return ldap.dn.dn2str(base_dn)
 
+    def create_ldap_user(self, userid: UserId, existing_users: Users) -> None:
+        existing_users[userid] = new_user_template(self.id)
+        existing_users[userid].setdefault("alias", userid)
+        save_users(existing_users, datetime.now())
+
+        try:
+            self.do_sync(
+                add_to_changelog=False,
+                only_username=userid,
+                load_users_func=load_users,
+                save_users_func=save_users,
+            )
+        except MKLDAPException as e:
+            _show_exception(self.id, _("Error during sync"), e, debug=active_config.debug)
+        except Exception as e:
+            _show_exception(self.id, _("Error during sync"), e)
+
+    def get_matching_user_profile(self, user_id: UserId) -> UserId | None:
+        """This function will try to match an existing user profile, or create a new one if
+        it doesn't exist yet. If no user_id can be matched/created, return None."""
+        existing_users = load_users(lock=True)
+
+        def get_user_id_create_user_if_neccessary(user_id_to_check: UserId) -> UserId | None:
+            if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
+                self.create_ldap_user(user_id_to_check, existing_users)
+                return user_id_to_check
+            return user_id_to_check if user_from_config.get("connector") == self.id else None
+
+        matched_user_id = get_user_id_create_user_if_neccessary(user_id)
+        if matched_user_id is None and self._has_suffix():
+            return get_user_id_create_user_if_neccessary(UserId(f"{user_id}@{self._get_suffix()}"))
+
+        return matched_user_id
+
     #
     # USERDB API METHODS
     #
@@ -1208,7 +1251,7 @@ class LDAPUserConnector(UserConnector):
         try:
             self.connect()
         except Exception as e:
-            self._logger.exception("Failed to connect to LDAP:", e)
+            self._logger.exception("Failed to connect to LDAP: %s", e)
             # Could not connect to any of the LDAP servers, or unknown error. Skip this connection.
             return None
 
@@ -1244,9 +1287,8 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password.raw))
-            result: CheckCredentialsResult = (
-                UserId(ldap_user_id) if not self._has_suffix() else self._add_suffix(ldap_user_id)
-            )
+            userid = self.get_matching_user_profile(UserId(ldap_user_id))
+            result: CheckCredentialsResult = False if userid is None else userid
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
                 "Unable to authenticate user %s. Reason: %s",
@@ -1296,6 +1338,8 @@ class LDAPUserConnector(UserConnector):
 
     def _add_suffix(self, username: LdapUsername) -> UserId:
         suffix = self._get_suffix()
+        if username.endswith(f"@{suffix}"):
+            return UserId(username)
         return UserId(f"{username}@{suffix}")
 
     def do_sync(  # pylint: disable=too-many-branches

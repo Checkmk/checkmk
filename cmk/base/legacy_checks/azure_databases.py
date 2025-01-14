@@ -46,6 +46,7 @@ check_info["azure_databases.storage"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -69,6 +70,7 @@ check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -95,6 +97,7 @@ check_info["azure_databases.cpu"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -124,6 +127,7 @@ check_info["azure_databases.dtu"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -160,6 +164,7 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -190,5 +195,6 @@ check_info["azure_databases"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )

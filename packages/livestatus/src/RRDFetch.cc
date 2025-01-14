@@ -8,15 +8,11 @@
 #include <iostream>
 
 std::ostream &operator<<(std::ostream &os, const RRDFetchHeader &h) {
-    auto epoch = [](auto &&t) {
-        return std::chrono::duration_cast<std::chrono::seconds>(
-                   t.time_since_epoch())
-            .count();
-    };
     return os << "FlushVersion: " << h.flush_version() << "\n"
-              << "Start: " << epoch(h.start()) << "\n"
-              << "End: " << epoch(h.end()) << "\n"
+              << "Start: " << std::chrono::system_clock::to_time_t(h.start())
+              << "\n"
+              << "End: " << std::chrono::system_clock::to_time_t(h.end())
+              << "\n"
               << "Step: " << h.step() << "\n"
-              << "DSCount: " << h.dscount() << "\n"
-              << h.dsname() << "\n";
+              << "DSCount: " << h.dscount() << "\n";
 }

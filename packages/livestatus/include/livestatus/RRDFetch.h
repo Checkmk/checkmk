@@ -22,9 +22,8 @@ class RRDFetchHeader {
      * End: ...
      * Step: ...
      * DSCount: 7
-     * DSName-1: BinaryData 1601 8 LITTLE || DSName: 1 2 3 4 5 6 7
      */
-    enum Field { FlushVersion, Start, End, Step, Dscount, Dsname };
+    enum Field { FlushVersion, Start, End, Step, Dscount };
     using C = std::chrono::system_clock;
 
 public:
@@ -32,7 +31,7 @@ public:
     RRDFetchHeader(const std::vector<std::string> &h) : _h{h} {
         assert(h.size() == size());
     }
-    static std::size_t size() { return Field::Dsname + 1; }
+    static std::size_t size() { return Field::Dscount + 1; }
     [[nodiscard]] unsigned long flush_version() const {
         return parse(_h[Field::FlushVersion]);
     }
@@ -46,7 +45,6 @@ public:
     [[nodiscard]] unsigned long dscount() const {
         return parse(_h[Field::Dscount]);
     }
-    [[nodiscard]] std::string dsname() const { return _h[Field::Dsname]; }
 
 private:
     std::vector<std::string> _h;

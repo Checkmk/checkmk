@@ -52,7 +52,9 @@ class LocatorHelper(ABC):
 
     def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""
-        expect(self.locator("div.error")).to_have_text(message)
+        expect(self.locator("div.error"), "Invalid text in the error message box.").to_have_text(
+            message
+        )
 
     def get_error_text(self) -> str | None:
         """get error text content"""

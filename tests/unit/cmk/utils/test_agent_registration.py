@@ -29,7 +29,10 @@ from cmk.utils.paths import (
 class TestUUIDLink:
     @pytest.fixture
     def link(self, tmp_path: Path) -> UUIDLink:
-        return UUIDLink(tmp_path / "59e631e9-de89-40d6-9662-ba54569a24fb", tmp_path / "hostname")
+        return UUIDLink(
+            source=tmp_path / "59e631e9-de89-40d6-9662-ba54569a24fb",
+            target=tmp_path / "hostname",
+        )
 
     def test_uuid(self, link: UUIDLink) -> None:
         assert isinstance(link.uuid, UUID)

@@ -9,7 +9,7 @@ import enum
 from collections.abc import Container, Iterator, Mapping, Sequence
 from os.path import relpath
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, Final
 from uuid import UUID
 
 import cmk.utils.paths
@@ -41,17 +41,12 @@ def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostA
     )
 
 
-class UUIDLink(NamedTuple):
-    source: Path
-    target: Path
-
-    @property
-    def uuid(self) -> UUID:
-        return UUID(self.source.name)
-
-    @property
-    def hostname(self) -> HostName:
-        return HostName(self.target.name)
+class UUIDLink:
+    def __init__(self, *, source: Path, target: Path) -> None:
+        self.source: Final = source
+        self.target: Final = target
+        self.uuid: Final = UUID(self.source.name)
+        self.hostname: Final = HostName(self.target.name)
 
     def unlink(self) -> None:
         self.source.unlink(missing_ok=True)

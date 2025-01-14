@@ -16,8 +16,7 @@ TEST(TestRPNFetch, Header) {
         "Start: 1733220000\n"
         "End: 1736245800\n"
         "Step: 1800\n"
-        "DSCount: 2\n"
-        "DSName: 1 2\n";
+        "DSCount: 2\n";
     auto header = RRDFetchHeader{mk::split(raw, '\n')};
     auto ss = std::ostringstream{};
     ss << header;

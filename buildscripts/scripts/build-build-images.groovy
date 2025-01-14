@@ -24,7 +24,11 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS);
+
+    // with 2.2.0 becoming the oldest version of checkmk since the phaseout of 2.1.0
+    // and thereby no longer building images on daily base, only for release built images might be deleted automatically
+    // therefore now alway build all images
+    def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS, "release");
 
     def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
     def safe_branch_name = versioning.safe_branch_name(scm);
@@ -108,4 +112,5 @@ def main() {
         }
     }
 }
+
 return this;

@@ -69,11 +69,11 @@ double LastCF::init() {
 
 void LastCF::handle(double value) { counter_ = value; }
 
-std::vector<double> rrd_consolidate(const std::unique_ptr<CF> &cf,
-                                    const std::vector<double> &input,
-                                    std::size_t act_step, std::size_t target) {
+std::pair<std::vector<double>, std::size_t> rrd_consolidate(
+    const std::unique_ptr<CF> &cf, const std::vector<double> &input,
+    std::size_t act_step, std::size_t target) {
     if (act_step >= target) {
-        return input;
+        return std::make_pair(input, act_step);
     }
     const std::size_t factor = target / act_step;
     auto out = std::vector<double>{};
@@ -83,5 +83,5 @@ std::vector<double> rrd_consolidate(const std::unique_ptr<CF> &cf,
             out.emplace_back(cf->init());
         }
     }
-    return out;
+    return std::make_pair(out, act_step * factor);
 }

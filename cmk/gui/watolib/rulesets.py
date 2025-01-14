@@ -1341,17 +1341,15 @@ class Rule:
                         matcher.service_extra_conf(
                             hostname,
                             svc_desc_or_item,
-                            ruleset,
                             service_labels,
+                            ruleset,
                         )
                     )
                 case "item":
-                    if svc_desc is None:
-                        raise TypeError("svc_desc_or_item must be set for service rulesets")
                     return bool_(
                         list(
                             matcher.get_checkgroup_ruleset_values(
-                                hostname, svc_desc, svc_desc_or_item, ruleset, service_labels
+                                hostname, svc_desc_or_item, service_labels, ruleset
                             )
                         )
                     )

@@ -603,11 +603,23 @@ def _make_compute_check_parameters_of_autocheck(
     def compute_check_parameters_of_autocheck(
         host_name: HostName, entry: AutocheckEntry
     ) -> TimespecificParameters:
+        service_name = config.service_description(
+            ruleset_matcher,
+            host_name,
+            entry.check_plugin_name,
+            service_name_template=(
+                None
+                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                else p.service_name
+            ),
+            item=entry.item,
+        )
         return config.compute_check_parameters(
             ruleset_matcher,
             host_name,
             entry.check_plugin_name,
             entry.item,
+            ruleset_matcher.labels_of_service(host_name, service_name, entry.service_labels),
             entry.parameters,
         )
 
@@ -934,6 +946,9 @@ def _make_get_effective_host_of_autocheck_callback(
         return config_cache.effective_host(
             host,
             service_name,
+            config_cache.ruleset_matcher.labels_of_service(
+                host, service_name, entry.service_labels
+            ),
         )
 
     return get_effective_host_of_autocheck
@@ -1442,10 +1457,20 @@ class AutomationGetServicesLabels(Automation):
         called_from_automation_helper: bool,
     ) -> GetServicesLabelsResult:
         host_name, services = HostName(args[0]), args[1:]
-        ruleset_matcher = config.get_config_cache().ruleset_matcher
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+
+        # I think we might be computing something here that the caller already knew.
+        discovered_services = config_cache.get_discovered_services(host_name)
+        discovered_labels = {s.description: s.labels for s in discovered_services}
+
         return GetServicesLabelsResult(
-            {service: ruleset_matcher.labels_of_service(host_name, service) for service in services}
+            {
+                service: config_cache.ruleset_matcher.labels_of_service(
+                    host_name, service, discovered_labels.get(service, {})
+                )
+                for service in services
+            }
         )
 
 
@@ -1455,8 +1480,7 @@ automations.register(AutomationGetServicesLabels())
 @dataclass
 class _FoundService:
     service_info: ServiceInfo
-    # TODO: we'll soon need to add the discovered labels here
-    # discovered_labels: Mapping[str, str]
+    discovered_labels: Mapping[str, str]
 
 
 class AutomationAnalyseServices(Automation):
@@ -1476,9 +1500,11 @@ class AutomationAnalyseServices(Automation):
         return (
             AnalyseServiceResult(
                 service_info=found.service_info,
-                labels=config_cache.ruleset_matcher.labels_of_service(host_name, servicedesc),
+                labels=config_cache.ruleset_matcher.labels_of_service(
+                    host_name, servicedesc, found.discovered_labels
+                ),
                 label_sources=config_cache.ruleset_matcher.label_sources_of_service(
-                    host_name, servicedesc
+                    host_name, servicedesc, found.discovered_labels
                 ),
             )
             if (
@@ -1528,7 +1554,8 @@ class AutomationAnalyseServices(Automation):
                 "origin": "active",
                 "checktype": "check-mk-inventory",
                 "parameters": asdict(config_cache.discovery_check_parameters(host_name)),
-            }
+            },
+            discovered_labels={},
         )
 
     @staticmethod
@@ -1544,7 +1571,8 @@ class AutomationAnalyseServices(Automation):
                         "checktype": str(service.check_plugin_name),
                         "item": service.item,
                         "parameters": service.parameters.preview(timeperiod_active),
-                    }
+                    },
+                    discovered_labels=service.discovered_labels,
                 )
                 return
 
@@ -1560,7 +1588,8 @@ class AutomationAnalyseServices(Automation):
                 service
                 for node in config_cache.nodes(host_name)
                 for service in config_cache.get_discovered_services(node)
-                if host_name == config_cache.effective_host(node, service.description)
+                if host_name
+                == config_cache.effective_host(node, service.description, service.labels)
             ]
             if host_name in config_cache.hosts_config.clusters
             else config_cache.get_discovered_services(host_name)
@@ -1589,7 +1618,8 @@ class AutomationAnalyseServices(Automation):
                     "factory_settings": plugin.check_default_parameters,
                     # effective parameters:
                     "parameters": service.parameters.preview(timeperiod_active),
-                }
+                },
+                discovered_labels=service.discovered_labels,
             )
             return
 
@@ -1607,7 +1637,7 @@ class AutomationAnalyseServices(Automation):
                 }
                 if "command_line" in entry:  # Only active checks have a command line
                     result["command_line"] = entry["command_line"]
-                yield _FoundService(service_info=result)
+                yield _FoundService(service_info=result, discovered_labels={})
                 return
 
     @staticmethod
@@ -1632,7 +1662,8 @@ class AutomationAnalyseServices(Automation):
                         "origin": "active",
                         "checktype": active_service.plugin_name,
                         "parameters": active_service.configuration,
-                    }
+                    },
+                    discovered_labels={},
                 )
                 return
 
@@ -2682,6 +2713,7 @@ class AutomationActiveCheck(Automation):
                     entry["service_description"],
                     entry.get("command_line", ""),
                     ip_address_of,
+                    discovered_labels={},
                 )
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
@@ -2712,6 +2744,9 @@ class AutomationActiveCheck(Automation):
             command_line = self._replace_service_macros(
                 host_name,
                 service_data.description,
+                config_cache.ruleset_matcher.labels_of_service(
+                    host_name, service_data.description, {}
+                ),
                 " ".join(service_data.command),
             )
             return ActiveCheckResult(*self._execute_check_plugin(command_line))
@@ -2732,13 +2767,21 @@ class AutomationActiveCheck(Automation):
         service_desc: str,
         commandline: str,
         ip_address_of: config.IPLookup,
+        discovered_labels: Mapping[str, str],
     ) -> str:
         config_cache = config.get_config_cache()
         macros = ConfigCache.get_host_macros_from_attributes(
             hostname, config_cache.get_host_attributes(hostname, ip_address_of)
         )
+
         service_attrs = core_config.get_service_attributes(
-            hostname, service_desc, config_cache, extra_icon=None
+            config_cache,
+            hostname,
+            service_desc,
+            config_cache.ruleset_matcher.labels_of_service(
+                hostname, service_desc, discovered_labels
+            ),
+            extra_icon=None,
         )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
         macros.update(config.get_resource_macros())
@@ -2746,11 +2789,15 @@ class AutomationActiveCheck(Automation):
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
     def _replace_service_macros(
-        self, hostname: HostName, service_desc: str, commandline: str
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Mapping[str, str],
+        commandline: str,
     ) -> str:
         config_cache = config.get_config_cache()
         service_attrs = core_config.get_service_attributes(
-            hostname, service_desc, config_cache, extra_icon=None
+            config_cache, host_name, service_name, service_labels, extra_icon=None
         )
         service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
 

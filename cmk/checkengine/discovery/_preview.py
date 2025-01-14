@@ -179,6 +179,7 @@ def get_check_preview(
                     description=autochecks_config.service_description(h, entry.newer),
                     parameters=compute_check_parameters(h, entry.older),
                     discovered_parameters=entry.older.parameters,
+                    labels=autochecks_config.service_labels(h, entry.older),
                     discovered_labels=entry.older.service_labels,
                     is_enforced=False,
                 ),

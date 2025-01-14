@@ -301,7 +301,11 @@ def dump_host(
                 str(service.item),
                 _evaluate_params(service.parameters),
                 service.description,
-                ",".join(config_cache.servicegroups_of_service(hostname, service.description)),
+                ",".join(
+                    config_cache.servicegroups_of_service(
+                        hostname, service.description, service.labels
+                    )
+                ),
             ]
         )
 

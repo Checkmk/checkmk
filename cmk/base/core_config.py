@@ -32,7 +32,7 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.checking import ConfiguredService, ServiceID
+from cmk.checkengine.checking import ServiceID
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
@@ -450,14 +450,16 @@ def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
     host_name: HostName,
-    service: ConfiguredService,
+    service_name: ServiceName,
+    service_labels: Labels,
     check_mk_attrs: ObjectAttributes,
     extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
-        host_name,
-        service.description,
         config_cache,
+        host_name,
+        service_name,
+        service_labels,
         extra_icon,
     )
 
@@ -467,56 +469,53 @@ def get_cmk_passive_service_attributes(
 
 
 def get_service_attributes(
-    hostname: HostName,
-    description: ServiceName,
     config_cache: ConfigCache,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
     extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
-        hostname, description, config_cache, extra_icon
-    )
-    attrs.update(
-        ConfigCache._get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG")
-    )
-
-    attrs.update(
-        ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.labels_of_service(hostname, description),
-            "LABEL",
-        )
+        config_cache, host_name, service_name, service_labels, extra_icon
     )
     attrs.update(
         ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.label_sources_of_service(hostname, description),
-            "LABELSOURCE",
+            config_cache.tags_of_service(host_name, service_name, service_labels), "TAG"
         )
     )
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABEL"))
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABELSOURCE"))
     return attrs
 
 
 def _extra_service_attributes(
-    hostname: HostName,
-    description: ServiceName,
     config_cache: ConfigCache,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
     extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in config_cache.custom_attributes_of_service(hostname, description).items():
+    for varname, value in config_cache.custom_attributes_of_service(
+        host_name, service_name, service_labels
+    ).items():
         attrs["_%s" % varname.upper()] = value
 
-    attrs.update(config_cache.extra_attributes_of_service(hostname, description))
+    attrs.update(config_cache.extra_attributes_of_service(host_name, service_name, service_labels))
 
     # Add explicit custom_variables
     for varname, value in ConfigCache.get_explicit_service_custom_variables(
-        hostname, description
+        host_name, service_name
     ).items():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(hostname, description, extra_icon)
+    actions = config_cache.icons_and_actions_of_service(
+        host_name, service_name, service_labels, extra_icon
+    )
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs

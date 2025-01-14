@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -56,6 +58,9 @@ class _AutochecksConfigDummy:
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
         return f"{entry.check_plugin_name} / {entry.item}"
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+        return {}
 
 
 def test_get_host_services_by_host_name_vanished_on_node() -> None:

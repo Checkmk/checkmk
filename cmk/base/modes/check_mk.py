@@ -1228,6 +1228,8 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
+    effective_host_callback = config.AutochecksConfigurer(config_cache).effective_host
+
     if not hosts:
         hosts = sorted(
             {
@@ -1288,12 +1290,8 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
 
         # autochecks
         count = sum(
-            remove_autochecks_of_host(
-                node,
-                host,
-                config_cache.effective_host_of_autocheck,
-            )
-            for node in config_cache.nodes(host) or [host]
+            remove_autochecks_of_host(node, host, effective_host_callback)
+            for node in (config_cache.nodes(host) or [host])
         )
         # config_cache.remove_autochecks(host)
         if count:
@@ -2427,7 +2425,10 @@ def mode_check(
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(hostname),
                 run_plugin_names=run_plugin_names,
-                get_check_period=partial(config_cache.check_period_of_service, hostname),
+                get_check_period=lambda service_name,
+                service_labels: config_cache.check_period_of_service(
+                    hostname, service_name, service_labels
+                ),
                 submitter=get_submitter_(
                     check_submission=config.check_submission,
                     monitoring_core=config.monitoring_core,

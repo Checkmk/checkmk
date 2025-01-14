@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager, DiscoveredLabelsCache
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
@@ -190,14 +190,6 @@ class Scenario:
                 self.config_cache,
                 "_autochecks_manager",
                 self._autochecks_mocker,
-                raising=False,
-            )
-            monkeypatch.setattr(
-                self.config_cache,
-                "_discovered_labels_cache",
-                DiscoveredLabelsCache(
-                    self.config["clusters"], self._autochecks_mocker.get_autochecks
-                ),
                 raising=False,
             )
 

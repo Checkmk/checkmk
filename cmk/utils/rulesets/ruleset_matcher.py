@@ -5,8 +5,7 @@
 """This module provides generic Check_MK ruleset processing functionality"""
 
 import contextlib
-import dataclasses
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from re import Pattern
 from typing import (
     Any,
@@ -148,18 +147,6 @@ class LabelManager(NamedTuple):
     explicit_host_labels: dict[HostName, Labels]
     host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
-    discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class RulesetMatchObject:
-    host_name: HostName | HostAddress
-    # The next field is:
-    #   * None to match hosts
-    #   * ServiceName to match services
-    #   * Item to match checkgroups
-    service_description: ServiceName | Item
-    service_labels: Labels
 
 
 def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:
@@ -209,10 +196,6 @@ class RulesetMatcher:
             ],
             object,
         ] = {}
-        # Expensive and mostly useless caching.
-        self.__service_match_obj: dict[
-            tuple[HostName, ServiceName, Item | None], RulesetMatchObject
-        ] = {}
 
     def get_host_bool_value(self, hostname: HostName, ruleset: Sequence[RuleSpec[bool]]) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
@@ -257,75 +240,11 @@ class RulesetMatcher:
 
         return optimized_ruleset.get(hostname, [])
 
-    def cache_service_labels(
-        self, hostname: HostName, description: ServiceName, labels: Labels
-    ) -> None:
-        cache_id = (hostname, description, None)
-        if cache_id not in self.__service_match_obj:
-            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
-
-    def cache_service_checkgroup(
-        self, hostname: HostName, description: ServiceName, item: Item, labels: Labels
-    ) -> None:
-        cache_id = (hostname, description, item)
-        if cache_id not in self.__service_match_obj:
-            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, item, labels)
-
-    def _service_match_object(
-        self,
-        hostname: HostName,
-        description: ServiceName,
-        service_labels: Labels | None = None,
-    ) -> RulesetMatchObject:
-        cache_id = (hostname, description, None)
-        with contextlib.suppress(KeyError):
-            return self.__service_match_obj[cache_id]
-
-        return self.__service_match_obj.setdefault(
-            cache_id,
-            RulesetMatchObject(
-                hostname,
-                description,
-                service_labels or self.labels_of_service(hostname, description),
-            ),
-        )
-
-    def _checkgroup_match_object(
-        self,
-        hostname: HostName,
-        description: ServiceName,
-        item: Item,
-        service_labels: Labels | None = None,
-        span: trace.Span | None = None,
-    ) -> RulesetMatchObject:
-        cache_id = (hostname, description, item)
-        if span:
-            span.set_attribute("cmk.cache_id", repr(cache_id))
-        with contextlib.suppress(KeyError):
-            return self.__service_match_obj[cache_id]
-
-        match_object = RulesetMatchObject(
-            hostname,
-            item,
-            service_labels := service_labels
-            or self.labels_of_service(
-                hostname,
-                description,
-            ),
-        )
-        if span:
-            span.set_attribute("cmk.service_labels", repr(service_labels))
-            span.set_attribute("cmk.match_object", repr(match_object))
-
-        return self.__service_match_obj.setdefault(
-            cache_id,
-            match_object,
-        )
-
     def get_service_bool_value(
         self,
         hostname: HostName,
         service_name: ServiceName,
+        service_labels: Labels,
         ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
@@ -334,9 +253,8 @@ class RulesetMatcher:
         Depending on the value the outcome is negated or not.
 
         """
-        mo = self._service_match_object(hostname, service_name)
         for value in self.get_service_ruleset_values(
-            hostname, service_name, mo.service_labels, ruleset
+            hostname, service_name, service_labels, ruleset
         ):
             # See `get_host_bool_value()`.
             assert isinstance(value, bool)
@@ -347,17 +265,15 @@ class RulesetMatcher:
         self,
         hostname: HostName,
         service_name: ServiceName,
+        service_labels: Labels,
         ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         """
-        mo = self._service_match_object(hostname, service_name)
         return merge_parameters(
-            list(
-                self.get_service_ruleset_values(hostname, service_name, mo.service_labels, ruleset)
-            ),
+            list(self.get_service_ruleset_values(hostname, service_name, service_labels, ruleset)),
             default={},
         )
 
@@ -365,44 +281,34 @@ class RulesetMatcher:
         self,
         hostname: HostName,
         service_name: ServiceName,
+        service_labels: Labels,
         ruleset: Sequence[RuleSpec[TRuleValue]],
-        service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
-        mo = self._service_match_object(hostname, service_name, service_labels)
         return list(
-            self.get_service_ruleset_values(hostname, service_name, mo.service_labels, ruleset)
+            self.get_service_ruleset_values(hostname, service_name, service_labels, ruleset)
         )
 
     def get_checkgroup_ruleset_values(
         self,
         hostname: HostName,
-        service_name: ServiceName,
         item: Item,
+        service_labels: Labels,
         ruleset: Sequence[RuleSpec[TRuleValue]],
-        service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         with tracer.start_as_current_span(
             "RulesetMatcher_get_checkgroup_ruleset_values",
             attributes={
                 "cmk.host_name": hostname,
-                "cmk.service_name": service_name,
                 "cmk.item": repr(item),
                 "cmk.ruleset": repr(ruleset),
             },
-        ) as span:
-            mo = self._checkgroup_match_object(
-                hostname,
-                service_name,
-                item,
-                service_labels,
-                span,
-            )
+        ):
             return list(
                 self.get_service_ruleset_values(
                     hostname,
                     item,
-                    mo.service_labels,
+                    service_labels,
                     ruleset,
                 )
             )
@@ -924,7 +830,9 @@ class RulesetOptimizer:
             for label_id, label in self._builtin_host_labels_store.load().items()
         }
 
-    def labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
+    def labels_of_service(
+        self, hostname: HostName, service_desc: ServiceName, discovered_labels: Labels
+    ) -> Labels:
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -933,24 +841,19 @@ class RulesetOptimizer:
         Last one wins.
         """
         labels: dict[str, str] = {}
-        labels.update(self._label_manager.discovered_labels_of_service(hostname, service_desc))
+        labels.update(discovered_labels)
         labels.update(self._ruleset_labels_of_service(hostname, service_desc))
 
         return labels
 
     def label_sources_of_service(
-        self, hostname: HostName, service_desc: ServiceName
+        self, hostname: HostName, service_desc: ServiceName, discovered_labels: Labels
     ) -> LabelSources:
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels: LabelSources = {}
-        labels.update(
-            {
-                k: "discovered"
-                for k in self._label_manager.discovered_labels_of_service(hostname, service_desc)
-            }
-        )
+        labels.update({k: "discovered" for k in discovered_labels})
         labels.update(
             {k: "ruleset" for k in self._ruleset_labels_of_service(hostname, service_desc)}
         )

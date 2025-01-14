@@ -15,7 +15,9 @@ from pytest import MonkeyPatch
 from tests.testlib.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
@@ -35,6 +37,12 @@ def make_timespecific_params_list(
     entries: Iterable[Mapping[str, object]],
 ) -> TimespecificParameters:
     return TimespecificParameters([TimespecificParameterSet.from_parameters(e) for e in entries])
+
+
+def make_service(desription: ServiceName) -> ConfiguredService:
+    return ConfiguredService(
+        CheckPluginName("dummy"), None, desription, TimespecificParameters(), {}, {}, {}, False
+    )
 
 
 @pytest.mark.parametrize(
@@ -94,7 +102,7 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
     assert [] == checkers._get_clustered_service_node_keys(
         HostName("cluster.test"),
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -116,7 +124,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     assert [] == checkers._get_clustered_service_node_keys(
         HostName("node1.test"),
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -128,7 +136,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     ] == checkers._get_clustered_service_node_keys(
         cluster_test,
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=[HostName("node1.test"), HostName("node2.test")],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -162,7 +170,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     assert checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     ) == [
@@ -180,7 +188,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ] == checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
-        "Test Unclustered",
+        make_service("Test Unclustered"),
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     )

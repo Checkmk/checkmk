@@ -1933,6 +1933,9 @@ class _AutochecksConfigDummy:
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
         return "desc"
 
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+        return {}
+
 
 def test_get_node_services() -> None:
     host_name = HostName("horst")

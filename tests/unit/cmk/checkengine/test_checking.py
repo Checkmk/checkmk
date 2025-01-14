@@ -31,6 +31,7 @@ def _service(plugin: str, item: str | None) -> ConfiguredService:
         parameters=TimespecificParameters(),
         discovered_parameters={},
         discovered_labels={},
+        labels={},
         is_enforced=False,
     )
 
@@ -61,6 +62,7 @@ def make_aggregated_result(*, name: str, data_received: bool) -> AggregatedResul
             parameters=TimespecificParameters(),
             discovered_parameters={},
             discovered_labels={},
+            labels={},
             is_enforced=False,
         ),
         data_received=data_received,
@@ -177,7 +179,8 @@ def test_service_configurer() -> None:
     service_configurer = ServiceConfigurer(
         compute_check_parameters=lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
         get_service_description=lambda _host, check, item: f"{check}-{item}",
-        get_effective_host=lambda hostname, _desc: hostname,
+        get_effective_host=lambda host, _desc, _labels: host,
+        get_service_labels=lambda _host, _desc, labels: labels,
     )
 
     assert (
@@ -192,6 +195,7 @@ def test_service_configurer() -> None:
             parameters=_COMPUTED_PARAMETERS_SENTINEL,
             discovered_parameters={},
             discovered_labels={},
+            labels={},
             is_enforced=False,
         ),
     ]
@@ -200,7 +204,7 @@ def test_service_configurer() -> None:
 
 
 def _dummy_service(sid: ServiceID) -> ConfiguredService:
-    return ConfiguredService(*sid, "", TimespecificParameters(), {}, {}, True)
+    return ConfiguredService(*sid, "", TimespecificParameters(), {}, {}, {}, True)
 
 
 def test_aggregate_enforced_services_filters_unclustered() -> None:
@@ -212,7 +216,8 @@ def test_aggregate_enforced_services_filters_unclustered() -> None:
                 HostAddress("host1"): {sid1: ("ruleset_name1", _dummy_service(sid1))},
                 HostAddress("host2"): {sid2: ("ruleset_name2", _dummy_service(sid2))},
             },
-            lambda host_name, servic_name: host_name == HostAddress("host1"),
+            lambda host_name, servic_name, discovered_labels: host_name == HostAddress("host1"),
+            lambda service_name, discovered_labels: discovered_labels,
         )
     ) == (_dummy_service(sid1),)
 
@@ -235,6 +240,7 @@ def test_aggregate_enforced_services_merge() -> None:
                             _make_params({"common": 1, "1": 1}),
                             {"common": 1, "1": 1},
                             {"common": "1", "1": "1"},
+                            {"common": "1", "1": "1"},
                             True,
                         ),
                     )
@@ -248,12 +254,14 @@ def test_aggregate_enforced_services_merge() -> None:
                             _make_params({"common": 2, "2": 2}),
                             {"common": 2, "2": 2},
                             {"common": "2", "2": "2"},
+                            {"common": "2", "2": "2"},
                             True,
                         ),
                     )
                 },
             },
-            lambda host_name, servic_name: True,
+            lambda host_name, servic_name, discovered_labels: True,
+            lambda service_name, discovered_labels: discovered_labels,
         )
     ) == (
         ConfiguredService(
@@ -267,6 +275,7 @@ def test_aggregate_enforced_services_merge() -> None:
             ),
             {"common": 1, "1": 1, "2": 2},
             {"common": "1", "1": "1", "2": "2"},
-            True,
+            {"common": "1", "1": "1", "2": "2"},
+            is_enforced=True,
         ),
     )

@@ -179,6 +179,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=True,
                 ),
@@ -194,6 +195,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check bla_blub / ITEM",
                     parameters=TimespecificParameters(()),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 ),
@@ -203,6 +205,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check blub_bla / ITEM",
                     parameters=TimespecificParameters(),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=True,
                 ),
@@ -224,6 +227,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=True,
                 ),
@@ -244,6 +248,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 ),
@@ -259,6 +264,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=True,
                 ),
@@ -280,6 +286,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=True,
                 ),
@@ -294,6 +301,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 ),
@@ -314,6 +322,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 )
@@ -334,6 +343,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 )
@@ -354,6 +364,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
+                    labels={},
                     discovered_labels={},
                     is_enforced=False,
                 )
@@ -647,9 +658,9 @@ def test_check_table__get_static_check_entries(
     entries = config._get_checkgroup_parameters(
         config_cache.ruleset_matcher,
         hostname,
-        "ps",
         "item",
-        "Process item",
+        {},
+        "ps",
     )
 
     assert len(entries) == 1

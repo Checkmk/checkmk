@@ -12915,9 +12915,6 @@ msgstr "情報を収集する..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "診断分析のためにCheckmkサイトの情報を収集します。"
 
-msgid "Collect performance data for disk latency"
-msgstr "ディスク遅延のパフォーマンスデータを収集する"
-
 msgid "Collection Size"
 msgstr "コレクションのサイズ"
 
@@ -13257,10 +13254,6 @@ msgstr "復元を完了します"
 
 msgid "Complete tree"
 msgstr "完全なツリー"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "完全な変数リスト(テスト用)"
 
 msgid "Complete variable list (for testing)"
 msgstr "完全な変数リスト(テスト用)"
@@ -13815,6 +13808,18 @@ msgstr ""
 "ここでユーザーまたはグループのキーを指定して、通知を受信するようにユーザーま"
 "たはグループを構成します。キーはプッシュオーバーのウェブサイトから入手できま"
 "す。"
+
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発生"
+"時により良いエラーメッセージを提供するという利点があります。しかし、より多く"
+"の設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商用版の"
+"インストール時のみ使用することをお勧めします。"
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -19702,10 +19707,6 @@ msgstr "ドキュメント数のデルタ"
 msgid "Document count growth per minute"
 msgstr "1分あたりのドキュメント数の増加"
 
-#, fuzzy
-msgid "Documentation"
-msgstr "ドキュメントURL"
-
 msgid "Documentation URL"
 msgstr "ドキュメントURL"
 
@@ -22003,6 +22004,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "イベントコンソールアラート"
+
 msgid "Event Console alerts"
 msgstr "イベントコンソールアラート"
 
@@ -22080,10 +22085,6 @@ msgstr "イベントコメント"
 
 msgid "Event console"
 msgstr "イベントコンソール"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "イベントコンソールアラート"
 
 msgid "Event console performance"
 msgstr "イベントコンソールのパフォーマンス"
@@ -22681,6 +22682,7 @@ msgstr "期待される状態"
 msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
+#, fuzzy
 msgid "Experimental features"
 msgstr "実験的機能"
 
@@ -29902,6 +29904,9 @@ msgstr "モニタリングで検索"
 
 msgid "Icons"
 msgstr "アイコン"
+
+msgid "Ideas Portal"
+msgstr ""
 
 msgid "Ident of the value"
 msgstr "値のID"
@@ -37171,6 +37176,10 @@ msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
 
 #, fuzzy
+msgid "Lower levels on quality"
+msgstr "電圧の低レベル"
+
+#, fuzzy
 msgid "Lower levels on the biggest input buffer"
 msgstr "最初の出力項目の下位レベル"
 
@@ -37666,6 +37675,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "ビューをユーザーで並べ替え可能にする"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr "ドロップダウンメニューの代わりにアイコンを列に表示します。"
@@ -41122,6 +41137,10 @@ msgid "Negative match (Exclude matching services from the set)"
 msgstr "ネガティブマッチ(セットからマッチングサービスを除外)"
 
 #, fuzzy
+msgid "Negative values not allowed"
+msgstr "ここでは空の値は許可されていません。"
+
+#, fuzzy
 msgid "Negotiate"
 msgstr "SSLをネゴシエートする"
 
@@ -41488,16 +41507,16 @@ msgid "Next step: Recipient"
 msgstr "受信者"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "一般的なプロパティ"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "保留中の接続"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "コメントタイプ(ホスト/サービス)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "ホスト状態概要"
 
 msgid "Nginx Server"
 msgstr "Nginxサーバー"
@@ -41719,8 +41738,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "IDが<tt>%s </tt>のグラフはありません"
 
 msgid "No groups are defined yet."
@@ -42028,6 +42047,10 @@ msgstr "ノード統計"
 
 msgid "Node Status"
 msgstr "ノードステータス"
+
+#, fuzzy
+msgid "Node index"
+msgstr "インデックスを使用する"
 
 #, fuzzy
 msgid "Node labels"
@@ -42459,6 +42482,10 @@ msgstr ""
 "外する</a>を使用してセクション<tt> if64adm </tt>をアクティブにします。これに"
 "より、SNMPトラフィックが約5%増加することに注意してください。"
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "最大許容値は %sです。"
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -42466,15 +42493,6 @@ msgstr ""
 "注意:このコマンドを使用すると、1つのホストのすべてのイベントをアーカイブする"
 "ことができます。「イベント コンソールでイベントの状態を確認する(Check event "
 "state in Event Console)」ルールが設定されている必要があります。"
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"注意:PNP4NagiosをSINGLEモードで動作させる場合、レイテンシーのパフォーマンス"
-"データを有効にすると、既存のヒストリカルデータと互換性がなくなる可能性があり"
-"ます。"
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "注: これはHEADではなくHTTP GETまたはPOSTを実行します。"
@@ -43836,6 +43854,10 @@ msgid "On host name exclusion list."
 msgstr "%s 除外リスト。"
 
 #, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "ダウンタイムをスケジュールする"
+
+#, fuzzy
 msgid "On recovery (OK/UP)"
 msgstr "コアの再起動またはリカバリー（OK/UP）時"
 
@@ -43863,6 +43885,10 @@ msgstr "選択したサイト"
 
 msgid "On selected users"
 msgstr "選択したユーザーについて"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "スケジュールされたダウンタイムを無視する"
 
 #, fuzzy, python-format
 msgid ""
@@ -47300,16 +47326,8 @@ msgstr "パフォーマンスカウンター"
 msgid "Performance data"
 msgstr "パフォーマンスデータ"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "レイテンシーのパフォーマンスデータ"
-
 msgid "Performance data for protocols"
 msgstr "プロトコルのパフォーマンスデータ"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "キューの長さのパフォーマンスデータ"
 
 #, fuzzy
 msgid ""
@@ -50167,7 +50185,7 @@ msgid "Read operations /s"
 msgstr "読み取り操作 /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "キューの長さを読み取る"
 
 msgid "Read recovery latency"
@@ -52265,11 +52283,6 @@ msgstr "リモート設定"
 msgid "Review your configuration and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
-
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
 
@@ -53528,10 +53541,6 @@ msgid "Schedule downtime for %d %s"
 msgstr "%d%sのダウンタイムをスケジュールする"
 
 msgid "Schedule downtime on host"
-msgstr "ホストでのダウンタイムのスケジュール"
-
-#, fuzzy
-msgid "Schedule downtime on service"
 msgstr "ホストでのダウンタイムのスケジュール"
 
 msgid "Schedule downtimes"
@@ -58615,6 +58624,10 @@ msgstr "%s で開始"
 msgid "Started at: %s."
 msgstr "開始: %s。"
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "セッションの実行"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -59715,6 +59728,9 @@ msgstr "保存されたレポート"
 msgid "Stored reports"
 msgstr "保存されたレポート"
 
+msgid "Stormshield quality"
+msgstr ""
+
 msgid "Straight"
 msgstr "まっすぐ"
 
@@ -59942,6 +59958,10 @@ msgstr "リクエストIDの認証に成功"
 
 msgid "Successfully verified signature"
 msgstr "署名の検証に成功"
+
+#, fuzzy
+msgid "Suggest a product improvement"
+msgstr "パフォーマンスの向上"
 
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
@@ -80875,7 +80895,7 @@ msgid "Write operations/s"
 msgstr "書き込み操作/秒"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "書き込みキューの長さ"
 
 #, fuzzy
@@ -85312,18 +85332,6 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, fuzzy
-#~ msgid "Jenkins version"
-#~ msgstr "保留中の接続"
-
-#, fuzzy
-#~ msgid "Service state on version difference"
-#~ msgstr "サービス状態のパーセンテージ"
-
-#, fuzzy
-#~ msgid "Suggest a product improvement"
-#~ msgstr "パフォーマンスの向上"
-
-#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "アクティブパス"
 
@@ -85348,6 +85356,10 @@ msgstr ""
 #~ msgstr "発信者ID"
 
 #, fuzzy
+#~ msgid "Calls In/Out"
+#~ msgstr "ルールを呼び出す"
+
+#, fuzzy
 #~ msgid "Calls Out"
 #~ msgstr "ルールを呼び出す"
 
@@ -85356,15 +85368,76 @@ msgstr ""
 #~ msgstr "1秒あたりのページ数"
 
 #, fuzzy
+#~ msgid "Disk IO Utilization"
+#~ msgstr "ディスク使用率"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "特定のSIDの場合"
+
+#, fuzzy, python-format
+#~ msgid "General value error: %s"
+#~ msgstr "一般的なエラー"
+
+#, fuzzy
+#~ msgid "Generic percentage value"
+#~ msgstr "一般的な数値"
+
+#, fuzzy
+#~ msgid "IP Group Active Calls In"
+#~ msgstr "アクティブパス"
+
+#, fuzzy
+#~ msgid "IP Group Active Calls Out"
+#~ msgstr "アクティブユニット"
+
+#, fuzzy
+#~ msgid "IP Group Calls In"
+#~ msgstr "発信者ID"
+
+#, fuzzy
+#~ msgid "IP Group Calls In/Out"
+#~ msgstr "ルールを呼び出す"
+
+#, fuzzy
+#~ msgid "IP Group Calls Out"
+#~ msgstr "ルールを呼び出す"
+
+#, fuzzy
 #~ msgid "Indeterminate"
 #~ msgstr "休憩"
 
 #, fuzzy
-#~ msgid ""
-#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
-#~ msgstr ""
-#~ "ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
-#~ "windows \"のように。"
+#~ msgid "Invalid choice"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid choice, falling back to False"
+#~ msgstr "全てのバックアップコードを無効にする"
+
+#, fuzzy
+#~ msgid "Invalid data"
+#~ msgstr "無効なID"
+
+#, fuzzy
+#~ msgid "Invalid data format"
+#~ msgstr "無効なデータソース: %s"
+
+#, fuzzy
+#~ msgid "Invalid data. Missing filename"
+#~ msgstr "無効なファイル名"
+
+#, fuzzy
+#~ msgid "Invalid datatype"
+#~ msgstr "無効なテスト。"
+
+#, fuzzy, python-format
+#~ msgid "Invalid datatype of value: %s"
+#~ msgstr "無効なデータソース: %s"
+
+#, fuzzy
+#~ msgid "List element is not a number"
+#~ msgstr "このレポート要素は存在しません。"
 
 #, fuzzy
 #~ msgid "Lower levels for average success ratio"
@@ -85373,6 +85446,85 @@ msgstr ""
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "再起動の上位レベル"
+
+#, fuzzy
+#~ msgid "Not a list"
+#~ msgstr "ホストマッチリスト"
+
+#, fuzzy
+#~ msgid "Not a number"
+#~ msgstr "ポート番号"
+
+#, fuzzy
+#~ msgid "Not an integer number"
+#~ msgstr "無効なファイル名"
+
+#, fuzzy
+#~ msgid "Number of SIP/H323 fax success calls"
+#~ msgstr "アクセスポイントの数"
+
+#, fuzzy
+#~ msgid "Number of failed SIP/H323 calls"
+#~ msgstr "失敗したパスの数"
+
+#, fuzzy
+#~ msgid "Total duration of SIP/H323 calls"
+#~ msgstr "総所要直"
+
+#, fuzzy
+#~ msgid "Using default value"
+#~ msgstr "デフォルト値"
+
+#, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "完全な変数リスト(テスト用)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "ドキュメントURL"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "ディスク遅延のパフォーマンスデータを収集する"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "ホスト状態概要"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "注意:PNP4NagiosをSINGLEモードで動作させる場合、レイテンシーのパフォーマン"
+#~ "スデータを有効にすると、既存のヒストリカルデータと互換性がなくなる可能性が"
+#~ "あります。"
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "レイテンシーのパフォーマンスデータ"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "キューの長さのパフォーマンスデータ"
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "ホストでのダウンタイムのスケジュール"
+
+#, fuzzy
+#~ msgid "Jenkins version"
+#~ msgstr "保留中の接続"
+
+#, fuzzy
+#~ msgid "Service state on version difference"
+#~ msgstr "サービス状態のパーセンテージ"
+
+#, fuzzy
+#~ msgid ""
+#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+#~ msgstr ""
+#~ "ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
+#~ "windows \"のように。"
 
 #~ msgid "Custom Notes"
 #~ msgstr "カスタムノート"
@@ -86049,18 +86201,6 @@ msgstr ""
 #~ "デフォルトでは、電子メール内のすべての複数のグラフが近くに浮かんで表示され"
 #~ "ます。このオプションを有効にすると、グラフを相互に表示できます。"
 
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発"
-#~ "生時により良いエラーメッセージを提供するという利点があります。しかし、より"
-#~ "多くの設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商"
-#~ "用版のインストール時のみ使用することをお勧めします。"
-
 #~ msgid "Display additional information"
 #~ msgstr "追加情報の表示"
 
@@ -86404,9 +86544,6 @@ msgstr ""
 
 #~ msgid "(unused)"
 #~ msgstr "(未使用)"
-
-#~ msgid "Host match list"
-#~ msgstr "ホストマッチリスト"
 
 #~ msgid "Item match list"
 #~ msgstr "アイテムマッチリスト"

@@ -13593,9 +13593,6 @@ msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr ""
 "Recoger la información de los sitios Checkmk para el análisis de diagnóstico."
 
-msgid "Collect performance data for disk latency"
-msgstr "Recoger datos de rendimiento para la latencia del disco"
-
 msgid "Collection Size"
 msgstr "Tamaño de la colección"
 
@@ -13956,10 +13953,6 @@ msgstr "Completar la restauración"
 
 msgid "Complete tree"
 msgstr "Árbol completo"
-
-#, fuzzy
-msgid "Complete variable list"
-msgstr "Lista completa de variables (para las pruebas)"
 
 msgid "Complete variable list (for testing)"
 msgstr "Lista completa de variables (para las pruebas)"
@@ -14553,6 +14546,20 @@ msgstr ""
 "Configure el usuario o grupo para recibir las notificaciones proporcionando "
 "la clave del usuario o grupo aquí. La clave puede obtenerse en el sitio web "
 "de Pushover."
+
+#, fuzzy
+msgid ""
+"Configure this to have the notification plug-in connect directly to the SMTP "
+"server. This has the advantage of providing better error messages in case of "
+"an error, but it does require more configuration and is strictly "
+"synchronous. So we advice use only on enterprise installations using the "
+"notification spooler."
+msgstr ""
+"Configurar esto para que el plugin de notificaciones se conecte directamente "
+"al servidor smtp. Esto tiene la ventaja de proporcionar mejores mensajes de "
+"error en caso de un error, pero requiere más configuración y es "
+"estrictamente sincrónico, por lo que aconsejamos su uso sólo en "
+"instalaciones empresariales que utilicen el spooler de notificaciones."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -20810,10 +20817,6 @@ msgstr "Delta del recuento de documentos"
 msgid "Document count growth per minute"
 msgstr "Crecimiento del número de documentos por minuto"
 
-#, fuzzy
-msgid "Documentation"
-msgstr "URL de la documentación"
-
 msgid "Documentation URL"
 msgstr "URL de la documentación"
 
@@ -23175,6 +23178,10 @@ msgid ""
 "cleaned up."
 msgstr ""
 
+#, fuzzy
+msgid "Event Console alert filters"
+msgstr "Alertas de la consola de eventos"
+
 msgid "Event Console alerts"
 msgstr "Alertas de la consola de eventos"
 
@@ -23253,10 +23260,6 @@ msgstr "Comentario del evento"
 
 msgid "Event console"
 msgstr "Consola de eventos"
-
-#, fuzzy
-msgid "Event console alert filters"
-msgstr "Alertas de la consola de eventos"
 
 msgid "Event console performance"
 msgstr "Rendimiento de la consola de eventos"
@@ -31223,6 +31226,9 @@ msgstr "Buscar en la supervisión"
 msgid "Icons"
 msgstr "Iconos"
 
+msgid "Ideas Portal"
+msgstr ""
+
 msgid "Ident of the value"
 msgstr "Identificación del valor"
 
@@ -38715,6 +38721,10 @@ msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveles más bajos en el número de conexiones punto a punto"
 
 #, fuzzy
+msgid "Lower levels on quality"
+msgstr "Niveles inferiores de tensión"
+
+#, fuzzy
 msgid "Lower levels on the biggest input buffer"
 msgstr "Niveles inferiores para el primer elemento de salida"
 
@@ -39225,6 +39235,12 @@ msgstr ""
 
 msgid "Make view sortable by user"
 msgstr "Hacer que la vista se pueda ordenar por usuario"
+
+msgid ""
+"Make your rule more recognizable with a meaningful description and other "
+"metadata. Note: Notification rules take effect immediately without "
+"\"Activate changes\"."
+msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
@@ -42741,6 +42757,10 @@ msgstr ""
 "Coincidencia negativa (excluir del conjunto los servicios coincidentes)"
 
 #, fuzzy
+msgid "Negative values not allowed"
+msgstr "Aquí no se permite un valor vacío."
+
+#, fuzzy
 msgid "Negotiate"
 msgstr "Negociar SSL"
 
@@ -43111,16 +43131,16 @@ msgid "Next step: Recipient"
 msgstr "Destinatario"
 
 #, fuzzy
+msgid "Next step: Review all settings"
+msgstr "Propiedades generales"
+
+#, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "conexiones pendientes"
 
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "Tipo de comentario (host/servicio)"
-
-#, fuzzy
-msgid "Next step: Summary"
-msgstr "Resumen del estado del anfitrión"
 
 msgid "Nginx Server"
 msgstr "Servidor Nginx"
@@ -43347,8 +43367,8 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "No hay gráfico disponible: %s"
 
-#, python-format
-msgid "No graph with the ID <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "No hay gráfico con el ID <tt>%s</tt>"
 
 msgid "No groups are defined yet."
@@ -43664,6 +43684,10 @@ msgstr "Estadísticas de los nodos"
 
 msgid "Node Status"
 msgstr "Estado del nodo"
+
+#, fuzzy
+msgid "Node index"
+msgstr "Utilizar el índice"
 
 #, fuzzy
 msgid "Node labels"
@@ -44107,6 +44131,10 @@ msgstr ""
 "SNMP</a>. Tenga en cuenta que esto provocará un aumento del tráfico SNMP de "
 "aproximadamente un 5%."
 
+#, fuzzy
+msgid "Note: The maximum allowed file size is 10MB. "
+msgstr "%s es demasiado %s. El valor permitido %s es %s."
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -44114,15 +44142,6 @@ msgstr ""
 "Nota: Con este comando puede archivar todos los eventos de un host. Necesita "
 "que se configure la regla \"Comprobar el estado de los eventos en la consola "
 "de eventos\"."
-
-msgid ""
-"Note: enabling performance data for the latency might cause "
-"incompatibilities with existing historical data if you are running "
-"PNP4Nagios in SINGLE mode."
-msgstr ""
-"Nota: la activación de los datos de rendimiento para la latencia podría "
-"causar incompatibilidades con los datos históricos existentes si está "
-"ejecutando PNP4Nagios en modo SINGLE."
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
 msgstr "Nota: esto todavía hace un GET o POST HTTP, no un HEAD."
@@ -45536,6 +45555,10 @@ msgid "On host name exclusion list."
 msgstr "%s en la lista de exclusión."
 
 #, fuzzy
+msgid "On host: Schedule downtime"
+msgstr "Programar los tiempos de inactividad"
+
+#, fuzzy
 msgid "On recovery (OK/UP)"
 msgstr "En el reinicio del núcleo O recuperación (OK/UP)"
 
@@ -45563,6 +45586,10 @@ msgstr "En sitios seleccionados"
 
 msgid "On selected users"
 msgstr "En usuarios seleccionados"
+
+#, fuzzy
+msgid "On service: Schedule downtime"
+msgstr "Ignorar los tiempos de inactividad programados"
 
 #, fuzzy, python-format
 msgid ""
@@ -49055,16 +49082,8 @@ msgstr "Contadores de rendimiento"
 msgid "Performance data"
 msgstr "Datos de rendimiento"
 
-#, fuzzy
-msgid "Performance data for latency"
-msgstr "Datos de rendimiento para la latencia"
-
 msgid "Performance data for protocols"
 msgstr "Datos de rendimiento de los protocolos"
-
-#, fuzzy
-msgid "Performance data for queue length"
-msgstr "Datos de rendimiento de la longitud de la cola"
 
 #, fuzzy
 msgid ""
@@ -51989,7 +52008,7 @@ msgid "Read operations /s"
 msgstr "Operaciones de lectura /s"
 
 #, fuzzy
-msgid "Read queue-length"
+msgid "Read queue length"
 msgstr "Longitud de la cola de lectura"
 
 msgid "Read recovery latency"
@@ -54135,11 +54154,6 @@ msgstr "Configuración remota"
 msgid "Review your configuration and run preview service discovery"
 msgstr "Guardar & ejecutar la detección de servicios"
 
-msgid ""
-"Review your notification rule before applying it. They will take effect "
-"right away without \"Activate changes\"."
-msgstr ""
-
 msgid "Revolutions per minute"
 msgstr "Revoluciones por minuto"
 
@@ -55415,10 +55429,6 @@ msgid "Schedule downtime for %d %s"
 msgstr "Programar el tiempo de inactividad para %d %s"
 
 msgid "Schedule downtime on host"
-msgstr "Programar el tiempo de inactividad en el host"
-
-#, fuzzy
-msgid "Schedule downtime on service"
 msgstr "Programar el tiempo de inactividad en el host"
 
 msgid "Schedule downtimes"
@@ -60659,6 +60669,10 @@ msgstr "Comenzó en %s"
 msgid "Started at: %s."
 msgstr "Comenzó en: %s."
 
+#, fuzzy
+msgid "Starting Quick setup action..."
+msgstr "Sesiones de trabajo"
+
 msgid "Starting Quick stage action..."
 msgstr ""
 
@@ -61783,6 +61797,9 @@ msgstr "Informe almacenado"
 msgid "Stored reports"
 msgstr "Informes almacenados"
 
+msgid "Stormshield quality"
+msgstr ""
+
 msgid "Straight"
 msgstr "Recto"
 
@@ -62014,6 +62031,10 @@ msgstr "Identificador de solicitud verificado correctamente"
 
 msgid "Successfully verified signature"
 msgstr "Firma verificada correctamente"
+
+#, fuzzy
+msgid "Suggest a product improvement"
+msgstr "Mejoras en el rendimiento"
 
 msgid "Suggested tutorial videos"
 msgstr "Vídeos tutoriales sugeridos"
@@ -83682,7 +83703,7 @@ msgid "Write operations/s"
 msgstr "Operaciones de escritura/s"
 
 #, fuzzy
-msgid "Write queue-length"
+msgid "Write queue length"
 msgstr "Longitud de la cola de escritura"
 
 #, fuzzy
@@ -88235,18 +88256,6 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
 
 #, fuzzy
-#~ msgid "Jenkins version"
-#~ msgstr "conexiones pendientes"
-
-#, fuzzy
-#~ msgid "Service state on version difference"
-#~ msgstr "Porcentaje del estado del servicio"
-
-#, fuzzy
-#~ msgid "Suggest a product improvement"
-#~ msgstr "Mejoras en el rendimiento"
-
-#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "Vías activas"
 
@@ -88271,6 +88280,10 @@ msgstr "Usar SSL para la conexión."
 #~ msgstr "Identificación de llamadas"
 
 #, fuzzy
+#~ msgid "Calls In/Out"
+#~ msgstr "Llamar a una regla"
+
+#, fuzzy
 #~ msgid "Calls Out"
 #~ msgstr "Llamar a una regla"
 
@@ -88279,15 +88292,76 @@ msgstr "Usar SSL para la conexión."
 #~ msgstr "Páginas por segundo"
 
 #, fuzzy
+#~ msgid "Disk IO Utilization"
+#~ msgstr "Utilización del disco"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "Para las DIM específicas"
+
+#, fuzzy, python-format
+#~ msgid "General value error: %s"
+#~ msgstr "Error general"
+
+#, fuzzy
+#~ msgid "Generic percentage value"
+#~ msgstr "Valor numérico genérico"
+
+#, fuzzy
+#~ msgid "IP Group Active Calls In"
+#~ msgstr "Vías activas"
+
+#, fuzzy
+#~ msgid "IP Group Active Calls Out"
+#~ msgstr "Unidad activa"
+
+#, fuzzy
+#~ msgid "IP Group Calls In"
+#~ msgstr "Identificación de llamadas"
+
+#, fuzzy
+#~ msgid "IP Group Calls In/Out"
+#~ msgstr "Llamar a una regla"
+
+#, fuzzy
+#~ msgid "IP Group Calls Out"
+#~ msgstr "Llamar a una regla"
+
+#, fuzzy
 #~ msgid "Indeterminate"
 #~ msgstr "Intermedio"
 
 #, fuzzy
-#~ msgid ""
-#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
-#~ msgstr ""
-#~ "Las etiquetas deben tener el formato \"[CLAVE]:[VALOR]\". Por ejemplo "
-#~ "\"os:windows\"."
+#~ msgid "Invalid choice"
+#~ msgstr "Tema no válido"
+
+#, fuzzy
+#~ msgid "Invalid choice, falling back to False"
+#~ msgstr "Regenerar los códigos de seguridad"
+
+#, fuzzy
+#~ msgid "Invalid data"
+#~ msgstr "Identificación inválida"
+
+#, fuzzy
+#~ msgid "Invalid data format"
+#~ msgstr "Fuente de datos no válida: %s"
+
+#, fuzzy
+#~ msgid "Invalid data. Missing filename"
+#~ msgstr "Nombre de archivo no válido"
+
+#, fuzzy
+#~ msgid "Invalid datatype"
+#~ msgstr "Prueba inválida."
+
+#, fuzzy, python-format
+#~ msgid "Invalid datatype of value: %s"
+#~ msgstr "Fuente de datos no válida: %s"
+
+#, fuzzy
+#~ msgid "List element is not a number"
+#~ msgstr "Este elemento del informe no existe."
 
 #, fuzzy
 #~ msgid "Lower levels for average success ratio"
@@ -88296,6 +88370,85 @@ msgstr "Usar SSL para la conexión."
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "Niveles superiores para los reinicios"
+
+#, fuzzy
+#~ msgid "Not a list"
+#~ msgstr "Lista de partidos del anfitrión"
+
+#, fuzzy
+#~ msgid "Not a number"
+#~ msgstr "Número de puerto"
+
+#, fuzzy
+#~ msgid "Not an integer number"
+#~ msgstr "Nombre de archivo no válido"
+
+#, fuzzy
+#~ msgid "Number of SIP/H323 fax success calls"
+#~ msgstr "Número de puntos de acceso"
+
+#, fuzzy
+#~ msgid "Number of failed SIP/H323 calls"
+#~ msgstr "Número de rutas fallidas"
+
+#, fuzzy
+#~ msgid "Total duration of SIP/H323 calls"
+#~ msgstr "Duración total"
+
+#, fuzzy
+#~ msgid "Using default value"
+#~ msgstr "Valor por defecto"
+
+#, fuzzy
+#~ msgid "Complete variable list"
+#~ msgstr "Lista completa de variables (para las pruebas)"
+
+#, fuzzy
+#~ msgid "Documentation"
+#~ msgstr "URL de la documentación"
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Recoger datos de rendimiento para la latencia del disco"
+
+#, fuzzy
+#~ msgid "Next step: Summary"
+#~ msgstr "Resumen del estado del anfitrión"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Nota: la activación de los datos de rendimiento para la latencia podría "
+#~ "causar incompatibilidades con los datos históricos existentes si está "
+#~ "ejecutando PNP4Nagios en modo SINGLE."
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "Datos de rendimiento para la latencia"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "Datos de rendimiento de la longitud de la cola"
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programar el tiempo de inactividad en el host"
+
+#, fuzzy
+#~ msgid "Jenkins version"
+#~ msgstr "conexiones pendientes"
+
+#, fuzzy
+#~ msgid "Service state on version difference"
+#~ msgstr "Porcentaje del estado del servicio"
+
+#, fuzzy
+#~ msgid ""
+#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+#~ msgstr ""
+#~ "Las etiquetas deben tener el formato \"[CLAVE]:[VALOR]\". Por ejemplo "
+#~ "\"os:windows\"."
 
 #~ msgid "Custom Notes"
 #~ msgstr "Notas personalizadas"
@@ -88965,21 +89118,6 @@ msgstr "Usar SSL para la conexión."
 #~ "muestran flotando cerca. Puede activar esta opción para mostrar los "
 #~ "gráficos entre sí."
 
-#, fuzzy
-#~ msgid ""
-#~ "Configure this to have the notification plug-in connect directly to the "
-#~ "SMTP server. This has the advantage of providing better error messages in "
-#~ "case of an error, but it does require more configuration and is strictly "
-#~ "synchronous. So we advice use only on enterprise installations using the "
-#~ "notification spooler."
-#~ msgstr ""
-#~ "Configurar esto para que el plugin de notificaciones se conecte "
-#~ "directamente al servidor smtp. Esto tiene la ventaja de proporcionar "
-#~ "mejores mensajes de error en caso de un error, pero requiere más "
-#~ "configuración y es estrictamente sincrónico, por lo que aconsejamos su "
-#~ "uso sólo en instalaciones empresariales que utilicen el spooler de "
-#~ "notificaciones."
-
 #~ msgid "Display additional information"
 #~ msgstr "Mostrar información adicional"
 
@@ -89324,9 +89462,6 @@ msgstr "Usar SSL para la conexión."
 
 #~ msgid "(unused)"
 #~ msgstr "(no usado)"
-
-#~ msgid "Host match list"
-#~ msgstr "Lista de partidos del anfitrión"
 
 #~ msgid "Item match list"
 #~ msgstr "Lista de coincidencia de artículos"

@@ -26,7 +26,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-cmk-dependencies.sh \
         install-gdb.sh \
         install-gnu-toolchain.sh \
-        install-openssl.sh \
         install-patchelf.sh \
         install-protobuf-cpp.sh \
         install-python.sh \

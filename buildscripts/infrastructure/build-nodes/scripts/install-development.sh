@@ -236,7 +236,6 @@ install_for_python_dev() {
 
 install_python_and_teammates() {
     export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-openssl.sh
     "${SCRIPT_DIR}"/install-python.sh
 
     if [[ $STRIP_LATER -eq 1 ]]; then
@@ -249,7 +248,6 @@ install_python_and_teammates() {
 strip_for_python() {
     # strip only the content of the latest created directory
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "Python-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "openssl-*" -print -quit | head -n 1)"
 }
 
 install_for_cpp_dev() {

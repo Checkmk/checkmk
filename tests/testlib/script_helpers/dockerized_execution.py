@@ -125,7 +125,15 @@ def execute_tests_in_container(
             dockerpty.exec_command(
                 client.api,
                 container.id,
-                ["sudo", "su", _TESTUSER, "-c", "source /git/.venv/bin/activate; bash"],
+                [
+                    "sudo",
+                    "su",
+                    "--pty",
+                    "-",
+                    _TESTUSER,
+                    "-c",
+                    "source /git/.venv/bin/activate; bash",
+                ],
             )
 
             return 0

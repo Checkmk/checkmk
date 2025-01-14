@@ -152,8 +152,15 @@ def ldap_api_schema(ldap_id: str) -> dict:
             },
             "groups_to_roles": {
                 "state": "enabled",
-                "admin": [{"group_dn": "ou=Gruppen,dc=corp,dc=de", "search_in": "this_connection"}],
-                "user": [{"group_dn": "ou=Gruppen,dc=corp,dc=de", "search_in": "LDAP_1"}],
+                "admin": [
+                    {
+                        "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                        "search_in": "this_connection",
+                    }
+                ],
+                "user": [
+                    {"group_dn": "CN=cmk_AD_users,ou=Gruppen,dc=corp,dc=de", "search_in": "LDAP_1"}
+                ],
             },
         },
         "other": {

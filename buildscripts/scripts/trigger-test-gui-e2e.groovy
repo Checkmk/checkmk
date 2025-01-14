@@ -19,11 +19,15 @@ def main() {
 
     def all_editions = ["enterprise", "cloud", "managed", "raw", "saas"];
     def selected_editions_default = ["enterprise", "cloud", "saas"];
-    def selected_editions = (
-        params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep()
-        ?: job_params_from_comments.get("editions")
-        ?: selected_editions_default
-    );
+    def params_editions = params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep();
+    def selected_editions = [];
+    if (params_editions) {
+      selected_editions = params_editions;
+    } else if ("editions" in job_params_from_comments) {
+      selected_editions = job_params_from_comments.get("editions");
+    } else {
+      selected_editions = selected_editions_default;
+    }
 
     print(
         """

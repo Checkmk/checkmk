@@ -190,7 +190,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fro
             else []
         )
 
-        return compute_validation_errors(compute_validators(self.form_spec), vue_value)
+        return compute_validation_errors(compute_validators(self.form_spec), vue_value, vue_value)
 
     def _to_disk(self, raw_value: object, parsed_value: Conditions) -> Conditions:
         return parsed_value

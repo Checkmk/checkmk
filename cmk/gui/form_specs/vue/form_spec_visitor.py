@@ -283,8 +283,10 @@ def render_form_spec(
         form_spec, field_id, origin, do_validate, value, display_mode
     )
     if active_config.load_frontend_vue == "inject":
-        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
-        logger.warning("Vue value:\n%s", pprint.pformat(json.dumps(vue_app_config.data), width=220))
+        logger.warning(
+            "Vue app config:\n%s", pprint.pformat(asdict(vue_app_config), width=220, indent=2)
+        )
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
         logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 

@@ -379,6 +379,10 @@ class CheckmkApp:
         self._teardown()
 
     def _create_automation_user(self) -> None:
+        if self.openapi.users.get(self.api_user):
+            logger.info("Dropping existing test-user: '%s'", self.api_user)
+            self.openapi.users.delete(self.api_user)
+        logger.info("Creating automation user: '%s'.", self.api_user)
         self.openapi.users.create(
             username=self.api_user,
             fullname="Automation user for tests",

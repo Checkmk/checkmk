@@ -87,6 +87,8 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
                         return fmt::format("{}:CMK_VERSION = \"{}\"", file,
                                            output[1]);
                     }
+                } else {
+                    return fmt::format("{}:CMK_VERSION = n/a", file);
                 }
                 return {};
             }

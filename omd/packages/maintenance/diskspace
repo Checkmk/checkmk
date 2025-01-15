@@ -11,7 +11,8 @@ import subprocess
 import sys
 import time
 import traceback
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -119,13 +120,20 @@ def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> dict[str, dict[st
     return plugins
 
 
-def _collect_file_infos(plugins: Mapping[str, dict[str, Any]]) -> None:
+@dataclass
+class _Info:
+    plugin_name: str
+    path_to_mod_time: dict[str, float]
+
+
+def _collect_file_infos(plugins: Mapping[str, Mapping[str, Any]]) -> list[_Info]:
+    infos = []
     for plugin in plugins.values():
+        path_to_mod_time = plugin.get("file_infos", {})
         for path in plugin.get("cleanup_paths", []):
-            result: os.stat_result = os.stat(path)
-            file_infos_value: tuple[int, float] = (result.st_size, result.st_mtime)
-            plugin.setdefault("file_infos", {})
-            plugin["file_infos"][path] = file_infos_value
+            path_to_mod_time[path] = os.stat(path).st_mtime
+        infos.append(_Info(plugin_name=plugin["name"], path_to_mod_time=path_to_mod_time))
+    return infos
 
 
 def _get_free_space() -> int:
@@ -167,13 +175,12 @@ def _delete_files_and_base_directory(path: str, reason: str) -> bool:
     return False
 
 
-def _oldest_candidate(min_file_age: int, file_infos: dict) -> str | None:
-    if file_infos:
+def _oldest_candidate(min_file_age: int, path_to_mod_time: Mapping[str, float]) -> str | None:
+    if path_to_mod_time:
         # Sort by modification time
-        sorted_infos = sorted(file_infos.items(), key=lambda i: i[1][1])
-        oldest = sorted_infos[0]
-        if oldest[1][1] < time.time() - min_file_age:
-            return oldest[0]
+        oldest, age = max(path_to_mod_time.items(), key=lambda key_val: key_val[1])
+        if age < time.time() - min_file_age:
+            return oldest
     return None
 
 
@@ -317,7 +324,7 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
         _do_cleanup_central_site(cleanup_abandoned_host_files, local_site_hosts)
 
 
-def _cleanup_aged(max_file_age: int | None, plugins: Mapping[str, dict[str, Any]]) -> None:
+def _cleanup_aged(max_file_age: int | None, infos: Sequence[_Info]) -> None:
     """
     Loop all files to check whether files are older than
     max_age. Simply remove all of them.
@@ -328,11 +335,11 @@ def _cleanup_aged(max_file_age: int | None, plugins: Mapping[str, dict[str, Any]
         return
     max_age: float = time.time() - max_file_age
 
-    for plugin in plugins.values():
-        for path, (_size, mtime) in list(plugin.get("file_infos", {}).items()):
+    for info in infos:
+        for path, mtime in info.path_to_mod_time.items():
             if mtime < max_age:
                 if _delete_file(path, "too old"):
-                    del plugin["file_infos"][path]
+                    del info.path_to_mod_time[path]
             else:
                 _verbose(f"Not deleting {path}")
 
@@ -343,7 +350,7 @@ def _cleanup_aged(max_file_age: int | None, plugins: Mapping[str, dict[str, Any]
 def _cleanup_oldest_files(
     force: bool,
     min_free_bytes_and_age: tuple[int, int] | None,
-    plugins: Mapping[str, Mapping[str, Any]],
+    infos: Sequence[_Info],
 ) -> None:
     if min_free_bytes_and_age is None:
         _verbose("Not cleaning up oldest files of plugins (not enabled)")
@@ -367,10 +374,10 @@ def _cleanup_oldest_files(
 
     # Loop all cleanup plugins to find the oldest candidate per plugin
     # which is older than min_age and delete this file.
-    for plugin_name, plugin in plugins.items():
-        oldest = _oldest_candidate(min_file_age, plugin.get("file_infos", {}))
+    for info in infos:
+        oldest = _oldest_candidate(min_file_age, info.path_to_mod_time)
         if oldest is not None:
-            _delete_file(oldest, plugin_name + ": my oldest")
+            _delete_file(oldest, info.plugin_name + ": my oldest")
 
     bytes_free = _get_free_space()
     _verbose(f"Free space (after min free space space cleanup): {fmt_bytes(bytes_free)}")
@@ -381,7 +388,7 @@ def main() -> None:
     config = read_config(diskspace_config_dir)
     _print_config(config)
     plugins = _load_plugins(omd_root / "share/diskspace", omd_root / "local/share/diskspace")
-    _collect_file_infos(plugins)
+    infos = _collect_file_infos(plugins)
 
     _do_cleanup_abandoned_host_files(config.cleanup_abandoned_host_files)
 
@@ -389,8 +396,8 @@ def main() -> None:
     bytes_free = _get_free_space()
     _verbose(f"Free space: {fmt_bytes(bytes_free)}")
 
-    _cleanup_aged(config.max_file_age, plugins)
-    _cleanup_oldest_files("-f" in sys.argv, config.min_free_bytes, plugins)
+    _cleanup_aged(config.max_file_age, infos)
+    _cleanup_oldest_files("-f" in sys.argv, config.min_free_bytes, infos)
 
 
 if __name__ == "__main__":

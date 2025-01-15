@@ -21,7 +21,10 @@ from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
+from cmk.gui.config import active_config
+from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, VisualContext
 from cmk.gui.visuals import livestatus_query_bare
@@ -40,7 +43,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_2_2
-from ._legacy import get_render_function, LegacyUnitSpecification
 from ._metric_expression import (
     Average,
     BaseMetricExpression,
@@ -593,11 +595,7 @@ def _create_graph_recipe_from_template(
                 translated_metrics,
                 graph_template.consolidation_function,
             ),
-            unit=(
-                evaluated.unit_spec
-                if isinstance(evaluated.unit_spec, ConvertibleUnitSpecification)
-                else evaluated.unit_spec.id
-            ),
+            unit=evaluated.unit_spec,
             color=evaluated.color,
         )
         for evaluated in graph_template.metrics
@@ -625,9 +623,7 @@ def _create_graph_recipe_from_template(
     return GraphRecipe(
         title=title,
         metrics=metrics,
-        unit_spec=(
-            LegacyUnitSpecification(id=unit) if isinstance(unit := units.pop(), str) else unit
-        ),
+        unit_spec=units.pop(),
         explicit_vertical_range=evaluate_graph_template_range(
             graph_template.range,
             translated_metrics,
@@ -635,7 +631,11 @@ def _create_graph_recipe_from_template(
         horizontal_rules=[
             HorizontalRule(
                 value=evaluated.value,
-                rendered_value=get_render_function(evaluated.unit_spec)(evaluated.value),
+                rendered_value=user_specific_unit(
+                    evaluated.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render(evaluated.value),
                 color=evaluated.color,
                 title=evaluated.title,
             )

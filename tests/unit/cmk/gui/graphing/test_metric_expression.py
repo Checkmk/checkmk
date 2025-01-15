@@ -5,11 +5,13 @@
 
 import pytest
 
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._metric_expression import (
     Metric,
     MetricExpression,
 )
 from cmk.gui.graphing._metric_operation import LineType
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
 
 @pytest.mark.parametrize(
@@ -26,13 +28,19 @@ from cmk.gui.graphing._metric_operation import LineType
 def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineType) -> None:
     assert MetricExpression(
         Metric("metric-name"),
-        unit_spec="unit",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
         color="#000000",
         line_type=line_type,
         title="Title",
     ).mirror() == MetricExpression(
         Metric("metric-name"),
-        unit_spec="unit",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
         color="#000000",
         line_type=expected_line_type,
         title="Title",

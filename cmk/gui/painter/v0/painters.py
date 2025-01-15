@@ -19,20 +19,21 @@ from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
 from cmk.gui import sites
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
-from cmk.gui.graphing._legacy import get_render_function
 from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.painter_options import (
     paint_age,
     paint_age_or_never,
@@ -778,7 +779,11 @@ class PainterSvcMetrics(Painter):
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
             html.td(
-                get_render_function(translated_metric.unit_spec)(translated_metric.value),
+                user_specific_unit(
+                    translated_metric.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render(translated_metric.value),
                 class_="value",
             )
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
@@ -5493,7 +5498,15 @@ class AbstractColumnSpecificMetric(Painter):
             return "", ""
 
         translated_metric = translated_metrics[show_metric]
-        return "", get_render_function(translated_metric.unit_spec)(translated_metric.value)
+
+        return (
+            "",
+            user_specific_unit(
+                translated_metric.unit_spec,
+                user,
+                active_config,
+            ).formatter.render(translated_metric.value),
+        )
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):

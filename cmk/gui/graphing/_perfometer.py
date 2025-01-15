@@ -22,11 +22,6 @@ from cmk.graphing.v1 import perfometers as perfometers_api
 
 from ._color import parse_color_from_api
 from ._from_api import parse_unit_from_api, perfometers_from_api
-from ._legacy import (
-    get_conversion_function,
-    get_render_function,
-    UnitInfo,
-)
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -162,7 +157,7 @@ def _perfometer_matches(
 
 @dataclass(frozen=True)
 class _EvaluatedQuantity:
-    unit_spec: UnitInfo | ConvertibleUnitSpecification
+    unit_spec: ConvertibleUnitSpecification
     color: str
     value: int | float
 
@@ -344,7 +339,9 @@ def _make_projection(
     #              68 °F
     # Generalize the following...
     conversion = (
-        get_conversion_function(list(translated_metrics.values())[0].unit_spec)
+        user_specific_unit(
+            list(translated_metrics.values())[0].unit_spec, user, active_config
+        ).conversion
         if len(translated_metrics) == 1
         else lambda v: v
     )
@@ -545,9 +542,7 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _render_value(unit_spec: UnitInfo | ConvertibleUnitSpecification, value: float) -> str:
-        if isinstance(unit_spec, UnitInfo):
-            return (unit_spec.perfometer_render or unit_spec.render)(value)
+    def _render_value(unit_spec: ConvertibleUnitSpecification, value: float) -> str:
         return user_specific_unit(unit_spec, user, active_config).formatter.render(value)
 
 
@@ -586,7 +581,11 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return get_render_function(first_segment.unit_spec)(
+        return user_specific_unit(
+            first_segment.unit_spec,
+            user,
+            active_config,
+        ).formatter.render(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value

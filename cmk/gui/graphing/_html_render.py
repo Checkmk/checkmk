@@ -26,6 +26,7 @@ from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -60,7 +61,6 @@ from ._graph_render_config import (
     GraphTitleFormat,
 )
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
-from ._legacy import get_render_function, get_unit_info, LegacyUnitSpecification
 from ._utils import SizeEx
 
 RenderOutput = HTML | str
@@ -1010,11 +1010,11 @@ def _render_ajax_graph_hover(
         "curve_values": list(
             compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(curves),
-                get_render_function(
-                    get_unit_info(graph_recipe.unit_spec.id)
-                    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)
-                    else graph_recipe.unit_spec
-                ),
+                user_specific_unit(
+                    graph_recipe.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render,
                 hover_time,
             )
         ),

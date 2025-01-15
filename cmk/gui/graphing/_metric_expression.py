@@ -20,7 +20,6 @@ from cmk.graphing.v1 import metrics as metrics_api
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._formatter import AutoPrecision, StrictPrecision
 from ._from_api import parse_unit_from_api
-from ._legacy import get_unit_info, unit_info, UnitInfo
 from ._metric_operation import GraphConsolidationFunction, line_type_mirror, LineType
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
@@ -37,15 +36,10 @@ _FALLBACK_UNIT_SPEC_INT = ConvertibleUnitSpecification(
 
 
 def _unit_mult(
-    left_unit_spec: UnitInfo | ConvertibleUnitSpecification,
-    right_unit_spec: UnitInfo | ConvertibleUnitSpecification,
-) -> UnitInfo | ConvertibleUnitSpecification:
+    left_unit_spec: ConvertibleUnitSpecification,
+    right_unit_spec: ConvertibleUnitSpecification,
+) -> ConvertibleUnitSpecification:
     # TODO: real unit computation!
-    if isinstance(left_unit_spec, UnitInfo) and left_unit_spec in (
-        unit_info[""],
-        unit_info["count"],
-    ):
-        return right_unit_spec
     if (
         isinstance(left_unit_spec, ConvertibleUnitSpecification)
         and not left_unit_spec.notation.symbol
@@ -56,24 +50,24 @@ def _unit_mult(
 
 _unit_div: Callable[
     [
-        UnitInfo | ConvertibleUnitSpecification,
-        UnitInfo | ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
     ],
-    UnitInfo | ConvertibleUnitSpecification,
+    ConvertibleUnitSpecification,
 ] = _unit_mult
 _unit_add: Callable[
     [
-        UnitInfo | ConvertibleUnitSpecification,
-        UnitInfo | ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
     ],
-    UnitInfo | ConvertibleUnitSpecification,
+    ConvertibleUnitSpecification,
 ] = _unit_mult
 _unit_sub: Callable[
     [
-        UnitInfo | ConvertibleUnitSpecification,
-        UnitInfo | ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
+        ConvertibleUnitSpecification,
     ],
-    UnitInfo | ConvertibleUnitSpecification,
+    ConvertibleUnitSpecification,
 ] = _unit_mult
 
 
@@ -88,7 +82,7 @@ def _choose_operator_color(a: str, b: str) -> str:
 @dataclass(frozen=True)
 class BaseEvaluated:
     value: int | float
-    unit_spec: ConvertibleUnitSpecification | UnitInfo
+    unit_spec: ConvertibleUnitSpecification
     color: str
 
 
@@ -615,7 +609,7 @@ class Merge(BaseMetricExpression):
 class Evaluated:
     base: BaseMetricExpression
     value: int | float
-    unit_spec: ConvertibleUnitSpecification | UnitInfo
+    unit_spec: ConvertibleUnitSpecification
     color: str
     line_type: LineType
     title: str
@@ -641,7 +635,7 @@ class Evaluated:
 class MetricExpression:
     base: BaseMetricExpression
     _: KW_ONLY
-    unit_spec: ConvertibleUnitSpecification | str | None = None
+    unit_spec: ConvertibleUnitSpecification | None = None
     color: str = ""
     line_type: LineType
     title: str = ""
@@ -667,11 +661,7 @@ class MetricExpression:
             Evaluated(
                 self.base,
                 result.ok.value,
-                (
-                    get_unit_info(self.unit_spec)
-                    if isinstance(self.unit_spec, str)
-                    else (self.unit_spec or result.ok.unit_spec)
-                ),
+                self.unit_spec or result.ok.unit_spec,
                 self.color or result.ok.color,
                 self.line_type,
                 _title(),

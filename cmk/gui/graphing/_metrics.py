@@ -15,7 +15,6 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._formatter import AutoPrecision
 from ._from_api import metrics_from_api
-from ._legacy import UnitInfo
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
 
 
@@ -23,7 +22,7 @@ from ._unit import ConvertibleUnitSpecification, DecimalNotation
 class MetricSpec:
     name: MetricName
     title: str
-    unit_spec: UnitInfo | ConvertibleUnitSpecification
+    unit_spec: ConvertibleUnitSpecification
     color: str
 
 

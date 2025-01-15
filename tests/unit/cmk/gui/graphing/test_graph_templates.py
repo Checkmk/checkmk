@@ -34,7 +34,6 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._legacy import get_render_function
 from cmk.gui.graphing._metric_expression import (
     BaseMetricExpression,
     Constant,
@@ -59,7 +58,8 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -252,7 +252,11 @@ def test_horizontal_rules_from_thresholds(
     assert [
         HorizontalRule(
             value=e.value,
-            rendered_value=get_render_function(e.unit_spec)(e.value),
+            rendered_value=user_specific_unit(
+                e.unit_spec,
+                user,
+                active_config,
+            ).formatter.render(e.value),
             color=e.color,
             title=e.title,
         )

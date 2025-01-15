@@ -21,7 +21,6 @@ from pydantic import (
 from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
-from ._legacy import LegacyUnitSpecification
 from ._metric_operation import (
     GraphConsolidationFunction,
     LineType,
@@ -42,7 +41,7 @@ class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
     operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
-    unit: str | ConvertibleUnitSpecification
+    unit: ConvertibleUnitSpecification
     color: str
 
 
@@ -110,9 +109,9 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
 
 class GraphRecipe(BaseModel, frozen=True):
     title: str
-    unit_spec: (
-        ConvertibleUnitSpecification | NonConvertibleUnitSpecification | LegacyUnitSpecification
-    ) = Field(discriminator="type")
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification = Field(
+        discriminator="type"
+    )
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool

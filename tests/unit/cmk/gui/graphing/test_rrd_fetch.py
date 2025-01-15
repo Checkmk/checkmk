@@ -72,7 +72,9 @@ _GRAPH_RECIPE = GraphRecipe(
                 scale=1,
             ),
             color="#ffa000",
-            unit="c",
+            unit=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"), precision=AutoPrecision(digits=2)
+            ),
         )
     ],
     unit_spec=ConvertibleUnitSpecification(

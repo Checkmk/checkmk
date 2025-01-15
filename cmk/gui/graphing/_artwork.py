@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
@@ -33,7 +32,6 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
 from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._time_series import TimeSeries, TimeSeriesValue
@@ -150,23 +148,16 @@ def compute_graph_artwork(
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_spec: UserSpecificUnit | UnitInfo
-
-    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification):
-        unit_spec = get_unit_info(graph_recipe.unit_spec.id)
-        renderer = unit_spec.render
-    else:
-        unit_spec = user_specific_unit(
-            graph_recipe.unit_spec,
-            user,
-            active_config,
-        )
-        renderer = unit_spec.formatter.render
+    unit_spec = user_specific_unit(
+        graph_recipe.unit_spec,
+        user,
+        active_config,
+    )
 
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 
     pin_time = _load_graph_pin()
-    _compute_scalars(renderer, curves, pin_time)
+    _compute_scalars(unit_spec.formatter.render, curves, pin_time)
     layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
     width, height = size
 
@@ -601,91 +592,6 @@ class _VAxisMinMax:
     label_range: tuple[float, float]
 
 
-def _render_legacy_labels(
-    height_ex: SizeEx,
-    v_axis_min_max: _VAxisMinMax,
-    unit_info: UnitInfo,
-    mirrored: bool,
-) -> tuple[Sequence[VerticalAxisLabel], int, str | None]:
-    # Guestimate a useful number of vertical labels
-    # max(2, ...)               -> show at least two labels
-    # height_ex - 2             -> add some overall spacing
-    # math.log(height_ex) * 1.6 -> spacing between labels, increase for higher graphs
-    num_v_labels = max(2, (height_ex - 2) / math.log(height_ex) * 1.6) if height_ex > 1 else 0
-
-    # The value range between single labels
-    label_distance_at_least = float(v_axis_min_max.distance) / max(num_v_labels, 1)
-
-    # The stepping of the labels is not always decimal, where
-    # we choose distances like 10, 20, 50. It can also be "binary", where
-    # we have 512, 1024, etc. or "time", where we have seconds, minutes,
-    # days
-    stepping = unit_info.stepping or "decimal"
-
-    if stepping == "integer":
-        label_distance_at_least = max(label_distance_at_least, 1)  # e.g. for unit type "count"
-
-    divide_by = 1.0
-
-    if stepping == "binary":
-        base = 16
-        steps: list[tuple[float, float]] = [
-            (2, 0.5),
-            (4, 1),
-            (8, 2),
-            (16, 4),
-        ]
-
-    elif stepping == "time":
-        if v_axis_min_max.label_range[1] > 3600 * 24:
-            divide_by = 86400.0
-            base = 10
-            steps = [(2, 0.5), (5, 1), (10, 2)]
-        elif v_axis_min_max.label_range[1] >= 10:
-            base = 60
-            steps = [(2, 0.5), (3, 0.5), (5, 1), (10, 2), (20, 5), (30, 5), (60, 10)]
-        else:  # ms
-            base = 10
-            steps = [(2, 0.5), (5, 1), (10, 2)]
-
-    elif stepping == "integer":
-        base = 10
-        steps = [(2, 0.5), (5, 1), (10, 2)]
-
-    else:  # "decimal"
-        base = 10
-        steps = [(2, 0.5), (2.5, 0.5), (5, 1), (10, 2)]
-
-    mantissa, exponent = cmk.utils.render._frexpb(label_distance_at_least / divide_by, base)
-
-    # We draw a label at either 1, 2, or 5 of the choosen
-    # exponent
-    for step, substep in steps:
-        if mantissa <= step:
-            mantissa = step
-            submantissa = substep
-            break
-
-    # Both are in value ranges, not coordinates or similar. These are calculated later
-    # by _create_vertical_axis_labels().
-    label_distance = mantissa * (base**exponent) * divide_by
-    sub_distance = submantissa * (base**exponent) * divide_by
-
-    # We need to round the position of the labels. Otherwise some
-    # strange things can happen due to internal precision limitation.
-    # Here we compute the number of decimal digits we need
-
-    # Adds "labels", "max_label_length" and updates "axis_label" in case
-    # of units which use a graph global unit
-    return _create_vertical_axis_labels(
-        v_axis_min_max.label_range,
-        unit_info,
-        label_distance,
-        sub_distance,
-        mirrored,
-    )
-
-
 # Compute the displayed vertical range and the labelling
 # and scale of the vertical axis.
 # If mirrored == True, then the graph uses the negative
@@ -694,7 +600,7 @@ def _render_legacy_labels(
 #
 # height -> Graph area height in ex
 def _compute_graph_v_axis(
-    unit_spec: UserSpecificUnit | UnitInfo,
+    unit_spec: UserSpecificUnit,
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     graph_data_range: GraphDataRange,
     height_ex: SizeEx,
@@ -712,46 +618,28 @@ def _compute_graph_v_axis(
         mirrored,
         height_ex,
     )
-
-    if isinstance(unit_spec, UserSpecificUnit):
-        labels = _compute_labels_from_api(
-            unit_spec.formatter,
-            height_ex,
-            mirrored,
-            min_y=v_axis_min_max.label_range[0],
-            max_y=v_axis_min_max.label_range[1],
-        )
-        label_positions = [l.position for l in labels]
-        label_range = (
-            min([v_axis_min_max.label_range[0]] + label_positions),
-            max([v_axis_min_max.label_range[1]] + label_positions),
-        )
-        rendered_labels: Sequence[VerticalAxisLabel] = [
-            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
-            for label in labels
-        ]
-        max_label_length = max(len(l.text) for l in rendered_labels)
-        graph_unit = None
-    else:
-        rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
-            height_ex,
-            v_axis_min_max,
-            unit_spec,
-            mirrored,
-        )
-        label_range = v_axis_min_max.label_range
-
-    v_axis = VerticalAxis(
+    labels = _compute_labels_from_api(
+        unit_spec.formatter,
+        height_ex,
+        mirrored,
+        min_y=v_axis_min_max.label_range[0],
+        max_y=v_axis_min_max.label_range[1],
+    )
+    label_positions = [l.position for l in labels]
+    label_range = (
+        min([v_axis_min_max.label_range[0]] + label_positions),
+        max([v_axis_min_max.label_range[1]] + label_positions),
+    )
+    rendered_labels = [
+        VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
+        for label in labels
+    ]
+    return VerticalAxis(
         range=label_range,
         axis_label=None,
         labels=rendered_labels,
-        max_label_length=max_label_length,
+        max_label_length=max(len(l.text) for l in rendered_labels),
     )
-
-    if graph_unit is not None:
-        v_axis["axis_label"] = graph_unit
-
-    return v_axis
 
 
 def _compute_min_max(
@@ -858,55 +746,6 @@ def _compute_v_axis_min_max(
     return _VAxisMinMax(distance, (min_value, max_value))
 
 
-# Create labels for the necessary range
-def _create_vertical_axis_labels(
-    label_range: tuple[float, float],
-    unit_info: UnitInfo,
-    label_distance: float,
-    sub_distance: float,
-    mirrored: bool,
-) -> tuple[list[VerticalAxisLabel], int, str | None]:
-    min_value, max_value = label_range
-    # round_to is the precision (number of digits after the decimal point)
-    # that we round labels to.
-    round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))
-
-    frac, full = math.modf(min_value / sub_distance)
-    if min_value >= 0:
-        pos = full * sub_distance
-    else:
-        if frac != 0:
-            full -= 1.0
-        pos = full * sub_distance
-
-    # First determine where to put labels and store the label value
-    label_specs = []
-    while pos <= max_value:
-        pos = round(pos, round_to)
-
-        if pos >= min_value and (
-            label_spec := _label_spec(
-                position=pos,
-                label_distance=label_distance,
-                mirrored=mirrored,
-            )
-        ):
-            label_specs.append(label_spec)
-            if len(label_specs) > 1000:
-                break  # avoid memory exhaustion in case of error
-
-        # Make sure that we increase position at least that much that it
-        # will not fall back to its old value due to rounding! This once created
-        # a nice endless loop.
-        pos += max(sub_distance, 10**-round_to)
-
-    # Now render the single label values. When the unit has a function to calculate
-    # a graph global unit, use it. Otherwise add units to all labels individually.
-    if unit_info.graph_unit:
-        return _render_labels_with_graph_unit(label_specs, unit_info.graph_unit)
-    return _render_labels_with_individual_units(label_specs, unit_info)
-
-
 def _label_spec(
     *,
     position: float,
@@ -922,44 +761,6 @@ def _label_spec(
 
         return (position, label_value, 2)
     return None
-
-
-def _render_labels_with_individual_units(
-    label_specs: Sequence[tuple[float, float, int]], unit_info: UnitInfo
-) -> tuple[list[VerticalAxisLabel], int, None]:
-    rendered_labels, max_label_length = render_labels(
-        (
-            label_spec[0],
-            _render_label_value(label_spec[1], render_func=unit_info.render),
-            label_spec[2],
-        )
-        for label_spec in label_specs
-    )
-    return rendered_labels, max_label_length, None
-
-
-def _render_labels_with_graph_unit(
-    label_specs: Sequence[tuple[float, float, int]],
-    graph_unit_func: Callable[[list[float]], tuple[str, list[str]]],
-) -> tuple[list[VerticalAxisLabel], int, str]:
-    graph_unit, scaled_labels = graph_unit_func([l[1] for l in label_specs if l[1] != 0])
-
-    rendered_labels, max_label_length = render_labels(
-        (
-            label_spec[0],
-            _render_label_value(0) if label_spec[1] == 0 else scaled_labels.pop(0),
-            label_spec[2],
-        )
-        for label_spec in label_specs
-    )
-    return rendered_labels, max_label_length, graph_unit
-
-
-def _render_label_value(
-    label_value: float,
-    render_func: Callable[[float], str] = str,
-) -> str:
-    return "0" if label_value == 0 else render_func(label_value)
 
 
 def render_labels(

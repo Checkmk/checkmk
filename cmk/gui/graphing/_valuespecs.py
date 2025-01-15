@@ -43,7 +43,7 @@ from ..config import active_config
 from ._formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
 from ._from_api import metrics_from_api
 from ._graph_render_config import GraphRenderConfigBase
-from ._legacy import check_metrics, unit_info, UnitInfo
+from ._legacy import check_metrics
 from ._metrics import get_metric_spec, registered_metrics
 from ._translated_metrics import (
     find_matching_translation,
@@ -334,16 +334,6 @@ _FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
 
 
 def _sorted_unit_choices() -> list[_UnitChoice]:
-    return _sorted_api_and_fallback_unit_choices() + sorted(
-        (
-            _unit_choice_from_unit_info(registered_unit_info)
-            for _id, registered_unit_info in unit_info.items()
-        ),
-        key=lambda choice: choice.title,
-    )
-
-
-def _sorted_api_and_fallback_unit_choices() -> list[_UnitChoice]:
     return sorted(
         {_unit_choice_from_unit_spec(metric.unit_spec) for metric in metrics_from_api.values()}
         | {_unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)},
@@ -419,24 +409,11 @@ def _vs_type_from_formatter(
     return Float
 
 
-def _unit_choice_from_unit_info(unit_info_: UnitInfo) -> _UnitChoice:
-    return _UnitChoice(
-        id=unit_info_.id,
-        title=unit_info_.description or unit_info_.title,
-        symbol=unit_info_.symbol,
-        vs_type=unit_info_.valuespec or Float,
-    )
-
-
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         if metric_name := self.webapi_request()["metric"]:
             metric_spec = get_metric_spec(metric_name)
-            unit_choice_for_metric = (
-                _unit_choice_from_unit_spec(metric_spec.unit_spec)
-                if isinstance(metric_spec.unit_spec, ConvertibleUnitSpecification)
-                else _unit_choice_from_unit_info(metric_spec.unit_spec)
-            )
+            unit_choice_for_metric = _unit_choice_from_unit_spec(metric_spec.unit_spec)
         else:
             unit_choice_for_metric = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)
 

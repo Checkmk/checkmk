@@ -22,16 +22,15 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
-    get_conversion_function,
-    get_unit_info,
-    LegacyUnitSpecification,
 )
 from ._metric_operation import (
     GraphConsolidationFunction,
@@ -43,17 +42,14 @@ from ._metric_operation import (
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries, TimeSeriesValues
 from ._translated_metrics import find_matching_translation, TranslationSpec
+from ._unit import user_specific_unit
 
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    conversion = get_conversion_function(
-        get_unit_info(graph_recipe.unit_spec.id)
-        if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)
-        else graph_recipe.unit_spec
-    )
+    conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
@@ -334,5 +330,7 @@ def translate_and_merge_rrd_columns(
         end=timeseries.end,
         step=timeseries.step,
         values=single_value_series,
-        conversion=get_conversion_function(get_metric_spec(metric_name).unit_spec),
+        conversion=user_specific_unit(
+            get_metric_spec(metric_name).unit_spec, user, active_config
+        ).conversion,
     )

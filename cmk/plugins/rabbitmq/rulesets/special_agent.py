@@ -26,7 +26,12 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _form_spec_special_agents_rabbitmq():
     return Dictionary(
         title=Title("RabbitMQ"),
-        help_text=Help("Requests data from a RabbitMQ instance."),
+        help_text=Help(
+            "Request data from a RabbitMQ instance."
+            " This special agent queries the HTTP API provided by"
+            " RabbitMQs 'Management Plugin'. You need to enable this"
+            " plugin in your RabbitMQ instance."
+        ),
         elements={
             "instance": DictElement(
                 required=False,

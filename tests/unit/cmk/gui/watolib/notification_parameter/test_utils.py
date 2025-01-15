@@ -82,7 +82,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "bar"}},
         },
     )
@@ -108,7 +108,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
         ),
         pytest.param(
             {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
                 "parameter_properties": {"test_param": ""},
             },
             id="empty value",

@@ -70,25 +70,13 @@ def _print_config(config: Config) -> None:
             )
 
 
-def _resolve_paths(plugins: Mapping[str, dict[str, Any]]) -> None:
-    for plugin in plugins.values():
-        resolved: list[str] = []
-        for path in plugin.get("cleanup_paths", []):
-            # Make relative paths absolute ones
-            if path[0] != "/":
-                path = str(omd_root / path)
-
-            # Resolve given path pattern to really existing files.
-            # Also ensure that the files in the resolved list do really exist.
-            resolved += glob.glob(path)
-
-        if resolved:
-            plugin["cleanup_paths"] = resolved
-        elif "cleanup_paths" in plugin:
-            del plugin["cleanup_paths"]
+@dataclass(frozen=True)
+class _Info:
+    plugin_name: str
+    path_to_mod_time: Mapping[str, float]
 
 
-def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> dict[str, dict[str, Any]]:
+def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
     try:
         local_plugins: list[str] = list(p.name for p in plugin_dir_local.iterdir())
     except OSError:
@@ -104,29 +92,33 @@ def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> dict[str, dict[st
 
             plugins[file_name] = {}
 
-            path = base_dir / file_name
-            _verbose(f"Loading plugin: {path}")
+            plugin_path = base_dir / file_name
+            _verbose(f"Loading plugin: {plugin_path}")
             try:
                 exec(  # nosec B102 # BNS:aee528
-                    path.read_text(),
+                    plugin_path.read_text(),
                     plugins[file_name],
                     plugins[file_name],
                 )
             except Exception as e:
-                _error(f'Exception while loading plugin "{path}": {e}')
+                _error(f'Exception while loading plugin "{plugin_path}": {e}')
 
     # Now transform all path patterns to absolute paths for really existing files
-    _resolve_paths(plugins)
-    return plugins
+    for plugin in plugins.values():
+        resolved: list[str] = []
+        for path in plugin.get("cleanup_paths", []):
+            # Make relative paths absolute ones
+            if path[0] != "/":
+                path = str(omd_root / path)
 
+            # Resolve given path pattern to really existing files.
+            # Also ensure that the files in the resolved list do really exist.
+            resolved += glob.glob(path)
 
-@dataclass(frozen=True)
-class _Info:
-    plugin_name: str
-    path_to_mod_time: Mapping[str, float]
-
-
-def _collect_file_infos(plugins: Mapping[str, Mapping[str, Any]]) -> list[_Info]:
+        if resolved:
+            plugin["cleanup_paths"] = resolved
+        elif "cleanup_paths" in plugin:
+            del plugin["cleanup_paths"]
     infos = []
     for plugin in plugins.values():
         path_to_mod_time = plugin.get("file_infos", {})
@@ -386,8 +378,7 @@ def main() -> None:
     _setup_logging("-v" in sys.argv)
     config = read_config(diskspace_config_dir)
     _print_config(config)
-    plugins = _load_plugins(omd_root / "share/diskspace", omd_root / "local/share/diskspace")
-    infos = _collect_file_infos(plugins)
+    infos = _load_plugins(omd_root / "share/diskspace", omd_root / "local/share/diskspace")
 
     _do_cleanup_abandoned_host_files(config.cleanup_abandoned_host_files)
 

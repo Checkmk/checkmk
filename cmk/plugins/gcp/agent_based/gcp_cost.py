@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -40,7 +41,10 @@ class Cost(BaseModel):
         return datetime.datetime.strptime(value, "%Y%m")
 
     def to_details(self) -> str:
-        return f"{self.month.strftime('%B %Y')}: {self.amount:.2f} {self.currency}"
+        return f"{self.date()}: {self.amount:.2f} {self.currency}"
+
+    def date(self) -> str:
+        return self.month.strftime("%B %Y")
 
 
 @dataclass(frozen=True)
@@ -95,19 +99,16 @@ def check(item: str, params: Mapping[str, Any], section: Section) -> CheckResult
         return
     project_costs = section[item]
     current_month = project_costs.current_month
-    previous_month = project_costs.previous_month
-    state = State.OK
-    if levels := params.get("levels"):
-        if current_month.amount > levels[1]:
-            state = State.CRIT
-        elif current_month.amount > levels[0]:
-            state = State.WARN
-    prev_month_details = f", {previous_month.to_details()}" if previous_month else ""
-    yield Result(
-        state=state,
-        summary=f"Project: {current_month.project}, Cost: {current_month.amount} {current_month.currency}",
-        details=f"{current_month.to_details()}{prev_month_details}",
+
+    yield from check_levels(
+        value=current_month.amount,
+        label=current_month.date(),
+        levels_upper=params["levels"],
+        render_func=lambda x: f"{x:.2f} {current_month.currency}",
     )
+
+    if previous_month := project_costs.previous_month:
+        yield Result(state=State.OK, notice=previous_month.to_details())
 
 
 check_plugin_gcp_cost = CheckPlugin(

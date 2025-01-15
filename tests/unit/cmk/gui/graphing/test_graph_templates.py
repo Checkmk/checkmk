@@ -34,7 +34,7 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
+from cmk.gui.graphing._legacy import get_render_function
 from cmk.gui.graphing._metric_expression import (
     BaseMetricExpression,
     Constant,
@@ -1015,128 +1015,6 @@ def test__parse_bidirectional_from_api(
             )
         )
     assert _parse_bidirectional_from_api(graph.name, graph) == expected_template
-
-
-@pytest.mark.parametrize(
-    "raw, expected_graph_template",
-    [
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[],
-                scalars=["metric", "metric:warn", "metric:crit"],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="metric",
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric")),
-                        line_type="line",
-                        title="Warning",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric")),
-                        line_type="line",
-                        title="Critical",
-                    ),
-                ],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[],
-            ),
-            id="scalar str",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[],
-                scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="Title",
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric")),
-                        line_type="line",
-                        title="Warn",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric")),
-                        line_type="line",
-                        title="Crit",
-                    ),
-                ],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[],
-            ),
-            id="scalar tuple",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[("metric", "line")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[
-                    MetricExpression(Metric("metric"), line_type="line"),
-                ],
-            ),
-            id="metrics 2-er tuple",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[("metric", "line", "Title")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="Title",
-                    ),
-                ],
-            ),
-            id="metrics 3-er tuple",
-        ),
-    ],
-)
-def test__parse_graph_plugin(
-    raw: RawGraphTemplate,
-    expected_graph_template: GraphTemplate,
-) -> None:
-    assert _parse_graph_plugin("ident", raw) == expected_graph_template
 
 
 @pytest.mark.parametrize(

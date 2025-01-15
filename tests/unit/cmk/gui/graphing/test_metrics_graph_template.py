@@ -3,99 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.graphing._graph_templates as gt
-from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._metric_expression import parse_legacy_expression
-from cmk.gui.graphing._metric_operation import (
-    MetricOpConstant,
-    MetricOperation,
-    MetricOpOperator,
-    MetricOpRRDSource,
-)
-from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
+from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
-
-
-@pytest.mark.parametrize(
-    "raw_expression, result",
-    [
-        (
-            "fs_size,fs_used,-",
-            MetricOpOperator(
-                operator_name="-",
-                operands=[
-                    MetricOpRRDSource(
-                        site_id=SiteId(""),
-                        host_name=HostName(""),
-                        service_name="",
-                        metric_name="fs_size",
-                        consolidation_func_name=None,
-                        scale=1048576,
-                    ),
-                    MetricOpRRDSource(
-                        site_id=SiteId(""),
-                        host_name=HostName(""),
-                        service_name="",
-                        metric_name="_",
-                        consolidation_func_name=None,
-                        scale=1048576,
-                    ),
-                ],
-            ),
-        ),
-        (
-            "fs_growth.min,0,MIN,-1,*",
-            MetricOpOperator(
-                operator_name="*",
-                operands=[
-                    MetricOpOperator(
-                        operator_name="MIN",
-                        operands=[
-                            MetricOpRRDSource(
-                                site_id=SiteId(""),
-                                host_name=HostName(""),
-                                service_name="",
-                                metric_name="growth",
-                                consolidation_func_name="min",
-                                scale=12.136296296296296,
-                            ),
-                            MetricOpConstant(value=0.0),
-                        ],
-                    ),
-                    MetricOpConstant(value=-1.0),
-                ],
-            ),
-        ),
-    ],
-)
-def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
-    perf_data, check_command = parse_perf_data(
-        "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
-        "check_mk-df",
-        config=active_config,
-    )
-    translated_metrics = translate_metrics(perf_data, check_command)
-    assert (
-        gt.metric_expression_to_graph_recipe_expression(
-            SiteId(""),
-            HostName(""),
-            "",
-            parse_legacy_expression(raw_expression, "line", "", translated_metrics).base,
-            translated_metrics,
-            None,
-        )
-        == result
-    )
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):
@@ -233,76 +150,3 @@ def test_template_recipes() -> None:
             ),
         ),
     ]
-
-
-@pytest.mark.parametrize(
-    "expression, perf_data_string, check_command, result_color",
-    [
-        (
-            "load15",
-            "load1=0.38;40;80;0;8 load5=0.62;40;80;0;8 load15=0.68;40;80;0;8",
-            "check_mk-cpu.loads",
-            "#1873cc",
-        ),
-        ("test", "test=5;5;10;0;20", "check_mk-local", "#cc00ff"),
-    ],
-)
-def test_metric_unit_color(
-    expression: str, perf_data_string: str, check_command: str | None, result_color: str
-) -> None:
-    perf_data, check_command = parse_perf_data(
-        perf_data_string, check_command, config=active_config
-    )
-    translated_metrics = translate_metrics(perf_data, check_command)
-    translated_metric = translated_metrics.get(expression)
-    assert translated_metric is not None
-    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
-        translated_metrics
-    )
-    assert evaluated.is_ok()
-    assert evaluated.ok.unit_spec == (
-        translated_metric.unit_spec
-        if isinstance(translated_metric.unit_spec, ConvertibleUnitSpecification)
-        else translated_metric.unit_spec.id
-    )
-    assert evaluated.ok.color == result_color
-
-
-@pytest.mark.parametrize(
-    "expression, perf_data_string, check_command",
-    [
-        ("test", "", "check_mk-local"),
-    ],
-)
-def test_metric_unit_color_skip(
-    expression: str, perf_data_string: str, check_command: str | None
-) -> None:
-    perf_data, check_command = parse_perf_data(
-        perf_data_string, check_command, config=active_config
-    )
-    translated_metrics = translate_metrics(perf_data, check_command)
-    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
-        translated_metrics
-    )
-    assert evaluated.is_error()
-    assert evaluated.error.metric_name == "test"
-
-
-@pytest.mark.parametrize(
-    "expression, perf_data_string, check_command",
-    [
-        ("level,altitude,+", "test=5;5;10;0;20", "check_mk-local"),
-    ],
-)
-def test_metric_unit_color_exception(
-    expression: str, perf_data_string: str, check_command: str | None
-) -> None:
-    perf_data, check_command = parse_perf_data(
-        perf_data_string, check_command, config=active_config
-    )
-    translated_metrics = translate_metrics(perf_data, check_command)
-    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
-        translated_metrics
-    )
-    assert evaluated.is_error()
-    assert evaluated.error.metric_name == "level"

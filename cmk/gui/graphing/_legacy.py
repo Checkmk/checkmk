@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import Final, Literal, NotRequired, TypedDict
 
@@ -160,62 +159,6 @@ class MetricInfo(_MetricInfoMandatory, total=False):
 
 
 metric_info: dict[MetricName, MetricInfo] = {}
-
-
-# .
-#   .--graphs--------------------------------------------------------------.
-#   |                                         _                            |
-#   |                    __ _ _ __ __ _ _ __ | |__  ___                    |
-#   |                   / _` | '__/ _` | '_ \| '_ \/ __|                   |
-#   |                  | (_| | | | (_| | |_) | | | \__ \                   |
-#   |                   \__, |_|  \__,_| .__/|_| |_|___/                   |
-#   |                   |___/          |_|                                 |
-#   '----------------------------------------------------------------------'
-
-
-class RawGraphTemplate(TypedDict):
-    metrics: Sequence[
-        tuple[str, Literal["line", "area", "stack", "-line", "-area", "-stack"]]
-        | tuple[str, Literal["line", "area", "stack", "-line", "-area", "-stack"], str]
-        | tuple[str, Literal["line", "area", "stack", "-line", "-area", "-stack"], LazyString]
-    ]
-    title: NotRequired[str | LazyString]
-    scalars: NotRequired[Sequence[str | tuple[str, str | LazyString]]]
-    conflicting_metrics: NotRequired[Sequence[str]]
-    optional_metrics: NotRequired[Sequence[str]]
-    consolidation_function: NotRequired[Literal["max", "min", "average"]]
-    range: NotRequired[tuple[int | str, int | str]]
-    omit_zero_metrics: NotRequired[bool]
-
-
-class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
-    """Dictionary class with the ability of appending items like provided
-    by a list."""
-
-    def __init__(self, list_identifier: str | None = None, start_index: int | None = None) -> None:
-        super().__init__(self)
-        self._list_identifier = list_identifier or "item"
-        self._item_index = start_index or 0
-
-    def append(self, item: RawGraphTemplate) -> None:
-        # Avoid duplicate graph definitions in case the metric plug-ins are loaded multiple times.
-        # Otherwise, we get duplicate graphs in the UI.
-        if self._item_already_appended(item):
-            return
-        self["%s_%i" % (self._list_identifier, self._item_index)] = item
-        self._item_index += 1
-
-    def _item_already_appended(self, item: RawGraphTemplate) -> bool:
-        return item in [
-            graph_template
-            for graph_template_id, graph_template in self.items()
-            if graph_template_id.startswith(self._list_identifier)
-        ]
-
-
-# _AutomaticDict is used here to provide some list methods.
-# This is needed to maintain backwards-compatibility.
-graph_info = AutomaticDict("manual_graph_template")
 
 
 # .

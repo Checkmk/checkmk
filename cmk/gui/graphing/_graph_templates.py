@@ -24,7 +24,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, VisualContext
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals import livestatus_query_bare
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -41,7 +40,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_2_2
-from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
+from ._legacy import get_render_function, LegacyUnitSpecification
 from ._metric_expression import (
     Average,
     BaseMetricExpression,
@@ -59,15 +58,12 @@ from ._metric_expression import (
     MinimumOf,
     parse_base_expression_from_api,
     parse_expression_from_api,
-    parse_legacy_base_expression,
-    parse_legacy_expression,
     Product,
     Sum,
     WarningOf,
 )
 from ._metric_operation import (
     GraphConsolidationFunction,
-    LineType,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
@@ -77,22 +73,8 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _collect_graph_plugins() -> Iterator[
-    tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
-]:
-    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    known_plugins: set[str] = set()
-    for graph in graphs_from_api.values():
-        if isinstance(graph, (graphs_api.Graph, graphs_api.Bidirectional)):
-            known_plugins.add(graph.name)
-            yield graph.name, graph
-    for template_id, template in graph_info.items():
-        if template_id not in known_plugins:
-            yield template_id, template
-
-
 def _get_sorted_graph_plugins() -> Sequence[
-    tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
+    tuple[str, graphs_api.Graph | graphs_api.Bidirectional]
 ]:
     def _by_index(graph_name: str) -> int:
         try:
@@ -100,15 +82,11 @@ def _get_sorted_graph_plugins() -> Sequence[
         except ValueError:
             return -1
 
-    return sorted(list(_collect_graph_plugins()), key=lambda t: _by_index(t[0]))
+    return sorted(graphs_from_api.items(), key=lambda t: _by_index(t[0]))
 
 
-def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate) -> str:
-    match template:
-        case graphs_api.Graph() | graphs_api.Bidirectional():
-            return template.title.localize(translate_to_current_language)
-        case _:
-            return str(template.get("title", ""))
+def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional) -> str:
+    return template.title.localize(translate_to_current_language)
 
 
 @dataclass(frozen=True)
@@ -121,7 +99,10 @@ def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _collect_graph_plugins()],
+        [
+            GraphTemplateChoice(graph.name, _parse_title(graph))
+            for graph in graphs_from_api.values()
+        ],
         key=lambda c: c.title,
     )
 
@@ -257,34 +238,8 @@ def _parse_bidirectional_from_api(
     )
 
 
-def _parse_raw_scalar_expression(
-    raw_scalar_expression: str | tuple[str, str | LazyString],
-) -> MetricExpression:
-    if isinstance(raw_scalar_expression, tuple):
-        return parse_legacy_expression(
-            raw_scalar_expression[0], "line", str(raw_scalar_expression[1]), {}
-        )
-
-    if raw_scalar_expression.endswith(":warn"):
-        title = _("Warning")
-    elif raw_scalar_expression.endswith(":crit"):
-        title = _("Critical")
-    else:
-        title = raw_scalar_expression
-    return parse_legacy_expression(raw_scalar_expression, "line", str(title), {})
-
-
-def _parse_raw_metric_expression(
-    raw_metric_expression: (
-        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    ),
-) -> MetricExpression:
-    raw_expression, line_type, *title = raw_metric_expression
-    return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
-
-
 def _parse_graph_plugin(
-    id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
+    id_: str, template: graphs_api.Graph | graphs_api.Bidirectional
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
@@ -292,24 +247,7 @@ def _parse_graph_plugin(
         case graphs_api.Bidirectional():
             return _parse_bidirectional_from_api(id_, template)
         case _:
-            return GraphTemplate(
-                id=id_,
-                title=_parse_title(template),
-                scalars=[_parse_raw_scalar_expression(r) for r in template.get("scalars", [])],
-                conflicting_metrics=template.get("conflicting_metrics", []),
-                optional_metrics=template.get("optional_metrics", []),
-                consolidation_function=template.get("consolidation_function"),
-                range=(
-                    FixedGraphTemplateRange(
-                        min=parse_legacy_base_expression(template_range[0], {}),
-                        max=parse_legacy_base_expression(template_range[1], {}),
-                    )
-                    if (template_range := template.get("range"))
-                    else None
-                ),
-                omit_zero_metrics=template.get("omit_zero_metrics", False),
-                metrics=[_parse_raw_metric_expression(r) for r in template["metrics"]],
-            )
+            assert_never(template)
 
 
 def _create_graph_template_from_name(name: str) -> GraphTemplate:

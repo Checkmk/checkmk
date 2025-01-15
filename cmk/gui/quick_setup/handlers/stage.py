@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -22,7 +22,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
 )
@@ -205,8 +205,15 @@ class StageActionResult(BaseModel, frozen=False):
     @classmethod
     def load_from_job_result(cls, job_id: str) -> "StageActionResult":
         work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
-        result = store.load_text_from_file(cls._file_path(work_dir))
-        return cls.model_validate_json(result)
+        if not os.path.exists(work_dir):
+            raise MKInternalError(None, _("Stage action result not found"))
+        content = store.load_text_from_file(cls._file_path(work_dir))
+        try:
+            return cls.model_validate_json(content)
+        except ValidationError as e:
+            raise MKInternalError(
+                None, f"Error reading stage action result with content: {content}"
+            ) from e
 
     def save_to_file(self, work_dir: str) -> None:
         store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())

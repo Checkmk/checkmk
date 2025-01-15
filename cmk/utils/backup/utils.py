@@ -267,11 +267,13 @@ class ProgressLogger:
         self._state = state
         self._last_state_update = time.time()
         self._last_bps: float | None = None
+        self._bytedif: int = 0
 
     def update(self, bytes_copied: int) -> None:
         timedif = time.time() - self._last_state_update
+        self._bytedif += bytes_copied
         if timedif >= 1:
-            this_bps = bytes_copied / timedif
+            this_bps = self._bytedif / timedif
 
             if self._last_bps is None:
                 bps = this_bps  # initialize the value
@@ -283,6 +285,7 @@ class ProgressLogger:
 
             self._state.update_and_save(bytes_per_second=bps)
             self._last_state_update, self._last_bps = time.time(), bps
+            self._bytedif = 0
 
 
 def do_site_restore(

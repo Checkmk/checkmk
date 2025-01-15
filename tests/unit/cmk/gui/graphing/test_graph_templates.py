@@ -184,22 +184,28 @@ def test__matching_graph_templates(
     )
 
 
-def test__evaluate_title() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
-    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+def test_evaluate_title_ok() -> None:
     assert (
-        gt._evaluate_title("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        gt._evaluate_title(
+            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
+            translate_metrics(
+                [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
+                "check_mk-cpu_loads",
+            ),
+        )
         == "CPU Load - 25 CPU Cores"
     )
 
 
-def test__evaluate_title_missing_scalars() -> None:
-    perfdata: Perfdata = [
-        PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["load1"]
-    ]
-    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+def test_evaluate_title_missing_scalar() -> None:
     assert (
-        gt._evaluate_title("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        gt._evaluate_title(
+            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
+            translate_metrics(
+                [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
+                "check_mk-cpu_loads",
+            ),
+        )
         == "CPU Load"
     )
 

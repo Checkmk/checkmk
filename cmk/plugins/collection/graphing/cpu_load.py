@@ -36,7 +36,7 @@ perfometer_load1 = perfometers.Perfometer(
 
 graph_cpu_load = graphs.Graph(
     name="cpu_load",
-    title=Title("CPU Load - %(load1:max@count) CPU Cores"),
+    title=Title('CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores'),
     compound_lines=["load1"],
     simple_lines=[
         "load5",

@@ -6,15 +6,18 @@
 from __future__ import annotations
 
 import itertools
+import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Literal
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils import pnp_cleanup, regex
+from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -48,15 +51,16 @@ from ._metric_expression import (
     Evaluated,
     Fraction,
     Maximum,
+    MaximumOf,
     Merge,
     Metric,
     MetricExpression,
     Minimum,
+    MinimumOf,
     parse_base_expression_from_api,
     parse_expression_from_api,
     parse_legacy_base_expression,
     parse_legacy_expression,
-    parse_legacy_simple_expression,
     Product,
     Sum,
     WarningOf,
@@ -727,22 +731,52 @@ def _evaluate_predictive_metrics(
 
 
 def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-    """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-    # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
-    # offer such replacements in a generic way.
-    reg = regex.regex(r"%\([^)]*\)")
-    if m := reg.search(title):
-        if (
-            result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
-                translated_metrics
+    # Note: This is not officially supported and only has to work for our internal needs:
+    # CPU load, CPU utilization
+    for serialized_expression in extract_raw_expressions_from_graph_title(title):
+        evaluated_expression = _graph_title_expression_to_metric_expression(
+            _GraphTitleExpression.model_validate_json(serialized_expression[len("_EXPRESSION:") :])
+        ).evaluate(translated_metrics)
+        if evaluated_expression.is_ok():
+            title = title.replace(
+                serialized_expression,
+                str(
+                    # rendering as an integer is hard-coded because it is all we need for now
+                    int(evaluated_expression.ok.value)
+                ),
+                1,
             )
-        ).is_error():
+        else:
             return title.split("-")[0].strip()
-        return reg.sub(
-            get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
-            title,
-        )
     return title
+
+
+def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
+    return re.findall(r"_EXPRESSION:\{.*?\}", title)
+
+
+class _GraphTitleExpression(BaseModel, frozen=True):
+    metric: str
+    scalar: Literal["warn", "crit", "min", "max"]
+
+
+def _graph_title_expression_to_metric_expression(
+    expression: _GraphTitleExpression,
+) -> BaseMetricExpression:
+    metric = Metric(expression.metric, consolidation=None)
+    scalar: BaseMetricExpression
+    match expression.scalar:
+        case "warn":
+            scalar = WarningOf(metric)
+        case "crit":
+            scalar = CriticalOf(metric)
+        case "min":
+            scalar = MinimumOf(metric)
+        case "max":
+            scalar = MaximumOf(metric)
+        case _:
+            assert_never(expression.scalar)
+    return scalar
 
 
 def _evaluate_scalars(

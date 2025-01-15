@@ -22347,6 +22347,11 @@ msgstr ""
 "Vous aurez besoin de la clé privée et de la phrase de passe pour décrypter "
 "la sauvegarde."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Activer la détection des rabats"
 
@@ -23859,7 +23864,7 @@ msgid "Expected update interval"
 msgstr "Intervalle de mise à jour prévu"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Fonctionnalité d'entreprise"
 
 #, fuzzy
@@ -25757,6 +25762,10 @@ msgstr "Réseaux"
 
 msgid "Form factor"
 msgstr "Facteur de forme"
+
+#, fuzzy
+msgid "Form specs"
+msgstr "Pour des SIDs spécifiques"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
@@ -53143,9 +53152,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Rendre les règles verticales entre les colonnes"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 msgid "Repeat"
 msgstr "Répéter"
 
@@ -68581,6 +68587,10 @@ msgstr ""
 "Ces paramètres contrôlent dans quelles circonstances un utilisateur est "
 "autorisé à voir les services et les groupes dans l'interface utilisateur. "
 "<b>Note:</b> Cela n'a <b>aucune</b> incidence sur les notifications."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -88387,10 +88397,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Utilisation du disque"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "Pour des SIDs spécifiques"
 
 #, fuzzy, python-format
 #~ msgid "General value error: %s"

@@ -22175,6 +22175,11 @@ msgstr ""
 "opgegeven sleutel. U hebt de private sleutel en de passphrase nodig om de "
 "backup te decoderen."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Klepdetectie inschakelen"
 
@@ -23675,7 +23680,7 @@ msgid "Expected update interval"
 msgstr "Verwacht update-interval"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Ondernemingsfunctie"
 
 #, fuzzy
@@ -25561,6 +25566,10 @@ msgstr "Netwerken"
 
 msgid "Form factor"
 msgstr "Vormfactor"
+
+#, fuzzy
+msgid "Form specs"
+msgstr "Voor specifieke SID's"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
@@ -52715,9 +52724,6 @@ msgstr "Render de titelbalk inclusief titel en link boven het element."
 msgid "Render vertical rules between columns"
 msgstr "Verticale regels tussen kolommen weergeven"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 #, fuzzy
 msgid "Repeat"
 msgstr "herhalen:"
@@ -67987,6 +67993,10 @@ msgstr ""
 "Deze instellingen bepalen onder welke omstandigheden een gebruiker diensten "
 "en groepen in de gebruikersinterface mag zien. <b>Note:</b> Dit heeft "
 "<b>geen</b> invloed op meldingen."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -87572,10 +87582,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Schijfgebruik"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "Voor specifieke SID's"
 
 #, fuzzy, python-format
 #~ msgid "General value error: %s"

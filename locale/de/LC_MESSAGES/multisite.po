@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-01-14 17:25+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -21410,6 +21410,14 @@ msgstr ""
 "verschlüsselt. Zur Wiederherstellung benötigen Sie den privaten Schlüssel "
 "und das Passwort des Schlüssels."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+"Aktivieren Sie experimentelle Rendering-Modi für Formularvorlagen. Beachten "
+"Sie, dass einige Formularvorgaben immer im Frontend gerendert werden, "
+"unabhängig von dieser Einstellung."
+
 msgid "Enable flap detection"
 msgstr "Flap-Erkennung ein"
 
@@ -22897,7 +22905,8 @@ msgstr "Erwarteter Zustand"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
-msgid "Experimental features"
+#, fuzzy
+msgid "Experimental rendering"
 msgstr "Experimentelle Funktionen"
 
 msgid "Expiration Date"
@@ -24708,6 +24717,9 @@ msgstr "Gabelungen"
 
 msgid "Form factor"
 msgstr "Formfaktor"
+
+msgid "Form specs"
+msgstr "Formularvorgaben"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr "FormSpec und interne Datenstruktur stimmen nicht überein"
@@ -50565,9 +50577,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Vertikale Linien zwischen den Spalten zeichnen"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr "Rendering-Modus für Valuespecs und Tabellen"
-
 msgid "Repeat"
 msgstr "Wiederholen"
 
@@ -65651,6 +65660,12 @@ msgstr ""
 "Diese Einstellungen legen fest, wann ein Benutzer Services und Gruppen in "
 "der Benutzeroberfläche sehen darf. <b>Hinweis:</b> Dies hat <b>keine</"
 "b>Auswirkungen auf Benachrichtigungen."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
+"Diese Einstellungen wirken sich nur auf Funktionen aus, die sich derzeit in "
+"der Entwicklung befinden."
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -84367,6 +84382,9 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "Rendering mode for valuespecs and tables"
+#~ msgstr "Rendering-Modus für Valuespecs und Tabellen"
+
 #~ msgid "Active Calls"
 #~ msgstr "Aktive Anrufe"
 
@@ -84406,18 +84424,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Disk IO Utilization"
 #~ msgstr "E/A-Festplattenauslastung"
-
-#~ msgid ""
-#~ "Enable experimental rendering modes for form specs. Keep in mind thatsome "
-#~ "form specs are always rendered in the frontend, regardless of this "
-#~ "setting."
-#~ msgstr ""
-#~ "Aktivieren Sie experimentelle Rendering-Modi für Formularvorlagen. "
-#~ "Beachten Sie, dass einige Formularvorgaben immer im Frontend gerendert "
-#~ "werden, unabhängig von dieser Einstellung."
-
-#~ msgid "Form specs"
-#~ msgstr "Formularvorgaben"
 
 #, python-format
 #~ msgid "General value error: %s"
@@ -84528,12 +84534,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Tel2IP"
 #~ msgstr "Tel2IP"
-
-#~ msgid ""
-#~ "These settings only affect features that are currently under development."
-#~ msgstr ""
-#~ "Diese Einstellungen wirken sich nur auf Funktionen aus, die sich derzeit "
-#~ "in der Entwicklung befinden."
 
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "Gesamtdauer der SIP/H323 Anrufe"

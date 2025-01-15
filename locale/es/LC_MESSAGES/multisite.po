@@ -22348,6 +22348,11 @@ msgstr ""
 "especificada durante la copia de seguridad. Necesitará la clave privada y la "
 "frase de contraseña para descifrar la copia de seguridad."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Activar la detección de volátiles"
 
@@ -23867,7 +23872,7 @@ msgid "Expected update interval"
 msgstr "Intervalo de actualización previsto"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Característica de la empresa"
 
 #, fuzzy
@@ -25766,6 +25771,10 @@ msgstr "Redes"
 
 msgid "Form factor"
 msgstr "Factor de forma"
+
+#, fuzzy
+msgid "Form specs"
+msgstr "Para las DIM específicas"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
@@ -53155,9 +53164,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Renderizar reglas verticales entre columnas"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 #, fuzzy
 msgid "Repeat"
 msgstr "repite:"
@@ -68573,6 +68579,10 @@ msgstr ""
 "Estos ajustes controlan en qué circunstancias se permite a un usuario ver "
 "los servicios y grupos en la interfaz de usuario. <b>Nota:</b> Esto no tiene "
 "<b>ningún</b> impacto en las notificaciones."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -88294,10 +88304,6 @@ msgstr "Usar SSL para la conexión."
 #, fuzzy
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Utilización del disco"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "Para las DIM específicas"
 
 #, fuzzy, python-format
 #~ msgid "General value error: %s"

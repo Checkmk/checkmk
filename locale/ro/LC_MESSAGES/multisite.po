@@ -22219,6 +22219,11 @@ msgstr ""
 "de rezervă. Veți avea nevoie de cheia privată și de fraza de acces pentru a "
 "decripta copia de rezervă."
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "Activați detectarea clapetei"
 
@@ -23723,7 +23728,7 @@ msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "Caracteristici experimentale"
 
 #, fuzzy
@@ -25607,6 +25612,10 @@ msgstr "Rețele"
 
 msgid "Form factor"
 msgstr "Factor de formă"
+
+#, fuzzy
+msgid "Form specs"
+msgstr "Pentru SID-uri specifice"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
@@ -52783,9 +52792,6 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 msgid "Repeat"
 msgstr "Repetați"
 
@@ -68180,6 +68186,10 @@ msgstr ""
 "permisiunea de a vedea serviciile și grupurile din interfața cu "
 "utilizatorul. <b>Nota: </b> Acest lucru nu are <b> nici un</b> impact asupra "
 "notificărilor."
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -87751,10 +87761,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Utilizarea discului"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "Pentru SID-uri specifice"
 
 #, fuzzy, python-format
 #~ msgid "General value error: %s"

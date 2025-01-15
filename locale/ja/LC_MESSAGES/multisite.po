@@ -21217,6 +21217,11 @@ msgstr ""
 "れたtarアーカイブは、バックアップ中に指定されたキーを使用して暗号化されます。"
 "バックアップを復号化するには、秘密鍵とパスフレーズが必要になります。"
 
+msgid ""
+"Enable experimental rendering modes for form specs. Keep in mind thatsome "
+"form specs are always rendered in the frontend, regardless of this setting."
+msgstr ""
+
 msgid "Enable flap detection"
 msgstr "フラップ検出を有効にする"
 
@@ -22683,7 +22688,7 @@ msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
 #, fuzzy
-msgid "Experimental features"
+msgid "Experimental rendering"
 msgstr "実験的機能"
 
 #, fuzzy
@@ -24542,6 +24547,10 @@ msgstr "ネットワーク"
 
 msgid "Form factor"
 msgstr "フォーム ファクタ"
+
+#, fuzzy
+msgid "Form specs"
+msgstr "特定のSIDの場合"
 
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
@@ -51315,9 +51324,6 @@ msgstr "要素の上にタイトルとリンクを含むタイトルバーをレ
 msgid "Render vertical rules between columns"
 msgstr "列間に垂直ルールをレンダリングする"
 
-msgid "Rendering mode for valuespecs and tables"
-msgstr ""
-
 #, fuzzy
 msgid "Repeat"
 msgstr "繰り返す:"
@@ -66260,6 +66266,10 @@ msgstr ""
 "これらの設定は、どのような状況でユーザーがユーザー インターフェイスでサービス"
 "やグループを見ることを許可されるかを制御します。<b>注意</b>:これは、通知には"
 "<b>全く</b>影響しません。"
+
+msgid ""
+"These settings only affect features that are currently under development."
+msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -85370,10 +85380,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disk IO Utilization"
 #~ msgstr "ディスク使用率"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "特定のSIDの場合"
 
 #, fuzzy, python-format
 #~ msgid "General value error: %s"

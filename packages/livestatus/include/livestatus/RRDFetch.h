@@ -28,7 +28,7 @@ class RRDFetchHeader {
 
 public:
     using time_point = C::time_point;
-    RRDFetchHeader(const std::vector<std::string> &h) : _h{h} {
+    explicit RRDFetchHeader(const std::vector<std::string> &h) : _h{h} {
         assert(h.size() == size());
     }
     static std::size_t size() { return Field::Dscount + 1; }

@@ -10,7 +10,7 @@
 #include "livestatus/RRDFetch.h"
 #include "livestatus/StringUtils.h"
 
-TEST(TestRPNFetch, Header) {
+TEST(TestRRDFetchHeader, Header) {
     const char *raw =
         "FlushVersion: 1\n"
         "Start: 1733220000\n"

@@ -121,10 +121,16 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
             lock=lock,
         )
 
+    def save_for_snapshot(self, omd_root_path: Path, work_dir: Path, cfg: _D) -> None:
+        self._save_to_path(work_dir / self._config_file_path.relative_to(omd_root_path), cfg)
+
     def save(self, cfg: _D) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        self._save_to_path(self._config_file_path, cfg)
+
+    def _save_to_path(self, target_path: Path, cfg: _D) -> None:
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path),
+            str(target_path),
             self._config_variable,
             cfg,
             pprint_value=active_config.wato_pprint_config,

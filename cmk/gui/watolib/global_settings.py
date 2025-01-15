@@ -23,7 +23,7 @@ from cmk.gui.watolib.config_domain_name import (
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> GlobalSettings:
-    settings = {}
+    settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
             settings.update(domain.load_full_config())

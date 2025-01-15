@@ -410,9 +410,10 @@ class ConfigDomainApache(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {
@@ -530,9 +531,10 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {

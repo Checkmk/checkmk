@@ -102,9 +102,10 @@ def check(item: str, params: Mapping[str, Any], section: Section) -> CheckResult
 
     yield from check_levels(
         value=current_month.amount,
-        label=current_month.date(),
         levels_upper=params["levels"],
+        metric_name="gcp_cost_per_month",
         render_func=lambda x: f"{x:.2f} {current_month.currency}",
+        label=current_month.date(),
     )
 
     if previous_month := project_costs.previous_month:

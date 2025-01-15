@@ -175,7 +175,7 @@ function renderTuple(
         return h('span', [
           formSpec.show_titles && title ? `${title}: ` : h([]),
           renderForm(element, value[index], elementValidations[index]),
-          index === formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? '' : ', '
+          index === formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? ', ' : ''
         ])
       })
     ]
@@ -306,7 +306,7 @@ function renderDict(
       elements.forEach((element) => {
         dictElements.push(
           h('tr', trProps, [
-            h('td', { class: 'dict_title' }, [element[0]]),
+            h('td', { class: 'dict_title' }, [`${element[0]}:`]),
             h('td', { class: 'dict_value' }, [element[1]])
           ])
         )
@@ -516,7 +516,6 @@ function renderLegacyValuespec(
 ): VNode {
   return h('div', [
     h('div', {
-      style: 'background: #595959',
       class: 'legacy_valuespec',
       innerHTML: (value as PreRenderedHtml).readonly_html
     }),
@@ -648,7 +647,7 @@ table.form-readonly__table {
   > tr:not(:first-child) {
     box-shadow: 0 -1px 0 0 var(--default-form-element-border-color);
     > td.dict_title {
-      min-width: 35ch;
+      min-width: 20ch;
       max-width: 70ch;
       white-space: normal;
       overflow-wrap: break-word;

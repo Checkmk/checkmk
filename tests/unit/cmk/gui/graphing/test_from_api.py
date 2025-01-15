@@ -14,7 +14,6 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils.paths import omd_root
 
-from cmk.gui.graphing._legacy import metric_info
 from cmk.gui.metrics import _load_graphing_plugins
 
 from cmk.discover_plugins import PluginLocation
@@ -28,10 +27,6 @@ def test_load_graphing_plugins() -> None:
     discovered_graphing_plugins = _load_graphing_plugins()
     assert not discovered_graphing_plugins.errors
     assert discovered_graphing_plugins.plugins
-
-
-def test_metric_duplicates() -> None:
-    assert not metric_info
 
 
 def test_translations_to_be_standalone() -> None:

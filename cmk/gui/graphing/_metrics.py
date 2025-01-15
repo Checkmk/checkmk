@@ -15,17 +15,8 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._formatter import AutoPrecision
 from ._from_api import metrics_from_api
-from ._legacy import metric_info, MetricInfo, unit_info, UnitInfo
+from ._legacy import UnitInfo
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
-
-
-def _get_legacy_metric_info(
-    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
-) -> MetricInfo | None:
-    if not (mi := metric_info.get(metric_name)):
-        return None
-    color_counter.update({"metric": 1})
-    return mi
 
 
 @dataclass(frozen=True)
@@ -54,7 +45,6 @@ def _fallback_metric_spec(
 def get_metric_spec_with_color(
     metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
 ) -> MetricSpec:
-    metric_info_prediction = None
     if metric_name.startswith("predict_lower_"):
         if (lookup_metric_name := metric_name[14:]) in metrics_from_api:
             mfa = metrics_from_api[lookup_metric_name]
@@ -66,13 +56,6 @@ def get_metric_spec_with_color(
                     + _(" (lower levels)")
                 ),
                 unit_spec=mfa.unit_spec,
-                color=get_gray_tone(color_counter),
-            )
-
-        if mi := _get_legacy_metric_info(lookup_metric_name, color_counter):
-            metric_info_prediction = MetricInfo(
-                title=_("Prediction of ") + mi["title"] + _(" (lower levels)"),
-                unit=mi["unit"],
                 color=get_gray_tone(color_counter),
             )
         else:
@@ -97,13 +80,6 @@ def get_metric_spec_with_color(
                 unit_spec=mfa.unit_spec,
                 color=get_gray_tone(color_counter),
             )
-
-        if mi := _get_legacy_metric_info(lookup_metric_name, color_counter):
-            metric_info_prediction = MetricInfo(
-                title=_("Prediction of ") + mi["title"] + _(" (upper levels)"),
-                unit=mi["unit"],
-                color=get_gray_tone(color_counter),
-            )
         else:
             fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
             return MetricSpec(
@@ -121,14 +97,6 @@ def get_metric_spec_with_color(
             color=mfa.color,
         )
 
-    if mi := (metric_info_prediction or _get_legacy_metric_info(metric_name, color_counter)):
-        return MetricSpec(
-            name=metric_name,
-            title=str(mi["title"]),
-            unit_spec=unit_info[mi["unit"]],
-            color=parse_color_into_hexrgb(mi["color"]),
-        )
-
     return _fallback_metric_spec(metric_name, color_counter)
 
 
@@ -139,5 +107,3 @@ def get_metric_spec(metric_name: str) -> MetricSpec:
 def registered_metrics() -> Iterator[tuple[str, str]]:
     for metric_id, mie in metrics_from_api.items():
         yield metric_id, mie.title_localizer(translate_to_current_language)
-    for metric_id, mi in metric_info.items():
-        yield metric_id, str(mi["title"])

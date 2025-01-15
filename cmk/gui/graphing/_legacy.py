@@ -13,7 +13,6 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, user_specific_unit
@@ -134,31 +133,6 @@ def get_unit_info(unit_id: str) -> UnitInfo:
     if unit_id in unit_info.keys():
         return unit_info[unit_id]
     return unit_info[""]
-
-
-# .
-#   .--metrics-------------------------------------------------------------.
-#   |                                _        _                            |
-#   |                 _ __ ___   ___| |_ _ __(_) ___ ___                   |
-#   |                | '_ ` _ \ / _ \ __| '__| |/ __/ __|                  |
-#   |                | | | | | |  __/ |_| |  | | (__\__ \                  |
-#   |                |_| |_| |_|\___|\__|_|  |_|\___|___/                  |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class _MetricInfoMandatory(TypedDict):
-    title: str | LazyString
-    unit: str
-    color: str
-
-
-class MetricInfo(_MetricInfoMandatory, total=False):
-    help: str | LazyString
-    render: Callable[[float | int], str]
-
-
-metric_info: dict[MetricName, MetricInfo] = {}
 
 
 # .

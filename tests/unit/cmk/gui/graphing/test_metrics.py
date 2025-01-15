@@ -8,14 +8,8 @@ from typing import Literal
 
 from cmk.gui.graphing._color import parse_color_into_hexrgb
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._metrics import _fallback_metric_spec, _get_legacy_metric_info, MetricSpec
+from cmk.gui.graphing._metrics import _fallback_metric_spec, MetricSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
-
-
-def test__get_legacy_metric_info() -> None:
-    color_counter: Counter[Literal["metric", "predictive"]] = Counter()
-    assert _get_legacy_metric_info("foo", Counter()) is None
-    assert color_counter["metric"] == 0
 
 
 def test_fallback_metric_spec() -> None:

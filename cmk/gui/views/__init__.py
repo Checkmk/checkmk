@@ -9,7 +9,6 @@ from typing import Any
 
 from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.painter.v0 import register_painter
@@ -220,7 +219,6 @@ def _register_pre_21_plugin_api() -> None:
     api_module.__dict__.update(
         {
             "Perfdata": Perfdata,
-            "PerfometerSpec": PerfometerSpec,
             "VisualLinkSpec": VisualLinkSpec,
             "TranslatedMetrics": Mapping[str, TranslatedMetric],
             "get_labels": get_labels,

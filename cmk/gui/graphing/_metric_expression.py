@@ -949,22 +949,6 @@ class SimpleMetricExpression:
         yield from self.base.scalar_names()
 
 
-def parse_legacy_simple_expression(
-    raw_expression: str | int | float,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> SimpleMetricExpression:
-    if isinstance(raw_expression, (int, float)):
-        return SimpleMetricExpression(Constant(raw_expression))
-    (
-        stack,
-        unit_id,
-        color,
-    ) = _parse_legacy_expression(raw_expression, translated_metrics)
-    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
-        return SimpleMetricExpression(resolved, unit_spec=unit_id or None, color=color)
-    raise TypeError(resolved)
-
-
 @dataclass(frozen=True)
 class Evaluated:
     base: BaseMetricExpression
@@ -1069,20 +1053,6 @@ def parse_legacy_expression(
             line_type=line_type,
             title=title,
         )
-    raise TypeError(resolved)
-
-
-def parse_legacy_conditional_expression(
-    raw_expression: str,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> ConditionalMetricExpression:
-    (
-        stack,
-        _unit_id,
-        _color,
-    ) = _parse_legacy_expression(raw_expression, translated_metrics)
-    if isinstance(resolved := _resolve_stack(stack), ConditionalMetricExpression):
-        return resolved
     raise TypeError(resolved)
 
 

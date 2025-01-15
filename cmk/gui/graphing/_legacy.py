@@ -6,7 +6,7 @@
 from collections import OrderedDict
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Literal, NotRequired, TypeAlias, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel
 
@@ -160,49 +160,6 @@ class MetricInfo(_MetricInfoMandatory, total=False):
 
 
 metric_info: dict[MetricName, MetricInfo] = {}
-
-
-# .
-#   .--perfometers---------------------------------------------------------.
-#   |                       __                      _                      |
-#   |      _ __   ___ _ __ / _| ___  _ __ ___   ___| |_ ___ _ __ ___       |
-#   |     | '_ \ / _ \ '__| |_ / _ \| '_ ` _ \ / _ \ __/ _ \ '__/ __|      |
-#   |     | |_) |  __/ |  |  _| (_) | | | | | |  __/ ||  __/ |  \__ \      |
-#   |     | .__/ \___|_|  |_|  \___/|_| |_| |_|\___|\__\___|_|  |___/      |
-#   |     |_|                                                              |
-#   '----------------------------------------------------------------------'
-
-
-class LinearPerfometerSpec(TypedDict):
-    type: Literal["linear"]
-    segments: Sequence[str]
-    total: int | float | str
-    condition: NotRequired[str]
-    label: NotRequired[tuple[str, str] | None]  # (expression, unit)
-
-
-class LogarithmicPerfometerSpec(TypedDict):
-    type: Literal["logarithmic"]
-    metric: str
-    half_value: int | float
-    exponent: int | float
-
-
-class DualPerfometerSpec(TypedDict):
-    type: Literal["dual"]
-    perfometers: Sequence[LinearPerfometerSpec | LogarithmicPerfometerSpec]
-
-
-class StackedPerfometerSpec(TypedDict):
-    type: Literal["stacked"]
-    perfometers: Sequence[LinearPerfometerSpec | LogarithmicPerfometerSpec]
-
-
-LegacyPerfometer = tuple[str, Any]
-PerfometerSpec: TypeAlias = (
-    LinearPerfometerSpec | LogarithmicPerfometerSpec | DualPerfometerSpec | StackedPerfometerSpec
-)
-perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 
 
 # .

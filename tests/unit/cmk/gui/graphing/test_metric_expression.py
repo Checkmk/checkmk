@@ -10,23 +10,15 @@ from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._metric_expression import (
     _FALLBACK_UNIT_SPEC_FLOAT,
     _FALLBACK_UNIT_SPEC_INT,
-    ConditionalMetricExpression,
     Constant,
     CriticalOf,
     Difference,
-    GreaterEqualThan,
-    GreaterThan,
-    LessEqualThan,
-    LessThan,
     MaximumOf,
     Metric,
     MetricExpression,
     MinimumOf,
-    parse_legacy_conditional_expression,
     parse_legacy_expression,
     Percent,
-    Product,
-    Sum,
     WarningOf,
 )
 from cmk.gui.graphing._metric_operation import LineType
@@ -404,176 +396,6 @@ def test_parse_and_evaluate_2(
     assert result.ok.value == expected_value
     assert result.ok.unit_spec == expected_unit_spec
     assert result.ok.color == expected_color
-
-
-@pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, expected_conditional_metric_declaration, value",
-    [
-        pytest.param(
-            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
-            "check_mk-foo",
-            "metric_name,100,>",
-            GreaterThan(
-                left=Metric("metric_name"),
-                right=Constant(100),
-            ),
-            False,
-            id="conditional greater than",
-        ),
-        pytest.param(
-            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
-            "check_mk-foo",
-            "metric_name,100,>=",
-            GreaterEqualThan(
-                left=Metric("metric_name"),
-                right=Constant(100),
-            ),
-            True,
-            id="conditional greater equal than",
-        ),
-        pytest.param(
-            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
-            "check_mk-foo",
-            "metric_name,100,<",
-            LessThan(
-                left=Metric("metric_name"),
-                right=Constant(100),
-            ),
-            False,
-            id="conditional less than",
-        ),
-        pytest.param(
-            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
-            "check_mk-foo",
-            "metric_name,100,<=",
-            LessEqualThan(
-                left=Metric("metric_name"),
-                right=Constant(100),
-            ),
-            True,
-            id="conditional less equal than",
-        ),
-        pytest.param(
-            [
-                PerfDataTuple("used", "used", 50, "", 20, 30, 0, 50),
-                PerfDataTuple("uncommitted", "uncommitted", 50, "", 20, 30, 0, 50),
-                PerfDataTuple("size", "size", 100, "", 20, 30, 0, 100),
-            ],
-            "check_mk-foo",
-            "used,uncommitted,+,size,>",
-            GreaterThan(
-                left=Sum([Metric("used"), Metric("uncommitted")]),
-                right=Metric("size"),
-            ),
-            False,
-            id="conditional greater than nested",
-        ),
-        pytest.param(
-            [
-                PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
-                ),
-                PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
-            ],
-            "check_mk-foo",
-            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            GreaterEqualThan(
-                left=Sum(
-                    [
-                        Metric("delivered_notifications"),
-                        Metric("failed_notifications"),
-                    ]
-                ),
-                right=Product(
-                    [
-                        Sum(
-                            [
-                                Metric("delivered_notifications"),
-                                Metric("failed_notifications"),
-                            ]
-                        ),
-                        Constant(2),
-                    ]
-                ),
-            ),
-            True,
-            id="conditional notifications greater than 1",
-        ),
-        pytest.param(
-            [
-                PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 1, "", 0, 0, 0, 0
-                ),
-                PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
-            ],
-            "check_mk-foo",
-            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            GreaterEqualThan(
-                left=Sum(
-                    [
-                        Metric("delivered_notifications"),
-                        Metric("failed_notifications"),
-                    ]
-                ),
-                right=Product(
-                    [
-                        Sum(
-                            [
-                                Metric("delivered_notifications"),
-                                Metric("failed_notifications"),
-                            ]
-                        ),
-                        Constant(2),
-                    ]
-                ),
-            ),
-            False,
-            id="conditional notifications greater than 2",
-        ),
-        pytest.param(
-            [
-                PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
-                ),
-                PerfDataTuple("failed_notifications", "failed_notifications", 1, "", 0, 0, 0, 0),
-            ],
-            "check_mk-foo",
-            "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            GreaterEqualThan(
-                left=Sum(
-                    [
-                        Metric("delivered_notifications"),
-                        Metric("failed_notifications"),
-                    ]
-                ),
-                right=Product(
-                    [
-                        Sum(
-                            [
-                                Metric("delivered_notifications"),
-                                Metric("failed_notifications"),
-                            ]
-                        ),
-                        Constant(2),
-                    ]
-                ),
-            ),
-            False,
-            id="conditional notifications greater than 3",
-        ),
-    ],
-)
-def test_parse_and_evaluate_conditional(
-    perf_data: Perfdata,
-    check_command: str,
-    raw_expression: str,
-    expected_conditional_metric_declaration: ConditionalMetricExpression,
-    value: bool,
-) -> None:
-    translated_metrics = translate_metrics(perf_data, check_command)
-    metric_declaration = parse_legacy_conditional_expression(raw_expression, translated_metrics)
-    assert metric_declaration == expected_conditional_metric_declaration
-    assert metric_declaration.evaluate(translated_metrics) == value
 
 
 @pytest.mark.parametrize(

@@ -11,7 +11,6 @@ from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import TemplateGraphSpecification
-from ._legacy import perfometer_info, PerfometerSpec
 from ._metric_operation import (
     metric_operation_registry,
     MetricOpConstant,
@@ -20,7 +19,7 @@ from ._metric_operation import (
     MetricOpRRDSource,
 )
 from ._metrics import registered_metrics
-from ._perfometer import get_first_matching_perfometer, parse_perfometer
+from ._perfometer import get_first_matching_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
 
@@ -42,10 +41,7 @@ def register(
 
 
 __all__ = [
-    "register",
     "get_first_matching_perfometer",
-    "parse_perfometer",
-    "perfometer_info",
-    "PerfometerSpec",
+    "register",
     "registered_metrics",
 ]

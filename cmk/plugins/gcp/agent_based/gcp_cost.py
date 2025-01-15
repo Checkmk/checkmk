@@ -7,7 +7,6 @@ import datetime
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
-from itertools import groupby
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -18,9 +17,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    Result,
     Service,
-    State,
     StringTable,
 )
 
@@ -51,37 +48,26 @@ class Cost(BaseModel):
 class ProjectCost:
     project: str
     current_month: Cost
-    previous_month: Cost | None
 
 
 Section = Mapping[ProjectId, ProjectCost]
 
 
-def keyfunc(x: Mapping[str, str]) -> str:
-    return x["id"]
-
-
 def parse(string_table: StringTable) -> Section:
     query_month = datetime.datetime.strptime(json.loads(string_table[0][0])["query_month"], "%Y%m")
-    all_rows = sorted([json.loads(line[0]) for line in string_table[1:]], key=keyfunc)
+
     section = {}
-    for project_id, rows in groupby(all_rows, key=keyfunc):
-        month_costs = sorted(
-            [Cost.model_validate(r) for r in rows], key=lambda c: c.month, reverse=True
-        )
-        if len(month_costs) > 1:
-            cost = ProjectCost(
-                current_month=month_costs[0],
-                previous_month=month_costs[1],
-                project=month_costs[1].project,
-            )
-        else:
-            cost = ProjectCost(
-                current_month=month_costs[0], previous_month=None, project=month_costs[0].project
-            )
-        if cost.current_month.month != query_month:
+    for row in [json.loads(line[0]) for line in string_table[1:]]:
+        cost = Cost.model_validate(row)
+        if cost.month != query_month:
+            # just to make sure, query should only return values of that month
             continue
-        section[project_id] = cost
+
+        project = ProjectCost(
+            cost.project,
+            current_month=cost,
+        )
+        section[row["id"]] = project
 
     return section
 
@@ -107,9 +93,6 @@ def check(item: str, params: Mapping[str, Any], section: Section) -> CheckResult
         render_func=lambda x: f"{x:.2f} {current_month.currency}",
         label=current_month.date(),
     )
-
-    if previous_month := project_costs.previous_month:
-        yield Result(state=State.OK, notice=previous_month.to_details())
 
 
 check_plugin_gcp_cost = CheckPlugin(

@@ -1,5 +1,5 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 file_from_flag(
@@ -35,6 +35,30 @@ rust_test(
     name = "check-cert-lib-test-internal",
     crate = ":check-cert-lib",
     data = ["assets/certificate.der"],
+)
+
+rust_test_suite(
+    name = "check-cert-lib-test-external",
+    srcs = [
+        "tests/certificate.rs",
+        "tests/igca_cert.rs",
+        "tests/truststore.rs",
+        "tests/verify.rs",
+    ],
+    data = [
+        "assets/IGC_A.der",
+        "assets/cert.der",
+        "assets/ee-pss-sha1-cert.pem",
+        "assets/ee-pss-sha256-cert.pem",
+        "assets/root-ca.der",
+    ],
+    deps = [
+        ":check-cert-lib",
+        "@cargo_deps_site//:assert_cmd",
+        "@cargo_deps_site//:assertor",
+        "@cargo_deps_site//:openssl",
+        "@cargo_deps_site//:tempfile",
+    ],
 )
 
 rust_binary(

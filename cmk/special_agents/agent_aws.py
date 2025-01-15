@@ -7475,9 +7475,11 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
         if args.proxy_password:
             proxy_password = args.proxy_password
-        else:
+        elif args.proxy_password_reference:
             pw_id, pw_file = args.proxy_password_reference.split(":", 1)
             proxy_password = password_store.lookup(Path(pw_file), pw_id)
+        else:
+            proxy_password = None
         return botocore.config.Config(
             proxies={
                 "https": _proxy_address(

@@ -76,6 +76,39 @@ class _Info:
     path_to_mod_time: Mapping[str, float]
 
 
+def _load_plugin(plugin_name: str, plugin_path: Path) -> _Info | None:
+    _verbose(f"Loading plugin: {plugin_path}")
+    plugin: dict[str, Any] = {}
+    try:
+        exec(  # nosec B102 # BNS:aee528
+            plugin_path.read_text(),
+            plugin,
+            plugin,
+        )
+    except Exception as e:
+        _error(f'Exception while loading plugin "{plugin_path}": {e}')
+        return None
+    # Now transform all path patterns to absolute paths for really existing files
+    resolved: list[str] = []
+    for path in plugin.get("cleanup_paths", []):
+        # Make relative paths absolute ones
+        if path[0] != "/":
+            path = str(omd_root / path)
+
+        # Resolve given path pattern to really existing files.
+        # Also ensure that the files in the resolved list do really exist.
+        resolved += glob.glob(path)
+
+    if resolved:
+        plugin["cleanup_paths"] = resolved
+    elif "cleanup_paths" in plugin:
+        del plugin["cleanup_paths"]
+    path_to_mod_time = plugin.get("file_infos", {})
+    for path in plugin.get("cleanup_paths", []):
+        path_to_mod_time[path] = os.stat(path).st_mtime
+    return _Info(plugin_name=plugin_name, path_to_mod_time=path_to_mod_time)
+
+
 def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
     try:
         local_plugins: list[str] = list(p.name for p in plugin_dir_local.iterdir())
@@ -84,47 +117,14 @@ def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
 
     plugin_files: list[str] = [p.name for p in plugin_dir.iterdir() if p.name not in local_plugins]
 
-    plugins: dict[str, dict[str, Any]] = {}
+    infos = []
     for base_dir, file_list in [(plugin_dir, plugin_files), (plugin_dir_local, local_plugins)]:
         for file_name in file_list:
             if file_name[0] == ".":
                 continue
+            if (info := _load_plugin(file_name, base_dir / file_name)) is not None:
+                infos.append(info)
 
-            plugins[file_name] = {}
-
-            plugin_path = base_dir / file_name
-            _verbose(f"Loading plugin: {plugin_path}")
-            try:
-                exec(  # nosec B102 # BNS:aee528
-                    plugin_path.read_text(),
-                    plugins[file_name],
-                    plugins[file_name],
-                )
-            except Exception as e:
-                _error(f'Exception while loading plugin "{plugin_path}": {e}')
-
-    # Now transform all path patterns to absolute paths for really existing files
-    for plugin in plugins.values():
-        resolved: list[str] = []
-        for path in plugin.get("cleanup_paths", []):
-            # Make relative paths absolute ones
-            if path[0] != "/":
-                path = str(omd_root / path)
-
-            # Resolve given path pattern to really existing files.
-            # Also ensure that the files in the resolved list do really exist.
-            resolved += glob.glob(path)
-
-        if resolved:
-            plugin["cleanup_paths"] = resolved
-        elif "cleanup_paths" in plugin:
-            del plugin["cleanup_paths"]
-    infos = []
-    for plugin in plugins.values():
-        path_to_mod_time = plugin.get("file_infos", {})
-        for path in plugin.get("cleanup_paths", []):
-            path_to_mod_time[path] = os.stat(path).st_mtime
-        infos.append(_Info(plugin_name=plugin["name"], path_to_mod_time=path_to_mod_time))
     return infos
 
 

@@ -53,7 +53,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin
+from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -3152,6 +3152,13 @@ class ModeNewRule(ABCEditRuleMode):
                     service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
         self._rule = Rule.from_ruleset_defaults(self._folder, self._ruleset)
+        try:
+            # If the rulespec already uses the new form spec, use the DEFAULT_VALUE sentinel
+            # instead of an auto-generated valuespec:default_value()
+            _tmp = self._ruleset.rulespec.form_spec
+            self._rule.value = DEFAULT_VALUE
+        except FormSpecNotImplementedError:
+            pass
         self._rule.update_conditions(
             RuleConditions(
                 host_folder=self._folder.path(),

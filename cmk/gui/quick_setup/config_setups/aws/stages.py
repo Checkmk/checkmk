@@ -339,6 +339,7 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     regions_to_monitor = params["regions_to_monitor"]
     assert isinstance(regions_to_monitor, list)
     keys_to_rename = {"aws_lambda": "lambda"}
+    proxy_details = params.get("proxy_details")
     params = {
         "auth": (
             "access_key",
@@ -354,6 +355,11 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
     }
+    if proxy_details is not None:
+        assert isinstance(proxy_details, dict)
+        assert "proxy_host" in proxy_details
+        params["proxy_details"] = proxy_details
+
     if overall_tags is not None:
         assert isinstance(overall_tags, dict)
         if (restriction_tags := overall_tags.get("restriction_tags")) is not None:

@@ -46,12 +46,13 @@ onMounted(() => {
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
-  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
-    element.addEventListener('input', collectData)
-  })
+  addEventListeners()
 
   const observer = new MutationObserver(() => {
     collectData()
+    // On every mutation, we need to remove and re-add the event listeners
+    removeEventListeners()
+    addEventListeners()
   })
 
   observer.observe(legacyDOM.value!, {
@@ -67,10 +68,20 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  removeEventListeners()
+})
+
+function addEventListeners() {
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    element.addEventListener('input', collectData)
+  })
+}
+
+function removeEventListeners() {
   legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
     element.removeEventListener('input', collectData)
   })
-})
+}
 
 function collectData() {
   const result = Object.fromEntries(new FormData(legacyDOM.value))

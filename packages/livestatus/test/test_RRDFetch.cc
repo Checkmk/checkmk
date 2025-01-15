@@ -22,3 +22,8 @@ TEST(TestRRDFetchHeader, Header) {
     ss << header;
     EXPECT_EQ(ss.str(), raw);
 }
+
+TEST(TestRRDFetchBinPayloadHeader, Header) {
+    const char *raw = "DSName-1 BinaryData 1234 8 LITTLE";
+    EXPECT_EQ(RRDFetchBinPayloadHeader::parse(raw).unparse(), raw);
+}

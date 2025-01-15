@@ -65,4 +65,14 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const RRDFetchHeader &h);
 
+struct RRDFetchBinPayloadHeader {
+    // DSName-[DSNAME]: BinaryData [VALUE_COUNT] [VALUE_SIZE] [ENDIANNESS]
+    static RRDFetchBinPayloadHeader parse(const std::string &line);
+    [[nodiscard]] std::string unparse() const;
+    std::size_t dsname;
+    std::size_t value_count;
+    std::size_t value_size;
+    std::string endianness;
+};
+
 #endif

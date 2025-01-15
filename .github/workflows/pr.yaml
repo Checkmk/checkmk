@@ -14,8 +14,6 @@ jobs:
   testing:
     runs-on: ubuntu-22.04
     env:
-      PIPENV_IGNORE_VIRTUALENVS: 1
-      USE_EXTERNAL_PIPENV_MIRROR: true
       PYTHONWARNINGS: ignore:DeprecationWarning
     strategy:
       matrix:

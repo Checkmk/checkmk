@@ -146,8 +146,7 @@ class ConfigDomainGUI(ABCConfigDomain):
                     f"Resetting the default language '{get_language_alias(dflt_lang)}' to 'English' due to "
                     "globally disabled commmunity translations (Global settings > User interface)."
                 )
-                gui_config = self.load()
-                gui_config.pop("default_language", None)
+                gui_config = {k: v for k, v in self.load().items() if k != "default_language"}
                 self.save(gui_config)
                 active_config.default_language = "en"
 

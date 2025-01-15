@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.gcp.agent_based.gcp_cost import check, discover, parse, Section
 
 TABLE_MULTI_MONTH = [
@@ -77,6 +77,7 @@ def test_gcp_cost_check(section: Section, item: str) -> None:
     results = list(check(item=item, params={"levels": None}, section=section))
     assert results == [
         Result(state=State.OK, summary="July 2022: 42.21 EUR"),
+        Metric("gcp_cost_per_month", 42.21),
         Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
     ]
 
@@ -84,10 +85,8 @@ def test_gcp_cost_check(section: Section, item: str) -> None:
 def test_gcp_cost_check_data_only_one_month(section: Section) -> None:
     results = list(check(item="single", params={"levels": None}, section=section))
     assert results == [
-        Result(
-            state=State.OK,
-            summary="July 2022: 2.71 EUR",
-        )
+        Result(state=State.OK, summary="July 2022: 2.71 EUR"),
+        Metric("gcp_cost_per_month", 2.71),
     ]
 
 
@@ -100,26 +99,34 @@ def test_item_not_in_section_yields_no_result(section: Section) -> None:
     "result, params",
     [
         pytest.param(
-            Result(
-                state=State.WARN,
-                summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/50.00 EUR)",
-            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/50.00 EUR)",
+                ),
+                Metric("gcp_cost_per_month", 42.21, levels=(21.0, 50.0)),
+            ],
             {"levels": ("fixed", (21, 50))},
             id="warn",
         ),
         pytest.param(
-            Result(
-                state=State.CRIT,
-                summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/41.00 EUR)",
-            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/41.00 EUR)",
+                ),
+                Metric("gcp_cost_per_month", 42.21, levels=(21.0, 41.0)),
+            ],
             {"levels": ("fixed", (21, 41))},
             id="crit",
         ),
     ],
 )
-def test_gcp_cost_check_levels(result: Result, params: Mapping[str, Any], section: Section) -> None:
+def test_gcp_cost_check_levels(
+    result: list[Result | Metric], params: Mapping[str, Any], section: Section
+) -> None:
     results = list(check(item="test1", params=params, section=section))
     assert results == [
-        result,
+        *result,
         Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
     ]

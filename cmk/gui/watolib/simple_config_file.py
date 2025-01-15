@@ -38,10 +38,19 @@ class WatoConfigFile(abc.ABC, Generic[_G]):
             lock=lock,
         )
 
+    def save_for_snapshot(self, omd_root_path: Path, work_dir: Path, cfg: _G) -> None:
+        self._save_to_path(work_dir / self._config_file_path.relative_to(omd_root_path), cfg, False)
+
     def save(self, cfg: _G, pretty: bool) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        self._save_to_path(self._config_file_path, cfg, pretty)
+
+    def _save_to_path(self, target_path: Path, cfg: _G, pretty: bool) -> None:
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path), self._config_variable, cfg, pprint_value=pretty
+            str(target_path),
+            self._config_variable,
+            cfg,
+            pprint_value=pretty,
         )
 
 

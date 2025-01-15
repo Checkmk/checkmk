@@ -155,14 +155,6 @@ run_cargo_cmd_with_explicit_package() {
     cargo "${1}" --package "${PWD##*/}" "${@:2}"
 }
 
-run_check_format() {
-    ${BAZEL_CMD} run \
-        --ui_event_filters=-info,-stderr \
-        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
-        format --check --diff Cargo.toml
-    run_cargo_cmd_with_explicit_package fmt -- --check
-}
-
 run_format() {
     ${BAZEL_CMD} run \
         --ui_event_filters=-info,-stderr \
@@ -181,7 +173,7 @@ main() {
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build :all
     test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
+    test ${RUN_CHECK_FORMAT} = yes && "${BAZEL_CMD}" build --config=rustfmt :all
     test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy //packages/site/check-http:all
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}

@@ -341,6 +341,7 @@ def _get_expected_paths(
             "etc/check_mk/dcd.d/wato/distributed.mk",
             "etc/check_mk/dcd.d",
             "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/dcd.d/wato/connections.mk",
             "etc/check_mk/dcd.d/wato/sitespecific.mk",
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",

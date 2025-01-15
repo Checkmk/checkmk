@@ -149,6 +149,7 @@ def configure_authentication() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and authority"),
+                run_in_background=True,
             ),
         ],
     )
@@ -327,6 +328,7 @@ quick_setup_azure = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            run_in_background=True,
         ),
     ],
 )

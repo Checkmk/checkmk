@@ -69,7 +69,7 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
             "entity_type": ConfigEntityType.notification_parameter.value,
             "entity_type_specifier": "dummy_params",
             "data": {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
                 "parameter_properties": {"method_parameters": {"test_param": "bar"}},
             },
         }
@@ -87,7 +87,7 @@ def test_update_configuration_entity(
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
         },
         None,
@@ -100,7 +100,7 @@ def test_update_configuration_entity(
             "entity_type_specifier": "dummy_params",
             "entity_id": entity.ident,
             "data": {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
                 "parameter_properties": {"method_parameters": {"test_param": "bar"}},
             },
         }
@@ -115,7 +115,16 @@ def test_update_configuration_entity(
 @pytest.mark.parametrize(
     "data, expected_error_fields",
     [
-        ({}, {"general": {"description": {"": [mock.ANY]}}}),
+        (
+            {},
+            {
+                "general": {
+                    "description": {"": [mock.ANY]},
+                    "comment": {"": [mock.ANY]},
+                    "docu_url": {"": [mock.ANY]},
+                }
+            },
+        ),
         (
             {"general": {}, "parameter_properties": {}},
             {
@@ -124,7 +133,7 @@ def test_update_configuration_entity(
         ),
         (
             {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
                 "parameter_properties": {"method_parameters": {"test_param": {}}},
             },
             {"parameter_properties": {"method_parameters": {"test_param": {"": [mock.ANY]}}}},
@@ -157,7 +166,7 @@ def test_list_configuration_entities(
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
         None,
@@ -183,7 +192,7 @@ def test_get_configuration_entity(
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
         None,

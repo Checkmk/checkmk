@@ -147,11 +147,13 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                                 required=True,
                             ),
                             "comment": TopicElement(
+                                required=True,
                                 parameter_form=CommentTextArea(
                                     title=Title("Comment"),
-                                )
+                                ),
                             ),
                             "docu_url": TopicElement(
+                                required=True,
                                 parameter_form=String(
                                     title=Title("Documentation URL"),
                                     help_text=Help(
@@ -161,7 +163,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                                         "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
                                         "URLs (that are relative to <tt>check_mk/</tt>)."
                                     ),
-                                )
+                                ),
                             ),
                         },
                     ),

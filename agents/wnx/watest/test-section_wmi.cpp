@@ -329,12 +329,11 @@ TEST(WmiProviderTest, SimulationIntegration) {
     {
         Wmi dotnet_clr(kDotNetClrMemory, wmi::kSepChar);
         EXPECT_EQ(dotnet_clr.subsectionMode(), SubSection::Mode::standard);
-        EXPECT_EQ(dotnet_clr.delayOnFail(), cma::cfg::G_DefaultDelayOnFail);
+        EXPECT_EQ(dotnet_clr.delayOnFail(), 0s);
         EXPECT_EQ(dotnet_clr.object(),
                   L"Win32_PerfRawData_NETFramework_NETCLRMemory");
         EXPECT_TRUE(dotnet_clr.isAllowedByCurrentConfig());
         EXPECT_TRUE(dotnet_clr.isAllowedByTime());
-        EXPECT_EQ(dotnet_clr.delayOnFail(), 3600s);
 
         EXPECT_EQ(dotnet_clr.nameSpace(), L"Root\\Cimv2");
         std::string body;
@@ -383,7 +382,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
         Wmi cpu(kWmiCpuLoad, wmi::kSepChar);
         EXPECT_EQ(cpu.subsectionMode(), SubSection::Mode::standard);
         ASSERT_FALSE(cpu.headerless());
-        EXPECT_EQ(cpu.delayOnFail(), cma::cfg::G_DefaultDelayOnFail);
+        EXPECT_EQ(cpu.delayOnFail(), 0s);
 
         // this is empty section
         EXPECT_EQ(cpu.object(), L"");
@@ -403,7 +402,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
         // other:
         EXPECT_TRUE(cpu.isAllowedByCurrentConfig());
         EXPECT_TRUE(cpu.isAllowedByTime());
-        EXPECT_EQ(cpu.delayOnFail(), 3600s);
+        EXPECT_EQ(cpu.delayOnFail(), 0s);
     }
     {
         Wmi msexch(kMsExch, wmi::kSepChar);
@@ -518,10 +517,14 @@ TEST(WmiProviderTest, BasicWmi) {
 }
 
 TEST(WmiProviderTest, DelayOnFailDefault) {
-    for (const auto name :
-         {kOhm, kWmiCpuLoad, kWmiWebservices, kDotNetClrMemory, kMsExch}) {
+    for (const auto name : {kOhm, kWmiWebservices, kMsExch}) {
         Wmi b(name, ',');
         EXPECT_EQ(b.delayOnFail(), 3600s)
+            << "bad delay for section by default " << name;
+    }
+    for (const auto name : {kWmiCpuLoad, kDotNetClrMemory}) {
+        Wmi b(name, ',');
+        EXPECT_EQ(b.delayOnFail(), 0s)
             << "bad delay for section by default " << name;
     }
 }

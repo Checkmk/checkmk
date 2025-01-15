@@ -15,7 +15,6 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from types import ModuleType
 from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
 
 import livestatus
@@ -1747,15 +1746,7 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    # pylint: disable=import-outside-toplevel
     from cmk.base import notify
-
-    keepalive_mod: ModuleType | None
-    try:
-        from cmk.base.cee import keepalive as keepalive_mod  # type: ignore[no-redef, unused-ignore]
-    except ImportError:
-        # Edition layering...
-        keepalive_mod = None
 
     with store.lock_checkmk_configuration(configuration_lockfile):
         config.load(with_conf_d=True, validate_hosts=False)
@@ -1764,11 +1755,11 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         if config.is_cmc():
             raise RuntimeError(msg)
 
-    keepalive = False
-    if keepalive_mod and "keepalive" in options:
-        keepalive_mod.enable()
+    keepalive = "keepalive" in options and (
+        cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
+    )
+    if keepalive:
         register_sigint_handler()
-        keepalive = True
 
     return notify.do_notify(
         options,

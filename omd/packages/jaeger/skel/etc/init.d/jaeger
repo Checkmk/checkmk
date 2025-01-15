@@ -10,7 +10,7 @@ LOGFILE=$OMD_ROOT/var/log/jaeger.log
 THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 
 process_is_running() {
-    kill -0 "$1" 2>/dev/null 2>&1
+    kill -0 "$1" >/dev/null 2>&1
 }
 
 await_process_stop() {
@@ -26,7 +26,7 @@ await_process_stop() {
 case "$1" in
     start)
         echo -n 'Starting jaeger...'
-        if process_is_running "$THE_PID" ; then
+        if [ -n "$THE_PID" ] && process_is_running "$THE_PID" ; then
             echo 'already running.'
             exit 0
         fi

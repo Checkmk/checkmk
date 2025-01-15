@@ -191,8 +191,8 @@ def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure services to monitor & other options"),
         sub_title=_(
-            "Select and configure AWS services you would like to monitor, and set other "
-            "options such as AWS tags or a proxy server."
+            "Select and configure AWS services you would like to monitor, "
+            "and optionally restrict them with AWS tags."
         ),
         configure_components=_configure,
         actions=[

@@ -1,5 +1,5 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 file_from_flag(
@@ -29,6 +29,12 @@ rust_library(
         proc_macro = True,
     ),
     deps = all_crate_deps(),
+)
+
+rust_test(
+    name = "check-cert-lib-test-internal",
+    crate = ":check-cert-lib",
+    data = ["assets/certificate.der"],
 )
 
 rust_binary(

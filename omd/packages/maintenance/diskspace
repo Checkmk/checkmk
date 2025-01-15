@@ -120,10 +120,10 @@ def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> dict[str, dict[st
     return plugins
 
 
-@dataclass
+@dataclass(frozen=True)
 class _Info:
     plugin_name: str
-    path_to_mod_time: dict[str, float]
+    path_to_mod_time: Mapping[str, float]
 
 
 def _collect_file_infos(plugins: Mapping[str, Mapping[str, Any]]) -> list[_Info]:
@@ -338,8 +338,7 @@ def _cleanup_aged(max_file_age: int | None, infos: Sequence[_Info]) -> None:
     for info in infos:
         for path, mtime in info.path_to_mod_time.items():
             if mtime < max_age:
-                if _delete_file(path, "too old"):
-                    del info.path_to_mod_time[path]
+                _delete_file(path, "too old")
             else:
                 _verbose(f"Not deleting {path}")
 
@@ -376,7 +375,7 @@ def _cleanup_oldest_files(
     # which is older than min_age and delete this file.
     for info in infos:
         oldest = _oldest_candidate(min_file_age, info.path_to_mod_time)
-        if oldest is not None:
+        if oldest is not None and os.path.exists(oldest):  # _cleanup_aged might have deleted oldest
             _delete_file(oldest, info.plugin_name + ": my oldest")
 
     bytes_free = _get_free_space()

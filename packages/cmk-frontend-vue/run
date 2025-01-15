@@ -5,6 +5,8 @@
 
 set -e
 
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -24,6 +26,16 @@ usage() {
     echo "  -a, --all                  shortcut for -b -t -F -T -E -d"
     echo "  -f, --format               format sources"
     echo "  -h, --help                 show this help"
+}
+
+setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv/bin/activate
+    SETUP_VENV_RAN=yes
 }
 
 parse_options() {
@@ -149,6 +161,7 @@ run_build_dev() {
 run_check_format() {
     setup_npm
     npm run test-prettier
+    setup_venv
     python3 scripts/test_license_headers.py
 }
 

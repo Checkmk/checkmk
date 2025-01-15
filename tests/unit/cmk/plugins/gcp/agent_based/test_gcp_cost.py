@@ -78,7 +78,6 @@ def test_gcp_cost_check(section: Section, item: str) -> None:
     assert results == [
         Result(state=State.OK, summary="July 2022: 42.21 EUR"),
         Metric("gcp_cost_per_month", 42.21),
-        Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
     ]
 
 
@@ -126,7 +125,4 @@ def test_gcp_cost_check_levels(
     result: list[Result | Metric], params: Mapping[str, Any], section: Section
 ) -> None:
     results = list(check(item="test1", params=params, section=section))
-    assert results == [
-        *result,
-        Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
-    ]
+    assert results == result

@@ -102,7 +102,6 @@ class Client:
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         first_of_month = self.date.replace(day=1)
-        first_of_previous_month = (first_of_month - datetime.timedelta(days=1)).replace(day=1)
         if "`" in tableid:
             raise ValueError("tableid contains invalid character")
 
@@ -117,11 +116,8 @@ class Client:
             "currency, "
             "invoice.month "
             f"FROM `{tableid}`"
-            'WHERE ('
-            f'   invoice.month = "{first_of_month.strftime("%Y%m")}" '
-            f'   OR invoice.month = "{first_of_previous_month.strftime("%Y%m")}" '
-            ') '
-            f'AND DATE(_PARTITIONTIME) >= "{first_of_previous_month.strftime("%Y-%m-%d")}" '
+            f'WHERE invoice.month = "{first_of_month.strftime("%Y%m")}" '
+            f'AND DATE(_PARTITIONTIME) >= "{first_of_month.strftime("%Y-%m-%d")}" '
             "AND project.name IS NOT NULL "
             "GROUP BY project.name, project.id, currency, invoice.month "
             "ORDER BY project.name, invoice.month"

@@ -7,7 +7,6 @@ import pytest
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._legacy import unit_info, UnitInfo
 from cmk.gui.graphing._metric_expression import (
     _FALLBACK_UNIT_SPEC_FLOAT,
     _FALLBACK_UNIT_SPEC_INT,
@@ -94,20 +93,6 @@ def test_evaluate_cpu_utilization(
         "expected_color",
     ],
     [
-        pytest.param(
-            [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
-            "check_mk-openvpn_clients",
-            "if_in_octets,8,*@bits/s",
-            MetricExpression(
-                Product([Metric("if_in_octets"), Constant(8)]),
-                line_type="line",
-                unit_spec="bits/s",
-            ),
-            16.0,
-            "bits/s",
-            "#37fa37",
-            id="already_migrated-warn, crit, min, max",
-        ),
         # This is a terrible metric from Nagios plug-ins. Test is for survival instead of
         # correctness The unit "percent" is lost on the way. Fixing this would imply also
         # figuring out how to represent graphs for active-icmp check when host has multiple
@@ -173,16 +158,6 @@ def test_evaluate_cpu_utilization(
             _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
             id="constant float",
-        ),
-        pytest.param(
-            [],
-            "check_mk-foo",
-            "97.0@bytes",
-            MetricExpression(Constant(97.0), line_type="line", unit_spec="bytes"),
-            97.0,
-            "bytes",
-            "#000000",
-            id="constant unit",
         ),
         pytest.param(
             [],
@@ -367,7 +342,7 @@ def test_parse_and_evaluate_1(
     raw_expression: str,
     expected_metric_expression: MetricExpression,
     expected_value: float,
-    expected_unit_spec: str | ConvertibleUnitSpecification,
+    expected_unit_spec: ConvertibleUnitSpecification,
     expected_color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
@@ -378,24 +353,7 @@ def test_parse_and_evaluate_1(
     assert result.is_ok()
     assert result.ok.value == expected_value
     assert result.ok.color == expected_color
-
-    if isinstance(expected_unit_spec, ConvertibleUnitSpecification):
-        assert result.ok.unit_spec == expected_unit_spec
-    else:
-        assert isinstance(result.ok.unit_spec, UnitInfo)
-        unit_info_ = unit_info[expected_unit_spec]
-        assert result.ok.unit_spec.id == unit_info_.id
-        assert result.ok.unit_spec.title == unit_info_.title
-        assert result.ok.unit_spec.symbol == unit_info_.symbol
-        assert result.ok.unit_spec.render == unit_info_.render
-        assert result.ok.unit_spec.js_render == unit_info_.js_render
-        assert result.ok.unit_spec.stepping == unit_info_.stepping
-        assert result.ok.unit_spec.color == unit_info_.color
-        assert result.ok.unit_spec.graph_unit == unit_info_.graph_unit
-        assert result.ok.unit_spec.description == unit_info_.description
-        assert result.ok.unit_spec.valuespec == unit_info_.valuespec
-        assert result.ok.unit_spec.perfometer_render == unit_info_.perfometer_render
-        assert result.ok.unit_spec.conversion(123.456) == 123.456
+    assert result.ok.unit_spec == expected_unit_spec
 
 
 @pytest.mark.parametrize(

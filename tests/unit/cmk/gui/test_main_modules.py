@@ -23,7 +23,6 @@ def _plugin_path(main_module_name: str) -> Path:
     name="main_module_name",
     params=[
         "dashboard",
-        "metrics",
         "sidebar",
         "userdb",
         "views",
@@ -80,7 +79,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "bi",
         "views",
         "views/icons",
-        "metrics",
     ],
 )
 def fixture_plugin_module_dir(request):

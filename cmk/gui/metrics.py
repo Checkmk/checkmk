@@ -14,7 +14,6 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
-from typing import Any
 
 from livestatus import SiteId
 
@@ -28,10 +27,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
-from cmk.gui import utils
-from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
-from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._from_api import (
     graphs_from_api,
     metrics_from_api,
@@ -40,13 +36,11 @@ from cmk.gui.graphing._from_api import (
 )
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
-from cmk.gui.graphing._graph_templates import GraphTemplate
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
 from cmk.gui.http import request
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
 
@@ -156,7 +150,6 @@ def _add_graphing_plugins(
         | translations_api.Translation
     ],
 ) -> None:
-    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics_api.Metric):
             metrics_from_api.register(parse_metric_from_api(plugin))
@@ -180,109 +173,8 @@ def _add_graphing_plugins(
 
 def load_plugins() -> None:
     """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    _register_pre_21_plugin_api()
-    utils.load_web_plugins("metrics", globals())
     _add_graphing_plugins(_load_graphing_plugins())
 
-
-def _register_pre_21_plugin_api() -> None:
-    """Register pre 2.1 "plug-in API"
-
-    This was never an official API, but the names were used by built-in and also 3rd party plugins.
-
-    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plug-ins for now.
-
-    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
-    switch to the new API. Until then let's not bother the users with it.
-
-    CMK-12228
-    """
-    # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.plugins.metrics as legacy_api_module  # pylint: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.metrics.utils as legacy_plugin_utils  # pylint: disable=cmk-module-layer-violation
-
-    for name in (
-        "check_metrics",
-        "graph_info",
-        "metric_info",
-        "perfometer_info",
-        "unit_info",
-    ):
-        legacy_api_module.__dict__[name] = graphing_legacy.__dict__[name]
-        legacy_plugin_utils.__dict__[name] = graphing_legacy.__dict__[name]
-
-    for name in (
-        "G",
-        "GB",
-        "K",
-        "KB",
-        "m",
-        "M",
-        "MAX_CORES",
-        "MAX_NUMBER_HOPS",
-        "MB",
-        "P",
-        "PB",
-        "scale_symbols",
-        "skype_mobile_devices",
-        "T",
-        "TB",
-    ):
-        legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
-        legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
-
-    legacy_api_module.__dict__["GraphTemplate"] = GraphTemplate
-    legacy_plugin_utils.__dict__["GraphTemplate"] = GraphTemplate
-
-    for name in (
-        "darken_color",
-        "indexed_color",
-        "lighten_color",
-        "MONITORING_STATUS_COLORS",
-        "parse_color",
-        "parse_color_into_hexrgb",
-        "render_color",
-        "scalar_colors",
-    ):
-        legacy_api_module.__dict__[name] = graphing_color.__dict__[name]
-        legacy_plugin_utils.__dict__[name] = graphing_color.__dict__[name]
-
-    # Avoid needed imports, see CMK-12147
-    globals().update(
-        {
-            "indexed_color": graphing_color.indexed_color,
-            "metric_info": graphing_legacy.metric_info,
-            "check_metrics": graphing_legacy.check_metrics,
-            "graph_info": graphing_legacy.graph_info,
-            "_": _,
-        }
-    )
-
-
-# .
-#   .--Helpers-------------------------------------------------------------.
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   |  Various helper functions                                            |
-#   '----------------------------------------------------------------------'
-# A few helper function to be used by the definitions
-
-
-def metric_to_text(metric: dict[str, Any], value: int | float | None = None) -> str:
-    if value is None:
-        value = metric["value"]
-    return metric["unit"]["render"](value)
-
-
-# aliases to be compatible to old plugins
-physical_precision = cmk.utils.render.physical_precision
-age_human_readable = cmk.utils.render.approx_age
 
 # .
 #   .--Hover-Graph---------------------------------------------------------.

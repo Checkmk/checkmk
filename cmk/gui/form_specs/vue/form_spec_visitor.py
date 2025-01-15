@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Any, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.config import active_config
@@ -250,7 +251,7 @@ def _process_validation_errors(
     first_error = validation_errors[0]
     raise MKUserError(
         "" if not first_error.location else first_error.location[-1],
-        first_error.message,
+        _("Cannot save the form because it contains errors."),
     )
 
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import glob
+import logging
 import os
 import random
 import subprocess
@@ -22,7 +23,6 @@ from cmk.utils.render import fmt_bytes
 # but that is also suboptimal, since the tool depends on `omdlib`.
 from cmk.diskspace import Config, read_config  # pylint: disable=cmk-module-layer-violation
 
-opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv
 
 plugin_dir = omd_root / "share/diskspace"
@@ -36,12 +36,17 @@ def _error(message: str) -> None:
 
 
 def _log(message: str) -> None:
-    sys.stdout.write(f"{message}\n")
+    logging.getLogger(__name__).info(message)
 
 
 def _verbose(message: str) -> None:
-    if opt_verbose:
-        _log(message)
+    logging.getLogger(__name__).debug(message)
+
+
+def _setup_logging(verbose: bool) -> None:
+    logging.basicConfig(
+        format="%(message)s", stream=sys.stdout, level=logging.DEBUG if verbose else logging.INFO
+    )
 
 
 def _print_config(config: Config) -> None:
@@ -371,6 +376,7 @@ def _cleanup_oldest_files(min_free_bytes_and_age: tuple[int, int] | None) -> Non
 
 
 def main() -> None:
+    _setup_logging("-v" in sys.argv)
     config = read_config(diskspace_config_dir)
     _print_config(config)
     _load_plugins()

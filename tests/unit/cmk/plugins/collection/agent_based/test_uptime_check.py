@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -323,3 +324,66 @@ def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -
         result = list(uptime_utils.check({}, section))
 
     assert result == reference
+
+
+_EXPECTED_NO_LEVELS = [
+    Result(state=State.OK, summary="Up since 2018-04-15 10:31:09"),
+    Result(state=State.OK, summary="Uptime: 6 hours 18 minutes"),
+    Metric("uptime", 22731.0),
+]
+
+_EXPECTED_FIXED_LEVELS = [
+    Result(state=State.OK, summary="Up since 2018-04-15 10:31:09"),
+    Result(
+        state=State.CRIT,
+        summary="Uptime: 6 hours 18 minutes (warn/crit at 10 seconds/20 seconds)",
+    ),
+    Metric("uptime", 22731.0, levels=(10.0, 20.0)),
+]
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        pytest.param({}, _EXPECTED_NO_LEVELS, id="no_params"),
+        pytest.param({"max": ("no_levels", None)}, _EXPECTED_NO_LEVELS, id="api v2 no_levels"),
+        pytest.param(
+            {"max": (10, 20)},
+            _EXPECTED_FIXED_LEVELS,
+            id="api v1 fixed",
+        ),
+        pytest.param(
+            {"max": ("fixed", (10, 20))},
+            _EXPECTED_FIXED_LEVELS,
+            id="api v2 fixed",
+        ),
+        pytest.param(
+            {"max": ("predictive", ("uptime", 10, (10, 20)))},
+            [
+                Result(state=State.OK, summary="Up since 2018-04-15 10:31:09"),
+                Result(
+                    state=State.CRIT,
+                    summary="Uptime: 6 hours 18 minutes (prediction: 10 seconds) (warn/crit at 10 "
+                    "seconds/20 seconds)",
+                ),
+                Metric("uptime", 22731.0, levels=(10.0, 20.0)),
+                Metric("predict_uptime", 10.0),
+            ],
+            id="api v2 predictive",
+        ),
+    ],
+)
+def test_uptime_levels_diff_api_versions(
+    params: Mapping[str, Any], expected: list[Result | Metric]
+) -> None:
+    """Check that the uptime library can handle different API versions for level definitions.
+    Can be removed when all the rulesets of the checks using the library are migrated to v2."""
+    # This time freeze has no correlation with the uptime of the test. It
+    # is needed for the check output to always return the same infotext.
+    # The true test happens on state and perfdata
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, 0, tzinfo=ZoneInfo("CET"))):
+        result = list(
+            uptime_utils.check(params, uptime_utils.Section(uptime_sec=22731, message=None))
+        )
+
+    assert result == expected

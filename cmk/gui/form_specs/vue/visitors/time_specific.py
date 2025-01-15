@@ -145,7 +145,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fron
                             elements={
                                 "timeperiod": DictElement(
                                     parameter_form=create_timeperiod_selection(
-                                        title=Title("Time period")
+                                        title=Title("Match only during time period")
                                     ),
                                     required=True,
                                 ),

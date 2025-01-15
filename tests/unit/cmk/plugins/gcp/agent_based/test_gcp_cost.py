@@ -76,11 +76,8 @@ def test_gcp_cost_discovery(section: Section) -> None:
 def test_gcp_cost_check(section: Section, item: str) -> None:
     results = list(check(item=item, params={"levels": None}, section=section))
     assert results == [
-        Result(
-            state=State.OK,
-            summary="Project: test, Cost: 42.21 EUR",
-            details="July 2022: 42.21 EUR, June 2022: 1337.00 EUR",
-        )
+        Result(state=State.OK, summary="July 2022: 42.21 EUR"),
+        Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
     ]
 
 
@@ -89,8 +86,7 @@ def test_gcp_cost_check_data_only_one_month(section: Section) -> None:
     assert results == [
         Result(
             state=State.OK,
-            summary="Project: single, Cost: 2.71 EUR",
-            details="July 2022: 2.71 EUR",
+            summary="July 2022: 2.71 EUR",
         )
     ]
 
@@ -101,18 +97,29 @@ def test_item_not_in_section_yields_no_result(section: Section) -> None:
 
 
 @pytest.mark.parametrize(
-    "state, params",
+    "result, params",
     [
-        pytest.param(State.WARN, {"levels": (21, 50)}, id="warn"),
-        pytest.param(State.CRIT, {"levels": (21, 41)}, id="crit"),
+        pytest.param(
+            Result(
+                state=State.WARN,
+                summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/50.00 EUR)",
+            ),
+            {"levels": ("fixed", (21, 50))},
+            id="warn",
+        ),
+        pytest.param(
+            Result(
+                state=State.CRIT,
+                summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/41.00 EUR)",
+            ),
+            {"levels": ("fixed", (21, 41))},
+            id="crit",
+        ),
     ],
 )
-def test_gcp_cost_check_levels(section: Section, state: State, params: Mapping[str, Any]) -> None:
+def test_gcp_cost_check_levels(result: Result, params: Mapping[str, Any], section: Section) -> None:
     results = list(check(item="test1", params=params, section=section))
     assert results == [
-        Result(
-            state=state,
-            summary="Project: test, Cost: 42.21 EUR",
-            details="July 2022: 42.21 EUR, June 2022: 1337.00 EUR",
-        )
+        result,
+        Result(state=State.OK, notice="June 2022: 1337.00 EUR"),
     ]

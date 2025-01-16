@@ -12,7 +12,6 @@ from __future__ import annotations
 import abc
 import functools
 import re
-import warnings
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, NotRequired, TypedDict
 
@@ -23,7 +22,6 @@ from livestatus import SiteId
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils import deprecation_warnings
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
@@ -728,7 +726,7 @@ def _declare_host_tag_attributes() -> None:
             # Try to translate the title to a built-in topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
             # TODO: We need to adapt the tag data structure to contain topic IDs
-            topic_id = _transform_attribute_topic_title_to_id(topic_spec)
+            topic_id = transform_attribute_topic_title_to_id(topic_spec)
 
             # Build an internal ID from the given topic
             if topic_id is None:
@@ -779,7 +777,7 @@ def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag
 
 
 def declare_custom_host_attrs() -> None:
-    for attr in transform_pre_16_host_topics(active_config.wato_host_attrs):
+    for attr in active_config.wato_host_attrs:
         vs = TextInput(
             title=attr["title"],
             help=attr["help"],
@@ -805,34 +803,7 @@ def declare_custom_host_attrs() -> None:
         )
 
 
-def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Previous to 1.6 the titles of the host attribute topics were stored.
-
-    This lead to issues with localized topics. We now have internal IDs for
-    all the topics and try to convert the values here to the new format.
-
-    We translate the titles which have been distributed with Checkmk to their
-    internal topic ID. No action should be needed. Custom topics or topics of
-    other languages are not translated. The attributes are put into the
-    "Custom attributes" topic once. Users will have to re-configure the topic,
-    sorry :-/."""
-    for custom_attr in custom_attributes:
-        if custom_attr["topic"] in host_attribute_topic_registry:
-            continue
-
-        # The topic not being in the registry means that is most likely an unconverted one.
-        warnings.warn(
-            "Use of free-text topics in custom attributes deprecated.",
-            deprecation_warnings.DeprecatedSince20Warning,
-        )
-        custom_attr["topic"] = (
-            _transform_attribute_topic_title_to_id(custom_attr["topic"]) or "custom_attributes"
-        )
-
-    return custom_attributes
-
-
-def _transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
+def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
     _topic_title_to_id_map = {
         "Basic settings": "basic",
         "Address": "address",

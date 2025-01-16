@@ -470,30 +470,6 @@ def test_legacy_register_rulegroup_without_defaults(
     assert attr.from_config() is True
 
 
-@pytest.mark.parametrize(
-    "old,new",
-    [
-        ("Basic settings", "basic"),
-        ("Management board", "management_board"),
-    ],
-)
-def test_custom_host_attribute_transform(old: str, new: str) -> None:
-    attributes = [
-        {
-            "add_custom_macro": True,
-            "help": "",
-            "name": "attr1",
-            "show_in_table": True,
-            "title": "Attribute 1",
-            "topic": old,
-            "type": "TextAscii",
-        }
-    ]
-
-    transformed_attributes = attrs.transform_pre_16_host_topics(attributes)
-    assert transformed_attributes[0]["topic"] == new
-
-
 @pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize(
     "for_what",

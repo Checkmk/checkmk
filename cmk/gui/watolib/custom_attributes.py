@@ -12,7 +12,6 @@ from cmk.ccc import store
 from cmk.gui import userdb
 from cmk.gui.config import load_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
-from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -68,7 +67,7 @@ def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:
         {
             # Next step: Parse data to get rid of the annotations
             "user": vars_.get("wato_user_attrs", []),  # type: ignore[typeddict-item]
-            "host": transform_pre_16_host_topics(vars_.get("wato_host_attrs", [])),  # type: ignore[arg-type,typeddict-item]
+            "host": vars_.get("wato_host_attrs", []),  # type: ignore[typeddict-item]
         }
     )
 
@@ -84,5 +83,5 @@ def save_custom_attrs_to_mk_file(attrs: CustomAttrSpecs) -> None:
         output += "if type(wato_host_attrs) != list:\n    wato_host_attrs = []\n"
         output += f"wato_host_attrs += {pprint.pformat(attrs['host'])}\n\n"
 
-    store.mkdir(multisite_dir())
+    store.makedirs(multisite_dir())
     store.save_text_to_file(multisite_dir() + "custom_attrs.mk", output)

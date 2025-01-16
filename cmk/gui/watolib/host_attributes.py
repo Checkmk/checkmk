@@ -552,18 +552,13 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
         else:
             self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
-    def attributes(self) -> list[ABCHostAttribute]:
-        return [cls() for cls in self.values()]
-
 
 host_attribute_registry = HostAttributeRegistry()
 
 
 def sorted_host_attributes() -> list[ABCHostAttribute]:
     """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-    return sorted(
-        host_attribute_registry.attributes(), key=lambda a: (a.sort_index(), a.topic()().title)
-    )
+    return sorted(all_host_attributes().values(), key=lambda a: (a.sort_index(), a.topic()().title))
 
 
 def host_attribute_choices() -> Choices:
@@ -574,8 +569,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics: set[type[HostAttributeTopic]] = set()
-    for attr_class in host_attribute_registry.values():
-        attr = attr_class()
+    for attr in all_host_attributes().values():
         if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
             needed_topics.add(attr.topic())
 
@@ -719,7 +713,7 @@ def undeclare_host_tag_attribute(tag_id: str) -> None:
 
 
 def _clear_config_based_host_attributes() -> None:
-    for attr in host_attribute_registry.attributes():
+    for attr in all_host_attributes().values():
         if attr.from_config():
             undeclare_host_attribute(attr.name())
 
@@ -833,8 +827,12 @@ def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
         return None
 
 
+def all_host_attributes() -> dict[str, ABCHostAttribute]:
+    return {ident: cls() for ident, cls in host_attribute_registry.items()}
+
+
 def host_attribute(name: str) -> ABCHostAttribute:
-    return host_attribute_registry[name]()
+    return all_host_attributes()[name]
 
 
 # This is the counterpart of "configure_attributes". Another place which
@@ -844,7 +842,7 @@ def collect_attributes(
 ) -> HostAttributes:
     """Read attributes from HTML variables"""
     host = HostAttributes()
-    for attr in host_attribute_registry.attributes():
+    for attr in all_host_attributes().values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
             continue

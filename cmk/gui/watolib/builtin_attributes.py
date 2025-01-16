@@ -68,7 +68,7 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
-    host_attribute_registry,
+    host_attribute_choices,
     HostAttributeTopic,
     HostAttributeTopicAddress,
     HostAttributeTopicBasicSettings,
@@ -1345,7 +1345,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return ListOf(
-            valuespec=DropdownChoice(choices=host_attribute_registry.get_choices),
+            valuespec=DropdownChoice(choices=host_attribute_choices),
             title=_("Locked attributes"),
             text_if_empty=_("Not locked"),
         )

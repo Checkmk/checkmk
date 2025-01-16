@@ -1,5 +1,5 @@
 load("@cargo_deps_host//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 
 rust_library(
     name = "mk-sql-lib",
@@ -58,4 +58,43 @@ rust_test(
         "tests/files/test-mini.yml",
     ],
     crate = ":mk-sql-lib",
+)
+
+rust_library(
+    name = "mk-sql-tests-common",
+    testonly = 1,
+    srcs = [
+        "tests/common/mod.rs",
+        "tests/common/tools.rs",
+    ],
+    crate_features = ["build_system_bazel"],
+    crate_name = "common",
+    crate_root = "tests/common/mod.rs",
+    deps = all_crate_deps() + [
+        ":mk-sql-lib",
+        "@cargo_deps_host//:assert_cmd",
+        "@cargo_deps_host//:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "mk-sql-lib-test-external",
+    srcs = [
+        "tests/test_ms_sql.rs",
+    ],
+    compile_data = [
+        "tests/files/no-mssql.yml",
+        "tests/files/not-yaml.yml",
+        "tests/files/test-config.yml",
+        "tests/files/test-no-ms-sql.yml",
+        "tests/files/test-mini.yml",
+    ],
+    crate_features = ["build_system_bazel"],
+    deps = all_crate_deps() + [
+        ":mk-sql",
+        ":mk-sql-lib",
+        ":mk-sql-tests-common",
+        "@cargo_deps_host//:assert_cmd",
+        "@cargo_deps_host//:tempfile",
+    ],
 )

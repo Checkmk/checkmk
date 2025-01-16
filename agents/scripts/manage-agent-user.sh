@@ -5,6 +5,10 @@
 
 : "${MK_INSTALLDIR:=""}"
 : "${AGENT_USER:="cmk-agent"}"
+: "${AGENT_USER_UID:=""}"
+: "${AGENT_USER_GID:=""}"
+# "auto" or "create" or "use-existing"
+: "${AGENT_USER_CREATION:="auto"}"
 # "root" or "non-root"
 : "${DEPLOYMENT_MODE:="root"}"
 

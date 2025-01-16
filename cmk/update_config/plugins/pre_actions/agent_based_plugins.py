@@ -12,7 +12,7 @@ from cmk.utils.paths import local_agent_based_plugins_dir
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.urls import werk_reference_url, WerkReference
 
-from cmk.mkp_tool import Manifest
+from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
@@ -43,11 +43,13 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             return
         installer, package_map = get_installer_and_package_map(path_config)
         # group the local_agent_based_plugins_dir files by package
-        grouped_files: dict[Manifest, list[Path]] = {}
+        grouped_files: dict[PackageID, list[Path]] = {}
+        manifests: dict[PackageID, Manifest] = {}
         inactive_files_not_in_package = []
         for path in self._get_files():
             if (manifest := package_map.get(path.resolve())) is not None:
-                grouped_files.setdefault(manifest, []).append(path)
+                grouped_files.setdefault(manifest.id, []).append(path)
+                manifests[manifest.id] = manifest
             else:
                 inactive_files_not_in_package.append(path)
 
@@ -60,22 +62,20 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             if _continue_per_users_choice(conflict_mode).is_abort():
                 raise MKUserError(None, "decommissioned file(s)")
 
-        for manifest, paths in grouped_files.items():
-            if not is_applicable_mkp(manifest):
+        for package_id, paths in grouped_files.items():
+            if not is_applicable_mkp(manifests[package_id]):
                 logger.info(
                     "[%s %s]: Ignoring problems (MKP will be disabled on target version)",
-                    manifest.name,
-                    manifest.version,
+                    package_id.name,
+                    package_id.version,
                 )
                 continue
 
             _log_error_message_obsolete_files(logger, paths)
             logger.error(
-                f"The above file(s) are part of the extension package {manifest.name} {manifest.version}."
+                f"The above file(s) are part of the extension package {package_id.name} {package_id.version}."
             )
-            if disable_incomp_mkp(
-                conflict_mode, manifest.id, installer, PACKAGE_STORE, path_config
-            ):
+            if disable_incomp_mkp(conflict_mode, package_id, installer, PACKAGE_STORE, path_config):
                 continue
             raise MKUserError(None, "incompatible extension package")
 

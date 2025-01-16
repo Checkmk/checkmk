@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Callable
 
 from cmk.ccc.i18n import _
 
@@ -46,7 +47,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -209,6 +210,34 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
+class _EC2RecapMessage:
+    @staticmethod
+    def _cre_message() -> str:
+        return _(
+            "Hosts for EC2 instances need to be created manually, please check the %s."
+        ) % HTMLWriter.render_a(
+            _("documentation"),
+            href=doc_reference_url(DocReference.AWS_EC2),
+        )
+
+    message: Callable[[], str] = _cre_message
+
+
+ec2_recap_message = _EC2RecapMessage()
+
+
+def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
+    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    if "ec2" in parsed_data.get(FormSpecId("configure_services_to_monitor"), {}).get(
+        "services", []
+    ):
+        message += " " + ec2_recap_message.message()
+    return [
+        Text(text=title),
+        Text(text=message),
+    ]
+
+
 def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
@@ -226,14 +255,7 @@ def recap_found_services(
         service_discovery_result=service_discovery_result,
     )
     if len(filtered_groups_of_services[aws_service_interest]):
-        return [
-            Text(text=_("AWS services found!")),
-            Text(
-                text=_(
-                    "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
-                )
-            ),
-        ]
+        return _save_and_activate_recap(_("AWS services found!"), parsed_data)
     return [
         Text(text=_("No AWS services found.")),
         Text(
@@ -264,14 +286,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, ____: [
-                        Text(text=_("Skipped the configuration test.")),
-                        Text(
-                            text=_(
-                                "Save your progress and go to the Activate Changes page to enable it."
-                            )
-                        ),
-                    ]
+                    lambda __, ___, parsed_data: _save_and_activate_recap(
+                        _("Skipped the configuration test."), parsed_data
+                    )
                 ],
                 next_button_label=_("Skip test"),
             ),

@@ -7896,6 +7896,10 @@ msgstr "Gemiddelde checker-latentie"
 msgid "Average consumption"
 msgstr "Gemiddeld verbruik"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Gemiddelde groei aantal documenten"
+
 msgid "Average disk I/O-queue length"
 msgstr "Gemiddelde schijf I/O-queue lengte"
 
@@ -11379,6 +11383,9 @@ msgstr "Kan geen gegevens ophalen van ntop REST API: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Kan geen historische gegevens ophalen met Nagios core"
+
+msgid "Cannot save the form because it contains errors."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "Kan niet testen. Kan het aantal CPU's op het doelsysteem niet bepalen."
@@ -19115,6 +19122,10 @@ msgstr "Diagnostiek dump"
 msgid "Diagnostics dump started..."
 msgstr "Diagnostiek dump gestart..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Niet veranderd"
 
@@ -23680,10 +23691,6 @@ msgid "Expected update interval"
 msgstr "Verwacht update-interval"
 
 #, fuzzy
-msgid "Experimental rendering"
-msgstr "Ondernemingsfunctie"
-
-#, fuzzy
 msgid "Expiration Date"
 msgstr "Registratie Staat"
 
@@ -25567,10 +25574,6 @@ msgstr "Netwerken"
 msgid "Form factor"
 msgstr "Vormfactor"
 
-#, fuzzy
-msgid "Form specs"
-msgstr "Voor specifieke SID's"
-
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -26216,6 +26219,10 @@ msgstr "General Purpose SSD (gp2) ruimte"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "General Purpose SSD (gp3) ruimte"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Algemene fout"
 
 msgid "Generate"
 msgstr "Genereer"
@@ -34323,10 +34330,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Ongeldig DCD commando: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Ongeldige ident"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Ongeldig IPv4 adres: %s"
 
@@ -34385,10 +34388,6 @@ msgstr "Ongeldig automatiseringsgeheim."
 msgid "Invalid back URL provided."
 msgstr "Ongeldige URL teruggegeven."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Ongeldig onderwerp"
-
 msgid "Invalid call: No profiles set."
 msgstr "Ongeldige oproep: Geen profielen ingesteld."
 
@@ -34412,9 +34411,17 @@ msgstr "Ongeldige controleparameter"
 msgid "Invalid check type"
 msgstr "Ongeldig controletype"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Ongeldig onderwerp"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34423,10 +34430,6 @@ msgstr "Ongeldige URL teruggegeven."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ongeldige kleurspecificatie '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Ongeldige actie"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34445,19 +34448,35 @@ msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
 #, fuzzy
-msgid "Invalid data for list"
+msgid "Invalid data"
+msgstr "Ongeldige ident"
+
+#, fuzzy
+msgid "Invalid data format"
 msgstr "Ongeldige gegevensbron: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Ongeldige gegevensbron: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Ongeldige bestandsnaam"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Ongeldige datasource '%s' geconfigureerd."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Ongeldige test."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Ongeldige gegevensbron: %s"
 
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
@@ -34473,10 +34492,6 @@ msgstr "Ongeldig verwacht callable voor %s op idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Ongeldige bestandsnaam"
 
 msgid "Invalid file name"
 msgstr "Ongeldige bestandsnaam"
@@ -34498,14 +34513,6 @@ msgstr "Ongeldige bestandsnaam"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Ongeldig fixel element type '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Ongeldige bestandsnaam"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Ongeldige ident"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34553,10 +34560,6 @@ msgstr "Ongeldige ident"
 msgid "Invalid ident: %s"
 msgstr "Ongeldige ident: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Ongeldige bestandsnaam"
-
 msgid "Invalid login credentials."
 msgstr "Ongeldige inloggegevens."
 
@@ -34566,21 +34569,13 @@ msgstr "Ongeldige man pagina: Mislukt om de titel te krijgen"
 msgid "Invalid messaging method selected."
 msgstr "Ongeldige berichtmethode geselecteerd."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Ongeldig onderwerp"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Ongeldig onderwerp"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Ongeldig onderwerp"
+msgid "Invalid number"
+msgstr "Ongeldige bestandsnaam"
 
 msgid "Invalid package part"
 msgstr "Ongeldig pakketonderdeel"
@@ -34701,10 +34696,6 @@ msgstr "Ongeldige momentopname (te klein)"
 msgid "Invalid start time given"
 msgstr "Ongeldige starttijd gegeven"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Ongeldige actie"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
@@ -34746,10 +34737,6 @@ msgstr "Ongeldig onderwerp"
 msgid "Invalid transaction"
 msgstr "Ongeldige transactie"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Ongeldige test."
-
 msgid "Invalid type specified."
 msgstr "Ongeldig type opgegeven."
 
@@ -34765,10 +34752,6 @@ msgid "Invalid user input"
 msgstr "Ongeldige gebruikersinvoer"
 
 msgid "Invalid value for ack parameter."
-msgstr "Ongeldige waarde voor ack parameter."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Ongeldige waarde voor ack parameter."
 
 #, python-format
@@ -36263,6 +36246,11 @@ msgstr "Niveaus SNAT-gebruik"
 msgid "Levels app gateway"
 msgstr "Niveaus app gateway"
 
+msgid ""
+"Levels are applied to the value as reported by the application, or to the "
+"computed rate (if enabled)."
+msgstr ""
+
 msgid "Levels byte count"
 msgstr "Niveaus byte-telling"
 
@@ -37359,6 +37347,10 @@ msgstr ""
 
 msgid "List crash reports of all sites"
 msgstr "Lijst van crashmeldingen van alle locaties"
+
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Dit rapportelement bestaat niet."
 
 msgid "List grouped interfaces instead"
 msgstr "In plaats daarvan gegroepeerde interfaces weergeven"
@@ -43621,6 +43613,14 @@ msgstr "Niet"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Host wedstrijd lijst"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Poortnummer"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Geen geldige URL (Alleen http en https URL's zijn toegestaan)."
 
@@ -43629,6 +43629,10 @@ msgstr "Niet alle locaties zijn bevraagd. Sommige informatie ontbreekt."
 
 msgid "Not an active member of the stack"
 msgstr "Geen actief lid van de stapel"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Ongeldige bestandsnaam"
 
 msgid "Not authenticated"
 msgstr "Niet geauthenticeerd"
@@ -50183,6 +50187,9 @@ msgstr "Prefetch hits"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch metadata hit ratio"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Voorvoegsel"
 
@@ -53976,6 +53983,10 @@ msgstr "Regel pakken"
 msgid "Rule properties"
 msgstr "Regeleigenschappen"
 
+#, fuzzy
+msgid "Rule rendering mode"
+msgstr "Lopende pods"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Weergave van de regel: %s"
@@ -55511,8 +55522,8 @@ msgstr "Selecteer een iCalendar bestand (<tt>*.ics</tt>) van uw PC"
 
 #, fuzzy
 msgid ""
-"Select and configure AWS services you would like to monitor, and set other "
-"options such as AWS tags or a proxy server."
+"Select and configure AWS services you would like to monitor, and optionally "
+"restrict them with AWS tags."
 msgstr "Te controleren Azure diensten"
 
 #, fuzzy
@@ -64021,7 +64032,10 @@ msgstr "De volledige hardware- en software-inventaris van een host"
 msgid "The configuration \"%s\" does not exist."
 msgstr "De site \"%s\" bestaat niet."
 
-msgid "The configuration bundle does not contain all required objects."
+#, python-format
+msgid ""
+"The configuration bundle '%s' is not valid. This likely means that parts of "
+"it were removed or not properly created."
 msgstr ""
 
 msgid "The configuration is currently in read only mode. "
@@ -76661,10 +76675,6 @@ msgstr ""
 "Kan geneste groepen niet synchroniseren (geen gemeenschappelijke basis DN "
 "gevonden voor gebruiker basis DN \"%s\" en groep basis DN \"%s\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Mislukt om waarde te renderen:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Kan pictogram niet uploaden: %s"
@@ -79232,6 +79242,10 @@ msgstr "Gebruikers, rollen en machtigingen"
 msgid "Users: User Management"
 msgstr "Gebruikersbeheer"
 
+#, fuzzy
+msgid "Using default value"
+msgstr "Standaardwaarde"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -80662,6 +80676,10 @@ msgstr "Vrijwillige contextwisselingen"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch binding"
+
+#, fuzzy
+msgid "Vue experimental features"
+msgstr "Ondernemingsfunctie"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVM volumes (Linux)"
@@ -85425,6 +85443,10 @@ msgstr "gebruikers in staat stellen deze melding te deactiveren"
 msgid "and"
 msgstr "Band"
 
+#, fuzzy, python-format
+msgid "and %s more"
+msgstr " en %s '%s'"
+
 msgid "any"
 msgstr "elke"
 
@@ -87544,6 +87566,70 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "Experimental rendering"
+#~ msgstr "Ondernemingsfunctie"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "Voor specifieke SID's"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Ongeldige ident"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Ongeldige actie"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Ongeldige gegevensbron: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Ongeldige bestandsnaam"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Ongeldige ident"
+
+#, fuzzy
+#~ msgid "Invalid integer number"
+#~ msgstr "Ongeldige bestandsnaam"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Ongeldige actie"
+
+#, fuzzy
+#~ msgid "Invalid tuple"
+#~ msgstr "Ongeldige test."
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Ongeldige waarde voor ack parameter."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Mislukt om waarde te renderen:"
+
+#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "Actieve paden"
 
@@ -87583,10 +87669,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Schijfgebruik"
 
-#, fuzzy, python-format
-#~ msgid "General value error: %s"
-#~ msgstr "Algemene fout"
-
 #, fuzzy
 #~ msgid "Generic percentage value"
 #~ msgstr "Generieke numerieke waarde"
@@ -87616,56 +87698,12 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgstr "Pauze"
 
 #, fuzzy
-#~ msgid "Invalid choice"
-#~ msgstr "Ongeldig onderwerp"
-
-#, fuzzy
-#~ msgid "Invalid choice, falling back to False"
-#~ msgstr "Back-upcodes opnieuw genereren"
-
-#, fuzzy
-#~ msgid "Invalid data"
-#~ msgstr "Ongeldige ident"
-
-#, fuzzy
-#~ msgid "Invalid data format"
-#~ msgstr "Ongeldige gegevensbron: %s"
-
-#, fuzzy
-#~ msgid "Invalid data. Missing filename"
-#~ msgstr "Ongeldige bestandsnaam"
-
-#, fuzzy
-#~ msgid "Invalid datatype"
-#~ msgstr "Ongeldige test."
-
-#, fuzzy, python-format
-#~ msgid "Invalid datatype of value: %s"
-#~ msgstr "Ongeldige gegevensbron: %s"
-
-#, fuzzy
-#~ msgid "List element is not a number"
-#~ msgstr "Dit rapportelement bestaat niet."
-
-#, fuzzy
 #~ msgid "Lower levels for average success ratio"
 #~ msgstr "Lagere niveaus voor SMS-succespercentage"
 
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "Bovenste niveaus voor herstarten"
-
-#, fuzzy
-#~ msgid "Not a list"
-#~ msgstr "Host wedstrijd lijst"
-
-#, fuzzy
-#~ msgid "Not a number"
-#~ msgstr "Poortnummer"
-
-#, fuzzy
-#~ msgid "Not an integer number"
-#~ msgstr "Ongeldige bestandsnaam"
 
 #, fuzzy
 #~ msgid "Number of SIP/H323 fax success calls"
@@ -87678,10 +87716,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "Totale duur"
-
-#, fuzzy
-#~ msgid "Using default value"
-#~ msgstr "Standaardwaarde"
 
 #, fuzzy
 #~ msgid "Complete variable list"

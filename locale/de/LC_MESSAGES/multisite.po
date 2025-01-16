@@ -7704,6 +7704,10 @@ msgstr "Durchschnittliche Checker-Latenz"
 msgid "Average consumption"
 msgstr "Durchschnittlicher Verbrauch"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Durchschnittliches Wachstum der Dokumentenanzahl"
+
 msgid "Average disk I/O-queue length"
 msgstr "Durchschnittliche Länge Disk I/O-Queue"
 
@@ -11002,6 +11006,9 @@ msgstr "Daten können nicht von der ntop REST API abgerufen werden: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
+
+msgid "Cannot save the form because it contains errors."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -18457,6 +18464,10 @@ msgstr "Diagnose-Dump"
 msgid "Diagnostics dump started..."
 msgstr "Diagnose-Dump gestartet..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr "Das Wörterbuch enthält ungültige Schlüssel: %r"
+
 msgid "Did not changed"
 msgstr "Hat sich nicht geändert"
 
@@ -22905,10 +22916,6 @@ msgstr "Erwarteter Zustand"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
-#, fuzzy
-msgid "Experimental rendering"
-msgstr "Experimentelle Funktionen"
-
 msgid "Expiration Date"
 msgstr "Ablaufdatum"
 
@@ -24718,9 +24725,6 @@ msgstr "Gabelungen"
 msgid "Form factor"
 msgstr "Formfaktor"
 
-msgid "Form specs"
-msgstr "Formularvorgaben"
-
 msgid "FormSpec and internal data structure mismatch"
 msgstr "FormSpec und interne Datenstruktur stimmen nicht überein"
 
@@ -25354,6 +25358,10 @@ msgstr "Platz für General Purpose SSD (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Gesamtplatz für General Purpose SSD (gp3)"
+
+#, python-format
+msgid "General value error: %s"
+msgstr "Genereller Wertfehler: %s"
 
 msgid "Generate"
 msgstr "Erzeugen"
@@ -33044,9 +33052,6 @@ msgstr "Ungültiges CSRF-Token (%r) für Sitzung (%r)"
 msgid "Invalid DCD command: %r"
 msgstr "Ungültiger DCD-Befehl: %r"
 
-msgid "Invalid FixedValue"
-msgstr "Ungültiger fester Wert"
-
 msgid "Invalid IP address"
 msgstr "Ungültige IP-Adresse"
 
@@ -33103,9 +33108,6 @@ msgstr "Ungültiges Automatisierungspasswort."
 msgid "Invalid back URL provided."
 msgstr "Fehlerhafte Rückkehradresse angegeben."
 
-msgid "Invalid boolean choice"
-msgstr "Ungültige boolesche Auswahl"
-
 msgid "Invalid call: No profiles set."
 msgstr "Ungültiger Anruf: Keine Profile gesetzt."
 
@@ -33129,9 +33131,15 @@ msgstr "Ungültiger Check-Parameter"
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
 
+msgid "Invalid choice"
+msgstr "Ungültige Auswahl"
+
 #, python-format
 msgid "Invalid choice %r"
 msgstr "Ungültige Auswahl %r"
+
+msgid "Invalid choice, falling back to False"
+msgstr "Ungültige Auswahl, Rückkehr zu 'False'"
 
 msgid "Invalid code provided"
 msgstr "Ungültiger Code angegeben"
@@ -33139,9 +33147,6 @@ msgstr "Ungültiger Code angegeben"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ungültige Farbangabe '%s'"
-
-msgid "Invalid conditions"
-msgstr "Ungültige Bedingungen"
 
 msgid "Invalid configuration bundle group type."
 msgstr "Ungültiger Konfigurationsbündel-Gruppentyp."
@@ -33158,19 +33163,32 @@ msgstr ""
 "Ungültiges benutzerdefiniertes Feld. Es sind nur die Zeichen a-z, A-Z, 0-9, "
 "_ und - erlaubt."
 
-msgid "Invalid data for list"
-msgstr "Ungültige Daten für die Liste"
+msgid "Invalid data"
+msgstr "Ungültige Daten"
+
+msgid "Invalid data format"
+msgstr "Ungültiges Datenformat"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Ungültige Datenquelle: %s"
 
+msgid "Invalid data. Missing filename"
+msgstr "Ungültige Daten. Dateiname fehlt"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Ungültige Datenquelle '%s' konfiguriert."
 
+msgid "Invalid datatype"
+msgstr "Ungültiger Datentyp"
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ungültiger Datentyp des Zeitstempels (muss int/float sein)."
+
+#, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Ungültiger Datentyp vom Wert: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -33186,9 +33204,6 @@ msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 #, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ungültiger Erweiterungstyp, unterstützte Typen sind: %s"
-
-msgid "Invalid file"
-msgstr "Ungültige Datei"
 
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
@@ -33209,12 +33224,6 @@ msgstr "Ungültiger Dateiname"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Es gibt kein Seitenelement vom Typ '%s'"
-
-msgid "Invalid float number"
-msgstr "Ungültige Float-Nummer"
-
-msgid "Invalid folder"
-msgstr "Ungültiger Ordner"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33263,9 +33272,6 @@ msgstr "Ungültiger Schlüssel"
 msgid "Invalid ident: %s"
 msgstr "Ungültiger Schlüssel: %s"
 
-msgid "Invalid integer number"
-msgstr "Ungültige Integer-Nummer"
-
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
 
@@ -33275,18 +33281,13 @@ msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
 msgid "Invalid messaging method selected."
 msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 
-msgid "Invalid metric"
-msgstr "Ungültige Metrik"
-
 #, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 
-msgid "Invalid multiple choice value"
-msgstr "Ungültiger Wert für Mehrfachauswahl"
-
-msgid "Invalid optional choice"
-msgstr "Ungültige optionale Auswahl"
+#, fuzzy
+msgid "Invalid number"
+msgstr "Ungültige Float-Nummer"
 
 msgid "Invalid package part"
 msgstr "Ungültiger Teil im Paket"
@@ -33408,9 +33409,6 @@ msgstr "Ungültige Sicherung (zu klein)"
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
 
-msgid "Invalid string"
-msgstr "Ungültige Zeichenkette"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ungültige Merkmal ID. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>_</tt>, <tt>-</"
@@ -33452,9 +33450,6 @@ msgstr "Ungültiges Thema"
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
 
-msgid "Invalid tuple"
-msgstr "Ungültiges Tuple"
-
 msgid "Invalid type specified."
 msgstr "Ungültiger Typ angegeben."
 
@@ -33470,9 +33465,6 @@ msgstr "Ungültige Benutzereingabe"
 
 msgid "Invalid value for ack parameter."
 msgstr "Ungültiger Wert für ACK Parameter."
-
-msgid "Invalid value for valuespec"
-msgstr "Ungültiger Wert für valuespec"
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -34887,6 +34879,11 @@ msgstr "Level für SNAT-Nutzung"
 msgid "Levels app gateway"
 msgstr "Level app gateway"
 
+msgid ""
+"Levels are applied to the value as reported by the application, or to the "
+"computed rate (if enabled)."
+msgstr ""
+
 msgid "Levels byte count"
 msgstr "Level für die Byte-Zählung"
 
@@ -35936,6 +35933,9 @@ msgstr ""
 
 msgid "List crash reports of all sites"
 msgstr "Liste der Absturzberichte aller Instanzen"
+
+msgid "List element is not a number"
+msgstr "Dieses Listenelement ist keine Nummer"
 
 msgid "List grouped interfaces instead"
 msgstr "Stattdessen gruppierte Schnittstellen auflisten"
@@ -41971,6 +41971,12 @@ msgstr "Nicht"
 msgid "Not Before: %s - Not After: %s"
 msgstr "Nicht vor: %s - nicht nach: %s"
 
+msgid "Not a list"
+msgstr "Dies ist keine Liste"
+
+msgid "Not a number"
+msgstr "Dies ist keine Nummer"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Keine gültige URL (nur http- und https-URLs sind zulässig)."
 
@@ -41979,6 +41985,9 @@ msgstr "Nicht alle Instanzen wurde angefragt. Es fehlen einige Informationen."
 
 msgid "Not an active member of the stack"
 msgstr "Kein aktives Stackmitglied"
+
+msgid "Not an integer number"
+msgstr "Dies ist keine Ganzzahl"
 
 msgid "Not authenticated"
 msgstr "Nicht authentifiziert"
@@ -48139,6 +48148,9 @@ msgstr "Prefetchingtreffer"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch Metadata Hitrate"
 
+msgid "Prefill value is an input hint"
+msgstr "Der vorgegebene Wert ist ein Eingabehinweis"
+
 msgid "Prefix"
 msgstr "Präfix"
 
@@ -51794,6 +51806,10 @@ msgstr "Regelpakete"
 msgid "Rule properties"
 msgstr "Regel-Eigenschaften"
 
+#, fuzzy
+msgid "Rule rendering mode"
+msgstr "Rundungsmodus"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Darstellung der Regel: %s"
@@ -53261,9 +53277,10 @@ msgstr "Wählen Sie ein Symbol aus"
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Wählen Sie eine iCalender-Datei (<tt>*.ics</tt>) von Ihrem Rechner"
 
+#, fuzzy
 msgid ""
-"Select and configure AWS services you would like to monitor, and set other "
-"options such as AWS tags or a proxy server."
+"Select and configure AWS services you would like to monitor, and optionally "
+"restrict them with AWS tags."
 msgstr ""
 "Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten, "
 "und legen Sie weitere Optionen wie AWS-Merkmale oder einen Proxy-Server fest."
@@ -61591,8 +61608,11 @@ msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
 msgid "The configuration \"%s\" does not exist."
 msgstr "Die Konfiguration \"%s\" existiert nicht."
 
-msgid "The configuration bundle does not contain all required objects."
-msgstr "Das Konfigurationsbündel enthält nicht alle erforderlichen Objekte."
+#, python-format
+msgid ""
+"The configuration bundle '%s' is not valid. This likely means that parts of "
+"it were removed or not properly created."
+msgstr ""
 
 msgid "The configuration is currently in read only mode. "
 msgstr "Die Konfiguration ist aktuell schreibgeschützt. "
@@ -73763,9 +73783,6 @@ msgstr ""
 "gemeinsame Basis DN für die Benutzerbasis DN \"%s\" und die Gruppenbasis DN "
 "\"%s\" gefunden)"
 
-msgid "Unable to transform value"
-msgstr "Wert kann nicht umgewandelt werden"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Fehler beim Hochladen des Symbols: %s"
@@ -76245,6 +76262,9 @@ msgstr "Benutzer, Rollen und Berechtigungen"
 msgid "Users: User Management"
 msgstr "Benutzer: Benutzer-Verwaltung"
 
+msgid "Using default value"
+msgstr "Standardwert verwenden"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -77526,6 +77546,10 @@ msgstr "Freiwillige Kontextwechsel"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch Verbindung"
+
+#, fuzzy
+msgid "Vue experimental features"
+msgstr "Enterprise Funktion"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVM volumes (Linux)"
@@ -82317,6 +82341,10 @@ msgstr "Benutzern erlauben, diese Benachrichtigung zu deaktivieren"
 msgid "and"
 msgstr "und"
 
+#, fuzzy, python-format
+msgid "and %s more"
+msgstr " und %s '%s'"
+
 msgid "any"
 msgstr "beliebig"
 
@@ -84382,6 +84410,58 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#, fuzzy
+#~ msgid "Experimental rendering"
+#~ msgstr "Experimentelle Funktionen"
+
+#~ msgid "Form specs"
+#~ msgstr "Formularvorgaben"
+
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Ungültiger fester Wert"
+
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Ungültige boolesche Auswahl"
+
+#~ msgid "Invalid conditions"
+#~ msgstr "Ungültige Bedingungen"
+
+#~ msgid "Invalid data for list"
+#~ msgstr "Ungültige Daten für die Liste"
+
+#~ msgid "Invalid file"
+#~ msgstr "Ungültige Datei"
+
+#~ msgid "Invalid folder"
+#~ msgstr "Ungültiger Ordner"
+
+#~ msgid "Invalid integer number"
+#~ msgstr "Ungültige Integer-Nummer"
+
+#~ msgid "Invalid metric"
+#~ msgstr "Ungültige Metrik"
+
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Ungültiger Wert für Mehrfachauswahl"
+
+#~ msgid "Invalid optional choice"
+#~ msgstr "Ungültige optionale Auswahl"
+
+#~ msgid "Invalid string"
+#~ msgstr "Ungültige Zeichenkette"
+
+#~ msgid "Invalid tuple"
+#~ msgstr "Ungültiges Tuple"
+
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Ungültiger Wert für valuespec"
+
+#~ msgid "The configuration bundle does not contain all required objects."
+#~ msgstr "Das Konfigurationsbündel enthält nicht alle erforderlichen Objekte."
+
+#~ msgid "Unable to transform value"
+#~ msgstr "Wert kann nicht umgewandelt werden"
+
 #~ msgid "Rendering mode for valuespecs and tables"
 #~ msgstr "Rendering-Modus für Valuespecs und Tabellen"
 
@@ -84418,16 +84498,8 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Calls per Second"
 #~ msgstr "Aufrufe pro Sekunde"
 
-#, python-format
-#~ msgid "Dictionary contains invalid keys: %r"
-#~ msgstr "Das Wörterbuch enthält ungültige Schlüssel: %r"
-
 #~ msgid "Disk IO Utilization"
 #~ msgstr "E/A-Festplattenauslastung"
-
-#, python-format
-#~ msgid "General value error: %s"
-#~ msgstr "Genereller Wertfehler: %s"
 
 #~ msgid "Generic percentage value"
 #~ msgstr "Generischer Prozentwert"
@@ -84453,31 +84525,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Indeterminate"
 #~ msgstr "Unbestimmt"
 
-#~ msgid "Invalid choice"
-#~ msgstr "Ungültige Auswahl"
-
-#~ msgid "Invalid choice, falling back to False"
-#~ msgstr "Ungültige Auswahl, Rückkehr zu 'False'"
-
-#~ msgid "Invalid data"
-#~ msgstr "Ungültige Daten"
-
-#~ msgid "Invalid data format"
-#~ msgstr "Ungültiges Datenformat"
-
-#~ msgid "Invalid data. Missing filename"
-#~ msgstr "Ungültige Daten. Dateiname fehlt"
-
-#~ msgid "Invalid datatype"
-#~ msgstr "Ungültiger Datentyp"
-
-#, python-format
-#~ msgid "Invalid datatype of value: %s"
-#~ msgstr "Ungültiger Datentyp vom Wert: %s"
-
-#~ msgid "List element is not a number"
-#~ msgstr "Dieses Listenelement ist keine Nummer"
-
 #~ msgid "Lower levels for average success ratio"
 #~ msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
 
@@ -84486,15 +84533,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "Schwere-Levels den Alarmzuständen zuordnen"
-
-#~ msgid "Not a list"
-#~ msgstr "Dies ist keine Liste"
-
-#~ msgid "Not a number"
-#~ msgstr "Dies ist keine Nummer"
-
-#~ msgid "Not an integer number"
-#~ msgstr "Dies ist keine Ganzzahl"
 
 #~ msgid "Number of Attempted SIP/H323 calls"
 #~ msgstr "Anzahl der versuchten SIP/H323 Anrufe"
@@ -84529,17 +84567,11 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Number of failed SIP/H323 calls"
 #~ msgstr "Anzahl fehlgeschlagener SIP/H323 Anrufe"
 
-#~ msgid "Prefill value is an input hint"
-#~ msgstr "Der vorgegebene Wert ist ein Eingabehinweis"
-
 #~ msgid "Tel2IP"
 #~ msgstr "Tel2IP"
 
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "Gesamtdauer der SIP/H323 Anrufe"
-
-#~ msgid "Using default value"
-#~ msgstr "Standardwert verwenden"
 
 #~ msgid "Complete variable list"
 #~ msgstr "Vollständige Variablenliste"

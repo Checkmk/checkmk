@@ -7832,6 +7832,10 @@ msgstr "Latenza media del checker"
 msgid "Average consumption"
 msgstr "Consumo medio"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Crescita media del numero di documenti"
+
 msgid "Average disk I/O-queue length"
 msgstr "Lunghezza media della coda di I/O su disco"
 
@@ -11282,6 +11286,9 @@ msgstr "Impossibile recuperare i dati da ntop REST API: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Impossibile recuperare i dati storici con Nagios core"
+
+msgid "Cannot save the form because it contains errors."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -18937,6 +18944,10 @@ msgstr "Dump di diagnostica"
 msgid "Diagnostics dump started..."
 msgstr "Il dump della diagnostica è iniziato..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Non è cambiato"
 
@@ -23476,10 +23487,6 @@ msgid "Expected update interval"
 msgstr "Intervallo di aggiornamento previsto"
 
 #, fuzzy
-msgid "Experimental rendering"
-msgstr "Caratteristica dell'impresa"
-
-#, fuzzy
 msgid "Expiration Date"
 msgstr "Nessuna data di scadenza"
 
@@ -25350,10 +25357,6 @@ msgstr "Reti"
 msgid "Form factor"
 msgstr "Fattore di forma"
 
-#, fuzzy
-msgid "Form specs"
-msgstr "Per i SID specifici"
-
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -25991,6 +25994,10 @@ msgstr "Spazio SSD per uso generale (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Spazio SSD per usi generali (gp3)"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Errore generale"
 
 msgid "Generate"
 msgstr "Genera"
@@ -34043,10 +34050,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Comando DCD non valido: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Identità non valida"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Indirizzo IPv4 non valido: %s"
 
@@ -34103,10 +34106,6 @@ msgstr "Segreto di automazione non valido."
 msgid "Invalid back URL provided."
 msgstr "URL di ritorno non valido fornito."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Argomento non valido"
-
 msgid "Invalid call: No profiles set."
 msgstr "Chiamata non valida: Nessun profilo impostato."
 
@@ -34130,9 +34129,17 @@ msgstr "Parametro di controllo non valido"
 msgid "Invalid check type"
 msgstr "Tipo di controllo non valido"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Argomento non valido"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Argomento non valido"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Invalidare tutti i codici di backup"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34141,10 +34148,6 @@ msgstr "URL di ritorno non valido fornito."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specifica di colore non valida '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Azione non valida"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34162,19 +34165,35 @@ msgid ""
 msgstr "ID tag non valido. Sono ammessi solo i caratteri a-z, A-Z, 0-9, _ e -."
 
 #, fuzzy
-msgid "Invalid data for list"
-msgstr "Origine dati non valida: %s"
+msgid "Invalid data"
+msgstr "Identità non valida"
+
+#, fuzzy
+msgid "Invalid data format"
+msgstr "Formato di data non valido: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Origine dati non valida: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Nome del file non valido"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Sorgente dati non valida '%s' configurata."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Test non valido."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo di dato non valido del timestamp: deve essere int o float."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Origine dati non valida: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -34190,10 +34209,6 @@ msgstr "Callable non valido previsto per %s a idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tipo di perfometro non valido: %s"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Nome del file non valido"
 
 msgid "Invalid file name"
 msgstr "Nome del file non valido"
@@ -34214,14 +34229,6 @@ msgstr "Nome del file non valido"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Tipo di elemento fixel non valido '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Nome del file non valido"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Identità non valida"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34271,10 +34278,6 @@ msgstr "Identità non valida"
 msgid "Invalid ident: %s"
 msgstr "Identità non valida: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Nome del file non valido"
-
 msgid "Invalid login credentials."
 msgstr "Credenziali di accesso non valide."
 
@@ -34284,21 +34287,13 @@ msgstr "Pagina man non valida: Impossibile ottenere il titolo"
 msgid "Invalid messaging method selected."
 msgstr "È stato selezionato un metodo di messaggistica non valido."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Argomento non valido"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tipo di perfometro non valido: %s"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Argomento non valido"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Argomento non valido"
+msgid "Invalid number"
+msgstr "Nome del file non valido"
 
 msgid "Invalid package part"
 msgstr "Parte di pacchetto non valida"
@@ -34418,10 +34413,6 @@ msgstr "Istantanea non valida (troppo piccola)"
 msgid "Invalid start time given"
 msgstr "Ora di inizio non valida indicata"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Azione non valida"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "ID tag non valido. Sono ammessi solo i caratteri a-z, A-Z, 0-9, _ e -."
 
@@ -34462,10 +34453,6 @@ msgstr "Argomento non valido"
 msgid "Invalid transaction"
 msgstr "Transazione non valida"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Test non valido."
-
 msgid "Invalid type specified."
 msgstr "Tipo specificato non valido."
 
@@ -34481,10 +34468,6 @@ msgid "Invalid user input"
 msgstr "Inserimento utente non valido"
 
 msgid "Invalid value for ack parameter."
-msgstr "Valore non valido per il parametro ack."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Valore non valido per il parametro ack."
 
 #, python-format
@@ -35965,6 +35948,11 @@ msgstr "Livelli di utilizzo di SNAT"
 msgid "Levels app gateway"
 msgstr "Livelli app gateway"
 
+msgid ""
+"Levels are applied to the value as reported by the application, or to the "
+"computed rate (if enabled)."
+msgstr ""
+
 msgid "Levels byte count"
 msgstr "Livelli conteggio byte"
 
@@ -37041,6 +37029,10 @@ msgstr ""
 
 msgid "List crash reports of all sites"
 msgstr "Elenco dei rapporti sugli incidenti di tutti i siti"
+
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Questo elemento di rapporto non esiste."
 
 msgid "List grouped interfaces instead"
 msgstr "Elenca invece le interfacce raggruppate"
@@ -43241,6 +43233,14 @@ msgstr "Non"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Elenco degli abbinamenti dell'host"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Numero di porta"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Non è un URL valido (sono ammessi solo URL http e https)."
 
@@ -43249,6 +43249,10 @@ msgstr "Non tutti i siti sono stati interrogati. Mancano alcune informazioni."
 
 msgid "Not an active member of the stack"
 msgstr "Non è un membro attivo della pila"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Nome del file non valido"
 
 msgid "Not authenticated"
 msgstr "Non autenticato"
@@ -49750,6 +49754,9 @@ msgstr "Risultati del prefetch"
 msgid "Prefetch metadata hit ratio"
 msgstr "Prefetch metadata hit ratio"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Prefisso"
 
@@ -53525,6 +53532,10 @@ msgstr "Pacchetti di regole"
 msgid "Rule properties"
 msgstr "Proprietà della regola"
 
+#, fuzzy
+msgid "Rule rendering mode"
+msgstr "Baccelli in esecuzione"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Rappresentazione della regola: %s"
@@ -55044,8 +55055,8 @@ msgstr "Seleziona un file iCalendar (<tt>*.ics</tt>) dal tuo PC"
 
 #, fuzzy
 msgid ""
-"Select and configure AWS services you would like to monitor, and set other "
-"options such as AWS tags or a proxy server."
+"Select and configure AWS services you would like to monitor, and optionally "
+"restrict them with AWS tags."
 msgstr "Servizi Azure da monitorare"
 
 #, fuzzy
@@ -63481,7 +63492,10 @@ msgstr "L'inventario completo di hardware e software di un host"
 msgid "The configuration \"%s\" does not exist."
 msgstr "Il sito \"%s\" non esiste."
 
-msgid "The configuration bundle does not contain all required objects."
+#, python-format
+msgid ""
+"The configuration bundle '%s' is not valid. This likely means that parts of "
+"it were removed or not properly created."
 msgstr ""
 
 msgid "The configuration is currently in read only mode. "
@@ -75999,10 +76013,6 @@ msgstr ""
 "comune per il DN di base dell'utente \"%s\" e il DN di base del gruppo \"%s"
 "\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Fallito il rendering del valore:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Impossibile caricare l'icona: %s"
@@ -78545,6 +78555,10 @@ msgstr "Utenti, ruoli e autorizzazioni"
 msgid "Users: User Management"
 msgstr "Gestione degli utenti"
 
+#, fuzzy
+msgid "Using default value"
+msgstr "Valore predefinito"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -79966,6 +79980,10 @@ msgstr "Cambio di contesto volontario"
 
 msgid "Vswitch bonding"
 msgstr "Collegamento Vswitch"
+
+#, fuzzy
+msgid "Vue experimental features"
+msgstr "Caratteristica dell'impresa"
 
 msgid "VxVM volumes (Linux)"
 msgstr "Volumi VxVM (Linux)"
@@ -84688,6 +84706,10 @@ msgstr "permettere agli utenti di disattivare questa notifica"
 msgid "and"
 msgstr "Banda"
 
+#, fuzzy, python-format
+msgid "and %s more"
+msgstr " e %s '%s'"
+
 msgid "any"
 msgstr "qualsiasi"
 
@@ -86775,6 +86797,70 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
 
 #, fuzzy
+#~ msgid "Experimental rendering"
+#~ msgstr "Caratteristica dell'impresa"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "Per i SID specifici"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Identità non valida"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Azione non valida"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Origine dati non valida: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Nome del file non valido"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Identità non valida"
+
+#, fuzzy
+#~ msgid "Invalid integer number"
+#~ msgstr "Nome del file non valido"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Argomento non valido"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Azione non valida"
+
+#, fuzzy
+#~ msgid "Invalid tuple"
+#~ msgstr "Test non valido."
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Valore non valido per il parametro ack."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Fallito il rendering del valore:"
+
+#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "Percorsi attivi"
 
@@ -86814,10 +86900,6 @@ msgstr "Usa SSL per la connessione."
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Utilizzo del disco"
 
-#, fuzzy, python-format
-#~ msgid "General value error: %s"
-#~ msgstr "Errore generale"
-
 #, fuzzy
 #~ msgid "Generic percentage value"
 #~ msgstr "Valore numerico generico"
@@ -86847,56 +86929,12 @@ msgstr "Usa SSL per la connessione."
 #~ msgstr "Intervallo"
 
 #, fuzzy
-#~ msgid "Invalid choice"
-#~ msgstr "Argomento non valido"
-
-#, fuzzy
-#~ msgid "Invalid choice, falling back to False"
-#~ msgstr "Invalidare tutti i codici di backup"
-
-#, fuzzy
-#~ msgid "Invalid data"
-#~ msgstr "Identità non valida"
-
-#, fuzzy
-#~ msgid "Invalid data format"
-#~ msgstr "Formato di data non valido: %s"
-
-#, fuzzy
-#~ msgid "Invalid data. Missing filename"
-#~ msgstr "Nome del file non valido"
-
-#, fuzzy
-#~ msgid "Invalid datatype"
-#~ msgstr "Test non valido."
-
-#, fuzzy, python-format
-#~ msgid "Invalid datatype of value: %s"
-#~ msgstr "Origine dati non valida: %s"
-
-#, fuzzy
-#~ msgid "List element is not a number"
-#~ msgstr "Questo elemento di rapporto non esiste."
-
-#, fuzzy
 #~ msgid "Lower levels for average success ratio"
 #~ msgstr "Livelli più bassi per la percentuale di successo degli SMS"
 
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "Livelli superiori per i riavvii"
-
-#, fuzzy
-#~ msgid "Not a list"
-#~ msgstr "Elenco degli abbinamenti dell'host"
-
-#, fuzzy
-#~ msgid "Not a number"
-#~ msgstr "Numero di porta"
-
-#, fuzzy
-#~ msgid "Not an integer number"
-#~ msgstr "Nome del file non valido"
 
 #, fuzzy
 #~ msgid "Number of SIP/H323 fax success calls"
@@ -86909,10 +86947,6 @@ msgstr "Usa SSL per la connessione."
 #, fuzzy
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "Durata totale"
-
-#, fuzzy
-#~ msgid "Using default value"
-#~ msgstr "Valore predefinito"
 
 #, fuzzy
 #~ msgid "Complete variable list"

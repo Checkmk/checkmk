@@ -7549,6 +7549,10 @@ msgstr "平均チェッカー待ち時間"
 msgid "Average consumption"
 msgstr "平均消費量"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "ドキュメント数の平均増加"
+
 msgid "Average disk I/O-queue length"
 msgstr "平均ディスクI / Oキュー長"
 
@@ -10927,6 +10931,9 @@ msgstr "ntop REST APIからデータを取得できません: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Nagiosコアで履歴データを取得できません"
+
+msgid "Cannot save the form because it contains errors."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "テストできません。ターゲットシステムのCPU数を判別できません。"
@@ -18285,6 +18292,10 @@ msgstr "診断ダンプ"
 msgid "Diagnostics dump started..."
 msgstr "診断ダンプが開始されました..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "変更されていません"
 
@@ -22688,10 +22699,6 @@ msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
 #, fuzzy
-msgid "Experimental rendering"
-msgstr "実験的機能"
-
-#, fuzzy
 msgid "Expiration Date"
 msgstr "登録状態"
 
@@ -24548,10 +24555,6 @@ msgstr "ネットワーク"
 msgid "Form factor"
 msgstr "フォーム ファクタ"
 
-#, fuzzy
-msgid "Form specs"
-msgstr "特定のSIDの場合"
-
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -25185,6 +25188,10 @@ msgstr "汎用SSD (gp2) スペース"
 #, fuzzy
 msgid "General purpose SSD (gp3) space"
 msgstr "汎用SSD (gp3) スペース"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "一般的なエラー"
 
 msgid "Generate"
 msgstr "生成する"
@@ -33161,10 +33168,6 @@ msgid "Invalid DCD command: %r"
 msgstr "無効なDCDコマンド: %r"
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "無効なID"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "無効なIPv4アドレス:%s"
 
@@ -33220,10 +33223,6 @@ msgstr "オートメーションシークレットが無効です。"
 msgid "Invalid back URL provided."
 msgstr "無効なバックURLが提供されました。"
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "無効なトピック"
-
 msgid "Invalid call: No profiles set."
 msgstr "無効な呼び出し:プロファイルが設定されていません。"
 
@@ -33247,9 +33246,17 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "無効なトピック"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "無効なトピック"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "全てのバックアップコードを無効にする"
 
 msgid "Invalid code provided"
 msgstr "不正なコード"
@@ -33257,10 +33264,6 @@ msgstr "不正なコード"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "無効な色指定 '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "無効なアクション"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -33278,20 +33281,36 @@ msgid ""
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
 #, fuzzy
-msgid "Invalid data for list"
+msgid "Invalid data"
+msgstr "無効なID"
+
+#, fuzzy
+msgid "Invalid data format"
 msgstr "無効なデータソース: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "無効なデータソース: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "無効なファイル名"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "無効なデータソース '%s' が指定されました。"
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "無効なテスト。"
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 "タイムスタンプのデータ型が無効です:intまたはfloatである必要があります。"
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "無効なデータソース: %s"
 
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
@@ -33307,10 +33326,6 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "無効なファイル名"
 
 msgid "Invalid file name"
 msgstr "無効なファイル名"
@@ -33331,14 +33346,6 @@ msgstr "無効なファイル名"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "無効なfixel要素タイプ '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "無効なファイル名"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "無効なID"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33384,10 +33391,6 @@ msgstr "無効なID"
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "無効なファイル名"
-
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
 
@@ -33397,21 +33400,13 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "無効なトピック"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "無効なトピック"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "無効なトピック"
+msgid "Invalid number"
+msgstr "無効なファイル名"
 
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
@@ -33530,10 +33525,6 @@ msgstr "スナップショットが無効です(小さすぎます)"
 msgid "Invalid start time given"
 msgstr "無効な開始時刻が指定されました"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "無効なアクション"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
@@ -33573,10 +33564,6 @@ msgstr "無効なトピック"
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "無効なテスト。"
-
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
 
@@ -33592,10 +33579,6 @@ msgid "Invalid user input"
 msgstr "無効なユーザー入力"
 
 msgid "Invalid value for ack parameter."
-msgstr "ackパラメーターの値が無効です。"
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "ackパラメーターの値が無効です。"
 
 #, python-format
@@ -35067,6 +35050,11 @@ msgstr "SNAT使用量のレベル"
 msgid "Levels app gateway"
 msgstr "アプリ下ゲートウェイのレベル"
 
+msgid ""
+"Levels are applied to the value as reported by the application, or to the "
+"computed rate (if enabled)."
+msgstr ""
+
 msgid "Levels byte count"
 msgstr "バイト数のレベル"
 
@@ -36129,6 +36117,10 @@ msgstr ""
 
 msgid "List crash reports of all sites"
 msgstr "すべてのサイトのクラッシュレポートを一覧表示する"
+
+#, fuzzy
+msgid "List element is not a number"
+msgstr "このレポート要素は存在しません。"
 
 msgid "List grouped interfaces instead"
 msgstr "代わりに、グループ化されたインターフェイスを一覧表示します"
@@ -42331,6 +42323,14 @@ msgstr "ない"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "ホストマッチリスト"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "ポート番号"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "有効なURLでない（httpとhttpsのURLのみ使用可能）。"
 
@@ -42340,6 +42340,10 @@ msgstr ""
 
 msgid "Not an active member of the stack"
 msgstr "スタックのアクティブなメンバーではありません"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "無効なファイル名"
 
 msgid "Not authenticated"
 msgstr "認証されていません"
@@ -48784,6 +48788,9 @@ msgstr "プリフェッチヒット"
 msgid "Prefetch metadata hit ratio"
 msgstr "プリフェッチメタデータヒット率"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "プレフィックス"
 
@@ -52574,6 +52581,10 @@ msgstr "ルールパック"
 msgid "Rule properties"
 msgstr "ルールのプロパティ"
 
+#, fuzzy
+msgid "Rule rendering mode"
+msgstr "ランニング pod"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "ルール表示 :%s"
@@ -54094,8 +54105,8 @@ msgstr "PCからiCalendarファイル (<tt>*.ics</tt>) を選択します"
 
 #, fuzzy
 msgid ""
-"Select and configure AWS services you would like to monitor, and set other "
-"options such as AWS tags or a proxy server."
+"Select and configure AWS services you would like to monitor, and optionally "
+"restrict them with AWS tags."
 msgstr "監視するAzureサービス"
 
 #, fuzzy
@@ -62396,7 +62407,10 @@ msgstr "ホストの完全なハードウェアおよびソフトウェアイン
 msgid "The configuration \"%s\" does not exist."
 msgstr "サイト\"%s\"は存在しません。"
 
-msgid "The configuration bundle does not contain all required objects."
+#, python-format
+msgid ""
+"The configuration bundle '%s' is not valid. This likely means that parts of "
+"it were removed or not properly created."
 msgstr ""
 
 msgid "The configuration is currently in read only mode. "
@@ -74722,10 +74736,6 @@ msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "値のレンダリングに失敗しました:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "アイコンをアップロードできません:%s"
@@ -77224,6 +77234,10 @@ msgstr "ユーザー、役割と権限"
 msgid "Users: User Management"
 msgstr "ユーザー管理"
 
+#, fuzzy
+msgid "Using default value"
+msgstr "デフォルト値"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -78639,6 +78653,10 @@ msgstr "自発的なコンテキストスイッチ"
 
 msgid "Vswitch bonding"
 msgstr "Vswitchボンディング"
+
+#, fuzzy
+msgid "Vue experimental features"
+msgstr "エンタープライズ機能"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVMボリューム(Linux)"
@@ -83239,6 +83257,10 @@ msgstr "ユーザーがこの通知を非アクティブ化できるようにす
 msgid "and"
 msgstr "バンド"
 
+#, fuzzy, python-format
+msgid "and %s more"
+msgstr " および%s '%s'"
+
 msgid "any"
 msgstr "どれか"
 
@@ -85342,6 +85364,70 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, fuzzy
+#~ msgid "Experimental rendering"
+#~ msgstr "実験的機能"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "特定のSIDの場合"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "無効なID"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "無効なアクション"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "無効なデータソース: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "無効なファイル名"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "無効なID"
+
+#, fuzzy
+#~ msgid "Invalid integer number"
+#~ msgstr "無効なファイル名"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "無効なトピック"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "無効なアクション"
+
+#, fuzzy
+#~ msgid "Invalid tuple"
+#~ msgstr "無効なテスト。"
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "ackパラメーターの値が無効です。"
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "値のレンダリングに失敗しました:"
+
+#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "アクティブパス"
 
@@ -85381,10 +85467,6 @@ msgstr ""
 #~ msgid "Disk IO Utilization"
 #~ msgstr "ディスク使用率"
 
-#, fuzzy, python-format
-#~ msgid "General value error: %s"
-#~ msgstr "一般的なエラー"
-
 #, fuzzy
 #~ msgid "Generic percentage value"
 #~ msgstr "一般的な数値"
@@ -85414,56 +85496,12 @@ msgstr ""
 #~ msgstr "休憩"
 
 #, fuzzy
-#~ msgid "Invalid choice"
-#~ msgstr "無効なトピック"
-
-#, fuzzy
-#~ msgid "Invalid choice, falling back to False"
-#~ msgstr "全てのバックアップコードを無効にする"
-
-#, fuzzy
-#~ msgid "Invalid data"
-#~ msgstr "無効なID"
-
-#, fuzzy
-#~ msgid "Invalid data format"
-#~ msgstr "無効なデータソース: %s"
-
-#, fuzzy
-#~ msgid "Invalid data. Missing filename"
-#~ msgstr "無効なファイル名"
-
-#, fuzzy
-#~ msgid "Invalid datatype"
-#~ msgstr "無効なテスト。"
-
-#, fuzzy, python-format
-#~ msgid "Invalid datatype of value: %s"
-#~ msgstr "無効なデータソース: %s"
-
-#, fuzzy
-#~ msgid "List element is not a number"
-#~ msgstr "このレポート要素は存在しません。"
-
-#, fuzzy
 #~ msgid "Lower levels for average success ratio"
 #~ msgstr "SMS成功率の下位レベル"
 
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "再起動の上位レベル"
-
-#, fuzzy
-#~ msgid "Not a list"
-#~ msgstr "ホストマッチリスト"
-
-#, fuzzy
-#~ msgid "Not a number"
-#~ msgstr "ポート番号"
-
-#, fuzzy
-#~ msgid "Not an integer number"
-#~ msgstr "無効なファイル名"
 
 #, fuzzy
 #~ msgid "Number of SIP/H323 fax success calls"
@@ -85476,10 +85514,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "総所要直"
-
-#, fuzzy
-#~ msgid "Using default value"
-#~ msgstr "デフォルト値"
 
 #, fuzzy
 #~ msgid "Complete variable list"

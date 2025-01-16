@@ -7898,6 +7898,10 @@ msgstr "Latența medie a verificatorului"
 msgid "Average consumption"
 msgstr "Consum mediu"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Creșterea numărului mediu de documente"
+
 msgid "Average disk I/O-queue length"
 msgstr "Lungime medie a cozii de așteptare I/O a discului"
 
@@ -11408,6 +11412,9 @@ msgstr "Nu se pot prelua date de la ntop REST API: %s."
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Nu se pot prelua date istorice cu Nagios core"
+
+msgid "Cannot save the form because it contains errors."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -19141,6 +19148,10 @@ msgstr "Descărcare de diagnosticare"
 msgid "Diagnostics dump started..."
 msgstr "A început descărcarea de diagnosticare..."
 
+#, python-format
+msgid "Dictionary contains invalid keys: %r"
+msgstr ""
+
 msgid "Did not changed"
 msgstr "Nu s-a schimbat"
 
@@ -23728,10 +23739,6 @@ msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
 
 #, fuzzy
-msgid "Experimental rendering"
-msgstr "Caracteristici experimentale"
-
-#, fuzzy
 msgid "Expiration Date"
 msgstr "Fără dată de expirare"
 
@@ -25613,10 +25620,6 @@ msgstr "Rețele"
 msgid "Form factor"
 msgstr "Factor de formă"
 
-#, fuzzy
-msgid "Form specs"
-msgstr "Pentru SID-uri specifice"
-
 msgid "FormSpec and internal data structure mismatch"
 msgstr ""
 
@@ -26258,6 +26261,10 @@ msgstr "Spațiu SSD de uz general (gp2)"
 
 msgid "General purpose SSD (gp3) space"
 msgstr "Spațiu SSD cu scop general (gp3)"
+
+#, fuzzy, python-format
+msgid "General value error: %s"
+msgstr "Eroare generală"
 
 msgid "Generate"
 msgstr "Generați"
@@ -34411,10 +34418,6 @@ msgid "Invalid DCD command: %r"
 msgstr "Comandă DCD invalidă: %r."
 
 #, fuzzy
-msgid "Invalid FixedValue"
-msgstr "Identificator invalid"
-
-#, fuzzy
 msgid "Invalid IP address"
 msgstr "Adresa IPv4 invalidă: %s"
 
@@ -34471,10 +34474,6 @@ msgstr "Secret de automatizare invalid."
 msgid "Invalid back URL provided."
 msgstr "URL-ul de întoarcere furnizat nu este valid."
 
-#, fuzzy
-msgid "Invalid boolean choice"
-msgstr "Subiect nevalabil"
-
 msgid "Invalid call: No profiles set."
 msgstr "Apel invalid: Nu sunt stabilite profiluri."
 
@@ -34498,9 +34497,17 @@ msgstr "Parametru de control invalid"
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
 
+#, fuzzy
+msgid "Invalid choice"
+msgstr "Subiect nevalabil"
+
 #, fuzzy, python-format
 msgid "Invalid choice %r"
 msgstr "Subiect nevalabil"
+
+#, fuzzy
+msgid "Invalid choice, falling back to False"
+msgstr "Invalidarea tuturor codurilor de rezervă"
 
 #, fuzzy
 msgid "Invalid code provided"
@@ -34509,10 +34516,6 @@ msgstr "URL-ul de întoarcere furnizat nu este valid."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specificație de culoare invalidă '%s'"
-
-#, fuzzy
-msgid "Invalid conditions"
-msgstr "Acțiune invalidă"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34532,19 +34535,35 @@ msgstr ""
 "_ și -."
 
 #, fuzzy
-msgid "Invalid data for list"
-msgstr "Sursă de date invalidă: %s"
+msgid "Invalid data"
+msgstr "Identificator invalid"
+
+#, fuzzy
+msgid "Invalid data format"
+msgstr "Format de dată invalid: %s"
 
 #, python-format
 msgid "Invalid data source: %s"
 msgstr "Sursă de date invalidă: %s"
 
+#, fuzzy
+msgid "Invalid data. Missing filename"
+msgstr "Nume de fișier invalid"
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Sursă de date invalidă '%s' configurată."
 
+#, fuzzy
+msgid "Invalid datatype"
+msgstr "Test nevalabil."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipul de date invalid al timestamp-ului: trebuie să fie int sau float."
+
+#, fuzzy, python-format
+msgid "Invalid datatype of value: %s"
+msgstr "Sursă de date invalidă: %s"
 
 #, python-format
 msgid "Invalid date format: %s"
@@ -34560,10 +34579,6 @@ msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
-
-#, fuzzy
-msgid "Invalid file"
-msgstr "Nume de fișier invalid"
 
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
@@ -34584,14 +34599,6 @@ msgstr "Nume de fișier invalid"
 #, python-format
 msgid "Invalid fixel element type '%s'"
 msgstr "Tip de element fixel nevalabil '%s'"
-
-#, fuzzy
-msgid "Invalid float number"
-msgstr "Nume de fișier invalid"
-
-#, fuzzy
-msgid "Invalid folder"
-msgstr "Identificator invalid"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -34639,10 +34646,6 @@ msgstr "Identificator invalid"
 msgid "Invalid ident: %s"
 msgstr "Identificator invalid: %s"
 
-#, fuzzy
-msgid "Invalid integer number"
-msgstr "Nume de fișier invalid"
-
 msgid "Invalid login credentials."
 msgstr "Datele de autentificare nevalabile."
 
@@ -34652,21 +34655,13 @@ msgstr "Pagină de manual invalidă: Nu a reușit să obțină titlul"
 msgid "Invalid messaging method selected."
 msgstr "Metoda de mesagerie nevalabilă selectată."
 
-#, fuzzy
-msgid "Invalid metric"
-msgstr "Subiect nevalabil"
-
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 
 #, fuzzy
-msgid "Invalid multiple choice value"
-msgstr "Subiect nevalabil"
-
-#, fuzzy
-msgid "Invalid optional choice"
-msgstr "Subiect nevalabil"
+msgid "Invalid number"
+msgstr "Nume de fișier invalid"
 
 msgid "Invalid package part"
 msgstr "Parte de pachet invalidă"
@@ -34786,10 +34781,6 @@ msgstr "Instantaneu invalid (prea mic)"
 msgid "Invalid start time given"
 msgstr "Ora de începere invalidă dată"
 
-#, fuzzy
-msgid "Invalid string"
-msgstr "Acțiune invalidă"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
@@ -34833,10 +34824,6 @@ msgstr "Subiect nevalabil"
 msgid "Invalid transaction"
 msgstr "Tranzacție invalidă"
 
-#, fuzzy
-msgid "Invalid tuple"
-msgstr "Test nevalabil."
-
 msgid "Invalid type specified."
 msgstr "Tipul specificat nu este valid."
 
@@ -34852,10 +34839,6 @@ msgid "Invalid user input"
 msgstr "Intrare invalidă a utilizatorului"
 
 msgid "Invalid value for ack parameter."
-msgstr "Valoare invalidă pentru parametrul ack."
-
-#, fuzzy
-msgid "Invalid value for valuespec"
 msgstr "Valoare invalidă pentru parametrul ack."
 
 #, python-format
@@ -36343,6 +36326,11 @@ msgstr "Niveluri de utilizare SNAT"
 msgid "Levels app gateway"
 msgstr "Nivele gateway aplicație"
 
+msgid ""
+"Levels are applied to the value as reported by the application, or to the "
+"computed rate (if enabled)."
+msgstr ""
+
 msgid "Levels byte count"
 msgstr "Număr de octeți de nivel"
 
@@ -37421,6 +37409,10 @@ msgstr ""
 
 msgid "List crash reports of all sites"
 msgstr "Lista rapoartelor de accident ale tuturor siturilor"
+
+#, fuzzy
+msgid "List element is not a number"
+msgstr "Acest element de raport nu există."
 
 msgid "List grouped interfaces instead"
 msgstr "Listează în schimb interfețele grupate"
@@ -43692,6 +43684,14 @@ msgstr "Nu"
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Not a list"
+msgstr "Lista de corespondență a gazdelor"
+
+#, fuzzy
+msgid "Not a number"
+msgstr "Numărul portului"
+
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr ""
 "Nu este o adresă URL validă (sunt permise doar adresele URL http și https)."
@@ -43701,6 +43701,10 @@ msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
 
 msgid "Not an active member of the stack"
 msgstr "Nu este un membru activ al stivei"
+
+#, fuzzy
+msgid "Not an integer number"
+msgstr "Nume de fișier invalid"
 
 msgid "Not authenticated"
 msgstr "Nu este autentificat"
@@ -50251,6 +50255,9 @@ msgstr "Prefetch hituri"
 msgid "Prefetch metadata hit ratio"
 msgstr "Rata de succes a metadatelor de preextragere"
 
+msgid "Prefill value is an input hint"
+msgstr ""
+
 msgid "Prefix"
 msgstr "Prefix"
 
@@ -54048,6 +54055,10 @@ msgstr "Pachete de reguli"
 msgid "Rule properties"
 msgstr "Proprietăți ale regulilor"
 
+#, fuzzy
+msgid "Rule rendering mode"
+msgstr "Poduri de rulare"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Reprezentarea regulilor: %s"
@@ -55582,8 +55593,8 @@ msgstr "Selectați un fișier iCalendar (<tt>*.ics</tt>) de pe PC-ul dvs."
 
 #, fuzzy
 msgid ""
-"Select and configure AWS services you would like to monitor, and set other "
-"options such as AWS tags or a proxy server."
+"Select and configure AWS services you would like to monitor, and optionally "
+"restrict them with AWS tags."
 msgstr "Servicii Azure de monitorizat"
 
 #, fuzzy
@@ -64172,7 +64183,10 @@ msgstr "Inventarul complet hardware și software al unei gazde"
 msgid "The configuration \"%s\" does not exist."
 msgstr "Site-ul \"%s\" nu există."
 
-msgid "The configuration bundle does not contain all required objects."
+#, python-format
+msgid ""
+"The configuration bundle '%s' is not valid. This likely means that parts of "
+"it were removed or not properly created."
 msgstr ""
 
 msgid "The configuration is currently in read only mode. "
@@ -76838,10 +76852,6 @@ msgstr ""
 "pentru DN-ul de bază al utilizatorului \"%s\" și DN-ul de bază al grupului "
 "\"%s\")"
 
-#, fuzzy
-msgid "Unable to transform value"
-msgstr "Nu a reușit să redea valoarea:"
-
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Nu se poate încărca pictograma: %s."
@@ -79417,6 +79427,10 @@ msgstr "Utilizatori, roluri și permisiuni"
 msgid "Users: User Management"
 msgstr "Gestionarea utilizatorilor"
 
+#, fuzzy
+msgid "Using default value"
+msgstr "Valoarea implicită"
+
 msgid ""
 "Using device name as service name isn't recommended. Device names aren't "
 "persistent and can change after a reboot or an update. In case WWN is not "
@@ -80844,6 +80858,10 @@ msgstr "Schimbarea voluntară a contextului"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch bonding"
+
+#, fuzzy
+msgid "Vue experimental features"
+msgstr "Caracteristica Enterprise"
 
 msgid "VxVM volumes (Linux)"
 msgstr "Volumele VxVM (Linux)"
@@ -85621,6 +85639,10 @@ msgstr "permite utilizatorilor să dezactiveze această notificare"
 msgid "and"
 msgstr "Bandă"
 
+#, fuzzy, python-format
+msgid "and %s more"
+msgstr " și %s '%s'"
+
 msgid "any"
 msgstr "orice"
 
@@ -87723,6 +87745,70 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "Experimental rendering"
+#~ msgstr "Caracteristici experimentale"
+
+#, fuzzy
+#~ msgid "Form specs"
+#~ msgstr "Pentru SID-uri specifice"
+
+#, fuzzy
+#~ msgid "Invalid FixedValue"
+#~ msgstr "Identificator invalid"
+
+#, fuzzy
+#~ msgid "Invalid boolean choice"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid conditions"
+#~ msgstr "Acțiune invalidă"
+
+#, fuzzy
+#~ msgid "Invalid data for list"
+#~ msgstr "Sursă de date invalidă: %s"
+
+#, fuzzy
+#~ msgid "Invalid file"
+#~ msgstr "Nume de fișier invalid"
+
+#, fuzzy
+#~ msgid "Invalid folder"
+#~ msgstr "Identificator invalid"
+
+#, fuzzy
+#~ msgid "Invalid integer number"
+#~ msgstr "Nume de fișier invalid"
+
+#, fuzzy
+#~ msgid "Invalid metric"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid multiple choice value"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid optional choice"
+#~ msgstr "Subiect nevalabil"
+
+#, fuzzy
+#~ msgid "Invalid string"
+#~ msgstr "Acțiune invalidă"
+
+#, fuzzy
+#~ msgid "Invalid tuple"
+#~ msgstr "Test nevalabil."
+
+#, fuzzy
+#~ msgid "Invalid value for valuespec"
+#~ msgstr "Valoare invalidă pentru parametrul ack."
+
+#, fuzzy
+#~ msgid "Unable to transform value"
+#~ msgstr "Nu a reușit să redea valoarea:"
+
+#, fuzzy
 #~ msgid "Active Calls"
 #~ msgstr "Trasee active"
 
@@ -87762,10 +87848,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgid "Disk IO Utilization"
 #~ msgstr "Utilizarea discului"
 
-#, fuzzy, python-format
-#~ msgid "General value error: %s"
-#~ msgstr "Eroare generală"
-
 #, fuzzy
 #~ msgid "Generic percentage value"
 #~ msgstr "Valoare numerică generică"
@@ -87795,56 +87877,12 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr "Pauză"
 
 #, fuzzy
-#~ msgid "Invalid choice"
-#~ msgstr "Subiect nevalabil"
-
-#, fuzzy
-#~ msgid "Invalid choice, falling back to False"
-#~ msgstr "Invalidarea tuturor codurilor de rezervă"
-
-#, fuzzy
-#~ msgid "Invalid data"
-#~ msgstr "Identificator invalid"
-
-#, fuzzy
-#~ msgid "Invalid data format"
-#~ msgstr "Format de dată invalid: %s"
-
-#, fuzzy
-#~ msgid "Invalid data. Missing filename"
-#~ msgstr "Nume de fișier invalid"
-
-#, fuzzy
-#~ msgid "Invalid datatype"
-#~ msgstr "Test nevalabil."
-
-#, fuzzy, python-format
-#~ msgid "Invalid datatype of value: %s"
-#~ msgstr "Sursă de date invalidă: %s"
-
-#, fuzzy
-#~ msgid "List element is not a number"
-#~ msgstr "Acest element de raport nu există."
-
-#, fuzzy
 #~ msgid "Lower levels for average success ratio"
 #~ msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 
 #, fuzzy
 #~ msgid "Map severity levels to alarm states"
 #~ msgstr "Niveluri superioare pentru reporniri"
-
-#, fuzzy
-#~ msgid "Not a list"
-#~ msgstr "Lista de corespondență a gazdelor"
-
-#, fuzzy
-#~ msgid "Not a number"
-#~ msgstr "Numărul portului"
-
-#, fuzzy
-#~ msgid "Not an integer number"
-#~ msgstr "Nume de fișier invalid"
 
 #, fuzzy
 #~ msgid "Number of SIP/H323 fax success calls"
@@ -87857,10 +87895,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Total duration of SIP/H323 calls"
 #~ msgstr "Durata totală"
-
-#, fuzzy
-#~ msgid "Using default value"
-#~ msgstr "Valoarea implicită"
 
 #, fuzzy
 #~ msgid "Complete variable list"

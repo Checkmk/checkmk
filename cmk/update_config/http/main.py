@@ -67,6 +67,7 @@ class V1Url(BaseModel, extra="forbid"):
     ) = None
     response_time: tuple[float, float] | None = None
     timeout: int | None = None
+    user_agent: str | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -117,6 +118,13 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             timeout: Mapping[str, object] = {}
         case timeout_sec:
             timeout = {"timeout": float(timeout_sec)}
+    match url_params.user_agent:
+        case None:
+            # TODO: This implicitly changes the user agent from `check_http/v2.3.3
+            # (monitoring-plugins 2.3.3)` to `checkmk-active-httpv2/2.4.0`
+            user_agent: Mapping[str, object] = {}
+        case agent:
+            user_agent = {"user_agent": agent}
     return {
         "endpoints": [
             {
@@ -133,6 +141,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         "method": ("get", None),
                         **tls_versions,
                         **timeout,
+                        **user_agent,
                     },
                     **response_time,
                 },

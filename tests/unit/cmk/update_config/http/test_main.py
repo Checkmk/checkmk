@@ -224,6 +224,12 @@ EXAMPLE_30: Mapping[str, object] = {
     "mode": ("url", {"timeout": 0}),
 }
 
+EXAMPLE_31: Mapping[str, object] = {
+    "name": "user_agent",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"user_agent": "agent"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -241,6 +247,7 @@ EXAMPLE_30: Mapping[str, object] = {
         EXAMPLE_28,
         EXAMPLE_29,
         EXAMPLE_30,
+        EXAMPLE_31,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -355,6 +362,25 @@ def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> 
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["timeout"] == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (EXAMPLE_31, "agent"),
+    ],
+)
+def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.model_dump()["user_agent"] == expected
 
 
 @pytest.mark.parametrize(

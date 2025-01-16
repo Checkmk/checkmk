@@ -155,7 +155,7 @@ def _request_user_input_on_incompatible_file(conflict_mode: ConflictMode) -> Res
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.UPDATE
         case ConflictMode.ASK:
-            return continue_per_users_choice(
+            return _disable_per_users_choice(
                 "You can abort the update process (A) or disable the "
                 "extension package (d) and continue the update process.\n"
                 "Abort the update process? [A/d] \n"

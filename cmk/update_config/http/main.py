@@ -66,6 +66,7 @@ class V1Url(BaseModel, extra="forbid"):
         | None
     ) = None
     response_time: tuple[float, float] | None = None
+    timeout: int | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -111,6 +112,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             response_time: Mapping[str, object] = {}
         case (warn_milli, crit_milli):
             response_time = {"response_time": ("fixed", (warn_milli / 1000, crit_milli / 1000))}
+    match url_params.timeout:
+        case None:
+            timeout: Mapping[str, object] = {}
+        case timeout_sec:
+            timeout = {"timeout": float(timeout_sec)}
     return {
         "endpoints": [
             {
@@ -126,6 +132,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         # TODO: revisit this, it might be inconsistent with V1
                         "method": ("get", None),
                         **tls_versions,
+                        **timeout,
                     },
                     **response_time,
                 },

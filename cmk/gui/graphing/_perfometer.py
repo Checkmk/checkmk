@@ -475,7 +475,7 @@ def _compute_segments(
     return [
         _StackEntry(computed.value, computed.color)
         for segment in segments
-        if (computed := evaluate_quantity(segment, translated_metrics)).value > 0
+        if (computed := evaluate_quantity(segment, translated_metrics))
     ]
 
 

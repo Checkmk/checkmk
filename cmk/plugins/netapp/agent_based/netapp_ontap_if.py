@@ -103,7 +103,7 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
     - if failover (policy) is 'default' or 'broadcast_domain_only' in case of port failure
       the failover ports are the ports of the broadcast_domain of the failing port
     - if failover (policy) is 'home_node_only' in case of port failure
-      the failover ports are the port(s) of the home node
+      the failover ports are the port(s) of the broadcast_domain which are on the home node
     - if failover (policy) is 'home_port_only' in case of port failure
       the failover ports is the home_port
     Cfr: https://docs.netapp.com/us-en/ontap-restmap-9131//net.html#net-port-broadcast-domain-get
@@ -170,16 +170,13 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
 
         failover_policy_alert = None
         failover_policy = interface.get("failover")
+        fail_ports: set = broadcast_domains_ports.get(interface.get("broadcast_domain", ""), set())
         match failover_policy:
             case "default" | "broadcast_domain_only":
-                fail_ports: set = broadcast_domains_ports.get(
-                    interface.get("broadcast_domain", ""), set()
-                )
-
                 interface["failover_ports"] = ";".join(el for el in fail_ports)
             case "home_node_only":
                 interface["failover_ports"] = ";".join(
-                    el for el in node_ports.get(interface["home-node"], set())
+                    el for el in fail_ports if el.split("|")[0] == interface["home-node"]
                 )
             case "home_port_only":
                 interface["failover_ports"] = failover_home_port

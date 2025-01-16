@@ -23,8 +23,8 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
+    all_host_attributes,
     collect_attributes,
-    host_attribute_registry,
     sorted_host_attributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -190,7 +190,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
-        for attrname in host_attribute_registry.keys():
+        for attrname in all_host_attributes().keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

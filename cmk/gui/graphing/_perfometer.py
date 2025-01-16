@@ -632,11 +632,7 @@ def _filter_segments(
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[_EvaluatedQuantity]:
-    return [
-        evaluated
-        for segment in segments
-        if (evaluated := _evaluate_quantity(segment, translated_metrics)).value > 0
-    ]
+    return [_evaluate_quantity(segment, translated_metrics) for segment in segments]
 
 
 def _project_segments(

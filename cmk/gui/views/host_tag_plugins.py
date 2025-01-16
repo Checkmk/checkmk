@@ -11,7 +11,7 @@ from cmk.utils.tags import TagGroupID
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Painter, painter_registry
+from cmk.gui.painter.v0 import Painter, painter_registry
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec

@@ -9,7 +9,7 @@ from collections.abc import Callable
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry

@@ -8,8 +8,7 @@ from functools import partial
 
 from cmk.gui.data_source import data_source_registry, register_data_sources
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0 import painters
-from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0 import painter_registry, painters
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec

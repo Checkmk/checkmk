@@ -52,7 +52,7 @@ from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration

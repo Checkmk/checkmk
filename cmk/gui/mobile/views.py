@@ -11,7 +11,7 @@ from cmk.utils.user import UserId
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML

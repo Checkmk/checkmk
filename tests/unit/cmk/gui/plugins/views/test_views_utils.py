@@ -13,8 +13,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import base as painter_base
-from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
+from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry, register_painter, registry
 from cmk.gui.painter.v0.helpers import RenderLink, replace_action_url_macros
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
@@ -90,12 +89,12 @@ def test_replace_action_url_macros(
 
 
 def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
-    monkeypatch.setattr(painter_base, "painter_registry", painter_registry := PainterRegistry())
+    monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
 
     def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
-    painter_base.register_painter(
+    register_painter(
         "tag_painter",
         {
             "title": "Tag painter",
@@ -109,7 +108,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         },
     )
 
-    painter: Painter = painter_base.painter_registry["tag_painter"](
+    painter: Painter = painter_registry["tag_painter"](
         user=user,
         config=active_config,
         request=request,

@@ -9,7 +9,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import painter_exists, painter_registry
+from cmk.gui.painter.v0 import painter_exists, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme

@@ -8,16 +8,16 @@ import pytest
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
-from cmk.gui.painter.v0 import base
+from cmk.gui.painter.v0 import registry
 from cmk.gui.views import host_tag_plugins
 
 
 @pytest.mark.usefixtures("load_config")
 def test_host_tag_painter_registration(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        host_tag_plugins, "painter_registry", painter_registry := base.PainterRegistry()
+        host_tag_plugins, "painter_registry", painter_registry := registry.PainterRegistry()
     )
-    monkeypatch.setattr(base, "painter_registry", painter_registry)
+    monkeypatch.setattr(registry, "painter_registry", painter_registry)
 
     with monkeypatch.context() as m:
         m.setattr(
@@ -44,4 +44,4 @@ def test_host_tag_painter_registration(monkeypatch: pytest.MonkeyPatch) -> None:
             ),
         )
         host_tag_plugins.register_tag_plugins()
-        assert "host_tag_whoot" in list(base.painter_registry.keys())
+        assert "host_tag_whoot" in list(registry.painter_registry.keys())

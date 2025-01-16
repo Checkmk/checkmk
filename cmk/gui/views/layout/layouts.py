@@ -21,7 +21,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, EmptyCell
+from cmk.gui.painter.v0 import Cell, EmptyCell
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element

@@ -6,7 +6,7 @@
 
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.views.row_post_processing import RowPostProcessorRegistry

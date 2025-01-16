@@ -7,7 +7,7 @@ from collections.abc import Callable
 
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.valuespec import AutocompleterRegistry

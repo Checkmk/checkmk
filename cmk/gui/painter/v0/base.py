@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
 
 import cmk.utils.paths
 
@@ -308,68 +307,6 @@ class Painter(abc.ABC):
         return self._compute_data(row, cell)
 
 
-class PainterRegistry(Registry[type[Painter]]):
-    def plugin_name(self, instance: type[Painter]) -> str:
-        return instance(
-            user=user,
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        ).ident
-
-
-painter_registry = PainterRegistry()
-
-
-# Kept for pre 1.6 compatibility.
-def register_painter(ident: str, spec: dict[str, Any]) -> None:
-    paint_function = spec["paint"]
-    cls = type(
-        "LegacyPainter%s" % ident.title(),
-        (Painter,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": lambda s, cell: s._spec["title"],
-            "short_title": lambda s, cell: s._spec.get("short", s.title),
-            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
-            "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell: paint_function(row),
-            "export_for_python": (
-                lambda self, row, cell: (
-                    spec["export_for_python"](row, cell)
-                    if "export_for_python" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_csv": (
-                lambda self, row, cell: (
-                    spec["export_for_csv"](row, cell)
-                    if "export_for_csv" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_json": (
-                lambda self, row, cell: (
-                    spec["export_for_json"](row, cell)
-                    if "export_for_json" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "group_by": lambda self, row, cell: self._spec.get("groupby"),
-            "parameters": property(lambda s: s._spec.get("params")),
-            "painter_options": property(lambda s: s._spec.get("options", [])),
-            "printable": property(lambda s: s._spec.get("printable", True)),
-            "sorter": property(lambda s: s._spec.get("sorter", None)),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-        },
-    )
-    painter_registry.register(cls)
-
-
 # .
 #   .--Cells---------------------------------------------------------------.
 #   |                           ____     _ _                               |
@@ -382,10 +319,6 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
 #   | View cell handling classes. Each cell instanciates a multisite       |
 #   | painter to render a table cell.                                      |
 #   '----------------------------------------------------------------------'
-
-
-def painter_exists(column_spec: ColumnSpec) -> bool:
-    return column_spec.name in painter_registry
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:

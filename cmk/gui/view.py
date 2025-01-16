@@ -20,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists, painter_registry
+from cmk.gui.painter.v0 import Cell, JoinCell, painter_exists, painter_registry
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,

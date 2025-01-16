@@ -16,6 +16,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    Migrate,
     Percentage,
     TextInput,
     ValueSpec,
@@ -114,15 +115,24 @@ rulespec_registry.register(
 )
 
 
-def _vs_cost() -> Dictionary:
-    return Dictionary(
-        title=_("Levels monthly GCP costs"),
-        elements=[
-            (
-                "levels",
-                Levels(title=_("Amount in billed currency")),
-            ),
-        ],
+def migrate_predictive_cost(value: dict[str, object]) -> dict[str, object]:
+    if isinstance(value.get("levels"), dict):
+        return {"levels": None}
+    return value
+
+
+def _vs_cost() -> ValueSpec:
+    return Migrate(
+        Dictionary(
+            title=_("Levels monthly GCP costs"),
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(title=_("Amount in billed currency")),
+                ),
+            ],
+        ),
+        migrate=migrate_predictive_cost,
     )
 
 

@@ -38,13 +38,6 @@ jobs:
         echo "UV_CACHE_DIR=$HOME/.cache/uv" >> $GITHUB_ENV
     - name: Checkout Repository
       uses: actions/checkout@v3
-    - name: Parse Python version from defines.make
-      run: |
-        echo "PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)" >> $GITHUB_ENV
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
     - name: Cache uv
       uses: actions/cache@v3
       with:

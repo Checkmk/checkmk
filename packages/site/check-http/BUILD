@@ -1,7 +1,7 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 rust_library(
@@ -23,6 +23,11 @@ rust_library(
         proc_macro = True,
     ),
     deps = all_crate_deps() + ["@openssl"],
+)
+
+rust_test(
+    name = "check-http-lib-internal",
+    crate = ":check-http-lib",
 )
 
 file_from_flag(

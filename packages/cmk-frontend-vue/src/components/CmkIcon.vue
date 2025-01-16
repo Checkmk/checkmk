@@ -86,8 +86,8 @@ const getTransformRotate = () => {
   vertical-align: baseline;
 
   content: v-bind('getIconVariable(name)');
-  width: v-bind('cmkIconVariants({size})');
-  height: v-bind('cmkIconVariants({size})');
+  width: v-bind('cmkIconVariants({size})') !important;
+  height: v-bind('cmkIconVariants({size})') !important;
   transform: v-bind('getTransformRotate()');
 
   &.cmk-icon--inline {

@@ -923,7 +923,7 @@ class ConfigVariableAutomationHelper(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Activate automation helper"),
-            default_value=False,
+            default_value=True,
         )
 
 

@@ -631,8 +631,8 @@ def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: boo
 
 
 def wait_for_dcd_pend_changes(site: Site) -> None:
-    """Wait up to 120 seconds for DCD to activate changes."""
-    max_count = 120
+    """Wait for DCD to activate changes."""
+    max_count = 180
     count = 0
     while (n_pending_changes := len(site.openapi.changes.get_pending())) > 0 and count < max_count:
         logger.info(

@@ -22,12 +22,24 @@ from cmk.base.automations import AutomationExitCode
 
 
 class _DummyAutomationEngineSuccess:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
         return AutomationExitCode.SUCCESS
 
 
 class _DummyAutomationEngineFailure:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
         raise SystemExit(1)
 
 

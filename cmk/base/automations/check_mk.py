@@ -254,7 +254,11 @@ class AutomationDiscovery(DiscoveryAutomation):
     # DiscoverySettings
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: list[str]) -> ServiceDiscoveryResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ServiceDiscoveryResult:
         force_snmp_cache_refresh, args = _extract_directive("@scan", args)
         _prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
@@ -389,7 +393,11 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ServiceDiscoveryPreviewResult:
         run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
         config_cache = config.get_config_cache()
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
@@ -432,7 +440,11 @@ class AutomationDiscoveryPreview(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ServiceDiscoveryPreviewResult:
         prevent_fetching, args = _extract_directive("@nofetch", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
 
@@ -687,7 +699,11 @@ class AutomationAutodiscovery(DiscoveryAutomation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> AutodiscoveryResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> AutodiscoveryResult:
         with redirect_stdout(open(os.devnull, "w")):
             result = _execute_autodiscovery()
 
@@ -925,7 +941,11 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> SetAutochecksV2Result:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> SetAutochecksV2Result:
         set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
         config_cache = config.get_config_cache()
 
@@ -981,7 +1001,11 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # table of (checktype, item). No parameters are specified. Those
     # are either (1) kept from existing autochecks or (2) computed
     # from a new inventory.
-    def execute(self, args: list[str]) -> SetAutochecksResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> SetAutochecksResult:
         hostname = HostName(args[0])
         new_items: SetAutochecksTable = ast.literal_eval(sys.stdin.read())
 
@@ -1043,7 +1067,11 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: list[str]) -> UpdateHostLabelsResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> UpdateHostLabelsResult:
         hostname = HostName(args[0])
         DiscoveredHostLabelsStore(hostname).save(
             [
@@ -1073,7 +1101,11 @@ class AutomationRenameHosts(Automation):
     # several file and directory names. This function has no argument but reads
     # Python pair-list from stdin:
     # [("old1", "new1"), ("old2", "new2")])
-    def execute(self, args: list[str]) -> RenameHostsResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> RenameHostsResult:
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
         actions: list[str] = []
@@ -1400,7 +1432,11 @@ class AutomationGetServicesLabels(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> GetServicesLabelsResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> GetServicesLabelsResult:
         host_name, services = HostName(args[0]), args[1:]
         ruleset_matcher = config.get_config_cache().ruleset_matcher
         ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
@@ -1424,7 +1460,11 @@ class AutomationAnalyseServices(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> AnalyseServiceResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> AnalyseServiceResult:
         host_name = HostName(args[0])
         servicedesc = args[1]
         config_cache = config.get_config_cache()
@@ -1601,7 +1641,11 @@ class AutomationAnalyseHost(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: list[str]) -> AnalyseHostResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> AnalyseHostResult:
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
@@ -1672,7 +1716,11 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
 
-    def execute(self, args: list[str]) -> DeleteHostsResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> DeleteHostsResult:
         self._execute(args)
         return DeleteHostsResult()
 
@@ -1715,7 +1763,11 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
     cmd = "delete-hosts-known-remote"
 
-    def execute(self, args: list[str]) -> DeleteHostsKnownRemoteResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
 
@@ -1757,7 +1809,11 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    def execute(self, args: list[str]) -> RestartResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> RestartResult:
         if args:
             nodes = {HostName(hn) for hn in args}
         else:
@@ -1813,8 +1869,19 @@ class AutomationReload(AutomationRestart):
             return CoreAction.RESTART
         return CoreAction.RELOAD
 
-    def execute(self, args: list[str]) -> ReloadResult:
-        return ReloadResult(super().execute(args).config_warnings)
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ReloadResult:
+        return ReloadResult(
+            super()
+            .execute(
+                args,
+                called_from_automation_helper,
+            )
+            .config_warnings
+        )
 
 
 automations.register(AutomationReload())
@@ -1877,7 +1944,11 @@ class AutomationGetConfiguration(Automation):
     # this option (like before).
     needs_checks = False
 
-    def execute(self, args: list[str]) -> GetConfigurationResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> GetConfigurationResult:
         config.load(with_conf_d=False)
 
         # We read the list of variable names from stdin since
@@ -1910,7 +1981,11 @@ class AutomationGetCheckInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: list[str]) -> GetCheckInformationResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> GetCheckInformationResult:
         man_page_path_map = man_pages.make_man_page_path_map(
             discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
@@ -1959,7 +2034,11 @@ class AutomationGetSectionInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: object) -> GetSectionInformationResult:
+    def execute(
+        self,
+        args: object,
+        called_from_automation_helper: bool,
+    ) -> GetSectionInformationResult:
         plugins = agent_based_register.get_previously_loaded_plugins()
         section_infos = {
             str(section_name): {
@@ -1989,7 +2068,11 @@ class AutomationScanParents(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> ScanParentsResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ScanParentsResult:
         settings = {
             "timeout": int(args[0]),
             "probes": int(args[1]),
@@ -2081,7 +2164,11 @@ class AutomationDiagSpecialAgent(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: list[str]) -> DiagSpecialAgentResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> DiagSpecialAgentResult:
         diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
         return DiagSpecialAgentResult(
             tuple(
@@ -2147,6 +2234,7 @@ class AutomationDiagHost(Automation):
     def execute(  # pylint: disable=too-many-branches
         self,
         args: list[str],
+        called_from_automation_helper: bool,
     ) -> DiagHostResult:
         host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
@@ -2564,7 +2652,11 @@ class AutomationActiveCheck(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: list[str]) -> ActiveCheckResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ActiveCheckResult:
         host_name = HostName(args[0])
         plugin, item = args[1:]
 
@@ -2687,7 +2779,11 @@ class AutomationUpdatePasswordsMergedFile(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: list[str]) -> UpdatePasswordsMergedFileResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> UpdatePasswordsMergedFileResult:
         cmk.utils.password_store.save(
             config.get_config_cache().collect_passwords(),
             cmk.utils.password_store.pending_password_store_path(),
@@ -2703,7 +2799,11 @@ class AutomationUpdateDNSCache(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> UpdateDNSCacheResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> UpdateDNSCacheResult:
         config_cache = config.get_config_cache()
         hosts_config = config_cache.hosts_config
         return UpdateDNSCacheResult(
@@ -2729,7 +2829,11 @@ class AutomationGetAgentOutput(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> GetAgentOutputResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
@@ -2898,7 +3002,11 @@ class AutomationNotificationReplay(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> NotificationReplayResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> NotificationReplayResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
                 raise RuntimeError(msg)
@@ -2934,7 +3042,11 @@ class AutomationNotificationAnalyse(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> NotificationAnalyseResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> NotificationAnalyseResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
                 raise RuntimeError(msg)
@@ -2971,7 +3083,11 @@ class AutomationNotificationTest(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> NotificationTestResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> NotificationTestResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
                 raise RuntimeError(msg)
@@ -3010,7 +3126,11 @@ class AutomationGetBulks(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: list[str]) -> NotificationGetBulksResult:
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
         return NotificationGetBulksResult(
             notify.find_bulks(only_ripe, bulk_interval=config.notification_bulk_interval)
@@ -3025,7 +3145,11 @@ class AutomationCreateDiagnosticsDump(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: DiagnosticsCLParameters) -> CreateDiagnosticsDumpResult:
+    def execute(
+        self,
+        args: DiagnosticsCLParameters,
+        called_from_automation_helper: bool,
+    ) -> CreateDiagnosticsDumpResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()

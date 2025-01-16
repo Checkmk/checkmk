@@ -57,8 +57,13 @@ def redirect_stdin(stream: io.StringIO) -> Iterator[None]:
 
 
 class AutomationEngine(Protocol):
-    # TODO: remove `reload_config` when automation helper is fully integrated.
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode: ...
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode: ...
 
 
 def get_application(
@@ -102,9 +107,10 @@ def get_application(
             temporary_log_level(LOGGER, payload.log_level),
         ):
             try:
-                # TODO: remove `reload_config` when automation helper is fully integrated.
                 exit_code: int = engine.execute(
-                    payload.name, list(payload.args), reload_config=False
+                    payload.name,
+                    list(payload.args),
+                    called_from_automation_helper=True,
                 )
             except SystemExit as system_exit:
                 LOGGER.error("[automation] command raised a system exit exception.")

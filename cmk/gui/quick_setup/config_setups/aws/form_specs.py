@@ -3,24 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
 
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
-
-try:
-    # Ignore import-untyped for non-CCE CI stages
-    from .cce import (  # type: ignore[import-untyped,unused-ignore]
-        edition_specific_global_services,
-        edition_specific_regional_services,
-    )
-except ImportError:
-    from .cre import (
-        edition_specific_global_services,
-        edition_specific_regional_services,
-    )
-
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -38,29 +25,28 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def _global_services() -> Sequence[MultipleChoiceElement]:
-    return [
-        MultipleChoiceElement(name="ce", title=Title("Costs and usage (CE)")),
-        *edition_specific_global_services(),
-    ]
+class _ServiceChoices:
+    def __init__(self):
+        self.global_services = [
+            MultipleChoiceElement(name="ce", title=Title("Costs and usage (CE)")),
+        ]
+        self.regional_services = [
+            MultipleChoiceElement(name="ec2", title=Title("Elastic Compute Cloud (EC2)")),
+            MultipleChoiceElement(name="ebs", title=Title("Elastic Block Storage (EBS)")),
+            MultipleChoiceElement(name="s3", title=Title("Simple Storage Service (S3)")),
+            MultipleChoiceElement(name="glacier", title=Title("Amazon S3 Glacier (Glacier)")),
+            MultipleChoiceElement(name="elb", title=Title("Classic Load Balancing (ELB)")),
+            MultipleChoiceElement(
+                name="elbv2", title=Title("Application and Network Load Balancing (ELBv2)")
+            ),
+            MultipleChoiceElement(name="rds", title=Title("Relational Database Service (RDS)")),
+            MultipleChoiceElement(name="cloudwatch_alarms", title=Title("CloudWatch Alarms")),
+            MultipleChoiceElement(name="dynamodb", title=Title("DynamoDB")),
+            MultipleChoiceElement(name="wafv2", title=Title("Web Application Firewall (WAFV2)")),
+        ]
 
 
-def _regional_services() -> Sequence[MultipleChoiceElement]:
-    return [
-        MultipleChoiceElement(name="ec2", title=Title("Elastic Compute Cloud (EC2)")),
-        MultipleChoiceElement(name="ebs", title=Title("Elastic Block Storage (EBS)")),
-        MultipleChoiceElement(name="s3", title=Title("Simple Storage Service (S3)")),
-        MultipleChoiceElement(name="glacier", title=Title("Amazon S3 Glacier (Glacier)")),
-        MultipleChoiceElement(name="elb", title=Title("Classic Load Balancing (ELB)")),
-        MultipleChoiceElement(
-            name="elbv2", title=Title("Application and Network Load Balancing (ELBv2)")
-        ),
-        MultipleChoiceElement(name="rds", title=Title("Relational Database Service (RDS)")),
-        MultipleChoiceElement(name="cloudwatch_alarms", title=Title("CloudWatch Alarms")),
-        MultipleChoiceElement(name="dynamodb", title=Title("DynamoDB")),
-        MultipleChoiceElement(name="wafv2", title=Title("Web Application Firewall (WAFV2)")),
-        *edition_specific_regional_services(),
-    ]
+service_choices = _ServiceChoices()
 
 
 def _formspec_aws_api_access() -> dict[str, DictElement]:
@@ -226,12 +212,12 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
 
 
 def quick_setup_stage_3() -> Mapping[str, DictElement]:
-    valid_service_choices = {c.name for c in _regional_services()}
+    valid_service_choices = {c.name for c in service_choices.regional_services}
     return {
         "services": DictElement(
             parameter_form=MultipleChoice(
                 title=Title("Services per region"),
-                elements=_regional_services(),
+                elements=service_choices.regional_services,
                 prefill=DefaultValue(list(valid_service_choices)),
             ),
             required=True,
@@ -239,7 +225,7 @@ def quick_setup_stage_3() -> Mapping[str, DictElement]:
         "global_services": DictElement(
             parameter_form=MultipleChoice(
                 title=Title("Global services"),
-                elements=_global_services(),
+                elements=service_choices.global_services,
                 prefill=DefaultValue([]),
             ),
             required=True,

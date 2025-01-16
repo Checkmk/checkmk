@@ -705,7 +705,7 @@ class AutomationAutodiscovery(DiscoveryAutomation):
         called_from_automation_helper: bool,
     ) -> AutodiscoveryResult:
         with redirect_stdout(open(os.devnull, "w")):
-            result = _execute_autodiscovery()
+            result = _execute_autodiscovery(called_from_automation_helper)
 
         return AutodiscoveryResult(*result)
 
@@ -713,14 +713,17 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 automations.register(AutomationAutodiscovery())
 
 
-def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
+def _execute_autodiscovery(
+    called_from_automation_helper: bool,
+) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     # pylint: disable=too-many-branches
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
         return {}, False
 
-    config.load()
+    if not called_from_automation_helper:
+        config.load()
     config_cache = config.get_config_cache()
     ab_plugins = agent_based_register.get_previously_loaded_plugins()
     autochecks_config = config.AutochecksConfigurer(config_cache)
@@ -1011,17 +1014,18 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
 
-        # Not loading all checks improves performance of the calls and as a result the
-        # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
-        # because we already have calculated service names. For clusters we have to load all
-        # checks for config_cache.set_autochecks, because it needs to calculate the
-        # service_descriptions of existing services to decided whether or not they are clustered
-        # (See autochecks.set_autochecks_of_cluster())
-        if hostname in config_cache.hosts_config.clusters:
-            config.load_all_plugins(
-                local_checks_dir=local_checks_dir,
-                checks_dir=checks_dir,
-            )
+        if not called_from_automation_helper:
+            # Not loading all checks improves performance of the calls and as a result the
+            # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
+            # because we already have calculated service names. For clusters we have to load all
+            # checks for config_cache.set_autochecks, because it needs to calculate the
+            # service_descriptions of existing services to decided whether or not they are clustered
+            # (See autochecks.set_autochecks_of_cluster())
+            if hostname in config_cache.hosts_config.clusters:
+                config.load_all_plugins(
+                    local_checks_dir=local_checks_dir,
+                    checks_dir=checks_dir,
+                )
 
         new_services = [
             AutocheckServiceWithNodes(
@@ -1949,20 +1953,21 @@ class AutomationGetConfiguration(Automation):
         args: list[str],
         called_from_automation_helper: bool,
     ) -> GetConfigurationResult:
-        config.load(with_conf_d=False)
-
         # We read the list of variable names from stdin since
         # that could be too much for the command line
         variable_names = ast.literal_eval(sys.stdin.read())
 
-        missing_variables = [v for v in variable_names if not hasattr(config, v)]
-
-        if missing_variables:
-            config.load_all_plugins(
-                local_checks_dir=local_checks_dir,
-                checks_dir=checks_dir,
-            )
+        if not called_from_automation_helper:
             config.load(with_conf_d=False)
+
+            missing_variables = [v for v in variable_names if not hasattr(config, v)]
+
+            if missing_variables:
+                config.load_all_plugins(
+                    local_checks_dir=local_checks_dir,
+                    checks_dir=checks_dir,
+                )
+                config.load(with_conf_d=False)
 
         result = {}
         for varname in variable_names:

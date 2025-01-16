@@ -103,18 +103,23 @@ class Client:
         return self.asset().list_assets(request)
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
-        prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
+        this_month = self.date.replace(day=1)
+        prev_month = this_month - datetime.timedelta(days=1)
         query = (
             "SELECT "
             "PROJECT.name, "
             "PROJECT.id, "
-            "SUM(cost) AS cost, "
+            "SUM(CAST(cost AS NUMERIC)) + SUM(IFNULL((SELECT SUM(CAST(c.amount as NUMERIC)) FROM UNNEST(credits) c), 0)) AS cost, "
             "currency, "
             "invoice.month "
-            f"FROM `{tableid}`, UNNEST(credits) as c "
+            f"FROM `{tableid}` "
             f'WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" '
-            'AND c.type != "SUSTAINED_USAGE_DISCOUNT" '
-            "GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month"
+            "AND ("
+            f'   invoice.month = "{this_month.strftime("%Y%m")}" '
+            f'   OR invoice.month = "{prev_month.strftime("%Y%m")}" '
+            ") "
+            "GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month "
+            "ORDER BY PROJECT.name, invoice.month"
         )
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)

@@ -148,7 +148,7 @@ pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
     }
 }
 
-fn load_from_str(content: &str) -> Result<Vec<Yaml>> {
+pub(super) fn load_from_str(content: &str) -> Result<Vec<Yaml>> {
     Ok(YamlLoader::load_from_str(content)?)
 }
 

@@ -471,8 +471,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
         ).returncode
         == 0
     )
-    logger.info("Activating changes & reloading core...")
-    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True, strict=False)
 
     logger.info("Running service discovery...")
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)

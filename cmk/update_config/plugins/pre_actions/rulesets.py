@@ -12,7 +12,6 @@ from cmk.ccc import version
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
-from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
@@ -23,7 +22,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.plugins.lib.rulesets import REPLACED_RULESETS
+from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
@@ -124,27 +123,8 @@ def _validate_rule_values(
 
     Returns True if the update shall continue, False otherwise.
     """
-    rulesets_skip = {
-        # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
-        # see all of them
-        RuleGroup.ExtraServiceConf("_sla_config"),
-        # validating a ruleset for static checks, where we want to replace the ruleset anyway,
-        # does not work:
-        # * the validation checks if there are checks which subscribe to that check group
-        # * when replacing a ruleset, we have no check anymore subscribing to the old name
-        # * in that case, the validation will always fail, so we skip it during update
-        # * the rule validation with the replaced ruleset will happen after the replacing anyway again
-        # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
-        *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
-        # Validating the ignored checks ruleset does not make sense:
-        # Invalid choices are the plugins that don't exist (anymore).
-        # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
-        # could be missing only temporarily, so better not remove it.
-        "ignored_checks",
-    }
-
     for ruleset in all_rulesets.get_rulesets().values():
-        if ruleset.name in rulesets_skip:
+        if ruleset.name in SKIP_PREACTION:
             continue
 
         for folder, index, rule in ruleset.get_rules():

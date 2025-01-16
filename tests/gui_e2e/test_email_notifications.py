@@ -30,7 +30,6 @@ def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
     yield from create_notification_user(test_site)
 
 
-@pytest.mark.skip(reason="Ongoing investigation - CMK-21202")
 def test_filesystem_email_notifications(
     dashboard_page: Dashboard,
     linux_hosts: list[str],

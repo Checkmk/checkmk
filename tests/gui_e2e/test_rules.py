@@ -117,7 +117,7 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
-@pytest.mark.skip(reason="Ongoing investigation - CMK-21202")
+@pytest.mark.skip(reason="Ongoing investigation - CMK-21219")
 def test_create_rules(
     test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
 ) -> None:

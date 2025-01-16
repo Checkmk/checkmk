@@ -5,7 +5,7 @@
 /// Trigger post submit test cascade of lightweight jobs
 
 def main() {
-    def all_lightweight_jobs = [
+    def job_names = [
         "test-python3-pylint",
         "test-python3-bandit",
         "test-agent-plugin-unit",
@@ -29,34 +29,30 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_lightweight_jobs:..... │${all_lightweight_jobs}│
-        |checkout_dir:............. │${checkout_dir}│
+        |job_names:..... │${job_names}│
+        |checkout_dir:.. │${checkout_dir}│
         |===================================================
         """.stripMargin());
 
-    def build_for_parallel = [:];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
 
-    all_lightweight_jobs.each { item ->
-        build_for_parallel[item] = { ->
-            stage(item) {
-                build(
-                    job: "${base_folder}/${item}",
-                    propagate: true,  // Raise any errors
-                    parameters: [
-                        string(name: "CUSTOM_GIT_REF", value: checkout_commit_id),
-                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                        string(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
-                    ],
-                );
-            }
+    currentBuild.result = parallel(
+        job_names.collectEntries { job_name ->
+            [("${job_name}") : {
+                stage("Trigger ${job_name}") {
+                    smart_build(
+                        job: "${base_folder}/${job_name}",
+                        parameters: [
+                            stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
+                        ],
+                    );
+                }
+            }]
         }
-    }
-
-    stage('Trigger all lightweight tests') {
-        parallel build_for_parallel;
-    }
+    ).values().every { it } ? "SUCCESS" : "FAILURE";
 }
 
 return this;

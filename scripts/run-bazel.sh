@@ -37,7 +37,7 @@ ACTION="$1"
 TARGET=("${@:2}")
 TARGET_S1=$(echo "${TARGET[-1]}" | sed -e 's/\/\///g' -e 's/@//g' -e 's/:/_/g' -e 's/\//_/g')
 EXECUTION_LOG_FILE_NAME="${ROOT_DIR}/bazel_execution_log-${TARGET_S1}.json"
-BAZEL_CACHE_URL="${BAZEL_CACHE_URL:-bazel-cache.lan.checkmk.net:9092}"
+BAZEL_CACHE_URL="${BAZEL_CACHE_URL:+bazel-cache.lan.checkmk.net:9092}"
 
 # explicitly create, and later `eval` since run directly with `eval` this script
 # would not abort on error

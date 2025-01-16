@@ -51,6 +51,10 @@ defineProps<ScrollContainerProps>()
   border-radius: 16px;
 }
 
+.scroll-container--inner {
+  height: 100%;
+}
+
 .scroll-container--inner > *:nth-child(1)::-webkit-scrollbar {
   width: 8px;
 }

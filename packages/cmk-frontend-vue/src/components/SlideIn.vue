@@ -76,6 +76,10 @@ const emit = defineEmits(['close'])
   }
 }
 
+:slotted(div) {
+  height: 100%;
+}
+
 .slide-in__slot {
   overflow: auto;
   height: 100%;

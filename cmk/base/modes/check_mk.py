@@ -131,7 +131,7 @@ from cmk.base.config import (
 )
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
-from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.modes import Mode, modes, Option
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
@@ -1800,7 +1800,10 @@ modes.register(
                 long_option="log-to-stdout",
                 short_help="Also write log messages to console",
             ),
-            keepalive_option,
+            Option(
+                long_option="keepalive",
+                short_help="Execute in keepalive mode (CEE only)",
+            ),
         ],
     )
 )

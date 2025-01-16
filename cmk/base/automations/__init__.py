@@ -48,16 +48,23 @@ class Automations:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    # TODO: remove `reload_config` when automation helper is fully integrated.
     def execute(
-        self, cmd: str, args: list[str], *, reload_config: bool = True
+        self, cmd: str, args: list[str], *, called_from_automation_helper: bool = False
     ) -> AutomationExitCode:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
-            return self._execute(cmd, remaining_args, reload_config=reload_config)
+            return self._execute(
+                cmd,
+                remaining_args,
+                called_from_automation_helper=called_from_automation_helper,
+            )
 
     def _execute(
-        self, cmd: str, args: list[str], *, reload_config: bool = True
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
     ) -> AutomationExitCode:
         try:
             try:
@@ -68,7 +75,7 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            if reload_config and automation.needs_checks:
+            if not called_from_automation_helper and automation.needs_checks:
                 with (
                     tracer.start_as_current_span("load_all_plugins"),
                     redirect_stdout(open(os.devnull, "w")),
@@ -79,12 +86,12 @@ class Automations:
                         checks_dir=paths.checks_dir,
                     )
 
-            if reload_config and automation.needs_config:
+            if not called_from_automation_helper and automation.needs_config:
                 with tracer.start_as_current_span("load_config"):
                     config.load(validate_hosts=False)
 
             with tracer.start_as_current_span(f"execute_automation[{cmd}]"):
-                result = automation.execute(args)
+                result = automation.execute(args, called_from_automation_helper)
 
         except (MKAutomationError, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -123,7 +130,11 @@ class Automation(abc.ABC):
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: list[str]) -> ABCAutomationResult: ...
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ABCAutomationResult: ...
 
 
 #

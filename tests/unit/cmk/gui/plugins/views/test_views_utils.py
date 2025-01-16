@@ -90,7 +90,7 @@ def test_replace_action_url_macros(
 
 
 def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
-    monkeypatch.setattr(painter_base, "painter_registry", PainterRegistry())
+    monkeypatch.setattr(painter_base, "painter_registry", painter_registry := PainterRegistry())
 
     def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
@@ -117,6 +117,6 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None)
+    dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None, painter_registry)
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

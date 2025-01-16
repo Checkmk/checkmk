@@ -897,12 +897,12 @@ def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[Cascad
 
 
 def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, painter_registry)
     return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
 def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, painter_registry)
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)

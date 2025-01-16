@@ -74,7 +74,7 @@ def declare_1to1_sorter(
     sorter_registry.register(
         Sorter(
             ident=painter_name,
-            title=painter.title(EmptyCell(None, None)),
+            title=painter.title(EmptyCell(None, None, None)),
             columns=painter.columns,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))

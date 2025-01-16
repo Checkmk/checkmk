@@ -20,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
+from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists, painter_registry
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -86,9 +86,17 @@ class View:
                 continue
 
             if (col_type := e.column_type) in ["join_column", "join_inv_column"]:
-                cells.append(JoinCell(e, self._compute_sort_url_parameter(e, registered_sorters)))
+                cells.append(
+                    JoinCell(
+                        e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry
+                    )
+                )
             elif col_type == "column":
-                cells.append(Cell(e, self._compute_sort_url_parameter(e, registered_sorters)))
+                cells.append(
+                    Cell(
+                        e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry
+                    )
+                )
             else:
                 raise NotImplementedError()
 
@@ -99,7 +107,7 @@ class View:
         """Group cells are displayed as titles of grouped rows"""
         registered_sorters = all_sorters(active_config)
         return [
-            Cell(e, self._compute_sort_url_parameter(e, registered_sorters))
+            Cell(e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry)
             for e in self.spec["group_painters"]
             if painter_exists(e)
         ]

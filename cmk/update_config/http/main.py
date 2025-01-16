@@ -65,6 +65,7 @@ class V1Url(BaseModel, extra="forbid"):
         ]
         | None
     ) = None
+    response_time: tuple[float, float] | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -105,6 +106,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
         case "ssl_1_3":
             scheme = "https"
             tls_versions = {"tls_versions": {"min_version": "tls_1_3", "allow_higher": False}}
+    match url_params.response_time:
+        case None:
+            response_time: Mapping[str, object] = {}
+        case (warn_milli, crit_milli):
+            response_time = {"response_time": ("fixed", (warn_milli / 1000, crit_milli / 1000))}
     return {
         "endpoints": [
             {
@@ -120,7 +126,8 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         # TODO: revisit this, it might be inconsistent with V1
                         "method": ("get", None),
                         **tls_versions,
-                    }
+                    },
+                    **response_time,
                 },
             }
         ],

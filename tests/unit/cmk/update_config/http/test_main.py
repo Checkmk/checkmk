@@ -7,7 +7,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.httpv2 import parse_http_params, TlsVersion
+from cmk.plugins.collection.server_side_calls.httpv2 import (
+    LevelsType,
+    parse_http_params,
+    TlsVersion,
+)
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.update_config.http.main import _classify, _migratable, _migrate, HostType, V1Value
 
@@ -202,10 +206,17 @@ EXAMPLE_27: Mapping[str, object] = {
     "mode": ("url", {"ssl": "auto"}),
 }
 
+EXAMPLE_28: Mapping[str, object] = {
+    "name": "response_time",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"response_time": (0.0, 0.0)}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
     [
+        EXAMPLE_1,
         EXAMPLE_15,
         EXAMPLE_16,
         EXAMPLE_17,
@@ -215,6 +226,7 @@ EXAMPLE_27: Mapping[str, object] = {
         EXAMPLE_25,
         EXAMPLE_26,
         EXAMPLE_27,
+        EXAMPLE_28,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -269,7 +281,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 @pytest.mark.parametrize(
     "rule_value",
     [
-        EXAMPLE_1,
         EXAMPLE_2,
         EXAMPLE_3,
         EXAMPLE_4,
@@ -291,6 +302,25 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     assert not _migratable(rule_value)
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_1, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_27, None),
+        (EXAMPLE_28, (LevelsType.FIXED, (0.0, 0.0))),
+    ],
+)
+def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.response_time == expected
 
 
 @pytest.mark.parametrize(

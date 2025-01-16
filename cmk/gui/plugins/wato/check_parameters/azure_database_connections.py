@@ -38,9 +38,9 @@ def _parameter_valuespec_connections():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="database_connections",
-        item_spec=lambda: TextInput(title=_("Database connections")),
+        item_spec=lambda: TextInput(title=_("Database")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_connections,
-        title=lambda: _("Database connections"),
+        title=lambda: _("Azure database connections"),
     )
 )

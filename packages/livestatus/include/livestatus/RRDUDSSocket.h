@@ -24,6 +24,7 @@ public:
     void connect();
     [[nodiscard]] Logger *logger() const { return logger_; }
     [[nodiscard]] std::string readLine() const;
+    [[nodiscard]] std::string read(std::size_t count) const;
     [[nodiscard]] ssize_t write(std::string_view text,
                                 std::chrono::milliseconds timeout) const;
     [[nodiscard]] bool isConnected() const { return socket_ != -1; }

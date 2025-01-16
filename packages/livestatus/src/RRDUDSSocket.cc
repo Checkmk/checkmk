@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include <algorithm>
+#include <array>
 #include <utility>
 
 #include "livestatus/Logger.h"
@@ -51,6 +53,18 @@ std::string RRDUDSSocket::readLine() const {
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     return mk::rstrip(answer);
+}
+
+std::string RRDUDSSocket::read(std::size_t count) const {
+    std::array<char, 512> answer{};
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const auto rd = ::fread(answer.data(), sizeof(decltype(answer)::value_type),
+                            std::min(count, answer.size()), file_);
+    if (feof(file_) != 0 || ferror(file_) != 0) {
+        throw generic_error("cannot read reply");
+    }
+    return {answer.begin(), answer.begin() + rd};
+    // NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
 ssize_t RRDUDSSocket::write(std::string_view text,

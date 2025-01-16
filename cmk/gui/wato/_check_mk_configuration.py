@@ -912,7 +912,7 @@ class ConfigVariableLoadFrontendVue(ConfigVariable):
 
 class ConfigVariableAutomationHelper(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupDeveloperTools
+        return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
         return ConfigDomainGUI()

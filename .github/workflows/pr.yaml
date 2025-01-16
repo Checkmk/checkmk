@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       PYTHONWARNINGS: ignore:DeprecationWarning
+      # Avoid falling back to our internal bazel remote cache on github actions
+      BAZEL_CACHE_URL: ""
     strategy:
       matrix:
         include:
@@ -48,6 +50,14 @@ jobs:
       with:
         key: uv-${{ runner.os }}-${{ hashFiles('requirements_all_lock.txt') }}
         path: ${{ env.UV_CACHE_DIR  }}
+    - name: Cache bazel
+      uses: actions/cache@v3
+      with:
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
+        path: |
+          ~/.cache/bazel
+        restore-keys: |
+          ${{ runner.os }}-bazel-
     - name: Setup Environment
       run: |
         # ksh: Needed for some "unit test" (test_mk_errpt_aix).

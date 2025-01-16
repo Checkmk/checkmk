@@ -64,7 +64,7 @@ class OracleDatabase:
         self.password = "oracle"
         self.sys_user_auth: str = f"sys/{self.password}@localhost:{self.PORT}/{self.SID}"
         self.charset = "AL32UTF8"
-        self.wallet_dir = Path("/etc/check_mk/oracle_wallet")
+        self.wallet_dir = Path("/home/oracle/oracle_wallet")
         self.wallet_password = "wallywallet42"
 
         # database root folder
@@ -150,7 +150,7 @@ class OracleDatabase:
         wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
         cmd = ["mkstore", "-wrl", self.wallet_dir.as_posix(), "-create"]
         rc, output = self.container.exec_run(
-            f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""", user="root"
+            f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""", user="oracle"
         )
         assert rc == 0, f"Error during wallet creation: {output.decode('UTF-8')}"
         logger.info("Creating Oracle wallet credential...")
@@ -159,10 +159,10 @@ class OracleDatabase:
             "-wrl",
             self.wallet_dir.as_posix(),
             "-createCredential",
-            f"localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}",
+            f"{self.SID} {self.cmk_username} {self.cmk_password}",
         ]
         rc, output = self.container.exec_run(
-            f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""", user="root"
+            f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""", user="oracle"
         )
         assert rc == 0, f"Error during wallet credential creation: {output.decode('UTF-8')}"
 

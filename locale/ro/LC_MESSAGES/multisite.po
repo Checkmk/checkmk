@@ -7472,6 +7472,10 @@ msgstr "Latența medie a verificatorului"
 msgid "Average consumption"
 msgstr "Consum mediu"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Creșterea numărului mediu de documente"
+
 msgid "Average disk I/O-queue length"
 msgstr "Lungime medie a cozii de așteptare I/O a discului"
 

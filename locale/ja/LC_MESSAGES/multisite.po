@@ -7129,6 +7129,10 @@ msgstr "平均チェッカー待ち時間"
 msgid "Average consumption"
 msgstr "平均消費量"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "ドキュメント数の平均増加"
+
 msgid "Average disk I/O-queue length"
 msgstr "平均ディスクI / Oキュー長"
 

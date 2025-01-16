@@ -7478,6 +7478,10 @@ msgstr "Gemiddelde checker-latentie"
 msgid "Average consumption"
 msgstr "Gemiddeld verbruik"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Gemiddelde groei aantal documenten"
+
 msgid "Average disk I/O-queue length"
 msgstr "Gemiddelde schijf I/O-queue lengte"
 

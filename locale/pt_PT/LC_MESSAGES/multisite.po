@@ -7482,6 +7482,10 @@ msgstr "Latência média do verificador"
 msgid "Average consumption"
 msgstr "Consumo médio"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Crescimento médio da contagem de documentos"
+
 msgid "Average disk I/O-queue length"
 msgstr "Comprimento médio da fila de E/S do disco"
 

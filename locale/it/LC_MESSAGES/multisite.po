@@ -7414,6 +7414,10 @@ msgstr "Latenza media del checker"
 msgid "Average consumption"
 msgstr "Consumo medio"
 
+#, fuzzy
+msgid "Average deadlock count"
+msgstr "Crescita media del numero di documenti"
+
 msgid "Average disk I/O-queue length"
 msgstr "Lunghezza media della coda di I/O su disco"
 

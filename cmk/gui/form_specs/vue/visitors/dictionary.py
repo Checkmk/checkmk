@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
 from collections.abc import Mapping
-from typing import Sequence
+from typing import cast, Sequence
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -63,7 +63,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         if not isinstance(raw_value, Mapping):
             return InvalidValue[_FrontendModel](
                 reason=_("Invalid datatype of value: %s") % type(raw_value),
-                fallback_value=self._compute_default_values(),
+                fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
             )
 
         try:
@@ -71,21 +71,21 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
             if invalid_keys := self._get_invalid_keys(resolved_dict):
                 return InvalidValue[_FrontendModel](
                     reason=_("Dictionary contains invalid keys: %r") % invalid_keys,
-                    fallback_value=self._compute_default_values(),
+                    fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
                 )
             return resolved_dict
         except ValueError as e:
             # This can happen during parsing the static elements with ast.literal_eval
             return InvalidValue[_FrontendModel](
                 reason=_("General value error: %s") % e,
-                fallback_value=self._compute_default_values(),
+                fallback_value=cast(_FrontendModel, self.to_vue(DEFAULT_VALUE)[1]),
             )
 
     def _to_vue(
         self,
         raw_value: object,
         parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
-    ) -> tuple[shared_type_defs.Dictionary, dict[str, object]]:
+    ) -> tuple[shared_type_defs.Dictionary, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeName
 
 from cmk.gui.painter.v0 import JoinCell, painter_registry
@@ -10,6 +12,7 @@ from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 
 
+@pytest.mark.usefixtures("request_context")
 def test_row_post_processor() -> None:
     class _FakeJoinCell(JoinCell):
         def painter_parameters(self) -> PainterParameters | None:

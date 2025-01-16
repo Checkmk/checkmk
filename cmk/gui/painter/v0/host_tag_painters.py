@@ -3,57 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-"""Dynamic registration of host tag painters and sorters based on the site configuration"""
+"""Dynamic host tag painters and sorters based on the site configuration"""
 
 from cmk.utils.tags import TagGroupID
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0 import Painter, painter_registry
+from cmk.gui.painter.v0 import Painter
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 
 
-def register_tag_plugins() -> None:
-    if getattr(register_tag_plugins, "_config_hash", None) == _calc_config_hash(
-        config=active_config
-    ):
-        return  # No re-register needed :-)
-    _register_host_tag_painters(config=active_config)
-    setattr(register_tag_plugins, "_config_hash", _calc_config_hash(config=active_config))
-
-
-def _calc_config_hash(*, config: Config) -> int:
-    return hash(repr(config.tags.get_dict_format()))
-
-
-def _register_host_tag_painters(*, config: Config) -> None:
-    # first remove all old painters to reflect delted painters during runtime
-    for key in list(painter_registry.keys()):
-        if key.startswith("host_tag_"):
-            painter_registry.unregister(key)
-
-    for tag_group in config.tags.tag_groups:
-        if tag_group.topic:
-            long_title = tag_group.topic + " / " + tag_group.title
-        else:
-            long_title = tag_group.title
-
-        ident = "host_tag_" + tag_group.id
-        spec = {
-            "title": _("Host tag:") + " " + long_title,
-            "short": tag_group.title,
-            "columns": ["host_tags"],
-        }
-        cls = type(
+def host_tag_config_based_painters(config: Config) -> dict[str, type[Painter]]:
+    return {
+        (ident := "host_tag_" + tag_group.id): type(
             "HostTagPainter%s" % str(tag_group.id).title(),
             (Painter,),
             {
                 "_ident": ident,
-                "_spec": spec,
+                "_spec": {
+                    "title": _("Host tag:")
+                    + " "
+                    + (
+                        f"{tag_group.topic}  / {tag_group.title}"
+                        if tag_group.topic
+                        else tag_group.title
+                    ),
+                    "short": tag_group.title,
+                    "columns": ["host_tags"],
+                },
                 "_tag_group_id": tag_group.id,
                 "ident": property(lambda self: self._ident),
                 "title": lambda self, cell: self._spec["title"],
@@ -69,7 +48,8 @@ def _register_host_tag_painters(*, config: Config) -> None:
                 )[1],
             },
         )
-        painter_registry.register(cls)
+        for tag_group in config.tags.tag_groups
+    }
 
 
 def _paint_host_tag(row: Row, tgid: TagGroupID, *, config: Config) -> CellSpec:

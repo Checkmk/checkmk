@@ -42,7 +42,6 @@ from cmk.gui import (
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
-from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
@@ -170,7 +169,6 @@ def register(
         permission_registry,
         page_registry,
         visual_type_registry,
-        register_post_config_load_hook,
         multisite_builtin_views,
         row_post_processor_registry,
     )

@@ -7,16 +7,16 @@ from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnSpec
 
 from .base import Painter
 from .helpers import RenderLink
+from .host_tag_painters import host_tag_config_based_painters
 
 
 class PainterRegistry(Registry[type[Painter]]):
@@ -34,8 +34,8 @@ class PainterRegistry(Registry[type[Painter]]):
 painter_registry = PainterRegistry()
 
 
-def painter_exists(column_spec: ColumnSpec) -> bool:
-    return column_spec.name in painter_registry
+def all_painters(config: Config) -> dict[str, type[Painter]]:
+    return dict(painter_registry.items()) | host_tag_config_based_painters(config)
 
 
 # Kept for pre 1.6 compatibility.

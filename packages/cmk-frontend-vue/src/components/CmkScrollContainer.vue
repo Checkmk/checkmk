@@ -25,12 +25,16 @@ defineProps<ScrollContainerProps>()
 </script>
 
 <template>
-  <div :class="scrollContainerVariants({ type })">
+  <div class="scroll-container" :class="scrollContainerVariants({ type })">
     <slot></slot>
   </div>
 </template>
 
 <style scoped>
+.scroll-container {
+  display: inline-block;
+}
+
 .scroll-container--outer {
   overflow: auto;
   height: 100%;

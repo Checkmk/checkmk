@@ -5,7 +5,7 @@
 
 from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeName
 
-from cmk.gui.painter.v0.base import JoinCell
+from cmk.gui.painter.v0.base import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 
@@ -124,6 +124,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Match 'version'
             _FakeJoinCell(
@@ -138,6 +139,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Match 'bar', not unique
             _FakeJoinCell(
@@ -152,6 +154,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Unknown macro
             _FakeJoinCell(
@@ -166,6 +169,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Unknown node
             _FakeJoinCell(
@@ -180,6 +184,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
         ],
         view_datasource_ident="invorainstance",

@@ -343,7 +343,8 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
         for painter_class in painter_registry.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
-        (painter, Cell(ColumnSpec(name=painter.ident), None)) for painter in painters
+        (painter, Cell(ColumnSpec(name=painter.ident), None, painter_registry))
+        for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -387,7 +388,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
+    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, painter_registry)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"

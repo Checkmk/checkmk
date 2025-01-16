@@ -103,7 +103,7 @@ class Painter(abc.ABC):
             return rows
 
         # Needed because of old calling conventions. Doesn't have any effect.
-        empty_cell = EmptyCell(None, None)
+        empty_cell = EmptyCell(None, None, None)
 
         def format_html(row: Row, _painter_configuration: PainterConfiguration) -> CellSpec:
             return self.render(row, empty_cell)
@@ -402,9 +402,11 @@ class Cell:
         self,
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
+        registered_painters: Mapping[str, type[Painter]] | None,
     ) -> None:
         self._painter_name: PainterName | None
         self._painter_params: PainterParameters | None
+        self._registered_painters = registered_painters
 
         if column_spec:
             self._painter_name = column_spec.name
@@ -413,8 +415,9 @@ class Cell:
                 column_spec.parameters.get("column_title") or column_spec.column_title
             )
             self._link_spec = column_spec.link_spec
+            assert registered_painters is not None
             self._tooltip_painter_name = (
-                column_spec.tooltip if column_spec.tooltip in painter_registry else None
+                column_spec.tooltip if column_spec.tooltip in registered_painters else None
             )
         else:
             self._painter_name = None
@@ -466,7 +469,8 @@ class Cell:
                 url_renderer=RenderLink(request, response, display_options),
             )
         except KeyError:
-            return painter_registry[self.painter_name()](
+            assert self._registered_painters is not None
+            return self._registered_painters[self.painter_name()](
                 user=user,
                 config=active_config,
                 request=request,
@@ -536,7 +540,8 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name](
+        assert self._registered_painters is not None
+        return self._registered_painters[self._tooltip_painter_name](
             user=user,
             config=active_config,
             request=request,
@@ -598,7 +603,9 @@ class Cell:
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             assert isinstance(content, (str, HTML))
-            tooltip_cell = Cell(ColumnSpec(self.tooltip_painter_name()), None)
+            tooltip_cell = Cell(
+                ColumnSpec(self.tooltip_painter_name()), None, self._registered_painters
+            )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
@@ -752,8 +759,9 @@ class JoinCell(Cell):
         self,
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
+        registered_painters: Mapping[str, type[Painter]],
     ) -> None:
-        super().__init__(column_spec, sort_url_parameter)
+        super().__init__(column_spec, sort_url_parameter, registered_painters)
         if (join_value := column_spec.join_value) is None:
             raise ValueError()
 

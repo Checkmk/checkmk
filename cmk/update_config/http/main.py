@@ -68,6 +68,7 @@ class V1Url(BaseModel, extra="forbid"):
     response_time: tuple[float, float] | None = None
     timeout: int | None = None
     user_agent: str | None = None
+    add_headers: list[str] | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -79,6 +80,8 @@ class V1Value(BaseModel, extra="forbid"):
 def _migratable(rule_value: Mapping[str, object]) -> bool:
     try:
         value = V1Value.model_validate(rule_value)
+        if any(": " not in header for header in value.mode[1].add_headers or []):
+            return False
         type_ = _classify(value.host.address[1])
         if type_ is HostType.EMBEDDABLE:
             # This might have some issues, since customers can put a port, uri, and really mess with
@@ -87,6 +90,11 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
         return False
     except ValidationError:
         return False
+
+
+def _migrate_header(header: str) -> dict[str, object]:
+    name, value = header.split(": ", 1)
+    return {"header_name": name, "header_value": value}
 
 
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
@@ -125,6 +133,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             user_agent: Mapping[str, object] = {}
         case agent:
             user_agent = {"user_agent": agent}
+    match url_params.add_headers:
+        case None:
+            add_headers: Mapping[str, object] = {}
+        case headers:
+            add_headers = {"add_headers": [_migrate_header(header) for header in headers]}
     return {
         "endpoints": [
             {
@@ -142,6 +155,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         **tls_versions,
                         **timeout,
                         **user_agent,
+                        **add_headers,
                     },
                     **response_time,
                 },

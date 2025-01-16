@@ -230,6 +230,30 @@ EXAMPLE_31: Mapping[str, object] = {
     "mode": ("url", {"user_agent": "agent"}),
 }
 
+EXAMPLE_32: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": ["head: tail", "mop: ", "a: b: c"]}),
+}
+
+EXAMPLE_33: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": ["mop"]}),
+}
+
+EXAMPLE_34: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": ["head:tail"]}),
+}
+
+EXAMPLE_35: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": ["head:"]}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -248,6 +272,7 @@ EXAMPLE_31: Mapping[str, object] = {
         EXAMPLE_29,
         EXAMPLE_30,
         EXAMPLE_31,
+        EXAMPLE_32,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -319,6 +344,9 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_22,
         EXAMPLE_23,
         EXAMPLE_24,
+        EXAMPLE_33,
+        EXAMPLE_34,
+        EXAMPLE_35,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -381,6 +409,32 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["user_agent"] == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (
+            EXAMPLE_32,
+            [
+                {"header_name": "head", "header_value": "tail"},
+                {"header_name": "mop", "header_value": ""},
+                {"header_name": "a", "header_value": "b: c"},
+            ],
+        ),
+    ],
+)
+def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.model_dump()["add_headers"] == expected
 
 
 @pytest.mark.parametrize(

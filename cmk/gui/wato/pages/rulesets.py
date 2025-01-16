@@ -3259,7 +3259,7 @@ def _get_rule_render_mode() -> RenderMode:
     # Settings via url overwrite config based settings
     if (rendering_mode := html.request.var("rule_render_mode", None)) is None:
         rendering_mode = active_config.vue_experimental_features.get(
-            "rule_render_mode", RenderMode.FRONTEND.value
+            "rule_render_mode", RenderMode.BACKEND.value
         )
 
     match rendering_mode:

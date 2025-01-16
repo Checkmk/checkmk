@@ -25,7 +25,6 @@ def get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         yield from get_site_factory(prefix="int_").get_test_site(
             name="test",
             auto_restart_httpd=True,
-            global_settings_update={"automation_helper_active": True},
         )
 
 

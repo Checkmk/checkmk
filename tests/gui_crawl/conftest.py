@@ -32,9 +32,7 @@ def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from get_site_factory(prefix="crawl_").get_test_site(
-            global_settings_update={"automation_helper_active": True},
-        )
+        yield from get_site_factory(prefix="crawl_").get_test_site()
 
 
 @pytest.fixture(name="test_crawler", scope="session")

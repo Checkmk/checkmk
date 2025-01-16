@@ -418,7 +418,6 @@ class CheckmkApp:
         install_agent_rc, install_agent_output = app.exec_run(
             f"{'rpm' if agent_type == "rpm" else 'dpkg'} --install '/{os.path.basename(agent_path)}'",
             user="root",
-            privileged=True,
         )
         assert (
             install_agent_rc == 0
@@ -445,7 +444,6 @@ class CheckmkApp:
         register_agent_rc, register_agent_output = app.exec_run(
             cmd,
             user="root",
-            privileged=True,
         )
         assert (
             register_agent_rc == 0
@@ -463,7 +461,6 @@ class CheckmkApp:
         install_python_rc, install_python_output = app.exec_run(
             f"dnf install '{python_pkg_name}'",
             user="root",
-            privileged=True,
         )
         assert (
             install_python_rc == 0
@@ -474,6 +471,5 @@ class CheckmkApp:
         app.exec_run(
             f'{python_bin_name} "/{os.path.basename(daemon_path)}"',
             user="root",
-            privileged=True,
             detach=True,
         )

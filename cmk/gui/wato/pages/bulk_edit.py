@@ -25,6 +25,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     collect_attributes,
     host_attribute_registry,
+    sorted_host_attributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
@@ -189,8 +190,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
-        for attr in host_attribute_registry.attributes():
-            attrname = attr.name()
+        for attrname in host_attribute_registry.keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean
@@ -243,7 +243,7 @@ class ModeBulkCleanup(WatoMode):
         self, hosts: Sequence[Host]
     ) -> list[tuple[ABCHostAttribute, bool, int]]:
         attributes = []
-        for attr in host_attribute_registry.get_sorted_host_attributes():
+        for attr in sorted_host_attributes():
             attrname = attr.name()
 
             if not attr.show_in_host_cleanup():

@@ -555,15 +555,19 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
     def attributes(self) -> list[ABCHostAttribute]:
         return [cls() for cls in self.values()]
 
-    def get_sorted_host_attributes(self) -> list[ABCHostAttribute]:
-        """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
-
-    def get_choices(self) -> Choices:
-        return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
-
 
 host_attribute_registry = HostAttributeRegistry()
+
+
+def sorted_host_attributes() -> list[ABCHostAttribute]:
+    """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
+    return sorted(
+        host_attribute_registry.attributes(), key=lambda a: (a.sort_index(), a.topic()().title)
+    )
+
+
+def host_attribute_choices() -> Choices:
+    return [(a.name(), a.title()) for a in sorted_host_attributes()]
 
 
 def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
@@ -595,7 +599,7 @@ def get_sorted_host_attributes_by_topic(
 
     sorted_attributes = []
     for attr in sorted(
-        host_attribute_registry.get_sorted_host_attributes(),
+        sorted_host_attributes(),
         key=functools.cmp_to_key(sort_host_attributes),
     ):
         if attr.topic() == host_attribute_topic_registry[topic_id]:

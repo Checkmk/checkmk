@@ -11,7 +11,7 @@ import time
 from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
 from urllib.parse import urlencode
 
@@ -987,7 +987,7 @@ def _fallback_mail_contacts_configured() -> bool:
 
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
-    total_send_notifications = get_total_sent_notifications()
+    total_send_notifications = _get_total_sent_notifications_last_seven_days()
     return Notifications(
         overview_title_i18n=_("Notification overview"),
         fallback_warning=(
@@ -1029,10 +1029,11 @@ def _get_vue_data() -> Notifications:
                     ("view_name", "notifications"),
                     ("_show_filter_form", "0"),
                     ("filled_in", "filter"),
-                    ("_active", "logtime;log_notification_phase;log_class"),
+                    ("_active", "logtime;log_notification_phase;log_class;log_type"),
                     ("logtime_from", "7"),
                     ("is_log_notification_phase", "0"),
                     ("logclass3", "on"),
+                    ("log_type", ".*NOTIFICATION RESULT$"),
                 ],
                 filename="view.py",
             ),
@@ -1081,6 +1082,13 @@ def _get_vue_data() -> Notifications:
         ],
         user_id=str(user.id),
     )
+
+
+def _get_total_sent_notifications_last_seven_days() -> LivestatusResponse:
+    current_time = datetime.now()
+    seven_days_ago = current_time - timedelta(days=7)
+    from_timestamp = int(seven_days_ago.timestamp())
+    return get_total_sent_notifications(from_timestamp=from_timestamp)
 
 
 def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:

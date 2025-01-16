@@ -16,7 +16,7 @@ from cmk.gui import inventory
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText
-from cmk.gui.painter.v0.base import Painter, painter_registry
+from cmk.gui.painter.v0 import Painter, painter_registry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,

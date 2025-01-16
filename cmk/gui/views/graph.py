@@ -25,7 +25,7 @@ from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
     PainterOption,

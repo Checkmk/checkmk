@@ -80,7 +80,7 @@ from cmk.gui.visual_link import render_link_to_view
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
-from .base import Cell, Painter, PainterRegistry
+from .base import Cell, Painter
 from .helpers import (
     format_labels_for_csv_export,
     get_label_sources,
@@ -91,6 +91,7 @@ from .helpers import (
     RenderLink,
     replace_action_url_macros,
 )
+from .registry import PainterRegistry
 
 
 def register(

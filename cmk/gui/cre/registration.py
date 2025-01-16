@@ -35,7 +35,7 @@ from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry
-from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry

@@ -26,8 +26,8 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import base as painter_base
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0 import Cell, Painter, painter_registry, PainterRegistry, register_painter
+from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
@@ -358,15 +358,15 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
 def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     monkeypatch.setattr(
-        painter_base,
+        painter_registry_module,
         "painter_registry",
-        PainterRegistry(),
+        registry := PainterRegistry(),
     )
 
     def rendr(row):
         return ("abc", "xyz")
 
-    painter_base.register_painter(
+    register_painter(
         "abc",
         {
             "title": "A B C",
@@ -380,7 +380,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"](
+    painter = registry["abc"](
         user=user,
         config=active_config,
         request=request,
@@ -388,7 +388,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, painter_registry)
+    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registry)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"

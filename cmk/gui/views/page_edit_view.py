@@ -26,7 +26,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0 import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (

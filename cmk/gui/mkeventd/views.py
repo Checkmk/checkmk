@@ -24,7 +24,7 @@ from cmk.gui.http import Request
 from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
+from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
 from cmk.gui.painter.v0.painters import paint_custom_var
 from cmk.gui.painter_options import paint_age

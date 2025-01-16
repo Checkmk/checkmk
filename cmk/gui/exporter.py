@@ -12,7 +12,7 @@ from typing import NamedTuple
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.gui.http import ContentDispositionType, request, response
-from cmk.gui.painter.v0.base import Cell, join_row
+from cmk.gui.painter.v0 import Cell, join_row
 from cmk.gui.type_defs import Rows, ViewSpec
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML

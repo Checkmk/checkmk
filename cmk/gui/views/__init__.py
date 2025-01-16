@@ -13,7 +13,7 @@ from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
-from cmk.gui.painter.v0.base import register_painter
+from cmk.gui.painter.v0 import register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
@@ -92,6 +92,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
+    import cmk.gui.painter.v0.registry as painter_registry
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
     from cmk.gui import data_source, display_options, exporter, painter_options, visual_link
@@ -181,12 +182,16 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "EmptyCell",
         "CellSpec",
         "Painter",
-        "painter_registry",
-        "register_painter",
         "ExportCellContent",
         "join_row",
     ):
         api_module.__dict__[name] = painter_base.__dict__[name]
+
+    for name in (
+        "painter_registry",
+        "register_painter",
+    ):
+        api_module.__dict__[name] = painter_registry.__dict__[name]
 
     for name in (
         "format_plugin_output",

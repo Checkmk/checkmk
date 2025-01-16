@@ -35,7 +35,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.painter.v0.base import Cell, columns_of_cells
+from cmk.gui.painter.v0 import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,

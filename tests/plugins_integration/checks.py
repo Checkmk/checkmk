@@ -665,9 +665,8 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         delete_hosts=True,
         no_deletion_time_after_init=60,
     )
-    test_site_piggyback.openapi.changes.activate_and_wait_for_completion(
-        force_foreign_changes=True, strict=False
-    )
+    with test_site_piggyback.openapi.wait_for_completion(300, "get", "activate_changes"):
+        test_site_piggyback.openapi.changes.activate(force_foreign_changes=True)
     try:
         yield
     finally:

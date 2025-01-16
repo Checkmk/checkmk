@@ -45,12 +45,12 @@ class ConvertCounters(UpdateAction):
                 logger.debug(msg_temp, "skipped (already JSON)", f)
                 continue
 
+            logger.debug(msg_temp, "converting", f)
             f.write_text(
                 json.dumps(
                     [(k, repr(v)) for k, v in ast.literal_eval(content).items()],
                 )
             )
-            logger.debug(msg_temp, "converted", f)
 
 
 update_action_registry.register(

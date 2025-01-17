@@ -131,7 +131,10 @@ class File(NamedTuple):
     content: str
 
     @classmethod
-    def new(cls, path: str, blob: Blob) -> "File":
+    def new(cls, path: str | None, blob: Blob | None) -> "File":
+        # TODO: Fix None handling at call sites
+        assert path is not None
+        assert blob is not None
         return File(
             name=Path(path).name,
             path=path,
@@ -229,6 +232,9 @@ def get_change(commit: Commit) -> WerkCommit | None:
                     yield WerkAdded(File.new(diff.b_path, diff.b_blob))
             else:
                 assert diff.b_path == diff.a_path
+                # TODO: Fix None handling for real
+                assert diff.a_blob is not None
+                assert diff.b_blob is not None
                 werk_diff = "\n".join(
                     difflib.ndiff(
                         diff.a_blob.data_stream.read().decode("utf-8").split("\n"),

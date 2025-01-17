@@ -67,7 +67,7 @@ def _get_data_using_telnet(addr_host: str, addr_port: int) -> str:
             if _result:
                 return _result
             time.sleep(2)
-        except Exception as _:
+        except Exception:
             # print('No connect, waiting for agent')
             time.sleep(2)
 
@@ -85,11 +85,13 @@ def actual_output_engine(write_config, wait_agent):
 
         yield _get_data_using_telnet(host, port).splitlines()
     finally:
-        if p:
+        if p is not None:
             p.terminate()
 
-        # hammer kill of the process, terminate may be too long
-        subprocess.call(f'taskkill /F /FI "pid eq {p.pid}" /FI "IMAGENAME eq check_mk_agent.exe"')
+            # hammer kill of the process, terminate may be too long
+            subprocess.call(
+                f'taskkill /F /FI "pid eq {p.pid}" /FI "IMAGENAME eq check_mk_agent.exe"'
+            )
 
         # Possibly wait for async processes to stop.
         wait_agent()

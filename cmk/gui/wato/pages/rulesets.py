@@ -3155,8 +3155,9 @@ class ModeNewRule(ABCEditRuleMode):
         try:
             # If the rulespec already uses the new form spec, use the DEFAULT_VALUE sentinel
             # instead of an auto-generated valuespec:default_value()
-            _tmp = self._ruleset.rulespec.form_spec
-            self._rule.value = DEFAULT_VALUE
+            if _get_rule_render_mode() == RenderMode.FRONTEND:
+                _tmp = self._ruleset.rulespec.form_spec
+                self._rule.value = DEFAULT_VALUE
         except FormSpecNotImplementedError:
             pass
         self._rule.update_conditions(

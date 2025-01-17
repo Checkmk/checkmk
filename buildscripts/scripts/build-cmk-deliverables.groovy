@@ -30,7 +30,6 @@ def main() {
         "ARTIFACT_STORAGE",
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
-        "BAZEL_CACHE_URL",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

@@ -1,6 +1,11 @@
 # https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
 try-import %workspace%/user.bazelrc
 
+# The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
+# Jenkins job (or a user) in the form of:
+# common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
+try-import %workspace%/remote.bazelrc
+
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
 common --experimental_remote_cache_async

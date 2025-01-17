@@ -18,7 +18,6 @@ def main() {
     check_environment_variables([
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
-        "BAZEL_CACHE_URL",
     ]);
 
     def distro = params.DISTRO;
@@ -35,9 +34,7 @@ def main() {
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (disable_cache ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "BAZEL_CACHE_URL=",
-        "BAZEL_CACHE_USER=",
-        "BAZEL_CACHE_PASSWORD="] : []);
+        ] : []);
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -138,15 +135,12 @@ def main() {
                                         credentialsId: 'nexus',
                                         passwordVariable: 'NEXUS_PASSWORD',
                                         usernameVariable: 'NEXUS_USERNAME'),
-                                    usernamePassword(
-                                        credentialsId: 'bazel-caching-credentials',
-                                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                                        usernameVariable: 'BAZEL_CACHE_USER'),
                                 ]) {
-                                    /// Don't use withEnv, see
-                                    /// https://issues.jenkins.io/browse/JENKINS-43632
-                                    sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
+                                    withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
+                                        /// Don't use withEnv, see
+                                        /// https://issues.jenkins.io/browse/JENKINS-43632
+                                        sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
+                                    }
                                 }
                             }
                             cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}")

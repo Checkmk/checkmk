@@ -132,6 +132,5 @@ def _make_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         description=request.node.name,
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
-        global_settings_update={"automation_helper_active": False},
     ) as this_site:
         yield this_site

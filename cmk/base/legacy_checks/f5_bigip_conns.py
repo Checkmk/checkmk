@@ -43,7 +43,7 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
         else:
             compat_conn_rate = 0
 
-            total_native_compat_rate += native_conn_rate + compat_conn_rate
+        total_native_compat_rate += native_conn_rate + compat_conn_rate
 
         if line[4] != "":
             stat_http_req_rate = get_rate(

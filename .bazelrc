@@ -69,7 +69,6 @@ build:ci --@rules_python//python/config_settings:bootstrap_impl=script
 # Flags for Debug builds
 # Definition of "bazel x --config=debug -- ..."
 ## Common
-common:debug --subcommands=pretty_print
 common:debug --announce_rc
 # gRPC errors provide stack trace as well
 common:debug --verbose_failures

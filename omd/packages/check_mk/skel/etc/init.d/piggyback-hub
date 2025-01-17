@@ -61,7 +61,7 @@ case "$1" in
             exit_with_code 0 'already running.'
         fi
 
-        if "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT"; then
+        if "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT" "$OMD_SITE"; then
             exit_with_code 0 'OK'
         else
             exit_with_code 1 'failed'

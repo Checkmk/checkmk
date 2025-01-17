@@ -1335,7 +1335,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                     "The configuration checks against the local site"
                 )
             else:
-                connection_status = check_remote_connection(omd_root, remote_host, remote_port)
+                connection_status = check_remote_connection(
+                    omd_root, remote_host, remote_port, site["id"]
+                )
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:

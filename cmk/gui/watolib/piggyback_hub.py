@@ -7,6 +7,8 @@ from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
 
@@ -42,7 +44,9 @@ def distribute_piggyback_hub_configs(
     dirty_sites: Collection[SiteId],  # only needed in CME case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
-    distribute_config(compute_new_config(global_settings, configured_sites, hosts_sites), omd_root)
+    distribute_config(
+        compute_new_config(global_settings, configured_sites, hosts_sites), omd_root, omd_site()
+    )
 
 
 def compute_new_config(

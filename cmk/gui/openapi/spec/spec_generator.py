@@ -1284,7 +1284,7 @@ def _docstring_name(docstring: str | None) -> str:
     Returns:
         A string or nothing.
 
-    """ ""
+    """
     if not docstring:
         raise ValueError("No name for the module defined. Please add a docstring!")
 

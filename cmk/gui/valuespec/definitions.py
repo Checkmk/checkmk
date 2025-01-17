@@ -3956,7 +3956,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         self._empty_text = empty_text if empty_text is not None else _("(nothing selected)")
         self._loaded_at: int | None = None
         self._render_function = (
-            render_function if render_function is not None else (lambda id, val: val)
+            render_function if render_function is not None else (lambda _id, val: val)
         )
         self._toggle_all = toggle_all
         self._render_orientation = render_orientation

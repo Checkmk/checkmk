@@ -55,12 +55,8 @@ following environment variables before executing the package build targets:
 - `NEXUS_USERNAME=nexus-user`
 - `NEXUS_PASSWORD=nexus-password`
 
-For Bazel the cache is configured to be read-only for users, but read-write for
-Jenkins using the following environment variables
-
-- `BAZEL_CACHE_URL=[BAZEL_CACHE_URL]:[BAZEL_PORT]`
-- `BAZEL_CACHE_PASSWORD=bazel-user`
-- `BAZEL_CACHE_USER=bazel-password`
+In case you want to use the (internal) bazel remote cache, add a `remote.bazelrc`
+to the repository root (see `.bazelrc` for more information)
 
 Once this is configured correctly the first build will produce build artifacts
 and upload them to the nexus/bazel server. On the next run, either the locally

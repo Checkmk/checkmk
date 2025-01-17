@@ -9,7 +9,7 @@ from .base import EmptyCell as EmptyCell
 from .base import join_row as join_row
 from .base import JoinCell as JoinCell
 from .base import Painter as Painter
-from .registry import painter_exists as painter_exists
+from .registry import all_painters as all_painters
 from .registry import painter_registry as painter_registry
 from .registry import PainterRegistry as PainterRegistry
 from .registry import register_painter as register_painter

@@ -24,7 +24,7 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.http import request
-from cmk.gui.painter.v0 import painter_registry
+from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
@@ -70,7 +70,7 @@ def fixture_livestatus_test_config(
 
 @pytest.mark.usefixtures("load_config")
 def test_registered_painters() -> None:
-    painters = painter_registry.keys()
+    painters = all_painters(active_config).keys()
     expected_painters = [
         "aggr_acknowledged",
         "aggr_assumed_state",

@@ -20,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.painter.v0 import Cell, JoinCell, painter_exists, painter_registry
+from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -81,20 +81,29 @@ class View:
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells: list[Cell] = []
         registered_sorters = all_sorters(active_config)
+        registered_painters = all_painters(active_config)
         for e in self.spec["painters"]:
-            if not painter_exists(e):
+            if e.name not in registered_painters:
                 continue
 
             if (col_type := e.column_type) in ["join_column", "join_inv_column"]:
                 cells.append(
                     JoinCell(
-                        e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry
+                        e,
+                        self._compute_sort_url_parameter(
+                            e, registered_sorters, registered_painters
+                        ),
+                        registered_painters,
                     )
                 )
             elif col_type == "column":
                 cells.append(
                     Cell(
-                        e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry
+                        e,
+                        self._compute_sort_url_parameter(
+                            e, registered_sorters, registered_painters
+                        ),
+                        registered_painters,
                     )
                 )
             else:
@@ -106,10 +115,15 @@ class View:
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         registered_sorters = all_sorters(active_config)
+        registered_painters = all_painters(active_config)
         return [
-            Cell(e, self._compute_sort_url_parameter(e, registered_sorters), painter_registry)
+            Cell(
+                e,
+                self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
+                registered_painters,
+            )
             for e in self.spec["group_painters"]
-            if painter_exists(e)
+            if e.name in registered_painters
         ]
 
     @property
@@ -126,7 +140,10 @@ class View:
         )
 
     def _compute_sort_url_parameter(
-        self, painter: ColumnSpec, registered_sorters: Mapping[str, Sorter]
+        self,
+        painter: ColumnSpec,
+        registered_sorters: Mapping[str, Sorter],
+        registered_painters: Mapping[str, type[Painter]],
     ) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None
@@ -139,6 +156,7 @@ class View:
             self.spec["sorters"],
             self._user_sorters or [],
             registered_sorters,
+            registered_painters,
         )
 
     def _get_sorter_entries(

@@ -6,11 +6,14 @@
 import time
 from typing import Any
 
+import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
@@ -18,7 +21,10 @@ from cmk.gui.i18n import _
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.views.store import internal_view_to_runtime_view
 
-from .builtin_dashboards import builtin_dashboards
+from .builtin_dashboards import (
+    builtin_dashboard_extender_registry,
+    builtin_dashboards,
+)
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 
 
@@ -39,7 +45,9 @@ class DashboardStore:
         """Loads all definitions from disk and returns them"""
         return visuals.load(
             "dashboards",
-            builtin_dashboards,
+            builtin_dashboard_extender_registry[cmk_version.edition(paths.omd_root).short].callable(
+                builtin_dashboards, active_config
+            ),
             _internal_dashboard_to_runtime_dashboard,
         )
 

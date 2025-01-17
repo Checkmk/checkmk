@@ -49,7 +49,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
+from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -923,10 +923,6 @@ def _rename_tags_after_confirmation(
 
         if mode == TagCleanupMode.ABORT:
             raise MKUserError("id_0", _("Aborting change."))
-
-        # make attribute unknown to system, important for save() operations
-        if isinstance(operation, OperationRemoveTagGroup):
-            undeclare_host_tag_attribute(operation.tag_group_id)
 
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(operation, mode)
 

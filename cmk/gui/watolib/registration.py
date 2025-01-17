@@ -17,7 +17,6 @@ from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
-    _host_attributes,
     _sync_remote_sites,
     activate_changes,
     autodiscovery,
@@ -120,7 +119,6 @@ def register(
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     activate_changes.register(replication_path_registry)
-    _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs(cron_job_registry)
     folder_validators_registry.register(

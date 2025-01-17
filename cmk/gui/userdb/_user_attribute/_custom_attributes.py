@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from collections.abc import Sequence
 
+from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.valuespec import TextInput, ValueSpec
 
 from ._base import UserAttribute
@@ -52,7 +53,7 @@ class GenericUserAttribute(UserAttribute):
 
 
 def config_based_custom_user_attributes(
-    attributes: list[dict[str, Any]],
+    attributes: Sequence[CustomUserAttrSpec],
 ) -> list[tuple[str, type[GenericUserAttribute]]]:
     custom_attributes: list[tuple[str, type[GenericUserAttribute]]] = []
     for attr in attributes:
@@ -65,9 +66,9 @@ def config_based_custom_user_attributes(
             _name = attr["name"]
             _valuespec = TextInput(title=attr["title"], help=attr["help"])
             _topic = attr.get("topic", "personal")
-            _user_editable = attr["user_editable"]
-            _show_in_table = attr.get("show_in_table", False)
-            _add_custom_macro = attr.get("add_custom_macro", False)
+            _user_editable = attr["user_editable"] or False
+            _show_in_table = attr.get("show_in_table") or False
+            _add_custom_macro = attr.get("add_custom_macro") or False
 
             @classmethod
             def name(cls) -> str:

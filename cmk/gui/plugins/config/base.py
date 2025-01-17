@@ -17,6 +17,8 @@ from cmk.utils.tags import TagConfigSpec
 
 from cmk.gui.type_defs import (
     BuiltinIconVisibility,
+    CustomHostAttrSpec,
+    CustomUserAttrSpec,
     GroupSpec,
     IconSpec,
     TrustedCertificateAuthorities,
@@ -569,8 +571,8 @@ class CREConfig:
     wato_write_nagvis_auth: bool = False
     wato_use_git: bool = False
     wato_hidden_users: list = field(default_factory=list)
-    wato_user_attrs: list = field(default_factory=list)
-    wato_host_attrs: list = field(default_factory=list)
+    wato_user_attrs: Sequence[CustomUserAttrSpec] = field(default_factory=list)
+    wato_host_attrs: Sequence[CustomHostAttrSpec] = field(default_factory=list)
     wato_read_only: dict = field(default_factory=dict)
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False

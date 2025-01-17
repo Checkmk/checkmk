@@ -293,12 +293,11 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
         # Remove local CA files to avoid confusion. They have no use anymore.
         SiteBrokerCA.delete(paths.omd_root)
 
-        clear_brokers_certs_cache()
-
         # In case we're logging in, and the node is running, immediately create the user.
         # If for some reason the node is not running, the user will be created when the
         # node starts and imports the definitions.
         if rabbitmq.rabbitmqctl_process(("status",), wait=True).returncode == 0:
+            clear_brokers_certs_cache()
             self._add_central_site_user(api_request.central_site)
 
         return True

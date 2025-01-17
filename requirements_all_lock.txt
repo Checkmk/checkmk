@@ -2197,6 +2197,7 @@ packaging==24.2 \
     #   opentelemetry-instrumentation
     #   packaging-legacy
     #   pytest
+    #   requirements-parser
     #   sphinx
     #   twine
 packaging-legacy==23.0.post0 \
@@ -3310,6 +3311,10 @@ requests-unixsocket==0.3.0 \
     # via
     #   -r requirements_all.txt
     #   redfish
+requirements-parser==0.11.0 \
+    --hash=sha256:35f36dc969d14830bf459803da84f314dc3d17c802592e9e970f63d0359e5920 \
+    --hash=sha256:50379eb50311834386c2568263ae5225d7b9d0867fb55cf4ecc93959de2c2684
+    # via -r requirements_dev.txt
 responses==0.25.3 \
     --hash=sha256:521efcbc82081ab8daa588e08f7e8a64ce79b91c39f6e62199b19159bea7dbcb \
     --hash=sha256:617b9247abd9ae28313d57a75880422d55ec63c29d33d629697590a034358dba
@@ -3980,6 +3985,7 @@ types-setuptools==75.6.0.20241126 \
     --hash=sha256:aaae310a0e27033c1da8457d4d26ac673b0c8a0de7272d6d4708e263f2ea3b9b
     # via
     #   -r requirements_dev.txt
+    #   requirements-parser
     #   types-cffi
 types-simplejson==3.19.0.20240801 \
     --hash=sha256:37f1b33c8626d7f072ea87737629310674845d54d187f12387fe33d31c938288 \

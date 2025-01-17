@@ -174,7 +174,7 @@ main() {
     test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build :all
     test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all
     test ${RUN_CHECK_FORMAT} = yes && "${BAZEL_CMD}" build --config=rustfmt :all
-    test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy //packages/site/check-http:all
+    test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
     true

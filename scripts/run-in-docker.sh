@@ -156,9 +156,6 @@ docker run -a stdout -a stderr \
     -e PYTHON_FILES \
     -e CHANGED_FILES \
     -e RESULTS \
-    -e BAZEL_CACHE_URL \
-    -e BAZEL_CACHE_USER \
-    -e BAZEL_CACHE_PASSWORD \
     -e GERRIT_BRANCH \
     -e DOCKER_REGISTRY_NO_HTTPS \
     -w "${PWD}" \

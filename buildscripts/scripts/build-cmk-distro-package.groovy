@@ -20,7 +20,6 @@ def main() {
     check_environment_variables([
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
-        "BAZEL_CACHE_URL",
     ]);
 
     def distro = params.DISTRO;
@@ -37,9 +36,7 @@ def main() {
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (disable_cache ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "BAZEL_CACHE_URL=",
-        "BAZEL_CACHE_USER=",
-        "BAZEL_CACHE_PASSWORD="] : []);
+        ] : []);
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -205,7 +202,6 @@ def main() {
 
     stage("Parse cache hits") {
         bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
-        bazel_logs.try_plot_cache_hits(bazel_log_prefix, [distro]);
     }
 
     stage("Archive stuff") {

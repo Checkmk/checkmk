@@ -40,14 +40,9 @@ def create_stage(Map args, time_stage_started) {
         println("CMD: ${args.COMMAND}");
         def cmd_status;
 
-        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)} +
-            usernamePassword(
-                credentialsId: 'bazel-caching-credentials',
-                /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                usernameVariable: 'BAZEL_CACHE_USER'),
-        ) {
+        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
             withEnv(args.ENV_VAR_LIST) {
+                withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     dir(args.DIR) {
                         // be very carefull here. Setting quantity to 0 or null, takes all available resources
@@ -77,7 +72,7 @@ def create_stage(Map args, time_stage_started) {
 
                     /// make the stage fail if the command returned nonzero
                     sh("exit ${cmd_status}");
-                }
+                }}
             }
         }
         return [cmd_status == 0, issues];

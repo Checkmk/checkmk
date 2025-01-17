@@ -70,3 +70,17 @@ provide_clone = { repo_name, credentials_id ->
         ]);
     }
 }
+
+withCredentialFileAtLocation = {Map args, Closure body ->
+    body.resolveStrategy = Closure.OWNER_FIRST;
+    body.delegate = [:];
+    try {
+        withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
+                sh("ln -s ${SECRET_LOCATION} ${args.location}");
+                body();
+        }
+        return true;
+    } finally {
+        sh("rm ${args.location}");
+    }
+};

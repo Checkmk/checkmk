@@ -52,6 +52,11 @@ class V1Host(BaseModel, extra="forbid"):
     virthost: None = None
 
 
+class V1Auth(BaseModel, extra="forbid"):
+    user: str
+    password: object
+
+
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
     ssl: (
@@ -69,6 +74,7 @@ class V1Url(BaseModel, extra="forbid"):
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: list[str] | None = None
+    auth: V1Auth | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -138,6 +144,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             add_headers: Mapping[str, object] = {}
         case headers:
             add_headers = {"add_headers": [_migrate_header(header) for header in headers]}
+    match url_params.auth:
+        case None:
+            auth: Mapping[str, object] = {}
+        case user_auth:
+            auth = {"auth": ("user_auth", user_auth.model_dump())}
     return {
         "endpoints": [
             {
@@ -156,6 +167,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         **timeout,
                         **user_agent,
                         **add_headers,
+                        **auth,
                     },
                     **response_time,
                 },

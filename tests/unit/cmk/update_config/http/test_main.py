@@ -254,6 +254,24 @@ EXAMPLE_35: Mapping[str, object] = {
     "mode": ("url", {"add_headers": ["head:"]}),
 }
 
+EXAMPLE_36: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "auth": {
+                "user": "user",
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid60fd36ba-5de6-4aee-8d92-6cc6fb13bb05", "cmk"),
+                ),
+            }
+        },
+    ),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -273,6 +291,7 @@ EXAMPLE_35: Mapping[str, object] = {
         EXAMPLE_30,
         EXAMPLE_31,
         EXAMPLE_32,
+        EXAMPLE_36,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -435,6 +454,31 @@ def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["add_headers"] == expected
+
+
+def test_migrate_auth_user() -> None:
+    # Assemble
+    value = V1Value.model_validate(EXAMPLE_36)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.auth is not None
+    assert ssc_value[0].settings.connection.auth[0].value == "user_auth"
+
+
+def test_migrate_auth_no_auth() -> None:
+    # Assemble
+    value = V1Value.model_validate(EXAMPLE_27)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.auth is None
 
 
 @pytest.mark.parametrize(

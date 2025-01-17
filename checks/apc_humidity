@@ -8,8 +8,8 @@
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["apc_humidity_default_levels"] = {
-    "levels": (40, 35),
-    "levels_lower": (60, 65),
+    "levels": (60, 65),
+    "levels_lower": (40, 35),
 }
 
 

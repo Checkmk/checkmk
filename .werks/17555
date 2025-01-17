@@ -1,0 +1,17 @@
+Title: apc_humidity: Change defaults
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1737121790
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+This change affects users, which use the `apc_humidity` check and rely on the default configuration.
+In the default configuration, the service is always critical.
+
+This was because the lower levels `(60.0, 65.0)` were above the upper levels `(40.0, 35.0)`.
+In fact, the intended behaviour, which is also described by the manpage, was that the two levels were switched.
+With this Werk, the behaviour of the check matches the manpage description.
+
+The old behaviour can be restored by configuring the rule `Humidity Levels`.

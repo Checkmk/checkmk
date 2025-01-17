@@ -235,7 +235,7 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        font_css_filepath = "themes/facelift/fonts_lato.css"
+        font_css_filepath = "themes/facelift/fonts_inter.css"
         css_filepath = theme.url("theme.css")
 
         if current_app.debug:

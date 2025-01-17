@@ -1669,6 +1669,7 @@ class ActivateChangesManager(ActivateChanges):
                     backup_snapshots.snapshot_secret(),
                     active_config.wato_max_snapshots,
                     active_config.wato_use_git,
+                    active_config.debug,
                     trace.get_current_span().get_span_context(),
                 ),
             )

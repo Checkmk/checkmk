@@ -23,7 +23,6 @@ import cmk.utils
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.watolib.audit_log import log_audit
@@ -87,12 +86,13 @@ def create_snapshot_subprocess(
     secret: bytes,
     max_snapshots: int,
     use_git: bool,
+    debug: bool,
     parent_span_context: trace.SpanContext,
 ) -> None:
     """Entry point of the backup subprocess"""
     context = trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context))
     with trace.get_tracer().start_as_current_span("create_backup_snapshot", context):
-        create_snapshot(comment, created_by, secret, max_snapshots, use_git)
+        create_snapshot(comment, created_by, secret, max_snapshots, use_git, debug)
 
 
 def create_snapshot(
@@ -101,6 +101,7 @@ def create_snapshot(
     secret: bytes,
     max_snapshots: int,
     use_git: bool,
+    debug: bool,
 ) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
@@ -122,7 +123,7 @@ def create_snapshot(
     data["snapshot_name"] = snapshot_name
 
     _do_create_snapshot(data, secret)
-    _do_snapshot_maintenance(max_snapshots)
+    _do_snapshot_maintenance(max_snapshots, debug)
 
     log_audit(
         "snapshot-created",
@@ -235,11 +236,11 @@ def _do_create_snapshot(data: SnapshotData, secret: bytes) -> None:
         shutil.rmtree(work_dir)
 
 
-def _do_snapshot_maintenance(max_snapshots: int) -> None:
+def _do_snapshot_maintenance(max_snapshots: int, debug: bool) -> None:
     snapshots = []
     for f in os.listdir(snapshot_dir):
         if f.startswith("wato-snapshot-"):
-            status = get_snapshot_status(f, check_correct_core=False)
+            status = get_snapshot_status(f, debug, check_correct_core=False)
             # only remove automatic and legacy snapshots
             if status.get("type") in ["automatic", "legacy"]:
                 snapshots.append(f)
@@ -254,6 +255,7 @@ def _do_snapshot_maintenance(max_snapshots: int) -> None:
 # Returns status information for snapshots or snapshots in progress
 def get_snapshot_status(  # pylint: disable=too-many-branches
     snapshot: str,
+    debug: bool,
     validate_checksums: bool = False,
     check_correct_core: bool = True,
 ) -> SnapshotStatus:
@@ -446,7 +448,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             check_checksums()
 
     except Exception as e:
-        if active_config.debug:
+        if debug:
             status["broken_text"] = traceback.format_exc()
             status["broken"] = True
         else:

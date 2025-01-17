@@ -1,5 +1,5 @@
 load("@cargo_deps_host//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 
 rust_library(
     name = "mk-sql-lib",
@@ -47,4 +47,15 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-sql-lib"],
+)
+
+rust_test(
+    name = "mk-sql-lib-test-internal",
+    compile_data = [
+        "tests/files/no-mssql.yml",
+        "tests/files/not-yaml.yml",
+        "tests/files/test-config.yml",
+        "tests/files/test-mini.yml",
+    ],
+    crate = ":mk-sql-lib",
 )

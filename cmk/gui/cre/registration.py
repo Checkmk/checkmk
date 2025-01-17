@@ -18,7 +18,12 @@ from cmk.gui.common_registration import register as common_registration
 from cmk.gui.cron import cron_job_registry
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.customer import customer_api_registry, CustomerAPIStub
-from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.dashboard import (
+    builtin_dashboard_extender_registry,
+    BuiltinDashboardExtender,
+    dashlet_registry,
+    noop_builtin_dashboard_extender,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
 from cmk.gui.help_menu import (
@@ -280,6 +285,9 @@ def register(edition: Edition) -> None:
         permission_registry,
     )
     _openapi_registration()
+    builtin_dashboard_extender_registry.register(
+        BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
+    )
 
 
 def _openapi_registration() -> None:

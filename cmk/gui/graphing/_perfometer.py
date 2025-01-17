@@ -9,6 +9,7 @@ import abc
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from itertools import repeat
 from typing import Self
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -640,14 +641,29 @@ def _project_segments(
     segments: Sequence[_EvaluatedQuantity],
     themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
-    total = sum(s.value for s in segments)
-    total_projection = projection(total)
+    """Compute which portion of the perfometer needs to be filled with which color.
+
+    The sum of the segments determines the total portion of the perfometer that is filled.
+    This really only makes sense if the represent positve values, but we try to compute this
+    in a way that at least does not crash in the general case.
+    """
+    value_total = sum(s.value for s in segments)
+    filled_total = projection(value_total)  # ∈ [0.0, 100.0]
+
+    projected_values = [projection(s.value) for s in segments]  # ∈ [0.0, 100.0]
+    projected_values_sum = sum(projected_values)  # >= 0.0
+    segments_share_of_filled = (
+        repeat(0.0, len(segments))
+        if projected_values_sum == 0.0
+        else [(p / projected_values_sum) for p in projected_values]
+    )
+
     projections = [
         (
-            round(total_projection * (entry.value / total), 2),
+            round(filled_total * share, 2),
             entry.color,
         )
-        for entry in segments
+        for entry, share in zip(segments, segments_share_of_filled, strict=True)
     ]
     projections.append(
         (

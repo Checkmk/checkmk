@@ -272,6 +272,42 @@ EXAMPLE_36: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_37: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "ok"}),
+}
+
+EXAMPLE_38: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "warning"}),
+}
+
+EXAMPLE_39: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "critical"}),
+}
+
+EXAMPLE_40: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "follow"}),
+}
+
+EXAMPLE_41: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "sticky"}),
+}
+
+EXAMPLE_42: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"onredirect": "stickyport"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -292,6 +328,7 @@ EXAMPLE_36: Mapping[str, object] = {
         EXAMPLE_31,
         EXAMPLE_32,
         EXAMPLE_36,
+        EXAMPLE_37,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -479,6 +516,30 @@ def test_migrate_auth_no_auth() -> None:
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.auth is None
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (EXAMPLE_37, "ok"),
+        (EXAMPLE_38, "warning"),
+        (EXAMPLE_39, "critical"),
+        (EXAMPLE_40, "follow"),
+        (EXAMPLE_41, "sticky"),
+        (EXAMPLE_42, "stickyport"),
+    ],
+)
+def test_migrate_redirect(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.model_dump()["redirects"] == expected
 
 
 @pytest.mark.parametrize(

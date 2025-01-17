@@ -75,6 +75,7 @@ class V1Url(BaseModel, extra="forbid"):
     user_agent: str | None = None
     add_headers: list[str] | None = None
     auth: V1Auth | None = None
+    onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -149,6 +150,13 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             auth: Mapping[str, object] = {}
         case user_auth:
             auth = {"auth": ("user_auth", user_auth.model_dump())}
+    match url_params.onredirect:
+        # TODO: V1 and V2 work differently, if searching for strings in documents, also need to test
+        # with http codes.
+        case None:
+            redirects: Mapping[str, object] = {}
+        case onredirect:
+            redirects = {"redirects": onredirect}
     return {
         "endpoints": [
             {
@@ -168,6 +176,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         **user_agent,
                         **add_headers,
                         **auth,
+                        **redirects,
                     },
                     **response_time,
                 },

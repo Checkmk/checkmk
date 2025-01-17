@@ -57,7 +57,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
   <HelpText :help="spec.help" />
-  <div v-if="data !== null" class="embedded">
+  <div v-if="data !== null" class="indent dictelement">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}
     </span>
@@ -73,9 +73,5 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <style scoped>
 span.embedded_title {
   margin-right: 3px;
-}
-
-div.embedded {
-  margin-left: 40px;
 }
 </style>

@@ -92,6 +92,7 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -1601,11 +1602,14 @@ class ModeTestNotifications(ModeNotifications):
             )
 
         self._render_test_notifications()
-        context, analyse = self._result_from_request()
-        self._show_notification_test_overview(context, analyse)
-        self._show_notification_test_details(context, analyse)
-        if request.var("test_notification") and analyse:
-            self._show_resulting_notifications(result=analyse)
+
+        analyse = None
+        if not user_errors:
+            context, analyse = self._result_from_request()
+            self._show_notification_test_overview(context, analyse)
+            self._show_notification_test_details(context, analyse)
+            if request.var("test_notification") and analyse:
+                self._show_resulting_notifications(result=analyse)
         self._show_rules(analyse)
 
     def _result_from_request(
@@ -1811,7 +1815,10 @@ class ModeTestNotifications(ModeNotifications):
             cssclass="hot",
             form="form_test_notifications",
         )
-        html.buttonlink(makeuri(request, []), _("Cancel"))
+        html.buttonlink(
+            makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
+            _("Cancel"),
+        )
 
     def _test_notification_ongoing(self) -> bool:
         return request.has_var("_test_host_notifications") or request.has_var(

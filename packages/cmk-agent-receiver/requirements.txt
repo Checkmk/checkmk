@@ -2,6 +2,8 @@ cryptography
 fastapi
 gunicorn
 h11
+httpx
+pytest-mock
 python-dateutil
 python-multipart
 requests

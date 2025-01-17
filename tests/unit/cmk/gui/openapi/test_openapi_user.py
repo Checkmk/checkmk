@@ -32,12 +32,11 @@ from cmk.gui.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
-from cmk.gui.type_defs import UserObject
+from cmk.gui.type_defs import CustomUserAttrSpec, UserObject
 from cmk.gui.userdb import ConnectorType, UserRole
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import (
-    CustomUserAttrSpec,
     save_custom_attrs_to_mk_file,
     update_user_custom_attrs,
 )

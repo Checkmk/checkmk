@@ -5,35 +5,16 @@
 import os
 import pprint
 from datetime import datetime
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 from cmk.ccc import store
 
 from cmk.gui import userdb
 from cmk.gui.config import load_config
+from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
-
-
-class CustomAttrSpec(TypedDict):
-    type: Literal["TextAscii"]
-    name: str
-    title: str
-    topic: str
-    help: str
-    # None case should be cleaned up to False
-    show_in_table: bool | None
-    # None case should be cleaned up to False
-    add_custom_macro: bool | None
-
-
-class CustomHostAttrSpec(CustomAttrSpec): ...
-
-
-class CustomUserAttrSpec(CustomAttrSpec):
-    # None case should be cleaned up to False
-    user_editable: bool | None
 
 
 class CustomAttrSpecs(TypedDict):

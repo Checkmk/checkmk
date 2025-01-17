@@ -744,3 +744,23 @@ class IconSpec(TypedDict):
 class BuiltinIconVisibility(TypedDict):
     toplevel: NotRequired[bool]
     sort_index: NotRequired[int]
+
+
+class CustomAttrSpec(TypedDict):
+    type: Literal["TextAscii"]
+    name: str
+    title: str
+    topic: str
+    help: str
+    # None case should be cleaned up to False
+    show_in_table: bool | None
+    # None case should be cleaned up to False
+    add_custom_macro: bool | None
+
+
+class CustomHostAttrSpec(CustomAttrSpec): ...
+
+
+class CustomUserAttrSpec(CustomAttrSpec):
+    # None case should be cleaned up to False
+    user_editable: bool | None

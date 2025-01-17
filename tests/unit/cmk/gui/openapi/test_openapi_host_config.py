@@ -28,9 +28,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
-    CustomHostAttrSpec,
     save_custom_attrs_to_mk_file,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes

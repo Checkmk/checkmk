@@ -7,8 +7,8 @@ import logging
 
 import pytest
 
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.custom_attributes import (
-    CustomHostAttrSpec,
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
 )

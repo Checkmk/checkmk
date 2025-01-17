@@ -27,13 +27,17 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
-from cmk.gui.watolib.custom_attributes import (
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    PermissionName,
+)
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,

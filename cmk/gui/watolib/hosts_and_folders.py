@@ -1404,7 +1404,7 @@ class Folder(FolderProtocol):
                         )
                     group_rules_list.append((group_rules, cgconfig["use_for_services"]))
 
-            for attrname, attr in all_host_attributes().items():
+            for attrname, attr in all_host_attributes(active_config).items():
                 if attrname in effective:
                     custom_varname = attr.nagios_name()
                     if custom_varname:
@@ -1889,7 +1889,7 @@ class Folder(FolderProtocol):
         effective.update(self.attributes)
 
         # now add default values of attributes for all missing values
-        for attrname, host_attribute in all_host_attributes().items():
+        for attrname, host_attribute in all_host_attributes(active_config).items():
             if attrname not in effective:
                 # Mypy can not help here with the dynamic key
                 effective.setdefault(attrname, host_attribute.default_value())  # type: ignore[misc]
@@ -3009,7 +3009,7 @@ class SearchFolder(FolderProtocol):
 
             # Check attributes
             dont_match = False
-            for attrname, attr in all_host_attributes().items():
+            for attrname, attr in all_host_attributes(active_config).items():
                 if attrname in self._criteria and not attr.filter_matches(
                     self._criteria[attrname], effective.get(attrname), host_name
                 ):
@@ -3152,7 +3152,7 @@ class Host:
 
         tag_groups: dict[TagGroupID, TagID] = {}
         effective = self.effective_attributes()
-        for attr in all_host_attributes().values():
+        for attr in all_host_attributes(active_config).values():
             value = effective.get(attr.name())
             tag_groups.update(attr.get_tag_groups(value))
 

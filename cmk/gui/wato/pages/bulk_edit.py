@@ -11,6 +11,7 @@ from hashlib import sha256
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -190,7 +191,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
-        for attrname in all_host_attributes().keys():
+        for attrname in all_host_attributes(active_config).keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

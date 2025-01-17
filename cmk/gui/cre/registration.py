@@ -49,6 +49,11 @@ from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
+from cmk.gui.views.builtin_views import (
+    builtin_view_extender_registry,
+    BuiltinViewExtender,
+    noop_builtin_view_extender,
+)
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.layout import layout_registry
@@ -287,6 +292,9 @@ def register(edition: Edition) -> None:
     _openapi_registration()
     builtin_dashboard_extender_registry.register(
         BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
+    )
+    builtin_view_extender_registry.register(
+        BuiltinViewExtender(edition.short, noop_builtin_view_extender)
     )
 
 

@@ -601,8 +601,7 @@ def get_sorted_host_attributes_by_topic(
     return sorted_attributes
 
 
-# Is used for dynamic host attribute declaration (based on host tags)
-# + Kept for comatibility with pre 1.6 plugins
+# Kept for comatibility with pre 1.6 plugins
 def declare_host_attribute(
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
@@ -730,19 +729,36 @@ def _declare_host_tag_attributes() -> None:
             if topic_id is None:
                 topic_id = str(re.sub(r"[^A-Za-z0-9_]+", "_", topic_spec)).lower()
 
-            if topic_id not in host_attribute_topic_registry:
-                topic = _declare_host_attribute_topic(topic_id, topic_spec)
-            else:
-                topic = host_attribute_topic_registry[topic_id]
-
-            declare_host_attribute(
-                _create_tag_group_attribute(tag_group),
-                show_in_table=False,
-                show_in_folder=True,
-                topic=topic,
-                sort_index=_tag_attribute_sort_index(tag_group),
-                from_config=True,
+            final_class = type(
+                "HostAttributeTag%s" % str(tag_group.id).title(),
+                (
+                    ABCHostAttributeHostTagCheckbox
+                    if tag_group.is_checkbox_tag_group
+                    else ABCHostAttributeHostTagList,
+                ),
+                {
+                    "_tag_group": tag_group,
+                    "help": lambda _: tag_group.help,
+                    "_topic": _declare_host_attribute_topic(topic_id, topic_spec)
+                    if topic_id not in host_attribute_topic_registry
+                    else host_attribute_topic_registry[topic_id],
+                    "topic": lambda self: self._topic,
+                    "show_in_table": lambda self: False,
+                    "show_in_folder": lambda self: True,
+                    "from_config": lambda self: True,
+                    "openapi_field": lambda self: String(description=self.help()),
+                }
+                | (
+                    {
+                        "_sort_index": sort_index,
+                        "sort_index": classmethod(lambda c: c._sort_index),
+                    }
+                    if (sort_index := _tag_attribute_sort_index(tag_group))
+                    else {}
+                ),
             )
+
+            host_attribute_registry.register(final_class)
 
 
 def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
@@ -758,22 +774,6 @@ def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
     return None
 
 
-def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag]:
-    if tag_group.is_checkbox_tag_group:
-        base_class: type = ABCHostAttributeHostTagCheckbox
-    else:
-        base_class = ABCHostAttributeHostTagList
-
-    return type(
-        "HostAttributeTag%s" % str(tag_group.id).title(),
-        (base_class,),
-        {
-            "_tag_group": tag_group,
-            "help": lambda _: tag_group.help,
-        },
-    )
-
-
 def declare_custom_host_attrs() -> None:
     for attr in active_config.wato_host_attrs:
         vs = TextInput(
@@ -787,18 +787,21 @@ def declare_custom_host_attrs() -> None:
         else:
             a = ValueSpecAttribute(attr["name"], vs)
 
-        # Previous to 1.6 the topic was a the "topic title". Since 1.6
-        # it's the internal ID of the topic. Because referenced topics may
-        # have been removed, be compatible and dynamically create a topic
-        # in case one is missing.
-        topic_class = _declare_host_attribute_topic(attr["topic"], attr["topic"].title())
-
-        declare_host_attribute(
-            a,
-            show_in_table=attr["show_in_table"],
-            topic=topic_class,
-            from_config=True,
+        final_class = type(
+            "%sCustomHostAttr" % a.__name__,
+            (a,),
+            {
+                "from_config": lambda self: True,
+                "openapi_field": lambda self: String(description=self.help()),
+                # Previous to 1.6 the topic was a the "topic title". Since 1.6
+                # it's the internal ID of the topic. Because referenced topics may
+                # have been removed, be compatible and dynamically create a topic
+                # in case one is missing.
+                "_topic": _declare_host_attribute_topic(attr["topic"], attr["topic"].title()),
+                "topic": lambda self: self._topic,
+            },
         )
+        host_attribute_registry.register(final_class)
 
 
 def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:

@@ -42,6 +42,7 @@ class Arguments:
     pid_file: str
     log_file: str
     omd_root: str
+    omd_site: str
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -63,6 +64,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
     parser.add_argument("pid_file", help="Path to the PID file")
     parser.add_argument("log_file", help="Path to the log file")
     parser.add_argument("omd_root", help="Site root path")
+    parser.add_argument("omd_site", help="Site name")
 
     args = parser.parse_args(argv[1:])
     return Arguments(
@@ -72,6 +74,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
         pid_file=args.pid_file,
         log_file=args.log_file,
         omd_root=args.omd_root,
+        omd_site=args.omd_site,
     )
 
 
@@ -93,13 +96,14 @@ def _setup_logging(args: Arguments) -> logging.Logger:
 
 
 def run_piggyback_hub(
-    logger: logging.Logger, omd_root: Path, crash_report_callback: Callable[[], str]
+    logger: logging.Logger, omd_root: Path, omd_site: str, crash_report_callback: Callable[[], str]
 ) -> int:
     reload_config = make_event()
     processes = (
         ReceivingProcess(
             logger,
             omd_root,
+            omd_site,
             PiggybackPayload,
             save_payload_on_message(logger, omd_root),
             crash_report_callback,
@@ -110,6 +114,7 @@ def run_piggyback_hub(
         ReceivingProcess(
             logger,
             omd_root,
+            omd_site,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
             crash_report_callback,
@@ -164,7 +169,7 @@ def main(crash_report_callback: Callable[[], str], argv: list[str] | None = None
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            return run_piggyback_hub(logger, omd_root, crash_report_callback)
+            return run_piggyback_hub(logger, omd_root, args.omd_site, crash_report_callback)
     except Exception as exc:
         if args.debug:
             raise

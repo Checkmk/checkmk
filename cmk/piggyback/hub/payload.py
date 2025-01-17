@@ -95,7 +95,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         failed_message = None
         try:
             while True:
-                with make_connection(self.omd_root, self.logger, self.task_name) as conn:
+                with make_connection(self.omd_root, self.site, self.logger, self.task_name) as conn:
                     try:
                         channel = conn.channel(PiggybackPayload)
                         if failed_message is not None:

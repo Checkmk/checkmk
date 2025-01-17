@@ -66,8 +66,10 @@ def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
     return PiggybackHubConfig(targets=persisted.targets)
 
 
-def distribute_config(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
+def distribute_config(
+    configs: Mapping[str, PiggybackHubConfig], omd_root: Path, omd_site: str
+) -> None:
     for site_id, config in configs.items():
-        with Connection(APP_NAME, omd_root) as conn:
+        with Connection(APP_NAME, omd_root, omd_site) as conn:
             channel = conn.channel(PiggybackHubConfig)
             channel.publish_for_site(site_id, config, routing=CONFIG_ROUTE)

@@ -241,6 +241,17 @@ documentation:
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
+# Use this target to update the requirements_*_lock.txt files
+# TODO: Find a _way_ better ways to handle this
+relock_venv:
+	for type in runtime all; do \
+	    filename=requirements_$${type}_lock.txt; \
+	    > $${filename}; \
+	done; \
+	bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
+
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv:
 	@set -e; \

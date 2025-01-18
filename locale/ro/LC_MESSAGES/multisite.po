@@ -3392,6 +3392,10 @@ msgstr "Meniu de acțiune"
 msgid "Action on Error"
 msgstr "Acțiune în caz de eroare"
 
+#, fuzzy
+msgid "Action result not found"
+msgstr "pictograma nu a fost găsită"
+
 msgid "Actions"
 msgstr "Acțiuni"
 
@@ -8660,6 +8664,10 @@ msgstr "Instanțe Azure VM"
 
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Conexiuni la baza de date"
 
 #, fuzzy
 msgid "Azure services found!"
@@ -17222,10 +17230,6 @@ msgstr "Copie de rezervă a bazei de date"
 msgid "Database changed to emergency"
 msgstr "Baza de date a fost modificată în regim de urgență"
 
-#, fuzzy
-msgid "Database connections"
-msgstr "Conexiuni la baza de date"
-
 msgid "Database diff backup"
 msgstr "Baza de date diff backup"
 
@@ -21218,6 +21222,9 @@ msgstr "E.Tip"
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr ""
 "De exemplu 'project = my_project și result = \"waiting for something\"'"
+
+msgid "EC2 instances may take a few minutes to show up."
+msgstr ""
 
 msgid "EMC Data Domain MTree state"
 msgstr "Starea EMC Data Domain MTree"
@@ -30344,6 +30351,11 @@ msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>db2_mem</tt> "
 "implementat. Acest lucru va crea un serviciu pentru consumul de memorie al "
 "fiecărei instanțe DB2 în execuție care se găsește pe sistem."
+
+#, python-format
+msgid ""
+"Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "Gazde forțate să folosească 'if' în loc de 'if64'"
@@ -53029,6 +53041,12 @@ msgstr "Cerință. Versiune"
 msgid "Request Method"
 msgstr "Metoda de solicitare"
 
+msgid ""
+"Request data from a RabbitMQ instance. This special agent queries the HTTP "
+"API provided by RabbitMQs 'Management Plugin'. You need to enable this "
+"plugin in your RabbitMQ instance."
+msgstr ""
+
 msgid "Request latencies"
 msgstr "Latențe de solicitare"
 
@@ -53160,9 +53178,6 @@ msgstr "Solicită date de la o instanță Jenkins."
 #, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Solicită date de la o instanță Jenkins."
-
-msgid "Requests data from a RabbitMQ instance."
-msgstr "Solicită date de la o instanță RabbitMQ."
 
 msgid "Requests data from a Splunk instance."
 msgstr "Solicită date de la o instanță Splunk."
@@ -54973,11 +54988,6 @@ msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
 
 msgid "Save your progress and go to the Activate Changes page to enable it."
-msgstr ""
-
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. EC2 "
-"instances may take a few minutes to show up."
 msgstr ""
 
 msgid ""
@@ -60153,6 +60163,10 @@ msgstr "Suprafața stivuită"
 
 msgid "Stacks"
 msgstr "Stive"
+
+#, fuzzy
+msgid "Stage action result not found"
+msgstr "Stare dacă nu se găsește tunelul"
 
 msgid "Stale"
 msgstr "Stale"
@@ -67514,6 +67528,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "Utilizatorul %s utilizat de scanarea în rețea a dosarului %s nu există."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Acest ID există deja."
 
 msgid "The user interface"
 msgstr "Interfața cu utilizatorul"
@@ -87743,6 +87761,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Requests data from a RabbitMQ instance."
+#~ msgstr "Solicită date de la o instanță RabbitMQ."
 
 #, fuzzy
 #~ msgid "Experimental rendering"

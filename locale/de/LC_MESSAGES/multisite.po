@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-14 17:25+0000\n"
+"PO-Revision-Date: 2025-01-17 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3319,6 +3319,10 @@ msgstr "Aktions-Menü"
 
 msgid "Action on Error"
 msgstr "Aktion bei einem Fehler"
+
+#, fuzzy
+msgid "Action result not found"
+msgstr "Icon nicht gefunden"
 
 msgid "Actions"
 msgstr "Aktionen"
@@ -7704,9 +7708,8 @@ msgstr "Durchschnittliche Checker-Latenz"
 msgid "Average consumption"
 msgstr "Durchschnittlicher Verbrauch"
 
-#, fuzzy
 msgid "Average deadlock count"
-msgstr "Durchschnittliches Wachstum der Dokumentenanzahl"
+msgstr "Durchschnittliche Anzahl von Deadlocks"
 
 msgid "Average disk I/O-queue length"
 msgstr "Durchschnittliche Länge Disk I/O-Queue"
@@ -8333,6 +8336,10 @@ msgstr "Azure VM Instanzen"
 
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Datenbank-Verbindungen"
 
 msgid "Azure services found!"
 msgstr "Azure Services gefunden!"
@@ -11008,7 +11015,7 @@ msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
 
 msgid "Cannot save the form because it contains errors."
-msgstr ""
+msgstr "Das Formular kann nicht gespeichert werden, da es Fehler enthält."
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -16659,9 +16666,6 @@ msgstr "Datenbank Backup"
 msgid "Database changed to emergency"
 msgstr "Datenbank in Notlage geraten"
 
-msgid "Database connections"
-msgstr "Datenbank-Verbindungen"
-
 msgid "Database diff backup"
 msgstr "Datenbank diff Backup"
 
@@ -20427,6 +20431,9 @@ msgstr "B.Typ"
 
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr "z.B. 'project = my_project and result = \"waiting for something\"'"
+
+msgid "EC2 instances may take a few minutes to show up."
+msgstr ""
 
 msgid "EMC Data Domain MTree state"
 msgstr "EMC Data Domain MTree-Zustand"
@@ -29067,6 +29074,11 @@ msgstr ""
 "<tt>db2_mem</tt> verteilt. Dadurch wird ein Dienst für den Speicherverbrauch "
 "jeder auf dem System gefundenen laufenden DB2-Instanz erstellt."
 
+#, python-format
+msgid ""
+"Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
+
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "Zwinge Hosts 'if' anstatt 'if64' zu verwenden"
 
@@ -33285,9 +33297,8 @@ msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 
-#, fuzzy
 msgid "Invalid number"
-msgstr "Ungültige Float-Nummer"
+msgstr "Ungültige Nummer"
 
 msgid "Invalid package part"
 msgstr "Ungültiger Teil im Paket"
@@ -34883,6 +34894,8 @@ msgid ""
 "Levels are applied to the value as reported by the application, or to the "
 "computed rate (if enabled)."
 msgstr ""
+"Die Levels werden auf den von der Anwendung gemeldeten Wert oder auf die "
+"berechnete Rate (falls aktiviert) angewendet."
 
 msgid "Levels byte count"
 msgstr "Level für die Byte-Zählung"
@@ -50817,6 +50830,12 @@ msgstr "Erf. Version"
 msgid "Request Method"
 msgstr "Requestmethode"
 
+msgid ""
+"Request data from a RabbitMQ instance. This special agent queries the HTTP "
+"API provided by RabbitMQs 'Management Plugin'. You need to enable this "
+"plugin in your RabbitMQ instance."
+msgstr ""
+
 msgid "Request latencies"
 msgstr "Latenzen von Anfragen"
 
@@ -50931,9 +50950,6 @@ msgstr "Fordert Daten von einer Gerrit-Instanz an."
 
 msgid "Requests data from a Jenkins instance."
 msgstr "Fordert Daten von einer Jenkins-Instanz an."
-
-msgid "Requests data from a RabbitMQ instance."
-msgstr "Fordert Daten von einer RabbitMQ-Instanz an."
 
 msgid "Requests data from a Splunk instance."
 msgstr "Fordert Daten von einer Splunk-Instanz an."
@@ -51806,9 +51822,8 @@ msgstr "Regelpakete"
 msgid "Rule properties"
 msgstr "Regel-Eigenschaften"
 
-#, fuzzy
 msgid "Rule rendering mode"
-msgstr "Rundungsmodus"
+msgstr "Modus zur Regeldarstellung"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -52680,14 +52695,6 @@ msgstr ""
 "aktivieren, um sie zu aktivieren."
 
 msgid ""
-"Save your progress and go to the Activate Changes page to enable it. EC2 "
-"instances may take a few minutes to show up."
-msgstr ""
-"Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
-"aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis die "
-"EC2-Instanzen angezeigt werden."
-
-msgid ""
 "Save your progress and go to the Activate Changes page to enable it. Virtual "
 "machines may take a few minutes to show up."
 msgstr ""
@@ -53277,13 +53284,12 @@ msgstr "Wählen Sie ein Symbol aus"
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Wählen Sie eine iCalender-Datei (<tt>*.ics</tt>) von Ihrem Rechner"
 
-#, fuzzy
 msgid ""
 "Select and configure AWS services you would like to monitor, and optionally "
 "restrict them with AWS tags."
 msgstr ""
 "Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten, "
-"und legen Sie weitere Optionen wie AWS-Merkmale oder einen Proxy-Server fest."
+"und schränken Sie sie optional mit AWS-Tags ein."
 
 msgid ""
 "Select and configure the Google Cloud Platform services you would like to "
@@ -57691,6 +57697,10 @@ msgstr "gestapelte Fläche"
 msgid "Stacks"
 msgstr "Stapel"
 
+#, fuzzy
+msgid "Stage action result not found"
+msgstr "Zustand, wenn Tunnel nicht gefunden wird"
+
 msgid "Stale"
 msgstr "Veraltet"
 
@@ -61613,6 +61623,8 @@ msgid ""
 "The configuration bundle '%s' is not valid. This likely means that parts of "
 "it were removed or not properly created."
 msgstr ""
+"Das Konfigurationspaket '%s' ist nicht gültig. Dies bedeutet wahrscheinlich, "
+"dass Teile davon entfernt oder nicht richtig erstellt wurden."
 
 msgid "The configuration is currently in read only mode. "
 msgstr "Die Konfiguration ist aktuell schreibgeschützt. "
@@ -65004,6 +65016,10 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "Der Benutzer %s, welcher vom Netzwerkscan des Folders %s benutzt wurde, "
 "existiert nicht."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Diese ID existiert bereits."
 
 msgid "The user interface"
 msgstr "Benutzeroberfläche"
@@ -77547,9 +77563,8 @@ msgstr "Freiwillige Kontextwechsel"
 msgid "Vswitch bonding"
 msgstr "Vswitch Verbindung"
 
-#, fuzzy
 msgid "Vue experimental features"
-msgstr "Enterprise Funktion"
+msgstr "Experimentelle Funktionen von Vue"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVM volumes (Linux)"
@@ -82341,9 +82356,9 @@ msgstr "Benutzern erlauben, diese Benachrichtigung zu deaktivieren"
 msgid "and"
 msgstr "und"
 
-#, fuzzy, python-format
+#, python-format
 msgid "and %s more"
-msgstr " und %s '%s'"
+msgstr "und %s mehr"
 
 msgid "any"
 msgstr "beliebig"
@@ -84409,6 +84424,17 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Requests data from a RabbitMQ instance."
+#~ msgstr "Fordert Daten von einer RabbitMQ-Instanz an."
+
+#~ msgid ""
+#~ "Save your progress and go to the Activate Changes page to enable it. EC2 "
+#~ "instances may take a few minutes to show up."
+#~ msgstr ""
+#~ "Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
+#~ "aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis "
+#~ "die EC2-Instanzen angezeigt werden."
 
 #, fuzzy
 #~ msgid "Experimental rendering"

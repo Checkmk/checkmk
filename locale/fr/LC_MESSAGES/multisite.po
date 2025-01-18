@@ -3405,6 +3405,10 @@ msgstr "Menu d'action"
 msgid "Action on Error"
 msgstr "Action en cas d'erreur"
 
+#, fuzzy
+msgid "Action result not found"
+msgstr "icône non trouvée"
+
 msgid "Actions"
 msgstr "Actions"
 
@@ -8712,6 +8716,10 @@ msgstr "Instances VM Azure"
 
 msgid "Azure VNet Gateway"
 msgstr "Passerelle Azure VNet"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Connexions à la base de données"
 
 msgid "Azure services found!"
 msgstr "Service Azure trouvé !"
@@ -17332,10 +17340,6 @@ msgstr "Sauvegarde de la base de données"
 msgid "Database changed to emergency"
 msgstr "La base de données est passée en urgence"
 
-#, fuzzy
-msgid "Database connections"
-msgstr "Connexions à la base de données"
-
 msgid "Database diff backup"
 msgstr "Sauvegarde différée de la base de données"
 
@@ -21343,6 +21347,9 @@ msgstr "E.Type"
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr ""
 "Par exemple, 'projet = mon_projet et résultat = \"attente de quelque chose\"'"
+
+msgid "EC2 instances may take a few minutes to show up."
+msgstr ""
 
 msgid "EMC Data Domain MTree state"
 msgstr "État du MTree d'EMC Data Domain"
@@ -30546,6 +30553,11 @@ msgstr ""
 "Les hôtes configurés via cette règle obtiennent le plugin <tt>db2_mem</tt> "
 "déployé. Cela créera un service pour la consommation de mémoire de chaque "
 "instance DB2 en cours d'exécution trouvée sur le système."
+
+#, python-format
+msgid ""
+"Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "Les hôtes sont obligés d'utiliser 'if' au lieu de 'if64'"
@@ -53397,6 +53409,12 @@ msgstr "Req. Version"
 msgid "Request Method"
 msgstr "Méthode de demande"
 
+msgid ""
+"Request data from a RabbitMQ instance. This special agent queries the HTTP "
+"API provided by RabbitMQs 'Management Plugin'. You need to enable this "
+"plugin in your RabbitMQ instance."
+msgstr ""
+
 msgid "Request latencies"
 msgstr "Temps de latence des demandes"
 
@@ -53538,9 +53556,6 @@ msgstr "Demande des données à une instance de Jenkins."
 #, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Demande des données à une instance de Jenkins."
-
-msgid "Requests data from a RabbitMQ instance."
-msgstr "Demande des données à une instance RabbitMQ."
 
 msgid "Requests data from a Splunk instance."
 msgstr "Demande des données à partir d'une instance Splunk."
@@ -55368,11 +55383,6 @@ msgid "Save this host and go to"
 msgstr "Sauvegardez cet hôte et allez à"
 
 msgid "Save your progress and go to the Activate Changes page to enable it."
-msgstr ""
-
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. EC2 "
-"instances may take a few minutes to show up."
 msgstr ""
 
 msgid ""
@@ -60520,6 +60530,10 @@ msgstr "Zone empilée"
 
 msgid "Stacks"
 msgstr "Piles"
+
+#, fuzzy
+msgid "Stage action result not found"
+msgstr "État si le tunnel n'est pas trouvé"
 
 msgid "Stale"
 msgstr "Stale"
@@ -67921,6 +67935,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "L'utilisateur %s utilisé par l'analyse réseau du dossier %s n'existe pas."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Cet identifiant existe déjà."
 
 msgid "The user interface"
 msgstr "L'interface utilisateur"
@@ -88380,6 +88398,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#~ msgid "Requests data from a RabbitMQ instance."
+#~ msgstr "Demande des données à une instance RabbitMQ."
 
 #, fuzzy
 #~ msgid "Experimental rendering"

@@ -3243,6 +3243,10 @@ msgstr "アクションメニュー"
 msgid "Action on Error"
 msgstr "エラー時のアクション"
 
+#, fuzzy
+msgid "Action result not found"
+msgstr "アイコンが見つかりません"
+
 msgid "Actions"
 msgstr "アクション"
 
@@ -8303,6 +8307,10 @@ msgstr "Azure VMインスタンス"
 
 msgid "Azure VNet Gateway"
 msgstr "AzureVNetゲートウェイ"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "データベース接続"
 
 #, fuzzy
 msgid "Azure services found!"
@@ -16495,9 +16503,6 @@ msgstr "データベースのバックアップ"
 msgid "Database changed to emergency"
 msgstr "データベースが緊急事態に変更されました"
 
-msgid "Database connections"
-msgstr "データベース接続"
-
 msgid "Database diff backup"
 msgstr "データベースの差分バックアップ"
 
@@ -20241,6 +20246,9 @@ msgstr "E.Type"
 
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr "例 'project = my_project and result = \"何かを待っています\"'"
+
+msgid "EC2 instances may take a few minutes to show up."
+msgstr ""
 
 msgid "EMC Data Domain MTree state"
 msgstr "EMC Data Domain MTreeの状態"
@@ -29236,6 +29244,11 @@ msgstr ""
 "このルールを介して構成されたホストは、プラグイン<tt>db2_mem</tt>をデプロイし"
 "ます。これにより、システム上で実行されているすべてのDB2インスタンスのメモリー"
 "消費に対して1つのサービスが作成されます。"
+
+#, python-format
+msgid ""
+"Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "if64'の代わりに'if'を使用するように強制されたホスト"
@@ -51564,6 +51577,12 @@ msgstr "必須 バージョン"
 msgid "Request Method"
 msgstr "リクエスト方法"
 
+msgid ""
+"Request data from a RabbitMQ instance. This special agent queries the HTTP "
+"API provided by RabbitMQs 'Management Plugin'. You need to enable this "
+"plugin in your RabbitMQ instance."
+msgstr ""
+
 msgid "Request latencies"
 msgstr "リクエスト遅延"
 
@@ -51699,9 +51718,6 @@ msgstr "jenkinsインスタンスからデータをリクエストします。"
 #, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "jenkinsインスタンスからデータをリクエストします。"
-
-msgid "Requests data from a RabbitMQ instance."
-msgstr "RabbitMQインスタンスからデータを要求します。"
 
 msgid "Requests data from a Splunk instance."
 msgstr "Splunkインスタンスからデータをリクエストします。"
@@ -53496,11 +53512,6 @@ msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
 
 msgid "Save your progress and go to the Activate Changes page to enable it."
-msgstr ""
-
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. EC2 "
-"instances may take a few minutes to show up."
 msgstr ""
 
 msgid ""
@@ -58489,6 +58500,10 @@ msgstr "スタックエリア"
 
 msgid "Stacks"
 msgstr "スタック"
+
+#, fuzzy
+msgid "Stage action result not found"
+msgstr "トンネルが見つからない場合の状態"
 
 msgid "Stale"
 msgstr "最新化要"
@@ -65628,6 +65643,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "フォルダ %s のネットワークスキャンで使ったユーザー %s は、存在しません。"
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "このIDはすでに存在します。"
 
 msgid "The user interface"
 msgstr "ユーザーインターフェース"
@@ -85362,6 +85381,9 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid "Requests data from a RabbitMQ instance."
+#~ msgstr "RabbitMQインスタンスからデータを要求します。"
 
 #, fuzzy
 #~ msgid "Experimental rendering"

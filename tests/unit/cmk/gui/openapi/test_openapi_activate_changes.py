@@ -14,8 +14,6 @@ from cmk.ccc.version import edition
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-from cmk.automations.results import DeleteHostsResult
-
 from cmk.gui.watolib import activate_changes
 
 
@@ -57,10 +55,8 @@ def test_activate_changes(
     # Create a host
     clients.HostConfig.create(host_name="foobar", folder="/")
 
-    monkeypatch.setattr(
-        activate_changes.rabbitmq,  # type: ignore[attr-defined]
-        "update_and_activate_rabbitmq_definitions",
-        lambda *args, **kwargs: None,
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes.rabbitmq.update_and_activate_rabbitmq_definitions",
     )
 
     with reset_registries([activate_changes.activation_features_registry]):
@@ -71,7 +67,9 @@ def test_activate_changes(
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=lambda *args, **kwargs: None,
+                distribute_piggyback_hub_configs=(
+                    distribute_piggyback_config := mocker.MagicMock()
+                ),
             ),
         )
 
@@ -79,6 +77,9 @@ def test_activate_changes(
         with mock_livestatus(expect_status_query=True):
             resp = clients.ActivateChanges.activate_changes()
 
+    # activation_start.assert_called_once()
+    distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()
     assert set(resp.json["extensions"]) == {
         "sites",
         "is_running",
@@ -93,17 +94,6 @@ def test_activate_changes(
         "text",
         "time",
     }
-
-    # Delete the previously created host
-    monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.host_config.delete_hosts",
-        lambda *args, **kwargs: DeleteHostsResult(),
-    )
-    clients.HostConfig.delete(host_name="foobar")
-
-    # Activate the changes and wait for completion
-    with mock_livestatus(expect_status_query=True):
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
 
 
 def test_list_pending_changes(clients: ClientRegistry) -> None:

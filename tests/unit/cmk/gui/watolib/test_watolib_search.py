@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 from redis import Redis
 
 from cmk.utils.hostaddress import HostName
@@ -355,9 +356,14 @@ class TestPermissionHandler:
 
 class TestIndexSearcher:
     @pytest.mark.usefixtures("with_admin_login", "inline_background_jobs")
-    def test_search_no_index(self, clean_redis_client: "Redis[str]") -> None:
+    def test_search_no_index(self, clean_redis_client: "Redis[str]", mocker: MockerFixture) -> None:
+        get_config = mocker.patch(
+            "cmk.gui.wato.pages.global_settings.ABCConfigDomain.get_all_default_globals"
+        )
+
         with pytest.raises(IndexNotFoundException):
             list(IndexSearcher(clean_redis_client, PermissionsHandler()).search("change_dep"))
+        get_config.assert_called()
 
     def test_sort_search_results(self) -> None:
         def fake_permissions_check(_url: str) -> bool:

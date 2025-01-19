@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from unittest.mock import call
+
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_parent_scan_background(clients: ClientRegistry) -> None:
+def test_openapi_parent_scan_background(
+    clients: ClientRegistry,
+    mocker: MockerFixture,
+) -> None:
     clients.HostConfig.bulk_create(
         entries=[
             {
@@ -23,6 +29,7 @@ def test_openapi_parent_scan_background(clients: ClientRegistry) -> None:
         ]
     )
 
+    automation = mocker.patch("cmk.gui.watolib.parent_scan.scan_parents")
     resp = clients.ParentScan.start(
         host_names=["foobar", "sample"],
         gateway_hosts={
@@ -32,6 +39,14 @@ def test_openapi_parent_scan_background(clients: ClientRegistry) -> None:
         },
     )
 
+    automation.assert_has_calls(
+        [
+            call("NO_SITE", "foobar", "8", "2", "10", "5"),
+            call().results.__iter__(),
+            call("NO_SITE", "sample", "8", "2", "10", "5"),
+            call().results.__iter__(),
+        ]
+    )
     assert resp.json["id"] == "parent_scan"
     assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
         "is finished"

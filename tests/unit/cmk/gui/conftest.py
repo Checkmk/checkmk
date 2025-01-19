@@ -93,6 +93,11 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
+
+
+@pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:

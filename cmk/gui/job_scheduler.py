@@ -24,7 +24,6 @@ from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_conf
 
 from cmk.utils import paths
 
-from cmk.gui import main_modules
 from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
@@ -76,11 +75,15 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         )
         add_span_log_handler()
 
+        daemonize()
+
+        # The import and load_pugins take a few seconds and we don't want to delay the
+        # pre-daemonize phase with this, because it also slows down "omd start" significantly.
+        from cmk.gui import main_modules
+
         main_modules.load_plugins()
         if errors := get_failed_plugins():
             raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
-
-        daemonize()
 
         with pid_file_lock(_pid_file(omd_root)):
             init_logging()

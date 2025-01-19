@@ -46,7 +46,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
-from cmk import diskspace
+from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
 
 
 def register(
@@ -251,7 +251,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return cmk.utils.paths.diskspace_config_dir
 
     def default_globals(self) -> Mapping[str, Any]:
-        return {"diskspace_cleanup": diskspace.DEFAULT_CONFIG.model_dump(exclude_none=True)}
+        return {"diskspace_cleanup": diskspace_DEFAULT_CONFIG.model_dump(exclude_none=True)}
 
 
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):

@@ -255,6 +255,7 @@ def _allow_for_gui(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.messaging")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
+            _in_component(imported=imported, component=Component("cmk.diskspace.config")),
         )
     )
 
@@ -389,8 +390,21 @@ def _allow_for_cmk_update_config(
             _in_component(imported=imported, component=Component("cmk.base")),
             _in_component(imported=imported, component=Component("cmk.gui")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk")),
-            _in_component(imported=imported, component=Component("cmk.diskspace")),
+            _in_component(imported=imported, component=Component("cmk.diskspace.config")),
             _in_component(imported=imported, component=Component("cmk.validate_config")),
+        )
+    )
+
+
+def _is_allowed_for_diskspace(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _in_component(imported=imported, component=Component("cmk.diskspace")),
+            _in_component(imported=imported, component=Component("cmk.ccc")),
         )
     )
 
@@ -666,6 +680,7 @@ _COMPONENTS = (
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
+    (Component("cmk.diskspace"), _is_allowed_for_diskspace),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

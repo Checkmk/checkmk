@@ -36,6 +36,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
     /// Might also be taken from editions.yml - there we also have "saas" and "raw" but
     /// AFAIK there is no way to extract the editions we want to test generically, so we
@@ -57,6 +58,7 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
+    def bazel_log_prefix = "bazel_log_";
 
     def upload_to_testbuilds = ! (branch_base_folder.startsWith("Testing"));
     def deploy_to_website = (
@@ -179,6 +181,8 @@ def main() {
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
                 )
+
+                bazel_logs.try_plot_cache_hits("${deliverables_dir}/${bazel_log_prefix}", [distro]);
             }
         }]
     }
@@ -189,7 +193,7 @@ def main() {
         dir("${deliverables_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb,*.rpm,*.cma,*.tar.gz",
+                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*",
                     fingerprint: true,
                 );
             }
@@ -264,7 +268,9 @@ def main() {
     }
 
     smart_stage(name: "Cleanup leftovers") {
-        sh("rm -rf ${WORKSPACE}/deliverables");
+        dir("${deliverables_dir}") {
+            sh("rm -rf *.deb *.rpm *.cma *.tar.gz *.hash");
+        }
     }
 }
 

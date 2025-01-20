@@ -5,21 +5,53 @@
 
 #include "livestatus/RRDFetch.h"
 
+#include <cassert>
 #include <charconv>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 
 #include "livestatus/StringUtils.h"
 
-std::ostream &operator<<(std::ostream &os, const RRDFetchHeader &h) {
-    return os << "FlushVersion: " << h.flush_version() << "\n"
-              << "Start: " << std::chrono::system_clock::to_time_t(h.start())
-              << "\n"
-              << "End: " << std::chrono::system_clock::to_time_t(h.end())
-              << "\n"
-              << "Step: " << h.step() << "\n"
-              << "DSCount: " << h.dscount() << "\n";
+using namespace std::string_literals;
+
+namespace {
+[[nodiscard]] unsigned long get_header_value(std::string_view line) {
+    // "KEY: VALUE" -> VALUE
+    const std::size_t idx = line.find(": ");
+    if (idx == std::string::npos) {
+        return {};
+    }
+    unsigned long number = 0;
+    auto [ptr, ec] =
+        std::from_chars(line.begin() + idx + 2, line.end(), number);
+    return ec == std::errc{} ? number : 0;
+}
+}  // namespace
+
+RRDFetchHeader RRDFetchHeader::parse(const std::vector<std::string> &h) {
+    assert(h.size() == size());
+    return RRDFetchHeader{
+        .flush_version = get_header_value(h[Field::FlushVersion]),
+        .start = RRDFetchHeader::time_point{std::chrono::seconds{
+            get_header_value(h[Field::Start])}},
+        .end = RRDFetchHeader::time_point{std::chrono::seconds{
+            get_header_value(h[Field::End])}},
+        .step = get_header_value(h[Field::Step]),
+        .dscount = get_header_value(h[Field::Dscount]),
+    };
+}
+
+std::vector<std::string> RRDFetchHeader::unparse() const {
+    return std::vector<std::string>{
+        "FlushVersion: "s + std::to_string(flush_version),
+        "Start: "s +
+            std::to_string(std::chrono::system_clock::to_time_t(start)),
+        "End: "s + std::to_string(std::chrono::system_clock::to_time_t(end)),
+        "Step: "s + std::to_string(step),
+        "DSCount: "s + std::to_string(dscount),
+    };
 }
 
 namespace {

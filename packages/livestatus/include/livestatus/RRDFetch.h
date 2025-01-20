@@ -6,16 +6,12 @@
 #ifndef RRDFetch_h
 #define RRDFetch_h
 
-#include <cassert>
-#include <charconv>
 #include <chrono>
 #include <cstddef>
-#include <ios>
 #include <string>
-#include <system_error>
 #include <vector>
 
-class RRDFetchHeader {
+struct RRDFetchHeader {
     /*
      * FlushVersion: 1
      * Start: ...
@@ -23,47 +19,18 @@ class RRDFetchHeader {
      * Step: ...
      * DSCount: 7
      */
+    [[nodiscard]] RRDFetchHeader static parse(
+        const std::vector<std::string> &h);
+    [[nodiscard]] std::vector<std::string> unparse() const;
     enum Field { FlushVersion, Start, End, Step, Dscount };
-    using C = std::chrono::system_clock;
-
-public:
-    using time_point = C::time_point;
-    explicit RRDFetchHeader(const std::vector<std::string> &h) : _h{h} {
-        assert(h.size() == size());
-    }
+    using time_point = std::chrono::system_clock::time_point;
     static std::size_t size() { return Field::Dscount + 1; }
-    [[nodiscard]] unsigned long flush_version() const {
-        return parse(_h[Field::FlushVersion]);
-    }
-    [[nodiscard]] time_point start() const {
-        return time_point{std::chrono::seconds{parse(_h[Field::Start])}};
-    }
-    [[nodiscard]] time_point end() const {
-        return time_point{std::chrono::seconds{parse(_h[Field::End])}};
-    }
-    [[nodiscard]] unsigned long step() const { return parse(_h[Field::Step]); }
-    [[nodiscard]] unsigned long dscount() const {
-        return parse(_h[Field::Dscount]);
-    }
-
-private:
-    std::vector<std::string> _h;
-    [[nodiscard]] static unsigned long parse(const std::string &line) {
-        const auto idx = line.find(": ");
-        if (idx == std::string::npos) {
-            return {};
-        }
-        unsigned long number = 0;
-        // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        auto [ptr, ec] =
-            std::from_chars(line.data() + static_cast<std::size_t>(idx) + 2,
-                            line.data() + line.size(), number);
-        // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        return ec == std::errc{} ? number : 0;
-    }
+    unsigned long flush_version{};
+    time_point start;
+    time_point end;
+    unsigned long step{};
+    unsigned long dscount{};
 };
-
-std::ostream &operator<<(std::ostream &os, const RRDFetchHeader &h);
 
 struct RRDFetchBinPayloadHeader {
     // DSName-[DSNAME]: BinaryData [VALUE_COUNT] [VALUE_SIZE] [ENDIANNESS]

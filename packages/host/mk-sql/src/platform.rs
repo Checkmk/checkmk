@@ -69,9 +69,9 @@ impl InstanceInfo {
         }
         self.dynamic_port
             .as_ref()
-            .filter(|p| p.0 != 0)
+            .filter(|p| p.value() != 0)
             .or(self.port.as_ref())
-            .filter(|p| p.0 != 0)
+            .filter(|p| p.value() != 0)
     }
 
     pub fn is_shared_memory(&self) -> bool {

@@ -5,7 +5,6 @@
 
 # pylint: disable=protected-access
 
-import io
 import json
 from pathlib import Path
 
@@ -57,7 +56,6 @@ class TestAggregationRawdataGenerator:
                     site_url="http://somewhere:3000/some_site",
                     authentication=AgentBiAuthentication(
                         username="the_dude",
-                        secret_id=1337,
                         password_store_path=Path("/mocked/away"),
                         password_store_identifier="the_dude_secret",
                     ),
@@ -72,7 +70,6 @@ class TestAggregationRawdataGenerator:
                     site_url=None,
                     authentication=AgentBiAuthentication(
                         username="the_dude",
-                        secret_id=42,
                         password_store_path=Path("/mocked/away"),
                         password_store_identifier="the_dude_secret",
                     ),
@@ -111,36 +108,32 @@ class TestAggregationRawdataGenerator:
 
 def test_merge_config() -> None:
     merged_configs = merge_config(
-        ["--nosecret", "--nosecret", "foo:/bar", "bar:/foo", "--nosecret", "id:/path"],
-        io.BytesIO(
-            json.dumps(
-                [
-                    {},
-                    {},
-                    {"authentication": {"username": "user", "secret_id": 2}},
-                    {"authentication": {"username": "user", "secret_id": 3}},
-                    {},
-                    {"authentication": {"username": "user", "secret_id": 5}},
-                ]
-            ).encode("utf-8")
-        ),
+        ["nosecret", "nosecret", "foo:/bar", "bar:/foo", "nosecret", "id:/path"],
+        [
+            json.dumps(c)
+            for c in [
+                {},
+                {},
+                {"authentication": {"username": "user"}},
+                {"authentication": {"username": "user"}},
+                {},
+                {"authentication": {"username": "user"}},
+            ]
+        ],
     )
     assert merged_configs[0].authentication is None
     assert merged_configs[1].authentication is None
 
     assert merged_configs[2].authentication is not None
-    assert merged_configs[2].authentication.secret_id == 2
     assert merged_configs[2].authentication.password_store_path == Path("/bar")
     assert merged_configs[2].authentication.password_store_identifier == "foo"
 
     assert merged_configs[3].authentication is not None
-    assert merged_configs[3].authentication.secret_id == 3
     assert merged_configs[3].authentication.password_store_path == Path("/foo")
     assert merged_configs[3].authentication.password_store_identifier == "bar"
 
     assert merged_configs[4].authentication is None
 
     assert merged_configs[5].authentication is not None
-    assert merged_configs[5].authentication.secret_id == 5
     assert merged_configs[5].authentication.password_store_path == Path("/path")
     assert merged_configs[5].authentication.password_store_identifier == "id"

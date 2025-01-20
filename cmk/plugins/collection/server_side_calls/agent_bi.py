@@ -55,7 +55,7 @@ class _SiteConfig(TypedDict):
 
 
 def _transform_authentication(
-    credentials_config: _Credentials, config_id: int
+    credentials_config: _Credentials,
 ) -> tuple[None, None] | tuple[AgentBiAuthentication, Secret]:
     if credentials_config[0] == "automation":
         return None, None
@@ -63,7 +63,6 @@ def _transform_authentication(
     return (
         AgentBiAuthentication(
             username=credentials_config[1]["username"],
-            secret_id=config_id,
         ),
         credentials_config[1]["password"],
     )
@@ -101,7 +100,6 @@ def _transform_filter(filter_dict: _Filter | None) -> AgentBiFilter:
 
 
 def _site_config_to_agent_config(
-    config_id: int,
     site_config: _SiteConfig,
 ) -> tuple[Secret | None, AgentBiConfig]:
     """transform the params to AgentBiConfig
@@ -111,7 +109,7 @@ def _site_config_to_agent_config(
     transport the secrets (if we have some) over the commandline...
     """
 
-    creds, secret = _transform_authentication(site_config["credentials"], config_id)
+    creds, secret = _transform_authentication(site_config["credentials"])
     return secret, AgentBiConfig(
         filter=_transform_filter(site_config.get("filter")),
         site_url=None if site_config["site"][0] == "local" else site_config["site"][1],
@@ -124,19 +122,19 @@ def _site_config_to_agent_config(
 def _agent_bi_parser(params: Mapping[str, object]) -> list[tuple[Secret | None, AgentBiConfig]]:
     options = params["options"]
     assert isinstance(options, list)
-    return [_site_config_to_agent_config(i, config) for i, config in enumerate(options)]
+    return [_site_config_to_agent_config(config) for config in options]
 
 
 def _agent_bi_arguments(
     params: list[tuple[Secret | None, AgentBiConfig]],
     _hostconfig: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
-    cli_args = []
-    configs = []
+    cli_args: list[Secret | str] = ["--secrets"]
+    configs: list[str] = ["--congfigs"]
 
     for secret, config in params:
-        cli_args.append("--nosecret" if secret is None else secret)
-        configs.append(config.model_dump(mode="json"))
+        cli_args.append("nosecret" if secret is None else secret)
+        configs.append(config.model_dump_json())
 
     yield SpecialAgentCommand(command_arguments=cli_args, stdin=json.dumps(configs))
 

@@ -139,7 +139,7 @@ class WebsiteWerk(WerkV2Base):
     """
 
     versions: dict[str, str]
-    product: Literal["cmk", "cma", "checkmk_kube_agent"]
+    product: Literal["cmk", "cma", "checkmk_kube_agent", "cloudmk"]
 
 
 # ATTENTION! If you change this model, you have to inform

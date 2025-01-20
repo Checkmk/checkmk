@@ -93,7 +93,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     # if you want to compile the complete database of all werks, you have to go
     # through all branches and look at all .werks folders there.
-    parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent"])
+    parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent", "cloudmk"])
     parser_collect.add_argument("path", help="path to git repo to read werks from", type=path_dir)
     parser_collect.add_argument(
         "--substitute-branches",

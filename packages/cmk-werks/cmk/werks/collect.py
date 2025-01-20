@@ -27,7 +27,7 @@ class Config:
     quirks. This config tries to hold all repo specific configuration.
     """
 
-    def __init__(self, flavor: Literal["cma", "cmk", "checkmk_kube_agent"]) -> None:
+    def __init__(self, flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> None:
         self.flavor = flavor
 
     # only branches matching this regex will be considered for searching for

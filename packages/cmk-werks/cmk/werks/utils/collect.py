@@ -19,6 +19,10 @@ class CmaConfig(Config):
     branch_regex = r"^(master$|\d+\.\d+$)"
 
 
+class CloudmkConfig(Config):
+    branch_regex = r"^main$"
+
+
 class CmkConfig(Config):
     branch_regex = r"^master$|^\d+\.\d+\.\d+"
 
@@ -80,18 +84,20 @@ class KubeConfig(Config):
     branch_regex = r"^(main$|\d+\.\d+\.\d+)"
 
 
-def config_from_flavor(flavor: Literal["cma", "cmk", "checkmk_kube_agent"]) -> "Config":
+def config_from_flavor(flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> "Config":
     if flavor == "cma":
         return CmaConfig(flavor)
     if flavor == "checkmk_kube_agent":
         return KubeConfig(flavor)
     if flavor == "cmk":
         return CmkConfig(flavor)
+    if flavor == "cloudmk":
+        return CloudmkConfig(flavor)
     raise NotImplementedError()
 
 
 def main(
-    flavor: Literal["cma", "cmk", "checkmk_kube_agent"],
+    flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"],
     repo_path: Path,
     branches: Mapping[str, str],
 ) -> None:

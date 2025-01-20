@@ -134,6 +134,9 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
         # TODO: remove after CMK-20852 is finished
         if sub_path == repo_path() / "packages/cmk-shared-typing":
             continue
+        # the following paths may contain python files and should not be scanned
+        if sub_path.name == "container_shadow_workspace_local":
+            continue
         # TODO: We need to find a better way for the bazel-* folders created by bazel
         if "bazel-" in sub_path.name:
             continue
@@ -157,8 +160,6 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
         # exclude all treasures.
         basepath / "doc/treasures/migration_helpers",
-        # the following paths may contain python files and should not be scanned
-        basepath / "container_shadow_workspace_local",
     )
 
     for source_file_path in iter_sourcefiles(basepath):

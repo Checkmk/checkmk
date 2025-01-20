@@ -163,6 +163,14 @@ run_format() {
     run_cargo_cmd_with_explicit_package fmt
 }
 
+run_check_format() {
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff Cargo.toml
+    "${BAZEL_CMD}" build --config=rustfmt :all
+}
+
 main() {
     # Change to the directory where this script resides, it makes many things easier
     # and we can call this script from everywhere.
@@ -173,7 +181,7 @@ main() {
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build :all
     test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
-    test ${RUN_CHECK_FORMAT} = yes && "${BAZEL_CMD}" build --config=rustfmt :all
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}

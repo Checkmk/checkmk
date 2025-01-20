@@ -23,7 +23,7 @@ from typing import Any, Literal
 
 from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 
-from cmk.utils.paths import diskspace_config_dir, omd_root, var_dir
+from cmk.utils.paths import diskspace_config_dir
 
 # TODO: The diskspace tool depends on `check_mk` as a cli tool. Therefore, having the
 # "site context" as a dependency is probably appropriate. It could be moved to `cmk/diskspace`,
@@ -88,7 +88,7 @@ class _Info:
     path_to_mod_time: Mapping[str, float]
 
 
-def _load_plugin(plugin_name: str, plugin_path: Path) -> _Info | None:
+def _load_plugin(omd_root: Path, plugin_name: str, plugin_path: Path) -> _Info | None:
     _verbose(f"Loading plugin: {plugin_path}")
     plugin: dict[str, Any] = {}
     try:
@@ -117,7 +117,7 @@ def _load_plugin(plugin_name: str, plugin_path: Path) -> _Info | None:
     return _Info(plugin_name=plugin_name, path_to_mod_time=path_to_mod_time)
 
 
-def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
+def _load_plugins(omd_root: Path, plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
     try:
         local_plugins: list[str] = list(p.name for p in plugin_dir_local.iterdir())
     except OSError:
@@ -130,13 +130,13 @@ def _load_plugins(plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
         for file_name in file_list:
             if file_name[0] == ".":
                 continue
-            if (info := _load_plugin(file_name, base_dir / file_name)) is not None:
+            if (info := _load_plugin(omd_root, file_name, base_dir / file_name)) is not None:
                 infos.append(info)
 
     return infos
 
 
-def _get_free_space() -> int:
+def _get_free_space(omd_root: Path) -> int:
     statvfs_result = os.statvfs(omd_root)
     return statvfs_result.f_bavail * statvfs_result.f_frsize
 
@@ -239,7 +239,9 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
-def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) -> None:
+def _do_cleanup_central_site(
+    omd_root: Path, retention_time: int, local_site_hosts: set[str]
+) -> None:
     try:
         all_hosts = set(
             subprocess.check_output(
@@ -255,7 +257,7 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         _cleanup_host_directories(
             retention_time,
             all_hosts,
-            f"{var_dir}/inventory_archive",
+            f"{omd_root}/var/check_mk/inventory_archive",
         )
         | _cleanup_host_directories(
             retention_time,
@@ -265,7 +267,7 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            f"{var_dir}/rrd",
+            f"{omd_root}/var/check_mk/rrd",
         )
     )
 
@@ -275,12 +277,14 @@ def _do_cleanup_central_site(retention_time: int, local_site_hosts: set[str]) ->
         _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
 
 
-def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> None:
+def _do_cleanup_remote_site(
+    omd_root: Path, retention_time: int, local_site_hosts: set[str]
+) -> None:
     cleaned_up_non_local_hosts = (
         _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            f"{var_dir}/inventory_archive",
+            f"{omd_root}/var/check_mk/inventory_archive",
         )
         | _cleanup_host_directories(
             retention_time,
@@ -290,7 +294,7 @@ def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> 
         | _cleanup_host_directories(
             retention_time,
             local_site_hosts,
-            f"{var_dir}/rrd",
+            f"{omd_root}/var/check_mk/rrd",
         )
     )
 
@@ -298,7 +302,9 @@ def _do_cleanup_remote_site(retention_time: int, local_site_hosts: set[str]) -> 
         _do_automation_call(cleaned_up_non_local_hosts, "delete-hosts")
 
 
-def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -> None:
+def _do_cleanup_abandoned_host_files(
+    omd_root: Path, cleanup_abandoned_host_files: int | None
+) -> None:
     if not cleanup_abandoned_host_files:
         return
 
@@ -319,12 +325,12 @@ def _do_cleanup_abandoned_host_files(cleanup_abandoned_host_files: int | None) -
         return
 
     if is_wato_remote_site:
-        _do_cleanup_remote_site(cleanup_abandoned_host_files, local_site_hosts)
+        _do_cleanup_remote_site(omd_root, cleanup_abandoned_host_files, local_site_hosts)
     else:
-        _do_cleanup_central_site(cleanup_abandoned_host_files, local_site_hosts)
+        _do_cleanup_central_site(omd_root, cleanup_abandoned_host_files, local_site_hosts)
 
 
-def _cleanup_aged(max_file_age: int | None, infos: Sequence[_Info]) -> None:
+def _cleanup_aged(omd_root: Path, max_file_age: int | None, infos: Sequence[_Info]) -> None:
     """
     Loop all files to check whether files are older than
     max_age. Simply remove all of them.
@@ -342,11 +348,12 @@ def _cleanup_aged(max_file_age: int | None, infos: Sequence[_Info]) -> None:
             else:
                 _verbose(f"Not deleting {path}")
 
-    bytes_free: int = _get_free_space()
+    bytes_free: int = _get_free_space(omd_root)
     _verbose(f"Free space (after file age cleanup): {fmt_bytes(bytes_free)}")
 
 
 def _cleanup_oldest_files(
+    omd_root: Path,
     force: bool,
     min_free_bytes_and_age: tuple[int, int] | None,
     infos: Sequence[_Info],
@@ -357,7 +364,7 @@ def _cleanup_oldest_files(
     min_free_bytes, min_file_age = min_free_bytes_and_age
 
     # check disk space against configuration
-    bytes_free: int = _get_free_space()
+    bytes_free: int = _get_free_space(omd_root)
     if not force and bytes_free >= min_free_bytes:
         _verbose(
             f"Free space is above threshold of {fmt_bytes(min_free_bytes)}. Nothing to be done."
@@ -378,24 +385,27 @@ def _cleanup_oldest_files(
         if oldest is not None and os.path.exists(oldest):  # _cleanup_aged might have deleted oldest
             _delete_file(oldest, info.plugin_name + ": my oldest")
 
-    bytes_free = _get_free_space()
+    bytes_free = _get_free_space(omd_root)
     _verbose(f"Free space (after min free space space cleanup): {fmt_bytes(bytes_free)}")
 
 
 def main() -> None:
+    omd_root = Path(os.environ["OMD_ROOT"])
     _setup_logging("-v" in sys.argv)
     config = read_config(diskspace_config_dir)
     _print_config(config)
-    infos = _load_plugins(omd_root / "share/diskspace", omd_root / "local/share/diskspace")
+    infos = _load_plugins(
+        omd_root, omd_root / "share/diskspace", omd_root / "local/share/diskspace"
+    )
 
-    _do_cleanup_abandoned_host_files(config.cleanup_abandoned_host_files)
+    _do_cleanup_abandoned_host_files(omd_root, config.cleanup_abandoned_host_files)
 
     # get used disk space of the sites volume
-    bytes_free = _get_free_space()
+    bytes_free = _get_free_space(omd_root)
     _verbose(f"Free space: {fmt_bytes(bytes_free)}")
 
-    _cleanup_aged(config.max_file_age, infos)
-    _cleanup_oldest_files("-f" in sys.argv, config.min_free_bytes, infos)
+    _cleanup_aged(omd_root, config.max_file_age, infos)
+    _cleanup_oldest_files(omd_root, "-f" in sys.argv, config.min_free_bytes, infos)
 
 
 if __name__ == "__main__":

@@ -48,19 +48,16 @@ def check_winperf_ts_sessions(params: Mapping[str, Any], section: StringTable) -
     if active + inactive != total:
         active, inactive, total = total, active, inactive
 
-    limit_active = params.get("active", None)
-    limit_inactive = params.get("inactive", None)
-
     yield from check_levels(
         value=active,
         metric_name="active",
-        levels_upper=("fixed", limit_active) if limit_active else ("no_levels", limit_active),
+        levels_upper=params.get("active", None),
         render_func=lambda x: f"{x} Active",
     )
     yield from check_levels(
         value=inactive,
         metric_name="inactive",
-        levels_upper=("fixed", limit_inactive) if limit_inactive else ("no_levels", limit_inactive),
+        levels_upper=params.get("inactive", None),
         render_func=lambda x: f"{x} Inactive",
     )
 

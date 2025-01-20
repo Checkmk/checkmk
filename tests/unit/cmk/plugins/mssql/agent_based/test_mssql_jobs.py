@@ -14,7 +14,7 @@ from cmk.plugins.mssql.agent_based.mssql_jobs import (
     parse_mssql_jobs,
 )
 
-_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB = [
+INFO1 = [
     ["MSSQLSERVER"],
     [
         "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
@@ -32,7 +32,7 @@ _STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB = [
     ],
 ]
 
-_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS = [
+INFO2 = [
     [
         "MSSQLSERVER",
     ],
@@ -346,418 +346,47 @@ _STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS = [
     ],
 ]
 
-_STRING_TABLE_MULTIPLE_INSTANCES = [
-    ["SERVICES"],
-    [
-        "{EEE97E08-D37D-45B0-8140-517270078907}",
-        "CommandLog Cleanup",
-        "1",
-        "20241222",
-        "0",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 16 (WeeklyCommandLog).  The last step to run was step 1 (CommandLog Cleanup).",
-        "20241215",
-        "0",
-        "1",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{E27A4A40-74DE-4414-BADF-7DF74C49A690}",
-        "DatabaseBackup - SYSTEM_DATABASES - FULL",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{EF94B88D-F12D-488C-9A42-213544089DDD}",
-        "DatabaseBackup - USER_DATABASES - DIFF",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{30414067-A664-4D28-83D5-26B4F20C1EDA}",
-        "DatabaseBackup - USER_DATABASES - FULL",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{71F46DF0-7674-43E4-8B55-FDD4C89BC62D}",
-        "DatabaseBackup - USER_DATABASES - LOG",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{A11906F8-DF78-4323-B1C5-C4E5E56992B0}",
-        "DatabaseIntegrityCheck - SYSTEM_DATABASES",
-        "1",
-        "20241222",
-        "10000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 14 (WeeklyIntegritySystemDataases).  The last step to run was step 1 (DatabaseIntegrityCheck - SYSTEM_DATABASES).",
-        "20241215",
-        "10000",
-        "5",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{CD343539-04F6-4ABD-B92E-FA230A720815}",
-        "DatabaseIntegrityCheck - USER_DATABASES",
-        "1",
-        "20241222",
-        "11000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 15 (WeeklyIntegrityUserDatbases).  The last step to run was step 1 (DatabaseIntegrityCheck - USER_DATABASES).",
-        "20241215",
-        "11000",
-        "1301",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{9868AB93-1BD8-4D8E-A0E7-CBF02A44B3FD}",
-        "FullBackup.FullBackup",
-        "1",
-        "20241219",
-        "200000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 9 (FullBackup.FullBackup).  The last step to run was step 1 (FullBackup).",
-        "20241218",
-        "200000",
-        "1222",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{300A7934-A991-4CA7-94C4-5AE3CEB7D11E}",
-        "IndexOptimize - USER_DATABASES",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{99F8BF0B-E6D2-4630-BBDC-871EA5D1E988}",
-        "JobRouter_Start_ABB_Kreditorenprozess",
-        "1",
-        "20241219",
-        "54000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 11 (Alle 2 Minuten).  The last step to run was step 1 (Start Process).",
-        "20241219",
-        "55800",
-        "13",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{4E0F9DB2-91D4-4739-843C-A7D5128ECE66}",
-        "JobRouter_Start_LBB_Kreditorenprozess",
-        "1",
-        "20241219",
-        "54000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 12 (Alle 2 Minuten).  The last step to run was step 1 (Start Process).",
-        "20241219",
-        "55800",
-        "21",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{397221A0-7176-44B4-80F4-C5355FE12543}",
-        "JobRouter_Stellvertretung_setzen_erlauben",
-        "1",
-        "20241219",
-        "60000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 13 (Täglich jede Stunde).  The last step to run was step 1 (JRUSERS Tabelle updaten).",
-        "20241219",
-        "50000",
-        "0",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{B9E51F6C-225C-45FD-B54C-544335C44B3E}",
-        "Output File Cleanup",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{DFD77586-895C-4A53-9281-3065D1C5DAAC}",
-        "sp_delete_backuphistory",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{7F3BB0E7-C582-473D-86AB-8185D076D9DA}",
-        "sp_purge_jobhistory",
-        "0",
-        "",
-        "",
-        "5",
-        "",
-        "0",
-        "0",
-        "0",
-        "",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{6F578981-C22E-45CC-99AF-857BED9A593B}",
-        "syspolicy_purge_history",
-        "1",
-        "20241220",
-        "20000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 8 (syspolicy_purge_history_schedule).  The last step to run was step 3 (Erase Phantom System Health Records.).",
-        "20241219",
-        "20000",
-        "4",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    [
-        "{9FB3ABD1-584E-45EA-B99A-FDA48CE26A1C}",
-        "TLog.TLog",
-        "1",
-        "20241219",
-        "60000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 10 (TLog.TLog).  The last step to run was step 1 (TLog).",
-        "20241219",
-        "50000",
-        "19",
-        "1",
-        "2024-12-19 05:59:37",
-    ],
-    ["PROTEL"],
-    [
-        "{36684481-8BB6-4003-9040-3CA97E6552E2}",
-        "DatabaseIntegrityCheck - SYSTEM_DATABASES",
-        "1",
-        "20241222",
-        "30100",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 13 (WeeklyIntegritySystemDataases).  The last step to run was step 1 (DatabaseIntegrityCheck - SYSTEM_DATABASES).",
-        "20241215",
-        "30100",
-        "2",
-        "1",
-        "2024-12-19 05:59:39",
-    ],
-    [
-        "{55DA288E-EF7A-48C2-B176-AB3B1FBA501F}",
-        "DatabaseIntegrityCheck - USER_DATABASES",
-        "1",
-        "20241222",
-        "31000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 14 (WeeklyIntegrityUserDatbases).  The last step to run was step 1 (DatabaseIntegrityCheck - USER_DATABASES).",
-        "20241215",
-        "31000",
-        "130",
-        "1",
-        "2024-12-19 05:59:39",
-    ],
-    [
-        "{D2B8A160-676E-4EE3-946A-6CFC4BD3B5DA}",
-        "FullBackup.FullBackup",
-        "1",
-        "20241219",
-        "200000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 9 (FullBackup.FullBackup).  The last step to run was step 1 (FullBackup).",
-        "20241218",
-        "200000",
-        "46",
-        "1",
-        "2024-12-19 05:59:39",
-    ],
-    [
-        "{07D35480-582B-4368-A62C-3CF61CB2ED80}",
-        "syspolicy_purge_history",
-        "1",
-        "20241220",
-        "20000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 8 (syspolicy_purge_history_schedule).  The last step to run was step 3 (Erase Phantom System Health Records.).",
-        "20241219",
-        "20000",
-        "6",
-        "1",
-        "2024-12-19 05:59:39",
-    ],
-    [
-        "{C1BFDA1A-E574-47E5-B804-7B98960A7876}",
-        "TLog.TLog",
-        "1",
-        "20241219",
-        "60000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 10 (TLog.TLog).  The last step to run was step 1 (TLog).",
-        "20241219",
-        "50001",
-        "5",
-        "1",
-        "2024-12-19 05:59:39",
-    ],
-    ["TCPOS"],
-    [
-        "{A7ACFD53-F4FB-4542-AC43-A8F2DCB4D71B}",
-        "syspolicy_purge_history",
-        "1",
-        "20241220",
-        "20000",
-        "1",
-        "The job succeeded.  The Job was invoked by Schedule 8 (syspolicy_purge_history_schedule).  The last step to run was step 3 (Erase Phantom System Health Records.).",
-        "20241219",
-        "20000",
-        "6",
-        "1",
-        "2024-12-19 05:59:41",
-    ],
-]
 
-
-_STRING_TABLE_ERROR = [
-    [
-        "MSSQLSERVER ERROR: The SELECT permission was denied on the object 'sysschedules', database 'msdb', schema 'dbo'. (SQLState: 42000/NativeError: 229)."
-    ]
-]
-
-
-def test_discover_single_instance_single_job() -> None:
-    assert list(
-        discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB))
-    ) == [
-        Service(item="teststsssss - MSSQLSERVER"),
+def test_discovery1() -> None:
+    assert list(discover_mssql_jobs(parse_mssql_jobs(INFO1))) == [
+        Service(item="teststsssss"),
     ]
 
 
-def test_discover_single_instance_multiple_jobs() -> None:
-    assert list(
-        discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS))
-    ) == [
-        Service(item="täglich 00:03 - MSSQLSERVER"),
-        Service(item="4x Täglich Infomanagement - MSSQLSERVER"),
-        Service(item="Wartung Stündlich - MSSQLSERVER"),
-        Service(item="1x Täglich - MSSQLSERVER"),
-        Service(item="aller 2h - MSSQLSERVER"),
-        Service(item="Wartung Täglich - MSSQLSERVER"),
-        Service(item="1x Täglich 6:00 Uhr - MSSQLSERVER"),
-        Service(item="1x Täglich Infomanagement - MSSQLSERVER"),
-        Service(item="Sonntag - MSSQLSERVER"),
-        Service(item="SSIS Server Maintenance Job - MSSQLSERVER"),
-        Service(item="aller 1h - MSSQLSERVER"),
-        Service(item="1 x täglich 01:00 Uhr - MSSQLSERVER"),
-        Service(item="1x täglich ttCall - MSSQLSERVER"),
-        Service(item="aller 15 min - MSSQLSERVER"),
-        Service(item="aller 5 min - MSSQLSERVER"),
-        Service(item="SSRS BO-Tool Report DL - MSSQLSERVER"),
-        Service(item="SSRS AIC Report DL - MSSQLSERVER"),
-        Service(item="14 Uhr - MSSQLSERVER"),
+def test_discovery2() -> None:
+    assert list(discover_mssql_jobs(parse_mssql_jobs(INFO2))) == [
+        Service(item="täglich 00:03"),
+        Service(item="4x Täglich Infomanagement"),
+        Service(item="Wartung Stündlich"),
+        Service(item="1x Täglich"),
+        Service(item="aller 2h"),
+        Service(item="Wartung Täglich"),
+        Service(item="1x Täglich 6:00 Uhr"),
+        Service(item="1x Täglich Infomanagement"),
+        Service(item="Sonntag"),
+        Service(item="SSIS Server Maintenance Job"),
+        Service(item="aller 1h"),
+        Service(item="1 x täglich 01:00 Uhr"),
+        Service(item="1x täglich ttCall"),
+        Service(item="aller 15 min"),
+        Service(item="aller 5 min"),
+        Service(item="SSRS BO-Tool Report DL"),
+        Service(item="SSRS AIC Report DL"),
+        Service(item="14 Uhr"),
     ]
 
 
-def test_discover_multiple_instances() -> None:
-    assert list(discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_MULTIPLE_INSTANCES))) == [
-        Service(item="CommandLog Cleanup - SERVICES"),
-        Service(item="DatabaseBackup - SYSTEM_DATABASES - FULL - SERVICES"),
-        Service(item="DatabaseBackup - USER_DATABASES - DIFF - SERVICES"),
-        Service(item="DatabaseBackup - USER_DATABASES - FULL - SERVICES"),
-        Service(item="DatabaseBackup - USER_DATABASES - LOG - SERVICES"),
-        Service(item="DatabaseIntegrityCheck - SYSTEM_DATABASES - SERVICES"),
-        Service(item="DatabaseIntegrityCheck - USER_DATABASES - SERVICES"),
-        Service(item="FullBackup.FullBackup - SERVICES"),
-        Service(item="IndexOptimize - USER_DATABASES - SERVICES"),
-        Service(item="JobRouter_Start_ABB_Kreditorenprozess - SERVICES"),
-        Service(item="JobRouter_Start_LBB_Kreditorenprozess - SERVICES"),
-        Service(item="JobRouter_Stellvertretung_setzen_erlauben - SERVICES"),
-        Service(item="Output File Cleanup - SERVICES"),
-        Service(item="sp_delete_backuphistory - SERVICES"),
-        Service(item="sp_purge_jobhistory - SERVICES"),
-        Service(item="syspolicy_purge_history - SERVICES"),
-        Service(item="TLog.TLog - SERVICES"),
-        Service(item="DatabaseIntegrityCheck - SYSTEM_DATABASES - PROTEL"),
-        Service(item="DatabaseIntegrityCheck - USER_DATABASES - PROTEL"),
-        Service(item="FullBackup.FullBackup - PROTEL"),
-        Service(item="syspolicy_purge_history - PROTEL"),
-        Service(item="TLog.TLog - PROTEL"),
-        Service(item="syspolicy_purge_history - TCPOS"),
-    ]
-
-
-def test_discover_error() -> None:
-    assert not list(discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_ERROR)))
-
-
-def test_check_ok() -> None:
+def test_check1() -> None:
     assert list(
         check_mssql_jobs(
-            "teststsssss - MSSQLSERVER",
+            "teststsssss",
             {
                 "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": None,
             },
-            parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB),
+            parse_mssql_jobs(INFO1),
         )
     ) == [
         Result(state=State.OK, summary="Last duration: 0 seconds"),
@@ -769,17 +398,17 @@ def test_check_ok() -> None:
     ]
 
 
-def test_check_failure() -> None:
+def test_check2() -> None:
     assert list(
         check_mssql_jobs(
-            "Wartung Stündlich - MSSQLSERVER",
+            "Wartung Stündlich",
             {
                 "consider_job_status": "consider",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
             },
-            parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS),
+            parse_mssql_jobs(INFO2),
         )
     ) == [
         Result(state=State.OK, summary="Last duration: 9 seconds"),
@@ -797,17 +426,17 @@ def test_check_failure() -> None:
     ]
 
 
-def test_check_with_outcome_message() -> None:
+def test_check3() -> None:
     assert list(
         check_mssql_jobs(
-            "aller 2h - MSSQLSERVER",
+            "aller 2h",
             {
                 "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
             },
-            parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_MULTIPLE_JOBS),
+            parse_mssql_jobs(INFO2),
         )
     ) == [
         Result(state=State.OK, summary="Last duration: 12 minutes 45 seconds"),
@@ -846,7 +475,7 @@ def test_check_with_outcome_message() -> None:
                     "2022-12-23 08:52:50",
                 ],
             ],
-            "MyJob - MSSQLSERVER",
+            "MyJob",
             {
                 "consider_job_status": "consider_if_enabled",
                 "status_disabled_jobs": 0,
@@ -880,7 +509,7 @@ def test_check_with_outcome_message() -> None:
                     "2022-12-23 08:52:50",
                 ],
             ],
-            "MyJob - MSSQLSERVER",
+            "MyJob",
             {
                 "consider_job_status": "consider_if_enabled",
                 "status_disabled_jobs": 0,
@@ -898,7 +527,7 @@ def test_check_with_outcome_message() -> None:
         ),
     ],
 )
-def test_check_mssql_jobs_consider_if_enabled(
+def test_check_mssql_jobs(
     string_table: StringTable,
     item: str,
     params: Mapping[str, object],

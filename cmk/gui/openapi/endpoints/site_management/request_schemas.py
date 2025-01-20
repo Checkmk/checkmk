@@ -317,9 +317,19 @@ class UserSyncAttributes(OneOfSchema):
     }
 
 
-class ConfigurationConnectionAttributes(BaseSchema):
-    enable_replication = fields.Boolean(
+class ConfigurationConnectionWithoutReplicationAttributes(BaseSchema):
+    enable_replication = fields.Constant(
         required=True,
+        constant=False,
+        description="Replication is disabled.",
+        example=False,
+    )
+
+
+class ConfigurationConnectionWithReplicationAttributes(BaseSchema):
+    enable_replication = fields.Constant(
+        required=True,
+        constant=True,
         description="Replication allows you to manage several monitoring sites with a logically centralized setup. Remote sites receive their configuration from the central sites.",
         example=True,
     )
@@ -365,6 +375,21 @@ class ConfigurationConnectionAttributes(BaseSchema):
         description="The port used by the message broker to exchange messages.",
         example=5672,
     )
+
+
+class ConfigurationConnectionAttributes(OneOfSchema):
+    type_field = "enable_replication"
+    type_field_remove = False
+    type_schemas = {
+        "WithReplication": ConfigurationConnectionWithReplicationAttributes,
+        "WithoutReplication": ConfigurationConnectionWithoutReplicationAttributes,
+    }
+
+    def get_data_type(self, data):
+        if "enable_replication" not in data:
+            return None
+
+        return "WithReplication" if data["enable_replication"] else "WithoutReplication"
 
 
 class SiteLoginRequest(BaseSchema):

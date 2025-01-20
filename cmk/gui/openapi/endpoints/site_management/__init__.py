@@ -217,14 +217,23 @@ def site_logout(params: Mapping[str, Any]) -> Response:
 
 
 def _serialize_site(site: SiteConfig) -> DomainObject:
+    site_config = dict(site.to_external())
+
+    if not _is_replication_enabled(site_config):
+        site_config["configuration_connection"] = {"enable_replication": False}
+
     return domain_object(
         domain_type="site_connection",
         identifier=site.basic_settings.site_id,
         title=site.basic_settings.alias,
-        extensions=dict(site.to_external()),
+        extensions=site_config,
         editable=True,
         deletable=True,
     )
+
+
+def _is_replication_enabled(site_config: dict[str, Any]) -> bool:
+    return site_config.get("configuration_connection", {}).get("enable_replication", False)
 
 
 def _convert_validate_and_save_site_data(

@@ -47,6 +47,8 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry
 
+DEFAULT_MESSAGE_BROKER_PORT = 5672
+
 
 class SiteDoesNotExistException(Exception): ...
 
@@ -433,6 +435,13 @@ class UserSync:
 
         return cls(sync_with_ldap_connections="disabled")
 
+    @classmethod
+    def from_external(cls, external_config: dict[str, Any] | None) -> UserSync:
+        if external_config is None:
+            return cls(sync_with_ldap_connections="disabled")
+
+        return cls(**external_config)
+
     def to_external(self) -> Iterator[tuple[str, str | None | list[str]]]:
         yield "sync_with_ldap_connections", self.sync_with_ldap_connections
         if self.ldap_connections:
@@ -451,14 +460,14 @@ class UserSync:
 @dataclass
 class ConfigurationConnection:
     enable_replication: bool
-    url_of_remote_site: str
-    disable_remote_configuration: bool
-    ignore_tls_errors: bool
-    direct_login_to_web_gui_allowed: bool
     user_sync: UserSync
-    replicate_event_console: bool
-    replicate_extensions: bool
-    message_broker_port: int
+    url_of_remote_site: str = ""
+    disable_remote_configuration: bool = True
+    ignore_tls_errors: bool = False
+    direct_login_to_web_gui_allowed: bool = True
+    replicate_event_console: bool = True
+    replicate_extensions: bool = True
+    message_broker_port: int = DEFAULT_MESSAGE_BROKER_PORT
 
     @classmethod
     def from_internal(
@@ -477,12 +486,16 @@ class ConfigurationConnection:
             ),
             replicate_event_console=internal_config["replicate_ec"],
             replicate_extensions=internal_config.get("replicate_mkps", False),
-            message_broker_port=internal_config.get("message_broker_port", 5672),
+            message_broker_port=internal_config.get(
+                "message_broker_port", DEFAULT_MESSAGE_BROKER_PORT
+            ),
         )
 
     @classmethod
     def from_external(cls, external_config: dict[str, Any]) -> ConfigurationConnection:
-        external_config["user_sync"] = UserSync(**external_config["user_sync"])
+        external_config["user_sync"] = UserSync.from_external(
+            external_config["user_sync"] if "user_sync" in external_config else None
+        )
         return cls(**external_config)
 
     def to_external(self) -> Iterator[tuple[str, dict[str, str | list[str] | None] | bool | str]]:

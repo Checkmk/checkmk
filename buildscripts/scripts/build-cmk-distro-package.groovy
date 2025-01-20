@@ -170,9 +170,8 @@ def main() {
         }
     }
 
-    stage("Plot cache hits") {
+    stage("Parse cache hits") {
         bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
-        bazel_logs.try_plot_cache_hits(bazel_log_prefix, [distro]);
     }
 
     stage("Archive stuff") {
@@ -183,7 +182,7 @@ def main() {
             );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb,*.rpm,*.cma",
+                    artifacts: "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*",
                     fingerprint: true,
                 );
             }

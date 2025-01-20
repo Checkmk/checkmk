@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <sstream>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -17,10 +16,8 @@ TEST(TestRRDFetchHeader, Header) {
         "End: 1736245800\n"
         "Step: 1800\n"
         "DSCount: 2\n";
-    auto header = RRDFetchHeader{mk::split(raw, '\n')};
-    auto ss = std::ostringstream{};
-    ss << header;
-    EXPECT_EQ(ss.str(), raw);
+    auto header = mk::split(raw, '\n');
+    EXPECT_EQ(header, RRDFetchHeader::parse(header).unparse());
 }
 
 TEST(TestRRDFetchBinPayloadHeader, Header) {

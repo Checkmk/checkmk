@@ -233,13 +233,9 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        font_css_filepath = "themes/facelift/fonts_lato.css"
         css_filepath = theme.url("theme.css")
-
         if current_app.debug:
             HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
-            HTMLGenerator._verify_file_exists_in_web_dirs(font_css_filepath)
-        self.stylesheet(HTMLGenerator._append_cache_busting_query(font_css_filepath))
         self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
         self._add_custom_style_sheet()

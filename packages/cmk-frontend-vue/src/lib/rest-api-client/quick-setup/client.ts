@@ -101,7 +101,10 @@ export const runStageAction = async (
     const { data } = await axios.post(url, { stage_action_id: stageActionId, stages })
     return data
   } catch (error) {
-    if (isAxiosError(error) && error.response?.data?.validation_errors) {
+    if (
+      isAxiosError<QuickSetupStageActionResponse, unknown>(error) &&
+      error.response?.data?.validation_errors
+    ) {
       return new QuickSetupStageActionValidationResponse(error.response.data)
     }
     throw argumentError(error as Error)

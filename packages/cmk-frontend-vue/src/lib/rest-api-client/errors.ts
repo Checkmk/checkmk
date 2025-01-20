@@ -3,18 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import axios from 'axios'
 import type { AxiosError } from 'axios'
+import axios from 'axios'
 
-import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
+import { CmkError } from '@/lib/error'
 import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
-import { CmkError } from '../error'
+import type { MaybeRestApiCrashReport, MaybeRestApiError } from '@/lib/types'
 // import type { Errors, StageErrors } from '@lib/rest./response_types'
 
 export class QuickSetupAxiosError extends CmkError<AxiosError> {
   override name = 'QuickSetupAxiosError'
   override getContext(): string {
-    if (axios.isAxiosError(this.cause) && this.cause.response) {
+    if (axios.isAxiosError<MaybeRestApiCrashReport, unknown>(this.cause) && this.cause.response) {
       let moreContext = ''
       if (this.cause.status === 502) {
         moreContext =
@@ -22,8 +22,7 @@ export class QuickSetupAxiosError extends CmkError<AxiosError> {
           'a moment and try again.'
       }
 
-      const crashReportUrl = (this.cause.response.data as MaybeRestApiCrashReport).ext?.details
-        ?.crash_report_url?.href
+      const crashReportUrl = this.cause.response.data.ext?.details?.crash_report_url?.href
       if (crashReportUrl) {
         moreContext = `${moreContext}\n\nCrash report: ${crashReportUrl}`
       }
@@ -62,7 +61,7 @@ export interface AllStagesValidationError extends RestApiError, OrUndefined<Stag
  * @returns CmkError<unknown> | QuickSetupAxiosError
  */
 export const argumentError = (err: Error): CmkError | QuickSetupAxiosError => {
-  if (axios.isAxiosError(err)) {
+  if (axios.isAxiosError<MaybeRestApiError, unknown>(err)) {
     const msg = err.response?.data?.detail || err.response?.data?.title || err.message
     return new QuickSetupAxiosError(msg, err)
   } else {

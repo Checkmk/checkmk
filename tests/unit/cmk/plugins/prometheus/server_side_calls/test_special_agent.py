@@ -68,11 +68,11 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "[{'metric_label': 'my-metric', 'promql_query': "
                     "'my-query'}]}], 'host_address': '1.2.3.4', "
                     "'host_name': 'host'}",
+                    "--cert-server-name",
+                    "host",
                     "auth_token",
                     "--token",
                     Secret(0),
-                    "--cert-server-name",
-                    "host",
                 ]
             ),
             id="medium configuration",
@@ -162,13 +162,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "'levels': {'lower_levels': (0.0, 1.0), "
                     "'upper_levels': (30.0, 40.0)}}]}], "
                     "'host_address': '1.2.3.4', 'host_name': 'host'}",
+                    "--cert-server-name",
+                    "host",
                     "auth_login",
                     "--username",
                     "user",
                     "--password-reference",
                     Secret(0),
-                    "--cert-server-name",
-                    "host",
                 ]
             ),
             id="full configuration",

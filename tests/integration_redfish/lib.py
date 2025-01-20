@@ -80,7 +80,7 @@ def create_special_agent_rule(
 def run_mockup_server(*, dataset_path: Path, port: int) -> subprocess.Popen:
     return subprocess.Popen(
         ["python3", _MOCKUP_SERVER_FILE, "--port", f"{port}", "-D", dataset_path],
-        stdout=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
         text=True,
     )

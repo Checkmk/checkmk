@@ -24,12 +24,19 @@ from typing import Any, Literal
 from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 
 from cmk.utils.paths import diskspace_config_dir, omd_root, var_dir
-from cmk.utils.render import fmt_bytes
 
 # TODO: The diskspace tool depends on `check_mk` as a cli tool. Therefore, having the
 # "site context" as a dependency is probably appropriate. It could be moved to `cmk/diskspace`,
 # but that is also suboptimal, since the tool depends on `omdlib`.
 from cmk.diskspace import Config, read_config  # pylint: disable=cmk-module-layer-violation
+
+
+def fmt_bytes(v: float) -> str:
+    for prefix in ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"):
+        if abs(v) < 1024:
+            return f"{v:.2f} {prefix}"
+        v /= 1024
+    return f"{v*1024:.2f} YiB"
 
 
 def _error(message: str) -> None:

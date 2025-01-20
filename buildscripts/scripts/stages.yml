@@ -48,7 +48,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' || true"
 
     - NAME: CHANGED_REQUIREMENTS_LOCK
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^requirements_all_lock.txt' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^requirements_*_lock.txt' || true"
 
     - NAME: CHANGED_FIND_PYTHON_FILES_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/find-python-files' || true"
@@ -239,15 +239,15 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
 
-    - NAME: "Python Pipfile Test"
+    - NAME: "Python Requirements Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_REQUIREMENTS_LOCK,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
       DIR: "tests"
       ENV_VARS:
-          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"
-      COMMAND: "make test-pipfile-docker"
-      TEXT_ON_SKIP: "Pipfile and Pipfile.lock files not changed"
+          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-requirements-junit.xml --color=no"
+      COMMAND: "make test-requirements-docker"
+      TEXT_ON_SKIP: "Requirements files not changed"
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python3-pipfile-junit.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/python3-requirements-junit.xml"
 
     - NAME: "Python File Content Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FILES_REL

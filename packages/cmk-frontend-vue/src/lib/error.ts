@@ -34,7 +34,7 @@ export function formatError(error: Error | CmkError): string {
     .join('\n\n')
 }
 
-export class CmkError<T = Error> extends Error {
+export class CmkError<T extends Error = Error> extends Error {
   cause: T | null
 
   constructor(message: string, cause: T | null) {

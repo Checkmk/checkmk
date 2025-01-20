@@ -18,7 +18,7 @@ interface MaybeApiError {
   severity?: 'error'
 }
 
-class AutoCompleterResponseError extends CmkError<null> {
+class AutoCompleterResponseError extends CmkError {
   response: MaybeApiError
 
   constructor(message: string, response: MaybeApiError) {

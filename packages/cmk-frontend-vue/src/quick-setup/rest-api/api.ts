@@ -75,7 +75,7 @@ const _getOverviewOrAllStages = async (
   try {
     return await quickSetupClient.getOverviewModeOrGuidedMode(quickSetupId, mode, objectId)
   } catch (error) {
-    throw processError(error)
+    throw processError(error as Error)
   }
 }
 
@@ -133,7 +133,7 @@ const _saveOrEditQuickSetup = async (
       ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
       : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
   } catch (error) {
-    throw processError(error)
+    throw processError(error as Error)
   }
 
   /*
@@ -193,7 +193,7 @@ export const validateAndRecapStage = async (
 
     return data as QuickSetupStageActionResponse
   } catch (err) {
-    throw processError(err)
+    throw processError(err as Error)
   }
 }
 

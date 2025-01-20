@@ -10,7 +10,7 @@ import { useErrorBoundary } from '@/components/useErrorBoundary'
 import { CmkError } from '@/lib/error.ts'
 const props = defineProps<{ screenshotMode: boolean }>()
 
-class DemoError<T> extends CmkError<T> {
+class DemoError<T extends Error> extends CmkError<T> {
   override name = 'DemoError'
   override getContext(): string {
     return 'DemoErrorContext'
@@ -22,10 +22,10 @@ function throwCmkError() {
     try {
       throw new Error('something happened in code we can not control')
     } catch (error: unknown) {
-      throw new DemoError('internal error handler, but keeps bubbeling', error)
+      throw new DemoError('internal error handler, but keeps bubbeling', error as Error)
     }
   } catch (error: unknown) {
-    throw new CmkError('this is a cmk error', error)
+    throw new CmkError('this is a cmk error', error as Error)
   }
 }
 

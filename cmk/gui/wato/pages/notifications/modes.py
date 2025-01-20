@@ -1641,18 +1641,8 @@ class ModeTestNotifications(ModeNotifications):
     ) -> None:
         if not context or not analyse:
             return
-        html.open_div(class_="test_notifications_matching_help")
-        html.icon("toggle_details")
-        html.b(_("Matching: "))
-        html.write_text_permissive(
-            _(
-                "Each parameter is defined by the first matching rule where that parameter "
-                "is set (checked)."
-            )
-        )
-        html.close_div()
-        html.open_div(id_="notification_analysis_container")
 
+        html.open_div(id_="notification_analysis_container")
         html.open_div(class_="state_bar state0")
         html.open_span()
         html.icon("check")

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import json
+import select
 import sys
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, Self, TypedDict
 
 import requests
 import urllib3
@@ -29,7 +32,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class AgentBiAuthentication(BaseModel):
     username: str
-    secret_id: int | None
     password_store_path: Path | None = None
     password_store_identifier: str | None = None
 
@@ -289,26 +291,66 @@ def query_data(config: AgentBiConfig) -> AggregationData:
     return output_generator.generate_data()
 
 
-def merge_config(argv: Sequence[str], stdin: IO) -> list[AgentBiConfig]:
+def merge_config(secrets: Sequence[str], raw_configs: Sequence[str]) -> list[AgentBiConfig]:
+    # we could just use zip( . , strict=True), but let's be explicit:
+    if (ls := len(secrets)) != (lc := len(raw_configs)):
+        raise ValueError(
+            f"Number of arguments to `--secrets` ({ls}) and `--configs` ({lc}) must match"
+        )
     configs = []
-    for i, (arg, config_j) in enumerate(zip(argv, json.load(stdin))):
-        config = AgentBiConfig.model_validate(config_j)
+    for arg, config_j in zip(secrets, raw_configs):
+        config = AgentBiConfig.model_validate_json(config_j)
+        if (config.authentication is None) is not (":" not in arg):
+            raise ValueError("Secrets and configs must match")
         configs.append(config)
-        if arg == "--nosecret":
-            assert config.authentication is None
-            continue
-        assert config.authentication is not None
-        assert config.authentication.secret_id == i
-        config.authentication.merge_arg(arg)
+        if config.authentication is not None:
+            config.authentication.merge_arg(arg)
     return configs
 
 
+@dataclass(frozen=True)
+class _Args:
+    debug: bool
+    configs: Sequence[AgentBiConfig]
+
+    @classmethod
+    def from_argv(cls, args: Sequence[str]) -> Self:
+        raw = parse_arguments(args)
+        return cls(debug=bool(raw.debug), configs=merge_config(raw.secrets, raw.configs))
+
+
+def _optionally_read_stdin_list() -> list[str]:
+    """Try to read additional argv elements from stdin
+
+    Most of the time, stdin will be available, and we immediately return
+    the read elements.
+    In case stdin is not provided (in manual calls for example) we time out
+    after just 1 second.
+    """
+    if select.select([sys.stdin], [], [], 1.0)[0]:
+        return json.load(sys.stdin)
+    return []
+
+
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    parser.add_argument("--secrets", default=[], nargs="*", help="List of secrets")
+    parser.add_argument("--configs", default=[], nargs="*", help="List of configs")
+    return parser.parse_args(argv)
+
+
 def main() -> int:
+    args = _Args.from_argv(sys.argv[1:] + _optionally_read_stdin_list())
     try:
         p = ThreadPool()
-        results = p.map(query_data, merge_config(sys.argv[1:], sys.stdin))
+        results = p.map(query_data, args.configs)
         AggregationOutputRenderer().render(results)
-    except Exception as e:
+    except () if args.debug else (Exception,) as e:
         sys.stderr.write("%s" % e)
         return 1
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

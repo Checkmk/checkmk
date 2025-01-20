@@ -11,7 +11,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import DropdownChoice
 
-from ._snapin import snapin_registry
+from ._snapin import all_snapins
 
 
 class SnapinDashletConfig(DashletConfig):
@@ -60,14 +60,14 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
 
     @classmethod
     def _snapin_choices(cls):
-        return sorted([(k, v.title()) for k, v in snapin_registry.items()], key=lambda x: x[1])
+        return sorted([(k, v.title()) for k, v in all_snapins().items()], key=lambda x: x[1])
 
     def default_display_title(self) -> str:
-        return snapin_registry[self._dashlet_spec["snapin"]].title()
+        return all_snapins()[self._dashlet_spec["snapin"]].title()
 
     def update(self):
         dashlet = self._dashlet_spec
-        snapin = snapin_registry.get(self._dashlet_spec["snapin"])
+        snapin = all_snapins().get(self._dashlet_spec["snapin"])
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()

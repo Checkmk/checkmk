@@ -97,10 +97,9 @@ def walk_managed(site_dir: Path, skel: Path) -> Iterator[str]:
 
 def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
     for relpath in walk_managed(site_dir, new_skel):
-        if relpath != ".":
-            store(site_dir, Path(relpath), backup_dir)
+        store(site_dir, Path(relpath), backup_dir)
     for relpath in walk_managed(site_dir, old_skel):
-        if relpath != "." and not os.path.lexists(new_skel / relpath):  # Already backed-up
+        if not os.path.lexists(new_skel / relpath):  # Already backed-up
             store(site_dir, Path(relpath), backup_dir)
 
 
@@ -169,9 +168,7 @@ class ManageUpdate:
         self.populated_tmpfs = False
 
     def __enter__(self) -> Self:
-        try:
-            self.backup_dir.mkdir()
-        except FileExistsError:
+        if self.backup_dir.exists():
             sys.exit(
                 f"The folder {self.backup_dir} contains data from a failed update attempt. This "
                 "only happens, if a serious error occured during a previous update attempt. "

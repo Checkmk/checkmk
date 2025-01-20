@@ -615,7 +615,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
                 redfishobj.redfish_connection,
                 "".join(firmware_url),
                 "FirmwareDirectory",
-                timeout=10,
+                timeout=40,
             )
             if members := firmwares.get("Members"):
                 assert not isinstance(members, str)
@@ -720,6 +720,8 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
             store_data = json.loads(raw)
             current_time = int(time.time())
             if store_data["timestamp"] + value < current_time:
+                continue
+            if key not in redfishobj.sections:
                 continue
             timestamps[key] = store_data["timestamp"]
             redfishobj.section_data.setdefault(key, store_data["data"])

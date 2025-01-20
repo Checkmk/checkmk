@@ -254,7 +254,7 @@ class ConfigurationConnectionAttributesOutput(BaseSchema):
 
     user_sync = fields.Nested(
         UserSyncAttributesOutput,
-        required=True,
+        required=False,
         description="By default the users are synchronized automatically in the interval configured in the connection. For example the LDAP connector synchronizes the users every five minutes by default. The interval can be changed for each connection individually in the connection settings. Please note that the synchronization is only performed on the master site in distributed setups by default.",
     )
 
@@ -271,7 +271,7 @@ class ConfigurationConnectionAttributesOutput(BaseSchema):
     )
 
     message_broker_port = fields.Integer(
-        required=True,
+        required=False,
         description="The port used for the message broker to exchange messages.",
         example=5672,
     )

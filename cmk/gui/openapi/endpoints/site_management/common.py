@@ -69,3 +69,11 @@ def default_config_example() -> SiteConfig:
         }
 
     return r
+
+
+def no_replication_config_example() -> SiteConfig:
+    r: SiteConfig = default_config_example()
+
+    r["configuration_connection"] = {"enable_replication": False}
+
+    return r

@@ -414,8 +414,10 @@ class ApiErrorAuthorizationRequestDenied(ApiError):
 def _make_exception(error_data: object) -> ApiError:
     match error_data:
         case {"code": "Authorization_RequestDenied", **rest}:
-            return ApiErrorAuthorizationRequestDenied(**rest.get("message", error_data))
-        case {"code": _code, "message": message}:
+            message = rest.get("message", error_data)
+            assert isinstance(message, Mapping)
+            return ApiErrorAuthorizationRequestDenied(**message)
+        case {"code": _, "message": message}:
             return ApiError(message)
         case other:
             return ApiError(other)

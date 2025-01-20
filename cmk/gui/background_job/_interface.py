@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from logging import Logger
 from pathlib import Path
 from typing import ContextManager, NamedTuple
 
+from pydantic import BaseModel
+
 from cmk.utils import render
 
-from cmk.trace import Link, TracerProvider
+from cmk.trace import SpanContext, TraceFlags, TracerProvider, TraceState
 from cmk.trace.export import SpanExporter
 
 from ._defines import BackgroundJobDefines
@@ -70,6 +74,33 @@ class BackgroundProcessInterface:
             f.write(encoded_info.encode())
 
 
+class SpanContextModel(BaseModel, frozen=True):
+    trace_id: int
+    span_id: int
+    is_remote: bool
+    trace_flags: int
+    trace_state: Sequence[tuple[str, str]]
+
+    @classmethod
+    def from_span_context(cls, span_context: SpanContext) -> SpanContextModel:
+        return SpanContextModel(
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            is_remote=span_context.is_remote,
+            trace_flags=span_context.trace_flags,
+            trace_state=list(span_context.trace_state.items()),
+        )
+
+    def to_span_context(self) -> SpanContext:
+        return SpanContext(
+            self.trace_id,
+            self.span_id,
+            self.is_remote,
+            TraceFlags(self.trace_flags),
+            TraceState(self.trace_state),
+        )
+
+
 class JobParameters(NamedTuple):
     """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
 
@@ -81,4 +112,4 @@ class JobParameters(NamedTuple):
     override_job_log_level: int | None
     span_id: str
     init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None]
-    origin_span: Link
+    origin_span_context: SpanContextModel

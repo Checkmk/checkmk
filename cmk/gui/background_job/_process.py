@@ -47,6 +47,7 @@ from cmk.trace import (
     get_tracer_provider,
     init_tracing,
     INVALID_SPAN,
+    Link,
     service_namespace_from_config,
     set_span_in_context,
     trace_send_config,
@@ -73,7 +74,7 @@ def run_process(job_parameters: JobParameters) -> None:
         override_job_log_level,
         span_id,
         init_span_processor_callback,
-        origin_span,
+        origin_span_context,
     ) = job_parameters
 
     logger = log.logger.getChild("background-job")
@@ -106,7 +107,7 @@ def run_process(job_parameters: JobParameters) -> None:
                 "cmk.job_id": job_id,
                 "cmk.target": str(target),
             },
-            links=[origin_span],
+            links=[Link(origin_span_context.to_span_context())],
         ):
             logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
             jobstatus_store.update({"pid": os.getpid(), "state": JobStatusStates.RUNNING})

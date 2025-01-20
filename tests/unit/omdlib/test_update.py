@@ -8,8 +8,6 @@ import dataclasses
 import os
 from pathlib import Path
 
-import pytest
-
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
@@ -336,7 +334,6 @@ def test_backup_add(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True)
 def test_backup_modify(tmp_path: Path) -> None:
     new_skel = tmp_path / "new_skel"
     old_skel = tmp_path / "old_skel"

@@ -1194,7 +1194,9 @@ harfile==0.3.0 \
 httpcore==1.0.7 \
     --hash=sha256:8551cb62a169ec7162ac7be8d4817d561f60e08eaa485234898414bb5a8a0b4c \
     --hash=sha256:a3fff8f43dc260d5bd363d9f9cf1830fa3a458b332856f34282de498ed420edd
-    # via httpx
+    # via
+    #   -r requirements_all.txt
+    #   httpx
 httplib2==0.22.0 \
     --hash=sha256:14ae0a53c1ba8f3d37e9e27cf37eabb0fb9980f435ba405d546948b009dd64dc \
     --hash=sha256:d7a10bc5ef5ab08322488bde8c726eeee5c8618723fdb399597ec58f3d82df81
@@ -1205,7 +1207,9 @@ httplib2==0.22.0 \
 httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
-    # via schemathesis
+    # via
+    #   -r requirements_all.txt
+    #   schemathesis
 hypothesis==6.122.3 \
     --hash=sha256:f0f57036d3b95b979491602b32c95b6725c3af678cccb6165d8de330857f3c83 \
     --hash=sha256:f4c927ce0ec739fa6266e4572949d0b54e24a14601a2bc5fec8f78e16af57918
@@ -3025,7 +3029,9 @@ pytest-metadata==3.1.1 \
 pytest-mock==3.14.0 \
     --hash=sha256:0b72c38033392a5f4621342fe11e9219ac11ec9d375f8e2a0c164539e0d70f6f \
     --hash=sha256:2719255a1efeceadbc056d6bf3df3d1c5015530fb40cf347c0f9afac88410bd0
-    # via -r requirements_dev.txt
+    # via
+    #   -r requirements_all.txt
+    #   -r requirements_dev.txt
 pytest-opentelemetry==1.0.1 \
     --hash=sha256:2fbedb36ca11b2c5a4ca9692e733cdb4311590bbd64cd67fe75d34bc9cd69ed2 \
     --hash=sha256:38455f3cad047ca46861912a91169c45cf96516cce8c4036e1e0d135d0515316

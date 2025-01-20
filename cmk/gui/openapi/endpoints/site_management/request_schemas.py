@@ -316,9 +316,19 @@ class UserSyncAttributes(OneOfSchema):
     }
 
 
-class ConfigurationConnectionAttributes(BaseSchema):
-    enable_replication = fields.Boolean(
+class ConfigurationConnectionWithoutReplicationAttributes(BaseSchema):
+    enable_replication = fields.Constant(
         required=True,
+        constant=False,
+        description="Replication is disabled.",
+        example=False,
+    )
+
+
+class ConfigurationConnectionWithReplicationAttributes(BaseSchema):
+    enable_replication = fields.Constant(
+        required=True,
+        constant=True,
         description="Replication allows you to manage several monitoring sites with a logically centralized setup. Remote sites receive their configuration from the central sites.",
         example=True,
     )
@@ -359,6 +369,21 @@ class ConfigurationConnectionAttributes(BaseSchema):
         description="If you enable the replication of MKPs then during each Activate Changes MKPs that are installed on your central site and all other files below the ~/local/ directory will be also transferred to the remote site. Note: all other MKPs and files below ~/local/ on the remote site will be removed.",
         example=True,
     )
+
+
+class ConfigurationConnectionAttributes(OneOfSchema):
+    type_field = "enable_replication"
+    type_field_remove = False
+    type_schemas = {
+        "WithReplication": ConfigurationConnectionWithReplicationAttributes,
+        "WithoutReplication": ConfigurationConnectionWithoutReplicationAttributes,
+    }
+
+    def get_data_type(self, data):
+        if "enable_replication" not in data:
+            return None
+
+        return "WithReplication" if data["enable_replication"] else "WithoutReplication"
 
 
 class SiteLoginRequest(BaseSchema):

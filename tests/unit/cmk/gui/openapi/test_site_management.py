@@ -17,6 +17,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
+from cmk.gui.openapi.endpoints.site_management.common import (
+    no_replication_config_example as _no_replication_config,
+)
 from cmk.gui.rest_api_types.site_connection import (
     ConfigurationConnection,
     Connection,
@@ -26,6 +29,11 @@ from cmk.gui.rest_api_types.site_connection import (
 )
 
 DOMAIN_TYPE = "site_connection"
+
+
+def _no_replication_config_with_site_id() -> tuple[SiteConfig, str]:
+    config = _no_replication_config()
+    return config, config["basic_settings"]["site_id"]
 
 
 def _default_config_with_site_id() -> tuple[SiteConfig, str]:
@@ -39,7 +47,7 @@ def test_get_a_site_connection(clients: ClientRegistry) -> None:
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["id"] == site_id
 
-    example_config = _default_config()
+    example_config = _no_replication_config()
     assert set(resp.json["extensions"].keys()) == set(example_config.keys())
     assert set(resp.json["extensions"]["basic_settings"].keys()) == set(
         example_config["basic_settings"].keys()
@@ -527,15 +535,6 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
     },
     {
         "enable_replication": False,
-        "url_of_remote_site": "https://localhost/heute_remote_site_id_1/check_mk/",
-        "disable_remote_configuration": False,
-        "ignore_tls_errors": False,
-        "direct_login_to_web_gui_allowed": False,
-        "user_sync": {
-            "sync_with_ldap_connections": "all",
-        },
-        "replicate_event_console": False,
-        "replicate_extensions": False,
     },
     {
         "enable_replication": True,
@@ -748,3 +747,12 @@ def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
         assert "customer" not in r.json["extensions"]["basic_settings"]
         config["basic_settings"].update({"customer": "provider"})
         clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+
+
+def test_create_no_sync_site_connection(clients: ClientRegistry) -> None:
+    config, site_id = _no_replication_config_with_site_id()
+    config["configuration_connection"] = {"enable_replication": False}
+    clients.SiteManagement.create(site_config=config)
+
+    resp = clients.SiteManagement.get(site_id=site_id)
+    assert resp.json["extensions"]["configuration_connection"] == config["configuration_connection"]

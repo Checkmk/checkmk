@@ -231,26 +231,25 @@ def check_filestats(item, params, parsed):
         show_files,
     )
 
-    if additional_rules:
+    if count is not None and additional_rules:
         yield 0, "Additional rules enabled"
 
-    remaining_files_count = count  # for display in service details
+        remaining_files_count = count  # for display in service details
 
-    for file_expression, file_details in matching_files.items():
-        file_list = file_details["file_list"]
-        file_count = len(file_list)
-        remaining_files_count -= file_count
-        yield 0, "\n%s" % file_details["display_name"]
-        yield 0, "Pattern: %r" % file_expression
-        yield 0, "Files in total: %d" % file_count
-        output = yield from check_filestats_extremes(
-            file_list,
-            file_details["rules"],
-            show_files,
-        )
-        yield 0, "\n".join(output)
+        for file_expression, file_details in matching_files.items():
+            file_list = file_details["file_list"]
+            file_count = len(file_list)
+            remaining_files_count -= file_count
+            yield 0, "\n%s" % file_details["display_name"]
+            yield 0, "Pattern: %r" % file_expression
+            yield 0, "Files in total: %d" % file_count
+            output = yield from check_filestats_extremes(
+                file_list,
+                file_details["rules"],
+                show_files,
+            )
+            yield 0, "\n".join(output)
 
-    if additional_rules:
         yield 0, "\nRemaining files: %d" % remaining_files_count
 
     yield 0, "\n" + "\n".join(remaining_files_output)

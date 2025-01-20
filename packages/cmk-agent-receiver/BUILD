@@ -40,6 +40,7 @@ py_library(
         requirement("python-dateutil"),
         requirement("python-multipart"),
         requirement("requests"),
+        requirement("starlette"),
         requirement("uvicorn"),
     ],
 )
@@ -72,6 +73,7 @@ py_test(
         requirement("pytest"),
         requirement("pytest-mock"),
         requirement("requests"),
+        requirement("starlette"),
     ],
 )
 
@@ -91,6 +93,7 @@ py_wheel(
         "python-dateutil",
         "python-multipart",
         "requests",
+        "starlette",
         "uvicorn",
     ],
     strip_path_prefixes = ["packages/cmk-agent-receiver"],

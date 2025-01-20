@@ -5,4 +5,5 @@ h11==0.14.0
 python-dateutil==2.9.0.post0
 python-multipart==0.0.19
 requests==2.32.3
+starlette==0.41.3
 uvicorn==0.32.1

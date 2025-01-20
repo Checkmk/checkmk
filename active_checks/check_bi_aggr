@@ -156,7 +156,7 @@ def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
 
     username, secret = _make_credentials(args=args)
 
-    if args.track_downtime and not args.hostname:
+    if args.track_downtimes and not args.hostname:
         sys.stderr.write("Please provide a hostname when using downtime tracking.\n")
         sys.exit(1)
 
@@ -233,7 +233,7 @@ def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
         else:  # "warn"
             aggr_state = min(aggr_state, 1)
 
-    if args.track_downtime:
+    if args.track_downtimes:
         # connect to livestatus
         try:
             import livestatus

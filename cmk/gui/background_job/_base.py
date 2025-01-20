@@ -29,11 +29,11 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
-from cmk.trace import get_tracer, Link, Status, StatusCode, TracerProvider
+from cmk.trace import get_tracer, SpanContext, Status, StatusCode, TracerProvider
 from cmk.trace.export import init_span_processor, SpanExporter
 
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface, JobParameters
+from ._interface import BackgroundProcessInterface, JobParameters, SpanContextModel
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -308,7 +308,7 @@ class BackgroundJob:
                     initial_status_args,
                     override_job_log_level,
                     init_span_processor_callback,
-                    Link(span.get_span_context()),
+                    span.get_span_context(),
                 )
             ).is_ok():
                 job_status = self.get_status()
@@ -327,7 +327,7 @@ class BackgroundJob:
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None],
-        origin_span: Link,
+        origin_span_context: SpanContext,
     ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if self.is_active():
             return result.Error(
@@ -371,7 +371,7 @@ class BackgroundJob:
                     override_job_log_level=override_job_log_level,
                     span_id=self.job_prefix,
                     init_span_processor_callback=init_span_processor_callback,
-                    origin_span=origin_span,
+                    origin_span_context=SpanContextModel.from_span_context(origin_span_context),
                 ),
             ),
         )

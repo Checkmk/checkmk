@@ -31,6 +31,8 @@ from ._tracer import Tracer
 Span = trace.Span
 SpanKind = trace.SpanKind
 SpanContext = trace.SpanContext
+TraceFlags = trace.TraceFlags
+TraceState = trace.TraceState
 NonRecordingSpan = trace.NonRecordingSpan
 Link = trace.Link
 get_tracer_provider = trace.get_tracer_provider

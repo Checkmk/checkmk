@@ -8,6 +8,8 @@ import dataclasses
 import os
 from pathlib import Path
 
+import pytest
+
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
@@ -337,6 +339,7 @@ def test_backup_add(tmp_path: Path) -> None:
     ]
 
 
+@pytest.mark.xfail(strict=True)
 def test_backup_modify(tmp_path: Path) -> None:
     new_skel = tmp_path / "new_skel"
     old_skel = tmp_path / "old_skel"
@@ -349,6 +352,7 @@ def test_backup_modify(tmp_path: Path) -> None:
     setup_skel(old_skel)
     setup_skel(site_dir)
     setup_user(site_dir)
+    site_dir.chmod(0o751)
     save = [read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)]
 
     with contextlib.suppress(TBaseException):

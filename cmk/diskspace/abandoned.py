@@ -37,7 +37,7 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
 
 
 def _check_threshold_and_delete(
-    retention_time: int, abandoned_hosts: set[str], base_path: str
+    now: float, retention_time: int, abandoned_hosts: set[str], base_path: str
 ) -> set[str]:
     """
     Find the latest modified file for each directory. When the latest
@@ -48,7 +48,7 @@ def _check_threshold_and_delete(
     for unrelated_dir in abandoned_hosts:
         path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
-        if mtime < time.time() - retention_time:
+        if mtime < now - retention_time:
             _delete_files_and_base_directory(path, "abandoned host")
             cleaned_up_hosts.add(unrelated_dir)
         else:
@@ -58,14 +58,14 @@ def _check_threshold_and_delete(
 
 
 def _cleanup_host_directories(
-    retention_time: int, unaffected_hosts: set[str], base_path: str
+    now: float, retention_time: int, unaffected_hosts: set[str], base_path: str
 ) -> set[str]:
     if not os.path.isdir(base_path):
         return set()
 
     abandoned = {host_dir for host_dir in os.listdir(base_path) if host_dir not in unaffected_hosts}
 
-    return _check_threshold_and_delete(retention_time, abandoned, base_path)
+    return _check_threshold_and_delete(now, retention_time, abandoned, base_path)
 
 
 def _do_automation_call(
@@ -99,16 +99,19 @@ def _do_cleanup_central_site(
 
     cleaned_up = (
         _cleanup_host_directories(
+            time.time(),
             retention_time,
             all_hosts,
             f"{omd_root}/var/check_mk/inventory_archive",
         )
         | _cleanup_host_directories(
+            time.time(),
             retention_time,
             local_site_hosts,
             f"{omd_root}/var/pnp4nagios/perfdata",
         )
         | _cleanup_host_directories(
+            time.time(),
             retention_time,
             local_site_hosts,
             f"{omd_root}/var/check_mk/rrd",
@@ -126,16 +129,19 @@ def _do_cleanup_remote_site(
 ) -> None:
     cleaned_up_non_local_hosts = (
         _cleanup_host_directories(
+            time.time(),
             retention_time,
             local_site_hosts,
             f"{omd_root}/var/check_mk/inventory_archive",
         )
         | _cleanup_host_directories(
+            time.time(),
             retention_time,
             local_site_hosts,
             f"{omd_root}/var/pnp4nagios/perfdata",
         )
         | _cleanup_host_directories(
+            time.time(),
             retention_time,
             local_site_hosts,
             f"{omd_root}/var/check_mk/rrd",

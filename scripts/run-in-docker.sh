@@ -69,6 +69,7 @@ mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
 touch "${CONTAINER_SHADOW_WORKSPACE}/home/.cmk-credentials"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache/bazel"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/omd_build"
 mkdir -p "${CHECKOUT_ROOT}/shared_cargo_folder"
 mkdir -p "${CHECKOUT_ROOT}/omd/build"
@@ -83,6 +84,14 @@ mkdir -p "${HOME}/shared_cargo_folder"
 # UNCONDITIONAL MOUNTS
 DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/home_cache:${HOME}/.cache"
+
+# with "--mount" the execution of binaries is not allowed and can not be changed
+# use "--tmpfs" instead
+# see https://docs.docker.com/engine/storage/tmpfs/#options-for---tmpfs
+# mount the bazel cache as tmpfs to save minimum 6GB of diskspace
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} --tmpfs ${HOME}/.cache/bazel:exec,size=10g,mode=777"
+# other folders in HOME/.cache are not touched to ensure a fast venv creation
+
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/shared_cargo_folder:${CHECKOUT_ROOT}/shared_cargo_folder"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CHECKOUT_ROOT}:${CHECKOUT_ROOT}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}"

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.lib.omd_broker import Queue, SectionQueues
 from cmk.plugins.omd.agent_based.omd_broker_queue import (
     check,
@@ -67,6 +67,8 @@ def test_discover_broker_queue() -> None:
         (
             "heute piggyback-hub",
             [
+                Result(state=State.OK, summary="Queued messages: 7"),
+                Metric("messages", 7),
                 Result(state=State.OK, summary="Messages in queue 'payload': 3"),
                 Result(state=State.OK, summary="Messages in queue 'config': 4"),
             ],
@@ -78,6 +80,8 @@ def test_discover_broker_queue() -> None:
         (
             "heute_remote_1 piggyback-hub",
             [
+                Result(state=State.OK, summary="Queued messages: 0"),
+                Metric("messages", 0),
                 Result(state=State.OK, summary="Messages in queue 'payload': 0"),
                 Result(state=State.OK, summary="Messages in queue 'config': 0"),
             ],

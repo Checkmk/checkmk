@@ -25,21 +25,20 @@ def inventory_f5_bigip_conns(info):
 def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branches
     # Connection rate
     now = time.time()
-    value_store = get_value_store()
     total_native_compat_rate = 0.0
     conns_dict = {}
 
     for line in info:
         if line[2] != "":
             native_conn_rate = get_rate(
-                value_store, "native", now, int(line[2]), raise_overflow=True
+                get_value_store(), "native", now, int(line[2]), raise_overflow=True
             )
         else:
             native_conn_rate = 0
 
         if line[3] != "":
             compat_conn_rate = get_rate(
-                value_store, "compat", now, int(line[3]), raise_overflow=True
+                get_value_store(), "compat", now, int(line[3]), raise_overflow=True
             )
         else:
             compat_conn_rate = 0
@@ -48,7 +47,7 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
 
         if line[4] != "":
             stat_http_req_rate = get_rate(
-                value_store, "stathttpreqs", now, int(line[4]), raise_overflow=True
+                get_value_store(), "stathttpreqs", now, int(line[4]), raise_overflow=True
             )
         else:
             stat_http_req_rate = None

@@ -10,7 +10,7 @@ import time
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render, SNMPTree
+from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
 
 check_info = {}
 
@@ -104,35 +104,26 @@ def inventory_f5_bigip_vserver(parsed):
             yield name, {}
 
 
-_AGGREGATION_KEYS = {
-    "if_in_pkts",
-    "if_out_pkts",
-    "if_in_octets",
-    "if_out_octets",
-    "connections_rate",
-    "packet_velocity_asic",
-}
-
-
 def get_aggregated_values(vserver):
-    value_store = get_value_store()
     now = time.time()
 
-    aggregation: dict[str, float] = {}
-
+    aggregation = {
+        k: 0.0
+        for k in (
+            "if_in_pkts",
+            "if_out_pkts",
+            "if_in_octets",
+            "if_out_octets",
+            "connections_rate",
+            "packet_velocity_asic",
+        )
+        if k in vserver
+    }
     # Calculate counters
-    for what in _AGGREGATION_KEYS.intersection(vserver):
-        this_aggregation = 0.0
-        raised = False
+    for what in aggregation:
         for idx, entry in enumerate(vserver[what]):
-            try:
-                this_aggregation += get_rate(
-                    value_store, f"{what}.{idx}", now, entry, raise_overflow=True
-                )
-            except GetRateError:
-                raised = True
-        if not raised:
-            aggregation[what] = this_aggregation
+            rate = get_rate(get_value_store(), f"{what}.{idx}", now, entry, raise_overflow=True)
+            aggregation[what] += rate
 
     # Calucate min/max/sum/mean values
     for what, function in [

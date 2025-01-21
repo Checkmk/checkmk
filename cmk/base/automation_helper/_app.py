@@ -46,6 +46,10 @@ def reload_automation_config() -> None:
     config.load(validate_hosts=False)
 
 
+def clear_caches_before_each_call() -> None:
+    config.get_config_cache().ruleset_matcher.clear_caches()
+
+
 @contextmanager
 def redirect_stdin(stream: io.StringIO) -> Iterator[None]:
     orig_stdin = sys.stdin
@@ -71,6 +75,7 @@ def get_application(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[], None],
+    clear_caches_before_each_call: Callable[[], None],
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
@@ -106,6 +111,7 @@ def get_application(
             redirect_stdin(io.StringIO(payload.stdin)),
             temporary_log_level(LOGGER, payload.log_level),
         ):
+            clear_caches_before_each_call()
             try:
                 exit_code: int = engine.execute(
                     payload.name,

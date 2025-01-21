@@ -20,6 +20,8 @@ else
     CONTROLLER_BINARY="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
 fi
 
+USER_COMMENT="Checkmk agent system user"
+
 usage() {
     cat >&2 <<HERE
 Usage: ${0}
@@ -89,7 +91,7 @@ _create_user() {
     printf "Creating %s user account ...\n" "${AGENT_USER}"
     useradd ${uid_argument} \
         ${group_argument} \
-        --comment "Checkmk agent system user" \
+        --comment "${USER_COMMENT}" \
         --system \
         --home-dir "${HOMEDIR}" \
         --no-create-home \
@@ -152,7 +154,7 @@ _update_user() {
         printf "Creating %s user account ...\n" "${AGENT_USER}"
         useradd ${uid_argument} \
             ${group_argument} \
-            --comment "Checkmk agent system user" \
+            --comment "${USER_COMMENT}" \
             --system \
             --home-dir "${HOMEDIR}" \
             --no-create-home \
@@ -167,14 +169,13 @@ _update_user() {
 _handle_user_legacy() {
     # add Checkmk agent system user
     printf "Creating/updating %s user account ...\n" "${AGENT_USER}"
-    comment="Checkmk agent system user"
     usershell="/bin/false"
 
     if id "${AGENT_USER}" >/dev/null 2>&1; then
         # check that the existing user is as expected
         existing="$(getent passwd "${AGENT_USER}")"
         existing="${existing#"${AGENT_USER}":*:*:*:}"
-        expected="${comment}:${HOMEDIR}:${usershell}"
+        expected="${USER_COMMENT}:${HOMEDIR}:${usershell}"
         if [ "${existing}" != "${expected}" ]; then
             printf "%s user found:  expected '%s'\n" "${AGENT_USER}" "${expected}" >&2
             printf "                but found '%s'\n" "${existing}" >&2
@@ -182,7 +183,7 @@ _handle_user_legacy() {
         unset existing expected
     else
         useradd \
-            --comment "${comment}" \
+            --comment "${USER_COMMENT}" \
             --system \
             --home-dir "${HOMEDIR}" \
             --no-create-home \
@@ -201,7 +202,7 @@ _handle_user_legacy() {
         _allow_legacy_pull
         _issue_legacy_pull_warning
     fi
-    unset homedir comment usershell
+    unset homedir usershell
 }
 
 main() {

@@ -18,7 +18,7 @@ from cmk.utils.redis import get_redis_client
 
 from cmk.base.automations import automations
 
-from ._app import get_application, reload_automation_config
+from ._app import clear_caches_before_each_call, get_application, reload_automation_config
 from ._cache import Cache
 from ._config import config_from_disk_or_default_config
 from ._log import configure_logger, LOGGER
@@ -53,6 +53,7 @@ def main() -> int:
             engine=automations,
             cache=cache,
             reload_config=reload_automation_config,
+            clear_caches_before_each_call=clear_caches_before_each_call,
         )
 
         daemonize()

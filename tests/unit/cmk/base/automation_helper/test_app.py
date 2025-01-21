@@ -52,21 +52,25 @@ def _get_test_client(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[], None],
+    clear_caches_before_each_call: Callable[[], None],
 ) -> TestClient:
     app = get_application(
         engine=engine,
         cache=cache,
         reload_config=reload_config,
+        clear_caches_before_each_call=clear_caches_before_each_call,
     )
     return TestClient(app)
 
 
 def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
+    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _get_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
+        mock_clear_caches_before_each_call,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -76,14 +80,17 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
         output="",
     )
     mock_reload_config.assert_called_once()  # only at application startup
+    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
+    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _get_test_client(
         _DummyAutomationEngineFailure(),
         cache,
         mock_reload_config,
+        mock_clear_caches_before_each_call,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
@@ -93,14 +100,17 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
         output="",
     )
     mock_reload_config.assert_called_once()  # only at application startup
+    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
+    mock_clear_caches_before_each_call = mocker.MagicMock()
     with _get_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
+        mock_clear_caches_before_each_call,
     ) as client:
         last_reload_before_cache_update = HealthCheckResponse.model_validate(
             client.get("/health").json()
@@ -116,12 +126,14 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         # once at application startup, once when the endpoint is called
         mock_reload_config.call_count == 2
     )
+    mock_clear_caches_before_each_call.assert_called_once()
 
 
 def test_health_check(cache: Cache) -> None:
     with _get_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
+        lambda: None,
         lambda: None,
     ) as client:
         resp = client.get("/health")

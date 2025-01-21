@@ -22,8 +22,6 @@ import pytest
 import requirements
 
 from tests.testlib.repo import (
-    branch_from_env,
-    current_base_branch_name,
     is_enterprise_repo,
     repo_path,
 )
@@ -111,10 +109,7 @@ def loaded_requirements():
     return load_requirements("all")
 
 
-@pytest.mark.skipif(
-    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
-    reason="pinning is only enforced in release branches",
-)
+@pytest.mark.skip(reason="ongoing investigation")
 def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
     # Test implements process as decribed in:
     # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies

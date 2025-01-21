@@ -394,7 +394,7 @@ test-werks:
 test-werks-docker:
 	../scripts/run-in-docker.sh make --quiet test-werks
 
-test-code-quality: test-license-headers test-requirements test-file-content test-werk
+test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality

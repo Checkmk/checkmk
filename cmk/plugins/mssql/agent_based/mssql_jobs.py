@@ -146,45 +146,34 @@ def _format_to_datetime(raw_date: str, raw_time: str) -> str:
 
 
 def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
-    if len(string_table) <= 1:
-        return {}
-
-    section: dict[str, JobSpec] = {}
-    current_instance = None
-
+    section = {}
     for line in string_table:
         if len(line) == 1:
-            current_instance = line[0]
+            continue
+        # The output may contain more than one line per job, depending on how often it is scheduled.
+        # The user is only interested in the upcoming "next_run_time".
+        if line[1] in section:
             continue
 
         job = dict(zip(_COL_HEADERS, line))
+
         last_run_outcome = _OUTCOME_TRANSLATION[job["last_run_outcome"]]
 
-        # The output may contain more than one line per job, depending on how often it is scheduled.
-        # The user is only interested in the upcoming "next_run_time".
-        section.setdefault(
-            (
-                f"{job["job_name"]} - {current_instance}"
-                # should always be set but we anyway guard against it
-                if current_instance
-                else job["job_name"]
+        section[job["job_name"]] = JobSpec(
+            last_run_duration=_calculate_seconds(job["last_run_duration"]),
+            last_run_outcome=last_run_outcome,
+            last_run_datetime=_format_to_datetime(
+                job["last_run_date"],
+                job["last_run_time"],
             ),
-            JobSpec(
-                last_run_duration=_calculate_seconds(job["last_run_duration"]),
-                last_run_outcome=last_run_outcome,
-                last_run_datetime=_format_to_datetime(
-                    job["last_run_date"],
-                    job["last_run_time"],
-                ),
-                enabled=job["job_enabled"] not in ("", "0"),
-                schedule_enabled=job["schedule_enabled"] not in ("", "0"),
-                next_run_datetime=_format_to_datetime(
-                    job["next_run_date"],
-                    job["next_run_time"],
-                ),
-                last_outcome_message=job["last_outcome_message"],
-                state=_STATUS_MAPPING.get(last_run_outcome, State.UNKNOWN),
+            enabled=job["job_enabled"] not in ("", "0"),
+            schedule_enabled=job["schedule_enabled"] not in ("", "0"),
+            next_run_datetime=_format_to_datetime(
+                job["next_run_date"],
+                job["next_run_time"],
             ),
+            last_outcome_message=job["last_outcome_message"],
+            state=_STATUS_MAPPING.get(last_run_outcome, State.UNKNOWN),
         )
 
     return section
@@ -241,7 +230,7 @@ check_plugin_mssql_jobs = CheckPlugin(
     name="mssql_jobs",
     discovery_function=discover_mssql_jobs,
     check_function=check_mssql_jobs,
-    service_name="MSSQL job %s",
+    service_name="MSSQL Job: %s",
     check_ruleset_name="mssql_jobs",
     check_default_parameters={
         "consider_job_status": "ignore",

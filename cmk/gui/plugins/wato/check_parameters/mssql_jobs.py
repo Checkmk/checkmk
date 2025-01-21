@@ -21,11 +21,10 @@ from cmk.gui.valuespec import Dictionary, Migrate, TextInput
 
 def _item_spec_mssql_jobs():
     return TextInput(
-        title=_("Job ID"),
+        title=_("Job Name"),
         help=_(
-            "You can set explicit jobs by defining their IDs. "
-            "The job ID is a combination of the job name and the name of the instance the job runs on: `{job_name} - {instance_name}`. "
-            'The job names can be found in the column "name" in the table "dbo.sysjobs" on the MSDB database.'
+            "You can set explicit jobs by defining their job names. The job names can be found "
+            'in the column "name" in the table "dbo.sysjobs" on the MSDB database.'
         ),
         allow_empty=False,
     )

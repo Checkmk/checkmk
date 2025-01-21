@@ -55,7 +55,6 @@ PACKAGES := \
     neb \
     robotmk \
     xmlsec1 \
-    redfish_mkp \
     rabbitmq
 
 ifeq ($(EDITION),enterprise)

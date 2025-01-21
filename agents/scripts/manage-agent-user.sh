@@ -69,6 +69,10 @@ _create_user() {
 
     # Some tests, before we touch anything
     id "${AGENT_USER}" >/dev/null 2>&1 && {
+        # We can't be entirely strict about forbidding an existing user, since the rule with the "create" option
+        # may remain in agent packages also on (automatic) agent updates.
+        # Hence we allow a user created by us and check for the specified user setup instead.
+        [ "$(getent passwd "${AGENT_USER}" | cut -d: -f5)" = "${USER_COMMENT}" ] && _check_user && return 0
         printf "User %s already exists, aborting.\n" "${AGENT_USER}"
         exit 1
     }

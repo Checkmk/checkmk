@@ -10,6 +10,8 @@
 /// Other artifacts: ???
 /// Depends on: image aliases for upstream OS images on Nexus, ???
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def main() {
     check_job_parameters([
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",
@@ -29,7 +31,6 @@ def main() {
     // and thereby no longer building images on daily base, only for release built images might be deleted automatically
     // therefore now alway build all images
     def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS, "release");
-
     def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -46,7 +47,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building for the following Distros:
         |${distros}
@@ -75,40 +76,66 @@ def main() {
             sh("cp defines.make .bazelversion omd/strip_binaries buildscripts/infrastructure/build-nodes/scripts");
         }
 
+        println("alias_names: ${alias_names}");
+        println("dockerfiles: ${dockerfiles}");
+        println("image_ids: ${image_ids}");
+
         dir("${checkout_dir}/buildscripts/infrastructure/build-nodes") {
-            // TODO: here it would be nice to iterate through all known distros
-            //       and use a conditional_stage(distro in distros) approach
             def stages = distros.collectEntries { distro ->
                 [("${distro}") : {
-                        stage("Build ${distro}") {
-                            def DOCKER_ARGS = (
-                                " --build-arg ${alias_names[distro]}=${image_ids[distro]}" +
-                                " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'" +
-                                " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
-                                " --build-arg DISTRO='$distro'" +
-                                " --build-arg NEXUS_USERNAME='$USERNAME'" +
-                                " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
-                                " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
-                                " --build-arg VERS_TAG='$vers_tag'" +
-                                " --build-arg BRANCH_VERSION='$branch_version'" +
-                                " -f ${dockerfiles[distro]} .");
-                            if (params.BUILD_IMAGE_WITHOUT_CACHE) {
-                                DOCKER_ARGS = "--no-cache " + DOCKER_ARGS;
-                            }
-                            docker.build("${distro}:${vers_tag}", DOCKER_ARGS);
-                        }}
-                ]
-            }
-            def images = parallel(stages);
+                    def run_condition = distro in distros;
+                    def image = false;
 
-            conditional_stage('upload images', publish_images) {
-                docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-                    images.each { distro, image ->
-                        image.push();
-                        image.push("${safe_branch_name}-latest");
+                    /// this makes sure the whole parallel thread is marked as skipped
+                    if (! run_condition){
+                        Utils.markStageSkippedForConditional("${distro}");
                     }
-                }
+
+                    smart_stage(
+                        name: "Build ${distro}",
+                        condition: run_condition,
+                        raiseOnError: true,
+                    ) {
+                        def image_name = "${distro}:${vers_tag}";
+                        def docker_build_args = (""
+                            + " --build-arg ${alias_names[distro]}=${image_ids[distro]}"
+
+                            + " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'"
+                            + " --build-arg NEXUS_ARCHIVES_URL='${NEXUS_ARCHIVES_URL}'"
+                            + " --build-arg DISTRO='${distro}'"
+                            + " --build-arg NEXUS_USERNAME='${USERNAME}'"
+                            + " --build-arg NEXUS_PASSWORD='${PASSWORD}'"
+                            + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
+
+                            + " --build-arg VERS_TAG='${vers_tag}'"
+                            + " --build-arg BRANCH_VERSION='${branch_version}'"
+                            + " -f ${dockerfiles[distro]} ."
+                        );
+
+                        if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                            docker_build_args = "--no-cache " + docker_build_args;
+                        }
+
+                        println("Build: ${image_name} with: ${docker_build_args}");
+                        image = docker.build(image_name, docker_build_args);
+                    }
+
+                    smart_stage(
+                        name: "Upload ${distro}",
+                        condition: run_condition && publish_images,
+                        raiseOnError: true,
+                    ) {
+                        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                            image.push();
+                            if (safe_branch_name ==~ /master|\d\.\d\.\d/) {
+                                image.push("${safe_branch_name}-latest");
+                            }
+                        }
+                    }
+                }]
             }
+
+            currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
         }
     }
 }

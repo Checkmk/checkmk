@@ -550,8 +550,8 @@ def check_netapp_qtree_quota(
         yield Result(state=State.UNKNOWN, summary="Qtree has no used space data set")
         return
 
-    size_total = int(disk_limit) / 1024.0
-    size_avail = size_total - int(qtree.disk_used) / 1024.0
+    size_total = int(disk_limit) / 1024**2
+    size_avail = size_total - int(qtree.disk_used) / 1024**2
     if qtree.files_used.isdigit() and qtree.file_limit.isdigit():
         inodes_total = int(qtree.file_limit)
         inodes_avail = inodes_total - int(qtree.files_used)

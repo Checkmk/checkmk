@@ -95,6 +95,16 @@ def get_cmk_version(branch, version) {
       // else
       "${version}");
 }
+
+def get_cmk_version_deploy(branch_name, branch_version, version) {
+    return (
+      // Experimental builds
+      (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
+      // Daily builds
+      (version in ['daily', 'git']) ? "${branch_version}-${build_date}" :
+      // else
+      "${version}");
+}
 /* groovylint-enable DuplicateListLiteral */
 
 def configured_or_overridden_distros(edition, distros, use_case="daily") {

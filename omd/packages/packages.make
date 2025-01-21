@@ -210,7 +210,6 @@ include \
     packages/unixcat/unixcat.make \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
-    packages/redfish_mkp/redfish_mkp.make \
     packages/rabbitmq/rabbitmq.make
 
 ifeq ($(EDITION),enterprise)

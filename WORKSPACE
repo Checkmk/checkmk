@@ -235,10 +235,6 @@ http_archive(
     url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
 
-load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp_workspace")
-
-redfish_mkp_workspace()
-
 load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
 jaeger_workspace()

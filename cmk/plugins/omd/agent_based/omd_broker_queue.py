@@ -11,6 +11,7 @@ from typing import Final
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -76,6 +77,12 @@ def check(item: str, section: SectionQueues) -> CheckResult:
     if (queues := _site_application(section).get((site, application))) is None:
         return
 
+    yield from check_levels(
+        sum(q.messages for q in queues),
+        metric_name="messages",
+        label="Queued messages",
+        render_func=str,
+    )
     for queue in queues:
         yield Result(
             state=State.OK,

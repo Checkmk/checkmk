@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { LegacyValuespec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 
@@ -40,19 +40,69 @@ interface PreRenderedHtml {
   readonly_html: string
 }
 
+function executeInlineScripts() {
+  legacyDOM.value!.querySelectorAll('script').forEach((element) => {
+    // ListOf
+    const reListOf = /cmk.valuespecs.listof_update_indices\("([^"]+)"\)/
+    let match = element.innerHTML.match(reListOf)
+    if (match) {
+      // @ts-expect-error comes from different javascript file
+      window['cmk'].valuespecs.listof_update_indices(match[1])
+    }
+
+    // ListOfStrings
+    const reListOfStrings = /cmk.valuespecs.list_of_strings_init\(([^)]+)\)/
+    match = element.innerHTML.match(reListOfStrings)
+    if (match) {
+      const argumentsArray = match[1]!.split(/\s*,\s*/).map((arg) => arg.trim())
+      // @ts-expect-error comes from different javascript file
+      window['cmk'].valuespecs.list_of_strings_init(
+        JSON.parse(argumentsArray[0]!),
+        JSON.parse(argumentsArray[1]!),
+        JSON.parse(argumentsArray[2]!)
+      )
+    }
+
+    // ListOfMultiple
+    const reListOfMultiple = /cmk.valuespecs.listofmultiple_init\("([^"]+)"\)/
+    match = element.innerHTML.match(reListOfMultiple)
+    if (match) {
+      // @ts-expect-error comes from different javascript file
+      window['cmk'].valuespecs.listofmultiple_init(match[1])
+    }
+
+    // CascadingDropdown
+    const reAddCascading = /cmk.valuespecs.add_cascading_sub_valuespec_parameters(\([^)]+\))/
+    match = element.innerHTML.match(reAddCascading)
+    if (match) {
+      const argumentsArray = JSON.parse(match[1]!.replace('(', '[').replace(')', ']'))
+      // @ts-expect-error comes from different javascript file
+      window['cmk'].valuespecs.add_cascading_sub_valuespec_parameters(
+        argumentsArray[0]!,
+        argumentsArray[1]!
+      )
+    }
+  })
+}
+
 onMounted(() => {
   inputHtml.value = (data.value as PreRenderedHtml).input_html
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
-  addEventListeners()
+
+  nextTick(() => {
+    executeInlineScripts()
+  }).catch((error) => {
+    console.error('Error while evaluating scripts in legacy valuespec', error)
+  })
+
+  updateEventListeners()
 
   const observer = new MutationObserver(() => {
     collectData()
-    // On every mutation, we need to remove and re-add the event listeners
-    removeEventListeners()
-    addEventListeners()
+    updateEventListeners()
   })
 
   observer.observe(legacyDOM.value!, {
@@ -68,18 +118,18 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  removeEventListeners()
-})
-
-function addEventListeners() {
-  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
-    element.addEventListener('input', collectData)
-  })
-}
-
-function removeEventListeners() {
   legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
     element.removeEventListener('input', collectData)
+  })
+})
+
+function updateEventListeners() {
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    if (element.getAttribute('data-has-event-listener') === 'true') {
+      return
+    }
+    element.setAttribute('data-has-event-listener', 'true')
+    element.addEventListener('input', collectData)
   })
 }
 

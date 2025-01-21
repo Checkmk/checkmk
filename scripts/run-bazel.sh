@@ -41,7 +41,7 @@ EXECUTION_LOG_FILE_NAME="${ROOT_DIR}/bazel_execution_log-${TARGET_S1}.json"
 # explicitly create, and later `eval` since run directly with `eval` this script
 # would not abort on error
 BUILD_ENVIRONMENT="$(
-    python3 \
+    "${ROOT_DIR}"/scripts/run-uvenv python3 \
         "${ROOT_DIR}"/scripts/create_build_environment_variables.py \
         "eval:os-release-name:cat /etc/os-release | grep PRETTY | cut -d '\"' -f2" \
         "pathhash:/usr/lib/x86_64-linux-gnu/libc.so" \

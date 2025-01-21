@@ -6864,7 +6864,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "d0937c1332b8957179b3d7f4013f9b617cfb927b14bf6a17533e0c915ac1d407",
+          "@@//requirements_all_lock.txt": "9b2f4aebdbfa2d8f7e19f1f7d6fa80474eb346e7ca931cde2a465f7429e24c4e",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -9441,7 +9441,6 @@
                 "bcrypt": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_bcrypt\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "cython": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_cython\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "docker": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_docker\",\"target_platforms\":null,\"version\":\"3.12\"}]",
-                "flake8": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_flake8\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "genson": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_genson\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "gevent": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_gevent\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "grpcio": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_grpcio\",\"target_platforms\":null,\"version\":\"3.12\"}]",
@@ -9585,7 +9584,6 @@
                 "marshmallow": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_marshmallow\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "polyfactory": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_polyfactory\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "portalocker": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_portalocker\",\"target_platforms\":null,\"version\":\"3.12\"}]",
-                "pycodestyle": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pycodestyle\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pytest_html": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pytest_html\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pytest_mock": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pytest_mock\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "python_ldap": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_python_ldap\",\"target_platforms\":null,\"version\":\"3.12\"}]",
@@ -9814,23 +9812,6 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "grpcio-status==1.68.1     --hash=sha256:66f3d8847f665acfd56221333d66f7ad8927903d87242a482996bdb45e8d28fd     --hash=sha256:e1378d036c81a1610d7b4c7a146cd663dd13fcc915cf4d7d053929dba5bbb6e1"
-            }
-          },
-          "cmk_requirements_312_pycodestyle": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@cmk_requirements//{name}:{target}",
-              "environment": {
-                "CC": "gcc-13"
-              },
-              "extra_pip_args": [
-                "--index-url",
-                "https://pypi.org/simple"
-              ],
-              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
-              "repo": "cmk_requirements_312",
-              "requirement": "pycodestyle==2.12.1     --hash=sha256:46f0fb92069a7c28ab7bb558f05bfc0110dac69a0cd23c61ea0040283a9d78b3     --hash=sha256:6838eae08bbce4f6accd5d5572075c63626a15ee3e6f842df996bf62f6d73521"
             }
           },
           "cmk_requirements_312_pypdf": {
@@ -14116,23 +14097,6 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "x-wr-timezone==0.0.7     --hash=sha256:0b5e16f677c8f51ce41087a0b3d4f786c5fdcf78af4f8a75d4d960107dcb6d3a     --hash=sha256:ccbaae164a52086535fd2eb1dced164a5250acc83a672fbb044d11e81a268965"
-            }
-          },
-          "cmk_requirements_312_flake8": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@cmk_requirements//{name}:{target}",
-              "environment": {
-                "CC": "gcc-13"
-              },
-              "extra_pip_args": [
-                "--index-url",
-                "https://pypi.org/simple"
-              ],
-              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
-              "repo": "cmk_requirements_312",
-              "requirement": "flake8==7.1.1     --hash=sha256:049d058491e228e03e67b390f311bbf88fce2dbaa8fa673e7aea87b7198b8d38     --hash=sha256:597477df7860daa5aa0fdd84bf5208a043ab96b8e96ab708770ae0364dd03213"
             }
           },
           "cmk_requirements_312_jaraco_classes": {

@@ -79,7 +79,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
-	test-unit-neb test-unit-core test-flake8 \
+	test-unit-neb test-unit-core \
 	test-semgrep test-semgrep-docker
 
 clean:
@@ -520,8 +520,6 @@ test-unit-cmc:
 test-find-modified-lock-files:
 	scripts/find_modified_lock_files
 
-test-flake8: ../.flake8
-	cd ..; $(UVENV) flake8 --jobs=6 $$($(FIND_PYTHON_FILES))
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running

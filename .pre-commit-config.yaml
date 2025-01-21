@@ -102,12 +102,6 @@ repos:
             entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
           - id: unittest
             name: unittests
             entry: scripts/run-unittests

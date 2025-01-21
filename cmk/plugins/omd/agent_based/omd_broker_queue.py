@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .libbroker import Queue, SectionQueues
+from .libbroker import node_to_site, Queue, SectionQueues
 
 # These could still be enforced, but don't autodiscover them
 _ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)
@@ -31,17 +31,15 @@ DEFAULT_VHOST_NAME: Final = "/"
 def parse(string_table: StringTable) -> SectionQueues:
     parsed: dict[str, list[Queue]] = defaultdict(list)
 
-    for line in string_table:
-        try:
-            site, vhost, queues_line = line[0].split(" ", 2)
-        except ValueError:
-            continue
-
-        queues_json = json.loads(queues_line)
-        parsed[site].extend(
-            Queue(vhost=vhost, name=queue["name"], messages=queue["messages"])
-            for queue in queues_json
-        )
+    for (word,) in string_table:
+        for raw_queue in json.loads(word):
+            parsed[node_to_site(raw_queue["node"])].append(
+                Queue(
+                    vhost=str(raw_queue["vhost"]),
+                    name=raw_queue["name"],
+                    messages=int(raw_queue["messages"]),
+                )
+            )
 
     return parsed
 

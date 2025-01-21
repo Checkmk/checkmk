@@ -11,6 +11,7 @@ RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
 RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
+RABBITMQ_PORT="${CONFIG_RABBITMQ_PORT:?}"
 RABBITMQ_DIAGNOSTICS="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-diagnostics"
 RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
@@ -43,10 +44,9 @@ await_process_stop() {
 }
 
 rabbitmq_accepting_connections() {
-    # set locale to avoid irrelevant warnings in log
-    LANG="C.utf8" \
-        LC_CTYPE="C.utf8" \
-        "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
+    "${RABBITMQ_DIAGNOSTICS}" check_port_listener --node "${RABBITMQ_NODENAME}" "${RABBITMQ_PORT}"
+    # no idea why we can't use this anymore; it will fail for the management plugin
+    # "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
 }
 
 await_process_start() {
@@ -136,13 +136,22 @@ case "$1" in
             exit_successfully 'already running'
         fi
 
+        # set locale to avoid irrelevant warnings in log
+        export LANG="C.utf8"
+        export LC_CTYPE="C.utf8"
+
         touch "${PIDFILE}"
         mkdir -p "${RABBITMQ_LOG_BASE}"
 
         nohup "${0}" "start-blocking" &>"${INITLOG}" &
 
         # try for one minute to interpret the outcome
-        await_process_start 60 &>>"${INITLOG}" && exit_successfully "OK"
+        if await_process_start 60 &>>"${INITLOG}"; then
+            RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
+                RABBITMQCTL="${RABBITMQCTL}" \
+                cmk-monitor-broker --setup &>>"${INITLOG}"
+            exit_successfully "OK"
+        fi
 
         # Give up
         exit_failure "failed"

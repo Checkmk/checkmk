@@ -1208,41 +1208,19 @@ section_mailqueue() {
     fi
 }
 
-_omd_broker() {
-    local section_name="$1"
-    local site_name="$2"
-    local command_name="$3"
-    printf "<<<omd_broker_%s:sep(0)>>>\n" "$section_name"
-    printf "%s %s\n" "$site_name" "$(su - "$site_name" -c "rabbitmq-diagnostics \"$command_name\" --formatter json" | tr -d \\n)"
-}
-
-_omd_broker_list_queues() {
-    local site_name="$1"
-    printf "<<<omd_broker_queues:sep(0)>>>\n"
-
-    # skip the first line, is the header
-    for i in $(
-        su - "$site_name" -c "rabbitmq-diagnostics list_vhosts --quiet" | tail -n +2
-    ); do
-        printf "%s %s %s\n" "$site_name" "$i" "$(su - "$site_name" -c "rabbitmq-diagnostics list_queues -p \"$i\" --formatter json" | tr -d \\n)"
-    done
-}
-
 section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
 
-        export -f _omd_broker
-        export -f _omd_broker_list_queues
+        ${MK_RUN_SYNC_PARTS} || return
+
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
-            _run_cached_internal "omd_broker_status_$site" 1 150 180 50 "_omd_broker status $site status"
-            _run_cached_internal "omd_broker_queues_$site" 1 150 180 50 "_omd_broker_list_queues $site"
-            _run_cached_internal "omd_broker_shovels_$site" 1 150 180 50 "_omd_broker shovels $site shovel_status"
+            for script in "${sitedir}"/bin/cmk-monitor-*; do
+                [ -e "{$script}" ] && su - "${site}" -c "${script}"
+            done
         done
-
-        ${MK_RUN_SYNC_PARTS} || return
 
         echo '<<<mknotifyd:sep(0)>>>'
         get_epoch

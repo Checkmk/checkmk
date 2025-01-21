@@ -26,7 +26,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc",
+        "//packages/cmk-ccc:store",
         "//packages/cmk-livestatus-client:py_livestatus",
     ],
 )

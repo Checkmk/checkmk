@@ -33,7 +33,8 @@ py_library(
         "//omd:__pkg__",
     ],
     deps = [
-        "//packages/cmk-ccc",
+        "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:version",
         requirement("gitpython"),
         requirement("lxml"),
         requirement("markdown"),

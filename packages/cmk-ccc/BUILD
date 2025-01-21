@@ -11,37 +11,135 @@ exports_files([
 ])
 
 py_library(
-    # TODO(ml): Split into separate libs.  This package is really
-    #           a collection of more or less unrelated modules.
-    name = "cmk-ccc",
+    name = "_init",
+    srcs = ["cmk/ccc/__init__.py"],
+    imports = ["."],
+)
+
+py_library(
+    name = "crash-reporting",
+    srcs = ["cmk/ccc/crash_reporting.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "plugin-registry",
+        "store",
+    ],
+)
+
+py_library(
+    name = "daemon",
+    srcs = ["cmk/ccc/daemon.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "exceptions",
+        "store",
+    ],
+)
+
+py_library(
+    name = "debug",
+    srcs = ["cmk/ccc/debug.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
+    name = "exceptions",
+    srcs = ["cmk/ccc/exceptions.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
+    name = "i18n",
+    srcs = ["cmk/ccc/i18n.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
+    name = "plugin-registry",
+    srcs = ["cmk/ccc/plugin_registry.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
+    name = "profile",
+    srcs = ["cmk/ccc/profile.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
+    name = "site",
+    srcs = ["cmk/ccc/site.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "i18n",
+        "//packages/cmk-livestatus-client:py_livestatus",
+    ],
+)
+
+py_library(
+    name = "store",
     srcs = [
-        "cmk/ccc/__init__.py",
-        "cmk/ccc/crash_reporting.py",
-        "cmk/ccc/daemon.py",
-        "cmk/ccc/debug.py",
-        "cmk/ccc/exceptions.py",
-        "cmk/ccc/i18n.py",
-        "cmk/ccc/plugin_registry.py",
-        "cmk/ccc/profile.py",
-        "cmk/ccc/site.py",
         "cmk/ccc/store/__init__.py",
         "cmk/ccc/store/_file.py",
         "cmk/ccc/store/_locks.py",
-        "cmk/ccc/version.py",
     ],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-livestatus-client:py_livestatus",
+        "_init",
+        "debug",
+        "exceptions",
+        "i18n",
         "//packages/cmk-trace",
-        requirement("pydantic"),  # store/_file.py
+        requirement("pydantic"),
     ],
 )
+
+py_library(
+    name = "version",
+    srcs = ["cmk/ccc/version.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "crash-reporting",
+        "site",
+    ],
+)
+
+_ALL = [
+    "crash-reporting",
+    "daemon",
+    "debug",
+    "exceptions",
+    "i18n",
+    "plugin-registry",
+    "profile",
+    "site",
+    "store",
+    "version",
+]
 
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = ["cmk-ccc"],
+    srcs = _ALL,
     tags = ["no-mypy"],
 )
 
@@ -53,13 +151,33 @@ py_pytest_main(
 )
 
 py_test(
-    name = "unit",
+    name = "daemon-tests",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    srcs = [
+        "__test__.py",
+        "tests/test_daemon.py",
+    ],
     main = "__test__.py",
     deps = [
-        ":__test__",
-        ":cmk-ccc",
+        "__test__",
+        "daemon",
+        "exceptions",
+        "store",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "site-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_site.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "site",
         requirement("pytest"),
     ],
 )
@@ -75,7 +193,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-ccc"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [":cmk-ccc"],
+    deps = _ALL,
 )
 
 package_wheel(

@@ -30,13 +30,13 @@ include ../artifacts.make
 
 $(CHECK_MK_WERKS_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	$(BAZEL_CMD) build //omd:run_werks_precompile_$(EDITION_SHORT)
-	cp $(BAZEL_BIN)/omd/werks_precompiled_$(EDITION_SHORT) $@
+	$(BAZEL_CMD) build //omd:run_werks_precompile_cre
+	cp $(BAZEL_BIN)/omd/werks_precompiled_cre $@
 
 $(CHECK_MK_CHANGELOG_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	$(BAZEL_CMD) build //omd:run_changelog_$(EDITION_SHORT)
-	cp $(BAZEL_BIN)/omd/changelog_$(EDITION_SHORT) $@
+	$(BAZEL_CMD) build //omd:run_changelog_cre
+	cp $(BAZEL_BIN)/omd/changelog_cre $@
 
 # RPM/DEB build are currently working on the same working directory and would
 # influence each other. Need to be cleaned up later

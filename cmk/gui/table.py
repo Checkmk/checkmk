@@ -14,7 +14,6 @@ from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, ContextManager, Final, Literal, NamedTuple
 
-from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -30,6 +29,7 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
@@ -726,10 +726,11 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
 
 
 def init_rowselect(selection_key: str) -> None:
-    selected = user.get_rowselection(weblib.selection_id(), selection_key)
+    selection_id = SelectionId.from_request(request)
+    selected = user.get_rowselection(selection_id, selection_key)
     selection_properties = {
         "page_id": selection_key,
-        "selection_id": weblib.selection_id(),
+        "selection_id": selection_id,
         "selected_rows": selected,
     }
     html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))

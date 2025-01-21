@@ -29,6 +29,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName, Users
 from cmk.gui.userdb import connections_by_type, ConnectorType, get_connection, get_user_attributes
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
@@ -281,7 +282,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
 def _get_selected_users() -> list[str]:
     selected_users: list[str] = []
     for selection in user.get_rowselection(
-        request.get_str_input_mandatory("selection"),
+        SelectionId.from_request(request),
         "users",
     ):
         selected_users.append(

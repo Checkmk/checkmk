@@ -15,7 +15,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths, render
 from cmk.utils.user import UserId
 
-from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
+from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
@@ -60,6 +60,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -221,7 +222,7 @@ class ModeUsers(WatoMode):
                     makeuri_contextless(
                         request,
                         [
-                            ("selection", weblib.selection_id()),
+                            ("selection", SelectionId.from_request(request)),
                             ("mode", "user_migrate"),
                         ],
                     )
@@ -596,7 +597,7 @@ class ModeUsers(WatoMode):
                         vs.value_to_html(user_spec.get(name, vs.default_value()))
                     )
 
-        html.hidden_field("selection", weblib.selection_id())
+        html.hidden_field("selection", SelectionId.from_request(request))
         html.hidden_fields()
 
     def _show_user_list_footer(self, users: dict[UserId, UserSpec]) -> None:

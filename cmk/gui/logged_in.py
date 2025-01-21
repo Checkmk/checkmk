@@ -10,7 +10,7 @@ import logging
 import os
 import time
 from collections.abc import Container, Sequence
-from typing import Any, Final
+from typing import Any, Final, Literal, NewType
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -27,10 +27,53 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
+UserFileName = Literal[
+    "acknowledged_notifications",
+    "analyze_notification_display_options",
+    "automation_user",
+    "avoptions",
+    "bi_assumptions",
+    "bi_treestate",
+    "cached_profile",
+    "customer_settings",
+    "discovery_checkboxes",
+    "discovery_show_discovered_labels",
+    "discovery_show_plugin_names",
+    "favorites",
+    "foldertree",
+    "graph_pin",
+    "graph_size",
+    "help",
+    "notification_display_options",
+    "parameter_column",
+    "parentscan",
+    "reporting_timerange",
+    "sidebar",
+    "sidebar_sites",
+    "simulated_event",
+    "siteconfig",
+    "start_url",
+    "tableoptions",
+    "test_notification_display_options",
+    "transids",
+    "treestates",
+    "unittest",  # for testing only
+    "viewoptions",
+    "virtual_host_tree",
+    "wato_folders_show_labels",
+    "wato_folders_show_tags",
+]
+
+# a str consisting of `rowselection/` and a SelectionId (uuid)
+_RowSelection = NewType("_RowSelection", str)
+
+# a str that is supposed to be "path safe"
+UserGraphDataRangeFileName = NewType("UserGraphDataRangeFileName", str)
 
 
 class LoggedInUser:
@@ -282,14 +325,15 @@ class LoggedInUser:
     def save_tableoptions(self) -> None:
         self.save_file("tableoptions", self._tableoptions)
 
-    def get_rowselection(self, selection_id: str, identifier: str) -> list[str]:
-        vo = self.load_file("rowselection/%s" % selection_id, {})
+    def get_rowselection(self, selection_id: SelectionId, identifier: str) -> list[str]:
+        vo = self.load_file(_RowSelection(f"rowselection/{selection_id}"), {})
         return vo.get(identifier, [])
 
     def set_rowselection(
-        self, selection_id: str, identifier: str, rows: list[str], action: str
+        self, selection_id: SelectionId, identifier: str, rows: list[str], action: str
     ) -> None:
-        vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
+        row_selection = _RowSelection(f"rowselection/{selection_id}")
+        vo = self.load_file(row_selection, {}, lock=True)
 
         if action == "set":
             vo[identifier] = rows
@@ -303,7 +347,7 @@ class LoggedInUser:
         elif action == "unset":
             del vo[identifier]
 
-        self.save_file("rowselection/%s" % selection_id, vo)
+        self.save_file(row_selection, vo)
 
     def cleanup_old_selections(self) -> None:
         # Delete all selection files older than the defined livetime.
@@ -400,7 +444,12 @@ class LoggedInUser:
                 % perm.title
             )
 
-    def load_file(self, name: str, deflt: Any, lock: bool = False) -> Any:
+    def load_file(
+        self,
+        name: UserFileName | _RowSelection | UserGraphDataRangeFileName,
+        deflt: Any,
+        lock: bool = False,
+    ) -> Any:
         if self.confdir is None:
             return deflt
 
@@ -414,7 +463,9 @@ class LoggedInUser:
         except (ValueError, SyntaxError):
             return deflt
 
-    def save_file(self, name: str, content: Any) -> None:
+    def save_file(
+        self, name: UserFileName | _RowSelection | UserGraphDataRangeFileName, content: object
+    ) -> None:
         assert self.id is not None
         save_user_file(name, content, self.id)
 

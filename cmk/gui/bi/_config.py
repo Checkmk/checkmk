@@ -17,7 +17,7 @@ from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import forms, weblib
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
@@ -52,6 +52,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -921,7 +922,7 @@ class ModeBIRules(ABCBIMode):
             else:
                 self.render_rules(_("Unused BI Rules"), only_unused=True)
 
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
         init_rowselect(self.name())
 
@@ -2209,7 +2210,7 @@ class BIModeAggregations(ABCBIMode):
             ),
         ):
             self._render_aggregations()
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
         init_rowselect(self.name())
 

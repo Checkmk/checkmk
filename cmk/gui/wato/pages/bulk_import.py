@@ -23,7 +23,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
-from cmk.gui import weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -44,6 +43,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -359,7 +359,7 @@ class ModeBulkImport(WatoMode):
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(
-                weblib.selection_id(),
+                SelectionId.from_request(request),
                 "wato-folder-/" + folder_path,
                 selected,
                 "set",
@@ -370,7 +370,7 @@ class ModeBulkImport(WatoMode):
                     _bulk_inventory="1",
                     show_checkboxes="1",
                     folder=folder_path,
-                    selection=weblib.selection_id(),
+                    selection=SelectionId.from_request(request),
                 )
             )
 

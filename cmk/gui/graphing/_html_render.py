@@ -31,7 +31,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInUser, user, UserGraphDataRangeFileName
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
@@ -679,8 +679,10 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _user_graph_data_range_file_name(custom_graph_id: str) -> str:
-    return f"graph_range_{custom_graph_id}"
+def _user_graph_data_range_file_name(custom_graph_id: str) -> UserGraphDataRangeFileName:
+    if "../" in custom_graph_id:
+        raise ValueError("../ in graph id")
+    return UserGraphDataRangeFileName(f"graph_range_{custom_graph_id}")
 
 
 class UserGraphDataRangeStore:

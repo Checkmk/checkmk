@@ -23,7 +23,7 @@ from cmk.utils.licensing.usage import get_license_usage_report_validity, License
 from cmk.utils.setup_search_index import request_index_rebuild
 
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import forms, weblib
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -53,6 +53,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
@@ -667,7 +668,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     )
 
             forms.end()
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
         init_rowselect(self.name())
 
@@ -865,7 +866,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
     def _select_sites_with_pending_changes(self) -> None:
         selected_sites: list[SiteId | str] = self._get_selected_sites()
-        user.set_rowselection(weblib.selection_id(), self.name(), selected_sites, "set")
+        user.set_rowselection(SelectionId.from_request(request), self.name(), selected_sites, "set")
 
     def _is_active_site(self, site_id: SiteId, site: SiteConfiguration, status: str) -> bool:
         return self._site_is_online(status) and self._site_is_logged_in(site_id, site)

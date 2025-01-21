@@ -5,7 +5,7 @@
 #
 
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .libbroker import Queue, SectionQueues
+from .libbroker import node_to_site, Queue, SectionQueues
 
 
 @dataclass(frozen=True)
@@ -40,18 +40,11 @@ SectionShovels = Mapping[str, Sequence[Shovel]]
 
 
 def parse_omd_broker_status(string_table: StringTable) -> SectionStatus:
-    parsed = {}
-    for line in string_table:
-        try:
-            site, status_line = line[0].split(" ", 1)
-        except ValueError:
-            continue
-
-        status = json.loads(status_line)
-        broker_status = BrokerStatus(memory=int(status["memory"]["total"]["rss"]))
-        parsed[site] = broker_status
-
-    return parsed
+    return {
+        node_to_site(str(node["name"])): BrokerStatus(memory=int(node["mem_used"]))
+        for (word,) in string_table
+        for node in json.loads(word)
+    }
 
 
 agent_section_omd_broker_status = AgentSection(
@@ -61,17 +54,12 @@ agent_section_omd_broker_status = AgentSection(
 
 
 def parse_omd_broker_shovels(string_table: StringTable) -> SectionShovels:
-    parsed = {}
-    for line in string_table:
-        try:
-            site, shovels_line = line[0].split(" ", 1)
-        except ValueError:
-            continue
-
-        shovels_json = json.loads(shovels_line)
-        parsed[site] = [
-            Shovel(name=shovel["name"], state=shovel["state"]) for shovel in shovels_json
-        ]
+    parsed: dict[str, list[Shovel]] = defaultdict(list)
+    for (word,) in string_table:
+        for raw_shovel in json.loads(word):
+            parsed[node_to_site(str(raw_shovel["node"]))].append(
+                Shovel(name=str(raw_shovel["name"]), state=str(raw_shovel["state"]))
+            )
 
     return parsed
 

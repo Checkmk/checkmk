@@ -31,27 +31,7 @@ from cmk.plugins.omd.agent_based.omd_broker_status import (
     "string_table, expected_parsed_data",
     [
         (
-            [
-                [
-                    """heute {
-                        "memory": {
-                            "atom": 100,
-                            "total": {
-                                "erlang": 100,
-                                "rss": 1000000000,
-                                "allocated": 100
-                            }
-                        },
-                        "totals": {
-                            "virtual_host_count": 2,
-                            "connection_count": 3,
-                            "queue_count": 4
-                        }
-                    }
-                    """
-                ],
-                ["stable"],
-            ],
+            [['[{"name": "rabbit-heute@localhost", "mem_used":  1000000000}]']],
             {"heute": BrokerStatus(memory=1000000000)},
         ),
         ([], {}),
@@ -69,54 +49,29 @@ def test_parse_omd_broker_status(
         (
             [
                 [
-                    """heute [{
+                    """[{
                             "name": "cmk.shovel.heute->heute_remote_1",
-                            "type": "dynamic",
+                            "node": "rabbit-heute@localhost",
                             "state": "running",
-                            "source": "amqp:///customer1",
-                            "vhost": "customer1",
-                            "destination": "amqps://localhost:5673",
-                            "termination_reason": "",
-                            "destination_protocol": "amqp091",
-                            "source_protocol": "amqp091",
-                            "last_changed": "2024-10-10 13:15:31",
-                            "source_queue": "cmk.intersite.heute_remote_1",
-                            "destination_exchange": "cmk.intersite"
+                            "vhost": "customer1"
                         },
                         {
                             "name": "cmk.shovel.heute->heute_remote_2",
-                            "type": "dynamic",
+                            "node": "rabbit-heute@localhost",
                             "state": "running",
-                            "source": "amqp:///customer1",
-                            "vhost": "customer1",
-                            "destination": "amqps://localhost:5674",
-                            "termination_reason": "",
-                            "destination_protocol": "amqp091",
-                            "source_protocol": "amqp091",
-                            "last_changed": "2024-10-10 13:59:07",
-                            "source_queue": "cmk.intersite.heute_remote_2",
-                            "destination_exchange": "cmk.intersite"
+                            "vhost": "customer1"
                         }
                     ]"""
                 ],
                 [
-                    """heute_remote [{
+                    """[{
                             "name": "cmk.shovel.heute->heute_remote_1",
-                            "type": "dynamic",
+                            "node": "rabbit-heute_remote@localhost",
                             "state": "starting",
-                            "source": "amqp:///customer1",
-                            "vhost": "customer1",
-                            "destination": "amqps://localhost:5673",
-                            "termination_reason": "",
-                            "destination_protocol": "amqp091",
-                            "source_protocol": "amqp091",
-                            "last_changed": "2024-10-10 13:15:31",
-                            "source_queue": "cmk.intersite.heute_remote_1",
-                            "destination_exchange": "cmk.intersite"
+                            "vhost": "customer1"
                         }
                     ]"""
                 ],
-                ["stable"],
             ],
             {
                 "heute": [

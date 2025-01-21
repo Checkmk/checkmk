@@ -142,7 +142,7 @@ _update_user() {
         exit 1
     }
 
-    [ -n "${AGENT_USER_GID}"] && ! getent group "${AGENT_USER_GID}" && groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}"
+    [ -n "${AGENT_USER_GID}" ] && ! getent group "${AGENT_USER_GID}" >/dev/null 2>&1 && groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}"
 
     if id "${AGENT_USER}" >/dev/null 2>&1; then
         [ -n "${AGENT_USER_GID}" ] && usermod -G "${AGENT_USER_GID}" "${AGENT_USER}"

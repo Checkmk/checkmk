@@ -1,5 +1,5 @@
 load("@cargo_deps_host//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 
 rust_library(
     name = "cmk-agent-ctl-lib",
@@ -40,6 +40,18 @@ rust_library(
         proc_macro = True,
     ),
     deps = all_crate_deps(),
+)
+
+rust_test(
+    name = "cmk-agent-ctl-lib-internal",
+    crate = ":cmk-agent-ctl-lib",
+    deps = all_crate_deps() + [
+        ":cmk-agent-ctl-lib",
+        "@cargo_deps_host//:assert_cmd",
+        "@cargo_deps_host//:lazy_static",
+        "@cargo_deps_host//:predicates",
+        "@cargo_deps_host//:tempfile",
+    ],
 )
 
 rust_binary(

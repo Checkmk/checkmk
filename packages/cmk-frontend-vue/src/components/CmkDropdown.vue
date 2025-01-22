@@ -4,12 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, nextTick, ref, watch, type Ref } from 'vue'
+import { type Ref, computed, nextTick, ref, watch } from 'vue'
 import CmkButton from './CmkButton.vue'
 import useClickOutside from '@/lib/useClickOutside'
 import FormRequired from '@/form/private/FormRequired.vue'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
-import CmkScrollContainer from './CmkScrollContainer.vue'
+import CmkSuggestions from './CmkSuggestions.vue'
 
 export interface DropdownOption {
   name: string
@@ -46,10 +46,8 @@ const selectedOptionTitle = computed(
 const noChoiceAvailable = computed(() => options.length === 0)
 
 const suggestionsShown = ref(false)
-const suggestionsRef = ref<HTMLUListElement | null>(null)
-const suggestionInputRef = ref<HTMLInputElement | null>(null)
+const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
-const optionRefs = ref<(HTMLLIElement | null)[]>([])
 
 const filterString = ref('')
 const filteredOptions = ref<number[]>(options.map((_, index) => index))
@@ -78,14 +76,14 @@ function showSuggestions(): void {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     nextTick(() => {
       if (suggestionsRef.value) {
-        const suggestionsRect = suggestionsRef.value.getBoundingClientRect()
+        const suggestionsRect = suggestionsRef.value.$el.getBoundingClientRect()
         if (window.innerHeight - suggestionsRect.bottom < suggestionsRect.height) {
-          suggestionsRef.value.style.bottom = `calc(2 * var(--spacing))`
+          suggestionsRef.value.$el.style.bottom = `calc(2 * var(--spacing))`
         } else {
-          suggestionsRef.value.style.removeProperty('bottom')
+          suggestionsRef.value.$el.style.removeProperty('bottom')
         }
+        suggestionsRef.value.focus()
       }
-      suggestionInputRef.value?.focus()
     })
   }
 }
@@ -95,55 +93,9 @@ function hideSuggestions(): void {
   comboboxButtonRef.value?.focus()
 }
 
-function selectOption(optionIndex: number): void {
-  selectedOption.value = options[optionIndex]?.name ?? null
+function selectOption(option: DropdownOption): void {
+  selectedOption.value = option.name
   hideSuggestions()
-}
-
-function selectSuggestion(filteredOptionIndex: number | null): void {
-  if (filteredOptionIndex === null) {
-    selectedSuggestionOptionIndex.value = null
-    return
-  }
-  const optionIndex = filteredOptions.value[filteredOptionIndex]
-  if (optionIndex === undefined) {
-    throw new Error('Invalid filtered option index')
-  }
-  selectedSuggestionOptionIndex.value = optionIndex
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  nextTick(() => {
-    optionRefs.value[optionIndex]?.scrollIntoView({ block: 'nearest' })
-  })
-}
-
-function keyEnter(event: InputEvent): void {
-  event.preventDefault()
-  event.stopPropagation()
-  if (selectedSuggestionOptionIndex.value === null) {
-    return
-  }
-  selectOption(selectedSuggestionOptionIndex.value)
-}
-
-function moveSuggestion(amount: number): void {
-  if (selectedSuggestionOptionIndex.value === null) {
-    return
-  }
-  const selectedFilteredOptionIndex = filteredOptions.value.findIndex(
-    (index) => index === selectedSuggestionOptionIndex.value
-  )
-  if (selectedFilteredOptionIndex === -1) {
-    throw new Error('Selected suggestion option index not found in filtered options')
-  }
-  selectSuggestion(
-    filteredOptions.value[
-      wrap(selectedFilteredOptionIndex + amount, filteredOptions.value.length)
-    ] ?? null
-  )
-}
-
-function wrap(index: number, length: number): number {
-  return (index + length) % length
 }
 </script>
 
@@ -179,38 +131,16 @@ function wrap(index: number, length: number): number {
       ><ArrowDown class="cmk-dropdown__button_arrow" />
     </CmkButton>
     <span v-else>{{ noElementsText }}</span>
-    <ul
+    <CmkSuggestions
       v-if="!!suggestionsShown"
       ref="suggestionsRef"
-      class="cmk-dropdown__suggestions"
+      :suggestions="options"
+      :on-select="selectOption"
+      :no-results-hint="noResultsHint"
+      :show-filter="showFilter"
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"
-      @keydown.enter="keyEnter"
-      @keydown.down.prevent="() => moveSuggestion(1)"
-      @keydown.up.prevent="() => moveSuggestion(-1)"
-    >
-      <span :class="{ hidden: !showFilter, input: true }">
-        <input ref="suggestionInputRef" v-model="filterString" type="text"
-      /></span>
-      <CmkScrollContainer>
-        <div class="cmk-dropdown__options-container">
-          <template v-for="(option, index) in options" :key="option.name">
-            <li
-              v-show="filteredOptions.includes(index)"
-              :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
-              role="option"
-              :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
-              @click.prevent="() => selectOption(index)"
-            >
-              {{ option.title }}
-            </li>
-          </template>
-          <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
-            {{ noResultsHint }}
-          </li>
-        </div>
-      </CmkScrollContainer>
-    </ul>
+    />
   </div>
 </template>
 
@@ -262,55 +192,6 @@ function wrap(index: number, length: number): number {
     > .cmk-dropdown__button_arrow {
       color: var(--font-color-dimmed);
     }
-  }
-}
-
-.cmk-dropdown__suggestions {
-  position: absolute;
-  z-index: 1;
-  color: var(--font-color);
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--ux-theme-6);
-  border-radius: 0px;
-  max-width: fit-content;
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-
-  span.input {
-    display: flex;
-    padding: 4px;
-
-    &.hidden {
-      display: none;
-    }
-  }
-
-  input {
-    width: 100%;
-    margin: 0;
-    background: var(--ux-theme-3);
-  }
-
-  li {
-    padding: 6px;
-    cursor: default;
-
-    &.selectable {
-      cursor: pointer;
-      &.selected {
-        color: var(--default-select-focus-color);
-      }
-      &:hover {
-        color: var(--default-select-hover-color);
-      }
-    }
-  }
-
-  .cmk-dropdown__options-container {
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
   }
 }
 </style>

@@ -218,18 +218,18 @@ def get_change(commit: Commit) -> WerkCommit | None:
 
             if diff.renamed_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
+                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))  # type: ignore[arg-type]
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
             elif diff.deleted_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
+                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))  # type: ignore[arg-type]
             elif diff.new_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
             elif diff.copied_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
             else:
                 assert diff.b_path == diff.a_path
                 # TODO: Fix None handling for real
@@ -241,7 +241,7 @@ def get_change(commit: Commit) -> WerkCommit | None:
                         diff.b_blob.data_stream.read().decode("utf-8").split("\n"),
                     )
                 )
-                yield WerkModified(File.new(diff.b_path, diff.b_blob), werk_diff)
+                yield WerkModified(File.new(diff.b_path, diff.b_blob), werk_diff)  # type: ignore[arg-type]
 
     werk_changes = list(_collect())
     if werk_changes:

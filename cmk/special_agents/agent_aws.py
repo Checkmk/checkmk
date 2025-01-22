@@ -6469,7 +6469,7 @@ class AWSSections(abc.ABC):
         try:
             # TODO: The signature of the client() method depends on the literal(!) value of its
             # first argument, so using a plain str here is wrong.
-            return self._session.client(client_key, config=self.config)  # type: ignore[call-overload]
+            return self._session.client(client_key, config=self.config)
         except (
             ValueError,
             botocore.exceptions.ClientError,

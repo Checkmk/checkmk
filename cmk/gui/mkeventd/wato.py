@@ -18,16 +18,16 @@ from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, Literal, overload, TypeVar
 
-from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import-untyped]
-from pysmi.compiler import MibCompiler  # type: ignore[import-untyped]
-from pysmi.error import PySmiError  # type: ignore[import-untyped]
-from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import-untyped]
-from pysmi.reader.callback import CallbackReader  # type: ignore[import-untyped]
-from pysmi.reader.localfile import FileReader  # type: ignore[import-untyped]
-from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import-untyped]
-from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import-untyped]
-from pysmi.searcher.stub import StubSearcher  # type: ignore[import-untyped]
-from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
+from pysmi.codegen.pysnmp import PySnmpCodeGen
+from pysmi.compiler import MibCompiler
+from pysmi.error import PySmiError
+from pysmi.parser.smiv1compat import SmiV1CompatParser
+from pysmi.reader.callback import CallbackReader
+from pysmi.reader.localfile import FileReader
+from pysmi.searcher.pyfile import PyFileSearcher
+from pysmi.searcher.pypackage import PyPackageSearcher
+from pysmi.searcher.stub import StubSearcher
+from pysmi.writer.pyfile import PyFileWriter
 
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
@@ -3563,9 +3563,6 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             raise Exception(_("Invalid filename"))
 
     def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes) -> str:
-        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
-        baseMibs = PySnmpCodeGen.baseMibs
-
         compiled_mibs_dir = _compiled_mibs_dir()
         store.mkdir(compiled_mibs_dir)
 
@@ -3593,10 +3590,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
 
         # and also check PySNMP shipped compiled MIBs
-        compiler.addSearchers(*[PyPackageSearcher(x) for x in defaultMibPackages])
+        compiler.addSearchers(*[PyPackageSearcher(x) for x in PySnmpCodeGen.defaultMibPackages])
 
         # never recompile MIBs with MACROs
-        compiler.addSearchers(StubSearcher(*baseMibs))
+        compiler.addSearchers(StubSearcher(*PySnmpCodeGen.baseMibs))  # type: ignore[has-type]
 
         try:
             if not content or content.isspace():

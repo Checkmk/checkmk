@@ -5,9 +5,9 @@
 
 from collections.abc import Iterable, Iterator, Sequence
 
-import feedparser  # type: ignore[import-untyped]
+import feedparser
 import requests
-from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
+from feedparser.util import FeedParserDict
 from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 

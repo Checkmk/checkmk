@@ -15,7 +15,7 @@ from email.message import Message as POPIMAPMessage
 from pathlib import Path
 from typing import assert_never
 
-from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
+from exchangelib import Message as EWSMessage
 
 from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
@@ -148,16 +148,20 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
             subject = msg.subject
             log_line = (
                 subject
-                + " | "
-                + (msg.text_body[: args.body_limit] if msg.text_body else "No mail body found.")
+                + " | "  # type: ignore[operator]
+                + (
+                    msg.text_body[: args.body_limit]  # type: ignore[index]
+                    if msg.text_body  # type: ignore[truthy-bool]
+                    else "No mail body found."
+                )
             )
 
         elif isinstance(msg, POPIMAPMessage):
-            subject = msg.get("Subject", "None")
+            subject = msg.get("Subject", "None")  # type: ignore[arg-type]
             log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
 
         else:
-            assert_never(msg)
+            assert_never(msg)  # type: ignore[arg-type]
 
         log_line = log_line.replace("\r\n", "\0")
         log_line = log_line.replace("\n", "\0")
@@ -166,11 +170,11 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
         if args.forward_app:
             application = args.forward_app
             if args.match_subject:
-                matches = re.match(args.match_subject, subject)
+                matches = re.match(args.match_subject, subject)  # type: ignore[call-overload]
                 for num, match in enumerate(matches.groups() if matches else []):
                     application = application.replace("\\%d" % (num + 1,), match)
         else:
-            application = subject.replace("\n", "")
+            application = subject.replace("\n", "")  # type: ignore[attr-defined]
 
         # Construct the final syslog message
         messages.append(

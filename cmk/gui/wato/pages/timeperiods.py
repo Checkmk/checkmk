@@ -12,9 +12,9 @@ from collections.abc import Collection
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
-import recurring_ical_events  # type: ignore[import-untyped]
-from icalendar import Calendar, Event  # type: ignore[import-untyped]
-from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
+import recurring_ical_events
+from icalendar import Calendar, Event
+from icalendar.prop import vDDDTypes
 
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
@@ -77,7 +77,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditTimeperiod)
 
 
-class ICalEvent(Event):  # type: ignore[misc]
+class ICalEvent(Event):
     def __init__(self, event: Event):
         super().__init__(**event)
         self.time_ranges: list[tuple[str, str]] = []

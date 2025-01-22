@@ -398,7 +398,7 @@ from collections.abc import Iterator, Sequence
 from typing import Any, get_args, TypedDict
 
 import apispec
-import apispec_oneofschema  # type: ignore[import-untyped]
+import apispec_oneofschema
 import openapi_spec_validator
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -550,7 +550,7 @@ def _make_spec() -> apispec.APISpec:
         "3.0.2",
         plugins=[
             MarshmallowPlugin(),
-            apispec_oneofschema.MarshmallowPlugin(),
+            apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]
             CheckmkMarshmallowPlugin(),
         ],
         **_redoc_spec(),

@@ -16,3 +16,4 @@ compile_commands.json
 
 .clang-tidy.cpt_backup
 .clang-tidy
+/wamain.sln.DotSettings.user

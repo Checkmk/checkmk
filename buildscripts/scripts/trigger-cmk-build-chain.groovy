@@ -43,6 +43,7 @@ def main() {
         booleanParam(name: 'BUILD_CLOUD_IMAGES', value: true),
         stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
         stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
+        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         booleanParam(name: 'PUBLISH_IN_MARKETPLACE', value: false),
     ];

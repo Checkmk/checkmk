@@ -109,6 +109,7 @@ def main() {
                         booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
                         stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                         stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                     ]
                 );
                 copyArtifacts(
@@ -136,6 +137,7 @@ def main() {
                         booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
                         stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                         stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                     ]
                 );
             }
@@ -169,6 +171,7 @@ def main() {
                         booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
                         stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                         stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                     ]
                 );
                 copyArtifacts(
@@ -258,6 +261,7 @@ def main() {
                 booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+                stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
             ]
         );
     }

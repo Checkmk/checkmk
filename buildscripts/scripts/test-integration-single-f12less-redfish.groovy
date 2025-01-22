@@ -48,7 +48,12 @@ def main() {
 
             dir("${checkout_dir}") {
                 stage("Fetch Checkmk package") {
-                    single_tests.fetch_package(edition: edition, distro: distro, download_dir: download_dir);
+                    single_tests.fetch_package(
+                        edition: edition,
+                        distro: distro,
+                        download_dir: download_dir,
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT
+                    );
                 }
                 try {
                     stage("Run `make ${make_target}`") {

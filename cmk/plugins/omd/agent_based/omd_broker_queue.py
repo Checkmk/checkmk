@@ -20,7 +20,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.omd_broker import Queue, SectionQueues
+
+from .libbroker import Queue, SectionQueues
 
 # These could still be enforced, but don't autodiscover them
 _ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)

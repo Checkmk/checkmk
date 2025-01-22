@@ -67,7 +67,7 @@ def test_config_reloading_with_reloader(site: Site) -> None:
                 > current_last_reload_timestamp
             ),
             timeout=reloader_configuration.poll_interval
-            + reloader_configuration.aggregation_interval
+            + reloader_configuration.cooldown_interval
             + 2,
         )
 
@@ -107,7 +107,7 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
         reloader_config=ReloaderConfig(
             active=False,
             poll_interval=default_configuration.reloader_config.poll_interval,
-            aggregation_interval=default_configuration.reloader_config.aggregation_interval,
+            cooldown_interval=default_configuration.reloader_config.cooldown_interval,
         ),
     )
     site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())

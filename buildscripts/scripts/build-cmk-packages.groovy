@@ -678,6 +678,7 @@ def get_valid_build_id(jobName) {
             relative_job_name: jobName,
             build_params: [
                 VERSION: currentBuildVersion,
+                CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
             ],
         );
         return "${job.number}";

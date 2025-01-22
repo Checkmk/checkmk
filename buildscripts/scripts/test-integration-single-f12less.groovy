@@ -96,6 +96,7 @@ def main() {
                                 CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
                                 EDITION: edition,
                                 DISTRO: distro,
+                                CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                             ],
                             build_params_no_check: [
                                 CIPARAM_OVERRIDE_BUILD_NODE: build_node,

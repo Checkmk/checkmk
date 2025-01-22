@@ -107,6 +107,7 @@ def main() {
                         build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
+                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                         ],
                         // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
                         dependency_paths: ["agents", "non-free/cmk-update-agent"],
@@ -127,6 +128,7 @@ def main() {
                         build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
+                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                         ],
                         // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
                         dependency_paths: [
@@ -167,6 +169,7 @@ def main() {
                         build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
+                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                         ],
                         // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
                         dependency_paths: ["agents/modules/windows"],

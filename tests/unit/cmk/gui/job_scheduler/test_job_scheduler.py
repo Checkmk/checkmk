@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.gui.cron import CronJob
-from cmk.gui.job_scheduler import run_scheduled_jobs
+from cmk.gui.job_scheduler._scheduler import run_scheduled_jobs
 
 
 def reraise_exception(exc: Exception) -> str:

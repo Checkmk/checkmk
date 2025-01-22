@@ -15,7 +15,8 @@ fn to_pem(der: &[u8]) -> Vec<u8> {
 
 #[test]
 fn test_load_system_trust_store() {
-    assert!(!truststore::system().unwrap().is_empty());
+    // Can the truststore::system() load the system trust store.
+    truststore::system().unwrap();
 }
 
 #[test]

@@ -117,6 +117,7 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
+@pytest.mark.skip(reason="CMK-21375; broken web-element(s)")
 def test_create_rules(
     test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
 ) -> None:

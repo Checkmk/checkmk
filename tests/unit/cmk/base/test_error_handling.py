@@ -7,6 +7,7 @@ import pytest
 
 from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
 
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 
 from cmk.snmplib import SNMPBackendEnum
@@ -81,3 +82,7 @@ def test_unhandled_exception_returns_3() -> None:
     assert handler.result is not None
     assert handler.result.state == 3
     assert handler.result.as_text().startswith("check failed - please submit a crash report!")
+    # "... (Crash-ID: ...)"
+    crash_id = handler.result.as_text().rsplit(" ", maxsplit=1)[-1][:-1]
+    crash_file = paths.crash_dir / "check" / crash_id / "crash.info"
+    crash_file.unlink()

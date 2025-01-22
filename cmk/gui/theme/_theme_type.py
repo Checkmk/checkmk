@@ -12,8 +12,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-
-from .choices import theme_choices
+from cmk.gui.theme import choices  # module imported for unit test monkeypatching
 
 
 class Theme:
@@ -32,7 +31,9 @@ class Theme:
         self._web_dir = web_dir
         self._local_web_dir = local_web_dir
         self._edition = edition
-        self.theme_choices: Final[Mapping[str, str]] = dict(theme_choices([web_dir, local_web_dir]))
+        self.theme_choices: Final[Mapping[str, str]] = dict(
+            choices.theme_choices([web_dir, local_web_dir])
+        )
 
         if not validate_choices:
             return

@@ -238,7 +238,7 @@ class HTMLGenerator(HTMLWriter):
         font_css_filepath = "themes/facelift/fonts_inter.css"
         css_filepath = theme.url("theme.css")
 
-        if current_app.debug:
+        if current_app.debug and not current_app.testing:
             HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
             HTMLGenerator._verify_file_exists_in_web_dirs(font_css_filepath)
         self.stylesheet(HTMLGenerator._append_cache_busting_query(font_css_filepath))
@@ -250,7 +250,7 @@ class HTMLGenerator(HTMLWriter):
         for js in javascripts:
             js_filepath = f"js/{js}_min.js"
             js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
-            if current_app.debug:
+            if current_app.debug and not current_app.testing:
                 HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
             self.javascript_file(js_url)
 

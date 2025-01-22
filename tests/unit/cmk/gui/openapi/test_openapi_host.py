@@ -215,7 +215,7 @@ def test_openapi_livestatus_host_list_all(
     with mock_livestatus():
         resp = clients.Host.list_all(
             query={"missing_key_op": "foo"}, expect_ok=False
-        ).assert_status_code(500)
+        ).assert_rest_api_crash()
         assert "KeyError: 'op'" in resp.json["detail"]
 
         resp = clients.Host.list_all(

@@ -149,6 +149,7 @@ def test_openapi_app_exception(
         headers={"Accept": "application/json"},
         status=500,
     )
+    resp.assert_rest_api_crash()
     assert "detail" in resp.json
     assert "title" in resp.json
     assert "crash_report_url" in resp.json["ext"]["details"]

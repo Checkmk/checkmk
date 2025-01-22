@@ -30,8 +30,8 @@ rest_api.before_app_request(set_global_vars)
 
 
 @functools.lru_cache
-def app_instance(debug: bool) -> CheckmkRESTAPI:
-    app = CheckmkRESTAPI(debug=debug)
+def app_instance(debug: bool, testing: bool) -> CheckmkRESTAPI:
+    app = CheckmkRESTAPI(debug=debug, testing=testing)
     app.wsgi_app = OverrideRequestMethod(app.wsgi_app)  # type: ignore[method-assign]
     return app
 
@@ -52,7 +52,7 @@ def after_request(response: Response) -> Response:
 @rest_api.route("/<string:version>/<path:path>", methods=["GET", "PUT", "POST", "DELETE"])
 def endpoint(site: str, version: str, path: str) -> WSGIApplication:
     # TODO: Carve out parts from `CheckmkRESTAPI` and move them here, decorated by @rest_api.route
-    return app_instance(debug=current_app.debug)
+    return app_instance(debug=current_app.debug, testing=current_app.testing)
 
 
 @rest_api.route("/doc/", defaults={"file_name": "index.html"})

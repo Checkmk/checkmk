@@ -25,6 +25,7 @@ from pytest_mock import MockerFixture
 from werkzeug.test import create_environ, TestResponse
 
 from tests.testlib.unit.rest_api_client import (
+    assert_and_delete_rest_crash_report,
     ClientRegistry,
     expand_rel,
     get_client_registry,
@@ -555,6 +556,12 @@ class CmkTestResponse(TestResponse):
     def body(self) -> Any:
         """Alias for `TestResponse.data`."""
         return self.data
+
+    def assert_rest_api_crash(self) -> typing.Self:
+        """Assert that the response is a REST API crash report. Then delete the underlying file."""
+        assert self.status_code == 500
+        assert_and_delete_rest_crash_report(self.json["ext"]["id"])
+        return self
 
 
 def _reset_cache_for_folders_and_hosts_setup() -> None:

@@ -6,9 +6,15 @@
 import traceback
 from collections.abc import Callable
 from datetime import datetime
-from functools import partial
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from pydantic import BaseModel
+
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+)
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
@@ -38,18 +44,26 @@ def execute_userdb_job() -> None:
         return
 
     job.start(
-        partial(
-            job.do_sync,
-            add_to_changelog=False,
-            enforce_sync=False,
-            load_users_func=load_users,
-            save_users_func=save_users,
+        JobTarget(
+            callable=sync_entry_point,
+            args=UserSyncArgs(add_to_changelog=False, enforce_sync=False),
         ),
         InitialStatusArgs(
             title=job.gui_title(),
             stoppable=False,
             user=str(user.id) if user.id else None,
         ),
+    )
+
+
+class UserSyncArgs(BaseModel, frozen=True):
+    add_to_changelog: bool
+    enforce_sync: bool
+
+
+def sync_entry_point(job_interface: BackgroundProcessInterface, args: UserSyncArgs) -> None:
+    UserSyncBackgroundJob().do_sync(
+        job_interface, args, load_users_func=load_users, save_users_func=save_users
     )
 
 
@@ -70,12 +84,9 @@ def ajax_sync() -> None:
         job = UserSyncBackgroundJob()
         if (
             result := job.start(
-                partial(
-                    job.do_sync,
-                    add_to_changelog=False,
-                    enforce_sync=True,
-                    load_users_func=load_users,
-                    save_users_func=save_users,
+                JobTarget(
+                    callable=sync_entry_point,
+                    args=UserSyncArgs(add_to_changelog=False, enforce_sync=True),
                 ),
                 InitialStatusArgs(
                     title=job.gui_title(),
@@ -115,8 +126,7 @@ class UserSyncBackgroundJob(BackgroundJob):
     def do_sync(
         self,
         job_interface: BackgroundProcessInterface,
-        add_to_changelog: bool,
-        enforce_sync: bool,
+        args: UserSyncArgs,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ) -> None:
@@ -124,8 +134,8 @@ class UserSyncBackgroundJob(BackgroundJob):
             job_interface.send_progress_update(_("Synchronization started..."))
             if self._execute_sync_action(
                 job_interface,
-                add_to_changelog,
-                enforce_sync,
+                args.add_to_changelog,
+                args.enforce_sync,
                 load_users_func,
                 save_users_func,
                 datetime.now(),

@@ -57,7 +57,7 @@ from cmk.trace.export import exporter_from_config
 
 from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface, JobParameters
+from ._interface import BackgroundProcessInterface, JobParameters, JobTarget
 from ._status import JobStatusStates
 from ._store import JobStatusSpecUpdate, JobStatusStore
 
@@ -105,7 +105,7 @@ def run_process(job_parameters: JobParameters) -> None:
             context=set_span_in_context(INVALID_SPAN),
             attributes={
                 "cmk.job_id": job_id,
-                "cmk.target": str(target),
+                "cmk.target.callable": str(target.callable),
             },
             links=[Link(origin_span_context.to_span_context())],
         ):
@@ -248,11 +248,11 @@ def _set_log_levels(override_job_log_level: int | None) -> None:
 
 def _execute_function(
     logger: Logger,
-    target: Callable[[BackgroundProcessInterface], None],
+    target: JobTarget,
     job_interface: BackgroundProcessInterface,
 ) -> None:
     try:
-        target(job_interface)
+        target.callable(job_interface, target.args)
     except MKTerminate:
         raise
     except Exception as e:

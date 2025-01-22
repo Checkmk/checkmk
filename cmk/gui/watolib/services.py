@@ -14,9 +14,10 @@ import sys
 import time
 from collections.abc import Container, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
-from functools import partial
 from pathlib import Path
 from typing import assert_never, Final, Literal, NamedTuple
+
+from pydantic import BaseModel
 
 from cmk.ccc.store import ObjectStore, TextSerializer
 from cmk.ccc.version import __version__, Version
@@ -43,6 +44,7 @@ from cmk.gui.background_job import (
     job_registry,
     JobStatusSpec,
     JobStatusStates,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -957,16 +959,19 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
     )
 
 
-# multiprocessing needs picklable objects and neither lambdas nor
-# local functions are picklable.
-def _discovery_job_target(
+class ServiceDiscoveryJobArgs(BaseModel, frozen=True):
+    host_name: HostName
+    action: DiscoveryAction
+    raise_errors: bool
+
+
+def discovery_job_entry_point(
     job_interface: BackgroundProcessInterface,
-    job: ServiceDiscoveryBackgroundJob,
-    action: DiscoveryAction,
-    raise_errors: bool,
+    args: ServiceDiscoveryJobArgs,
 ) -> None:
+    job = ServiceDiscoveryBackgroundJob(args.host_name)
     with job_interface.gui_context():
-        job.discover(action, raise_errors=raise_errors)
+        job.discover(args.action, raise_errors=args.raise_errors)
 
 
 def execute_discovery_job(
@@ -984,7 +989,14 @@ def execute_discovery_job(
         DiscoveryAction.TABULA_RASA,
     ]:
         job.start(
-            partial(_discovery_job_target, job=job, action=action, raise_errors=raise_errors),
+            JobTarget(
+                callable=discovery_job_entry_point,
+                args=ServiceDiscoveryJobArgs(
+                    host_name=host_name,
+                    action=action,
+                    raise_errors=raise_errors,
+                ),
+            ),
             InitialStatusArgs(
                 title=_("Service discovery"),
                 stoppable=True,

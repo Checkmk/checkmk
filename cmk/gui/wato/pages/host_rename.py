@@ -6,8 +6,9 @@
 
 import socket
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from functools import partial
 from typing import Any
+
+from pydantic import BaseModel
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
@@ -19,7 +20,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
 from cmk.gui import forms
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -171,7 +172,10 @@ class ModeBulkRenameHost(WatoMode):
             host_renaming_job = RenameHostsBackgroundJob()
             if (
                 result := host_renaming_job.start(
-                    partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
+                    JobTarget(
+                        callable=rename_hosts_job_entry_point,
+                        args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                    ),
                     InitialStatusArgs(
                         title=title,
                         lock_wato=True,
@@ -427,12 +431,16 @@ def _confirm(html_title, message):
     return confirm_with_preview(message, confirm_options)
 
 
-def rename_hosts_background_job(
-    renaming_args: Sequence[tuple[str, HostName, HostName]],
+class RenameHostsJobArgs(BaseModel, frozen=True):
+    renamings: Sequence[tuple[str, HostName, HostName]]
+
+
+def rename_hosts_job_entry_point(
     job_interface: BackgroundProcessInterface,
+    args: RenameHostsJobArgs,
 ) -> None:
     with job_interface.gui_context():
-        renamings = _renamings_from_job_args(renaming_args)
+        renamings = _renamings_from_job_args(args.renamings)
         actions, auth_problems = _rename_hosts(
             renamings, job_interface
         )  # Already activates the changes!
@@ -553,7 +561,10 @@ class ModeRenameHost(WatoMode):
 
         if (
             result := host_renaming_job.start(
-                partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
+                JobTarget(
+                    callable=rename_hosts_job_entry_point,
+                    args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                ),
                 InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
                     lock_wato=True,

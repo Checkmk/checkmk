@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
 from urllib.parse import urlparse
 
+from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
 from livestatus import BrokerConnections, SiteConfiguration, SiteId
@@ -73,6 +74,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
@@ -1766,7 +1768,15 @@ class ActivateChangesManager(ActivateChanges):
             self._source,
         )
         job.start(
-            job.schedule_sites,
+            JobTarget(
+                callable=activate_changes_scheduler_job_entry_point,
+                args=ActivateChangesSchedulerJobArgs(
+                    activation_id=self._activation_id,
+                    site_snapshot_settings=self._site_snapshot_settings,
+                    prevent_activate=self._prevent_activate,
+                    source=self._source,
+                ),
+            ),
             InitialStatusArgs(
                 title=job.gui_title(),
                 deletable=False,
@@ -2389,6 +2399,24 @@ def _handle_active_tasks(
         active_tasks["activate_site_changes"].pop(site_id)
 
 
+class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
+    activation_id: str
+    site_snapshot_settings: Mapping[SiteId, SnapshotSettings]
+    prevent_activate: bool
+    source: ActivationSource
+
+
+def activate_changes_scheduler_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: ActivateChangesSchedulerJobArgs
+) -> None:
+    ActivateChangesSchedulerBackgroundJob(
+        args.activation_id,
+        args.site_snapshot_settings,
+        args.prevent_activate,
+        args.source,
+    ).schedule_sites(job_interface)
+
+
 class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
@@ -2401,7 +2429,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     def __init__(
         self,
         activation_id: str,
-        site_snapshot_settings: dict[SiteId, SnapshotSettings],
+        site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
         prevent_activate: bool,
         source: ActivationSource,
     ) -> None:

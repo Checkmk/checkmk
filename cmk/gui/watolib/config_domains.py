@@ -13,9 +13,10 @@ import warnings as warnings_module
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from functools import partial
 from pathlib import Path
 from typing import Any, NewType
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
@@ -30,7 +31,12 @@ from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log.security_event import log_security_event
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+)
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
@@ -603,7 +609,12 @@ class ConfigDomainOMD(ABCConfigDomain):
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
             job.start(
-                partial(job.do_execute, config_change_commands),
+                JobTarget(
+                    callable=omd_config_change_job_entry_point,
+                    args=OMDConfigChangeJobArgs(
+                        commands=config_change_commands,
+                    ),
+                ),
                 InitialStatusArgs(
                     title=job.gui_title(),
                     lock_wato=False,
@@ -806,6 +817,16 @@ class ConfigDomainOMD(ABCConfigDomain):
         return omd_config
 
 
+class OMDConfigChangeJobArgs(BaseModel, frozen=True):
+    commands: Sequence[str]
+
+
+def omd_config_change_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: OMDConfigChangeJobArgs
+) -> None:
+    OMDConfigChangeBackgroundJob().do_execute(args.commands, job_interface)
+
+
 class OMDConfigChangeBackgroundJob(BackgroundJob):
     job_prefix = "omd-config-change"
 
@@ -817,13 +838,13 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
     def do_execute(
-        self, config_change_commands: list[str], job_interface: BackgroundProcessInterface
+        self, config_change_commands: Sequence[str], job_interface: BackgroundProcessInterface
     ) -> None:
         _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
 
-def _do_config_change(config_change_commands: list[str], omd_logger: logging.Logger) -> None:
+def _do_config_change(config_change_commands: Sequence[str], omd_logger: logging.Logger) -> None:
     completed_process = subprocess.run(
         ["omd", "config", "change"],
         stdout=subprocess.PIPE,

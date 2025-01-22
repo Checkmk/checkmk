@@ -11,6 +11,8 @@ from cmk.gui.background_job import (
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -30,7 +32,7 @@ def register(job_registry: BackgroundJobRegistry) -> None:
 
 def trigger_spec_generation_in_background(user_id: str | None) -> None:
     SpecGeneratorBackgroundJob().start(
-        _generate_spec_in_background_job,
+        simple_job_target(_generate_spec_in_background_job),
         InitialStatusArgs(
             title=SpecGeneratorBackgroundJob.gui_title(),
             stoppable=False,
@@ -51,7 +53,9 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
 
-def _generate_spec_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+def _generate_spec_in_background_job(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
     job_interface.send_progress_update(_("Generating REST API specification"))
     with subprocess.Popen(
         ["cmk-compute-api-spec"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"

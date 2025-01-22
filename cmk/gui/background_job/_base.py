@@ -33,7 +33,7 @@ from cmk.trace import get_tracer, SpanContext, Status, StatusCode, TracerProvide
 from cmk.trace.export import init_span_processor, SpanExporter
 
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface, JobParameters, SpanContextModel
+from ._interface import JobParameters, JobTarget, SpanContextModel
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -288,7 +288,7 @@ class BackgroundJob:
 
     def start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None = None,
         init_span_processor_callback: (
@@ -323,7 +323,7 @@ class BackgroundJob:
 
     def _start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None],

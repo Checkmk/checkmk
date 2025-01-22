@@ -10,7 +10,13 @@ from pathlib import Path
 
 import cmk.utils.paths
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
+)
 from cmk.gui.i18n import _
 
 from ..logged_in import user
@@ -23,7 +29,7 @@ def execute_user_profile_cleanup_job() -> None:
     Errors are logged to var/log/web.log."""
     job = UserProfileCleanupBackgroundJob()
     job.start(
-        job.do_execute,
+        simple_job_target(user_profile_cleanup_entry_point),
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,
@@ -47,13 +53,18 @@ class UserProfileCleanupBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            try:
-                cleanup_abandoned_profiles(self._logger, datetime.now(), timedelta(days=30))
-                job_interface.send_result_message(_("Job finished"))
-            finally:
-                UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
+
+def user_profile_cleanup_entry_point(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
+    with job_interface.gui_context():
+        try:
+            cleanup_abandoned_profiles(
+                job_interface.get_logger(), datetime.now(), timedelta(days=30)
+            )
+            job_interface.send_result_message(_("Job finished"))
+        finally:
+            UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
 
 
 def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta) -> None:

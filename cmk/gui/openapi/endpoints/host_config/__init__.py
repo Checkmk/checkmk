@@ -41,7 +41,6 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from functools import partial
 from typing import Any
 from urllib.parse import urlparse
 
@@ -49,7 +48,7 @@ from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import InitialStatusArgs
+from cmk.gui.background_job import InitialStatusArgs, JobTarget
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.fields_filter import FieldsFilter, make_filter
 from cmk.gui.fields.utils import BaseSchema
@@ -79,7 +78,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
+from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -743,7 +742,10 @@ def rename_host(params: Mapping[str, Any]) -> Response:
 
     background_job = RenameHostBackgroundJob(host)
     result = background_job.start(
-        partial(rename_hosts_background_job, [(host.folder().path(), host_name, new_name)]),
+        JobTarget(
+            callable=rename_hosts_job_entry_point,
+            args=RenameHostsJobArgs(renamings=[(host.folder().path(), host_name, new_name)]),
+        ),
         InitialStatusArgs(
             title=f"Renaming of {host_name} -> {new_name}",
             lock_wato=True,

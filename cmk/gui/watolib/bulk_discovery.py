@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from functools import partial
 from typing import NamedTuple, NewType, TypedDict
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
@@ -18,7 +19,12 @@ from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscover
 
 from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -461,13 +467,36 @@ def start_bulk_discovery(
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
     job.start(
-        partial(job.do_execute, discovery_mode, do_full_scan, ignore_errors, tasks),
+        JobTarget(
+            callable=bulk_discovery_job_entry_point,
+            args=BulkDiscoveryJobArgs(
+                discovery_mode=discovery_mode,
+                do_full_scan=do_full_scan,
+                ignore_errors=ignore_errors,
+                tasks=tasks,
+            ),
+        ),
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,
             stoppable=False,
             user=str(user.id) if user.id else None,
         ),
+    )
+
+
+class BulkDiscoveryJobArgs(BaseModel, frozen=True):
+    discovery_mode: DiscoverySettings
+    do_full_scan: DoFullScan
+    ignore_errors: IgnoreErrors
+    tasks: Sequence[DiscoveryTask]
+
+
+def bulk_discovery_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: BulkDiscoveryJobArgs
+) -> None:
+    BulkDiscoveryBackgroundJob().do_execute(
+        args.discovery_mode, args.do_full_scan, args.ignore_errors, args.tasks, job_interface
     )
 
 

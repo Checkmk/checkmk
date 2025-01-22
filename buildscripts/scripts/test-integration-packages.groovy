@@ -70,44 +70,46 @@ def main() {
     /// avoid failures due to leftover artifacts from prior runs
     sh("rm -rf ${checkout_dir}/test-results");
 
-    def test_stages = all_distros.collectEntries { distro -> [
-        ("Test ${distro}") : {
-            def run_condition = distro in selected_distros;
+    currentBuild.result = parallel(
+        all_distros.collectEntries { distro ->
+            [("${distro}") : {
+                def stepName = "Test ${distro}";
+                def run_condition = distro in selected_distros;
 
-            /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
-                Utils.markStageSkippedForConditional("Test ${distro}");
-            }
+                /// this makes sure the whole parallel thread is marked as skipped
+                if (! run_condition){
+                    Utils.markStageSkippedForConditional(stepName);
+                }
 
-            smart_stage(
-                name: "Test ${distro}",
-                condition: run_condition,
-                raiseOnError: false,
-            ) {
-                def build_instance = smart_build(
-                    job: relative_job_name,
-                    parameters: [
-                        stringParam(name: "DISTRO", value: distro),
-                        stringParam(name: "EDITION", value: EDITION),
-                        stringParam(name: "VERSION", value: VERSION),
-                        stringParam(name: "DOCKER_TAG", value: docker_tag),
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                    ],
-                );
-                copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
-                    selector: specific(build_instance.getId()), // buildNumber shall be a string
-                    target: "${checkout_dir}/test-results",
-                    fingerprintArtifacts: true
-                );
-                return build_instance.getResult();
-            }
-        }]
-    }
-
-    currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+                smart_stage(
+                    name: stepName,
+                    condition: run_condition,
+                    raiseOnError: false,
+                ) {
+                    def build_instance = smart_build(
+                        job: relative_job_name,
+                        parameters: [
+                            stringParam(name: "DISTRO", value: distro),
+                            stringParam(name: "EDITION", value: EDITION),
+                            stringParam(name: "VERSION", value: VERSION),
+                            stringParam(name: "DOCKER_TAG", value: docker_tag),
+                            stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                        ],
+                    );
+                    copyArtifacts(
+                        projectName: build_instance.getFullProjectName(),
+                        selector: specific(build_instance.getId()), // buildNumber shall be a string
+                        target: "${checkout_dir}/test-results",
+                        fingerprintArtifacts: true
+                    );
+                    return build_instance.getResult();
+                }
+            }]
+        }
+    ).values().every { it } ? "SUCCESS" : "FAILURE";
 
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {

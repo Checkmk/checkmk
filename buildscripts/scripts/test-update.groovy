@@ -57,61 +57,52 @@ def main() {
     def build_for_parallel = [:];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
     def relative_job_name = "${base_folder}/builders/test-update-single-f12less";
+    currentBuild.result = parallel(
+        all_distros.collectEntries { distro ->
+            [("${distro}") : {
+                def stepName = "Test ${distro}";
+                def run_condition = distro in distros;
 
-    all_distros.each { item ->
-        def distro = item;
-        def stepName = "Update test for ${distro}";
-
-        build_for_parallel[stepName] = { ->
-            def run_condition = distro in distros;
-            if (cross_edition_target && distro != "ubuntu-22.04") {
-                // see CMK-18366
-                run_condition = false;
-            }
-            println("Should ${distro} be tested? ${run_condition}");
-
-            /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
-                Utils.markStageSkippedForConditional(stepName);
-            }
-
-            smart_stage(
-                name: stepName,
-                condition: run_condition,
-                raiseOnError: true,
-            ) {
-                def job = build(
-                    job: relative_job_name,
-                    propagate: false,  // Not raise any errors
-                    parameters: [
-                        string(name: "DISTRO", value: item),
-                        string(name: "EDITION", value: edition),
-                        string(name: "VERSION", value: version),
-                        string(name: "DOCKER_TAG", value: docker_tag),
-                        string(name: "CROSS_EDITION_TARGET", value: cross_edition_target),
-                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
-                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                    ],
-                );
-
-                copyArtifacts(
-                    projectName: relative_job_name,
-                    selector: specific(job.getId()), // buildNumber shall be a string
-                    target: "${checkout_dir}/test-results",
-                    fingerprintArtifacts: true
-                );
-
-                if (job.result != 'SUCCESS') {
-                    raise("${relative_job_name} failed with result: ${job.result}");
+                if (cross_edition_target && distro != "ubuntu-22.04") {
+                    // see CMK-18366
+                    run_condition = false;
                 }
-            }
-        }
-    }
 
-    stage('Run update tests') {
-        parallel build_for_parallel;
-    }
+                /// this makes sure the whole parallel thread is marked as skipped
+                if (! run_condition){
+                    Utils.markStageSkippedForConditional(stepName);
+                }
+
+                smart_stage(
+                    name: stepName,
+                    condition: run_condition,
+                    raiseOnError: true,
+                ) {
+                    def job = smart_build(
+                        job: relative_job_name,
+                        parameters: [
+                            stringParam(name: "DISTRO", value: distro),
+                            stringParam(name: "EDITION", value: edition),
+                            stringParam(name: "VERSION", value: version),
+                            stringParam(name: "DOCKER_TAG", value: docker_tag),
+                            stringParam(name: "CROSS_EDITION_TARGET", value: cross_edition_target),
+                            stringParam(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
+                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                        ],
+                    );
+
+                    copyArtifacts(
+                        projectName: relative_job_name,
+                        selector: specific(job.getId()), // buildNumber shall be a string
+                        target: "${checkout_dir}/test-results",
+                        fingerprintArtifacts: true
+                    );
+                }
+            }]
+        }
+    ).values().every { it } ? "SUCCESS" : "FAILURE";
 
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {

@@ -96,6 +96,7 @@ def main() {
                         CUSTOM_GIT_REF: custom_git_ref,
                         EDITION: edition,
                         DISTRO: distro,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

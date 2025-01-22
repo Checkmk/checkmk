@@ -1,0 +1,17 @@
+Title: Support diagnostics: Fix unspecific error message when collecting RPM data
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1737548350
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+In rare cases, the collection of RPM packages failed with the error message
+
+C+:
+warning: Found bdb_ro Packages database while attempting sqlite backend: using bdb_ro backend
+error: bdb_ro error reading Packages database
+C-:
+
+This werk improves the error handling and prints out a more helpful message.

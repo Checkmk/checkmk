@@ -110,6 +110,7 @@ def _create_rules(pw: LoginPage) -> dict[str, list[str]]:
     return created_rules
 
 
+@pytest.mark.skip(reason="CMK-21375; broken web-element(s)")
 def test_create_rules(
     test_site: Site, logged_in_page: LoginPage, pytestconfig: pytest.Config
 ) -> None:

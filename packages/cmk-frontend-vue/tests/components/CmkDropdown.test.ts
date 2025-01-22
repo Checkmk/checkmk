@@ -82,28 +82,31 @@ test('dropdown shows and hides options', async () => {
   expect(screen.queryByText('Option 2')).toBeNull()
 })
 
-test('dropdown updates selecedOption selected via keyboard', async () => {
-  let selectedOption: string | null = ''
-  render(CmkDropdown, {
-    props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
-      selectedOption: null,
-      inputHint: 'Select an option',
-      'onUpdate:selectedOption': (option: string | null) => {
-        selectedOption = option
+test.each([{ showFilter: true }, { showFilter: false }])(
+  'dropdown updates selecedOption selected via keyboard with showFilter=$showFilter',
+  async ({ showFilter }) => {
+    let selectedOption: string | null = ''
+    render(CmkDropdown, {
+      props: {
+        options: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ],
+        showFilter,
+        selectedOption: null,
+        inputHint: 'Select an option',
+        'onUpdate:selectedOption': (option: string | null) => {
+          selectedOption = option
+        }
       }
-    }
-  })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'Select an option' }))
+    })
+    await fireEvent.click(screen.getByRole('combobox', { name: 'Select an option' }))
 
-  await userEvent.keyboard('[ArrowDown][Enter]')
+    await userEvent.keyboard('[ArrowDown][Enter]')
 
-  expect(selectedOption).toBe('option2')
-})
+    expect(selectedOption).toBe('option2')
+  }
+)
 
 test('dropdown option selection via keyboard wraps', async () => {
   let selectedOption: string | null = ''

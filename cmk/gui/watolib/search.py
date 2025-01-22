@@ -27,7 +27,13 @@ from cmk.utils.setup_search_index import (
     updates_requested,
 )
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
+)
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.global_config import get_global_config
@@ -401,7 +407,7 @@ class IndexSearcher:
     def _launch_index_building_in_background_job(self) -> None:
         build_job = SearchIndexBackgroundJob()
         build_job.start(
-            _index_building_in_background_job,
+            simple_job_target(_index_building_in_background_job),
             # We deliberately do not provide an estimated duration here, since that involves I/O.
             # We need to be as fast as possible here, since this is done at the end of HTTP
             # requests.
@@ -530,7 +536,9 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+def _index_building_in_background_job(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
     with job_interface.gui_context():
         _build_index(job_interface, get_redis_client())
 
@@ -546,7 +554,7 @@ def launch_requests_processing_background() -> None:
         return
     job = SearchIndexBackgroundJob()
     job.start(
-        _process_update_requests_background,
+        simple_job_target(_process_update_requests_background),
         # We deliberately do not provide an estimated duration here, since that involves I/O.
         # We need to be as fast as possible here, since this is done at the end of HTTP
         # requests.
@@ -558,7 +566,9 @@ def launch_requests_processing_background() -> None:
     )
 
 
-def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
+def _process_update_requests_background(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
     with job_interface.gui_context():
         redis_client = get_redis_client()
         if not redis_server_reachable(redis_client):

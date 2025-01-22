@@ -32,7 +32,9 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     job_registry,
     JobStatusStates,
+    NoArgs,
     running_job_ids,
+    simple_job_target,
     wait_for_background_jobs,
 )
 
@@ -109,18 +111,19 @@ class DummyBackgroundJob(BackgroundJob):
 
         super().__init__(self.job_prefix)
 
-    def execute_hello(self, job_interface: BackgroundProcessInterface) -> None:
+    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
         sys.stdout.write("Hallo :-)\n")
         sys.stdout.flush()
         self.finish_hello_event.wait()
 
-    def execute_endless(self, job_interface: BackgroundProcessInterface) -> None:
+    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
         sys.stdout.write("Hanging loop\n")
         sys.stdout.flush()
         time.sleep(100)
 
 
 @pytest.mark.skip(reason="Fails randomly: see CMK-18161")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
 def test_start_job() -> None:
     job = DummyBackgroundJob()
 
@@ -128,7 +131,7 @@ def test_start_job() -> None:
     assert status.state == JobStatusStates.INITIALIZED
 
     job.start(
-        job.execute_hello,
+        simple_job_target(job.execute_hello),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -140,7 +143,7 @@ def test_start_job() -> None:
     wait_until(job.is_active, timeout=10, interval=0.1)
 
     assert job.start(
-        job.execute_hello,
+        simple_job_target(job.execute_hello),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -170,10 +173,11 @@ def test_start_job() -> None:
 
 
 @pytest.mark.skip(reason="Fails randomly: see CMK-18161")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -220,11 +224,11 @@ def test_job_status_not_started() -> None:
 
 
 @pytest.mark.skip(reason="Fails randomly: see CMK-18161")
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -254,11 +258,11 @@ def test_job_status_while_running() -> None:
 
 
 @pytest.mark.skip(reason="Fails randomly: see CMK-18161")
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -295,10 +299,11 @@ def test_running_job_ids_none() -> None:
 
 
 @pytest.mark.skip(reason="Takes too long: see CMK-18161")
+@pytest.mark.usefixtures("allow_background_jobs")
 def test_running_job_ids_one_running() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -319,12 +324,13 @@ def test_running_job_ids_one_running() -> None:
 
 
 @pytest.mark.skip(reason="Takes too long: see CMK-18161")
+@pytest.mark.usefixtures("allow_background_jobs")
 def test_wait_for_background_jobs_while_one_running_for_too_long(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -354,12 +360,13 @@ def test_wait_for_background_jobs_while_one_running_for_too_long(
 
 
 @pytest.mark.skip(reason="Takes too long: see CMK-18161")
+@pytest.mark.usefixtures("allow_background_jobs")
 def test_wait_for_background_jobs_while_one_running_but_finishes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
@@ -420,7 +427,8 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
             assert status.state == JobStatusStates.INITIALIZED
 
             job.start(
-                partial(job_callback, job.finish_hello_event),
+                # Ignore for now, will be cleaned up and test enabled again with upcoming changes
+                partial(job_callback, job.finish_hello_event),  # type: ignore[arg-type]
                 InitialStatusArgs(
                     title=job.gui_title(),
                     deletable=False,

@@ -19,6 +19,7 @@ from cmk.gui.background_job import (
     BackgroundJobDefines,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.logged_in import user
@@ -379,7 +380,17 @@ def start_quick_setup_job(
     )
 
     job_start = job.start(
-        job.run_quick_setup_stage,
+        JobTarget(
+            callable=quick_setup_action_job_entry_point,
+            args=QuickSetupActionJobArgs(
+                job_uuid=job_uuid,
+                quick_setup_id=quick_setup.id,
+                action_id=action_id,
+                user_input_stages=user_input_stages,
+                mode=mode,
+                object_id=object_id,
+            ),
+        ),
         InitialStatusArgs(
             title=_("Running Quick setup %s action %s") % (quick_setup.id, action_id),
             user=str(user.id) if user.id else None,
@@ -389,3 +400,25 @@ def start_quick_setup_job(
         raise MKUserError(None, str(job_start.error))
 
     return job.get_job_id()
+
+
+class QuickSetupActionJobArgs(BaseModel, frozen=True):
+    job_uuid: str
+    quick_setup_id: QuickSetupId
+    action_id: ActionId
+    user_input_stages: Sequence[dict]
+    mode: QuickSetupActionMode
+    object_id: str | None
+
+
+def quick_setup_action_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: QuickSetupActionJobArgs
+) -> None:
+    QuickSetupActionBackgroundJob(
+        job_uuid=args.job_uuid,
+        quick_setup_id=args.quick_setup_id,
+        action_id=args.action_id,
+        user_input_stages=args.user_input_stages,
+        mode=args.mode,
+        object_id=args.object_id,
+    ).run_quick_setup_stage(job_interface)

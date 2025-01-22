@@ -8,7 +8,6 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator
-from functools import partial
 from typing import cast, Literal, overload
 
 from cmk.ccc.version import Edition, edition
@@ -17,6 +16,7 @@ from cmk.utils import paths, render
 from cmk.utils.user import UserId
 
 from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
+from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
@@ -54,7 +54,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
-from cmk.gui.userdb.user_sync_job import UserSyncBackgroundJob
+from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyncBackgroundJob
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -295,12 +295,9 @@ class ModeUsers(WatoMode):
                 job = UserSyncBackgroundJob()
                 if (
                     result := job.start(
-                        partial(
-                            job.do_sync,
-                            add_to_changelog=True,
-                            enforce_sync=True,
-                            load_users_func=userdb.load_users,
-                            save_users_func=userdb.save_users,
+                        JobTarget(
+                            callable=sync_entry_point,
+                            args=UserSyncArgs(add_to_changelog=True, enforce_sync=True),
                         ),
                         background_job.InitialStatusArgs(
                             title=job.gui_title(),

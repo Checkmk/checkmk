@@ -10,7 +10,13 @@ from cmk.utils.auto_queue import AutoQueue
 
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -48,11 +54,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             discovery_result.self_total_host_labels,
         )
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            self._execute(job_interface)
-
-    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
+    def execute(self, job_interface: BackgroundProcessInterface) -> None:
         result = autodiscovery(self.site_id)
 
         if not result.hosts:
@@ -100,7 +102,7 @@ def execute_autodiscovery() -> None:
 
     job = AutodiscoveryBackgroundJob()
     job.start(
-        job.do_execute,
+        simple_job_target(autodiscovery_job_entry_point),
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,
@@ -108,3 +110,8 @@ def execute_autodiscovery() -> None:
             user=str(user.id) if user.id else None,
         ),
     )
+
+
+def autodiscovery_job_entry_point(job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    with job_interface.gui_context():
+        AutodiscoveryBackgroundJob().execute(job_interface)

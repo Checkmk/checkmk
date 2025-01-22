@@ -5,8 +5,9 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from functools import partial
 from typing import Literal
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
@@ -18,7 +19,12 @@ from cmk.utils.paths import configuration_lockfile
 
 from cmk.automations.results import Gateway, GatewayResult
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -320,10 +326,15 @@ def start_parent_scan(
     settings: ParentScanSettings,
 ) -> None:
     job.start(
-        partial(
-            job.do_execute,
-            settings,
-            [ParentScanTask(host.site_id(), host.folder().path(), host.name()) for host in hosts],
+        JobTarget(
+            callable=parent_scan_job_entry_point,
+            args=ParentScanJobArgs(
+                tasks=[
+                    ParentScanTask(host.site_id(), host.folder().path(), host.name())
+                    for host in hosts
+                ],
+                settings=settings,
+            ),
         ),
         InitialStatusArgs(
             title=_("Parent scan"),
@@ -332,3 +343,14 @@ def start_parent_scan(
             user=str(user.id) if user.id else None,
         ),
     )
+
+
+class ParentScanJobArgs(BaseModel, frozen=True):
+    tasks: Sequence[ParentScanTask]
+    settings: ParentScanSettings
+
+
+def parent_scan_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: ParentScanJobArgs
+) -> None:
+    ParentScanBackgroundJob().do_execute(args.settings, args.tasks, job_interface)

@@ -17,7 +17,6 @@ import subprocess
 import time
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from functools import partial
 from io import BytesIO
 from pathlib import Path
 from typing import Final, NamedTuple
@@ -48,6 +47,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobStatusSpec,
     JobStatusStates,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -677,7 +677,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationReques
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
         job.start(
-            partial(job.execute_automation, api_request=api_request),
+            JobTarget(
+                callable=checkmk_automation_job_entry_point,
+                args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
+            ),
             InitialStatusArgs(
                 title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
                 user=str(user.id) if user.id else None,
@@ -685,6 +688,18 @@ class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationReques
         )
 
         return job.get_job_id()
+
+
+class CheckmkAutomationJobArgs(BaseModel, frozen=True):
+    job_id: str
+    api_request: CheckmkAutomationRequest
+
+
+def checkmk_automation_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: CheckmkAutomationJobArgs
+) -> None:
+    job = CheckmkAutomationBackgroundJob(args.job_id)
+    job.execute_automation(job_interface, args.api_request)
 
 
 class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):

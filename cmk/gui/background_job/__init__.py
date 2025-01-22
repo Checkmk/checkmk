@@ -8,6 +8,9 @@ from ._base import BackgroundJob as BackgroundJob
 from ._base import StartupError as StartupError
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
 from ._interface import BackgroundProcessInterface as BackgroundProcessInterface
+from ._interface import JobTarget as JobTarget
+from ._interface import NoArgs as NoArgs
+from ._interface import simple_job_target as simple_job_target
 from ._manager import BackgroundJobManager as BackgroundJobManager
 from ._registry import BackgroundJobRegistry as BackgroundJobRegistry
 from ._registry import job_registry as job_registry

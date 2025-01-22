@@ -8,6 +8,8 @@ import ast
 import os
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from livestatus import SiteId
 
 from cmk.ccc import store
@@ -22,6 +24,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
+    JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
@@ -246,7 +249,14 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
     job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
     if (
         result := job.start(
-            job.fetch_agent_output,
+            JobTarget(
+                callable=fetch_agent_output_entry_point,
+                args=FetchAgentOutputJobArgs(
+                    site_id=api_request.host.site_id(),
+                    host_name=api_request.host.name(),
+                    agent_type=api_request.agent_type,
+                ),
+            ),
             InitialStatusArgs(
                 title=_("Fetching %s of %s / %s")
                 % (
@@ -274,6 +284,20 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
 def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatusSpec:
     job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
     return job.get_status_snapshot().status
+
+
+class FetchAgentOutputJobArgs(BaseModel, frozen=True):
+    site_id: SiteId
+    host_name: HostName
+    agent_type: str
+
+
+def fetch_agent_output_entry_point(
+    job_interface: BackgroundProcessInterface, args: FetchAgentOutputJobArgs
+) -> None:
+    FetchAgentOutputBackgroundJob(args.site_id, args.host_name, args.agent_type).fetch_agent_output(
+        job_interface
+    )
 
 
 class FetchAgentOutputBackgroundJob(BackgroundJob):

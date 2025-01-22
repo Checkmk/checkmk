@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import importlib
 import sys
 import time
 from collections.abc import Callable, Sequence
@@ -12,7 +13,7 @@ from logging import Logger
 from pathlib import Path
 from typing import ContextManager, NamedTuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer, field_validator
 
 from cmk.utils import render
 
@@ -74,6 +75,37 @@ class BackgroundProcessInterface:
             f.write(encoded_info.encode())
 
 
+class JobTarget[Args](BaseModel, frozen=True):
+    # Actually we require a module level function and not a callable
+    callable: Callable[[BackgroundProcessInterface, Args], None]
+    args: Args
+
+    @field_validator("callable", mode="before")
+    @classmethod
+    def validate_callable(cls, value: object) -> Callable[[BackgroundProcessInterface, Args], None]:
+        if callable(value):
+            return value
+        if not isinstance(value, (tuple, list)) or not len(value) == 2:
+            raise ValueError("The callable must be a tuple with two elements")
+        func = getattr(importlib.import_module(value[0]), value[1])
+        if not callable(func):
+            raise ValueError("The callable must be a callable")
+        return func  # type: ignore[no-any-return]
+
+    @field_serializer("callable")
+    def serialize_callable(self, value: Callable) -> tuple[str, str]:
+        return self.callable.__module__, self.callable.__name__
+
+
+class NoArgs(BaseModel, frozen=True): ...
+
+
+def simple_job_target(
+    callable: Callable[[BackgroundProcessInterface, NoArgs], None],
+) -> JobTarget[NoArgs]:
+    return JobTarget(callable=callable, args=NoArgs())
+
+
 class SpanContextModel(BaseModel, frozen=True):
     trace_id: int
     span_id: int
@@ -106,7 +138,7 @@ class JobParameters(NamedTuple):
 
     work_dir: str
     job_id: str
-    target: Callable[[BackgroundProcessInterface], None]
+    target: JobTarget
     lock_wato: bool
     is_stoppable: bool
     override_job_log_level: int | None

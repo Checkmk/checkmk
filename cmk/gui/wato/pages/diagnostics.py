@@ -6,8 +6,9 @@
 import tarfile
 import uuid
 from collections.abc import Collection, Sequence
-from functools import partial
 from pathlib import Path
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
@@ -49,6 +50,7 @@ from cmk.gui.background_job import (
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -186,7 +188,10 @@ class ModeDiagnostics(WatoMode):
         params = self._diagnostics_parameters
         assert params is not None
         self._job.start(
-            partial(self._job.do_execute, params),
+            JobTarget(
+                callable=diagnostics_dump_entry_point,
+                args=DiagnosticsDumpArgs(params=params),
+            ),
             InitialStatusArgs(
                 title=self._job.gui_title(),
                 lock_wato=False,
@@ -678,6 +683,16 @@ class ModeDiagnostics(WatoMode):
             (rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
             for rel_filepath, file_info in files
         ]
+
+
+class DiagnosticsDumpArgs(BaseModel, frozen=True):
+    params: DiagnosticsParameters
+
+
+def diagnostics_dump_entry_point(
+    job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
+) -> None:
+    DiagnosticsDumpBackgroundJob().do_execute(args.params, job_interface)
 
 
 class DiagnosticsDumpBackgroundJob(BackgroundJob):

@@ -21,6 +21,7 @@ from cmk.gui.background_job import (
     BackgroundJobDefines,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
@@ -348,7 +349,16 @@ def start_quick_setup_stage_job(
     )
 
     job_start = job.start(
-        job.run_quick_setup_stage_action,
+        JobTarget(
+            callable=quick_setup_stage_action_job_entry_point,
+            args=QuickSetupStageActionJobArgs(
+                job_uuid=job_uuid,
+                quick_setup_id=quick_setup.id,
+                action_id=action_id,
+                stage_index=stage_index,
+                user_input_stages=user_input_stages,
+            ),
+        ),
         InitialStatusArgs(
             title=_("Running Quick setup %s stage %s action %s")
             % (quick_setup.id, stage_index, action_id),
@@ -359,6 +369,26 @@ def start_quick_setup_stage_job(
         raise MKUserError(None, str(job_start.error))
 
     return job.get_job_id()
+
+
+class QuickSetupStageActionJobArgs(BaseModel, frozen=True):
+    job_uuid: str
+    quick_setup_id: QuickSetupId
+    action_id: ActionId
+    stage_index: StageIndex
+    user_input_stages: Sequence[dict]
+
+
+def quick_setup_stage_action_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: QuickSetupStageActionJobArgs
+) -> None:
+    QuickSetupStageActionBackgroundJob(
+        job_uuid=args.job_uuid,
+        quick_setup_id=args.quick_setup_id,
+        action_id=args.action_id,
+        stage_index=args.stage_index,
+        user_input_stages=args.user_input_stages,
+    ).run_quick_setup_stage_action(job_interface)
 
 
 @dataclass

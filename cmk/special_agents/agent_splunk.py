@@ -16,7 +16,7 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
-__version__ = "2.3.0p25"
+__version__ = "2.3.0p26"
 
 USER_AGENT = f"checkmk-special-splunk-{__version__}"
 

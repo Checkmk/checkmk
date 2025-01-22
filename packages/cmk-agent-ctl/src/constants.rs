@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-pub const VERSION: &str = "2.3.0p25";
+pub const VERSION: &str = "2.3.0p26";
 
 // CONFIGURATION
 pub const DEFAULT_PULL_PORT: u16 = 6556;

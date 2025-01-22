@@ -1540,7 +1540,12 @@ class LDAPUserConnector(UserConnector):
                         % (self.id, checkmk_user_id, ", ".join(details))
                     )
 
-        hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
+        try:
+            hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
+        except AttributeError:
+            # The hooks call can fail if a user is created on login via the REST-API and is then
+            # modified by the ldap sync process, but the user has been updated correctly.
+            pass
 
         duration = time.time() - start_time
         self._logger.info(

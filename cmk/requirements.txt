@@ -2,7 +2,7 @@ setuptools <=70.3.0  # See https://github.com/pypa/setuptools/issues/4487#issuec
 setuptools-scm==4.1.2  # needed by various setup.py
 python-dateutil~=2.9.0  # direct dependency
 pyyaml==6.0.1  # needed by vcrpy
-vcrpy==6.0.1  # used by various unit tests to mock HTTP transactions in some special agents (only)
+vcrpy  # used by various unit tests to mock HTTP transactions in some special agents (only)
 cryptography
 paramiko
 pyasn1<0.6.1  # 0.6.1 removed pyasn1.compat.octets, but this is used by pysnmp <6.2.6. But updating that leads to API incompatibilities and integration test failures at the moment. :-/
@@ -39,7 +39,7 @@ pymssql==2.3.1 # needed by check_sql active check
 pymysql~=1.1.1 # needed by check_sql active check
 psycopg2-binary==2.9.6 # needed by check_sql active check
 apispec
-marshmallow
+marshmallow==3.23.1  # temporary pin
 marshmallow-oneofschema
 apispec-oneofschema
 pydantic~=2.7

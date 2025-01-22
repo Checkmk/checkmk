@@ -464,7 +464,8 @@ def _describe_dynamodb_tables(
             tables.append(
                 get_response_content(client.describe_table(TableName=table_name), "Table")  # type: ignore[attr-defined]
             )
-        except client.exceptions.ResourceNotFoundException:
+        # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+        except client.exceptions.ResourceNotFoundException:  # type: ignore[misc]
             # we raise the exception if we fetched the table names from the API, since in that case
             # all tables should exist, otherwise something went really wrong
             if fetched_table_names is None:
@@ -1194,7 +1195,8 @@ class ReservationUtilization(AWSSection):
         }
         try:
             response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
-        except self._client.exceptions.DataUnavailableException:
+        # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+        except self._client.exceptions.DataUnavailableException:  # type: ignore[misc]
             logging.warning("ReservationUtilization: No data available")
             return []
         return self._get_response_content(response, "UtilizationsByTime")
@@ -3774,7 +3776,8 @@ class RDSSummary(AWSSection):
                     DBInstanceIdentifier=name
                 ):
                     instances.extend(self._get_response_content(page, "DBInstances"))
-            except self._client.exceptions.DBInstanceNotFoundFault:
+            # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+            except self._client.exceptions.DBInstanceNotFoundFault:  # type: ignore[misc]
                 pass
 
         return instances

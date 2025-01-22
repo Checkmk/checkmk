@@ -25,7 +25,7 @@ jsonschema
 libcst # concrete syntax trees for plugin migration helpers
 msrest
 multipart  # redfixh server mocker for integration tests
-mypy  # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
+mypy==1.13.0  # temporary pin # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
 mypy-protobuf # for mypy
 networkx # needed for py-import-cycles
 pexpect # used for update testing
@@ -48,7 +48,7 @@ pytest-opentelemetry # instrument pytest runs
 python-lsp-server  # Note: There are extras, but the default seems sensible.
 requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests
-ruff
+ruff==0.8.3  # temporary pin
 schemathesis  # used for openapi tests
 semver
 sphinx  # used for the plugin API documentation

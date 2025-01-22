@@ -4,6 +4,7 @@ exports_files(
         "diskspace",
         "PNP4NAGIOS",
         "skel",
+        "skel.permissions",
     ],
     visibility = ["//visibility:public"],
 )

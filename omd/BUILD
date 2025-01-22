@@ -4,7 +4,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
+load("//:bazel_variables.bzl", "edition_deps")
 
 exports_files([
     "requirements.txt",
@@ -28,6 +28,7 @@ create_venv(
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/site/check-http:check_http_pkg",
+        "//omd/packages:skel_permissions_pkg_" + edition,
     ],
     extension = "tar.gz",
     deps = [
@@ -62,25 +63,6 @@ create_venv(
     "cme",
     "cse",
 ]]
-
-[genrule(
-    name = "skel_permissions_" + edition,
-    srcs = edition_skel_permissions[edition],
-    outs = ["skel.permissions_" + edition],
-    cmd = "cat $< > $@",
-) for edition in [
-    "cce",
-    "cee",
-    "cme",
-    "cse",
-]]
-
-# Placeholder since we have no cre specfic skel.permissions so far (will come soon)
-write_file(
-    name = "skel_permissions_cre",
-    out = "skel.permissions_cre",
-    content = [],
-)
 
 write_file(
     name = "werks_utils",

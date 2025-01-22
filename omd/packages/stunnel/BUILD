@@ -1,1 +1,4 @@
-exports_files(["skel"])
+exports_files([
+    "skel",
+    "skel.permissions",
+])

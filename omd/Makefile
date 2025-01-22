@@ -175,26 +175,7 @@ $(INSTALL): $(INSTALL_LOG_TARGETS)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(TOUCH) $@
 
-$(SKEL_PERMISSIONS): $(INSTALL)
-# Create permissions file for skel
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	set -e ; \
-	OUTPUT=""; \
-	cd packages ; for p in $(PACKAGES) rrdtool; do \
-	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
-	    fi ; \
-	done ; \
-	cd ../../non-free/packages ; for p in $(PACKAGES) ; do \
-	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
-	    fi ; \
-	done ; \
-	bazel build //omd:skel_permissions_$(EDITION_SHORT) ; \
-	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION_SHORT))\n" ; \
-	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)
-
-$(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
+$(INSTALL_GLOBAL): $(INSTALL) $(BOM)
 	# Create link to default version
 	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 

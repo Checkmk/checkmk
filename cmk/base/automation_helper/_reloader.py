@@ -44,13 +44,32 @@ def _run(
     while not shutdown_flag.wait(timeout=config.poll_interval):
         if (cached_last_change := _retrieve_last_change(cache)) == last_change:
             continue
-        shutdown_flag.wait(timeout=config.aggregation_interval)
-        LOGGER.info(
-            "[reloader] Change detected %.2f seconds ago, reloading",
-            time.time() - cached_last_change,
-        )
-        reload_callback()
+
         last_change = cached_last_change
+        LOGGER.info(
+            "[reloader] Change detected %.2f seconds ago",
+            time.time() - last_change,
+        )
+
+        current_cooldown = config.cooldown_interval
+        while not shutdown_flag.wait(timeout=current_cooldown):
+            cached_last_change = _retrieve_last_change(cache)
+            if cached_last_change == last_change:
+                LOGGER.info("[reloader] Triggering reload")
+                reload_callback()
+                break
+
+            else:
+                current_cooldown = min(
+                    # be rebust against cache resets, just in case
+                    abs(cached_last_change - last_change),
+                    config.cooldown_interval,
+                )
+                last_change = cached_last_change
+                LOGGER.info(
+                    "[reloader] Change detected %.2f seconds ago",
+                    time.time() - last_change,
+                )
 
 
 def _retrieve_last_change(cache: Cache) -> float:

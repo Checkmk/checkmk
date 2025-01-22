@@ -84,11 +84,11 @@ def main() {
                     build(
                         job: "${base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
-                            string(name: 'EDITION', value: edition),
-                            string(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-                            string(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                            string(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
-                            string(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                            stringParam(name: 'EDITION', value: edition),
+                            stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+                            stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                         ]
                     );
                 }

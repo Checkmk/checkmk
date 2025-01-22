@@ -9,5 +9,6 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         requirement("requests"),
+        requirement("simplejson"),
     ],
 )

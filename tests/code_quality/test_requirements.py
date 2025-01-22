@@ -377,7 +377,6 @@ def test_dependencies_are_declared() -> None:
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
-        "simplejson",  # remove after adding to the requirements
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

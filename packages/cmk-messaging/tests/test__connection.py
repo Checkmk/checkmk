@@ -76,7 +76,7 @@ class ChannelTester:
         queue: str,
         exchange: str,
         routing_key: str,
-        arguments: None = None,  # pylint: disable=unused-argument
+        arguments: None = None,  # noqa: ARG002
     ) -> None:
         self.bound_queues.append(Binding(exchange, routing_key, queue))
 
@@ -93,12 +93,12 @@ class ChannelTester:
 
     def basic_consume(
         self,
-        queue: str,  # pylint: disable=unused-argument
+        queue: str,  # noqa: ARG002
         on_message_callback: Callable[
             [pika.channel.Channel, pika.spec.Basic.Deliver, pika.BasicProperties, bytes],
             object,
         ],
-        auto_ack: bool,  # pylint: disable=unused-argument
+        auto_ack: bool,  # noqa: ARG002
     ) -> None:
         self.consumer = on_message_callback
 
@@ -108,6 +108,7 @@ class ChannelTester:
             # we don't care about the binding and so on. Just call the callback on
             # all stored messages from our test setup.
             self.consumer(
+                # TODO: The class hierarchy is simply wrong, ChannelTester must subclass Channel.
                 self,  # type: ignore[arg-type]
                 pika.spec.Basic.Deliver(delivery_tag=42),
                 published.properties,
@@ -202,7 +203,7 @@ class TestChannel:
         channel.publish_for_site("other_site", message, routing=RoutingKey("subrouting.key"))
 
         # make sure that we're called at all
-        def _on_message(*args: object, **kw: Mapping[str, object]) -> None:
+        def _on_message(*_args: object, **_kw: Mapping[str, object]) -> None:
             raise RuntimeError()
 
         with pytest.raises(RuntimeError):

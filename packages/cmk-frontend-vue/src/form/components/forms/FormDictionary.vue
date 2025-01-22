@@ -9,16 +9,17 @@ import { ref } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
-import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
-import {
-  groupDictionaryValidations,
-  type ValidationMessages
-} from '@/form/components/utils/validation'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import FormHelp from '../FormHelp.vue'
 import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -27,16 +28,22 @@ const dictionaryVariants = cva('', {
     variant: {
       one_column: 'form-dictionary--one_column',
       two_columns: 'form-dictionary--two_columns'
+    },
+    group_layout: {
+      none: '',
+      horizontal: 'horizontal_groups',
+      vertical: 'vertical_groups'
     }
   },
   defaultVariants: {
-    variant: 'one_column'
+    variant: 'one_column',
+    group_layout: 'none'
   }
 })
 type DictionaryVariants = VariantProps<typeof dictionaryVariants>
 
 interface ElementFromProps {
-  dict_config: DictionaryElement
+  dict_config: FormSpec.DictionaryElement
   is_active: boolean
 }
 
@@ -44,11 +51,12 @@ interface ElementsGroup {
   groupKey: string
   title?: string
   help?: string
+  layout: FormSpec.DictionaryGroupLayout
   elems: ElementFromProps[]
 }
 
 const props = defineProps<{
-  spec: Dictionary
+  spec: FormSpec.Dictionary
   backendValidation: ValidationMessages
 }>()
 
@@ -68,7 +76,7 @@ function getDefaultValue(key: string): unknown {
 
 immediateWatch(
   () => props.spec.additional_static_elements,
-  (newAdditionalStaticElements: Dictionary['additional_static_elements'] | undefined) => {
+  (newAdditionalStaticElements: FormSpec.Dictionary['additional_static_elements'] | undefined) => {
     if (newAdditionalStaticElements) {
       for (const [key, value] of Object.entries(newAdditionalStaticElements)) {
         data.value[key] = value
@@ -80,27 +88,28 @@ immediateWatch(
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, newValidation)
+    const [, _elementValidation] = groupNestedValidations(props.spec.elements, newValidation)
     elementValidation.value = _elementValidation
   }
 )
 
-const getGroupKey = (element: DictionaryElement, index: number): string => {
+const getGroupKey = (element: FormSpec.DictionaryElement, index: number): string => {
   if (variant === 'two_columns') {
     return `${DICT_ELEMENT_NO_GROUP}${index}`
   }
   return element.group?.key ?? `${DICT_ELEMENT_NO_GROUP}${index}`
 }
 
-const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
+const extractGroups = (elements: FormSpec.DictionaryElement[]): ElementsGroup[] => {
   const groups: ElementsGroup[] = []
-  elements.forEach((element: DictionaryElement, index: number) => {
+  elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
     const groupKey = getGroupKey(element, index)
     if (!groups.some((group) => group.groupKey === groupKey)) {
       groups.push({
         groupKey: groupKey,
         title: element.group?.title || '',
         help: element.group?.help || '',
+        layout: element.group?.layout || 'horizontal',
         elems: []
       })
     }
@@ -112,7 +121,7 @@ const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
 function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
-  props.spec.elements.forEach((element: DictionaryElement, index: number) => {
+  props.spec.elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
     const isActive = element.name in data.value ? true : element.required
     if (isActive && data.value[element.name] === undefined) {
       data.value[element.name] = structuredClone(getDefaultValue(element.name))
@@ -140,11 +149,19 @@ function toggleElement(key: string) {
   }
 }
 
-function indentRequired(element: DictionaryElement): boolean {
-  return labelRequired(element) && !(element.group && variant === 'one_column')
+function indentRequired(element: FormSpec.DictionaryElement): boolean {
+  return (
+    labelRequired(element) &&
+    !(element.group && variant === 'one_column') &&
+    !(
+      element.parameter_form.type === 'fixed_value' &&
+      !(element.parameter_form as FormSpec.FixedValue).label &&
+      !(element.parameter_form as FormSpec.FixedValue).value
+    )
+  )
 }
 
-function labelRequired(element: DictionaryElement): boolean {
+function labelRequired(element: FormSpec.DictionaryElement): boolean {
   return !(
     element.required &&
     element.parameter_form.title === '' &&
@@ -159,13 +176,17 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table class="dictionary" :class="dictionaryVariants({ variant })">
+  <table
+    v-if="props.spec.elements.length > 0"
+    class="dictionary"
+    :class="dictionaryVariants({ variant })"
+  >
     <tbody>
       <tr v-for="group in getElementsInGroupsFromProps()" :key="`${componentId}.${group.groupKey}`">
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div :class="dictionaryVariants({ variant })">
+          <div :class="dictionaryVariants({ variant, group_layout: group.layout })">
             <div
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
@@ -179,9 +200,14 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   "
                   class="checkbox"
                 >
-                  <label v-if="dict_element.dict_config.required">
-                    {{ dict_element.dict_config.parameter_form.title }}
-                  </label>
+                  <span v-if="dict_element.dict_config.required">
+                    <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
+                      v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
+                      :spec="dict_element.dict_config.parameter_form"
+                      :i18n-required="spec.i18n_base.required"
+                      :space="'before'"
+                    />
+                  </span>
                   <CmkCheckbox
                     v-else
                     v-model="dict_element.is_active"
@@ -193,19 +219,27 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 </span>
               </template>
               <div
+                :aria-label="dict_element.dict_config.parameter_form.title"
                 :class="{
                   indent: indentRequired(dict_element.dict_config),
                   dictelement: indentRequired(dict_element.dict_config),
                   'group-with-more-items': group.elems.length > 1
                 }"
               >
-                <FormEditDispatcher
-                  v-if="dict_element.is_active"
-                  v-model:data="data[dict_element.dict_config.name]"
-                  :spec="dict_element.dict_config.parameter_form"
-                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                  :aria-label="dict_element.dict_config.parameter_form.title"
-                />
+                <template v-if="dict_element.is_active">
+                  <FormEditDispatcher
+                    v-if="!dict_element.dict_config.render_only"
+                    v-model:data="data[dict_element.dict_config.name]"
+                    :spec="dict_element.dict_config.parameter_form"
+                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                  />
+                  <FormReadonly
+                    v-else
+                    :data="data[dict_element.dict_config.name]"
+                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                    :spec="dict_element.dict_config.parameter_form"
+                  ></FormReadonly>
+                </template>
               </div>
             </div>
           </div>
@@ -213,6 +247,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       </tr>
     </tbody>
   </table>
+  <span v-else>{{ spec.no_elements_text }}</span>
 </template>
 
 <style scoped>
@@ -240,7 +275,7 @@ span.checkbox {
   > span.checkbox {
     display: inline-block;
     flex-shrink: 0;
-    width: 160px;
+    width: 180px;
     margin: 0;
     padding-top: 3px;
     font-weight: bold;
@@ -263,8 +298,10 @@ span.checkbox {
 }
 
 .form-dictionary--one_column {
-  display: flex;
   flex-direction: row;
   gap: 0.5em;
+  &.horizontal_groups {
+    display: flex;
+  }
 }
 </style>

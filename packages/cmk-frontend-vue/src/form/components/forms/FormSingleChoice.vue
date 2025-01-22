@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { SingleChoice } from '@/form/components/vue_formspec_components'
+import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
@@ -38,6 +38,8 @@ const componentId = useId()
       :disabled="spec.frozen"
       :component-id="componentId"
       :show-filter="props.spec.elements.length > 5"
+      :no-elements-text="props.spec.no_elements_text || ''"
+      :required-text="props.spec.i18n_base.required"
     />
   </div>
   <FormValidation :validation="validation"></FormValidation>

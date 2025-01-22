@@ -627,7 +627,7 @@ class NotesIcon(Icon):
         if display_options.enabled(display_options.X):
             notes_url = row[what + "_notes_url_expanded"]
             if notes_url:
-                return "notes", _("Custom Notes"), (notes_url, "_blank")
+                return "notes", _("Notes (URL)"), (notes_url, "_blank")
         return None
 
 

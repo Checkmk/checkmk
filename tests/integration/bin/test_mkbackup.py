@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+import logging
 import os
 import re
 import subprocess
+import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -20,23 +22,35 @@ from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
 
+logger = logging.getLogger(__name__)
+
 
 @contextmanager
-def simulate_backup_lock(site: Site) -> Iterator[None]:
+def simulate_backup_lock(site: Site, timeout: int = 1200) -> Iterator[None]:
+    file_name = f"mkbackup-{site.id}.lock"
     with site.execute(
         [
             "flock",
             "-o",
             "-x",
             "-n",
-            str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"),
+            str(mkbackup_lock_dir / file_name),
             "sleep",
-            "300",
+            str(timeout),
         ]
     ) as p:
+        logger.info("Lock file %s", file_name)
+        start_time = time.time()
         try:
             yield None
         finally:
+            # command returns an exit code only after 'timeout' seconds (sleep).
+            if p.poll() == 0:
+                raise TimeoutError(
+                    f"{file_name} in unlocked state since "
+                    f"{((time.time() - start_time) - timeout):.2f} seconds!"
+                    "\nThis affects the test design and may result in false positives!"
+                )
             for c in Process(p.pid).children(recursive=True):
                 if c.name() == "sleep":
                     assert site.run(["kill", str(c.pid)]).returncode == 0
@@ -316,7 +330,6 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.skip(reason="CMK-20253: investigate flake.")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")

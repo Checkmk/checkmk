@@ -16,6 +16,8 @@ from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups
@@ -46,14 +48,16 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import (
+    DisplayMode,
     parse_data_from_frontend,
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin
+from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.hooks import call as call_hooks
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -148,10 +152,13 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
+from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec
 
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
+
+tracer = trace.get_tracer()
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -1314,39 +1321,50 @@ class ModeEditRuleset(WatoMode):
         service_name: ServiceName | None,
         rules: Sequence[Rule],
     ) -> dict[str, RuleMatchResult]:
-        service_labels = (
-            analyse_service(
-                site_id,
-                host_name,
-                service_name,
-            ).labels
-            if service_name
-            else {}
-        )
-        self._get_host_labels_from_remote_site()
-
-        rule_matches = {
-            rule.id: rule.matches(
-                host_name,
-                item,
-                service_name,
-                only_host_conditions=False,
-                service_labels=service_labels,
+        with tracer.span(
+            "ModeEditRuleset_analyze_rule_matching",
+            attributes={
+                "cmk.gui.site_id": site_id,
+                "cmk.gui.host_name": host_name,
+                "cmk.gui.item": repr(item),
+                "cmk.gui.service_name": repr(service_name),
+            },
+        ) as span:
+            service_labels = (
+                analyse_service(
+                    site_id,
+                    host_name,
+                    service_name,
+                ).labels
+                if service_name
+                else {}
             )
-            for rule in rules
-        }
+            span.set_attribute("cmk.service_labels", repr(service_labels))
+            self._get_host_labels_from_remote_site()
 
-        match_state = MatchState({"matched": False, "keys": set()})
-        return {
-            rule.id: self._make_match_result(
-                match_state,
-                rule,
-                rule_matches[rule.id],
-                host_name,
-                item,
-            )
-            for rule in rules
-        }
+            rule_matches = {
+                rule.id: rule.matches(
+                    host_name,
+                    item,
+                    service_name,
+                    only_host_conditions=False,
+                    service_labels=service_labels,
+                )
+                for rule in rules
+            }
+            span.set_attribute("cmk.gui.rule_matches", repr(rule_matches))
+
+            match_state = MatchState({"matched": False, "keys": set()})
+            return {
+                rule.id: self._make_match_result(
+                    match_state,
+                    rule,
+                    rule_matches[rule.id],
+                    host_name,
+                    item,
+                )
+                for rule in rules
+            }
 
     def _make_match_result(
         self,
@@ -1492,20 +1510,21 @@ class ModeEditRuleset(WatoMode):
                 value,
                 DataOrigin.DISK,
                 True,
-                display_mode=RenderMode.READONLY,
+                display_mode=DisplayMode.READONLY,
             )
 
         render_mode, form_spec = _get_render_mode(self._rulespec)
         match render_mode:
-            case ExperimentalRenderMode.BACKEND:
+            case RenderMode.BACKEND:
                 _show_rule_backend()
-            case ExperimentalRenderMode.FRONTEND:
+            case RenderMode.FRONTEND:
                 assert form_spec is not None
                 _show_rule_frontend(form_spec)
-            case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
                 assert form_spec is not None
                 _show_rule_frontend(form_spec)
-                _show_rule_backend()
+                # html.write_html("<hr>")
+                # _show_rule_backend()
 
         # Comment
         table.cell(_("Description"), css=["description"])
@@ -1863,9 +1882,9 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
         html.close_div()
 
 
-def _get_render_mode(rulespec: Rulespec) -> tuple[ExperimentalRenderMode, FormSpec | None]:
-    configured_mode = get_render_mode()
-    if configured_mode == ExperimentalRenderMode.BACKEND:
+def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
+    configured_mode = _get_rule_render_mode()
+    if configured_mode == RenderMode.BACKEND:
         return configured_mode, None
 
     try:
@@ -2040,7 +2059,7 @@ class ABCEditRuleMode(WatoMode):
 
         # Check permissions on folders
         new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
-        if not isinstance(self, ModeNewRule):
+        if not isinstance(self, (ModeNewRule, ModeCloneRule)):
             self._folder.permissions.need_permission("write")
         new_rule_folder.permissions.need_permission("write")
 
@@ -2111,17 +2130,13 @@ class ABCEditRuleMode(WatoMode):
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         self._do_validate_on_render = True
         match render_mode:
-            case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
                 assert registered_form_spec is not None
                 value = parse_data_from_frontend(
                     registered_form_spec,
                     self._vue_field_id(),
                 )
-                # For testing, validate this datatype/value again within legacy valuespec
-                # This should not throw any errors
-                self._ruleset.valuespec().validate_datatype(value, "ve")
-                self._ruleset.valuespec().validate_value(value, "ve")
-            case ExperimentalRenderMode.BACKEND:
+            case RenderMode.BACKEND:
                 value = self._ruleset.valuespec().from_html_vars("ve")
                 self._ruleset.valuespec().validate_value(value, "ve")
 
@@ -2230,11 +2245,10 @@ class ABCEditRuleMode(WatoMode):
         try:
             render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
             match render_mode:
-                case ExperimentalRenderMode.BACKEND:
+                case RenderMode.BACKEND:
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
-                case ExperimentalRenderMode.FRONTEND:
-                    forms.section("Current setting as VUE")
+                case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     value, origin = self._get_rule_value_and_origin()
                     render_form_spec(
@@ -2244,7 +2258,7 @@ class ABCEditRuleMode(WatoMode):
                         origin,
                         self._should_validate_on_render(),
                     )
-                case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                case RenderMode.BACKEND_AND_FRONTEND:
                     forms.section("Current setting as VUE")
                     assert registered_form_spec is not None
                     value, origin = self._get_rule_value_and_origin()
@@ -2537,9 +2551,6 @@ class VSExplicitConditions(Transform):
 
         if item_type == "service":
             return _("Services")
-
-        if item_type == "checktype":
-            return _("Check types")
 
         if item_type == "item":
             return self._rulespec.item_name
@@ -3141,6 +3152,14 @@ class ModeNewRule(ABCEditRuleMode):
                     service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
         self._rule = Rule.from_ruleset_defaults(self._folder, self._ruleset)
+        try:
+            # If the rulespec already uses the new form spec, use the DEFAULT_VALUE sentinel
+            # instead of an auto-generated valuespec:default_value()
+            if _get_rule_render_mode() == RenderMode.FRONTEND:
+                _tmp = self._ruleset.rulespec.form_spec
+                self._rule.value = DEFAULT_VALUE
+        except FormSpecNotImplementedError:
+            pass
         self._rule.update_conditions(
             RuleConditions(
                 host_folder=self._folder.path(),
@@ -3234,3 +3253,22 @@ class ModeExportRule(ABCEditRuleMode):
                 ),
             ],
         )
+
+
+@request_memoize()
+def _get_rule_render_mode() -> RenderMode:
+    # Settings via url overwrite config based settings
+    if (rendering_mode := html.request.var("rule_render_mode", None)) is None:
+        rendering_mode = active_config.vue_experimental_features.get(
+            "rule_render_mode", RenderMode.BACKEND.value
+        )
+
+    match rendering_mode:
+        case RenderMode.BACKEND.value:
+            return RenderMode.BACKEND
+        case RenderMode.FRONTEND.value:
+            return RenderMode.FRONTEND
+        case RenderMode.BACKEND_AND_FRONTEND.value:
+            return RenderMode.BACKEND_AND_FRONTEND
+        case _:
+            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)

@@ -41,6 +41,7 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.site_config import get_site_config
+from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -53,7 +54,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.theme import Theme
 from cmk.gui.valuespec import (
     Checkbox,
     DateFormat,
@@ -80,7 +80,7 @@ from cmk.gui.visual_link import render_link_to_view
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
-from .base import Cell, Painter, PainterRegistry
+from .base import Cell, Painter
 from .helpers import (
     format_labels_for_csv_export,
     get_label_sources,
@@ -91,6 +91,7 @@ from .helpers import (
     RenderLink,
     replace_action_url_macros,
 )
+from .registry import PainterRegistry
 
 
 def register(
@@ -906,7 +907,7 @@ class PainterSvcNotesURL(Painter):
         return "svc_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Services")
+        return _("Notes (URL) for Services")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -2116,7 +2117,7 @@ class PainterHostNotesURL(Painter):
         return "host_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Hosts")
+        return _("Notes (URL) for Hosts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")

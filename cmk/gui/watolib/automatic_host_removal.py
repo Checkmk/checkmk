@@ -22,11 +22,9 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.log
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
@@ -40,7 +38,7 @@ _LOGGER = cmk.gui.log.logger.getChild("automatic_host_removal")
 _LOGGER_BACKGROUND_JOB = _LOGGER.getChild("background_job")
 
 
-def execute_host_removal_background_job() -> None:
+def execute_host_removal_job() -> None:
     if is_wato_slave_site():
         return
 
@@ -48,49 +46,22 @@ def execute_host_removal_background_job() -> None:
         _LOGGER.debug("Automatic host removal not configured")
         return
 
-    HostRemovalBackgroundJob().start(
-        _do_remove_hosts,
-        InitialStatusArgs(
-            title=HostRemovalBackgroundJob.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    _init_logging()
 
-
-class HostRemovalBackgroundJob(BackgroundJob):
-    job_prefix = "host_removal"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Host removal")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
-
-
-def _do_remove_hosts(job_interface: BackgroundProcessInterface) -> None:
-    with job_interface.gui_context():
-        _init_logging()
-        _remove_hosts(job_interface)
-
-
-def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
     _LOGGER_BACKGROUND_JOB.debug("Starting host removal background job")
 
     try:
-        job_interface.send_progress_update("Starting host removal background job")
+        _LOGGER.info("Starting host removal background job")
 
         if not (
             hosts_to_be_removed := {
                 site_id: hosts
-                for site_id, hosts_iter in _hosts_to_be_removed(job_interface)
+                for site_id, hosts_iter in _hosts_to_be_removed()
                 if (hosts := list(hosts_iter))
             }
         ):
             _LOGGER_BACKGROUND_JOB.debug("Found no hosts to be removed, exiting")
-            job_interface.send_progress_update("Found no hosts to be removed, exiting")
+            _LOGGER.info("Found no hosts to be removed, exiting")
             return
 
         for folder, hosts_in_folder in itertools.groupby(
@@ -103,44 +74,35 @@ def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
                 len(hostnames),
                 folder.title(),
             )
-            job_interface.send_progress_update(
-                f"Removing {len(hostnames)} hosts from folder {folder.title()}"
-            )
+            _LOGGER.info(f"Removing {len(hostnames)} hosts from folder {folder.title()}")
             with SuperUserContext():
                 folder.delete_hosts(hostnames, automation=delete_hosts)
 
-        job_interface.send_progress_update("Hosts removed, starting activation of changes")
+        _LOGGER.info("Hosts removed, starting activation of changes")
         _activate_changes(hosts_to_be_removed)
 
-        job_interface.send_progress_update("Host removal background job finished")
+        _LOGGER.info("Host removal background job finished")
     except RedisConnectionError as e:
         # This can happen when Redis or the whole site is stopped while the background job is
         # running. Report an error in the background job result but don't create a crash report.
-        job_interface.send_exception(_("An connection error occurred: %s") % e)
+        _LOGGER.warning(_("An connection error occurred: %s") % e)
 
 
 def _init_logging() -> None:
-    handler = FileHandler(Path(log_dir, "automatic-host-removal.log"), encoding="utf-8")
+    handler = FileHandler(log_file := Path(log_dir, "automatic-host-removal.log"), encoding="utf-8")
+    _LOGGER.info("Logging host removal to %s", log_file)
     handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
     del _LOGGER.handlers[:]  # Remove all previously existing handlers
     _LOGGER.addHandler(handler)
     _LOGGER.propagate = False
 
 
-def _hosts_to_be_removed(
-    job_interface: BackgroundProcessInterface,
-) -> Iterator[tuple[SiteId, Iterator[Host]]]:
+def _hosts_to_be_removed() -> Iterator[tuple[SiteId, Iterator[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
-    yield from (
-        (site_id, _hosts_to_be_removed_for_site(job_interface, site_id))
-        for site_id in wato_site_ids()
-    )
+    yield from ((site_id, _hosts_to_be_removed_for_site(site_id)) for site_id in wato_site_ids())
 
 
-def _hosts_to_be_removed_for_site(
-    job_interface: BackgroundProcessInterface,
-    site_id: SiteId,
-) -> Iterator[Host]:
+def _hosts_to_be_removed_for_site(site_id: SiteId) -> Iterator[Host]:
     if site_is_local(active_config, site_id):
         hostnames = _hosts_to_be_removed_local()
     else:
@@ -153,9 +115,7 @@ def _hosts_to_be_removed_for_site(
                 )
             )
         except (MKUserError, MKAutomationException) as e:
-            job_interface.send_progress_update(
-                f"Skipping remote site {site_id}, might be down or not logged in ({e})"
-            )
+            _LOGGER.info(f"Skipping remote site {site_id}, might be down or not logged in ({e})")
             return
         hostnames = json.loads(hostnames_serialized)
 

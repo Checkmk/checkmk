@@ -265,10 +265,13 @@ class SetAutochecksInput:
         return cls(
             discovered_host=HostName(raw["discovered_host"]),
             target_services={
-                ServiceName(n): AutocheckEntry.load(s) for n, s in raw["target_services"].items()
+                ServiceName(n): AutocheckEntry.load(literal_eval(s))
+                for n, s in raw["target_services"].items()
             },
             nodes_services={
-                HostName(k): {ServiceName(n): AutocheckEntry.load(s) for n, s in v.items()}
+                HostName(k): {
+                    ServiceName(n): AutocheckEntry.load(literal_eval(s)) for n, s in v.items()
+                }
                 for k, v in raw["nodes_services"].items()
             },
         )
@@ -277,9 +280,9 @@ class SetAutochecksInput:
         return json.dumps(
             {
                 "discovered_host": str(self.discovered_host),
-                "target_services": {n: s.dump() for n, s in self.target_services.items()},
+                "target_services": {n: repr(s.dump()) for n, s in self.target_services.items()},
                 "nodes_services": {
-                    str(k): {n: s.dump() for n, s in v.items()}
+                    str(k): {n: repr(s.dump()) for n, s in v.items()}
                     for k, v in self.nodes_services.items()
                 },
             }

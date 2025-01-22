@@ -1,0 +1,24 @@
+[package]
+name = "check-cert"
+version = "0.1.0"
+workspace = ".."
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+vendored = ["openssl/vendored"]
+
+[dependencies]
+anyhow = { version = "1.0.75", features = ["backtrace"] }
+clap = { version = "4.3.24", features = ["derive"] }
+openssl = { version = "0.10.57" }
+openssl-probe = "0.1.5"
+time = "0.3.30"
+typed-builder = "0.18.0"
+x509-parser = "0.15.1"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"
+assertor = "*"
+tempfile = "*"

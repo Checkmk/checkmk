@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
+import cmk.utils.regex
+
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.private.folder import Folder
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
@@ -32,6 +35,9 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
+
+ID_VALIDATION_REGEX = cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII)
 
 
 def unique_id_formspec_wrapper(
@@ -51,6 +57,12 @@ def unique_id_formspec_wrapper(
                                 min_value=1,
                                 error_msg=Message("%s is required but not specified.")
                                 % title.localize(translate_to_current_language),
+                            ),
+                            validators.MatchRegex(
+                                regex=ID_VALIDATION_REGEX,
+                                error_msg=Message(
+                                    "An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+                                ),
                             ),
                         ),
                         prefill=DefaultValue(

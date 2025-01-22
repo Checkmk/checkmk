@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -47,20 +47,6 @@
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
-
-enum class Encoding;
-class User;
-class IComment;
-class IContact;
-class IContactGroup;
-class IDowntime;
-class IGlobalFlags;
-class IHost;
-class IPaths;
-class IService;
-class ITimeperiod;
-class IHostGroup;
-class IServiceGroup;
 
 class DummyMonitoringCore : public ICore {
     [[nodiscard]] const IHost *find_host(
@@ -358,7 +344,7 @@ public:
 private:
     std::vector<ColumnDefinition> defs_;
 
-    void sort() { std::sort(defs_.begin(), defs_.end()); }
+    void sort() { std::ranges::sort(defs_); }
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const ColumnDefinitions &rhs) {
@@ -896,13 +882,14 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
               ColumnDefinitions(TableHostsByGroup{&mc_}));
 }
 
-namespace {}  // namespace
+namespace {
 ColumnDefinitions labels_columns() {
     return {
         {"name", ColumnType::string},
         {"value", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableLabels) {
     EXPECT_EQ(labels_columns(),  //

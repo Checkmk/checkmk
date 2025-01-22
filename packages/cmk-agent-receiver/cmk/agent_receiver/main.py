@@ -6,7 +6,8 @@
 from fastapi import FastAPI
 
 # NOTE: The import below is a hack, we should register endpoints explicitly!
-from . import endpoints  # noqa: F401 # pylint: disable=unused-import
+# TODO: The "bazel lint ..." calls for run_check_format() and run_check_ruff() don't agree on their findings. Why??
+from . import endpoints  # noqa: F401, RUF100
 from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from .log import configure_logger
 from .site_context import log_path, site_name

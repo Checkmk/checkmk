@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 
 const stringValidators: FormSpec.Validator[] = [
@@ -20,6 +20,8 @@ const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: stringValidators,
   input_hint: '',
   autocompleter: null,
@@ -97,7 +99,7 @@ test('FormListOfStrings shows frontend validation on existing element', async ()
       data: ['some_value'],
       backendValidation: []
     }
-  })
+  }).emitted('select')
 
   const textboxes = await screen.getAllByRole<HTMLInputElement>('textbox')
   await fireEvent.update(textboxes[0]!, '')

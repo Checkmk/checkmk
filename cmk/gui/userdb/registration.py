@@ -6,16 +6,13 @@
 from datetime import timedelta
 
 from cmk.gui.background_job import BackgroundJobRegistry
-from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import ldap_connector, user_attributes
-from ._connections import fix_user_connections
 from ._connector import UserConnectorRegistry
-from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_users, find_usages_of_contact_group_in_users
 from ._user_attribute import UserAttributeRegistry
 from ._user_profile_cleanup import execute_user_profile_cleanup_job, UserProfileCleanupBackgroundJob
@@ -36,8 +33,6 @@ def register(
 ) -> None:
     user_attributes.register(user_attribute_registry)
 
-    register_post_config_load_hook(fix_user_connections)
-    register_post_config_load_hook(update_config_based_user_attributes)
     cron_job_registry.register(
         CronJob(
             name="execute_userdb_job",

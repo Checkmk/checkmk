@@ -11,25 +11,36 @@ from cmk.ccc.version import Edition
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui import sidebar, visuals
+from cmk.gui import nagvis, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.common_registration import register as common_registration
 from cmk.gui.cron import cron_job_registry
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.customer import customer_api_registry, CustomerAPIStub
-from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.dashboard import (
+    builtin_dashboard_extender_registry,
+    BuiltinDashboardExtender,
+    dashlet_registry,
+    noop_builtin_dashboard_extender,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
-from cmk.gui.help_menu import default_developer_items, default_info_line, default_learning_items
+from cmk.gui.help_menu import (
+    default_about_checkmk_items,
+    default_developer_items,
+    default_info_line,
+    default_learning_items,
+)
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.endpoints import autocomplete
+from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry
-from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
@@ -38,6 +49,11 @@ from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
+from cmk.gui.views.builtin_views import (
+    builtin_view_extender_registry,
+    BuiltinViewExtender,
+    noop_builtin_view_extender,
+)
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.layout import layout_registry
@@ -52,6 +68,8 @@ from cmk.gui.wato import (
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.wato.pages import ldap, roles
+from cmk.gui.watolib import network_scan
 from cmk.gui.watolib.activate_changes import (
     activation_features_registry,
     ActivationFeatures,
@@ -59,7 +77,10 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
-from cmk.gui.watolib.broker_certificates import DefaultBrokerCertificateSync
+from cmk.gui.watolib.broker_certificates import (
+    broker_certificate_sync_registry,
+    DefaultBrokerCertificateSync,
+)
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
@@ -105,7 +126,10 @@ def register_painters() -> None:
 
 
 def register(edition: Edition) -> None:
-    autocomplete.register(endpoint_registry)
+    network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
+    nagvis.register(permission_section_registry, permission_registry, snapin_registry)
+    ldap.register(mode_registry)
+    roles.register(mode_registry)
     common_registration(
         mega_menu_registry,
         job_registry,
@@ -155,6 +179,7 @@ def register(edition: Edition) -> None:
         default_info_line,
         default_learning_items,
         default_developer_items,
+        default_about_checkmk_items,
     )
 
     features_registry.register(
@@ -206,8 +231,6 @@ def register(edition: Edition) -> None:
         notification_parameter_registry,
         replication_path_registry,
         default_user_menu_topics,
-        edition_supports_ldap=True,
-        edition_supports_managing_roles=True,
     )
     user_features_registry.register(
         UserFeatures(
@@ -220,11 +243,11 @@ def register(edition: Edition) -> None:
             edition,
             sync_file_filter_func=None,
             snapshot_manager_factory=make_cre_snapshot_manager,
-            broker_certificate_sync=DefaultBrokerCertificateSync(),
             get_rabbitmq_definitions=default_rabbitmq_definitions,
             distribute_piggyback_hub_configs=distribute_piggyback_hub_configs,
         )
     )
+    broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())
 
     site_management_registry.register(SiteManagement())
     notification_parameter_registry.register(NotificationParameterMail)
@@ -266,3 +289,15 @@ def register(edition: Edition) -> None:
         main_module_registry,
         permission_registry,
     )
+    _openapi_registration()
+    builtin_dashboard_extender_registry.register(
+        BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
+    )
+    builtin_view_extender_registry.register(
+        BuiltinViewExtender(edition.short, noop_builtin_view_extender)
+    )
+
+
+def _openapi_registration() -> None:
+    autocomplete.register(endpoint_registry)
+    metric_endpoint.register(endpoint_registry)

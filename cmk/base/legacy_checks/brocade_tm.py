@@ -16,6 +16,17 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.brocade import DETECT_MLX
 
+LEVELS = {
+    "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
+    "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
+    "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
+    "brcdTMStatsIngressDequeuePkts": (1000, 10000),
+    "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
+    "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
+    "brcdTMStatsEgressDiscardPkts": (1000, 10000),
+}
+
+
 check_info = {}
 
 
@@ -26,7 +37,7 @@ def inventory_brocade_tm(info):
     return inventory
 
 
-def check_brocade_tm(item, params, info):
+def check_brocade_tm(item, _no_params, info):
     for line in info:
         if line[0] == item:
             tm = {}
@@ -50,7 +61,7 @@ def check_brocade_tm(item, params, info):
                     value_store, f"{name}.{item}", now, int(counter), raise_overflow=True
                 )
 
-                warn, crit = params["brcdTMStats" + name]
+                warn, crit = LEVELS["brcdTMStats" + name]
                 if re.search("Discard", name):
                     if rate > crit:
                         state = 2
@@ -88,14 +99,4 @@ check_info["brocade_tm"] = LegacyCheckDefinition(
     service_name="TM %s",
     discovery_function=inventory_brocade_tm,
     check_function=check_brocade_tm,
-    check_ruleset_name="brocade_tm",
-    check_default_parameters={
-        "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
-        "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
-        "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
-        "brcdTMStatsIngressDequeuePkts": (1000, 10000),
-        "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
-        "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
-        "brcdTMStatsEgressDiscardPkts": (1000, 10000),
-    },
 )

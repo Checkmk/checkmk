@@ -523,8 +523,5 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
     store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)
 
 
-def create_rabbitmq_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
-    store.save_text_to_file(
-        base_dir / rabbitmq.DEFINITIONS_FILE,
-        definition.dumps(),
-    )
+def create_rabbitmq_new_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
+    store.save_text_to_file(base_dir / rabbitmq.NEW_DEFINITIONS_FILE_PATH, definition.dumps())

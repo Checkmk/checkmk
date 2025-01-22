@@ -29,9 +29,9 @@ def get_package_extension() -> str:
 def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
     logger.info('Create host "%s" and bake agent...', hostname)
     start_time = time.time()
-    if site.openapi.get_host(hostname):
-        site.openapi.delete_host(hostname)
-    site.openapi.create_host(
+    if site.openapi.hosts.get(hostname):
+        site.openapi.hosts.delete(hostname)
+    site.openapi.hosts.create(
         hostname,
         attributes={"ipaddress": site.http_address},
         bake_agent=True,

@@ -29,7 +29,7 @@ class Snapshot:
     systime: int | None
     state: str
     name: str
-    vm: str
+    vm: str | None = None
 
     @property
     def age(self) -> int | None:
@@ -152,7 +152,7 @@ def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm
                 systime=(int(section.systime) if (section.systime is not None) else None),
                 state=x[2],
                 name=x[3],
-                vm=section.name if section.name else "",
+                vm=section.name if section.name else None,
             )
             for x in iter_snapshots_tuple
         ],

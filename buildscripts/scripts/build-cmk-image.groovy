@@ -87,82 +87,84 @@ def main() {
                 usernameVariable: 'NEXUS_USERNAME'),
         ]) {
             dir("${checkout_dir}") {
-                conditional_stage('Prepare package directory', build_image) {
+                smart_stage(name: 'Prepare package directory', condition: build_image) {
                     cleanup_directory("${package_dir}");
                 }
 
-                conditional_stage('Build Image', build_image) {
-                    on_dry_run_omit(LONG_RUNNING, "Download build sources") {
-                        artifacts_helper.download_deb(
-                            "${INTERNAL_DEPLOY_DEST}",
-                            "${INTERNAL_DEPLOY_PORT}",
-                            "${cmk_version_rc_aware}",
-                            "${source_dir}",
-                            "${EDITION}",
-                            "jammy");
-                        artifacts_helper.download_source_tar(
-                            "${INTERNAL_DEPLOY_DEST}",
-                            "${INTERNAL_DEPLOY_PORT}",
-                            "${cmk_version_rc_aware}",
-                            "${source_dir}",
-                            "${EDITION}");
-                    }
+                smart_stage(name: 'Build Image', condition: build_image) {
+                    artifacts_helper.download_deb(
+                        "${INTERNAL_DEPLOY_DEST}",
+                        "${INTERNAL_DEPLOY_PORT}",
+                        "${cmk_version_rc_aware}",
+                        "${source_dir}",
+                        "${EDITION}",
+                        "jammy");
+                    artifacts_helper.download_source_tar(
+                        "${INTERNAL_DEPLOY_DEST}",
+                        "${INTERNAL_DEPLOY_PORT}",
+                        "${cmk_version_rc_aware}",
+                        "${source_dir}",
+                        "${EDITION}");
 
-                    on_dry_run_omit(LONG_RUNNING, "Run build-cmk-container.sh") {
-                        /// TODO: fix this:
-                        /// build-cmk-container does not support the downloads dir
-                        /// to have an arbitrary location, so we have to provide
-                        /// `download` inside the checkout_dir
-                        sh("""
-                            scripts/run-pipenv run python \
-                            buildscripts/scripts/build-cmk-container.py \
-                            --branch=${branch_name} \
-                            --edition=${EDITION} \
-                            --version=${cmk_version} \
-                            --source_path=${source_dir} \
-                            --set_latest_tag=${SET_LATEST_TAG} \
-                            --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
-                            --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
-                            --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
-                            --action=build \
-                            -vvvv
-                        """);
-                    }
+                    /// TODO: fix this:
+                    /// build-cmk-container does not support the downloads dir
+                    /// to have an arbitrary location, so we have to provide
+                    /// `download` inside the checkout_dir
+                    sh("""
+                        scripts/run-uvenv python \
+                        buildscripts/scripts/build-cmk-container.py \
+                        --branch=${branch_name} \
+                        --edition=${EDITION} \
+                        --version=${cmk_version} \
+                        --source_path=${source_dir} \
+                        --set_latest_tag=${SET_LATEST_TAG} \
+                        --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
+                        --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
+                        --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
+                        --action=build \
+                        -vvvv
+                    """);
 
                     def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
-                    on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
-                        stage("Upload ${filename}") {
-                            artifacts_helper.upload_via_rsync(
-                                "${package_dir}",
-                                "${cmk_version_rc_aware}",
-                                "${filename}",
-                                "${INTERNAL_DEPLOY_DEST}",
-                                "${INTERNAL_DEPLOY_PORT}",
-                            );
-                        }
+                    stage("Upload to internal registry") {
+                        println("Uploading ${filename}");
+                        artifacts_helper.upload_via_rsync(
+                            "${package_dir}",
+                            "${cmk_version_rc_aware}",
+                            "${filename}",
+                            "${INTERNAL_DEPLOY_DEST}",
+                            "${INTERNAL_DEPLOY_PORT}",
+                        );
                     }
 
-                    if (branch_name.contains("sandbox") ) {
+                    def perform_public_upload = true;
+                    if (branch_name.contains("sandbox")) {
                         print("Skip uploading ${filename} due to sandbox branch");
-                    } else if ("${EDITION}" == "saas"){
+                        perform_public_upload = false;
+                    } else if ("${EDITION}" == "saas") {
                         print("Skip uploading ${filename} due to saas edition");
-                    } else {
-                        stage("Upload ${filename}") {
-                            artifacts_helper.upload_via_rsync(
-                                "${package_dir}",
-                                "${cmk_version_rc_aware}",
-                                "${filename}",
-                                "${WEB_DEPLOY_DEST}",
-                                "${WEB_DEPLOY_PORT}",
-                            );
-                        }
+                        perform_public_upload = false;
+                    }
+
+                    smart_stage(
+                        name: "Upload to public registry",
+                        condition: perform_public_upload
+                    ) {
+                        println("Uploading ${filename}");
+                        artifacts_helper.upload_via_rsync(
+                            "${package_dir}",
+                            "${cmk_version_rc_aware}",
+                            "${filename}",
+                            "${WEB_DEPLOY_DEST}",
+                            "${WEB_DEPLOY_PORT}",
+                        );
                     }
                 }
 
-                conditional_stage("Load image", !build_image) {
+                smart_stage(name: "Load image", condition: !build_image) {
                     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                         sh("""
-                            scripts/run-pipenv run python \
+                            scripts/run-uvenv python \
                             buildscripts/scripts/build-cmk-container.py \
                             --branch=${branch_name} \
                             --edition=${EDITION} \
@@ -175,9 +177,9 @@ def main() {
                     }
                 }
 
-                conditional_stage("Push images", push_to_registry) {
+                smart_stage(name: "Push images", condition: push_to_registry) {
                     sh("""
-                        scripts/run-pipenv run python \
+                        scripts/run-uvenv python \
                         buildscripts/scripts/build-cmk-container.py \
                         --branch=${branch_name} \
                         --edition=${EDITION} \

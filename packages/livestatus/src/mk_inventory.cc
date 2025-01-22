@@ -9,7 +9,7 @@
 
 std::chrono::system_clock::time_point mk_inventory_last(
     const std::string &path) {
-    struct stat st {};
+    struct stat st{};
     return std::chrono::system_clock::from_time_t(
         stat(path.c_str(), &st) != 0 ? 0 : st.st_mtime);
 }

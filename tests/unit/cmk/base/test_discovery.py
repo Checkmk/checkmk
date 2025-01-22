@@ -13,7 +13,7 @@ from typing import NamedTuple
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import OnError
 
@@ -1290,9 +1290,6 @@ def test_commandline_discovery(
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            agent_based_plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
@@ -1935,6 +1932,9 @@ class _AutochecksConfigDummy:
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
         return "desc"
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+        return {}
 
 
 def test_get_node_services() -> None:

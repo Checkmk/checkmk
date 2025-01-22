@@ -214,6 +214,7 @@ class UserSpec(TypedDict, total=False):
     force_authuser: NotRequired[bool]
     host_notification_options: str
     idle_timeout: Any  # TODO: Improve this
+    is_automation_user: bool
     language: NotRequired[str]
     last_pw_change: int
     last_login: LastLoginInfo | None
@@ -229,6 +230,7 @@ class UserSpec(TypedDict, total=False):
     roles: NotRequired[list[str]]
     serial: int
     service_notification_options: str
+    store_automation_secret: bool
     session_info: dict[SessionId, SessionInfo]
     show_mode: NotRequired[
         Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
@@ -660,7 +662,7 @@ class RowShading(TypedDict):
 GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 
 
-class GraphRenderOptionsBase(TypedDict, total=False):
+class GraphRenderOptionsVS(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
     editing: bool
@@ -680,9 +682,6 @@ class GraphRenderOptionsBase(TypedDict, total=False):
     show_vertical_axis: bool
     size: tuple[int, int]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
-
-
-class GraphRenderOptionsVS(GraphRenderOptionsBase, total=False):
     title_format: Sequence[GraphTitleFormatVS]
 
 
@@ -732,3 +731,36 @@ class Key(BaseModel):
 
 
 GlobalSettings = Mapping[str, Any]
+
+
+class IconSpec(TypedDict):
+    icon: str
+    title: NotRequired[str]
+    url: NotRequired[tuple[str, str]]
+    toplevel: NotRequired[bool]
+    sort_index: NotRequired[int]
+
+
+class BuiltinIconVisibility(TypedDict):
+    toplevel: NotRequired[bool]
+    sort_index: NotRequired[int]
+
+
+class CustomAttrSpec(TypedDict):
+    type: Literal["TextAscii"]
+    name: str
+    title: str
+    topic: str
+    help: str
+    # None case should be cleaned up to False
+    show_in_table: bool | None
+    # None case should be cleaned up to False
+    add_custom_macro: bool | None
+
+
+class CustomHostAttrSpec(CustomAttrSpec): ...
+
+
+class CustomUserAttrSpec(CustomAttrSpec):
+    # None case should be cleaned up to False
+    user_editable: bool | None

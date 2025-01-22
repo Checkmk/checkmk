@@ -46,7 +46,7 @@ from cmk.gui.type_defs import (
     UserSpec,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
-from cmk.gui.utils.roles import roles_of_user
+from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
 
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
@@ -54,7 +54,7 @@ from cmk.crypto.password import Password
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
 from ._user_attribute import get_user_attributes
-from ._user_spec import add_internal_attributes, validate_contact_details, validate_users_details
+from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
 
@@ -218,27 +218,22 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
             continue
 
         uid = UserId(user_dir)
+        if uid not in result:
+            continue
 
         # read special values from own files
-        if uid in result:
-            for attr, conv_func in attributes:
-                val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
-                if val is not None:
-                    result[uid][attr] = val
+        for attr, conv_func in attributes:
+            val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
+            if val is not None:
+                result[uid][attr] = val
 
-        # read automation secrets and add them to existing users or create new users automatically
-        try:
-            secret = AutomationUserSecret(uid).read()
-            if uid not in result:
-                # new guest automation user
-                result[uid] = {"roles": ["guest"]}
-
-            result[uid]["automation_secret"] = secret
-        except OSError:
-            # no secret; nothing to do
-            pass
-        # Empty secret files will raise a value error that we don't want to ignore here. Otherwise
-        # checking if a user is an automation user via existence of the file will go wrong.
+        result[uid]["store_automation_secret"] = AutomationUserSecret(uid).exists()
+        # The AutomationUserFile was added with 2.4. Previously the info to decide if a user is an
+        # automation user was the automation secret. Instead of creating an update action let's
+        # check both.
+        result[uid]["is_automation_user"] = (
+            AutomationUserSecret(uid).exists() or AutomationUserFile(uid).load()
+        )
 
     return result
 
@@ -363,8 +358,8 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users, now: datetime, skip_validation: bool = False) -> None:
-    write_contacts_and_users_file(profiles, skip_validation=skip_validation)
+def save_users(profiles: Users, now: datetime) -> None:
+    write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
     hook_save(profiles)
@@ -422,10 +417,12 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
 
         # authentication secret for local processes
         secret = AutomationUserSecret(user_id)
-        if "automation_secret" in user:
+        if user.get("store_automation_secret", False) and "automation_secret" in user:
             secret.save(user["automation_secret"])
-        else:
+        elif not user.get("store_automation_secret", False):
             secret.delete()
+
+        AutomationUserFile(user_id).save(user.get("is_automation_user", False))
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
@@ -504,7 +501,8 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 
 def write_contacts_and_users_file(
-    profiles: Users, custom_default_config_dir: str | None = None, skip_validation: bool = False
+    profiles: Users,
+    custom_default_config_dir: str | None = None,
 ) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
@@ -556,10 +554,6 @@ def write_contacts_and_users_file(
             for p, val in profile.items()
             if p in multisite_keys or p in multisite_attributes_cache[profile.get("connector")]
         }
-
-    if not skip_validation:
-        validate_users_details(users)
-        validate_contact_details(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(
@@ -625,7 +619,6 @@ def _multisite_keys() -> list[str]:
     return [
         "roles",
         "locked",
-        "automation_secret",
         "alias",
         "language",
         "connector",
@@ -645,13 +638,17 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
-def create_cmk_automation_user(now: datetime, name: str, alias: str, role: str) -> None:
+def create_cmk_automation_user(
+    now: datetime, name: str, alias: str, role: str, store_secret: bool
+) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
     users[UserId(name)] = {
         "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
+        "store_automation_secret": store_secret,
+        "is_automation_user": True,
         "password": password_hashing.hash_password(secret),
         "roles": [role],
         "locked": False,
@@ -672,6 +669,9 @@ def _save_cached_profile(
     # infos that are stored in the custom attribute files.
     cache = UserSpec()
     for key in user.keys():
+        if key in ("automation_secret",):
+            # Stripping away sensitive information
+            continue
         if key in multisite_keys or key not in non_contact_keys:
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
             cache[key] = user[key]  # type: ignore[literal-required]

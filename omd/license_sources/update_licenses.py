@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disable-error-code="import-untyped,no-untyped-def,var-annotated,arg-type,assignment,list-item"
 """
 usage: ./update_licenses [-h] [-v] [--path] [--version]
 
@@ -268,7 +269,7 @@ def download_cmk_sources(version) -> Path:
 
     print_separator()
     print("Downloading sources package %s from download.checkmk.com\n" % file_name)
-    os.system(
+    os.system(  # nosec B605
         "wget --user d-intern https://download.checkmk.com/checkmk/%s/%s --ask-password"
         % (version, file_name)
     )
@@ -399,11 +400,11 @@ def update_py_packages(
         os.mkdir(path_tmp_dir)
         match_path = path_cmk_dir / path
         if "tar" in path:
-            os.system(f"tar xf {match_path} --directory {path_tmp_dir}")
+            os.system(f"tar xf {match_path} --directory {path_tmp_dir}")  # nosec B605
         elif "zip" in path:
-            os.system(f"unzip -oq {match_path} -d {path_tmp_dir}")
+            os.system(f"unzip -oq {match_path} -d {path_tmp_dir}")  # nosec B605
         elif "cab" in path:
-            os.system(f"cabextract -q {match_path} -d {path_tmp_dir}")
+            os.system(f"cabextract -q {match_path} -d {path_tmp_dir}")  # nosec B605
         else:
             if verbose:
                 print("No extractable file found under: %s" % path)
@@ -604,7 +605,7 @@ def main(args):
             if not path_sources_pkg.is_file():
                 print("Download file %s not found. Check version and password." % path_sources_pkg)
                 return
-            os.system("tar xf %s" % path_sources_pkg)
+            os.system("tar xf %s" % path_sources_pkg)  # nosec B605
             path_sources_dir = Path(re.sub(".tar.gz", "/", str(path_sources_pkg)))
         licenses_csv = Path(path_omd / "Licenses.csv")
     except BaseException:

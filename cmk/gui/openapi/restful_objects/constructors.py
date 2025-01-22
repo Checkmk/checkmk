@@ -439,6 +439,37 @@ def domain_object_collection_href(
     return f"/objects/{domain_type}/{url_safe(obj_id)}/collections/{collection_name}"
 
 
+def sub_object_href(
+    domain_type: DomainType,
+    obj_id: str,
+    parent_domain_type: DomainType,
+    parent_id: str,
+) -> str:
+    """Constructs a href to a sub-object of a domain-object.
+
+    Args:
+         domain_type:
+            The domain-type of the sub-object.
+
+        obj_id:
+            The object-id of the sub-object.
+
+        parent_domain_type:
+            The domain-type of the parent object.
+
+        parent_id:
+            The object-id of the parent object.
+
+    Examples:
+        >>> sub_object_href('host', 'localhost', 'folder_config', 'stuff')
+        '/objects/folder_config/stuff/host/localhost'
+
+    Returns:
+        The href as a string.
+    """
+    return f"/objects/{parent_domain_type}/{url_safe(parent_id)}/{domain_type}/{url_safe(obj_id)}"
+
+
 def collection_href(domain_type: DomainType, name: str = "all") -> str:
     """Constructs a href to a collection.
 

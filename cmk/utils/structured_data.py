@@ -1700,7 +1700,7 @@ def parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     # compatible.
     if not isinstance(raw, dict):
         raise TypeError(raw)
-    if set(raw) == set(["meta", "raw_tree"]):
+    if set(raw) == {"meta", "raw_tree"}:
         # Handle future versions
         return SDMetaAndRawTree(
             meta=_parse_raw_meta(raw.get("meta")),

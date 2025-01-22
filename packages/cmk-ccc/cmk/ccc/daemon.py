@@ -22,7 +22,7 @@ def daemonize() -> None:
             # exit first parent
             sys.exit(0)
     except OSError as e:
-        sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
+        sys.stderr.write(f"Fork failed (#1): {e.errno} ({e.strerror})\n")
         sys.exit(1)
 
     # decouple from parent environment
@@ -38,7 +38,7 @@ def daemonize() -> None:
         if pid > 0:
             sys.exit(0)
     except OSError as e:
-        sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
+        sys.stderr.write(f"Fork failed (#2): {e.errno} ({e.strerror})\n")
         sys.exit(1)
 
     sys.stdout.flush()
@@ -84,7 +84,7 @@ def lock_with_pid_file(path: Path) -> None:
     # Now that we have the lock we are allowed to write our pid to the file.
     # The pid can then be used by the init script.
     with path.open("w", encoding="utf-8") as f:
-        f.write("%d\n" % os.getpid())
+        f.write(f"{os.getpid()}\n")
 
 
 def _cleanup_locked_pid_file(path: Path) -> None:

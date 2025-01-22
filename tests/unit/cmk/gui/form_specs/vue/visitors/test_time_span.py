@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Callable
+from collections.abc import Callable, Sequence
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def _get_time_span(custom_validate: Sequence[Callable[[float], object]]) -> TimeSpan:

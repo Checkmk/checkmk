@@ -4,15 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="ObjectIdent, Result">
-import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
+import type {
+  FormSpec,
+  ValidationMessage
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import AlertBox from '@/components/AlertBox.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 export type Payload = Record<string, unknown>
 
@@ -44,7 +49,6 @@ const props = defineProps<FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Re
 const schema = ref<FormSpec>()
 const data = ref<Payload>()
 
-const error = ref<string>()
 const backendValidation = ref<Array<ValidationMessage>>([])
 
 async function save() {
@@ -53,14 +57,7 @@ async function save() {
   }
   backendValidation.value = []
 
-  error.value = ''
-  let result: SetDataResult<Result>
-  try {
-    result = await props.api.setData(props.objectId, toRaw(data.value))
-  } catch (apiError: unknown) {
-    error.value = (apiError as Error).toString()
-    return
-  }
+  const result: SetDataResult<Result> = await props.api.setData(props.objectId, toRaw(data.value))
 
   if (result.type === 'success') {
     emit('submitted', result.entity)
@@ -87,54 +84,50 @@ async function reloadAll({
   api: API<ObjectIdent, Result>
   objectId: ObjectIdent | null
 }) {
-  error.value = ''
-  try {
-    const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])
-    data.value = apiData
-    schema.value = apiSchema
-  } catch (apiError: unknown) {
-    error.value = (apiError as Error).toString()
-  }
+  const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])
+  data.value = apiData
+  schema.value = apiSchema
 }
 
 immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { FormEditDispatcher } = useFormEditDispatcher()
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
   <div class="edit-object__wrapper">
-    <div v-if="!error" class="edit-object__buttons">
-      <CmkButtonSubmit @click="save">
-        {{
-          objectId === undefined ? props.i18n.create_button : props.i18n.save_button
-        }}</CmkButtonSubmit
-      >
-      <CmkSpace />
-      <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
-      <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
-      <AlertBox v-if="backendValidation.length !== 0" variant="error">
-        {{ i18n.validation_error }}
-      </AlertBox>
-    </div>
-    <AlertBox v-if="error" variant="error">
-      {{ i18n.fatal_error }}
-      {{ error }}
-      <button @click="() => reloadAll({ api: props.api, objectId: props.objectId })">reload</button>
-    </AlertBox>
-    <div class="edit-object__content">
-      <div v-if="schema !== undefined && !error && data !== undefined">
-        <FormEditDispatcher
-          v-model:data="data"
-          :spec="schema"
-          :backend-validation="backendValidation"
-        />
+    <ErrorBoundary>
+      <div class="edit-object__buttons">
+        <CmkButtonSubmit @click="save">
+          {{
+            objectId === undefined ? props.i18n.create_button : props.i18n.save_button
+          }}</CmkButtonSubmit
+        >
+        <CmkSpace />
+        <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
+        <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
+        <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
+          {{ i18n.validation_error }}
+        </CmkAlertBox>
       </div>
-      <div v-if="schema === undefined && !error">
-        <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
-      </div>
-    </div>
+      <CmkScrollContainer>
+        <div class="edit-object__content">
+          <div v-if="schema !== undefined && data !== undefined">
+            <FormEditDispatcher
+              v-model:data="data"
+              :spec="schema"
+              :backend-validation="backendValidation"
+            />
+          </div>
+          <div v-if="schema === undefined">
+            <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+          </div>
+        </div>
+      </CmkScrollContainer>
+    </ErrorBoundary>
   </div>
 </template>
 

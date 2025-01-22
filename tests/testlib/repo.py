@@ -11,11 +11,13 @@ import subprocess
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import suppress
+from functools import cache
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
 
+@cache
 def repo_path() -> Path:
     """Returns the checkout/worktree path (in contrast to the 'git-dir')
     same as result of `git rev-parse --show-toplevel`, but repo_path is being executed
@@ -50,13 +52,21 @@ def add_python_paths() -> None:
 def add_protocols_path():
     sys.path.insert(0, str(repo_path()))
     if is_enterprise_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "cmc-protocols"))
+        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))
 
 
+def add_otel_collector_path() -> None:
+    sys.path.insert(0, str(repo_path()))
+    if is_cloud_repo() or is_managed_repo():
+        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-otel-collector"))
+
+
+@cache
 def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
+@cache
 def branch_from_env(*, env_var: str, fallback: str | Callable[[], str] | None = None) -> str:
     if branch := os.environ.get(env_var):
         return branch
@@ -65,6 +75,7 @@ def branch_from_env(*, env_var: str, fallback: str | Callable[[], str] | None = 
     raise RuntimeError(f"{env_var} environment variable, e.g. master, is missing")
 
 
+@cache
 def current_branch_version() -> str:
     return subprocess.check_output(
         [
@@ -78,6 +89,7 @@ def current_branch_version() -> str:
     ).strip()
 
 
+@cache
 def current_base_branch_name() -> str:
     branch_name = current_branch_name()
 
@@ -128,6 +140,7 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
+@cache
 def current_branch_name(default: str = "no-branch") -> str:
     try:
         branch_name = subprocess.check_output(
@@ -141,6 +154,7 @@ def current_branch_name(default: str = "no-branch") -> str:
     return branch_name.split("\n", 1)[0]
 
 
+@cache
 def git_commit_id(path: Path | str) -> str:
     """Returns the git hash for given @path."""
     return subprocess.check_output(
@@ -152,6 +166,7 @@ def git_commit_id(path: Path | str) -> str:
     ).strip("\n")
 
 
+@cache
 def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
     """Yields paths to all directories needed to be accessible in order to run git operations
     Note that if a directory is a subdirectory of checkout_dir it will be skipped"""
@@ -181,6 +196,7 @@ def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
                     yield alternate.as_posix()
 
 
+@cache
 def find_git_rm_mv_files(dirpath: Path) -> list[str]:
     del_files = []
 

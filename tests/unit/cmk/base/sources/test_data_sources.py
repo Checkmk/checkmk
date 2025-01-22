@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import OnError
 

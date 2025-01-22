@@ -3,26 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Runs and obseves regular jobs in the cmk.gui context"""
+"""Runs and observes regular jobs in the cmk.gui context"""
 
 import datetime
 import logging
 import os
 import sys
+import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from setproctitle import setproctitle
 
-from cmk.ccc import store
+import cmk.ccc.version as cmk_version
+from cmk.ccc import crash_reporting, store
+from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
 from cmk.utils import paths
 
-from cmk.gui import main_modules
-from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
@@ -40,7 +41,24 @@ def _pid_file(omd_root: Path) -> Path:
     return omd_root / "tmp" / "run" / "cmk-ui-job-scheduler.pid"
 
 
-def main() -> int:
+class JobSchedulerCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
+    @classmethod
+    def type(cls) -> str:
+        return "ui-job-scheduler"
+
+
+def default_crash_report_callback(_exc: Exception) -> str:
+    crash = JobSchedulerCrashReport(
+        paths.crash_dir,
+        JobSchedulerCrashReport.make_crash_info(
+            cmk_version.get_general_version_infos(paths.omd_root)
+        ),
+    )
+    crash_reporting.CrashReportStore().save(crash)
+    return crash.ident_to_text()
+
+
+def main(crash_report_callback: Callable[[Exception], str]) -> int:
     try:
         setproctitle("cmk-ui-job-scheduler")
         os.unsetenv("LANG")
@@ -48,6 +66,9 @@ def main() -> int:
         omd_root = Path(os.environ.get("OMD_ROOT", ""))
 
         _setup_console_logging()
+
+        daemonize()
+
         init_span_processor(
             trace.init_tracing(
                 service_namespace="",
@@ -59,22 +80,20 @@ def main() -> int:
         )
         add_span_log_handler()
 
+        # The import and load_pugins take a few seconds and we don't want to delay the
+        # pre-daemonize phase with this, because it also slows down "omd start" significantly.
+        from cmk.gui import main_modules
+
         main_modules.load_plugins()
         if errors := get_failed_plugins():
             raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
 
-        daemonize()
-
         with pid_file_lock(_pid_file(omd_root)):
             init_logging()
-            _run_scheduler()
-    except Exception:
-        crash = create_gui_crash_report()
-        logger.error(
-            "Unhandled exception (Crash ID: %s)",
-            crash.ident_to_text(),
-            exc_info=True,
-        )
+            _run_scheduler(crash_report_callback)
+    except Exception as exc:
+        crash_msg = crash_report_callback(exc)
+        logger.error("Unhandled exception (Crash ID: %s)", crash_msg, exc_info=True)
         return 1
     return 0
 
@@ -85,21 +104,21 @@ def _setup_console_logging() -> None:
     logger.addHandler(handler)
 
 
-def _run_scheduler() -> None:
+def _run_scheduler(crash_report_callback: Callable[[Exception], str]) -> None:
+    job_threads: dict[str, threading.Thread] = {}
     while True:
-        # gui_context is within the loop to ensure that config changes are automatically applied
-        with gui_context(), SuperUserContext():
-            try:
-                cycle_start = time.time()
-                run_scheduled_jobs(list(cron_job_registry.values()))
-                time.sleep(60 - (time.time() - cycle_start))
-            except Exception:
-                crash = create_gui_crash_report()
-                logger.error(
-                    "Exception in scheduler (Crash ID: %s)",
-                    crash.ident_to_text(),
-                    exc_info=True,
-                )
+        cycle_start = time.time()
+        _collect_finished_threads(job_threads)
+
+        try:
+            run_scheduled_jobs(list(cron_job_registry.values()), job_threads, crash_report_callback)
+        except Exception as exc:
+            crash_msg = crash_report_callback(exc)
+            logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
+
+        if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
+            time.sleep(sleep_time)
+    _wait_for_job_threads(job_threads)
 
 
 def _load_last_job_runs() -> dict[str, datetime.datetime]:
@@ -127,27 +146,89 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
     ]
 
 
-@tracer.start_as_current_span("run_scheduled_jobs")
-def run_scheduled_jobs(jobs: Sequence[CronJob]) -> None:
+@tracer.instrument()
+def run_scheduled_jobs(
+    jobs: Sequence[CronJob],
+    job_threads: dict[str, threading.Thread],
+    crash_report_callback: Callable[[Exception], str],
+) -> None:
     logger.debug("Starting cron jobs")
 
     for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
         try:
-            with tracer.start_as_current_span(
-                f"run_cron_job[{job.name}]", attributes={"cmk.gui.job_name": job.name}
-            ):
-                logger.debug("Starting [%s]", job.name)
-                job.callable()
-                logger.debug("Finished [%s]", job.name)
-        except Exception:
-            crash = create_gui_crash_report()
+            if job.name in job_threads:
+                logger.debug("Skipping [%s] as it is already running", job.name)
+                continue
+
+            with tracer.span(
+                f"run_cron_job[{job.name}]",
+                attributes={
+                    "cmk.gui.job_name": job.name,
+                    "cmk.gui.job_run_in_thread": str(job.run_in_thread),
+                    "cmk.gui.job_interval": str(job.interval.total_seconds()),
+                },
+            ) as span:
+                if job.run_in_thread:
+                    logger.debug("Starting [%s] in thread", job.name)
+                    job_threads[job.name] = thread = threading.Thread(
+                        target=job_thread_main,
+                        args=(
+                            job,
+                            trace.Link(span.get_span_context()),
+                            crash_report_callback,
+                        ),
+                    )
+                    thread.start()
+                    logger.debug("Started [%s]", job.name)
+                else:
+                    logger.debug("Starting [%s] unthreaded", job.name)
+                    with gui_context(), SuperUserContext():
+                        job.callable()
+                    logger.debug("Finished [%s]", job.name)
+        except Exception as exc:
+            crash_msg = crash_report_callback(exc)
             logger.error(
-                "Exception in cron job (Job: %s Crash ID: %s)",
-                job.name,
-                crash.ident_to_text(),
-                exc_info=True,
+                "Exception in cron job (Job: %s Crash ID: %s)", job.name, crash_msg, exc_info=True
             )
         job_runs[job.name] = datetime.datetime.now()
     _save_last_job_runs(job_runs)
 
     logger.debug("Finished all cron jobs")
+
+
+def job_thread_main(
+    job: CronJob, origin_span: trace.Link, crash_report_callback: Callable[[Exception], str]
+) -> None:
+    try:
+        with (
+            tracer.span(
+                f"job_thread_main[{job.name}]",
+                attributes={"cmk.gui.job_name": job.name},
+                links=[origin_span],
+            ),
+            gui_context(),
+            SuperUserContext(),
+        ):
+            job.callable()
+    except Exception as exc:
+        crash_msg = crash_report_callback(exc)
+        logger.error(
+            "Exception in cron job thread (Job: %s Crash ID: %s)",
+            job.name,
+            crash_msg,
+            exc_info=True,
+        )
+
+
+@tracer.instrument()
+def _wait_for_job_threads(job_threads: dict[str, threading.Thread]) -> None:
+    logger.debug("Waiting for threads to terminate")
+    for thread in job_threads.values():
+        thread.join()
+
+
+def _collect_finished_threads(job_threads: dict[str, threading.Thread]) -> None:
+    for job_name, thread in list(job_threads.items()):
+        if not thread.is_alive():
+            logger.debug("Removing finished thread [%s]", job_name)
+            del job_threads[job_name]

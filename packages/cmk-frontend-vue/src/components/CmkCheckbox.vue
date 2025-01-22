@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
@@ -26,7 +27,7 @@ const props = defineProps<CmkCheckboxProps>()
         </svg>
       </CheckboxIndicator>
     </CheckboxRoot>
-    <span v-if="props.label"><CmkSpace size="small" />{{ label }}</span>
+    <span v-if="props.label"><CmkSpace size="small" /><CmkHtml :html="label" /></span>
   </label>
 </template>
 
@@ -34,28 +35,37 @@ const props = defineProps<CmkCheckboxProps>()
 .cmk-checkbox {
   cursor: pointer;
   display: inline-block;
-}
-.cmk-checkbox :deep(.cmk-checkbox__button) {
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-bg-color);
-  border-radius: 2px;
-  height: 12.5px;
-  width: 12.5px;
+  padding: 2px 0;
 
-  box-shadow: none; /* disable active/focus style of button */
-  padding: 0;
-  margin: 0;
-  vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
-}
-.cmk-checkbox:hover :deep(.cmk-checkbox__button) {
-  background-color: var(--input-hover-bg-color);
-}
-.cmk-checkbox .cmk-checkbox__indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.cmk-checkbox .cmk-checkbox__indicator svg {
-  width: 8px;
+  & :deep(.cmk-checkbox__button) {
+    background-color: var(--default-form-element-bg-color);
+    border: 1px solid var(--default-form-element-bg-color);
+    border-radius: 2px;
+    height: 14.5px;
+    width: 14.5px;
+
+    box-shadow: none; /* disable active/focus style of button */
+    padding: 0;
+    margin: 0;
+    vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
+  }
+
+  &:hover :deep(.cmk-checkbox__button) {
+    background-color: var(--input-hover-bg-color);
+  }
+
+  .cmk-checkbox__indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    svg {
+      width: 8px;
+    }
+  }
+
+  span {
+    vertical-align: middle;
+  }
 }
 </style>

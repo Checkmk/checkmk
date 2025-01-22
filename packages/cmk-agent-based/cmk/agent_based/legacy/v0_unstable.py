@@ -34,12 +34,14 @@ from cmk.agent_based.v2 import (
 )
 
 __all__ = [
-    "STATE_MARKERS",
     "check_levels",
-    "passwordstore_get_cmdline",
-    "LegacyResult",
-    "LegacyCheckResult",
     "LegacyCheckDefinition",
+    "LegacyCheckResult",
+    "LegacyDiscoveryResult",
+    "LegacyResult",
+    "LegacyService",
+    "passwordstore_get_cmdline",
+    "STATE_MARKERS",
 ]
 
 _DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg,misc]
@@ -50,18 +52,29 @@ _DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]  # type: ignore[m
 
 _OptNumber = None | int | float
 
-_MetricTuple = (
-    tuple[str, float]
-    | tuple[str, float, _OptNumber, _OptNumber]
-    | tuple[str, float, _OptNumber, _OptNumber, _OptNumber, _OptNumber]
-)
+_MetricTupleMinimal = tuple[str, float]
+_MetricTupleWithLevels = tuple[str, float, _OptNumber, _OptNumber]
+_MetricTupleWithLevelsAndBoundary = tuple[
+    str, float, _OptNumber, _OptNumber, _OptNumber, _OptNumber
+]
 
-_SingleResult = tuple[int, str] | tuple[int, str, list[_MetricTuple]]
+
+# there are for more variants than these, but let's keep it as 'simple' as possible.
+LegacyResult = (
+    tuple[int, str]
+    | tuple[
+        int,
+        str,
+        list[_MetricTupleMinimal]
+        | list[_MetricTupleWithLevels]
+        | list[_MetricTupleWithLevelsAndBoundary],
+    ]
+)
 
 
 _CheckFunctionLegacy = Callable[
     ...,
-    None | _SingleResult | Iterable[_SingleResult] | Generator[_SingleResult, None, None],
+    None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult, None, None],
 ]
 _CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
 
@@ -84,9 +97,10 @@ STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
 
 _Levels = tuple  # type: ignore[type-arg] # Has length 2 or 4
 
-LegacyResult = tuple[int, str, list[_MetricTuple]]
+LegacyCheckResult = Generator[LegacyResult, None, None]
 
-LegacyCheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
+LegacyService = tuple[str | None, Mapping[str, object]]
+LegacyDiscoveryResult = Iterable[LegacyService]
 
 
 def _normalize_levels(levels: _Levels) -> _Levels:
@@ -144,7 +158,7 @@ def _build_perfdata(
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
-def check_levels(  # noqa: PLR0913
+def check_levels(
     value: int | float,
     dsname: None | str,
     params: Any,
@@ -152,7 +166,7 @@ def check_levels(  # noqa: PLR0913
     human_readable_func: Callable | None = None,  # type: ignore[type-arg]
     infoname: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
-) -> LegacyResult:
+) -> tuple[int, str, list[_MetricTupleWithLevelsAndBoundary]]:
     """Generic function for checking a value against levels
 
     This also supports predictive levels.

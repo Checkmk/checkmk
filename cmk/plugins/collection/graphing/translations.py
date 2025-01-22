@@ -437,7 +437,7 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),
-        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count).*$": translations.RenameToAndScaleBy(
+        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count|fs_used_percent).*$": translations.RenameToAndScaleBy(
             "fs_used",
             1048576,
         ),
@@ -1509,7 +1509,7 @@ translation_sansymphony_pool = translations.Translation(
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),
-        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count).*$": translations.RenameToAndScaleBy(
+        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count|fs_used_percent).*$": translations.RenameToAndScaleBy(
             "fs_used",
             1048576,
         ),

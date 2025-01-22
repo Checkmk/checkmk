@@ -2,9 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, NamedTuple
+from typing import NamedTuple
 
 from cmk.ccc.i18n import _
 
@@ -15,7 +15,6 @@ from cmk.utils.notify_types import (
     NotificationParameterMethod,
 )
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
@@ -25,6 +24,8 @@ from cmk.gui.form_specs.vue.visitors import (
 )
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._registry import NotificationParameterRegistry
 
@@ -144,4 +145,6 @@ def get_notification_parameter(
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
     _, values = visitor.to_vue(item)
     assert isinstance(values, Mapping)
+    assert isinstance(item, Mapping)
+    assert isinstance(item["general"], Mapping)
     return NotificationParameter(description=item["general"]["description"], data=values)

@@ -13,6 +13,7 @@ from cmk.gui.http import Request
 
 @pytest.mark.usefixtures("patch_theme")
 @pytest.mark.usefixtures("suppress_license_expiry_header")
+@pytest.mark.usefixtures("suppress_license_banner")
 def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     app = logged_in_wsgi_app
@@ -31,6 +32,7 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
 
 @pytest.mark.usefixtures("patch_theme")
 @pytest.mark.usefixtures("suppress_license_expiry_header")
+@pytest.mark.usefixtures("suppress_license_banner")
 def test_ajax_call_2(
     wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,

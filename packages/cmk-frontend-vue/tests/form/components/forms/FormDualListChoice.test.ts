@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormDualListChoiceComponent from '@/form/components/forms/FormDualListChoice.vue'
 
 const spec: FormSpec.DualListChoice = {
@@ -26,7 +26,9 @@ const spec: FormSpec.DualListChoice = {
     selected_options: 'Selected options',
     selected: 'Selected',
     no_elements_available: 'No elements available',
-    no_elements_selected: 'No elements selected'
+    no_elements_selected: 'No elements selected',
+    autocompleter_loading: 'Loading',
+    and_x_more: 'and %s more'
   },
   validators: [],
   show_toggle_all: false

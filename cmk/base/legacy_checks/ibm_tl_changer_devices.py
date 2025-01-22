@@ -7,7 +7,7 @@
 from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import any_of, SNMPTree, startswith, StringTable
 
 check_info = {}
 
@@ -37,7 +37,10 @@ def parse_ibm_tl_changer_devices(string_table: StringTable) -> StringTable:
 check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
     name="ibm_tl_changer_devices",
     parse_function=parse_ibm_tl_changer_devices,
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
+    detect=any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.254"),
+    ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14851.3.1.11.2.1",
         oids=["4", "8", "9"],

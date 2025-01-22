@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import time_machine
+from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -28,9 +29,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
-    CustomHostAttrSpec,
     save_custom_attrs_to_mk_file,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -642,8 +643,10 @@ def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
 def test_openapi_host_rename(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
+    automation = mocker.patch("cmk.gui.watolib.host_rename.rename_hosts")
 
     clients.HostConfig.create(
         host_name="foobar",
@@ -653,6 +656,7 @@ def test_openapi_host_rename(
         host_name="foobar",
         new_name="foobaz",
     ).assert_status_code(204)
+    automation.assert_called_once()
 
 
 def test_openapi_host_rename_wait_for_completion_without_job(clients: ClientRegistry) -> None:

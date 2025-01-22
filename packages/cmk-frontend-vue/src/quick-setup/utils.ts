@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export const asStringArray = (value?: string[] | string): string[] => {
+export function asStringArray<T>(value?: T[] | T): T[] {
   if (!value) {
     return []
   }

@@ -32,6 +32,10 @@ __all__ = [
     "AutocheckEntryProtocol",
 ]
 
+type _DiscoveredLabels = Mapping[str, str]
+
+type _Labels = Mapping[str, str]
+
 
 class CheckPluginName(ValidatedString):
     MANAGEMENT_PREFIX: Final = "mgmt_"
@@ -57,16 +61,14 @@ class ServiceID(NamedTuple):
 
 @dataclass(frozen=True)
 class ConfiguredService:
-    """A service with almost all information derived from the config
-
-    Currently missing the configured service labels.
-    """
+    """A service with all information derived from the config"""
 
     check_plugin_name: CheckPluginName
     item: Item
     description: ServiceName
     parameters: TimespecificParameters
     discovered_parameters: Mapping[str, object]
+    labels: Mapping[str, str]
     discovered_labels: Mapping[str, str]
     is_enforced: bool
 
@@ -93,21 +95,24 @@ class AutocheckEntryProtocol(Protocol):
     def parameters(self) -> Mapping[str, object]: ...
 
     @property
-    def service_labels(self) -> Mapping[str, str]: ...
+    def service_labels(self) -> _DiscoveredLabels: ...
 
 
 class ServiceConfigurer:
     def __init__(
         self,
         compute_check_parameters: Callable[
-            [HostName, CheckPluginName, Item, Mapping[str, object]], TimespecificParameters
+            [HostName, CheckPluginName, Item, _Labels, Mapping[str, object]],
+            TimespecificParameters,
         ],
         get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-        get_effective_host: Callable[[HostName, str], HostName],
+        get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
+        get_service_labels: Callable[[HostName, ServiceName, _DiscoveredLabels], _Labels],
     ) -> None:
         self._compute_check_parameters = compute_check_parameters
         self._get_service_description = get_service_description
         self._get_effective_host = get_effective_host
+        self._get_service_labels = get_service_labels
 
     def _configure_autocheck(
         self, hostname: HostName, autocheck_entry: AutocheckEntryProtocol
@@ -116,18 +121,21 @@ class ServiceConfigurer:
         service_name = self._get_service_description(
             hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
         )
+        labels = self._get_service_labels(hostname, service_name, autocheck_entry.service_labels)
 
         return ConfiguredService(
             check_plugin_name=autocheck_entry.check_plugin_name,
             item=autocheck_entry.item,
             description=service_name,
             parameters=self._compute_check_parameters(
-                self._get_effective_host(hostname, service_name),
+                self._get_effective_host(hostname, service_name, labels),
                 autocheck_entry.check_plugin_name,
                 autocheck_entry.item,
+                labels,
                 autocheck_entry.parameters,
             ),
             discovered_parameters=autocheck_entry.parameters,
+            labels=labels,
             discovered_labels=autocheck_entry.service_labels,
             is_enforced=False,
         )
@@ -167,13 +175,14 @@ class CheckPlugin:
 
 def merge_enforced_services(
     services: Mapping[HostAddress, Mapping[ServiceID, tuple[object, ConfiguredService]]],
-    appears_on_cluster: Callable[[HostAddress, ServiceName], bool],
+    appears_on_cluster: Callable[[HostAddress, ServiceName, _DiscoveredLabels], bool],
+    labels_of_service: Callable[[ServiceName, _DiscoveredLabels], _Labels],
 ) -> Iterable[ConfiguredService]:
     """Aggregate services from multiple nodes"""
     entries_by_id: dict[ServiceID, list[ConfiguredService]] = defaultdict(list)
     for node, node_services in services.items():
         for sid, (_, service) in node_services.items():
-            if appears_on_cluster(node, service.description):
+            if appears_on_cluster(node, service.description, service.discovered_labels):
                 entries_by_id[sid].append(service)
 
     return [
@@ -184,10 +193,13 @@ def merge_enforced_services(
             parameters=TimespecificParameters(
                 [ps for entry in entries for ps in entry.parameters.entries]
             ),
-            # For consistency we merge the following two fields. At the time of writing, they are
-            # always empty for enforced services.
+            # For consistency we also merge `discovered_{parameters,labels}`.
+            # At the time of writing, they are always empty for enforced services.
             discovered_parameters=merge_parameters([e.discovered_parameters for e in entries], {}),
-            discovered_labels=merge_parameters([e.discovered_labels for e in entries], {}),
+            discovered_labels=(
+                discovered_labels := merge_parameters([e.discovered_labels for e in entries], {})
+            ),
+            labels=labels_of_service(entries[0].description, discovered_labels),
             is_enforced=True,
         )
         for sid, entries in entries_by_id.items()

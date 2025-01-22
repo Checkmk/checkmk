@@ -14,7 +14,6 @@ def test_registered_generators() -> None:
     expected_generators = [
         "acknowledge_initial_werks",
         "basic_wato_config",
-        "create_automation_user",
         "create_registration_automation_user",
         "ec_sample_rule_pack",
     ]
@@ -42,7 +41,6 @@ def test_get_sorted_generators() -> None:
     expected += [
         "acknowledge_initial_werks",
         "ec_sample_rule_pack",
-        "create_automation_user",
         "create_registration_automation_user",
     ]
 

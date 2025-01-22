@@ -29,7 +29,7 @@ export function start(siteid: string, est: number, progress_text: string) {
     call_ajax("wato_ajax_profile_repl.py", {
         response_handler: function (
             handler_data: {site_id: string},
-            response_json: string
+            response_json: string,
         ) {
             const response: CMKAjaxReponse<string> = JSON.parse(response_json);
 
@@ -43,7 +43,7 @@ export function start(siteid: string, est: number, progress_text: string) {
                 site_id: string;
             },
             status_code: number,
-            error_msg: string
+            error_msg: string,
         ) {
             set_result(
                 handler_data["site_id"],
@@ -51,7 +51,7 @@ export function start(siteid: string, est: number, progress_text: string) {
                 "Failed to perform profile replication [" +
                     status_code +
                     "]: " +
-                    error_msg
+                    error_msg,
             );
         },
         method: "POST",
@@ -60,7 +60,7 @@ export function start(siteid: string, est: number, progress_text: string) {
             encodeURIComponent(
                 JSON.stringify({
                     site: siteid,
-                })
+                }),
             ),
         handler_data: {
             site_id: siteid,

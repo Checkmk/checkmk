@@ -43,8 +43,9 @@ await_process_stop() {
 }
 
 rabbitmq_accepting_connections() {
-    LANG="C.utf8" \  # set locale to avoid irrelevant warnings in log
-    LC_CTYPE="C.utf8" \
+    # set locale to avoid irrelevant warnings in log
+    LANG="C.utf8" \
+        LC_CTYPE="C.utf8" \
         "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
 }
 

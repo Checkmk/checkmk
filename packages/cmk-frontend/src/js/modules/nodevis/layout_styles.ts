@@ -116,7 +116,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     //    The child node with the style is also included for positioning computing, unless it's detached from the parent
     _set_hierarchy_filter(
         node: NodevisNode,
-        first_node = false
+        first_node = false,
     ): NodevisNode[] {
         if (
             (!first_node &&
@@ -135,7 +135,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
             for (const idx in node.children_backup) {
                 const child_node = node.children_backup[idx];
                 node.children = node.children.concat(
-                    this._set_hierarchy_filter(child_node)
+                    this._set_hierarchy_filter(child_node),
                 );
             }
             if (node.children.length == 0) delete node.children;
@@ -158,7 +158,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     }
 
     get_drag_callback(
-        drag_function: (event: D3DragEvent<any, any, any>) => void
+        drag_function: (event: D3DragEvent<any, any, any>) => void,
     ): DragBehavior<any, any, any> {
         return drag()
             .on("start.drag", event => this._drag_start(event))
@@ -170,7 +170,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.drag_start_info.start_coords = [event.x, event.y];
         this.drag_start_info.delta = {x: 0, y: 0};
         this.drag_start_info.options = JSON.parse(
-            JSON.stringify(this.style_config.options)
+            JSON.stringify(this.style_config.options),
         );
         this.show_style_configuration();
         this._world.viewport.get_layout_manager().dragging = true;
@@ -178,7 +178,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 
     _drag_drag(
         event: D3DragEvent<any, any, any>,
-        drag_function: (event: D3DragEvent<any, any, any>) => void
+        drag_function: (event: D3DragEvent<any, any, any>) => void,
     ): void {
         this.drag_start_info.delta.x += event.dx;
         this.drag_start_info.delta.y += event.dy;
@@ -291,7 +291,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                     )
                         bounding_rect = get_bounding_rect_of_rotated_vertices(
                             node_style.unrotated_vertices,
-                            rad
+                            rad,
                         );
                     return [
                         bounding_rect.height * 1.1 + 100,
@@ -312,7 +312,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 )
                     bounding_rect = get_bounding_rect_of_rotated_vertices(
                         node_style.unrotated_vertices,
-                        node_rad
+                        node_rad,
                     );
 
                 let extra_width = 0;
@@ -357,8 +357,8 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         this._vertices.push(
             this._compute_svg_vertex(
                 this.style_root_node.x,
-                this.style_root_node.y
-            )
+                this.style_root_node.y,
+            ),
         );
 
         const sub_nodes_with_explicit_style: NodevisNode[] = [];
@@ -383,7 +383,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
             if (apply_style_force) {
                 const force = this.get_default_node_force(
-                    node
+                    node,
                 ) as unknown as NodeForce;
 
                 force.fx = this.style_root_node.x + x;
@@ -391,7 +391,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 force.text_positioning = text_positioning;
                 force.use_transition = this.use_transition;
                 this._vertices.push(
-                    this._compute_svg_vertex(force.fx, force.fy)
+                    this._compute_svg_vertex(force.fx, force.fy),
                 );
             }
 
@@ -410,13 +410,13 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 "retranslate style " +
                     used_style.type() +
                     " of subnode " +
-                    node.data.name
+                    node.data.name,
             );
             compute_node_position(node);
             used_style.force_style_translation();
             used_style.translate_coords();
             compute_node_positions_from_list_of_nodes(
-                used_style.filtered_descendants
+                used_style.filtered_descendants,
             );
         });
 
@@ -431,7 +431,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
         this.selection.attr(
             "transform",
-            "scale(" + this._world.viewport.last_zoom.k + ")"
+            "scale(" + this._world.viewport.last_zoom.k + ")",
         );
 
         this.add_enclosing_hull(this.selection, this._vertices);
@@ -442,7 +442,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(
                     (event: D3DragEvent<any, any, any>) =>
-                        this.resize_layer_drag(event)
+                        this.resize_layer_drag(event),
                 ),
             },
             {
@@ -460,7 +460,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     }
 
     get_text_positioning(
-        rad: number
+        rad: number,
     ): (x: Selection<BaseType, unknown, BaseType, unknown>) => any {
         rad = rad / 2;
         if (rad > (3 / 4) * Math.PI) rad = rad - Math.PI;
@@ -521,18 +521,18 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 (this._default_options.node_size as number) / 2,
                 Math.min(
                     (this._default_options.node_size as number) * 8,
-                    node_size
-                )
-            )
+                    node_size,
+                ),
+            ),
         );
         this.style_config.options.layer_height = Math.floor(
             Math.max(
                 (this._default_options.layer_height as number) / 2,
                 Math.min(
                     (this._default_options.layer_height as number) * 8,
-                    layer_height
-                )
-            )
+                    layer_height,
+                ),
+            ),
         );
     }
 
@@ -552,7 +552,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         for (const idx in max_elements_per_layer)
             highest_density = Math.max(
                 highest_density,
-                max_elements_per_layer[idx]
+                max_elements_per_layer[idx],
             );
 
         const width =
@@ -687,13 +687,13 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 !this.style_root_node.parent
             ) {
                 const force = this.get_default_node_force(
-                    node
+                    node,
                 ) as unknown as NodeForce;
                 force.fx = offsets.x + x;
                 force.fy = offsets.y + y;
                 force.text_positioning = this._get_radial_text_positioning(
                     entry,
-                    this._text_rotations[idx]
+                    this._text_rotations[idx],
                 );
                 force.use_transition = this.use_transition;
             }
@@ -719,7 +719,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 
     _get_radial_text_positioning(
         entry: [NodevisNode, number, number],
-        node_rad: number
+        node_rad: number,
     ): (a: d3SelectionSvg) => void {
         const node = entry[0];
 
@@ -761,12 +761,12 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 
         this.selection.attr(
             "transform",
-            "scale(" + this._world.viewport.last_zoom.k + ")"
+            "scale(" + this._world.viewport.last_zoom.k + ")",
         );
 
         const degree = Math.min(
             360,
-            Math.max(0, this.style_config.options.degree as number)
+            Math.max(0, this.style_config.options.degree as number),
         );
         const end_angle = (degree / 180) * Math.PI;
 
@@ -774,7 +774,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
             .innerRadius(25)
             .outerRadius(
                 (this.style_config.options.radius as number) *
-                    (this.max_depth - this.style_root_node.depth + 1)
+                    (this.max_depth - this.style_root_node.depth + 1),
             )
             .startAngle(2 * Math.PI - end_angle + Math.PI / 2)
             .endAngle(2 * Math.PI + Math.PI / 2);
@@ -796,7 +796,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 ")" +
                 "rotate(" +
                 -this.get_rotation() +
-                ")"
+                ")",
         );
 
         // Arc
@@ -853,9 +853,9 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 Math.max(
                     10,
                     (this.drag_start_info.options.radius as number) -
-                        this.drag_start_info.delta.y
-                )
-            )
+                        this.drag_start_info.delta.y,
+                ),
+            ),
         );
         this.changed_options(this.style_config.options);
     }
@@ -870,9 +870,9 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 Math.max(
                     10,
                     (this.drag_start_info.options.degree as number) -
-                        this.drag_start_info.delta.y
-                )
-            )
+                        this.drag_start_info.delta.y,
+                ),
+            ),
         );
         this.changed_options(this.style_config.options);
     }
@@ -987,7 +987,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         log(
             7,
             "translating block style, fixed positing:" +
-                this.has_fixed_position()
+                this.has_fixed_position(),
         );
 
         const abs_offsets: [number, number] = [
@@ -997,7 +997,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
 
         this._style_root_node_offsets.forEach(offset => {
             const force = this.get_default_node_force(
-                offset[0]
+                offset[0],
             ) as unknown as NodeForce;
             force.fx = abs_offsets[0] + offset[1];
             force.fy = abs_offsets[1] + offset[2];
@@ -1011,7 +1011,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
                             radius +
                             "," +
                             (radius + 4) +
-                            ") rotate(45)"
+                            ") rotate(45)",
                     )
                     .attr("text-anchor", "start");
             // TODO: check this, changed refs to index, removed force-500
@@ -1032,7 +1032,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
 
         this.selection.attr(
             "transform",
-            "scale(" + this._world.viewport.last_zoom.k + ")"
+            "scale(" + this._world.viewport.last_zoom.k + ")",
         );
 
         const boundary = 10;
@@ -1061,9 +1061,10 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
             ]);
         });
         let hull = this.selection
-            .selectAll<SVGPathElement, [number, number][]>(
-                "path.children_boundary"
-            )
+            .selectAll<
+                SVGPathElement,
+                [number, number][]
+            >("path.children_boundary")
             .data([polygonHull(hull_vertices)]);
         hull = hull
             .enter()
@@ -1077,7 +1078,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
             hull.attr("d", function (d) {
                 if (d == null) return "";
                 return "M" + d.join("L") + "Z";
-            })
+            }),
         ).style("opacity", null);
 
         const connection_line = this.selection

@@ -7,7 +7,7 @@ set -e
 
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
-readonly ALL_LINTERS=mypy,pylint,bandit
+readonly ALL_LINTERS=mypy,ruff,bandit,semgrep
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -35,8 +35,9 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
-    RUN_PYLINT=no
+    RUN_RUFF=no
     RUN_BANDIT=no
+    RUN_SEMGREP=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
@@ -78,8 +79,9 @@ parse_options() {
                 RUN_UNIT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
-                RUN_PYLINT=yes
+                RUN_RUFF=yes
                 RUN_BANDIT=yes
+                RUN_SEMGREP=yes
                 shift
                 ;;
             '-f' | '--format')
@@ -107,7 +109,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_PYLINT RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 setup_venv() {
@@ -116,7 +118,7 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv_uv/bin/activate
+    source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
@@ -126,24 +128,29 @@ run_clean() {
 }
 
 run_unit_tests() {
-    setup_venv
-    pytest
+    "${BAZEL_CMD}" test :all
 }
 
 run_check_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
-    setup_venv
-    ruff check --select I --diff cmk tests
-    ruff format --check --diff cmk tests
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff pyproject.toml
+    "${BAZEL_CMD}" lint \
+        --aspect:interactive=false \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
+        --diff \
+        --machine \
+        :all
+    "${BAZEL_CMD}" run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy //packages/cmk-crypto:all
+    "${BAZEL_CMD}" build --config=mypy :all
 }
 
-run_pylint() {
-    setup_venv
-    PYTHONPATH=. pylint --jobs="${JOBS}" cmk tests
+run_ruff() {
+    "${BAZEL_CMD}" lint :all
 }
 
 run_bandit() {
@@ -154,11 +161,32 @@ run_bandit() {
     bandit --configfile=pyproject.toml --quiet --recursive --severity-level=medium cmk tests
 }
 
+run_semgrep() {
+    # semgrep requires a dedicated venv at the moment. We would rather have semgrep as regular dev
+    # dependency, which would make the run-semgrep wrapper obsolete. See also:
+    #   https://review.lan.tribe29.com/c/check_mk/+/92077
+    #   https://github.com/semgrep/semgrep/issues/10408
+    SEMGREP_DIR="$(bazel info workspace)/tests/semgrep"
+    "${SEMGREP_DIR}"/run-semgrep scan \
+        --config "${SEMGREP_DIR}/rules" \
+        --quiet \
+        --oss-only \
+        --use-git-ignore \
+        --disable-version-check \
+        cmk tests
+}
+
 run_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
-    setup_venv
-    ruff check --select I --fix cmk tests
-    ruff format cmk tests
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format pyproject.toml
+    "${BAZEL_CMD}" lint \
+        --aspect:interactive=false \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
+        --fix \
+        :all
+    "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_documentation() {
@@ -174,8 +202,9 @@ main() {
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
-    test ${RUN_PYLINT} = yes && run_pylint
+    test ${RUN_RUFF} = yes && run_ruff
     test ${RUN_BANDIT} = yes && run_bandit
+    test ${RUN_SEMGREP} = yes && run_semgrep
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     test ${RUN_FORMAT} = yes && run_format
     true

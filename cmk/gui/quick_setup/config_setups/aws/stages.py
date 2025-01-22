@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Callable
 
 from cmk.ccc.i18n import _
 
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import request
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -41,12 +43,15 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     FormSpecWrapper,
     ListOfWidgets,
+    NoteText,
     Text,
     Widget,
 )
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -80,6 +85,20 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 list_type="ordered",
             ),
+            NoteText(
+                text=_(
+                    "Note: For access options like AssumeRole or a custom IAM region, please use "
+                    "the %s."
+                )
+                % HTMLWriter.render_a(
+                    _("advanced configuration"),
+                    href=makeuri_contextless(
+                        request,
+                        [("mode", "edit_ruleset"), ("varname", "special_agents:aws")],
+                        "wato.py",
+                    ),
+                )
+            ),
             widgets.unique_id_formspec_wrapper(
                 title=Title("Configuration name"), prefill_template="aws_config"
             ),
@@ -107,6 +126,7 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and regions"),
+                run_in_background=True,
             )
         ],
     )
@@ -172,8 +192,8 @@ def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure services to monitor & other options"),
         sub_title=_(
-            "Select and configure AWS services you would like to monitor, and set other "
-            "options such as AWS tags or a proxy server."
+            "Select and configure AWS services you would like to monitor, "
+            "and optionally restrict them with AWS tags."
         ),
         configure_components=_configure,
         actions=[
@@ -188,6 +208,34 @@ def configure_services_to_monitor() -> QuickSetupStage:
         ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
+
+
+class _EC2RecapMessage:
+    @staticmethod
+    def _cre_message() -> str:
+        return _(
+            "Hosts for EC2 instances need to be created manually, please check the %s."
+        ) % HTMLWriter.render_a(
+            _("documentation"),
+            href=doc_reference_url(DocReference.AWS_EC2),
+        )
+
+    message: Callable[[], str] = _cre_message
+
+
+ec2_recap_message = _EC2RecapMessage()
+
+
+def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
+    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    if "ec2" in parsed_data.get(FormSpecId("configure_services_to_monitor"), {}).get(
+        "services", []
+    ):
+        message += " " + ec2_recap_message.message()
+    return [
+        Text(text=title),
+        Text(text=message),
+    ]
 
 
 def recap_found_services(
@@ -207,14 +255,7 @@ def recap_found_services(
         service_discovery_result=service_discovery_result,
     )
     if len(filtered_groups_of_services[aws_service_interest]):
-        return [
-            Text(text=_("AWS services found!")),
-            Text(
-                text=_(
-                    "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
-                )
-            ),
-        ]
+        return _save_and_activate_recap(_("AWS services found!"), parsed_data)
     return [
         Text(text=_("No AWS services found.")),
         Text(
@@ -239,19 +280,15 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
+                run_in_background=True,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, ____: [
-                        Text(text=_("Skipped the configuration test.")),
-                        Text(
-                            text=_(
-                                "Save your progress and go to the Activate Changes page to enable it."
-                            )
-                        ),
-                    ]
+                    lambda __, ___, parsed_data: _save_and_activate_recap(
+                        _("Skipped the configuration test."), parsed_data
+                    )
                 ],
                 next_button_label=_("Skip test"),
             ),
@@ -319,9 +356,15 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     regions_to_monitor = params["regions_to_monitor"]
     assert isinstance(regions_to_monitor, list)
     keys_to_rename = {"aws_lambda": "lambda"}
+    proxy_details = params.get("proxy_details")
     params = {
-        "access_key_id": params["access_key_id"],
-        "secret_access_key": params["secret_access_key"],
+        "auth": (
+            "access_key",
+            {
+                "access_key_id": params["access_key_id"],
+                "secret_access_key": params["secret_access_key"],
+            },
+        ),
         "global_services": {k: _migrate_aws_service(k) for k in global_services},
         "regions": [region.replace("_", "-") for region in regions_to_monitor],
         "access": {},
@@ -329,6 +372,11 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
     }
+    if proxy_details is not None:
+        assert isinstance(proxy_details, dict)
+        assert "proxy_host" in proxy_details
+        params["proxy_details"] = proxy_details
+
     if overall_tags is not None:
         assert isinstance(overall_tags, dict)
         if (restriction_tags := overall_tags.get("restriction_tags")) is not None:
@@ -352,6 +400,8 @@ quick_setup_aws = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            run_in_background=True,
+            custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         ),
     ],
 )

@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.private import ConditionChoices
-from cmk.gui.form_specs.vue.shared_type_defs import (
+from cmk.gui.form_specs.private import ConditionChoices, not_empty
+from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
+from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+
+from cmk.rulesets.v1 import Label
+from cmk.shared_typing.vue_formspec_components import (
     Condition,
     ConditionChoicesValue,
     ConditionGroup,
@@ -13,11 +17,8 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     Ne,
     Nor,
     Or,
+    ValidationMessage,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
-
-from cmk.rulesets.v1 import Label
 
 CONDITION_CHOICES_FS = ConditionChoices(
     select_condition_group_to_add=Label("add"),
@@ -44,6 +45,7 @@ CONDITION_CHOICES_FS = ConditionChoices(
             conditions=[Condition(name="ip-v6", title="ip-v6")],
         ),
     },
+    custom_validate=[not_empty()],
 )
 
 
@@ -89,3 +91,16 @@ def test_tags_from_frontend() -> None:
         "ip-v4": {"$ne": "ip-v4"},
         "ip-v6": "ip-v6",
     }
+
+
+def test_non_empty_validation() -> None:
+    visitor = get_visitor(CONDITION_CHOICES_FS, VisitorOptions(data_origin=DataOrigin.FRONTEND))
+    validation = visitor.validate([])
+
+    assert validation == [
+        ValidationMessage(
+            location=[],
+            message="An empty value is not allowed here",
+            invalid_value=[],
+        ),
+    ]

@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
+from cmk.gui.config import Config
+from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -2552,7 +2556,7 @@ builtin_views.update(
             "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
-            "icon": "event",
+            "icon": "history",
             "layout": "table",
             "mustsearch": False,
             "name": "events",
@@ -2579,7 +2583,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Host & service events"),
+            "title": _l("Events of host & services"),
             "topic": "history",
             "sort_index": 10,
             "user_sortable": True,
@@ -4672,7 +4676,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Host & service history"),
+            "title": _l("Notifications of host & services"),
             "topic": "history",
             "sort_index": 20,
             "user_sortable": True,
@@ -6126,3 +6130,25 @@ builtin_views.update(
         },
     }
 )
+
+
+@dataclass(frozen=True)
+class BuiltinViewExtender:
+    ident: str
+    callable: Callable[
+        [Mapping[ViewName, ViewSpec], DataSourceRegistry, Config], dict[ViewName, ViewSpec]
+    ]
+
+
+class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
+    def plugin_name(self, instance: BuiltinViewExtender) -> str:
+        return instance.ident
+
+
+def noop_builtin_view_extender(
+    views: Mapping[ViewName, ViewSpec], data_source_registry: DataSourceRegistry, config: Config
+) -> dict[ViewName, ViewSpec]:
+    return {**views}
+
+
+builtin_view_extender_registry = BuiltinViewExtenderRegistry()

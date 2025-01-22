@@ -13,4 +13,4 @@ REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 # project.
 cd "$REPO_PATH"
 
-exec "$REPO_PATH/scripts/run-pipenv" run pylint "$@"
+exec "$REPO_PATH/scripts/run-uvenv" pylint "$@"

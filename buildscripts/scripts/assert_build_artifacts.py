@@ -12,7 +12,7 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
-from tests.testlib.version import ABCPackageManager, code_name
+from tests.testlib.package_manager import ABCPackageManager, code_name
 
 from cmk.ccc.version import Edition
 
@@ -55,9 +55,9 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "raw" | "cloud":
+            case "raw" | "cloud" | "managed":
                 return "checkmk/"
-            case "enterprise" | "managed":
+            case "enterprise":
                 return f"{ed}/"
             case "saas":
                 return ""
@@ -80,7 +80,7 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
                 Edition.from_long_edition(edition), version=args.version
             )
             internal_only = (
-                distro in loaded_yaml["internal_distros"]
+                distro in loaded_yaml.get("internal_distros", [])
                 or edition in loaded_yaml["internal_editions"]
             )
             yield package_name, internal_only

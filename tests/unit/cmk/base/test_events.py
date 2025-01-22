@@ -24,6 +24,7 @@ import cmk.base.events
 from cmk.base.events import (
     _update_enriched_context_from_notify_host_file,
     add_to_event_context,
+    apply_matchers,
     convert_proxy_params,
     event_match_hosttags,
     raw_context_from_string,
@@ -484,3 +485,32 @@ def test_convert_proxy_params(
 ) -> None:
     params_dict = convert_proxy_params(params)
     assert params_dict["proxy_url"] == expected
+
+
+def test_apply_matchers_catches_errors() -> None:
+    rule = EventRule(
+        rule_id=NotificationRuleID("1"),
+        allow_disable=False,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=False,
+        description="Test rule",
+        disabled=False,
+        notify_plugin=("mail", NotificationParameterID("parameter_id")),
+    )
+
+    def raise_error() -> None:
+        raise ValueError("This is a test")
+
+    why_not = apply_matchers(
+        [
+            lambda *args, **kw: raise_error(),
+        ],
+        rule,
+        context={},
+        analyse=False,
+        all_timeperiods={},
+    )
+
+    assert isinstance(why_not, str)
+    assert "ValueError: This is a test" in why_not

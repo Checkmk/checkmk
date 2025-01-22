@@ -8,11 +8,10 @@ import logging
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple
+from typing import Any, NamedTuple
 
 import requests
 
-from tests.testlib.rest_api_client import RequestHandler, Response
 from tests.testlib.version import CMKVersion
 
 from cmk.gui.http import HTTPMethod
@@ -22,32 +21,6 @@ from cmk import trace
 
 logger = logging.getLogger("rest-session")
 tracer = trace.get_tracer()
-
-
-class RequestSessionRequestHandler(RequestHandler):
-    def __init__(self) -> None:
-        self.session = requests.session()
-
-    def request(
-        self,
-        method: HTTPMethod,
-        url: str,
-        query_params: Mapping[str, str] | None = None,
-        body: AnyStr | None = None,
-        headers: Mapping[str, str] | None = None,
-    ) -> Response:
-        resp = self.session.request(
-            method=method,
-            url=url,
-            params=query_params,
-            data=body,
-            headers=headers,
-            allow_redirects=True,
-        )
-        return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
-
-    def set_credentials(self, username: str, password: str) -> None:
-        self.session.headers["Authorization"] = f"Bearer {username} {password}"
 
 
 class RestSessionException(Exception):
@@ -107,6 +80,24 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
 
+        self.changes = ChangesAPI(self)
+        self.users = UsersAPI(self)
+        self.folders = FoldersAPI(self)
+        self.hosts = HostsAPI(self)
+        self.host_groups = HostGroupsAPI(self)
+        self.service_discovery = ServiceDiscoveryAPI(self)
+        self.services = ServicesAPI(self)
+        self.agents = AgentsAPI(self)
+        self.rules = RulesAPI(self)
+        self.rulesets = RulesetsAPI(self)
+        self.broker_connections = BrokerConnectionsAPI(self)
+        self.sites = SitesAPI(self)
+        self.background_jobs = BackgroundJobsAPI(self)
+        self.dcd = DcdAPI(self)
+        self.ldap_connection = LDAPConnectionAPI(self)
+        self.passwords = PasswordsAPI(self)
+        self.license = LicenseAPI(self)
+
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
@@ -152,441 +143,8 @@ class CMKOpenApiSession(requests.Session):
 
         return response
 
-    def activate_changes(
-        self,
-        sites: list[str] | None = None,
-        force_foreign_changes: bool = False,
-    ) -> None:
-        response = self.post(
-            "/domain-types/activation_run/actions/activate-changes/invoke",
-            json={
-                "redirect": True,
-                "sites": sites or [],
-                "force_foreign_changes": force_foreign_changes,
-            },
-            headers={"If-Match": "*"},
-            # We want to get the redirect response and handle that below. So don't let requests
-            # handle that for us.
-            allow_redirects=False,
-        )
-        if response.status_code == 200:
-            logger.info("Activation id: %s", response.json()["id"])
-            return  # changes are activated
-        if response.status_code == 422:
-            raise NoActiveChanges  # there are no changes
-        if 300 <= response.status_code < 400:
-            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        raise UnexpectedResponse.from_response(response)
-
-    def pending_changes(self, sites: list[str] | None = None) -> list[dict[str, Any]]:
-        """Returns a list of all changes currently pending."""
-        response = self.get("/domain-types/activation_run/collections/pending_changes")
-        assert response.status_code == 200
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
-
-    @tracer.start_as_current_span("activate_changes_and_wait_for_completion")
-    def activate_changes_and_wait_for_completion(
-        self,
-        sites: list[str] | None = None,
-        force_foreign_changes: bool = False,
-        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
-    ) -> bool:
-        """Activate changes via REST API and wait for completion.
-
-        Returns:
-            * True if changes are activated
-            * False if there are no changes to be activated
-        """
-        logger.info("Activate changes and wait %ds for completion...", timeout)
-        with self._wait_for_completion(timeout, "get", "activate_changes"):
-            try:
-                self.activate_changes(sites, force_foreign_changes)
-            except NoActiveChanges:
-                return False
-
-        pending_changes = self.pending_changes()
-        assert (
-            not pending_changes
-        ), f"There are pending changes that were not activated: {pending_changes}"
-
-        return True
-
-    def create_user(
-        self,
-        username: str,
-        fullname: str,
-        password: str,
-        email: str,
-        contactgroups: list[str],
-        customer: None | str = None,
-        roles: list[str] | None = None,
-    ) -> None:
-        body = {
-            "username": username,
-            "fullname": fullname,
-            "auth_option": {
-                "auth_type": "password",
-                "password": password,
-            },
-            "contact_options": {
-                "email": email,
-            },
-            "contactgroups": contactgroups,
-            "roles": roles or [],
-        }
-        if customer:
-            body["customer"] = customer
-        response = self.post(
-            "domain-types/user_config/collections/all",
-            json=body,
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_all_users(self) -> list[User]:
-        response = self.get("domain-types/user_config/collections/all")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
-
-    def get_user(self, username: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the user details and the Etag header if the user was found
-            None if the user was not found
-        """
-        response = self.get(f"/objects/user_config/{username}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
-        response = self.put(
-            f"objects/user_config/{username}",
-            headers={
-                "If-Match": etag,
-            },
-            json=user_spec,
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def delete_user(self, username: str) -> None:
-        response = self.delete(f"/objects/user_config/{username}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def create_folder(
-        self,
-        folder: str,
-        title: str | None = None,
-        attributes: Mapping[str, Any] | None = None,
-    ) -> None:
-        if folder.count("/") > 1:
-            parent_folder, folder_name = folder.rsplit("/", 1)
-        else:
-            parent_folder = "/"
-            folder_name = folder.replace("/", "")
-        response = self.post(
-            "/domain-types/folder_config/collections/all",
-            json={
-                "name": folder_name,
-                "title": title if title else folder_name,
-                "parent": parent_folder,
-                "attributes": attributes if attributes else {},
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_folder(self, folder: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the folder details and the Etag header if the folder was found
-            None if the folder was not found
-        """
-        response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def create_host(
-        self,
-        hostname: str,
-        folder: str = "/",
-        attributes: Mapping[str, Any] | None = None,
-        bake_agent: bool = False,
-    ) -> requests.Response:
-        query_string = "?bake_agent=1" if bake_agent else ""
-        response = self.post(
-            f"/domain-types/host_config/collections/all{query_string}",
-            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def bulk_create_hosts(
-        self,
-        entries: list[dict[str, Any]],
-        bake_agent: bool = False,
-        ignore_existing: bool = False,
-    ) -> list[dict[str, Any]]:
-        if ignore_existing:
-            existing_hosts = [_.get("id") for _ in self.get_hosts()]
-            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
-        query_string = "?bake_agent=1" if bake_agent else ""
-        response = self.post(
-            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
-            json={"entries": entries},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()
-        return value
-
-    def get_host(self, hostname: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the host details and the Etag header if the host was found
-            None if the host was not found
-        """
-        response = self.get(f"/objects/host_config/{hostname}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def update_host_attributes(
-        self,
-        host_name: str,
-        update_attributes: Mapping[str, object],
-    ) -> None:
-        response = self.put(
-            url=f"/objects/host_config/{host_name}",
-            json={"update_attributes": update_attributes},
-            headers={
-                "If-Match": "*",
-                "Content-Type": "application/json",
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_hosts(self) -> list[dict[str, Any]]:
-        response = self.get(
-            "/domain-types/host_config/collections/all", params={"include_links": False}
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
-
-    def delete_host(self, hostname: str) -> None:
-        response = self.delete(f"/objects/host_config/{hostname}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def bulk_delete_hosts(self, hostnames: list[str]) -> None:
-        response = self.post(
-            "/domain-types/host_config/actions/bulk-delete/invoke",
-            json={"entries": hostnames},
-        )
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
-        response = self.put(
-            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
-            headers={
-                "If-Match": etag,
-                "Content-Type": "application/json",
-            },
-            json={"new_name": hostname_new},
-            allow_redirects=False,
-        )
-        if 300 <= response.status_code < 400:
-            # rename pending
-            raise Redirect(redirect_url=response.headers["Location"])
-        if not response.status_code == 200:
-            raise UnexpectedResponse.from_response(response)
-
-    @tracer.start_as_current_span("rename_host_and_wait_for_completion")
-    def rename_host_and_wait_for_completion(
-        self,
-        *,
-        hostname_old: str,
-        hostname_new: str,
-        etag: str,
-        timeout: int = 120,
-    ) -> None:
-        logger.info(
-            "Rename host %s to %s and wait %ds for completion...",
-            hostname_old,
-            hostname_new,
-            timeout,
-        )
-        with self._wait_for_completion(timeout, "get", "rename_host"):
-            self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
-            assert (
-                self.get_host(hostname_new) is not None
-            ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
-
-    def create_host_group(self, name: str, alias: str) -> requests.Response:
-        response = self.post(
-            "/domain-types/host_group_config/collections/all",
-            json={"name": name, "alias": alias},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def get_host_group(self, name: str) -> tuple[dict[Any, str], str]:
-        response = self.get(f"/objects/host_group_config/{name}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def delete_host_group(self, name: str) -> None:
-        response = self.delete(f"/objects/host_group_config/{name}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def discover_services(
-        self,
-        hostname: str,
-        mode: str = "tabula_rasa",
-    ) -> None:
-        response = self.post(
-            "/domain-types/service_discovery_run/actions/start/invoke",
-            json={
-                "host_name": hostname,
-                "mode": mode,
-            },
-            # We want to get the redirect response and handle that below. So don't let requests
-            # handle that for us.
-            allow_redirects=False,
-        )
-        if 300 <= response.status_code < 400:
-            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    @tracer.start_as_current_span("bulk_discover_services_and_wait_for_completion")
-    def bulk_discover_services_and_wait_for_completion(
-        self,
-        hostnames: list[str],
-        monitor_undecided_services: bool = True,
-        remove_vanished_services: bool = False,
-        update_service_labels: bool = False,
-        update_host_labels: bool = True,
-        do_full_scan: bool = True,
-        bulk_size: int = 10,
-        ignore_errors: bool = True,
-    ) -> str:
-        body = {
-            "hostnames": hostnames,
-            "do_full_scan": do_full_scan,
-            "bulk_size": bulk_size,
-            "ignore_errors": ignore_errors,
-        }
-
-        if self.site_version >= CMKVersion("2.3.0", self.site_version.edition):
-            body["options"] = {
-                "monitor_undecided_services": monitor_undecided_services,
-                "remove_vanished_services": remove_vanished_services,
-                "update_service_labels": update_service_labels,
-                "update_host_labels": update_host_labels,
-            }
-        else:
-            body["mode"] = "new"
-
-        response = self.post(
-            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_id: str = response.json()["id"]
-        while self.get_bulk_discovery_status(job_id) in (
-            "initialized",
-            "running",
-        ):
-            time.sleep(0.5)
-
-        status = self.get_bulk_discovery_job_status(job_id)
-
-        if status["extensions"]["state"] != "finished":
-            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
-
-        output = "\n".join(status["extensions"]["logs"]["progress"])
-        if "Traceback (most recent call last)" in output:
-            raise RuntimeError(f"Found traceback in job output: {output}")
-        if "0 failed" not in output:
-            raise RuntimeError(f"Found a failure in job output: {output}")
-
-        return job_id
-
-    def get_bulk_discovery_status(self, job_id: str) -> str:
-        job_status_response = self.get_bulk_discovery_job_status(job_id)
-        status: str = job_status_response["extensions"]["state"]
-        return status
-
-    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
-        response = self.get(f"/objects/discovery_run/{job_id}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
-
-    def get_discovery_status(self, hostname: str) -> str:
-        job_status_response = self.get_discovery_job_status(hostname)
-        status: str = job_status_response["extensions"]["state"]
-        return status
-
-    def get_discovery_job_status(self, hostname: str) -> dict:
-        response = self.get(f"/objects/service_discovery_run/{hostname}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
-
-    @tracer.start_as_current_span("discover_services_and_wait_for_completion")
-    def discover_services_and_wait_for_completion(
-        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
-    ) -> None:
-        with self._wait_for_completion(timeout, "get", "discover_services"):
-            self.discover_services(hostname, mode)
-            discovery_status = self.get_discovery_status(hostname)
-            assert (
-                discovery_status == "finished"
-            ), f"Unexpected service discovery status: {discovery_status}"
-
-    def service_discovery_result(self, hostname: str) -> Mapping[str, object]:
-        response = self.get(f"/objects/service_discovery/{hostname}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return {str(k): v for k, v in response.json().items()}
-
     @contextmanager
-    def _wait_for_completion(
+    def wait_for_completion(
         self,
         timeout: int,
         http_method_for_redirection: HTTPMethod,
@@ -647,6 +205,493 @@ class CMKOpenApiSession(requests.Session):
 
             time.sleep(0.5)
 
+
+class BaseAPI:
+    def __init__(self, session: CMKOpenApiSession) -> None:
+        self.session = session
+
+
+class ChangesAPI(BaseAPI):
+    def activate(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+    ) -> None:
+        response = self.session.post(
+            "/domain-types/activation_run/actions/activate-changes/invoke",
+            json={
+                "redirect": True,
+                "sites": sites or [],
+                "force_foreign_changes": force_foreign_changes,
+            },
+            headers={"If-Match": "*"},
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if response.status_code == 200:
+            logger.info("Activation id: %s", response.json()["id"])
+            return  # changes are activated
+        if response.status_code == 422:
+            raise NoActiveChanges  # there are no changes
+        if 300 <= response.status_code < 400:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        raise UnexpectedResponse.from_response(response)
+
+    def get_pending(self) -> list[dict[str, Any]]:
+        """Returns a list of all changes currently pending."""
+        response = self.session.get("/domain-types/activation_run/collections/pending_changes")
+        assert response.status_code == 200
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    @tracer.instrument("activate_and_wait_for_completion")
+    def activate_and_wait_for_completion(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
+        strict: bool = True,
+    ) -> bool:
+        """Activate changes via REST API and wait for completion.
+
+        Returns:
+            * True if changes are activated
+            * False if there are no changes to be activated
+        """
+        pending_changes_ids_before = set(_.get("id") for _ in self.get_pending())
+
+        logger.info("Activate changes and wait %ds for completion...", timeout)
+        with self.session.wait_for_completion(timeout, "get", "activate_changes"):
+            try:
+                self.activate(sites, force_foreign_changes)
+            except NoActiveChanges:
+                return False
+
+        pending_changes_after = self.get_pending()
+        if strict:
+            assert (
+                not pending_changes_after
+            ), f"There are pending changes after activation: {pending_changes_after}"
+        else:
+            pending_changes_intersection_ids = set(
+                _.get("id") for _ in pending_changes_after
+            ).intersection(pending_changes_ids_before)
+            assert not pending_changes_intersection_ids, (
+                f"There are pending changes that were not activated: "
+                f"{(_ for _ in pending_changes_after if _.get('id') in
+                     pending_changes_intersection_ids)}"
+            )
+
+        return True
+
+
+class UsersAPI(BaseAPI):
+    def create(
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        customer: None | str = None,
+        roles: list[str] | None = None,
+        is_automation_user: bool = False,
+        store_automation_secret: bool = False,
+    ) -> None:
+        if is_automation_user:
+            auth_option: dict[str, str | bool] = {
+                "auth_type": "automation",
+                "secret": password,
+            }
+            if store_automation_secret:
+                # This attribute came during 2.4 development. We use this API for older versions as
+                # well in test-update. So we should not set it in all requests!
+                auth_option["store_automation_secret"] = True
+        else:
+            auth_option = {
+                "auth_type": "password",
+                "password": password,
+            }
+
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": auth_option,
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+            "roles": roles or [],
+        }
+        if customer:
+            body["customer"] = customer
+        response = self.session.post(
+            "domain-types/user_config/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[User]:
+        response = self.session.get("domain-types/user_config/collections/all")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
+
+    def get(self, username: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the user details and the Etag header if the user was found
+            None if the user was not found
+        """
+        response = self.session.get(f"/objects/user_config/{username}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def edit(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
+        response = self.session.put(
+            f"objects/user_config/{username}",
+            headers={
+                "If-Match": etag,
+            },
+            json=user_spec,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, username: str) -> None:
+        response = self.session.delete(f"/objects/user_config/{username}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class FoldersAPI(BaseAPI):
+    def create(
+        self,
+        folder: str,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
+    ) -> None:
+        if folder.count("/") > 1:
+            parent_folder, folder_name = folder.rsplit("/", 1)
+        else:
+            parent_folder = "/"
+            folder_name = folder.replace("/", "")
+        response = self.session.post(
+            "/domain-types/folder_config/collections/all",
+            json={
+                "name": folder_name,
+                "title": title if title else folder_name,
+                "parent": parent_folder,
+                "attributes": attributes if attributes else {},
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, folder: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the folder details and the Etag header if the folder was found
+            None if the folder was not found
+        """
+        response = self.session.get(f"/objects/folder_config/{folder.replace('/', '~')}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+
+class HostsAPI(BaseAPI):
+    def create(
+        self,
+        hostname: str,
+        folder: str = "/",
+        attributes: Mapping[str, Any] | None = None,
+        bake_agent: bool = False,
+    ) -> requests.Response:
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/collections/all{query_string}",
+            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def bulk_create(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: bool = False,
+        ignore_existing: bool = False,
+    ) -> list[dict[str, Any]]:
+        if ignore_existing:
+            existing_hosts = self.get_all_names()
+            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
+            json={"entries": entries},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()
+        return value
+
+    def get(self, hostname: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the host details and the Etag header if the host was found
+            None if the host was not found
+        """
+        response = self.session.get(f"/objects/host_config/{hostname}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def update(
+        self,
+        host_name: str,
+        update_attributes: Mapping[str, object],
+    ) -> None:
+        response = self.session.put(
+            url=f"/objects/host_config/{host_name}",
+            json={"update_attributes": update_attributes},
+            headers={
+                "If-Match": "*",
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/host_config/collections/all", params={"include_links": False}
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_all_names(self) -> list[str]:
+        return [host["id"] for host in self.get_all()]
+
+    def delete(self, hostname: str) -> None:
+        response = self.session.delete(f"/objects/host_config/{hostname}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def bulk_delete(self, hostnames: list[str]) -> None:
+        response = self.session.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def rename(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
+        response = self.session.put(
+            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
+            headers={
+                "If-Match": etag,
+                "Content-Type": "application/json",
+            },
+            json={"new_name": hostname_new},
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            # rename pending
+            raise Redirect(redirect_url=response.headers["Location"])
+        if not response.status_code == 200:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.instrument("rename_and_wait_for_completion")
+    def rename_and_wait_for_completion(
+        self,
+        *,
+        hostname_old: str,
+        hostname_new: str,
+        etag: str,
+        timeout: int = 120,
+    ) -> None:
+        logger.info(
+            "Rename host %s to %s and wait %ds for completion...",
+            hostname_old,
+            hostname_new,
+            timeout,
+        )
+        with self.session.wait_for_completion(timeout, "get", "rename_host"):
+            self.rename(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+            assert (
+                self.get(hostname_new) is not None
+            ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
+
+        response = self.session.background_jobs.show("rename-hosts")
+        assert (
+            response["extensions"]["status"]["state"] == "finished"
+        ), f"Rename job failed: {response}"
+
+
+class HostGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        response = self.session.post(
+            "/domain-types/host_group_config/collections/all",
+            json={"name": name, "alias": alias},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.session.get(f"/objects/host_group_config/{name}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServiceDiscoveryAPI(BaseAPI):
+    def run_discovery(
+        self,
+        hostname: str,
+        mode: str = "tabula_rasa",
+    ) -> None:
+        response = self.session.post(
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={
+                "host_name": hostname,
+                "mode": mode,
+            },
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.instrument("run_bulk_discovery_and_wait_for_completion")
+    def run_bulk_discovery_and_wait_for_completion(
+        self,
+        hostnames: list[str],
+        monitor_undecided_services: bool = True,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = True,
+        do_full_scan: bool = True,
+        bulk_size: int = 10,
+        ignore_errors: bool = True,
+    ) -> str:
+        body = {
+            "hostnames": hostnames,
+            "do_full_scan": do_full_scan,
+            "bulk_size": bulk_size,
+            "ignore_errors": ignore_errors,
+        }
+
+        if self.session.site_version >= CMKVersion("2.3.0", self.session.site_version.edition):
+            body["options"] = {
+                "monitor_undecided_services": monitor_undecided_services,
+                "remove_vanished_services": remove_vanished_services,
+                "update_service_labels": update_service_labels,
+                "update_host_labels": update_host_labels,
+            }
+        else:
+            body["mode"] = "new"
+
+        response = self.session.post(
+            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_id: str = response.json()["id"]
+        while self.get_bulk_discovery_status(job_id) in (
+            "initialized",
+            "running",
+        ):
+            time.sleep(0.5)
+
+        status = self.get_bulk_discovery_job_status(job_id)
+
+        if status["extensions"]["state"] != "finished":
+            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+
+        output = "\n".join(status["extensions"]["logs"]["progress"])
+        if "Traceback (most recent call last)" in output:
+            raise RuntimeError(f"Found traceback in job output: {output}")
+        if "0 failed" not in output:
+            raise RuntimeError(f"Found a failure in job output: {output}")
+
+        return job_id
+
+    def get_bulk_discovery_status(self, job_id: str) -> str:
+        job_status_response = self.get_bulk_discovery_job_status(job_id)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
+        response = self.session.get(f"/objects/discovery_run/{job_id}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_status_response: dict = response.json()
+        return job_status_response
+
+    def get_discovery_status(self, hostname: str) -> str:
+        job_status_response = self.get_discovery_job_status(hostname)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_discovery_job_status(self, hostname: str) -> dict:
+        response = self.session.get(f"/objects/service_discovery_run/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_status_response: dict = response.json()
+        return job_status_response
+
+    @tracer.instrument("run_discovery_and_wait_for_completion")
+    def run_discovery_and_wait_for_completion(
+        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
+    ) -> None:
+        with self.session.wait_for_completion(timeout, "get", "discover_services"):
+            self.run_discovery(hostname, mode)
+            discovery_status = self.get_discovery_status(hostname)
+            assert (
+                discovery_status == "finished"
+            ), f"Unexpected service discovery status: {discovery_status}"
+
+    def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
+        response = self.session.get(f"/objects/service_discovery/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+
+class ServicesAPI(BaseAPI):
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
     ) -> list[dict[str, Any]]:
@@ -656,7 +701,7 @@ class CMKOpenApiSession(requests.Session):
             elif "has_been_checked" not in columns:
                 columns.append("has_been_checked")
         query_string = "?columns=" + "&columns=".join(columns) if columns else ""
-        response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
+        response = self.session.get(f"/objects/host/{hostname}/collections/services{query_string}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
@@ -668,8 +713,10 @@ class CMKOpenApiSession(requests.Session):
             ]
         return value
 
+
+class AgentsAPI(BaseAPI):
     def get_baking_status(self) -> BakingStatus:
-        response = self.get("/domain-types/agent/actions/baking_status/invoke")
+        response = self.session.get("/domain-types/agent/actions/baking_status/invoke")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
@@ -679,22 +726,24 @@ class CMKOpenApiSession(requests.Session):
             started=result["started"],
         )
 
-    def sign_agents(self, key_id: int, passphrase: str) -> None:
-        response = self.post(
+    def sign(self, key_id: int, passphrase: str) -> None:
+        response = self.session.post(
             "/domain-types/agent/actions/sign/invoke",
             json={"key_id": key_id, "passphrase": passphrase},
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def create_rule(
+
+class RulesAPI(BaseAPI):
+    def create(
         self,
         value: object,
         ruleset_name: str | None = None,
         folder: str = "/",
         conditions: dict[str, Any] | None = None,
     ) -> str:
-        response = self.post(
+        response = self.session.post(
             "/domain-types/rule/collections/all",
             json=(
                 {
@@ -715,13 +764,13 @@ class CMKOpenApiSession(requests.Session):
         the_id: str = response.json()["id"]
         return the_id
 
-    def get_rule(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
+    def get(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
         """
         Returns
             a tuple with the rule details and the Etag header if the rule_id was found
             None if the rule_id was not found
         """
-        response = self.get(f"/objects/rule/{rule_id}")
+        response = self.session.get(f"/objects/rule/{rule_id}")
         if response.status_code not in (200, 404):
             raise UnexpectedResponse.from_response(response)
         if response.status_code == 404:
@@ -731,13 +780,13 @@ class CMKOpenApiSession(requests.Session):
             response.headers["Etag"],
         )
 
-    def delete_rule(self, rule_id: str) -> None:
-        response = self.delete(f"/objects/rule/{rule_id}")
+    def delete(self, rule_id: str) -> None:
+        response = self.session.delete(f"/objects/rule/{rule_id}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def get_rules(self, ruleset_name: str) -> list[dict[str, Any]]:
-        response = self.get(
+    def get_all(self, ruleset_name: str) -> list[dict[str, Any]]:
+        response = self.session.get(
             "/domain-types/rule/collections/all",
             params={"ruleset_name": ruleset_name},
         )
@@ -746,8 +795,10 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
-    def get_rulesets(self) -> list[dict[str, Any]]:
-        response = self.get(
+
+class RulesetsAPI(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
             "/domain-types/ruleset/collections/all",
         )
         if response.status_code != 200:
@@ -755,20 +806,20 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
-    def get_broker_connections(
+
+class BrokerConnectionsAPI(BaseAPI):
+    def get_all(
         self,
     ) -> Sequence[Mapping[str, object]]:
-        response = self.get(
+        response = self.session.get(
             "/domain-types/broker_connection/collections/all",
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
 
-    def create_broker_connection(
-        self, connection_id: str, *, connecter: str, connectee: str
-    ) -> Mapping[str, object]:
-        response = self.post(
+    def create(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.post(
             "/domain-types/broker_connection/collections/all",
             headers={
                 "Content-Type": "application/json",
@@ -785,10 +836,8 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
-    def edit_broker_connection(
-        self, connection_id: str, *, connecter: str, connectee: str
-    ) -> Mapping[str, object]:
-        response = self.put(
+    def edit(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.put(
             f"/objects/broker_connection/{connection_id}",
             headers={
                 "Content-Type": "application/json",
@@ -804,8 +853,8 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
-    def delete_broker_connection(self, connection_id: str) -> None:
-        response = self.delete(
+    def delete(self, connection_id: str) -> None:
+        response = self.session.delete(
             f"/objects/broker_connection/{connection_id}",
             headers={
                 "Content-Type": "application/json",
@@ -814,8 +863,10 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def create_site(self, site_config: dict) -> None:
-        response = self.post(
+
+class SitesAPI(BaseAPI):
+    def create(self, site_config: dict) -> None:
+        response = self.session.post(
             "/domain-types/site_connection/collections/all",
             headers={
                 "Content-Type": "application/json",
@@ -826,8 +877,8 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def update_site(self, site_id: str, site_config: dict) -> None:
-        response = self.put(
+    def update(self, site_id: str, site_config: dict) -> None:
+        response = self.session.put(
             f"/objects/site_connection/{site_id}",
             headers={
                 "Content-Type": "application/json",
@@ -838,8 +889,8 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def show_site(self, site_id: str) -> dict[str, Any]:
-        response = self.get(
+    def show(self, site_id: str) -> dict[str, Any]:
+        response = self.session.get(
             f"/objects/site_connection/{site_id}",
             headers={
                 "Content-Type": "application/json",
@@ -852,14 +903,16 @@ class CMKOpenApiSession(requests.Session):
         value: dict[str, Any] = response.json()
         return value
 
-    def delete_site(self, site_id: str) -> None:
+    def delete(self, site_id: str) -> None:
         if (
-            response := self.post(f"/objects/site_connection/{site_id}/actions/delete/invoke")
+            response := self.session.post(
+                f"/objects/site_connection/{site_id}/actions/delete/invoke"
+            )
         ).status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def login_to_site(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
-        response = self.post(
+    def login(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
+        response = self.session.post(
             f"/objects/site_connection/{site_id}/actions/login/invoke",
             headers={
                 "Content-Type": "application/json",
@@ -870,7 +923,25 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def create_dynamic_host_configuration(
+
+class BackgroundJobsAPI(BaseAPI):
+    def show(self, job_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/background_job/{job_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+
+class DcdAPI(BaseAPI):
+    def create(
         self,
         dcd_id: str,
         title: str,
@@ -886,14 +957,14 @@ class CMKOpenApiSession(requests.Session):
         validity_period: int = 60,
     ) -> None:
         """Create a DCD connection via REST API."""
-        resp = self.post(
+        resp = self.session.post(
             "/domain-types/dcd/collections/all",
             json={
                 "dcd_id": dcd_id,
                 "title": title,
                 "comment": comment,
                 "disabled": disabled,
-                "site": self.site,
+                "site": self.session.site,
                 "connector_type": "piggyback",
                 "restrict_source_hosts": restrict_source_hosts or [],
                 "interval": interval,
@@ -913,13 +984,15 @@ class CMKOpenApiSession(requests.Session):
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
 
-    def delete_dynamic_host_configuration(self, dcd_id: str) -> None:
+    def delete(self, dcd_id: str) -> None:
         """Delete a DCD connection via REST API."""
-        resp = self.delete(f"/objects/dcd/{dcd_id}")
+        resp = self.session.delete(f"/objects/dcd/{dcd_id}")
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
 
-    def create_ldap_connection(
+
+class LDAPConnectionAPI(BaseAPI):
+    def create(
         self,
         ldap_id: str,
         user_base_dn: str,
@@ -973,7 +1046,7 @@ class CMKOpenApiSession(requests.Session):
                 "filter": group_search_filter,
             }
 
-        resp = self.post(
+        resp = self.session.post(
             "/domain-types/ldap_connection/collections/all",
             json={
                 "users": users,
@@ -1029,13 +1102,15 @@ class CMKOpenApiSession(requests.Session):
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
 
-    def delete_ldap_connection(self, ldap_id: str) -> None:
+    def delete(self, ldap_id: str) -> None:
         """Delete an LDAP connection via REST API."""
-        resp = self.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
+        resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
 
-    def create_password(
+
+class PasswordsAPI(BaseAPI):
+    def create(
         self,
         ident: str,
         title: str,
@@ -1044,7 +1119,7 @@ class CMKOpenApiSession(requests.Session):
         owner: str = "admin",
     ) -> None:
         """Create a password via REST API."""
-        response = self.post(
+        response = self.session.post(
             "/domain-types/password/collections/all",
             json={
                 "ident": ident,
@@ -1058,3 +1133,11 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+
+
+class LicenseAPI(BaseAPI):
+    def download(self) -> requests.Response:
+        response = self.session.get("/domain-types/license_request/actions/download/invoke")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response

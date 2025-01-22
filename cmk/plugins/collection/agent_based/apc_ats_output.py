@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, Dict, Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v1.render import percent
 from cmk.agent_based.v2 import (
@@ -27,7 +27,7 @@ class ATS(TypedDict, total=False):
     power: float
 
 
-Section = Dict[str, ATS]
+Section = dict[str, ATS]
 
 
 class DefaultParameters(TypedDict):
@@ -45,7 +45,7 @@ def parse_apc_ats_output(string_table: StringTable) -> Section:
     parsed: Section = {}
 
     # Define a mapping of keys to their respective factors
-    conversion_factors: Dict[Literal["voltage", "current", "perc_load", "power"], float] = {
+    conversion_factors: dict[Literal["voltage", "current", "perc_load", "power"], float] = {
         "voltage": 1.0,
         "current": 0.1,
         "perc_load": 1.0,

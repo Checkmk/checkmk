@@ -12,7 +12,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping
-from typing import Final, TypedDict
+from typing import Final, Sequence, TypedDict
 
 import livestatus
 from livestatus import SiteId
@@ -396,7 +396,9 @@ class PageCrash(ABCCrashReportPage):
 
         _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
         _crash_row(
-            _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True
+            _("Time"),
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(info["time"]))),
+            odd=True,
         )
         _crash_row(_("Operating System"), info["os"], False)
         _crash_row(_("Checkmk Version"), info["version"], True)
@@ -409,7 +411,7 @@ class PageCrash(ABCCrashReportPage):
 
         html.close_table()
 
-    def _format_traceback(self, tb: list[traceback.FrameSummary]) -> str:
+    def _format_traceback(self, tb: Sequence[tuple[str, int, str, str]]) -> str:
         return "".join(traceback.format_list(tb))
 
     def _show_crash_report_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
@@ -512,8 +514,9 @@ class ReportRendererCheck(ABCReportRenderer):
     def page_menu_entries_related_monitoring(
         self, crash_info: CrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
-        host = crash_info["details"]["host"]
-        service = crash_info["details"]["description"]
+        details = crash_info["details"]
+        host = details["host"]
+        service = details["description"]
 
         host_url = makeuri(
             request,
@@ -554,7 +557,7 @@ class ReportRendererCheck(ABCReportRenderer):
         _show_agent_output(row)
 
     def _show_crashed_check_details(self, info: CrashInfo) -> None:
-        def format_bool(val):
+        def format_bool(val: bool | None) -> str:
             return {
                 True: _("Yes"),
                 False: _("No"),

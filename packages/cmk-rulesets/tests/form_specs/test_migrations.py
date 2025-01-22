@@ -577,10 +577,7 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
             (
                 "cmk_postprocessed",
                 "explicit_password",
-                (
-                    ANY,  # type: ignore[misc]
-                    "secret-password",
-                ),
+                (ANY, "secret-password"),
             ),
             id="migrate explicit password",
         ),

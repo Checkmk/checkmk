@@ -23,7 +23,7 @@ export class ForceConfig {
 
     constructor(
         force_simulation: ForceSimulation,
-        options: ForceOptions | null = null
+        options: ForceOptions | null = null,
     ) {
         this._force_simulation = force_simulation;
         if (options == null) options = this.get_default_options();

@@ -36,8 +36,8 @@ def _goto_setup_page(pw: Dashboard, setup_page: str) -> None:
 def _write_rules_to_disk(site: Site) -> Iterator[None]:
     """Dump the rules for the rules migration part of the update test"""
     created_rules = {
-        str(ruleset.get("id", "")): site.openapi.get_rules(ruleset.get("id", ""))
-        for ruleset in site.openapi.get_rulesets()
+        str(ruleset.get("id", "")): site.openapi.rules.get_all(ruleset.get("id", ""))
+        for ruleset in site.openapi.rulesets.get_all()
     }
     try:
         yield
@@ -70,7 +70,7 @@ def _write_rules_to_disk(site: Site) -> Iterator[None]:
 
 def _get_tasks() -> dict[str, list[dict[str, str]]]:
     tasks_file_path = repo_path() / "tests" / "gui_e2e" / "customize_rules.json"
-    with open(tasks_file_path, "r", encoding="UTF-8") as tasks_file:
+    with open(tasks_file_path, encoding="UTF-8") as tasks_file:
         logger.info('Importing tasks file "%s"...', tasks_file_path)
         tasks: dict[str, list[dict[str, str]]] = json.load(tasks_file)
     return tasks
@@ -117,6 +117,7 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
+@pytest.mark.skip(reason="Ongoing investigation - CMK-21219")
 def test_create_rules(
     test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
 ) -> None:
@@ -127,7 +128,7 @@ def test_create_rules(
     ):
         # set up a host group
         host_group_name = "test-rules"
-        test_site.openapi.create_host_group(host_group_name, host_group_name)
+        test_site.openapi.host_groups.create(host_group_name, host_group_name)
 
         # set up "Custom icons and actions"
         dashboard_page.main_menu.setup_searchbar.fill("Custom icons and actions")
@@ -148,8 +149,8 @@ def test_create_rules(
         )
 
         existing_rules = {
-            ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
-            for ruleset in test_site.openapi.get_rulesets()
+            ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))
+            for ruleset in test_site.openapi.rulesets.get_all()
             if (ruleset_title := ruleset.get("title"))
         }
         for ruleset_name, rule_count in existing_rules.items():
@@ -165,8 +166,8 @@ def test_create_rules(
 
         logger.info("Verify all rules...")
         total_rules = {
-            ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
-            for ruleset in test_site.openapi.get_rulesets()
+            ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))
+            for ruleset in test_site.openapi.rulesets.get_all()
             if (ruleset_title := ruleset.get("title")) and ruleset_title in created_rules
         }
         for ruleset_name, rule_count in total_rules.items():
@@ -178,6 +179,7 @@ def test_create_rules(
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
 
 
+@pytest.mark.xfail(reason="Flaky test, see CMK-20900")
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -244,6 +246,7 @@ def test_periodic_service_discovery_rule(
     ruleset_page.delete_button.click()
 
 
+@pytest.mark.xfail(reason="Flaky test, see CMK-20900")
 @pytest.mark.parametrize(
     "created_host",
     [

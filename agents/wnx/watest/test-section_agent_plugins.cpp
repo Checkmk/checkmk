@@ -57,6 +57,16 @@ TEST_F(AgentPluginsTest, File) {
     }));
 }
 
+TEST_F(AgentPluginsTest, JustExe) {
+    auto ps_file = fs::path{cfg::GetUserPluginsDir()} / "empty.exe";
+    tst::CreateTextFile(ps_file, "");
+    auto rows = getRows();
+    ASSERT_EQ(rows.size(), 4);
+    EXPECT_TRUE(std::ranges::any_of(rows, [&](const std::string &row) {
+        return row == fmt::format("{}:CMK_VERSION = n/a", ps_file);
+    }));
+}
+
 TEST_F(AgentPluginsTest, DISABLED_Exe) {
     // Test is disabled because we need a binary to build: not appropriate for
     // unit testing. You may enable this test manually

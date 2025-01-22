@@ -30,10 +30,12 @@ import type {
   ConditionChoicesValue,
   ConditionGroup,
   TimeSpecific,
-  FileUpload
-} from '@/form/components/vue_formspec_components'
+  FileUpload,
+  DictionaryElement,
+  DictionaryGroup
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
-  groupDictionaryValidations,
+  groupNestedValidations,
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
@@ -42,7 +44,7 @@ import {
   translateOperator,
   type Operator,
   type OperatorI18n
-} from './forms/form_condition_choices/utils'
+} from './forms/FormConditionChoices/utils'
 
 function renderForm(
   formSpec: FormSpec,
@@ -57,6 +59,7 @@ function renderForm(
     case 'string':
     case 'integer':
     case 'float':
+    case 'metric':
       return renderSimpleValue(formSpec, value as string, backendValidation)
     case 'single_choice_editable':
     case 'single_choice':
@@ -125,7 +128,7 @@ function renderOptionalChoice(
   backendValidation: ValidationMessages = []
 ): VNode {
   if (value === null) {
-    return h('div', formSpec.i18n.none_label)
+    return h('div', h('i', formSpec.i18n.none_label))
   }
   const embeddedMessages: ValidationMessages = []
   const localMessages: ValidationMessages = []
@@ -172,7 +175,7 @@ function renderTuple(
         return h('span', [
           formSpec.show_titles && title ? `${title}: ` : h([]),
           renderForm(element, value[index], elementValidations[index]),
-          index === formSpec.elements.length - 1 ? '' : ', '
+          index === formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? ', ' : ''
         ])
       })
     ]
@@ -199,12 +202,9 @@ function renderMultipleChoice(
     textSpans.push(h('span', nameToTitle[entry]!))
   }
   if (value.length > maxEntries) {
+    const moreText = formSpec.i18n.and_x_more.replace('%s', `${value.length - maxEntries}`)
     textSpans.push(
-      h(
-        'span',
-        { class: 'form-readonly__multiple-choice__max-entries' },
-        ` and ${value.length - maxEntries} more`
-      )
+      h('span', { class: 'form-readonly__multiple-choice__max-entries' }, ` ${moreText}`)
     )
   }
   return h('div', { class: 'form-readonly__multiple-choice' }, textSpans)
@@ -216,6 +216,11 @@ function renderDataSize(value: [string, string]): VNode {
 
 function renderMultilineText(formSpec: MultilineText, value: string): VNode {
   const lines: VNode[] = []
+  if (formSpec.label) {
+    lines.push(h('span', formSpec.label))
+    lines.push(h('br'))
+  }
+
   value.split('\n').forEach((line) => {
     lines.push(h('span', { style: 'white-space: pre-wrap' }, line))
     lines.push(h('br'))
@@ -226,7 +231,9 @@ function renderMultilineText(formSpec: MultilineText, value: string): VNode {
 }
 
 function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
-  return h('div', value ? formSpec.text_on : formSpec.text_off)
+  return h('div', [
+    `${formSpec.label}${formSpec.label ? ': ' : ''}${value ? formSpec.text_on : formSpec.text_off}`
+  ])
 }
 
 function renderFixedValue(formSpec: FixedValue): VNode {
@@ -244,28 +251,91 @@ function renderDict(
 ): VNode {
   const dictElements: VNode[] = []
   // Note: Dictionary validations are not shown
-  const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
-  formSpec.elements.map((element) => {
-    if (value[element.name] === undefined) {
-      return
-    }
+  const [, elementValidations] = groupNestedValidations(formSpec.elements, backendValidation)
 
-    const elementForm = renderForm(
-      element.parameter_form,
-      value[element.name],
-      elementValidations[element.name] || []
-    )
-    if (elementForm === null) {
-      return
+  const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
+  const groups: Record<string, DictionaryElement[]> = {}
+  groups[DICT_ELEMENT_NO_GROUP] = []
+  const groupByKey: Record<string, DictionaryGroup> = {}
+  groupByKey[DICT_ELEMENT_NO_GROUP] = {
+    key: DICT_ELEMENT_NO_GROUP,
+    title: '',
+    help: null,
+    layout: 'vertical'
+  }
+
+  formSpec.elements.forEach((element) => {
+    if (element.group === null) {
+      groups[DICT_ELEMENT_NO_GROUP]!.push(element)
+    } else {
+      if (!groups[element.group.key!]) {
+        groups[element.group.key!] = []
+        groupByKey[element.group.key!] = element.group!
+      }
+      groups[element.group.key!]!.push(element)
     }
-    dictElements.push(
-      h('tr', [h('th', `${element.parameter_form.title}: `), h('td', [elementForm])])
-    )
   })
+
+  for (const [groupKey, groupElements] of Object.entries(groups)) {
+    const elements: [string, VNode][] = []
+    groupElements.forEach((element) => {
+      if (value[element.name] === undefined) {
+        return
+      }
+
+      const elementForm = renderForm(
+        element.parameter_form,
+        value[element.name],
+        elementValidations[element.name] || []
+      )
+      if (elementForm === null) {
+        return
+      }
+
+      elements.push([element.parameter_form.title, elementForm])
+    })
+    const group = groupByKey[groupKey]!
+    const trProps: Record<string, string> = {}
+    if (group.title) {
+      dictElements.push(
+        h('tr', [h('td', { colspan: 2, class: 'dict_group_title' }, [group.title])])
+      )
+      trProps['class'] = 'dict_group'
+    }
+    if (group.layout === 'vertical') {
+      elements.forEach((element) => {
+        dictElements.push(
+          h('tr', trProps, [
+            h('td', { class: 'dict_title' }, [`${element[0]}:`]),
+            h('td', { class: 'dict_value' }, [element[1]])
+          ])
+        )
+      })
+    } else {
+      const headers: VNode[] = []
+      const values: VNode[] = []
+      elements.forEach((element) => {
+        headers.push(h('td', { class: 'dict_title' }, [element[0]]))
+        values.push(h('td', { class: 'dict_value' }, [element[1]]))
+      })
+      dictElements.push(h('tr', trProps, headers))
+      dictElements.push(h('tr', trProps, values))
+    }
+  }
+
   const cssClasses = [
     'form-readonly__dictionary',
     formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : ''
   ]
+
+  if (dictElements.length === 0) {
+    dictElements.push(
+      h('tr', [
+        h('td', { class: 'dict_title' }, [formSpec.no_elements_text]),
+        h('td', { class: 'dict_value' }, [])
+      ])
+    )
+  }
   return h('table', { class: cssClasses }, dictElements)
 }
 
@@ -291,7 +361,7 @@ function renderSimpleValue(
 
 function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
   if (value[0] === 'explicit_password') {
-    return h('div', [`${formSpec.i18n.explicit_password}, ******`])
+    return h('div', [`${formSpec.i18n.explicit_password}: ******`])
   }
 
   const storeChoice = formSpec.password_store_choices.find(
@@ -397,7 +467,8 @@ function renderListOfStrings(
       ])
     )
   }
-  return h('ul', { style: 'display: contents' }, listResults)
+  // return h('ul', { style: 'display: contents' }, listResults)
+  return h('ul', { class: 'form-readonly__list' }, listResults)
 }
 
 function renderCascadingSingleChoice(
@@ -411,8 +482,7 @@ function renderCascadingSingleChoice(
         'div',
         h('div', { class: `form-readonly__cascading-single-choice__layout-${formSpec.layout}` }, [
           // notification explicitly defines empty string title:
-          [formSpec.title ? h('div', formSpec.title) : []],
-          h('div', element.title),
+          h('div', { style: 'vertical-align: top;' }, element.title),
           h('div', [renderForm(element.parameter_form, value[1], backendValidation)])
         ])
       )
@@ -446,7 +516,6 @@ function renderLegacyValuespec(
 ): VNode {
   return h('div', [
     h('div', {
-      style: 'background: #595959',
       class: 'legacy_valuespec',
       innerHTML: (value as PreRenderedHtml).readonly_html
     }),
@@ -573,9 +642,28 @@ table.form-readonly__table {
 
 .form-readonly__dictionary {
   display: inline-table;
+  border-spacing: 0px;
 
-  > tr > th {
-    padding-right: var(--spacing-half);
+  > tr:not(:first-child) {
+    box-shadow: 0 -1px 0 0 var(--default-form-element-border-color);
+    > td.dict_title {
+      min-width: 20ch;
+      max-width: 70ch;
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
+
+    &.dict_group {
+      > td:first-child {
+        padding-left: 8px;
+      }
+    }
+  }
+
+  > tr > td {
+    vertical-align: top;
+    padding-bottom: 2px;
+    padding-right: 4px;
   }
 }
 
@@ -608,8 +696,13 @@ table.form-readonly__table {
 }
 
 .form-readonly__list {
-  padding-left: var(--spacing-half);
+  padding-left: 0px !important;
   list-style-position: inside;
+  list-style-type: circle;
+  > li {
+    display: list-item !important;
+    padding-left: 0px !important;
+  }
 }
 
 .form-readonly__list > li > div {
@@ -637,10 +730,11 @@ table.form-readonly__table {
 }
 
 .form-readonly__cascading-single-choice__layout-horizontal {
-  display: flex;
+  margin-bottom: 4px;
 }
 .form-readonly__cascading-single-choice__layout-horizontal > div {
   margin-right: var(--spacing-half);
+  display: inline-block;
 }
 
 .form-readonly__tuple > span > * {

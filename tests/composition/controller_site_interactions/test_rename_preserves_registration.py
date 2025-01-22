@@ -25,35 +25,35 @@ def _test_rename_preserves_registration(
 ) -> None:
     new_hostname = HostName(f"{hostname}-renamed")
     try:
-        response_create = central_site.openapi.create_host(
+        response_create = central_site.openapi.hosts.create(
             hostname=hostname,
             attributes={
                 "ipaddress": "127.0.0.1",
                 "site": registration_site.id,
             },
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
         register_controller(
             ctl_path,
             registration_site,
             hostname,
         )
-        central_site.openapi.rename_host_and_wait_for_completion(
+        central_site.openapi.hosts.rename_and_wait_for_completion(
             hostname_old=hostname,
             hostname_new=new_hostname,
             etag=response_create.headers["ETag"],
         )
-        assert central_site.openapi.get_host(new_hostname) is not None
+        assert central_site.openapi.hosts.get(new_hostname) is not None
         controller_status = controller_status_json(ctl_path)
         connection_details = controller_connection_json(controller_status, registration_site)
         assert (
             connection_details["remote"]["hostname"] == new_hostname
         ), f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
     finally:
-        hostnames = {_["id"] for _ in central_site.openapi.get_hosts()}
+        hostnames = set(central_site.openapi.hosts.get_all_names())
         for hostname_ in hostnames.intersection({hostname, new_hostname}):
-            central_site.openapi.delete_host(hostname_)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+            central_site.openapi.hosts.delete(hostname_)
+        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized

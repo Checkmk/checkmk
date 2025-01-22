@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
-import { type Folder } from '@/form/components/vue_formspec_components'
+import { type Folder } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 

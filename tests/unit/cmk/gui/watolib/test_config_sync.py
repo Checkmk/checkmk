@@ -14,7 +14,7 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
@@ -299,6 +299,7 @@ def _get_expected_paths(
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
         "var/check_mk/web/%s" % user_id,
+        "var/check_mk/web/%s/automation_user.mk" % user_id,
         "var/check_mk/web/%s/cached_profile.mk" % user_id,
         "var/check_mk/web/%s/enforce_pw_change.mk" % user_id,
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,
@@ -332,7 +333,7 @@ def _get_expected_paths(
         "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
         "etc/rabbitmq",
         "etc/rabbitmq/definitions.d",
-        "etc/rabbitmq/definitions.d/definitions.json",
+        "etc/rabbitmq/definitions.d/definitions.next.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:
@@ -340,6 +341,7 @@ def _get_expected_paths(
             "etc/check_mk/dcd.d/wato/distributed.mk",
             "etc/check_mk/dcd.d",
             "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/dcd.d/wato/connections.mk",
             "etc/check_mk/dcd.d/wato/sitespecific.mk",
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
@@ -427,6 +429,16 @@ def _get_expected_paths(
             "local/share/check_mk/web/htdocs/themes/facelift/images",
             "local/share/check_mk/web/htdocs/themes/modern-dark",
             "local/share/check_mk/web/htdocs/themes/modern-dark/images",
+        ]
+
+    if (is_cloud_repo() and edition is cmk_version.Edition.CCE) or (
+        is_managed_repo() and edition is cmk_version.Edition.CME
+    ):
+        expected_paths += [
+            "etc/check_mk/otel_collector.d",
+            "etc/check_mk/otel_collector.d/wato",
+            "etc/check_mk/otel_collector.d/wato/otel_collector.mk",
+            "etc/check_mk/otel_collector.d/wato/sitespecific.mk",
         ]
 
     return expected_paths

@@ -524,7 +524,7 @@ class ModeUsers(WatoMode):
                     locked_attributes = []
 
                 # Authentication
-                if "automation_secret" in user_spec:
+                if user_spec.get("is_automation_user", False):
                     auth_method: str | HTML = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
@@ -802,7 +802,7 @@ class ModeEditUser(WatoMode):
 
         # We always store secrets for automation users. Also in editions that are not allowed
         # to edit users *hust* CSE *hust*
-        is_automation_user = self._user.get("automation_secret", None) is not None
+        is_automation_user = self._user.get("is_automation_user", False)
         if is_automation_user or self._can_edit_users:
             self._get_security_userattrs(user_attrs)
 
@@ -899,8 +899,25 @@ class ModeEditUser(WatoMode):
         increase_serial = False
 
         if request.var("authmethod") == "secret":  # automation secret
-            if secret := request.get_str_input_mandatory("_auth_secret", ""):
+            secret = request.get_str_input_mandatory("_auth_secret", "")
+            if (
+                not user_attrs.get("store_automation_secret", False)
+                and html.get_checkbox("store_automation_secret")
+                and not secret
+            ):
+                # store checkbox was checked without providing a new secret
+                raise MKUserError(
+                    "store_automation_secret",
+                    _("You need to supply a new secret in order to store it."),
+                )
+
+            user_attrs["store_automation_secret"] = (
+                html.get_checkbox("store_automation_secret") or False
+            )
+
+            if secret:
                 user_attrs["automation_secret"] = secret
+                user_attrs["is_automation_user"] = True
                 user_attrs["password"] = hash_password(Password(secret))
                 increase_serial = True  # password changed, reflect in auth serial
 
@@ -933,6 +950,7 @@ class ModeEditUser(WatoMode):
                 del user_attrs["automation_secret"]
                 if "password" in user_attrs:
                     del user_attrs["password"]  # which was the hashed automation secret!
+            user_attrs["is_automation_user"] = False
 
             if password:
                 verify_password_policy(password, password_field_name)
@@ -981,7 +999,7 @@ class ModeEditUser(WatoMode):
     def _show_form(self) -> None:  # pylint: disable=too-many-branches
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
-        is_automation_user = self._user.get("automation_secret", None) is not None
+        is_automation_user = self._user.get("is_automation_user", False)
 
         if self._can_edit_users:
             self._render_identity(custom_user_attr_topics)
@@ -1255,6 +1273,7 @@ class ModeEditUser(WatoMode):
                 "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
             )
             html.open_ul()
+            html.open_li()
             html.password_input(
                 "_auth_secret",
                 "",
@@ -1273,6 +1292,17 @@ class ModeEditUser(WatoMode):
                 "random",
             )
             html.close_b()
+            html.close_li()
+            html.open_li()
+            html.checkbox(
+                "store_automation_secret",
+                self._user.get("store_automation_secret", False),
+                label=_("store the secret"),
+                help=_(
+                    "In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, <i>Dynamic host configuration</i>"
+                ),
+            )
+            html.close_li()
             html.close_ul()
 
         if "password" in options_to_render:

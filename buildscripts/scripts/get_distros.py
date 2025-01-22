@@ -25,7 +25,12 @@ def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
     if args.as_rsync_exclude_pattern:
-        print("{" + ",".join([f"'*{d}*'" for d in list(distros) + list(editions)]) + "}")
+        exclude_elements = list(distros) + list(editions)
+        patterns = ",".join([f"'*{d}*'" for d in exclude_elements])
+        if len(exclude_elements) > 1:
+            print("{" + patterns + "}")  # this expands in bash
+        else:
+            print(patterns)
         return
 
     print(" ".join(sorted(set(distros).union(set(editions)))))
@@ -33,14 +38,14 @@ def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
 
 def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> Iterable[str]:
     return sorted(
-        set(
+        {
             distro
             for _edition, use_cases in edition_distros.items()
             if edition in (_edition, "all")
             for _use_case, distros in use_cases.items()
             if use_case in (_use_case, "all")
             for distro in flatten(distros)
-        )
+        }
     )
 
 
@@ -51,7 +56,7 @@ def print_distros_for_use_case(args: Args, loaded_yaml: dict) -> None:
     print(" ".join(distros_for_use_case(edition_distros, edition, use_case)))
 
 
-def print_editions(args: Args, loaded_yaml: dict) -> None:
+def print_editions(_args: Args, loaded_yaml: dict) -> None:
     print(" ".join(sorted(loaded_yaml["editions"].keys())))
 
 

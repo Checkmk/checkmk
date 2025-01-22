@@ -50,7 +50,13 @@ defineProps<CmkSpaceProps>()
   }
 }
 
-.cmk-space--direction-vertical.cmk-space--size-medium {
-  height: var(--spacing);
+.cmk-space--direction-vertical {
+  &.cmk-space--size-medium {
+    height: var(--spacing);
+  }
+
+  &.cmk-space--size-small {
+    height: var(--spacing-half);
+  }
 }
 </style>

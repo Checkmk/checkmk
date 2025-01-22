@@ -78,7 +78,7 @@ _need_ip_access_list() {
 }
 
 _predefined_connection_not_present() {
-    if [ -e ${PREDEFINED_CONNECTIONS_PATH} ]; then
+    if [ -e "${PREDEFINED_CONNECTIONS_PATH}" ]; then
         printf "A auto-registration rule was configured for this host!\n" >&2
         printf "The agent controller does not support the legacy setup and therefore transport encryption and auto-registration are not available!\n" >&2
         printf "Since this might be expected we abort here. If the legacy setup should really be used exclude this host from the rule that configures the auto-registration\n" >&2

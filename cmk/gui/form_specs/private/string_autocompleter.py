@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from cmk.gui.form_specs.vue.shared_type_defs import Autocompleter
-
 from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import FieldSize, FormSpec, InputHint, Prefill
+from cmk.shared_typing.vue_formspec_components import Autocompleter
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -7,11 +7,10 @@ Common parts of buildscripts scripts
 """
 
 import argparse
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Iterator, Union
 
 import yaml
 
@@ -46,7 +45,7 @@ def load_editions_file(filename: str | Path) -> dict:
 
 
 @contextmanager
-def cwd(path: Union[str, Path]) -> Iterator[None]:
+def cwd(path: str | Path) -> Iterator[None]:
     oldpwd = getcwd()
     chdir(path)
     try:

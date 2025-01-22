@@ -15,7 +15,7 @@ def test_propagate_context_via_environment() -> None:
     )
 
     # Create span and get the environment variables for propagation
-    with trace.get_tracer().start_as_current_span("test") as orig_span:
+    with trace.get_tracer().span("test") as orig_span:
         assert trace.get_current_span() == orig_span
         env = trace.context_for_environment()
 
@@ -23,7 +23,7 @@ def test_propagate_context_via_environment() -> None:
     assert trace.get_current_span() != orig_span
 
     # Now verify extract works
-    with trace.get_tracer().start_as_current_span(
+    with trace.get_tracer().span(
         "nested", context=trace.extract_context_from_environment(env)
     ) as nested_span:
         assert nested_span.get_span_context().trace_id == orig_span.get_span_context().trace_id

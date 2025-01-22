@@ -11,9 +11,9 @@ from collections.abc import Iterator, Mapping
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.integration.linux_test_host import create_linux_test_host
+
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def default_cfg_fixture(request: pytest.FixtureRequest, site: Site) -> None:
     print("Applying default config")
     create_linux_test_host(request, site, "livestatus-test-host")
     create_linux_test_host(request, site, "livestatus-test-host.domain")
-    site.openapi.discover_services_and_wait_for_completion("livestatus-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("livestatus-test-host")
     site.activate_changes_and_wait_for_core_reload()
 
 
@@ -145,13 +145,13 @@ def test_usage_counters(site: Site) -> None:
 
 @pytest.fixture(name="configure_service_tags")
 def configure_service_tags_fixture(site: Site) -> Iterator[None]:
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         (hostname := "modes-test-host"),
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="service_tag_rules",
         value=[("criticality", "prod")],
         conditions={
@@ -169,8 +169,8 @@ def configure_service_tags_fixture(site: Site) -> Iterator[None]:
     try:
         yield
     finally:
-        site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+        site.openapi.rules.delete(rule_id)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 

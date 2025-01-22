@@ -59,12 +59,12 @@ export class StateFigure extends TextFigure<StateFigureData> {
 
         const svc_status_display = getIn(plot, "status_display");
         const is_ok_status = (getIn(svc_status_display, "css") || "").endsWith(
-            "0"
+            "0",
         );
 
         const background_status_cls = svc_status_css(
             "background",
-            svc_status_display
+            svc_status_display,
         );
         const label_paint_style = getIn(svc_status_display, "paint");
 
@@ -122,7 +122,7 @@ export class StateFigure extends TextFigure<StateFigureData> {
             },
             ...metric_value_component_options_big_centered_text(
                 this.plot_size,
-                {}
+                {},
             ),
         });
     }

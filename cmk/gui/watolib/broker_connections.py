@@ -7,8 +7,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from livestatus import (
     BrokerConnection,

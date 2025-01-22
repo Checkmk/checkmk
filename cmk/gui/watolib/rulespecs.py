@@ -443,7 +443,7 @@ class Rulespec(abc.ABC):
         return self._is_binary_ruleset
 
     @property
-    def item_type(self) -> str | None:
+    def item_type(self) -> Literal["service", "item"] | None:
         return self._item_type
 
     @property
@@ -665,7 +665,6 @@ class BinaryHostRulespec(HostRulespec):
                     name=False, title=Title("Negative match (Exclude matching hosts from the set)")
                 ),
             ],
-            type=bool,
             prefill=DefaultValue(True),
         )
 
@@ -728,7 +727,6 @@ class BinaryServiceRulespec(ServiceRulespec):
                     title=Title("Negative match (Exclude matching services from the set)"),
                 ),
             ],
-            type=bool,
             prefill=DefaultValue(True),
         )
 

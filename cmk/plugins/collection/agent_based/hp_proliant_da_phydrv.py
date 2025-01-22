@@ -77,7 +77,7 @@ Section = Mapping[str, PhysicalDrive]
 
 def parse_hp_proliant_da_phydrv(string_table: StringTable) -> Section:
     return {
-        "%s/%s" % (cntlr_index, index): PhysicalDrive(
+        f"{cntlr_index}/{index}": PhysicalDrive(
             controller_index=cntlr_index,
             drive_index=index,
             bay=bay,

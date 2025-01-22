@@ -6,7 +6,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib.import_module_hack import import_module_hack
+from tests.unit.testlib.utils import import_module_hack
 
 
 @pytest.fixture(name="check_sql", scope="module")

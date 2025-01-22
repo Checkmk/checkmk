@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
-import type { List } from '@/form/components/vue_formspec_components'
+import type { List, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormList from '@/form/components/forms/FormList.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -25,8 +25,13 @@ const spec = ref<List>({
     type: 'string',
     title: 'some title',
     help: 'some help',
-    validators: []
-  }
+    label: null,
+    i18n_base: { required: 'required' },
+    validators: [],
+    input_hint: null,
+    field_size: 'SMALL',
+    autocompleter: null
+  } as String
 })
 const data = ref<Array<string>>([])
 </script>

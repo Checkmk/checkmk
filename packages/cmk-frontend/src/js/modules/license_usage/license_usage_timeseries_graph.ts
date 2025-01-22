@@ -77,7 +77,7 @@ function ts_to_date(unix_timestamp: number) {
 function compute_x_domain(
     subscription_start: number | null,
     subscription_end: number | null,
-    raw_daily_services: RawMonthlyServiceAverage[]
+    raw_daily_services: RawMonthlyServiceAverage[],
 ) {
     if (subscription_start !== null && subscription_end !== null) {
         const dummy_seconds = 10 * 24 * 60 * 60;
@@ -109,7 +109,7 @@ function compute_x_domain(
 function compute_y_domain_max(
     subscription_limit: "unlimited" | number | null,
     raw_daily_services: RawMonthlyServiceAverage[],
-    y_domain_max: number
+    y_domain_max: number,
 ) {
     let y_domain_max_values = [];
     if (subscription_limit !== "unlimited" && subscription_limit !== null) {
@@ -119,7 +119,7 @@ function compute_y_domain_max(
         y_domain_max_values = y_domain_max_values.concat(
             raw_daily_services.map(function (d) {
                 return d.num_services;
-            })
+            }),
         );
     }
     if (y_domain_max_values.length > 0) {
@@ -146,7 +146,7 @@ function compute_y_domain_max(
 function compute_daily_services(
     raw_daily_services: RawMonthlyServiceAverage[],
     x_domain_min: Date,
-    x_domain_max: Date
+    x_domain_max: Date,
 ) {
     const daily_services: MonthlyServiceAverage[] = [];
     raw_daily_services
@@ -165,7 +165,7 @@ function compute_daily_services(
 }
 
 function compute_monthly_service_averages(
-    raw_monthly_service_averages: RawMonthlyServiceAverage[]
+    raw_monthly_service_averages: RawMonthlyServiceAverage[],
 ) {
     const monthly_service_averages: MonthlyServiceAverage[] = [];
     if (raw_monthly_service_averages.length > 0) {
@@ -183,7 +183,7 @@ function compute_monthly_service_averages(
         monthly_service_averages.push({
             sample_date: timeMonth.offset(
                 ts_to_date(last_sample.sample_time),
-                1
+                1,
             ),
             num_services: last_sample.num_services,
         });
@@ -194,7 +194,7 @@ function compute_monthly_service_averages(
 function compute_bar_data(
     highest_service_report: RawMonthlyServiceAverage | null,
     subscription_exceeded_first: RawMonthlyServiceAverage | null,
-    last_service_report: RawMonthlyServiceAverage | null
+    last_service_report: RawMonthlyServiceAverage | null,
 ) {
     // Due to this calculcation of bar_dates we adapt the bar sizes:
     // It's possible that all three bars or at least two bars may be
@@ -267,7 +267,7 @@ function compute_bar_data(
 
 function get_bar_size(
     x_range: ScaleTime<number, number, any>,
-    bar_data_extended: BarDataExtended
+    bar_data_extended: BarDataExtended,
 ) {
     return (
         (x_range(timeMonth.offset(bar_data_extended.sample_date, 1)) -
@@ -289,7 +289,7 @@ function get_tooltip_date_info(x_coord_date: Date) {
 function get_tooltip_num_service_info(
     x_coord_date: Date,
     daily_services: MonthlyServiceAverage[],
-    tooltip_title: string
+    tooltip_title: string,
 ) {
     const the_year = x_coord_date.getFullYear(),
         the_month = x_coord_date.getMonth(),
@@ -305,7 +305,7 @@ function get_tooltip_num_service_info(
             sample_date.getDate() === the_day
         ) {
             num_services_info = format("~s")(
-                Math.trunc(daily_service.num_services)
+                Math.trunc(daily_service.num_services),
             );
             break;
         }
@@ -316,7 +316,7 @@ function get_tooltip_num_service_info(
 function get_tooltip_average_info(
     x_coord_date: Date,
     monthly_service_averages: MonthlyServiceAverage[],
-    tooltip_title: string
+    tooltip_title: string,
 ) {
     let average_info = "-";
     for (let i = 0; i < monthly_service_averages.length; i++) {
@@ -336,7 +336,7 @@ function get_tooltip_limit_info(
     subscription_end: number | null,
     subscription_limit: "unlimited" | number | null,
     subscription_sizing_title: string,
-    tooltip_title: string
+    tooltip_title: string,
 ) {
     if (subscription_limit === "unlimited") {
         return subscription_sizing_title + ": Unlimited";
@@ -360,7 +360,7 @@ function get_tooltip_limit_info(
 
 function add_legend_row(
     table: Selection<HTMLTableElement, unknown, HTMLElement, unknown>,
-    data: LegendRowData
+    data: LegendRowData,
 ) {
     const row = table.append("tr");
     row.append("td")
@@ -417,7 +417,7 @@ interface GraphConfig {
 
 function render_usage_graph(
     graph_config: GraphConfig,
-    aggregation: RawMonthlyServiceAggregation
+    aggregation: RawMonthlyServiceAggregation,
 ) {
     const subscription_start = aggregation.subscription_details.start;
     const subscription_end = aggregation.subscription_details.end;
@@ -426,7 +426,7 @@ function render_usage_graph(
     const x_domain = compute_x_domain(
         subscription_start,
         subscription_end,
-        aggregation.daily_services
+        aggregation.daily_services,
     );
     if (x_domain === null) {
         throw new Error("cannot render graph due to unknown time range");
@@ -435,26 +435,26 @@ function render_usage_graph(
     const y_domain_max = compute_y_domain_max(
         subscription_limit,
         aggregation.daily_services,
-        graph_config.y_domain_max
+        graph_config.y_domain_max,
     );
 
     // Prepare daily services
     const daily_services = compute_daily_services(
         aggregation.daily_services,
         x_domain[0],
-        x_domain[1]
+        x_domain[1],
     );
 
     // Prepare monthly averages
     const monthly_service_averages = compute_monthly_service_averages(
-        aggregation.monthly_service_averages
+        aggregation.monthly_service_averages,
     );
 
     // Prepare bars
     const bar_data_extended = compute_bar_data(
         aggregation.highest_service_report,
         aggregation.subscription_exceeded_first,
-        aggregation.last_service_report
+        aggregation.last_service_report,
     );
 
     // set the dimensions and margins of the graph
@@ -673,13 +673,13 @@ function render_usage_graph(
                         get_tooltip_num_service_info(
                             x_coord_date,
                             daily_services,
-                            graph_config.tooltip_title
+                            graph_config.tooltip_title,
                         ) +
                         "<br>" +
                         get_tooltip_average_info(
                             x_coord_date,
                             monthly_service_averages,
-                            graph_config.tooltip_title
+                            graph_config.tooltip_title,
                         ) +
                         "<br>" +
                         get_tooltip_limit_info(
@@ -688,8 +688,8 @@ function render_usage_graph(
                             subscription_end,
                             subscription_limit,
                             graph_config.subscription_sizing_title,
-                            graph_config.tooltip_title
-                        )
+                            graph_config.tooltip_title,
+                        ),
                 );
         });
 
@@ -726,7 +726,7 @@ function render_usage_graph(
 
 export function render_services_usage_graph(
     num_graphs: number,
-    services_aggregation: RawMonthlyServiceAggregation
+    services_aggregation: RawMonthlyServiceAggregation,
 ) {
     render_usage_graph(
         {
@@ -742,13 +742,13 @@ export function render_services_usage_graph(
             first_above_limit_title:
                 "First monthly average usage above subscription limit",
         },
-        services_aggregation
+        services_aggregation,
     );
 }
 
 export function render_tests_usage_graph(
     num_graphs: number,
-    tests_aggregation: RawMonthlyServiceAggregation
+    tests_aggregation: RawMonthlyServiceAggregation,
 ) {
     render_usage_graph(
         {
@@ -764,13 +764,13 @@ export function render_tests_usage_graph(
             first_above_limit_title:
                 "First monthly average usage above subscription limit",
         },
-        tests_aggregation
+        tests_aggregation,
     );
 }
 
 export function render_free_tests_usage_graph(
     num_graphs: number,
-    tests_aggregation: RawMonthlyServiceAggregation
+    tests_aggregation: RawMonthlyServiceAggregation,
 ) {
     render_usage_graph(
         {
@@ -786,6 +786,6 @@ export function render_free_tests_usage_graph(
             first_above_limit_title:
                 "First monthly average usage above free limit",
         },
-        tests_aggregation
+        tests_aggregation,
     );
 }

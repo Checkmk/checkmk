@@ -11,6 +11,7 @@ import threading
 import time
 import traceback
 from collections.abc import Sequence
+from datetime import timedelta
 from typing import Literal, NamedTuple, TypeGuard
 
 from cmk.ccc import store
@@ -22,6 +23,7 @@ from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -29,10 +31,16 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 
 from ..config import active_config
-from . import bakery
-from .automation_commands import AutomationCommand
+from . import bakery, builtin_attributes
+from .automation_commands import AutomationCommand, AutomationCommandRegistry
 from .automations import do_remote_automation
-from .host_attributes import ExcludeIPRange, HostAttributes, IPRange, NetworkScanResult
+from .host_attributes import (
+    ExcludeIPRange,
+    HostAttributeRegistry,
+    HostAttributes,
+    IPRange,
+    NetworkScanResult,
+)
 from .hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
@@ -189,6 +197,23 @@ class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
         folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
+
+
+def register(
+    host_attribute_registry: HostAttributeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    cron_job_registry: CronJobRegistry,
+) -> None:
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScan)
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScanResult)
+    automation_command_registry.register(AutomationNetworkScan)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_network_scan_job",
+            callable=execute_network_scan_job,
+            interval=timedelta(minutes=1),
+        )
+    )
 
 
 # This is executed in the site the host is assigned to.

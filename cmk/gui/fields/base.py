@@ -8,11 +8,11 @@ import collections
 import typing
 from collections.abc import Mapping, Sequence
 from functools import cached_property
+from typing import cast, Self
 
 from apispec.ext.marshmallow import common
 from marshmallow import (
     EXCLUDE,
-    fields,
     INCLUDE,
     post_dump,
     post_load,
@@ -21,6 +21,9 @@ from marshmallow import (
     types,
     utils,
     ValidationError,
+)
+from marshmallow import (
+    fields as ma_fields,
 )
 from marshmallow.base import SchemaABC
 from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, pre_dump, PRE_LOAD
@@ -82,6 +85,27 @@ class BaseSchema(Schema):
 
         return data
 
+    @classmethod
+    def from_dict(
+        cls,
+        fields: dict[str, ma_fields.Field | type[ma_fields.Field]],
+        *,
+        name: str = "GeneratedSchema",
+    ) -> type[Self]:
+        """Create a new schema class from a dictionary of fields.
+
+        Since the `from_dict` function returns a new type that inherits from the class from which
+        it was called but the return type hint is `type[Schema]` it is necessary to set the type
+        accordingly.
+
+        Another alternative evaluated in order to avoid calling `cast` was to duplicate the
+        function body and adjust the return type hint, but this would have implied that future
+        changes to the base function would not be immediately reflected.
+        """
+
+        schema_cls = super().from_dict(fields, name=name)
+        return cast(type[Self], schema_cls)
+
 
 class FieldWrapper:
     """Wrapper for marshmallow fields.
@@ -93,7 +117,7 @@ class FieldWrapper:
     registered as attributes.
     """
 
-    def __init__(self, field: fields.Field) -> None:
+    def __init__(self, field: ma_fields.Field) -> None:
         self.field = field
 
 
@@ -109,7 +133,7 @@ class ValueTypedDictSchema(BaseSchema):
     value_type: type[Schema] | FieldWrapper
 
     @classmethod
-    def field(cls, field: fields.Field) -> FieldWrapper:
+    def field(cls, field: ma_fields.Field) -> FieldWrapper:
         return FieldWrapper(field)
 
     def _convert_with_schema(self, data, schema_func):
@@ -119,7 +143,7 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
     def _serialize_field(
-        self, data: Mapping[str, object], field: fields.Field
+        self, data: Mapping[str, object], field: ma_fields.Field
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
@@ -134,7 +158,7 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
     def _deserialize_field(
-        self, data: Mapping[str, object], field: fields.Field
+        self, data: Mapping[str, object], field: ma_fields.Field
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
@@ -215,7 +239,7 @@ class LazySequence(Sequence):
         return len(self._items)
 
 
-class MultiNested(base.OpenAPIAttributes, fields.Field):
+class MultiNested(base.OpenAPIAttributes, ma_fields.Field):
     """Combine many distinct models under one overarching model
 
     Standard behaviour is to only allow one of the sub-model to be true at the same time, i.e.
@@ -240,13 +264,13 @@ class MultiNested(base.OpenAPIAttributes, fields.Field):
 
         >>> class Schema1(BaseSchema):
         ...     cast_to_dict = True
-        ...     required1 = fields.String(required=True)
-        ...     optional1 = fields.String()
+        ...     required1 = ma_fields.String(required=True)
+        ...     optional1 = ma_fields.String()
 
         >>> class Schema2(BaseSchema):
         ...     cast_to_dict = True
-        ...     required2 = fields.String(required=True)
-        ...     optional2 = fields.String()
+        ...     required2 = ma_fields.String(required=True)
+        ...     optional2 = ma_fields.String()
         ...
         ...     @post_load
         ...     def _valid(self, data, **kwargs):
@@ -361,7 +385,7 @@ required field.'], 'something': ['Unknown field.']}
 
             >>> class DumpOnly(BaseSchema):
             ...     cast_to_dict = True
-            ...     dump_only = fields.String(dump_only=True)
+            ...     dump_only = ma_fields.String(dump_only=True)
 
             >>> class WithDumpOnly(BaseSchema):
             ...      cast_to_dict = True
@@ -449,7 +473,7 @@ Keys 'optional1', 'required1' occur more than once.
         nested: typing.Sequence[type[Schema] | Schema | typing.Callable[[], type[Schema]]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
-        default: typing.Any = fields.missing_,  # type: ignore[attr-defined, unused-ignore]
+        default: typing.Any = ma_fields.missing_,  # type: ignore[attr-defined, unused-ignore]
         only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,

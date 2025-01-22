@@ -7,7 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import { mount } from '@vue/test-utils'
 import FormList from '@/form/components/forms/FormList.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import FormDataVisualizer from '../FormDataVisualizer.vue'
 
@@ -24,6 +24,8 @@ const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: stringValidators,
   input_hint: '',
   autocompleter: null,
@@ -33,7 +35,8 @@ const stringFormSpec: FormSpec.String = {
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
   key: 'titlehelp',
   title: 'title',
-  help: 'help'
+  help: 'help',
+  layout: 'horizontal'
 }
 
 const spec: FormSpec.List = {
@@ -64,9 +67,9 @@ test('List elements are draggable', async () => {
   })
 
   const draggables = wrapper.findAll('[aria-label="Drag to reorder"]')
-  draggables[0]!.trigger('dragstart')
-  draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
-  draggables[0]!.trigger('dragend')
+  await draggables[0]!.trigger('dragstart')
+  await draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
+  await draggables[0]!.trigger('dragend')
 
   wrapper.vm.$nextTick(() => {
     expect(wrapper.find('[data-testid="test-data"]').text()).toBe('["second_value","first_value"]')
@@ -146,6 +149,7 @@ const dictSpec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'dictTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   layout: 'one_column',
   validators: [],
   groups: [],
@@ -154,6 +158,7 @@ const dictSpec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'bar',
+      render_only: false,
       required: true,
       default_value: 'baz',
       parameter_form: stringFormSpec,

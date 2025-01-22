@@ -20,27 +20,27 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     logger.info("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -64,9 +64,9 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
 
     try:
         site.activate_changes_and_wait_for_core_reload()
@@ -81,10 +81,10 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
 
         site.activate_changes_and_wait_for_core_reload()
 

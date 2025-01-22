@@ -37,6 +37,14 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
+}
+
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -501,7 +509,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.4.0b1
+Version: 2.5.0b1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -866,7 +874,7 @@ section_diskstat() {
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
-            dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+            sudo_as_root dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
         fi
         if [ -d /dev/vx/dsk ]; then
             echo '[vx_dsk]'
@@ -979,9 +987,15 @@ section_cfggen() {
 
 section_storcli() {
     if inpath storcli; then
-        _storcli() { storcli "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli "$@"
+        ); }
     elif inpath storcli64; then
-        _storcli() { storcli64 "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli64 "$@"
+        ); }
     else
         return 1
     fi
@@ -1169,7 +1183,7 @@ section_mailqueue() {
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
     # Check status of qmail mailqueue
@@ -1202,16 +1216,29 @@ _omd_broker() {
     printf "%s %s\n" "$site_name" "$(su - "$site_name" -c "rabbitmq-diagnostics \"$command_name\" --formatter json" | tr -d \\n)"
 }
 
+_omd_broker_list_queues() {
+    local site_name="$1"
+    printf "<<<omd_broker_queues:sep(0)>>>\n"
+
+    # skip the first line, is the header
+    for i in $(
+        su - "$site_name" -c "rabbitmq-diagnostics list_vhosts --quiet" | tail -n +2
+    ); do
+        printf "%s %s %s\n" "$site_name" "$i" "$(su - "$site_name" -c "rabbitmq-diagnostics list_queues -p \"$i\" --formatter json" | tr -d \\n)"
+    done
+}
+
 section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
 
         export -f _omd_broker
+        export -f _omd_broker_list_queues
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
             _run_cached_internal "omd_broker_status_$site" 1 150 180 50 "_omd_broker status $site status"
-            _run_cached_internal "omd_broker_queues_$site" 1 150 180 50 "_omd_broker queues $site list_queues"
+            _run_cached_internal "omd_broker_queues_$site" 1 150 180 50 "_omd_broker_list_queues $site"
             _run_cached_internal "omd_broker_shovels_$site" 1 150 180 50 "_omd_broker shovels $site shovel_status"
         done
 
@@ -2266,6 +2293,8 @@ main_setup() {
     if "${DISABLE_STDERR:-true}"; then
         exec 2>/dev/null
     fi
+
+    init_sudo
 
     set_up_get_epoch
 

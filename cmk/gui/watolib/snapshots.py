@@ -26,7 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.watolib.config_sync import (
     ABCSnapshotDataCollector,
     create_distributed_wato_files,
-    create_rabbitmq_definitions_file,
+    create_rabbitmq_new_definitions_file,
     get_site_globals,
     replication_path_registry,
     ReplicationPath,
@@ -76,7 +76,7 @@ class SnapshotManager:
             return  # Nothing to do
 
         # 1. Collect files to "var/check_mk/site_configs" directory
-        with tracer.start_as_current_span("prepare_snapshot_files"):
+        with tracer.span("prepare_snapshot_files"):
             self._data_collector.prepare_snapshot_files()
 
         # 2. Allow hooks to further modify the reference data for the remote site
@@ -123,14 +123,14 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         first_site = site_ids.pop(0)
 
         # Create first directory and clone it once for each destination site
-        with tracer.start_as_current_span("prepare_first_site"):
+        with tracer.span("prepare_first_site"):
             self._prepare_site_config_directory(first_site)
             self._clone_site_config_directories(first_site, site_ids)
 
         for site_id, snapshot_settings in sorted(
             self._site_snapshot_settings.items(), key=lambda x: x[0]
         ):
-            with tracer.start_as_current_span(f"prepare_site_{site_id}"):
+            with tracer.span(f"prepare_site_{site_id}"):
                 save_site_global_settings(
                     get_site_globals(site_id, snapshot_settings.site_config),
                     custom_site_path=snapshot_settings.work_dir,
@@ -138,7 +138,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 create_distributed_wato_files(
                     Path(snapshot_settings.work_dir), site_id, is_remote=True
                 )
-                create_rabbitmq_definitions_file(
+                create_rabbitmq_new_definitions_file(
                     Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
                 )
 

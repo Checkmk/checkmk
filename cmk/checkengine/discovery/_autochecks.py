@@ -15,7 +15,6 @@ from cmk.ccc.store import ObjectStore
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
@@ -32,7 +31,6 @@ __all__ = [
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
 ]
-
 
 _GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 
@@ -315,93 +313,6 @@ def remove_autochecks_of_host(
     return len(existing_entries) - len(new_entries)
 
 
-class DiscoveredLabelsCache:
-    """Cache for discovered labels of services
-
-    This is insane.
-
-    We need this because we insist on looking up the labels of a service by its name.
-    Discovered labels are attached to the autocheck entry, which is identified by the
-    service ID (check plugin name and item).
-    We read all of the autochecks, compute all the service names, and then see if one
-    matches.
-
-    Ironically, at the start we already knew the service ID. We just forgot about it.
-    """
-
-    def __init__(
-        self,
-        clusters: Mapping[HostName, Sequence[HostName]],
-        get_autochecks: Callable[[HostName], Sequence[AutocheckEntry]],
-    ) -> None:
-        self._clusters = clusters
-        self._get_autochecks = get_autochecks
-        self._discovered_labels_of: dict[HostName, Mapping[ServiceName, Labels]] = {}
-
-    def discovered_labels_of(
-        self,
-        hostname: HostName,
-        service_desc: ServiceName,
-        get_service_description: _GetServiceDescription,
-        get_effective_host: _GetEffectiveHost,
-    ) -> Labels:
-        # NOTE: this returns an empty labels object for non-existing services
-        if (hosts_service_labels := self._discovered_labels_of.get(hostname)) is None:
-            hosts_service_labels = self._discovered_labels_of.setdefault(
-                hostname,
-                self._get_hosts_discovered_service_labels(
-                    hostname,
-                    get_service_description,
-                    get_effective_host,
-                ),
-            )
-
-        return hosts_service_labels.get(service_desc, {})
-
-    def _get_hosts_discovered_service_labels(
-        self,
-        host_name: HostName,
-        get_service_description: _GetServiceDescription,
-        get_effective_host: _GetEffectiveHost,
-    ) -> Mapping[ServiceName, Labels]:
-        return (
-            self._get_real_hosts_discovered_service_labels(host_name, get_service_description)
-            if (nodes := self._clusters.get(host_name)) is None
-            else self._get_clusters_discovered_service_labels(
-                host_name, nodes, get_service_description, get_effective_host
-            )
-        )
-
-    def _get_real_hosts_discovered_service_labels(
-        self,
-        node_name: HostName,
-        get_service_description: _GetServiceDescription,
-    ) -> Mapping[ServiceName, Labels]:
-        return {
-            get_service_description(
-                node_name, autocheck_entry.check_plugin_name, autocheck_entry.item
-            ): autocheck_entry.service_labels
-            for autocheck_entry in self._get_autochecks(node_name)
-        }
-
-    def _get_clusters_discovered_service_labels(
-        self,
-        cluster_name: HostName,
-        nodes: Sequence[HostName],
-        get_service_description: _GetServiceDescription,
-        get_effective_host: _GetEffectiveHost,
-    ) -> Mapping[ServiceName, Labels]:
-        return {
-            get_service_description(
-                cluster_name, autocheck_entry.check_plugin_name, autocheck_entry.item
-            ): autocheck_entry.service_labels
-            for autocheck_entry in merge_cluster_autochecks(
-                {node: self._get_autochecks(node) for node in nodes},
-                lambda node_name, entry: (get_effective_host(node_name, entry) == cluster_name),
-            )
-        }
-
-
 # TODO: We shouldn't need a protocol for configuration options
 class AutochecksConfig(Protocol):
     """Interface for the autochecks configuration
@@ -418,3 +329,5 @@ class AutochecksConfig(Protocol):
     def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName: ...
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName: ...
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]: ...

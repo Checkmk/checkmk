@@ -25,20 +25,12 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 # PACKAGES variable there to customzie the list of packages.
 
 PACKAGES := \
-    openssl \
     erlang \
     redis \
     libgsf \
     cpp-libs \
-    perl-modules \
-    Python \
-    freetds \
-    protobuf \
-    python3-modules \
-    rrdtool \
     lcab \
     msitools \
-    net-snmp \
     apache-omd \
     xinetd \
     mod_fcgid \
@@ -49,7 +41,6 @@ PACKAGES := \
     nagios \
     monitoring-plugins \
     check-cert \
-    check-http \
     nrpe \
     omd \
     navicli \
@@ -119,7 +110,6 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	done || true
-	egrep -h "^PACKAGE_PYTHON3_MODULES_PYTHON_DEPS?\s+:=\s+" packages/python3-modules/python3-modules.make >> $@
 
 
 -include .config
@@ -141,8 +131,11 @@ BOM := bill-of-materials.json
 .PHONY: install cma rpm deb clean install-clean venv
 
 # Called while building the .rpm/.deb packages
-install: $(INSTALL_GLOBAL)
-	python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
+install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
+	../scripts/run-bazel.sh run :venv
+	source .venv/bin/activate \
+	&& python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/ \
+	&& deactivate
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -187,7 +180,7 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	set -e ; \
 	OUTPUT=""; \
-	cd packages ; for p in $(PACKAGES) ; do \
+	cd packages ; for p in $(PACKAGES) rrdtool; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
 	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
 	    fi ; \
@@ -197,6 +190,8 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
 	    fi ; \
 	done ; \
+	bazel build //omd:skel_permissions_$(EDITION_SHORT) ; \
+	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION_SHORT))\n" ; \
 	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)
 
 $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
@@ -325,7 +320,6 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
-	    --prepend-path=`dirname $$(which pipenv)` \
 	    --prepend-path=`dirname $$(which python3)` \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \

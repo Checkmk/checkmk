@@ -9,7 +9,7 @@ import type {
   CoreStats,
   RuleSection,
   FallbackWarning
-} from '@/notification/type_defs'
+} from 'cmk-shared-typing/typescript/notifications'
 import NotificationStatsComponent from '@/notification/components/NotificationStats.vue'
 import CoreStatistics from '@/notification/components/CoreStats.vue'
 import NotificationRules from '@/notification/components/NotificationRules.vue'

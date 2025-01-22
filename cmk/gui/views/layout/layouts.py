@@ -21,12 +21,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, EmptyCell
+from cmk.gui.painter.v0 import Cell, EmptyCell
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
 
 from .base import Layout
@@ -410,10 +410,14 @@ def try_to_match_group(row: Row) -> GroupSpec | None:
             group_spec["pattern"], row["service_description"]
         ):
             if re.findall(r"(\([^)]*\))", group_spec["pattern"]):
-                group_spec["title"] = re.sub(
-                    group_spec["pattern"],
-                    escape_regex_chars(group_spec["title"]),
-                    row["service_description"],
+                return GroupSpec(
+                    title=re.sub(
+                        group_spec["pattern"],
+                        escape_regex_chars(group_spec["title"]),
+                        row["service_description"],
+                    ),
+                    pattern=group_spec["pattern"],
+                    min_items=group_spec["min_items"],
                 )
             return group_spec
 
@@ -551,7 +555,7 @@ class LayoutTiled(Layout):
             # We need at least five cells
             render_cells = list(cells)
             if len(render_cells) < 5:
-                render_cells += [EmptyCell(None, None)] * (5 - len(render_cells))
+                render_cells += [EmptyCell(None, None, None)] * (5 - len(render_cells))
 
             rendered = [cell.render(row, link_renderer) for cell in render_cells]
 

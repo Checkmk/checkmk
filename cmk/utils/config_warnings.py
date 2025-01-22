@@ -28,7 +28,7 @@ def get_configuration(
     *,  # kw only for now b/c the naming is quite creative here.
     additional_warnings: Sequence[str],
 ) -> ConfigurationWarnings:
-    adjusted_warnings = list(set((*g_configuration_warnings, *additional_warnings)))
+    adjusted_warnings = list({*g_configuration_warnings, *additional_warnings})
     max_warnings: Final = 10
     num_warnings = len(adjusted_warnings)
     return (

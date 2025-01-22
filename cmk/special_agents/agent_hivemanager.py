@@ -74,11 +74,13 @@ def _main(args: argparse.Namespace) -> int:
         "networkPolicy",
     ]
 
-    print("<<<hivemanager_devices:sep(124)>>>")
+    sys.stdout.write("<<<hivemanager_devices:sep(124)>>>\n")
     for line in json.loads(data):
         if line["upTime"] == "":
             line["upTime"] = "down"
-        print("|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])))
+        sys.stdout.write(
+            "|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])) + "\n"
+        )
     return 0
 
 
@@ -94,7 +96,7 @@ def _session(
         {
             "Authorization": "Basic %s"
             % (
-                base64.encodebytes(f"{username}:{password}".encode("utf-8"))
+                base64.encodebytes(f"{username}:{password}".encode())
                 .decode("utf-8")
                 .replace("\n", "")
             ),

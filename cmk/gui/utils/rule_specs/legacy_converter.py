@@ -20,7 +20,7 @@ import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import Tuple
+from cmk.gui.form_specs.converter import SimplePassword, Tuple
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
     LegacyValueSpec,
@@ -29,7 +29,6 @@ from cmk.gui.form_specs.private import (
     MonitoredHostExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -51,6 +50,9 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 
+from cmk.rulesets import v1 as ruleset_api_v1
+from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
+
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
@@ -65,8 +67,6 @@ except ImportError:
     RulespecGroupMonitoringAgentsAgentPlugins = None
     RulespecGroupMonitoringAgentsLinuxUnixAgent = None
     RulespecGroupMonitoringAgentsWindowsAgent = None
-
-from cmk.rulesets import v1 as ruleset_api_v1
 
 
 @dataclass(frozen=True)
@@ -818,6 +818,9 @@ def _convert_to_inner_legacy_valuespec(
         case Tuple():
             return _convert_to_legacy_tuple(to_convert, localizer)
 
+        case SimplePassword():
+            return _convert_to_legacy_password(to_convert, localizer)
+
         case LegacyValueSpec():
             return to_convert.valuespec
 
@@ -1349,7 +1352,7 @@ def _make_group_as_nested_dict(
         for key, dict_element in dict_elements.items()
     ]
 
-    all_group_elements_hidden = set(key_props.hidden) == set(key for key, _ in elements)
+    all_group_elements_hidden = set(key_props.hidden) == {key for key, _ in elements}
     return (
         legacy_valuespecs.Dictionary(
             elements=elements,
@@ -2477,4 +2480,16 @@ def _convert_to_legacy_tuple(
         elements=[convert_to_legacy_valuespec(e, localizer) for e in to_convert.elements],
         orientation=orientation,
         show_titles=to_convert.show_titles,
+    )
+
+
+def _convert_to_legacy_password(
+    to_convert: SimplePassword, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Password:
+    return legacy_valuespecs.Password(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
+        if to_convert.custom_validate
+        else None,
     )

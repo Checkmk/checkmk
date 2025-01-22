@@ -259,7 +259,7 @@ def test_summarize_predictions(
         ),
     ],
 )
-def test_check_levels(  # noqa: PLR0913
+def test_check_levels(
     value: float,
     levels_upper: NoLevelsT | FixedLevelsT[float] | None,
     levels_lower: NoLevelsT | FixedLevelsT[float] | None,
@@ -344,7 +344,7 @@ def test_check_levels(  # noqa: PLR0913
         ),
     ],
 )
-def test_check_levels_with_metric(  # noqa: PLR0913
+def test_check_levels_with_metric(
     value: float,
     levels_upper: LevelsT[float] | None,
     levels_lower: LevelsT[float] | None,

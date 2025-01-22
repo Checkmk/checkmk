@@ -62,7 +62,7 @@ export function execute_javascript_by_object(obj: HTMLElement) {
                 current_script = null;
             } catch (e) {
                 console.error(
-                    aScripts[i].text + "\nError:" + (e as any).message
+                    aScripts[i].text + "\nError:" + (e as any).message,
                 );
             }
         }
@@ -134,7 +134,7 @@ export function toggle_class(o: Nullable<HTMLElement>, a: string, b: string) {
 export function add_event_handler(
     type: string,
     func: (e: Event) => void,
-    obj?: EventTarget
+    obj?: EventTarget,
 ) {
     obj = typeof obj === "undefined" ? window : obj;
     obj.addEventListener(type, func, false);
@@ -143,7 +143,7 @@ export function add_event_handler(
 export function del_event_handler(
     type: string,
     func: (e?: Event) => void,
-    obj?: any
+    obj?: any,
 ) {
     obj = typeof obj === "undefined" ? window : obj;
 
@@ -161,8 +161,8 @@ export function get_button(event: MouseEvent) {
         return event.button < 2
             ? "LEFT"
             : event.button == 4
-            ? "MIDDLE"
-            : "RIGHT";
+              ? "MIDDLE"
+              : "RIGHT";
     /* All others */ else
         return event.which < 2 ? "LEFT" : event.which == 2 ? "MIDDLE" : "RIGHT";
 }
@@ -203,17 +203,17 @@ export function content_wrapper_size() {
 
     const vert_paddings =
         parseInt(
-            get_computed_style(container, "padding-top")!.replace("px", "")
+            get_computed_style(container, "padding-top")!.replace("px", ""),
         ) +
         parseInt(
-            get_computed_style(container, "padding-bottom")!.replace("px", "")
+            get_computed_style(container, "padding-bottom")!.replace("px", ""),
         );
     const hor_paddings =
         parseInt(
-            get_computed_style(container, "padding-right")!.replace("px", "")
+            get_computed_style(container, "padding-right")!.replace("px", ""),
         ) +
         parseInt(
-            get_computed_style(container, "padding-left")!.replace("px", "")
+            get_computed_style(container, "padding-left")!.replace("px", ""),
         );
 
     return {
@@ -302,7 +302,7 @@ export function set_inpage_search_result_info(text: string) {
     // First, check if result line is already shown, e.g. on hosts page for folder search.
     // If so, just update the result number
     const result_with_row_info: HTMLElement | null = document.getElementById(
-        "inpage_search_result_info"
+        "inpage_search_result_info",
     );
     if (result_with_row_info) {
         const [new_text, new_count] = text.split(":");
@@ -353,7 +353,7 @@ export function set_inpage_search_result_info(text: string) {
 // Function gets the value of the given url parameter
 export function get_url_param(
     name: string,
-    url: string | undefined = undefined
+    url: string | undefined = undefined,
 ) {
     name = name.replace("[", "\\[").replace("]", "\\]");
     url = typeof url === "undefined" ? window.location.toString() : url;
@@ -372,7 +372,7 @@ export function get_url_param(
 export function makeuri(
     addvars: any,
     url: string | undefined = undefined,
-    filename: string | undefined = undefined
+    filename: string | undefined = undefined,
 ) {
     url = typeof url === "undefined" ? window.location.href : url;
 
@@ -415,7 +415,7 @@ export function makeuri(
     // Add new params
     for (const key in addvars) {
         params.push(
-            encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key])
+            encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key]),
         );
     }
 
@@ -427,7 +427,7 @@ export function makeuri_contextless(vars: any, filename: string) {
     // Add new params
     for (const key in vars) {
         params.push(
-            encodeURIComponent(key) + "=" + encodeURIComponent(vars[key])
+            encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]),
         );
     }
 
@@ -486,7 +486,7 @@ export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
 }
 
 export function add_height_to_simple_bar_content_of_iframe(
-    target_iframe: string
+    target_iframe: string,
 ) {
     const iframe = document.getElementById(target_iframe);
     if (!iframe) return;
@@ -534,7 +534,7 @@ export function set_reload(secs: number, url?: string) {
 // running, this timer is terminated and replaced by the new one.
 export function schedule_reload(
     url: string | undefined = undefined,
-    remaining_ms: number | undefined = undefined
+    remaining_ms: number | undefined = undefined,
 ) {
     if (typeof url === "undefined") url = ""; // reload current page (or just the content)
 
@@ -669,7 +669,7 @@ function do_reload(url: string) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(
                     opts[i].toUpperCase(),
-                    opts[i]
+                    opts[i],
                 );
             else display_options += opts[i];
         }
@@ -710,7 +710,7 @@ function handle_content_reload(_unused: any, code: string) {
 
 function handle_content_reload_error(
     _unused: any,
-    status_code: number | string
+    status_code: number | string,
 ) {
     if (!g_reload_error) {
         const o = document.getElementById("data_container")!;
@@ -754,8 +754,8 @@ export function wheel_event_delta(event) {
     return event.deltaY
         ? event.deltaY
         : event.detail
-        ? event.detail * -120
-        : event.wheelDelta;
+          ? event.detail * -120
+          : event.wheelDelta;
 }
 
 export function wheel_event_name() {
@@ -767,7 +767,7 @@ export function wheel_event_name() {
 export function toggle_more(
     trigger: HTMLElement,
     toggle_id: string,
-    dom_levels_up: number
+    dom_levels_up: number,
 ) {
     event!.stopPropagation();
     let container: HTMLElement | ParentNode | null = trigger;
@@ -795,18 +795,18 @@ export function toggle_more(
             "&name=" +
             encodeURIComponent(toggle_id) +
             "&state=" +
-            encodeURIComponent(state)
+            encodeURIComponent(state),
     );
 }
 
 export function add_simplebar_scrollbar(scrollable_id: string) {
     return add_simplebar_scrollbar_to_object(
-        document.getElementById(scrollable_id)
+        document.getElementById(scrollable_id),
     );
 }
 
 export function add_simplebar_scrollbar_to_object(
-    obj: Nullable<HTMLElement>
+    obj: Nullable<HTMLElement>,
 ): SimpleBar | undefined {
     if (obj) {
         return new SimpleBar(obj);
@@ -832,13 +832,13 @@ export function content_scrollbar(scrollable_id: string) {
 
 export function set_focus_by_name(
     form_name: string | undefined,
-    field_name: number
+    field_name: number,
 ) {
     if (form_name === null) return;
 
     set_focus(
         (document.getElementById("form_" + form_name) as HTMLFormElement)
-            .elements[field_name] as HTMLElement | null
+            .elements[field_name] as HTMLElement | null,
     );
 }
 
@@ -858,7 +858,7 @@ function set_focus(focus_obj) {
 
 export function update_pending_changes(
     changes_info: Nullable<string>,
-    changes_tooltip: string
+    changes_tooltip: string,
 ) {
     if (!changes_info) {
         return;
@@ -866,7 +866,7 @@ export function update_pending_changes(
 
     // Update container div CSS class and tooltip
     const page_state_div = document.getElementsByClassName(
-        "page_state"
+        "page_state",
     )[0] as HTMLElement;
     change_class(page_state_div, "no_changes", "pending_changes");
     page_state_div.title = changes_tooltip;
@@ -903,7 +903,7 @@ export function update_pending_changes(
 
 export function get_computed_style(
     object: null | undefined | Element,
-    property: string
+    property: string,
 ) {
     return object
         ? window.getComputedStyle(object).getPropertyValue(property)
@@ -932,7 +932,7 @@ function fallbackCopyToClipboard(secret: string) {
 
 export function copy_to_clipboard(
     text: string,
-    success_msg: string | null = null
+    success_msg: string | null = null,
 ) {
     try {
         if (navigator.clipboard) {
@@ -961,7 +961,7 @@ export function copy_to_clipboard(
 
 export function copy_dom_element_content_to_clipboard(
     node_id: string,
-    success_msg = ""
+    success_msg = "",
 ) {
     const node = document.getElementById(node_id);
     if (!node) {
@@ -972,7 +972,7 @@ export function copy_dom_element_content_to_clipboard(
         console.warn(
             "Copy to clipboard failed due to an unsupported browser. " +
                 "Could not select text in DOM element:",
-            node
+            node,
         );
         return;
     }
@@ -985,7 +985,7 @@ export function querySelectorID<T extends HTMLElement>(id: string): T | null {
 }
 
 export function querySelectorAllByClassName<T extends HTMLElement>(
-    className: string
+    className: string,
 ) {
     return document.querySelectorAll<T>(`.${className}`);
 }

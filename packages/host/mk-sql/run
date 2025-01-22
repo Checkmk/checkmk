@@ -6,6 +6,7 @@
 set -e
 
 JOBS=6
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=clippy
 
 failure() {
@@ -127,7 +128,7 @@ parse_options() {
 # TODO: This needs some serious massaging, some stuff probably don't even belong
 # here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
 run_setup_environment() {
-    REPO_DIR="$(realpath ../..)"
+    REPO_DIR="$(git rev-parse --show-toplevel)"
 
     # When executed via "make deb", e.g. during local builds, these are set and
     # confuse cargo.
@@ -150,14 +151,24 @@ $RUSTFLAGS \
     export RUSTFLAGS
 }
 
-run_check_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff Cargo.toml
-    cargo fmt -- --check
+run_cargo_cmd_with_explicit_package() {
+    cargo "${1}" --package "${PWD##*/}" "${@:2}"
 }
 
 run_format() {
-    command -v taplo >/dev/null && RUST_LOG=warn taplo format Cargo.toml
-    cargo fmt
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format Cargo.toml
+    run_cargo_cmd_with_explicit_package fmt
+}
+
+run_check_format() {
+    ${BAZEL_CMD} run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff Cargo.toml
+    "${BAZEL_CMD}" build --config=rustfmt :all
 }
 
 main() {
@@ -166,14 +177,18 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    test ${RUN_CLEAN} = yes && cargo clean
+    test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && bazel build //packages/host/mk-sql
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    # TODO: We actually want to call '"${BAZEL_CMD}" build :all' instead of
+    # Cargo below, but we need a statically linked executable, and our Bazel
+    # machinery for Rust doesn't handle this yet.
+    test ${RUN_BUILD} = yes && run_cargo_cmd_with_explicit_package build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
+    test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
     true
 }
 

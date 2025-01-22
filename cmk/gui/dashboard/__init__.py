@@ -13,17 +13,23 @@ from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
 
 from ._network_topology import get_topology_context_and_filters
-from .builtin_dashboards import builtin_dashboards, GROW, MAX
+from .builtin_dashboards import (
+    builtin_dashboard_extender_registry,
+    builtin_dashboards,
+    BuiltinDashboardExtender,
+    BuiltinDashboardExtenderRegistry,
+    GROW,
+    MAX,
+    noop_builtin_dashboard_extender,
+)
 from .dashlet import (
     ABCFigureDashlet,
     Dashlet,
     dashlet_registry,
     DashletConfig,
     DashletRegistry,
-    FigureDashletPage,
     IFrameDashlet,
     LinkedViewDashletConfig,
-    register_dashlets,
     StaticTextDashletConfig,
     ViewDashletConfig,
 )
@@ -38,7 +44,10 @@ __all__ = [
     "DashletRegistry",
     "DashboardName",
     "DashboardConfig",
+    "builtin_dashboard_extender_registry",
     "builtin_dashboards",
+    "BuiltinDashboardExtender",
+    "BuiltinDashboardExtenderRegistry",
     "MAX",
     "GROW",
     "dashlet_registry",
@@ -49,6 +58,7 @@ __all__ = [
     "get_topology_context_and_filters",
     "get_all_dashboards",
     "get_permitted_dashboards",
+    "noop_builtin_dashboard_extender",
     "render_title_with_macros_string",
     "ABCFigureDashlet",
     "IFrameDashlet",

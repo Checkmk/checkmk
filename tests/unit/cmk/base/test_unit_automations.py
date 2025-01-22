@@ -7,7 +7,7 @@
 
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition, edition
@@ -93,7 +93,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
-    assert automation.execute(["test-host"]) == AnalyseHostResult(
+    assert automation.execute(["test-host"], False) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
             "cmk/site": "NO_SITE",
@@ -132,7 +132,10 @@ def test_service_labels(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    assert automation.execute(["test-host", "CPU load", "CPU temp"]) == GetServicesLabelsResult(
+    assert automation.execute(
+        ["test-host", "CPU load", "CPU temp"],
+        False,
+    ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},
             "CPU temp": {"label1": "val1"},

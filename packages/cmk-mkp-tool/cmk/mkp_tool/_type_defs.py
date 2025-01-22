@@ -135,9 +135,9 @@ class PackageID(BaseModel):
     version: PackageVersion
 
     @field_validator("name")
-    def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
+    def make_name(cls, value: str) -> PackageName:
         return PackageName(value)
 
     @field_validator("version")
-    def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
+    def make_version(cls, value: str) -> PackageVersion:
         return PackageVersion(value)

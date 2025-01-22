@@ -23,8 +23,8 @@ def test_proxy_register_import_workflow(
     agent_ctl: Path,
 ) -> None:
     hostname = HostName("proxy-host")
-    central_site.openapi.create_host(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
-    central_site.openapi.activate_changes_and_wait_for_completion()
+    central_site.openapi.hosts.create(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
+    central_site.openapi.changes.activate_and_wait_for_completion()
 
     try:
         proxy_registration_proc = run(
@@ -55,8 +55,8 @@ def test_proxy_register_import_workflow(
         logger.info("Waiting for controller to open TCP socket or push data")
         wait_until_host_receives_data(central_site, hostname)
 
-        central_site.openapi.discover_services_and_wait_for_completion(hostname)
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
         wait_until_host_has_services(
             central_site,
@@ -65,5 +65,5 @@ def test_proxy_register_import_workflow(
             interval=10,
         )
     finally:
-        central_site.openapi.delete_host(hostname=hostname)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.hosts.delete(hostname=hostname)
+        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

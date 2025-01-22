@@ -7,7 +7,7 @@
 # ui_context fixture which makes an initialized context available outside of tests.unit.cmk.gui
 # package. However, seems we need to import the fixtures referenced by the ui_context fixture to
 # make it work.
-from tests.unit.cmk.gui.conftest import (  # pylint: disable=unused-import
+from tests.unit.cmk.gui.conftest import (  # noqa: F401
     load_config,
     load_plugins,
     ui_context,

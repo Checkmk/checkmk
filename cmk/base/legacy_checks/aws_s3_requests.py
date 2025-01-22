@@ -11,6 +11,7 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     get_data_or_go_stale,
     inventory_aws_generic,
+    MetricInfo,
 )
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
@@ -171,13 +172,13 @@ def check_aws_s3_latency(item, params, section):
                 levels = tuple(level * 1e-3 for level in levels)
 
         metric_infos.append(
-            {
-                "metric_val": metric_val,
-                "metric_name": perf_key,
-                "levels": levels,
-                "info_name": title,
-                "human_readable_func": render.time_offset,
-            }
+            MetricInfo(
+                metric_val=metric_val,
+                metric_name=perf_key,
+                levels=levels,
+                info_name=title,
+                human_readable_func=render.time_offset,
+            )
         )
 
     return check_aws_metrics(metric_infos)
@@ -211,12 +212,12 @@ def check_aws_s3_traffic_stats(item, params, section):
     metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
-            {
-                "metric_val": metrics.get(key),
-                "metric_name": perf_key,
-                "info_name": title,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=metrics.get(key),
+                metric_name=perf_key,
+                info_name=title,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for key, title, perf_key in [
                 ("BytesDownloaded", "Downloads", "aws_s3_downloads"),
                 ("BytesUploaded", "Uploads", "aws_s3_uploads"),
@@ -252,12 +253,12 @@ def check_aws_s3_select_object(item, params, section):
     metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
-            {
-                "metric_val": metrics.get(key),
-                "metric_name": perf_key,
-                "info_name": title,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=metrics.get(key),
+                metric_name=perf_key,
+                info_name=title,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for key, title, perf_key in [
                 ("SelectBytesScanned", "Scanned", "aws_s3_select_object_scanned"),
                 ("SelectBytesReturned", "Returned", "aws_s3_select_object_returned"),

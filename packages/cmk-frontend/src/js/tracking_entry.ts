@@ -28,7 +28,7 @@ const siteName = window.location.pathname.split("/")[1];
 console.warn(
     "Tracking code enabled. See results at " +
         window.location.origin +
-        `/${siteName}/check_mk/gui_timings.py`
+        `/${siteName}/check_mk/gui_timings.py`,
 );
 
 export const cmk_export = {

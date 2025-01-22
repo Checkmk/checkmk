@@ -1,0 +1,16 @@
+#!/bin/bash
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/.venv"
+
+bazel run //omd:venv
+
+# shellcheck source=/dev/null
+source "$VENV_DIR"/bin/activate
+
+cmk-dev binreplace "$@"

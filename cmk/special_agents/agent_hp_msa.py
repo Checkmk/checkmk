@@ -202,7 +202,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Output sections
     for section, lines in sections.items():
-        print("<<<hp_msa_%s>>>" % section)
-        print("\n".join(x for x in lines))
+        sys.stdout.write("<<<hp_msa_%s>>>\n" % section)
+        sys.stdout.write("\n".join(x for x in lines) + "\n")
 
     return 0

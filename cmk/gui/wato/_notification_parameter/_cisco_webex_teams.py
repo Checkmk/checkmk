@@ -77,7 +77,6 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                                         for ident, title in passwordstore_choices_without_user()
                                         if ident is not None
                                     ],
-                                    type=str,
                                 ),
                             ),
                         ],

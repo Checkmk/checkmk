@@ -64,8 +64,10 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
         global segment_display_value, segment_display_unit
         segment_display_value = int(values[0] * factor)
         segment_display_unit = unit
-    print(
-        "{},{},{}".format(sensor_type, id_to_string(ident), ",".join([str(val) for val in values]))
+    sys.stdout.write(
+        "{},{},{}\n".format(
+            sensor_type, id_to_string(ident), ",".join([str(val) for val in values])
+        )
     )
 
 
@@ -300,8 +302,8 @@ def main():
             IPConnection,
         )
     except ImportError:
-        print("<<<tinkerforge:sep(44)>>>")
-        print("master,0.0.0,tinkerforge api isn't installed")
+        sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
+        sys.stdout.write("master,0.0.0,tinkerforge api isn't installed\n")
         return 1
 
     conn = IPConnection()
@@ -314,7 +316,7 @@ def main():
     device_handlers = init_device_handlers()
 
     try:
-        print("<<<tinkerforge:sep(44)>>>")
+        sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
 
         def cb(
             uid,

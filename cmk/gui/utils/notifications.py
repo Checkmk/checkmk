@@ -63,11 +63,12 @@ def get_failed_notification_count() -> int:
     return number_of_failed_notifications(after=acknowledged_time())
 
 
-def get_total_sent_notifications() -> LivestatusResponse:
+def get_total_sent_notifications(from_timestamp: int) -> LivestatusResponse:
     query = (
         "GET log\n"
         "Stats: class = 3\n"
-        "Filter: log_time >= 86400\n"
+        f"Filter: log_time >= {from_timestamp}\n"
+        "Filter: log_type ~~ .*NOTIFICATION RESULT$\n"
         # do not show internal notification events (just end user notifications)
         "Filter: log_command_name != check-mk-notify\n"
     )

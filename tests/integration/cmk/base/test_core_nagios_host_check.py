@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.integration.linux_test_host import create_linux_test_host
+
+from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
 

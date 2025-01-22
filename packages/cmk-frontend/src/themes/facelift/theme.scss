@@ -3,13 +3,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@import "select2/dist/css/select2";
+@import "select2/dist/css/select2.css";
 @import "@yaireo/tagify/dist/tagify.css";
-@import "dc/dist/style/dc";
-@import "simplebar/dist/simplebar";
+@import "dc/dist/style/dc.css";
+@import "simplebar/dist/simplebar.css";
 
 @import "scss/_variables_common.scss";
 @import "scss/_variables.scss";
+@import "scss/_mixins.scss";
 @import "scss/_main.scss";
 @import "scss/_pages.scss";
 @import "scss/_status.scss";
@@ -37,3 +38,4 @@
 @import "scss/_ntop.scss";
 @import "scss/_license_usage.scss";
 @import "scss/_robotmk.scss";
+@import "scss/_cse_banner.scss";

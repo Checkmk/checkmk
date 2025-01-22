@@ -21,6 +21,16 @@
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"
 
+namespace cma::type {
+template <class T>
+concept StringViewLike = std::convertible_to<T, std::string_view>;
+template <class T>
+concept WideStringViewLike = std::convertible_to<T, std::wstring_view>;
+template <typename C>
+concept AnyStringView = StringViewLike<C> || WideStringViewLike<C>;
+
+}  // namespace cma::type
+
 // Popular Data Structures Here
 // I am not sure...
 namespace cma {
@@ -72,26 +82,19 @@ inline std::optional<std::wstring_view> ToWideView(std::string_view s) {
 }
 
 template <class T>
-concept StringLike = std::is_convertible_v<T, std::string_view>;
-template <class T>
-concept WideStringLike = std::is_convertible_v<T, std::wstring_view>;
-template <class T>
-concept UniStringLike = StringLike<T> || WideStringLike<T>;
-
-template <class T>
-    requires StringLike<T>
+    requires type::StringViewLike<T>
 [[nodiscard]] auto AsView(const T &p) noexcept {
     return std::string_view{p};
 }
 
 template <class T>
-    requires WideStringLike<T>
+    requires type::WideStringViewLike<T>
 [[nodiscard]] auto AsView(const T &p) noexcept {
     return std::wstring_view{p};
 }
 
 template <class T, class V>
-    requires UniStringLike<T> && UniStringLike<V>
+    requires type::AnyStringView<T> && type::AnyStringView<V>
 [[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
         return CompareIgnoreCase(l, r) == std::strong_ordering::equal;
@@ -99,7 +102,7 @@ template <class T, class V>
 }
 
 template <class T, class V>
-    requires UniStringLike<T> && UniStringLike<V>
+    requires type::AnyStringView<T> && type::AnyStringView<V>
 auto ThreeWayCompare(const T &lhs, const V &rhs) {
     return std::lexicographical_compare_three_way(
         lhs.begin(), lhs.end(), std::ranges::begin(rhs), std::ranges::end(rhs),
@@ -197,7 +200,7 @@ void AddVector(std::vector<char> &accu, const T &add) noexcept {
 }
 
 template <typename T>
-auto ParseKeyValue(const std::basic_string<T> value, T splitter) {
+auto ParseKeyValue(const std::basic_string<T> &value, T splitter) {
     const auto end = value.find_first_of(splitter);
     if (end == std::basic_string<T>::npos) {
         return std::make_tuple(std::basic_string<T>(), std::basic_string<T>());
@@ -208,7 +211,7 @@ auto ParseKeyValue(const std::basic_string<T> value, T splitter) {
 }
 
 template <typename T>
-auto ParseKeyValue(const std::basic_string_view<T> value, T splitter) {
+auto ParseKeyValue(std::basic_string_view<T> value, T splitter) {
     const auto end = value.find_first_of(splitter);
     if (end == std::basic_string<T>::npos) {
         return std::make_tuple(std::basic_string<T>(), std::basic_string<T>());

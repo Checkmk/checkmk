@@ -1,7 +1,10 @@
+@use "sass:list";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
+
+@use "_mixins" as *;
 
 /* Styles used in all Multisite pages, for example in the
    status GUI, in WATO pages and in "Add snapin". These
@@ -28,13 +31,6 @@ h4 {
 h3:not(.table) {
   font-size: $font-size-large;
   font-weight: $font-weight-default;
-}
-
-@mixin table-header-mixin {
-  padding: 6px 0 4px 8px;
-  font-weight: $font-weight-bold;
-  background-color: $headline-color;
-  border-radius: $border-radius-top;
 }
 
 h3.table {
@@ -724,26 +720,6 @@ select {
 input[type="radio"],
 input[type="checkbox"] {
   margin-left: 0;
-}
-
-@mixin button-mixin {
-  display: inline-block;
-  width: auto;
-  margin-top: 8px;
-  margin-right: 8px;
-  margin-bottom: 8px;
-  margin-left: 0;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-table;
-  color: $font-color;
-  background-color: $input-button-bg-color;
-  border: 1px solid $default-button-border-color;
-  box-shadow: none;
-
-  &:hover,
-  &:active {
-    background-color: $input-button-hover-bg-color;
-  }
 }
 
 button {
@@ -1466,7 +1442,7 @@ table.data.job_table td {
       position: relative;
       line-height: 1.1;
       padding: $tag-padding;
-      padding-right: nth($tag-padding, 2) * 5;
+      padding-right: list.nth($tag-padding, 2) * 5;
       color: $font-color;
     }
 

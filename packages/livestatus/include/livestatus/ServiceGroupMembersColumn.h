@@ -17,7 +17,6 @@
 
 class ListFilter;
 class Logger;
-class ListRenderer;
 enum class RelationalOperator;
 enum class ServiceState;
 class User;

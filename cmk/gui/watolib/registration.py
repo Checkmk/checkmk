@@ -5,13 +5,10 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import timedelta
 
 from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
 
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -20,10 +17,8 @@ from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
-    _host_attributes,
     _sync_remote_sites,
     activate_changes,
-    auth_php,
     autodiscovery,
     automatic_host_removal,
     automation_commands,
@@ -36,10 +31,9 @@ from . import (
 )
 from .activate_changes import (
     ActivateChangesSchedulerBackgroundJob,
-    ActivationCleanupBackgroundJob,
     AutomationGetConfigSyncState,
     AutomationReceiveConfigSync,
-    execute_activation_cleanup_background_job,
+    execute_activation_cleanup_job,
 )
 from .agent_registration import AutomationRemoveTLSRegistration
 from .analyze_configuration import AutomationCheckAnalyzeConfig
@@ -49,7 +43,10 @@ from .automations import (
     AutomationCheckmkAutomationStart,
     CheckmkAutomationBackgroundJob,
 )
-from .broker_certificates import AutomationStoreBrokerCertificates
+from .broker_certificates import (
+    AutomationCreateBrokerCertificates,
+    AutomationStoreBrokerCertificates,
+)
 from .bulk_discovery import BulkDiscoveryBackgroundJob
 from .config_domain_name import (
     ConfigDomainRegistry,
@@ -60,7 +57,7 @@ from .config_hostname import config_hostname_autocompleter
 from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
-from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
+from .host_label_sync import AutomationDiscoveredHostLabelSync
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
@@ -74,7 +71,6 @@ from .hosts_and_folders import (
     MatchItemGeneratorHosts,
     rebuild_folder_lookup_cache,
 )
-from .network_scan import AutomationNetworkScan, execute_network_scan_job
 from .notifications import (
     find_timeperiod_usage_in_notification_rules,
     find_usages_of_contact_group_in_notification_rules,
@@ -92,7 +88,6 @@ from .rulespecs import (
 )
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorAutomationUser,
     ConfigGeneratorBasicWATOConfig,
     ConfigGeneratorRegistrationUser,
 )
@@ -121,12 +116,9 @@ def register(
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     activate_changes.register(replication_path_registry)
-    _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs(cron_job_registry)
     folder_validators_registry.register(
@@ -140,22 +132,21 @@ def register(
             validate_move_subfolder_to=lambda f, t: None,
         )
     )
-    _sync_remote_sites.register(automation_command_registry, job_registry, cron_job_registry)
+    _sync_remote_sites.register(automation_command_registry, cron_job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
     automation_command_registry.register(PushUserProfilesToSite)
     automation_command_registry.register(AutomationStoreBrokerCertificates)
+    automation_command_registry.register(AutomationCreateBrokerCertificates)
     automation_command_registry.register(AutomationGetConfigSyncState)
     automation_command_registry.register(AutomationReceiveConfigSync)
     automation_command_registry.register(AutomationRemoveTLSRegistration)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
-    automation_command_registry.register(AutomationNetworkScan)
     automation_command_registry.register(AutomationCheckmkAutomationStart)
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
-    sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
     sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
@@ -196,16 +187,13 @@ def _register_automation_commands(automation_command_registry: AutomationCommand
 
 def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(config_domains.OMDConfigChangeBackgroundJob)
-    job_registry.register(automatic_host_removal.HostRemovalBackgroundJob)
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(SearchIndexBackgroundJob)
-    job_registry.register(ActivationCleanupBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
     job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
-    job_registry.register(DiscoveredHostLabelSyncJob)
     job_registry.register(CheckmkAutomationBackgroundJob)
 
 
@@ -226,8 +214,6 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeAdditionalIPv6Addresses,
         builtin_attributes.HostAttributeSNMPCommunity,
         builtin_attributes.HostAttributeParents,
-        builtin_attributes.HostAttributeNetworkScan,
-        builtin_attributes.HostAttributeNetworkScanResult,
         builtin_attributes.HostAttributeManagementAddress,
         builtin_attributes.HostAttributeManagementProtocol,
         builtin_attributes.HostAttributeManagementSNMPCommunity,
@@ -245,32 +231,13 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         host_attribute_registry.register(cls)
 
 
-def _register_nagvis_hooks() -> None:
-    # TODO: Should we not execute this hook also when folders are modified?
-    args: Sequence[tuple[str, Callable]] = (
-        ("userdb-job", auth_php._on_userdb_job),
-        ("users-saved", lambda users: auth_php._create_auth_file("users-saved", users)),
-        ("roles-saved", lambda x: auth_php._create_auth_file("roles-saved")),
-        ("contactgroups-saved", lambda x: auth_php._create_auth_file("contactgroups-saved")),
-        ("activate-changes", lambda x: auth_php._create_auth_file("activate-changes")),
-    )
-    for name, func in args:
-        hooks.register_builtin(name, func)
-
-
 def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
     cron_job_registry.register(
         CronJob(
-            name="execute_activation_cleanup_background_job",
-            callable=execute_activation_cleanup_background_job,
+            name="execute_activation_cleanup_job",
+            callable=execute_activation_cleanup_job,
             interval=timedelta(minutes=1),
-        )
-    )
-    cron_job_registry.register(
-        CronJob(
-            name="execute_network_scan_job",
-            callable=execute_network_scan_job,
-            interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
     cron_job_registry.register(
@@ -282,9 +249,10 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
     )
     cron_job_registry.register(
         CronJob(
-            name="execute_host_removal_background_job",
-            callable=automatic_host_removal.execute_host_removal_background_job,
+            name="execute_host_removal_job",
+            callable=automatic_host_removal.execute_host_removal_job,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
     cron_job_registry.register(

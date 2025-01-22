@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import sys
 from collections.abc import Iterable, Sequence
 
 import requests
@@ -25,11 +26,11 @@ USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 def write_section(
     section_name: str, generator: Iterable[BaseModel], logger: logging.Logger
 ) -> None:
-    print(f"<<<netapp_ontap_{section_name}:sep(0)>>>")
+    sys.stdout.write(f"<<<netapp_ontap_{section_name}:sep(0)>>>\n")
     for element in generator:
         json_dict = element.model_dump_json(exclude_unset=True, exclude_none=False)
         logger.debug("Element data: %r", json_dict)
-        print(json_dict)
+        sys.stdout.write(json_dict + "\n")
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
@@ -270,7 +271,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
             space_size=element_data["space"]["size"],
             space_used=element_data["space"].get("used"),
             enabled=element_data["enabled"],
-            read_only=element_data["status"]["read_only"],
+            read_only=element_data.get("status", {}).get("read_only"),
             svm_name=element_data["svm"]["name"],
             volume_name=element_data["location"]["volume"]["name"],
         )

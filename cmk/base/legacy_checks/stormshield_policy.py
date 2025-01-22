@@ -16,7 +16,7 @@ def inventory_stormshield_policy(info):
         yield (line[0], None)
 
 
-def check_stormshield_policy(item, params, info):
+def check_stormshield_policy(item, _no_params, info):
     sync_status_mapping = {
         "1": "synced",
         "2": "not synced",
@@ -49,5 +49,4 @@ check_info["stormshield_policy"] = LegacyCheckDefinition(
     service_name="Policy %s",
     discovery_function=inventory_stormshield_policy,
     check_function=check_stormshield_policy,
-    check_ruleset_name="stormshield",
 )

@@ -179,7 +179,7 @@ CONFIG_MULTISITE_COOKIE_AUTH='on'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
-CONFIG_RABBITMQ_PORT=5672'
+CONFIG_RABBITMQ_PORT='5672'
 CONFIG_RABBITMQ_ONLY_FROM='0.0.0.0 ::'
 CONFIG_RABBITMQ_DIST_PORT='25672'
 CONFIG_TRACE_JAEGER_ADMIN_PORT='14269'
@@ -409,4 +409,12 @@ def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatc
     """Don't check if message about license expiration should be shown"""
     monkeypatch_module.setattr(
         "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
+    )
+
+
+@pytest.fixture(name="suppress_license_banner")
+def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    """Don't check if message about license expiration should be shown"""
+    monkeypatch_module.setattr(
+        "cmk.gui.htmllib.top_heading._may_show_license_banner", lambda x: None
     )

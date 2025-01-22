@@ -45,6 +45,4 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
             ),
         ],
         prefill=form_spec.prefill,
-        # SingleChoiceExtended
-        type=int,
     )

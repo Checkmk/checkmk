@@ -40,7 +40,8 @@ def test_get_start_url_user_config(set_config: SetConfig, request_context: None)
         def start_url(self) -> str:
             return "correct_url.py"
 
-        def is_automation_user(self) -> bool:
+        @property
+        def automation_user(self) -> bool:
             return False
 
     with set_config(start_url="wrong_url.py"):

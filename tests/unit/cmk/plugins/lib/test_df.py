@@ -309,7 +309,7 @@ def test_df_check_filesystem_single(
         ),
         (
             {  # pylint: disable= duplicate-key
-                "fake_same_name": {  # noqa: F601
+                "fake_same_name": {
                     "size_mb": None,
                     "avail_mb": None,
                     "reserved_mb": 0,

@@ -13,20 +13,14 @@ from cmk.utils.structured_data import SDKey, SDPath
 from cmk.utils.user import UserId
 
 from cmk.gui import inventory
-from cmk.gui.config import Config
-from cmk.gui.data_source import data_source_registry, DataSourceRegistry
-from cmk.gui.http import Request
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText
-from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry
-from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
+from cmk.gui.painter.v0 import Painter, painter_registry
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
-    Row,
-    SorterSpec,
-    ViewName,
-    ViewSpec,
     VisualContext,
     VisualLinkSpec,
 )
@@ -35,8 +29,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 
-from . import _paint_functions
-from ._data_sources import ABCDataSourceInventory, DataSourceInventoryHistory, RowTableInventory
+from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
     AttributeDisplayHint,
     inv_display_hints,

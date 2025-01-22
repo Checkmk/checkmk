@@ -171,7 +171,7 @@ def discover_oracle_instance_uptime(section: Section) -> DiscoveryResult:
     yield from (
         Service(item=item)
         for item, data in section.items()
-        if isinstance(data, Instance) and data.up_seconds is not None
+        if isinstance(data, Instance) and data.up_seconds is not None and data.up_seconds != -1
     )
 
 
@@ -186,6 +186,10 @@ def check_oracle_instance_uptime(
     if not isinstance((data := section.get(item)), Instance):
         # Error is already shown in main check
         raise IgnoreResultsError("Login into database failed")
+
+    if data.popenmode == "MOUNTED":
+        yield Result(state=State.OK, summary="PDB in mounted state has no uptime information")
+        return
 
     if data.up_seconds is None:
         return

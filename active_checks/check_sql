@@ -464,11 +464,10 @@ def process_result(
         if not crit[0] <= number < crit[1]:
             state = 2
         text += ": %s" % number
-    else:  # no levels were given
-        if number in (0, 1, 2, 3):
-            state = int(number)
-        else:
-            bail_out(3, "<%d> is not a state, and no levels given" % number)
+    elif number in (0, 1, 2, 3):  # no levels were given
+        state = int(number)
+    else:
+        bail_out(3, "<%d> is not a state, and no levels given" % number)
 
     return state, text + perf
 

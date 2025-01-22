@@ -11,7 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec

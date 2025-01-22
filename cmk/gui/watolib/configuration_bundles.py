@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
 from typing import (
     Any,
-    Container,
     get_args,
     Literal,
     NewType,
@@ -76,7 +75,7 @@ def bundle_domains() -> Mapping[RuleGroupType, set[DomainDefinition]]:
 def _get_affected_entities(bundle_group: str) -> set[Entity]:
     rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
     bundle_domain = bundle_domains().get(rule_group_type, None)
-    return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
+    return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 
 
 class CreateHost(TypedDict):
@@ -274,6 +273,11 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
     references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+
+    # we have to delete the bundle itself first, so the overview page doesn't error out
+    # when someone refreshes it while the deletion is in progress
+    store.save(all_bundles)
+
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
         _delete_rules(references.rules)
@@ -283,8 +287,6 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
         _delete_passwords(references.passwords)
     if references.dcd_connections:
         _delete_dcd_connections(references.dcd_connections)
-
-    store.save(all_bundles)
 
 
 def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:

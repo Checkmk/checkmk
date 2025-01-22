@@ -26,9 +26,10 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0 import all_painters, Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -43,7 +44,6 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -66,7 +66,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
 from .layout import layout_registry
-from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
+from .sorter import all_sorters, ParameterizedSorter, Sorter
 from .store import get_all_views
 from .view_choices import view_choices
 
@@ -421,13 +421,14 @@ def _get_inventory_column_infos_by_table(
 
 
 def _get_inventory_column_infos(hint: NodeDisplayHint) -> Sequence[InventoryColumnInfo]:
+    registered_painters = all_painters(active_config)
     return [
         InventoryColumnInfo(
             column_name=column_name,
             title=str(column_hint.title),
         )
         for column_name, column_hint in hint.columns.items()
-        if (col_ident := hint.column_ident(column_name)) and painter_registry.get(col_ident)
+        if (col_ident := hint.column_ident(column_name)) and registered_painters.get(col_ident)
     ]
 
 
@@ -686,6 +687,7 @@ def view_editor_sorter_specs(
     ) -> Iterator[DropdownChoiceEntry | CascadingDropdownChoice]:
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
+        registered_painters = all_painters(active_config)
 
         for name, p in sorters_of_datasource(ds_name).items():
             if any(column in p.columns for column in unsupported_columns):
@@ -695,11 +697,11 @@ def view_editor_sorter_specs(
             if isinstance(p, ParameterizedSorter):
                 yield (
                     name,
-                    get_sorter_plugin_title_for_choices(p),
+                    get_sorter_plugin_title_for_choices(p, registered_painters),
                     p.vs_parameters(active_config, painters),
                 )
             else:
-                yield name, get_sorter_plugin_title_for_choices(p)
+                yield name, get_sorter_plugin_title_for_choices(p, registered_painters)
 
     return Dictionary(
         title=_("Sorting"),
@@ -883,11 +885,12 @@ def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
 
 
 def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[CascadingDropdownChoice]:
+    registered_painters = all_painters(active_config)
     return sorted(
         (
             (
                 name,
-                _get_painter_plugin_title_for_choices(painter),
+                _get_painter_plugin_title_for_choices(painter, registered_painters),
                 painter.parameters if painter.parameters else None,
             )
             for name, painter in painters.items()
@@ -896,13 +899,17 @@ def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[Cascad
     )
 
 
-def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
+def _get_painter_plugin_title_for_choices(
+    plugin: Painter, registered_painters: Mapping[str, type[Painter]]
+) -> str:
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters)
     return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
-def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
+def get_sorter_plugin_title_for_choices(
+    plugin: Sorter, registered_painters: Mapping[str, type[Painter]]
+) -> str:
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters)
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)
@@ -968,11 +975,11 @@ def infos_needed_by_plugin(plugin: Painter | Sorter, add_columns: list | None = 
 
 
 def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(sorter_registry, ds_name)
+    return _allowed_for_datasource(all_sorters(active_config), ds_name)
 
 
 def painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
-    return _allowed_for_datasource(painter_registry, ds_name)
+    return _allowed_for_datasource(all_painters(active_config), ds_name)
 
 
 def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
@@ -982,7 +989,9 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
 
     # Get the painters allowed for the join "source" and "target"
     painters = painters_of_datasource(ds_name)
-    join_painters_unfiltered = _allowed_for_datasource(painter_registry, datasource.join[0])
+    join_painters_unfiltered = _allowed_for_datasource(
+        all_painters(active_config), datasource.join[0]
+    )
 
     # Filter out painters associated with the "join source" datasource
     join_painters: dict[str, Painter] = {}
@@ -994,17 +1003,21 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
 
 
 @overload
-def _allowed_for_datasource(collection: PainterRegistry, ds_name: str) -> Mapping[str, Painter]: ...
+def _allowed_for_datasource(
+    collection: Mapping[str, type[Painter]], ds_name: str
+) -> Mapping[str, Painter]: ...
 
 
 @overload
-def _allowed_for_datasource(collection: SorterRegistry, ds_name: str) -> Mapping[str, Sorter]: ...
+def _allowed_for_datasource(
+    collection: Mapping[str, Sorter], ds_name: str
+) -> Mapping[str, Sorter]: ...
 
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def _allowed_for_datasource(
-    collection: PainterRegistry | SorterRegistry,
+    collection: Mapping[str, type[Painter]] | Mapping[str, Sorter],
     ds_name: str,
 ) -> Mapping[str, Sorter | Painter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()

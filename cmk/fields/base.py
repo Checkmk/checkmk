@@ -13,6 +13,7 @@ class OpenAPIAttributes:
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         metadata = kwargs.setdefault("metadata", {})
         for key in [
+            "deprecated",
             "description",
             "doc_default",
             "enum",

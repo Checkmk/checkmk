@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 import subprocess
 import time
@@ -71,15 +72,14 @@ from cmk import trace
 from . import automation_helper, automation_subprocess
 from .automation_executor import AutomationExecutor
 
-# INFO: flag for activating automation helper, which is necessary for testing helper locally.
-USE_AUTOMATION_HELPER_EXECUTOR: Final = False
-
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
 
 
 class MKAutomationException(MKGeneralException):
@@ -98,8 +98,9 @@ def check_mk_local_automation_serialized(
     indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
+    force_cli_interface: bool = False,
 ) -> tuple[Sequence[str], SerializedResult]:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
     ) as span:
@@ -113,9 +114,11 @@ def check_mk_local_automation_serialized(
             call_hook_pre_activate_changes()
 
         executor: AutomationExecutor = (
-            automation_helper.HelperExecutor()
-            if USE_AUTOMATION_HELPER_EXECUTOR
-            else automation_subprocess.SubprocessExecutor()
+            automation_subprocess.SubprocessExecutor()
+            if force_cli_interface
+            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            or not active_config.automation_helper_active
+            else automation_helper.HelperExecutor()
         )
 
         try:
@@ -186,7 +189,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"remote_automation[{command}]",
         attributes={
             "cmk.automation.target_site_id": str(site_id),
@@ -388,15 +391,18 @@ def get_url_raw(
     }
     headers_.update(add_headers or {})
 
-    response = requests.post(
-        url,
-        data=data,
-        verify=not insecure,
-        auth=auth,
-        files=files,
-        timeout=timeout,
-        headers=headers_,
-    )
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            verify=not insecure,
+            auth=auth,
+            files=files,
+            timeout=timeout,
+            headers=headers_,
+        )
+    except (ConnectionError, requests.ConnectionError) as e:
+        raise MKUserError(None, _("Could not connect to the remote site (%s)") % e)
 
     response.encoding = "utf-8"  # Always decode with utf-8
 

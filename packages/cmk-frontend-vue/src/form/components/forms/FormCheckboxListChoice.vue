@@ -9,7 +9,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import type {
   CheckboxListChoice,
   MultipleChoiceElement
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const props = defineProps<{
@@ -34,22 +34,21 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 </script>
 
 <template>
-  <div v-for="element in props.spec.elements" :key="element.name" class="container">
-    <CmkCheckbox
-      :label="element.title"
-      :model-value="value.includes(element.name)"
-      @update:model-value="(newValue) => change(element, newValue)"
-    />
+  <div>
+    <div v-for="element in props.spec.elements" :key="element.name" class="container">
+      <CmkCheckbox
+        :label="element.title"
+        :model-value="value.includes(element.name)"
+        @update:model-value="(newValue) => change(element, newValue)"
+      />
+    </div>
   </div>
 
   <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
-.container {
+div.container:not(:last-of-type) {
   padding-bottom: 8px;
-}
-[type='checkbox'] + label::before {
-  border-radius: 2px;
 }
 </style>

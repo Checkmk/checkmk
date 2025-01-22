@@ -30,7 +30,6 @@ _TLS_PATH_MULTISITE_CERTS = (*_TLS_PATH, "multisite_certs")
 class BrokerCertificates(BaseModel):
     """The certificates for the messaging broker"""
 
-    key: bytes
     cert: bytes
     signing_ca: bytes
     additionally_trusted_ca: bytes = b""
@@ -142,20 +141,24 @@ def multisite_cert_file(omd_root: Path, site: str) -> Path:
     return base_path.joinpath(f"{site}_cert.pem")
 
 
-def make_connection_params(omd_root: Path, server: str, port: int) -> pika.ConnectionParameters:
+def make_connection_params(
+    omd_root: Path, server: str, port: int, omd_site: str, connection_name: str
+) -> pika.ConnectionParameters:
+    client_props: dict[str, str] = {"connection_name": connection_name}
     return pika.ConnectionParameters(
         host=server,
         port=port,
-        ssl_options=pika.SSLOptions(_make_ssl_context(omd_root)),
+        ssl_options=pika.SSLOptions(_make_ssl_context(omd_root), omd_site),
         credentials=pika.credentials.ExternalCredentials(),
         heartbeat=0,
         blocked_connection_timeout=300,
+        client_properties=client_props,
     )
 
 
 def _make_ssl_context(omd_root: Path) -> ssl.SSLContext:
     context = ssl.create_default_context(cafile=trusted_cas_file(omd_root))
-    context.check_hostname = False  # the host name in the cert is the site name, not the server.
+    context.check_hostname = True
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(site_cert_file(omd_root), site_key_file(omd_root))
     return context

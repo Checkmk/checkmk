@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
-import type { TimeSpan } from '@/form/components/vue_formspec_components'
+import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 function getSpec(
@@ -25,7 +25,8 @@ function getSpec(
       second: 'ut_second',
       millisecond: 'ut_ms',
       hour: 'ut_h',
-      day: 'ut_d'
+      day: 'ut_d',
+      validation_negative_number: 'some negative error message'
     }
   }
 }
@@ -85,4 +86,18 @@ test('FormTimeSpan shows frontend validation', async () => {
   await fireEvent.update(hoursInput, `${8 * 60 * 60}`)
   // there is not further value interpolation in the frontend: it just shows the error message of the backend
   screen.getByText('some_error_message')
+})
+
+test('FormTimeSpan shows error for negative values', async () => {
+  const { getCurrentData } = renderFormWithData({
+    spec: getSpec(['hour', 'minute'], []),
+    data: 1 * 60 * 60,
+    backendValidation: []
+  })
+
+  const minutesInput = screen.getByLabelText<HTMLInputElement>('ut_minute')
+  await fireEvent.update(minutesInput, '-1')
+
+  expect(getCurrentData()).toMatch(`${1 * 60 * 60 - 60}`)
+  screen.getByText('some negative error message')
 })

@@ -9,6 +9,25 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk import fields
 
 
+class BackgroundJobException(BaseSchema):
+    message = fields.String(
+        example="An exception message",
+        description="The exception message",
+    )
+    traceback = fields.String(
+        example="The traceback of the background job exception",
+        description="The traceback of the exception",
+    )
+
+
+BACKGROUND_JOB_EXCEPTION = fields.Nested(
+    BackgroundJobException,
+    description="The exception details if the action was run in the background and raised an "
+    "unexpected exception",
+    example={},
+)
+
+
 class QuickSetupStageOverviewResponse(BaseSchema):
     title = fields.String(
         example="Prepare AWS for Checkmk",
@@ -71,7 +90,7 @@ class Action(BaseSchema):
     )
 
 
-class QuickSetupNextStageStructure(BaseSchema):
+class QuickSetupStageStructure(BaseSchema):
     components = fields.List(
         fields.Dict,
         example=[],
@@ -90,23 +109,19 @@ class QuickSetupNextStageStructure(BaseSchema):
     )
 
 
-class QuickSetupStageResponse(BaseSchema):
+class QuickSetupStageActionResponse(BaseSchema):
     stage_recap = fields.List(
         fields.Dict,
         example=[],
         description="A collection of widget recaps",
     )
-    next_stage_structure = fields.Nested(
-        QuickSetupNextStageStructure,
-        example={"components": [], "button_label": "", "prev_button_label": ""},
-        description="The next stage structure",
-    )
-    errors = fields.Nested(
+    validation_errors = fields.Nested(
         Errors,
         example={},
         description="All formspec errors and general stage errors",
         allow_none=True,
     )
+    background_job_exception = BACKGROUND_JOB_EXCEPTION
 
 
 class QuickSetupCompleteStageResponse(BaseSchema):
@@ -181,7 +196,7 @@ class QuickSetupGuidedResponse(QuickSetupBaseResponse):
         description="The overview of the quicksetup stages",
     )
     stage = fields.Nested(
-        QuickSetupStageResponse,
+        QuickSetupStageStructure,
         example={"components": []},
         description="The first stage",
     )
@@ -208,7 +223,6 @@ class QuickSetupCompleteResponse(BaseSchema):
         example="http://save/url",
         description="The url to redirect to after saving the quicksetup",
     )
-
     all_stage_errors = fields.List(
         fields.Nested(
             Errors,
@@ -219,3 +233,4 @@ class QuickSetupCompleteResponse(BaseSchema):
         description="A list of stage errors",
         example=[],
     )
+    background_job_exception = BACKGROUND_JOB_EXCEPTION

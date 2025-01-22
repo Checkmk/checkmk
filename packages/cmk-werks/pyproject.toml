@@ -19,30 +19,5 @@ dependencies = { file = ["requirements.txt"] }
 target-version = "py312"
 line-length = 100
 
-[tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
-
 [tool.ruff.lint.isort]
 order-by-type = false
-
-# [tool.mypy]
-# mypy config moved to overrides in the root pyproject.toml
-
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = [
-  # We should at least document modules and classes. :-/
-  "missing-module-docstring",
-  "missing-class-docstring",
-  "missing-function-docstring",
-  # Instead of suppressing TODOs, we should actually fix them. :-/
-  "fixme",
-]
-
-[tool.pytest.ini_options]
-consider_namespace_packages = true
-testpaths = ["tests"]

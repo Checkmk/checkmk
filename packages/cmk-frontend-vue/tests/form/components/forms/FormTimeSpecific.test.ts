@@ -5,13 +5,15 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const embeddedSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: [],
   input_hint: '',
   autocompleter: null,
@@ -35,6 +37,7 @@ const enabledSpec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   layout: 'one_column',
   validators: [],
   groups: [],
@@ -43,6 +46,7 @@ const enabledSpec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'tp_default_value',
+      render_only: false,
       required: true,
       default_value: 'foo',
       parameter_form: embeddedSpec,
@@ -50,6 +54,7 @@ const enabledSpec: FormSpec.Dictionary = {
     },
     {
       name: 'tp_values',
+      render_only: false,
       required: true,
       default_value: [],
       parameter_form: listSpec,

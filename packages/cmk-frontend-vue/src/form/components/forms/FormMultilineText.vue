@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   spec: FormSpec.MultilineText
@@ -35,14 +36,16 @@ const style = computed(() => {
       <label> {{ spec.label }}</label
       ><br />
     </div>
-    <textarea
-      v-model="value"
-      :style="style"
-      :placeholder="spec.input_hint || ''"
-      rows="20"
-      cols="60"
-      type="text"
-    />
+    <CmkScrollContainer>
+      <textarea
+        v-model="value"
+        :style="style"
+        :placeholder="spec.input_hint || ''"
+        rows="20"
+        cols="60"
+        type="text"
+      />
+    </CmkScrollContainer>
     <FormValidation :validation="validation"></FormValidation>
   </div>
 </template>

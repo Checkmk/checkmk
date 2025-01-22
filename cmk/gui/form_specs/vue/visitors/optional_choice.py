@@ -5,25 +5,26 @@
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.optional_choice import OptionalChoice
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Label
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
 from ._utils import (
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_title_and_help,
     localize,
 )
 
+_ParsedValueModel = object
+_FrontendModel = object | None
 
-class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+
+class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         # Note: the raw_value None is reserved for the optional choice checkbox
         if isinstance(raw_value, DefaultValue):
             return None
@@ -38,8 +39,8 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
         return localize(Label(" Activate this option"))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> tuple[shared_type_defs.OptionalChoice, None | object]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.OptionalChoice, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 
         visitor = get_visitor(self.form_spec.parameter_form, self.options)
@@ -50,7 +51,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
             raise MKGeneralException(
                 "Unable to configure OptionalChoice with None as embedded value"
             )
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = None
 
         return (
@@ -69,18 +70,9 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            # Do not display the optional choice value
-            # It might include sensitive data from the wrapped form spec
-            return create_validation_error(
-                None,
-                Title("Invalid optional choice"),
-            )
-        validation_errors = compute_validation_errors(
-            compute_validators(self.form_spec), parsed_value
-        )
+        validation_errors: list[shared_type_defs.ValidationMessage] = []
         if parsed_value is not None:
             for validation_error in get_visitor(
                 self.form_spec.parameter_form, self.options
@@ -95,7 +87,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
 
         return validation_errors
 
-    def _to_disk(self, raw_value: object, parsed_value: object) -> object:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> object:
         if parsed_value is None:
             return parsed_value
         return get_visitor(self.form_spec.parameter_form, self.options).to_disk(parsed_value)

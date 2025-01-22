@@ -15,7 +15,15 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
-from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
+from cmk.gui.type_defs import (
+    BuiltinIconVisibility,
+    CustomHostAttrSpec,
+    CustomUserAttrSpec,
+    GroupSpec,
+    IconSpec,
+    TrustedCertificateAuthorities,
+    UserSpec,
+)
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
@@ -473,7 +481,7 @@ class CREConfig:
     )
 
     # Contains user specified icons and actions for hosts and services
-    user_icons_and_actions: dict = field(default_factory=dict)
+    user_icons_and_actions: dict[str, IconSpec] = field(default_factory=dict)
 
     # Defintions of custom attributes to be used for services
     custom_service_attributes: dict = field(default_factory=dict)
@@ -489,7 +497,7 @@ class CREConfig:
     )
 
     # Override toplevel and sort_index settings of built-in icons
-    builtin_icon_visibility: dict = field(default_factory=dict)
+    builtin_icon_visibility: dict[str, BuiltinIconVisibility] = field(default_factory=dict)
 
     trusted_certificate_authorities: TrustedCertificateAuthorities = field(
         default_factory=lambda: TrustedCertificateAuthorities(
@@ -563,8 +571,8 @@ class CREConfig:
     wato_write_nagvis_auth: bool = False
     wato_use_git: bool = False
     wato_hidden_users: list = field(default_factory=list)
-    wato_user_attrs: list = field(default_factory=list)
-    wato_host_attrs: list = field(default_factory=list)
+    wato_user_attrs: Sequence[CustomUserAttrSpec] = field(default_factory=list)
+    wato_host_attrs: Sequence[CustomHostAttrSpec] = field(default_factory=list)
     wato_read_only: dict = field(default_factory=dict)
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False
@@ -645,5 +653,6 @@ class CREConfig:
 
     inject_js_profiling_code: bool = False
     load_frontend_vue: Literal["static_files", "inject"] = "static_files"
-    # Experimental feature flags
-    experimental_features: dict[str, Any] = field(default_factory=dict)
+    # Vue experimental feature settings
+    vue_experimental_features: dict[str, Any] = field(default_factory=dict)
+    automation_helper_active: bool = True

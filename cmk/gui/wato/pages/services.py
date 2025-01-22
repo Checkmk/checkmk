@@ -325,11 +325,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             ),
             raise_errors=not discovery_options.ignore_errors,
         )
-        discovery_result = discovery_result._replace(
-            check_table=tuple(
-                self._reclassify_changed_discovery_parameters_services(discovery_result.check_table)
-            )
-        )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
                 check_table=(),
@@ -438,7 +433,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 | DiscoveryAction.BULK_UPDATE
                 | DiscoveryAction.UPDATE_SERVICES
                 | DiscoveryAction.UPDATE_SERVICE_LABELS
-                | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                | DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS
+                | DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
             ):
                 discovery_result = perform_service_discovery(
                     action=action,
@@ -463,38 +459,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result
-
-    def _reclassify_changed_discovery_parameters_services(
-        self, check_table: Iterable[CheckPreviewEntry]
-    ) -> Iterable[CheckPreviewEntry]:
-        # Currently services with changed discovery parameters are classified as changed by
-        # the backend. At the moment we have no convenient way to display the information
-        # provided by discovery parameters. Therefore, they are reclassified as unchanged.
-        for entry in check_table:
-            if (
-                entry.check_source == DiscoveryState.CHANGED
-                and entry.old_discovered_parameters != entry.new_discovered_parameters
-                and entry.old_labels == entry.new_labels
-            ):
-                yield CheckPreviewEntry(
-                    check_source=DiscoveryState.MONITORED,
-                    check_plugin_name=entry.check_plugin_name,
-                    ruleset_name=entry.ruleset_name,
-                    discovery_ruleset_name=entry.discovery_ruleset_name,
-                    item=entry.item,
-                    old_discovered_parameters=entry.old_discovered_parameters,
-                    new_discovered_parameters=entry.new_discovered_parameters,
-                    effective_parameters=entry.effective_parameters,
-                    description=entry.description,
-                    state=entry.state,
-                    output=entry.output,
-                    metrics=entry.metrics,
-                    old_labels=entry.old_labels,
-                    new_labels=entry.new_labels,
-                    found_on_nodes=entry.found_on_nodes,
-                )
-                continue
-            yield entry
 
     @staticmethod
     def _resolve_selected_services(
@@ -987,6 +951,7 @@ class DiscoveryPageRenderer:
 
         if has_changed_services:
             enable_page_menu_entry(html, "update_service_labels")
+            enable_page_menu_entry(html, "update_discovery_parameters")
 
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
@@ -1077,6 +1042,30 @@ class DiscoveryPageRenderer:
             table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
+        unchanged_labels: Labels = {}
+        changed_labels: Labels = {}
+        added_labels: Labels = {}
+        removed_labels: Labels = {}
+        if entry.check_source == DiscoveryState.CHANGED:
+            unchanged_labels, changed_labels, added_labels, removed_labels = (
+                self._calculate_changes(entry.old_labels, entry.new_labels)
+            )
+            _unchanged_parameters, changed_parameters, added_parameters, removed_parameters = (
+                self._calculate_changes(
+                    entry.old_discovered_parameters, entry.new_discovered_parameters
+                )
+            )
+
+            table.cell(_("Discovered changes"))
+            self._show_discovered_changes(
+                changed_labels,
+                added_labels,
+                removed_labels,
+                changed_parameters,
+                added_parameters,
+                removed_parameters,
+            )
+
         if self._options.show_discovered_labels:
             table.cell(
                 _("Previously discovered")
@@ -1084,27 +1073,8 @@ class DiscoveryPageRenderer:
                 else _("Discovered service labels")
             )
             self._show_discovered_labels(entry.old_labels)
+
             if entry.check_source == DiscoveryState.CHANGED:
-                unchanged_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value == entry.old_labels[label]
-                }
-                changed_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value != entry.old_labels[label]
-                }
-                added_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label not in entry.old_labels
-                }
-                removed_labels = {
-                    label: value
-                    for label, value in entry.old_labels.items()
-                    if label not in entry.new_labels
-                }
                 table.cell(_("Newly discovered"))
                 self._show_discovered_labels(unchanged_labels)
                 self._show_discovered_labels(changed_labels, override_label_render_type="changed")
@@ -1116,6 +1086,77 @@ class DiscoveryPageRenderer:
                 _("Check plug-in"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
                 css=["plugins"],
+            )
+
+    @staticmethod
+    def _calculate_changes(
+        old: Mapping[str, Any], new: Mapping[str, Any]
+    ) -> tuple[Mapping[str, Any], Mapping[str, Any], Mapping[str, Any], Mapping[str, Any]]:
+        unchanged = {}
+        changed = {}
+        added = {}
+        removed = {}
+        for key, value in new.items():
+            if key in old and value == old[key]:
+                unchanged[key] = value
+            if key in old and value != old[key]:
+                changed[key] = value
+            if key not in old:
+                added[key] = value
+        for key, value in old.items():
+            if key not in new:
+                removed[key] = value
+        return unchanged, changed, added, removed
+
+    def _show_discovered_changes(
+        self,
+        changed_labels: Labels,
+        added_labels: Labels,
+        removed_labels: Labels,
+        changed_parameters: Mapping[str, Any],
+        added_parameters: Mapping[str, Any],
+        removed_parameters: Mapping[str, Any],
+    ) -> None:
+        if changed_labels:
+            html.p(
+                ungettext("%d changed label", "%d changed labels", len(changed_labels))
+                % len(changed_labels)
+            )
+        if added_labels:
+            html.p(
+                ungettext("%d new label", "%d new labels", len(added_labels)) % len(added_labels)
+            )
+        if removed_labels:
+            html.p(
+                ungettext("%d removed label", "%d removed labels", len(removed_labels))
+                % len(removed_labels)
+            )
+        if changed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter changed",
+                    "%d discovery parameters changed",
+                    len(changed_parameters),
+                )
+                % len(changed_parameters)
+            )
+        if added_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter added",
+                    "%d discovery parameters added",
+                    len(added_parameters),
+                )
+                % len(added_parameters)
+            )
+        if removed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter removed",
+                    "%d discovery parameters removed",
+                    len(removed_parameters),
+                )
+                % len(removed_parameters)
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:
@@ -1265,13 +1306,13 @@ class DiscoveryPageRenderer:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(
                         url="",
-                        title=_("Update service labels"),
-                        icon="update_service_labels",
+                        title=_("Accept service properties"),
+                        icon="accept",
                         class_=button_classes,
                         onclick=_start_js_call(
                             self._host,
                             self._options._replace(
-                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
                             ),
                             request_vars={
                                 "update_target": DiscoveryState.MONITORED,
@@ -1753,7 +1794,7 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("Services"),
+                        title=_("On selected services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -1970,6 +2011,17 @@ def _page_menu_service_configuration_entries(
     )
 
     yield PageMenuEntry(
+        title=_("Remove all and find new"),
+        icon_name="services_tabula_rasa",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
+        ),
+        name="tabula_rasa",
+        is_enabled=False,
+        css_classes=["action"],
+    )
+
+    yield PageMenuEntry(
         title=_("Rescan"),
         icon_name="services_refresh",
         item=make_javascript_link(
@@ -1978,17 +2030,6 @@ def _page_menu_service_configuration_entries(
         name="refresh",
         is_enabled=False,
         is_shortcut=True,
-        css_classes=["action"],
-    )
-
-    yield PageMenuEntry(
-        title=_("Remove all and find new"),
-        icon_name="services_tabula_rasa",
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
-        ),
-        name="tabula_rasa",
-        is_enabled=False,
         css_classes=["action"],
     )
 
@@ -2127,6 +2168,24 @@ def _page_menu_selected_services_entries(
             )
         ),
         name="update_service_labels",
+        is_enabled=False,
+        is_shortcut=False,
+        css_classes=["action"],
+    )
+    yield PageMenuEntry(
+        title=_("Update discovery parameters"),
+        icon_name="update_discovery_parameters",
+        item=make_javascript_link(
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS),
+                request_vars={
+                    "update_target": DiscoveryState.MONITORED,
+                    "update_source": DiscoveryState.CHANGED,
+                },
+            )
+        ),
+        name="update_discovery_parameters",
         is_enabled=False,
         is_shortcut=False,
         css_classes=["action"],

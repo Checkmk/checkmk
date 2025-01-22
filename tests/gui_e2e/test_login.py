@@ -46,7 +46,7 @@ def create_ldap_connection(open_ldap_manager: OpenLDAPManager, test_site: Site) 
     Delete the LDAP connection after the test.
     """
     ldap_id = "test_ldap"
-    test_site.openapi.create_ldap_connection(
+    test_site.openapi.ldap_connection.create(
         ldap_id,
         user_base_dn="ou=developers,dc=ldap,dc=local",
         user_search_filter="(objectclass=inetOrgPerson)",
@@ -58,7 +58,7 @@ def create_ldap_connection(open_ldap_manager: OpenLDAPManager, test_site: Site) 
         password=open_ldap_manager.admin_password,
     )
     yield
-    test_site.openapi.delete_ldap_connection(ldap_id)
+    test_site.openapi.ldap_connection.delete(ldap_id)
 
 
 @pytest.fixture(name="valid_ldap_credentials", scope="module")

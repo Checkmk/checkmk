@@ -8,14 +8,16 @@ from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
     get_data_or_go_stale,
-    iter_resource_attributes,
-    parse_resources,
 )
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, Service
-from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+from cmk.plugins.lib.azure import (
+    get_service_labels_from_resource_tags,
+    iter_resource_attributes,
+    parse_resources,
+)
 
 check_info = {}
 
@@ -29,12 +31,12 @@ def check_azure_databases_storage(item, params, section):
     mcheck = check_azure_metric(
         resource, "average_storage_percent", cmk_key, "Storage", levels=levels
     )
-    if mcheck:
-        state, text, perf = mcheck
+    if mcheck and len(mcheck) == 3:
+        state, text, *perf = mcheck
         abs_storage_metric = resource.metrics.get("average_storage")
         if abs_storage_metric is not None:
             text += " (%s)" % render.bytes(abs_storage_metric.value)
-        yield state, text, perf
+        yield state, text, *perf
 
 
 check_info["azure_databases.storage"] = LegacyCheckDefinition(
@@ -48,6 +50,7 @@ check_info["azure_databases.storage"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -72,6 +75,7 @@ check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -99,6 +103,7 @@ check_info["azure_databases.cpu"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -129,6 +134,7 @@ check_info["azure_databases.dtu"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -161,6 +167,7 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )
 
@@ -192,5 +199,6 @@ check_info["azure_databases"] = LegacyCheckDefinition(
         "storage_percent_levels": (85.0, 95.0),
         "cpu_percent_levels": (85.0, 95.0),
         "dtu_percent_levels": (85.0, 95.0),
+        "deadlocks_levels": None,
     },
 )

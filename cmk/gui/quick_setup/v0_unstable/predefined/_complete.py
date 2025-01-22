@@ -48,7 +48,12 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    _normalize_folder_name,
+    Folder,
+    folder_tree,
+    Host,
+)
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
@@ -120,20 +125,26 @@ def _normalize_folder_path_str(folder_path: str) -> str:
 def sanitize_folder_path(folder_path: str) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
-
     tree = folder_tree()
     sanitized_folder_path = _normalize_folder_path_str(folder_path)
     if sanitized_folder_path == "":
         return tree.root_folder()
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
-    return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path,
-        title=sanitized_folder_path.split("/")[-1]
-        if "/" in sanitized_folder_path
-        else sanitized_folder_path,
-        attributes={},
-    )
+
+    folder = tree.root_folder()
+    for title in sanitized_folder_path.split("/"):
+        name = _normalize_folder_name(title)
+        folder = (
+            folder.subfolder_by_title(title)
+            or folder.subfolder(name)
+            or folder.create_subfolder(
+                name=name,
+                title=title,
+                attributes={},
+            )
+        )
+    return folder
 
 
 def create_special_agent_host_from_form_data(

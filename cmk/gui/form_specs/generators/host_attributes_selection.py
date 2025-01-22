@@ -8,7 +8,6 @@ from typing import Any, TypeVar
 from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.private.list_extended import ListExtended
-from cmk.gui.form_specs.vue.shared_type_defs import CascadingSingleChoiceLayout
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
@@ -21,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 T = TypeVar("T")
 

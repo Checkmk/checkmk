@@ -15,7 +15,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import job
 
 SECTION_1: job.Section = {
@@ -36,7 +36,7 @@ SECTION_1: job.Section = {
         },
     },
     "SNOWWHITE": {
-        "running": False,
+        "running": True,
         "start_time": 1557301201,
         "exit_code": 1,
         "running_start_time": [
@@ -63,7 +63,7 @@ SECTION_1: job.Section = {
 
 SECTION_2: job.Section = {
     "backup.sh": {
-        "running": False,
+        "running": True,
         "start_time": 1415204091,
         "exit_code": 0,
         "running_start_time": [1415205713],
@@ -115,6 +115,28 @@ SECTION_3: job.Section = {
         },
     },
 }
+
+STRING_TABLE_RUNNING = [
+    ["==>", "230-testing-funning.113660running", "<=="],
+    ["start_time", "1730709681"],
+]
+
+STRING_TABLE_RUNNING_FINISHED_PART = [
+    # be careful with the name here: if it ends with "running" everything is broken!
+    ["==>", "230-testing-funning", "<=="],
+    ["start_time", "1730702588"],
+    ["real", "0:02.00"],
+    ["user", "0.00"],
+    ["sys", "0.00"],
+    ["reads", "0"],
+    ["writes", "0"],
+    ["max_res_kbytes", "2304"],
+    ["avg_mem_kbytes", "0"],
+    ["invol_context_switches", "0"],
+    ["vol_context_switches", "2"],
+    ["exit_code", "0"],
+]
+
 
 TIME = 1594300620.0
 
@@ -583,3 +605,20 @@ def test_check_job(
 ) -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(job.check_job(item, params, section)) == expected_results
+
+
+def test_discover():
+    assert list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING))) == [
+        Service(item="230-testing-funning")
+    ]
+
+
+def test_parse_order():
+    section = job.parse_job(STRING_TABLE_RUNNING)
+    assert section["230-testing-funning"]["running"] is True
+
+    section = job.parse_job(STRING_TABLE_RUNNING + STRING_TABLE_RUNNING_FINISHED_PART)
+    assert section["230-testing-funning"]["running"] is True
+
+    section = job.parse_job(STRING_TABLE_RUNNING_FINISHED_PART + STRING_TABLE_RUNNING)
+    assert section["230-testing-funning"]["running"] is True

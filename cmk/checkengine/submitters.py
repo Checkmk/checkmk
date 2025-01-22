@@ -89,6 +89,7 @@ def get_submitter(
     dry_run: bool,
     perfdata_format: Literal["pnp", "standard"],
     show_perfdata: bool,
+    keepalive: bool,
 ) -> Submitter:
     """Enterprise should use `cmk.base.cee.keepalive.submitters`."""
     if dry_run:
@@ -160,7 +161,7 @@ class Submitter(abc.ABC):
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None: ...
 
     def _make_details(self, result: ServiceCheckResult) -> str:
-        return "%s|%s" % (
+        return "{}|{}".format(
             # The vertical bar indicates end of service output and start of metrics.
             # Replace the ones in the output by a Uniocode "Light vertical bar"
             result.output.replace("|", "\u2758"),

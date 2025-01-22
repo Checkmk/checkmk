@@ -34,8 +34,10 @@ In general, we follow the standard GitHub workflow which roughly works like this
  5. Submit a **Pull request** (PR) so that we can review your changes
  6. Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@checkmk.com ([further information](./doc/cla/cla_readme.md)).
 
- ⚠ Please reply when asked for more information or to update your PR in case in didn't meet the requirements (e.g. failed checks).
-If there's no response from the author for a longer period of time, we will close the PR (after giving you a heads up).
+ ⚠ Please reply when asked for more information or update your PR in case in didn't meet the requirements (e.g. failed checks).
+If there is no response from the author or the checks do not pass within 14 days, the PR will be considered stale.
+If there is still no response or the checks are not passing after 60 days, the PR will be closed.
+You will be notified in both cases.
 
 If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/).
 You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
@@ -200,20 +202,21 @@ Each time a Pull request is submitted, Github Actions will have a look at the ch
 
 **⚠ Important:** We only review PRs that are confirmed to be OK by Github Actions.
 If a check failed, please fix it and update the PR.
-PRs will be closed if the author didn't respond for at least 14 days.
+PRs will be considered stale if the author didn't respond for at least 14 days.
+It will be automatically closed after 60 days, if there is still no reply.
 
 It is recommended to run all tests locally before submitting a PR.
 If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
 
 ```console
-$ make -C tests test-pylint
+$ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
 $ make -C tests test-format-python
 $ make -C tests test-mypy-raw
 ```
 
-> We highly recommend integrating ruff, pylint and mypy into the editor you work with.
+> We highly recommend integrating ruff and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
 You could also push your changes to your forked repository and wait for Github Actions to execute the tests for you, but that takes several minutes for each try.
@@ -462,8 +465,8 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Automatic formatting/sorting with ruff
 
-The `ruff` configuration file, `pyproject.toml`, lives in the root directory of the project repository, where `ruff` picks it up automatically.
-`ruff` itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python`.
+The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
+`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format-python`.
 
 This make target will then format your code base as well as sort the import statements.
 

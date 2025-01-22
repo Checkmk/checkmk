@@ -5,7 +5,7 @@
 import contextlib
 import http.client
 import json
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
@@ -23,7 +23,11 @@ from cmk.gui.groups import GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
-from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.openapi.utils import (
+    GeneralRestAPIException,
+    ProblemException,
+    RestAPIRequestDataValidationException,
+)
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -301,3 +305,54 @@ def folder_slug(folder: Folder) -> str:
 def get_site_id_for_host(connection: MultiSiteConnection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
         return Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(conn)
+
+
+def mutually_exclusive_fields[T](
+    expected_type: type[T], params: Mapping[str, Any], *fields: str, default: T | None = None
+) -> T | None:
+    """
+    Check that at most one of the fields is set and return its value.
+
+    Args:
+        expected_type:
+            The expected type of the field. If the type does not match, an HTTP 500 error is raised.
+        params:
+            The parameters to check. Field names will be looked up in this dictionary.
+        fields:
+            The field names to check.
+        default:
+            The default value to return if no field is set.
+
+    Examples:
+        >>> mutually_exclusive_fields(int, {"a": 1, "b": 2}, "a", "b")
+        Traceback (most recent call last):
+        ...
+        cmk.gui.openapi.utils.RestAPIRequestDataValidationException: 400 Bad Request: Invalid request
+        >>> mutually_exclusive_fields(int, {"a": 1}, "a", "b")
+        1
+        >>> mutually_exclusive_fields(int, {"b": 2}, "a", "b")
+        2
+        >>> mutually_exclusive_fields(int, {}, "a", "b")
+        >>> mutually_exclusive_fields(int, {}, "a", "b", default=42)
+        42
+    """
+    values = [(field, params[field]) for field in fields if field in params]
+    if len(values) > 1:
+        fields_str = ", ".join(f"`{field}`" for field in fields[:-1]) + f" and `{fields[-1]}`"
+        raise RestAPIRequestDataValidationException(
+            title="Invalid request",
+            detail=f"Only one of the fields {fields_str} is allowed, but multiple were provided.",
+        )
+
+    if values:
+        field, value = values[0]
+        if isinstance(value, expected_type):
+            return value
+
+        raise GeneralRestAPIException(
+            status=500,
+            title="Internal error",
+            detail=f"Field `{field}` must be of type `{expected_type.__name__}`, but got `{type(value).__name__}`",
+        )
+
+    return default

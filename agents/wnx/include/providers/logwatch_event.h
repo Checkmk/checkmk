@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef LOGWATCH_EVENT_H
 #define LOGWATCH_EVENT_H
@@ -14,10 +12,10 @@
 #include <string_view>
 #include <utility>
 
-#include "wnx/cfg_engine.h"
 #include "common/cfg_info.h"
 #include "eventlog/eventlogbase.h"
 #include "providers/internal.h"
+#include "wnx/cfg_engine.h"
 #include "wnx/section_header.h"
 
 namespace cma::provider {

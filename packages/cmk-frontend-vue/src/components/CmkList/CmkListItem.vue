@@ -4,13 +4,29 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
-const { buttonPadding = '16px', ...props } = defineProps<{
+const listItemVariants = cva('', {
+  variants: {
+    variant: {
+      default: '',
+      first: 'cmk-list-item--first',
+      last: 'cmk-list-item--last',
+      only: 'cmk-list-item--only'
+    }
+  },
+  defaultVariants: {
+    variant: 'default'
+  }
+})
+type ListItemVariants = VariantProps<typeof listItemVariants>
+
+const { buttonPadding = '16px' } = defineProps<{
   removeElement: () => void
-  style?: 'first' | 'last' | null
+  variant?: ListItemVariants['variant']
   buttonPadding?: '16px' | '8px'
   draggable?: {
     dragStart: (event: DragEvent) => void
@@ -21,15 +37,9 @@ const { buttonPadding = '16px', ...props } = defineProps<{
 </script>
 
 <template>
-  <div class="cmk_list__element">
-    <div
-      :class="{
-        cmk_list__button_container: true,
-        first: props.style === 'first',
-        last: props.style === 'last'
-      }"
-    >
-      <div class="cmk_list__buttons">
+  <div class="cmk-list-item" :class="listItemVariants({ variant })">
+    <div class="cmk-list-item__button-container">
+      <div class="cmk-list-item__buttons">
         <template v-if="draggable!!">
           <CmkButton
             variant="transparent"
@@ -38,6 +48,7 @@ const { buttonPadding = '16px', ...props } = defineProps<{
             @dragstart="draggable?.dragStart"
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
+            @click.prevent="() => {}"
           >
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </CmkButton>
@@ -48,49 +59,59 @@ const { buttonPadding = '16px', ...props } = defineProps<{
         </CmkButton>
       </div>
     </div>
-    <div
-      :class="{
-        cmk_list__content: true,
-        first: props.style === 'first',
-        last: props.style === 'last'
-      }"
-    >
+    <div class="cmk-list-item__content">
       <slot></slot>
     </div>
   </div>
 </template>
 
 <style scoped>
-.cmk_list__element {
+.cmk-list-item {
   --button-padding-top: 4px;
 
-  .cmk_list__button_container,
-  .cmk_list__content {
+  .cmk-list-item__button-container,
+  .cmk-list-item__content {
     display: inline-block;
     vertical-align: top;
     padding: var(--spacing) 0;
 
-    .cmk_list__buttons {
+    .cmk-list-item__buttons {
       display: flex;
     }
   }
 
-  .cmk_list__content {
+  .cmk-list-item__content {
     padding-top: calc(var(--spacing) - var(--button-padding-top));
     padding-left: v-bind(buttonPadding);
   }
 
-  .cmk_list__button_container.first {
-    padding-top: var(--button-padding-top);
+  &.cmk-list-item--first {
+    > .cmk-list-item__button-container {
+      padding-top: var(--button-padding-top);
+    }
+
+    > .cmk-list-item__content {
+      padding-top: 0;
+    }
   }
 
-  .cmk_list__content.first {
-    padding-top: 0;
+  &.cmk-list-item--last {
+    > .cmk-list-item__button-container,
+    > .cmk-list-item__content {
+      padding-bottom: 0;
+    }
   }
 
-  .cmk_list__button_container.last,
-  .cmk_list__content.last {
-    padding-bottom: 0;
+  &.cmk-list-item--only {
+    > .cmk-list-item__button-container {
+      padding-top: var(--button-padding-top);
+      padding-bottom: var(--button-padding-top);
+    }
+
+    > .cmk-list-item__content {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
   }
 }
 </style>

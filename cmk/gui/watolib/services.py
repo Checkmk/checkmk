@@ -108,7 +108,7 @@ class DiscoveryAction(enum.StrEnum):
 
     >>> import json
     >>> [json.dumps(a) for a in DiscoveryAction]
-    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"', '"single_update_service_labels"']
+    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"', '"update_discovery_parameters"', '"single_update_service_properties"']
     """
 
     NONE = ""  # corresponds to Full Scan in WATO
@@ -121,7 +121,8 @@ class DiscoveryAction(enum.StrEnum):
     UPDATE_HOST_LABELS = "update_host_labels"
     UPDATE_SERVICES = "update_services"
     UPDATE_SERVICE_LABELS = "update_service_labels"
-    SINGLE_UPDATE_SERVICE_LABELS = "single_update_service_labels"
+    UPDATE_DISCOVERY_PARAMETERS = "update_discovery_parameters"
+    SINGLE_UPDATE_SERVICE_PROPERTIES = "single_update_service_properties"
 
 
 class UpdateType(enum.Enum):
@@ -364,15 +365,24 @@ class Discovery:
                     return unchanged_autochecks_value, AutocheckEntry(
                         CheckPluginName(entry.check_plugin_name),
                         entry.item,
-                        entry.old_discovered_parameters,
+                        (
+                            entry.new_discovered_parameters
+                            if self._action
+                            in (
+                                DiscoveryAction.FIX_ALL,
+                                DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+                                DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES,
+                            )
+                            else entry.old_discovered_parameters
+                        ),
                         (
                             entry.new_labels
                             if self._action
-                            in [
+                            in (
                                 DiscoveryAction.FIX_ALL,
                                 DiscoveryAction.UPDATE_SERVICE_LABELS,
-                                DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
-                            ]
+                                DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES,
+                            )
                             else entry.old_labels
                         ),
                     )
@@ -432,7 +442,7 @@ class Discovery:
 
         if self._action in [
             DiscoveryAction.SINGLE_UPDATE,
-            DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
+            DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES,
         ]:
             if (entry.check_plugin_name, entry.item) in self._selected_services:
                 return self._update_target
@@ -564,7 +574,7 @@ def has_discovery_action_specific_permissions(
             )
         case DiscoveryAction.REFRESH:
             return user.may("wato.services")
-        case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS:
+        case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES:
             if update_target is None:
                 # This should never happen.
                 # The typing possibilities are currently so limited that I don't see a better solution.
@@ -579,6 +589,8 @@ def has_discovery_action_specific_permissions(
         case DiscoveryAction.UPDATE_HOST_LABELS:
             return user.may("wato.services")
         case DiscoveryAction.UPDATE_SERVICE_LABELS:
+            return user.may("wato.services")
+        case DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS:
             return user.may("wato.services")
         case DiscoveryAction.UPDATE_SERVICES:
             return user.may("wato.services")
@@ -1040,7 +1052,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def discover(self, action: DiscoveryAction, *, raise_errors: bool) -> None:
         """Target function of the background job"""
-        print("Starting job...")
+        sys.stdout.write("Starting job...\n")
         self._pre_discovery_preview = self._get_discovery_preview()
 
         if action == DiscoveryAction.REFRESH:
@@ -1053,7 +1065,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
         else:
             raise NotImplementedError()
-        print("Completed.")
+        sys.stdout.write("Completed.\n")
 
     def _perform_service_scan(self, *, raise_errors: bool) -> None:
         """The service-discovery-preview automation refreshes the Checkmk internal cache and makes

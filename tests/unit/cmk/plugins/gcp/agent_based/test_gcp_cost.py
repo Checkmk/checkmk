@@ -8,8 +8,16 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.gcp.agent_based.gcp_cost import check, discover, parse, Section
+
+TABLE_MULTI_MONTH = [
+    ['{"query_month": "202501"}'],
+    ['{"project": "th", "id": "th", "month": "202501", "amount": 4.2, "currency": "EUR"}'],
+    ['{"project": "th", "id": "th", "month": "202411", "amount": 0.039882, "currency": "EUR"}'],
+    ['{"project": "th", "id": "th", "month": "202412", "amount": 7.0, "currency": "EUR"}'],
+    ['{"project": "La", "id": "la", "month": "202501", "amount": 0.00, "currency": "EUR"}'],
+]
 
 
 @pytest.fixture(name="section")
@@ -45,6 +53,13 @@ def _section() -> Section:
     return parse(table)
 
 
+def test_gcp_multi_month(section: Section) -> None:
+    assert list(sorted(discover(parse(TABLE_MULTI_MONTH)))) == [
+        Service(item="la"),
+        Service(item="th"),
+    ]
+
+
 def test_gcp_cost_discovery(section: Section) -> None:
     services = list(discover(section))
     assert sorted(services) == sorted(
@@ -61,22 +76,16 @@ def test_gcp_cost_discovery(section: Section) -> None:
 def test_gcp_cost_check(section: Section, item: str) -> None:
     results = list(check(item=item, params={"levels": None}, section=section))
     assert results == [
-        Result(
-            state=State.OK,
-            summary="Project: test, Cost: 42.21 EUR",
-            details="July 2022: 42.21 EUR, June 2022: 1337.00 EUR",
-        )
+        Result(state=State.OK, summary="July 2022: 42.21 EUR"),
+        Metric("gcp_cost_per_month", 42.21),
     ]
 
 
 def test_gcp_cost_check_data_only_one_month(section: Section) -> None:
     results = list(check(item="single", params={"levels": None}, section=section))
     assert results == [
-        Result(
-            state=State.OK,
-            summary="Project: single, Cost: 2.71 EUR",
-            details="July 2022: 2.71 EUR",
-        )
+        Result(state=State.OK, summary="July 2022: 2.71 EUR"),
+        Metric("gcp_cost_per_month", 2.71),
     ]
 
 
@@ -86,18 +95,34 @@ def test_item_not_in_section_yields_no_result(section: Section) -> None:
 
 
 @pytest.mark.parametrize(
-    "state, params",
+    "result, params",
     [
-        pytest.param(State.WARN, {"levels": (21, 50)}, id="warn"),
-        pytest.param(State.CRIT, {"levels": (21, 41)}, id="crit"),
+        pytest.param(
+            [
+                Result(
+                    state=State.WARN,
+                    summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/50.00 EUR)",
+                ),
+                Metric("gcp_cost_per_month", 42.21, levels=(21.0, 50.0)),
+            ],
+            {"levels": ("fixed", (21, 50))},
+            id="warn",
+        ),
+        pytest.param(
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="July 2022: 42.21 EUR (warn/crit at 21.00 EUR/41.00 EUR)",
+                ),
+                Metric("gcp_cost_per_month", 42.21, levels=(21.0, 41.0)),
+            ],
+            {"levels": ("fixed", (21, 41))},
+            id="crit",
+        ),
     ],
 )
-def test_gcp_cost_check_levels(section: Section, state: State, params: Mapping[str, Any]) -> None:
+def test_gcp_cost_check_levels(
+    result: list[Result | Metric], params: Mapping[str, Any], section: Section
+) -> None:
     results = list(check(item="test1", params=params, section=section))
-    assert results == [
-        Result(
-            state=state,
-            summary="Project: test, Cost: 42.21 EUR",
-            details="July 2022: 42.21 EUR, June 2022: 1337.00 EUR",
-        )
-    ]
+    assert results == result

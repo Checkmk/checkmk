@@ -3,44 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from cmk.shared_typing.configuration_entity import ConfigEntityType
+
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DefaultValue, InvalidValue
 from ._utils import (
-    compute_validation_errors,
+    base_i18n_form_spec,
     compute_validators,
     get_title_and_help,
 )
 
-OptionId = str
+_ParsedValueModel = str
+_FrontendModel = str | None
 
 
-class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId]):
-    def _parse_value(self, raw_value: object) -> OptionId | EmptyValue:
+class SingleChoiceEditableVisitor(
+    FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FrontendModel]
+):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
-            return EMPTY_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
         return raw_value
 
-    def _validators(self) -> Sequence[Callable[[OptionId], object]]:
+    def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:
         return compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: OptionId | EmptyValue
-    ) -> tuple[shared_type_defs.SingleChoiceEditable, OptionId | None]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.SingleChoiceEditable, _FrontendModel]:
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (
             get_list_of_configuration_entities,
             get_readable_entity_selection,
         )
-        from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
         title, help_text = get_title_and_help(self.form_spec)
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)
@@ -78,16 +82,10 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
                     no_objects=_("No options available"),
                     no_selection=_("Please select an element"),
                 ),
+                i18n_base=base_i18n_form_spec(),
             ),
-            None if isinstance(parsed_value, EmptyValue) else parsed_value,
+            None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: OptionId | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        return compute_validation_errors(
-            self._validators(), "" if isinstance(parsed_value, EmptyValue) else parsed_value
-        )
-
-    def _to_disk(self, raw_value: object, parsed_value: OptionId) -> OptionId:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
         return parsed_value

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { ref, computed } from 'vue'
@@ -63,28 +63,30 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <CmkButton size="small" @click.prevent="toggleTimeSpecific">
-    {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }}
-  </CmkButton>
-  <br />
-  <template v-if="timespecificActive">
-    <FormEditDispatcher
-      v-model:data="data"
-      :spec="spec.parameter_form_enabled"
-      :backend-validation="embeddedValidation"
-    />
-  </template>
-  <template v-else>
-    <FormEditDispatcher
-      v-model:data="data"
-      :spec="spec.parameter_form_disabled"
-      :backend-validation="embeddedValidation"
-    />
-  </template>
-  <br />
+  <span>
+    <CmkButton size="small" @click.prevent="toggleTimeSpecific">
+      {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }}
+    </CmkButton>
+    <br />
+    <template v-if="timespecificActive">
+      <FormEditDispatcher
+        v-model:data="data"
+        :spec="spec.parameter_form_enabled"
+        :backend-validation="embeddedValidation"
+      />
+    </template>
+    <template v-else>
+      <FormEditDispatcher
+        v-model:data="data"
+        :spec="spec.parameter_form_disabled"
+        :backend-validation="embeddedValidation"
+      />
+    </template>
+    <br />
 
-  <HelpText :help="spec.help" />
-  <FormValidation :validation="localValidation"></FormValidation>
+    <HelpText :help="spec.help" />
+    <FormValidation :validation="localValidation"></FormValidation>
+  </span>
 </template>
 
 <style scoped></style>

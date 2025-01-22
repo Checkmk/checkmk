@@ -30,58 +30,61 @@ struct ListeningConfig {
     pub port: u16,
 }
 
-trait PullState {
-    fn refresh(&mut self) -> AnyhowResult<()>;
-    fn tls_acceptor(&self) -> TlsAcceptor;
-    fn allow_legacy_pull(&self) -> bool;
-    fn is_active(&self) -> bool;
-    fn ip_allowlist(&self) -> &[String];
-    fn listening_config(&self) -> ListeningConfig;
-    fn connection_timeout(&self) -> u64;
+#[derive(Clone)]
+enum ConnectionMode {
+    Active(CryptoMode),
+    Inactive,
 }
-struct PullStateImpl {
-    allow_legacy_pull: bool,
-    tls_acceptor: TlsAcceptor,
+
+#[derive(Clone)]
+enum CryptoMode {
+    Tls(TlsAcceptor),
+    Plain,
+}
+
+impl std::convert::TryFrom<&config::PullConfig> for ConnectionMode {
+    type Error = AnyhowError;
+
+    fn try_from(config: &config::PullConfig) -> AnyhowResult<Self> {
+        if config.allow_legacy_pull() {
+            return Ok(Self::Active(CryptoMode::Plain));
+        }
+        if config.has_connections() {
+            Ok(Self::Active(CryptoMode::Tls(
+                tls_server::tls_acceptor(
+                    // this would fail if we passed in an empty iterator
+                    config.get_pull_connections(),
+                )
+                .context("Could not initialize TLS.")?,
+            )))
+        } else {
+            Ok(Self::Inactive)
+        }
+    }
+}
+
+struct PullState {
+    connection_mode: ConnectionMode,
     config: config::PullConfig,
 }
 
-impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
+impl std::convert::TryFrom<config::PullConfig> for PullState {
     type Error = AnyhowError;
 
     fn try_from(config: config::PullConfig) -> AnyhowResult<Self> {
         Ok(Self {
-            allow_legacy_pull: config.allow_legacy_pull(),
-            tls_acceptor: tls_server::tls_acceptor(config.get_pull_connections())
-                .context("Could not initialize TLS.")?,
+            connection_mode: ConnectionMode::try_from(&config)?,
             config,
         })
     }
 }
 
-impl PullState for PullStateImpl {
+impl PullState {
     fn refresh(&mut self) -> AnyhowResult<()> {
         if self.config.refresh()? {
-            self.tls_acceptor = tls_server::tls_acceptor(self.config.get_pull_connections())
-                .context("Could not initialize TLS.")?;
+            self.connection_mode = ConnectionMode::try_from(&self.config)?;
         };
-        self.allow_legacy_pull = self.config.allow_legacy_pull();
         Ok(())
-    }
-
-    fn tls_acceptor(&self) -> TlsAcceptor {
-        self.tls_acceptor.clone()
-    }
-
-    fn allow_legacy_pull(&self) -> bool {
-        self.allow_legacy_pull
-    }
-
-    fn is_active(&self) -> bool {
-        self.allow_legacy_pull || self.config.has_connections()
-    }
-
-    fn ip_allowlist(&self) -> &[String] {
-        &self.config.allowed_ip
     }
 
     fn listening_config(&self) -> ListeningConfig {
@@ -90,10 +93,6 @@ impl PullState for PullStateImpl {
             addr_v6: Ipv6Addr::UNSPECIFIED,
             port: self.config.port,
         }
-    }
-
-    fn connection_timeout(&self) -> u64 {
-        self.config.connection_timeout
     }
 }
 
@@ -195,7 +194,7 @@ pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
 pub async fn async_pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
     let guard = MaxConnectionsGuard::new(pull_config.max_connections);
     let agent_output_collector = AgentOutputCollectorImpl::from(&pull_config.agent_channel);
-    let pull_state = PullStateImpl::try_from(pull_config)?;
+    let pull_state = PullState::try_from(pull_config)?;
     _pull(pull_state, guard, agent_output_collector).await
 }
 
@@ -205,12 +204,12 @@ async fn pull_runtime_wrapper(pull_config: config::PullConfig) -> AnyhowResult<(
 }
 
 async fn _pull(
-    mut pull_state: impl PullState,
+    mut pull_state: PullState,
     mut guard: MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
 ) -> AnyhowResult<()> {
     loop {
-        if !pull_state.is_active() {
+        if matches!(pull_state.connection_mode, ConnectionMode::Inactive) {
             tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
             // Allow a crash due to a failing registry reload. It's not likely to recover
             // here without action taken, and it's vital for all connections.
@@ -324,7 +323,7 @@ fn tcp_listener(listening_config: ListeningConfig) -> AnyhowResult<TcpListenerSt
 }
 
 async fn _pull_loop(
-    pull_state: &mut impl PullState,
+    pull_state: &mut PullState,
     guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
 ) -> AnyhowResult<()> {
@@ -339,7 +338,7 @@ async fn _pull_loop(
         else {
             // No connection within timeout. Refresh config and check if we're still active.
             pull_state.refresh()?;
-            if !pull_state.is_active() {
+            if matches!(pull_state.connection_mode, ConnectionMode::Inactive) {
                 info!(
                     "No pull connection registered, stop listening on {}.",
                     listener.local_addr()?
@@ -358,7 +357,7 @@ async fn _pull_loop(
             }
         };
 
-        if !is_addr_allowed(&remote, pull_state.ip_allowlist()) {
+        if !is_addr_allowed(&remote, &pull_state.config.allowed_ip) {
             warn!(
                 "{}: Rejecting pull request - connection from IP is not allowed.",
                 remote
@@ -370,35 +369,37 @@ async fn _pull_loop(
         pull_state.refresh()?;
 
         // Check if pull was deactivated meanwhile before actually handling the request.
-        if !pull_state.is_active() {
-            info!("No pull connection registered, closing current connection and stop listening.");
-            return Ok(());
-        }
-
-        info!("{}: Handling pull request.", remote);
-
-        let request_handler_fut = handle_request(
-            stream,
-            agent_output_collector.clone(),
-            remote.ip(),
-            pull_state.allow_legacy_pull(),
-            pull_state.tls_acceptor(),
-            pull_state.connection_timeout(),
-        );
-
-        match guard.try_make_task_for_addr(remote, request_handler_fut) {
-            Ok(connection_fut) => {
-                tokio::spawn(async move {
-                    if let Err(err) = connection_fut.await {
-                        warn!("{}: Request failed. ({})", remote, err)
-                    };
-                });
+        match pull_state.connection_mode.clone() {
+            ConnectionMode::Inactive => {
+                info!(
+                    "No pull connection registered, closing current connection and stop listening."
+                );
+                return Ok(());
             }
-            Err(error) => {
-                warn!("{}: Request failed. ({})", remote, error);
+            ConnectionMode::Active(crypto_mode) => {
+                info!("{}: Handling pull request.", remote);
+                let request_handler_fut = handle_request(
+                    stream,
+                    agent_output_collector.clone(),
+                    remote.ip(),
+                    crypto_mode,
+                    pull_state.config.connection_timeout,
+                );
+                match guard.try_make_task_for_addr(remote, request_handler_fut) {
+                    Ok(connection_fut) => {
+                        tokio::spawn(async move {
+                            if let Err(err) = connection_fut.await {
+                                warn!("{}: Request failed. ({})", remote, err)
+                            };
+                        });
+                    }
+                    Err(error) => {
+                        warn!("{}: Request failed. ({})", remote, error);
+                    }
+                }
+                debug!("{}: Handling pull request DONE (Task detached).", remote);
             }
         }
-        debug!("{}: Handling pull request DONE (Task detached).", remote);
     }
 }
 
@@ -447,19 +448,39 @@ async fn handle_request(
     mut stream: TcpStream,
     agent_output_collector: impl AgentOutputCollector,
     remote_ip: IpAddr,
-    is_legacy_pull: bool,
-    tls_acceptor: TlsAcceptor,
+    crypto_mode: CryptoMode,
     connection_timeout: u64,
 ) -> AnyhowResult<()> {
-    if is_legacy_pull {
-        debug!("handle_request: starts in legacy mode from {:?}", remote_ip);
-        return handle_legacy_pull_request(
-            stream,
-            agent_output_collector.plain_output(remote_ip),
-            connection_timeout,
-        )
-        .await;
+    match crypto_mode {
+        CryptoMode::Tls(tls_acceptor) => {
+            handle_request_with_tls(
+                &mut stream,
+                agent_output_collector,
+                remote_ip,
+                &tls_acceptor,
+                connection_timeout,
+            )
+            .await
+        }
+        CryptoMode::Plain => {
+            debug!("handle_request: starts in legacy mode from {:?}", remote_ip);
+            handle_legacy_pull_request(
+                &mut stream,
+                agent_output_collector.plain_output(remote_ip),
+                connection_timeout,
+            )
+            .await
+        }
     }
+}
+
+async fn handle_request_with_tls(
+    stream: &mut TcpStream,
+    agent_output_collector: impl AgentOutputCollector,
+    remote_ip: IpAddr,
+    tls_acceptor: &TlsAcceptor,
+    connection_timeout: u64,
+) -> AnyhowResult<()> {
     debug!("handle_request: starts from {:?}", remote_ip);
 
     let handshake = with_timeout(
@@ -490,7 +511,7 @@ async fn handle_request(
 }
 
 async fn handle_legacy_pull_request(
-    mut stream: TcpStream,
+    stream: &mut TcpStream,
     plain_mondata: impl Future<Output = AnyhowResult<Vec<u8>>>,
     connection_timeout: u64,
 ) -> AnyhowResult<()> {

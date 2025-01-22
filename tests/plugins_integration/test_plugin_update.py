@@ -28,7 +28,9 @@ SKIPPED_DUMPS = [
 #   Related: CMK-13774
 # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
 #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-SKIPPED_CHECKS = ["Postfix status", "Postfix Queue"]
+# * The 'Power x' (x=1,2,...) services have been renamed into 'Power supply'
+#   See Werk 16905.
+SKIPPED_CHECKS = ["Postfix status", "Postfix Queue", "Power 1"]
 
 
 def test_plugin_update(
@@ -45,7 +47,7 @@ def test_plugin_update(
     * Re-discover services and compare services found before and after such discovery;
     * Check the number of rules in the ruleset 'periodic_discovery' and compare with the expected.
     """
-    psd_rules_base = test_site_update.openapi.get_rules("periodic_discovery")
+    psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
     for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
@@ -87,7 +89,7 @@ def test_plugin_update(
             f"in target-version: {not_found_status_0_services}"
         )
 
-    test_site_update.openapi.bulk_discover_services_and_wait_for_completion(
+    test_site_update.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
         get_host_names(test_site_update)
     )
 
@@ -117,7 +119,7 @@ def test_plugin_update(
             f"service-discovery but not after: {not_found_status_0_services_sd}"
         )
 
-    psd_rules_update = test_site_update.openapi.get_rules("periodic_discovery")
+    psd_rules_update = test_site_update.openapi.rules.get_all("periodic_discovery")
     err_msg = (
         "The number of rules in the ruleset 'periodic_discovery' differs between before and after "
         "the update."

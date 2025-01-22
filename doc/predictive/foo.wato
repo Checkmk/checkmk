@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=undefined-variable,disable=blacklisted-name
+# ruff: noqa: F821
 
 # WATO declaration for the check parameters of foo
 register_check_parameters(  # type: ignore[name-defined]

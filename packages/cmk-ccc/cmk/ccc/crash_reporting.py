@@ -17,16 +17,48 @@ import sys
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, Self
+from typing import Any, Final, Generic, NotRequired, Sequence, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
 
-CrashInfo = dict[str, Any]  # TODO: improve this type
+
+class BaseDetails(TypedDict):
+    argv: list
+    env: dict
+
+
+class VersionInfo(TypedDict):
+    core: str
+    python_version: str
+    edition: str
+    python_paths: Sequence[str]
+    version: str
+    time: float
+    os: str
+
+
+T = TypeVar("T")
+
+
+class ContactDetails(TypedDict):
+    name: NotRequired[str]
+    email: NotRequired[str]
+
+
+class CrashInfo(Generic[T], VersionInfo):
+    exc_type: str | None
+    crash_type: str
+    exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]
+    local_vars: str
+    details: T
+    exc_value: str
+    contact: NotRequired[ContactDetails]
+    id: str
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -117,7 +149,11 @@ class CrashReportStore:
                 crash_dir.rmdir()
 
 
-class ABCCrashReport(abc.ABC):
+class SerializedCrashReport(TypedDict):
+    crash_info: CrashInfo
+
+
+class ABCCrashReport(Generic[T], abc.ABC):
     """Base class for the component specific crash report types"""
 
     def __init__(self, crashdir: Path, crash_info: CrashInfo) -> None:
@@ -131,28 +167,20 @@ class ABCCrashReport(abc.ABC):
         raise NotImplementedError()
 
     @classmethod
-    def from_exception(
+    def make_crash_info(
         cls,
-        crashdir: Path,
-        version_info: dict[str, object],
-        details: Mapping[str, Any] | None = None,
-        type_specific_attributes: dict[str, Any] | None = None,
-    ) -> Self:
+        version_info: VersionInfo,
+        details: T | None = None,
+    ) -> CrashInfo:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
                   that are added to the "details" key of the crash_info.
-        type_specific_attributes - Crash type specific class attributes that
-                                   are set as attributes on the crash objects.
         """
-        attributes = {
-            "crash_info": _get_generic_crash_info(cls.type(), version_info, details or {}),
-        }
-        attributes |= type_specific_attributes or {}
-        return cls(crashdir, **attributes)
+        return _get_generic_crash_info(cls.type(), version_info, details)
 
     @classmethod
-    def deserialize(cls, crashdir: Path, serialized: dict[str, dict[str, str]]) -> ABCCrashReport:
+    def deserialize(cls, crashdir: Path, serialized: SerializedCrashReport) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(crashdir, **serialized)
@@ -199,8 +227,8 @@ class ABCCrashReport(abc.ABC):
 
 def _get_generic_crash_info(
     type_name: str,
-    version_info: dict[str, object],
-    details: Mapping[str, Any],
+    version_info: VersionInfo,
+    details: T,
 ) -> CrashInfo:
     """Produces the crash info data structure.
 
@@ -210,19 +238,22 @@ def _get_generic_crash_info(
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    version_info.update(
-        {
-            "id": str(uuid.uuid1()),
-            "crash_type": type_name,
-            "exc_type": exc_type.__name__ if exc_type else None,
-            "exc_value": str(exc_value),
-            # Py3: Make traceback.FrameSummary serializable
-            "exc_traceback": [tuple(e) for e in tb_list],
-            "local_vars": _get_local_vars_of_last_exception(),
-            "details": details,
-        }
+    return CrashInfo(
+        id=str(uuid.uuid1()),
+        crash_type=type_name,
+        exc_type=exc_type.__name__ if exc_type else None,
+        exc_value=str(exc_value),
+        exc_traceback=[tuple(e) for e in tb_list],
+        local_vars=_get_local_vars_of_last_exception(),
+        details=details,
+        core=version_info["core"],
+        python_version=version_info["python_version"],
+        edition=version_info["edition"],
+        python_paths=version_info["python_paths"],
+        version=version_info["version"],
+        time=version_info["time"],
+        os=version_info["os"],
     )
-    return version_info
 
 
 def _get_local_vars_of_last_exception() -> str:
@@ -264,7 +295,7 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     if isinstance(val, str):
         size = len(val)
         if size > maxsize:
-            val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
+            val = val[:maxsize] + f"... ({(size - maxsize)} bytes stripped)"
 
     return val
 

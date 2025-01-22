@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
 
@@ -63,7 +63,7 @@ class TestAutomationDiagHost:
     @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
-        assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
+        assert check_mk.AutomationDiagHost().execute(args, False) == DiagHostResult(
             0,
             raw_data,
         )
@@ -195,7 +195,7 @@ def test_automation_active_check(
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
-    assert active_check.execute(active_check_args) == expected_result
+    assert active_check.execute(active_check_args, False) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -255,7 +255,7 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = check_mk.AutomationActiveCheck()
-    active_check.execute(active_check_args)
+    active_check.execute(active_check_args, False)
 
     out, _ = capsys.readouterr()
     assert out == error_message

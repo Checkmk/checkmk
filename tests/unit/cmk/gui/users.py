@@ -55,6 +55,7 @@ def _mk_user_obj(
     }
 
     if automation:
+        user[username]["attributes"]["store_automation_secret"] = True
         user[username]["attributes"]["automation_secret"] = password
 
     if custom_attrs is not None:
@@ -118,7 +119,7 @@ def create_and_destroy_user(
             users = load_users()
             if user_id in users:
                 del users[user_id]
-                save_users(profiles=users, now=datetime.now(), skip_validation=True)
+                save_users(profiles=users, now=datetime.now())
 
             # User directories are not deleted by WATO by default. Clean it up here!
             shutil.rmtree(str(profile_path))

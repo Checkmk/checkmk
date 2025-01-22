@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import FormEdit from '@/form/components/FormEdit.vue'
-import type { FormSpec } from '@/form/components/vue_formspec_components'
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 
 defineProps<{

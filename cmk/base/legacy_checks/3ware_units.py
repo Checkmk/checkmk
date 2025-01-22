@@ -18,63 +18,77 @@
 # u0    RAID-5    OK             -       -       64K     1396.95   ON     ON
 
 
-# inventory
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}
 
 
-def inventory_3ware_units(info):
-    inventory = []
-    for line in info:
-        unit = line[0]
-        inventory.append((unit, None))
-    return inventory
+@dataclass(frozen=True)
+class Unit:
+    type: str
+    status: str
+    complete: str
+    size: float
 
 
-# check
-def check_3ware_units(item, _no_params, info):
-    for line in info:
-        if line[0] == item:
-            unit_type = line[1]
-            status = line[2]
-            complete = line[3]
-
-            # Handle different outputs of tw_cli
-            try:
-                size = float(line[6])
-            except ValueError:
-                size = float(line[5])
-
-            complete_txt = ""
-            if complete != "-":
-                complete_txt = " complete: %s%%" % complete
-
-            infotext = f"{status} (type: {unit_type}, size: {size}GB{complete_txt})"
-
-            if status in ["OK", "VERIFYING"]:
-                return (0, "unit status is " + infotext)
-            if status in ["INITIALIZING", "VERIFY-PAUSED", "REBUILDING"]:
-                return (1, "unit status is " + infotext)
-            return (2, "unit status is " + infotext)
-    return (3, "unit %s not found in agent output" % item)
+Section = Mapping[str, Unit]
 
 
-# declare the check to Checkmk
+def parse_3ware_units(string_table: StringTable) -> Section:
+    def _find_size_column(line: Sequence[str]) -> float:
+        # Handle different outputs of tw_cli
+        try:
+            return float(line[2])
+        except ValueError:
+            return float(line[1])
+
+    return {
+        name: Unit(
+            type=unit_type,
+            status=status,
+            complete=complete,
+            size=_find_size_column(rest),
+        )
+        for name, unit_type, status, complete, *rest in string_table
+    }
 
 
-def parse_3ware_units(string_table: StringTable) -> StringTable:
-    return string_table
+def discover_3ware_units(section: Section) -> LegacyDiscoveryResult:
+    yield from ((name, {}) for name in section)
+
+
+def check_3ware_units(item: str, _no_params: object, section: Section) -> LegacyCheckResult:
+    if (unit := section.get(item)) is None:
+        return
+
+    match unit.status:
+        case "OK" | "VERIFYING":
+            state = 0
+        case "INITIALIZING" | "VERIFY-PAUSED" | "REBUILDING":
+            state = 1
+        case _:
+            state = 2
+
+    yield state, unit.status
+    yield 0, f"Type: {unit.type}"
+    yield 0, f"Size: {unit.size}GB"
+    if unit.complete != "-":
+        yield 0, f"Complete: {unit.complete}%"
 
 
 check_info["3ware_units"] = LegacyCheckDefinition(
     name="3ware_units",
     parse_function=parse_3ware_units,
     service_name="RAID 3ware unit %s",
-    discovery_function=inventory_3ware_units,
+    discovery_function=discover_3ware_units,
     check_function=check_3ware_units,
     check_ruleset_name="raid",
 )

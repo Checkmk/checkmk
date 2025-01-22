@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 // TODO: move this file CMK-19774
 import { ref, computed } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
-import type * as vue_formspec_components from '@/form/components/vue_formspec_components'
+import type * as vue_formspec_components from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 
@@ -20,6 +20,7 @@ const spec = computed(() => {
     type: 'cascading_single_choice',
     title: 'some title',
     help: 'some help',
+    i18n_base: { required: 'required' },
     validators: [],
     label: 'some label',
     layout: layout.value,
@@ -33,6 +34,7 @@ const spec = computed(() => {
           type: 'integer',
           title: 'nestedIntegerTitle',
           label: 'nestedIntegerLabel',
+          i18n_base: { required: 'required' },
           help: 'nestedIntegerHelp',
           validators: [],
           input_hint: null,
@@ -47,6 +49,8 @@ const spec = computed(() => {
           type: 'string',
           title: 'nestedStringTitle',
           help: 'nestedStringHelp',
+          label: null,
+          i18n_base: { required: 'required' },
           validators: [],
           input_hint: 'nestedStringInputHint',
           field_size: 'SMALL',
@@ -54,7 +58,7 @@ const spec = computed(() => {
         } as vue_formspec_components.String
       }
     ]
-  }
+  } as vue_formspec_components.CascadingSingleChoice
 })
 const data = ref<[string, unknown]>(['stringChoice', 'some string'])
 </script>

@@ -41,7 +41,7 @@ def main_versions(
     _version_info: object,
     _site: object,
     _global_opts: object,
-    args: Sequence[str],
+    _args: Sequence[str],
     options: Mapping[str, str | None],
     versions_path: Path = Path("/omd/versions"),
 ) -> None:

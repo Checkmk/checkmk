@@ -1,8 +1,5 @@
 #!/bin/sh
 
-case "$1" in
-    0 | remove | purge)
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
-        ;;
-esac
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger

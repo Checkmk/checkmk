@@ -16,7 +16,7 @@ from cmk.utils.structured_data import SDRawTree
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
 _JSONSerializable = (
-    str | list[str] | list[tuple[str, bool]] | Mapping[str, str] | Mapping[str, list[str]]
+    str | float | list[str] | list[tuple[str, bool]] | Mapping[str, str] | Mapping[str, list[str]]
 )
 
 DiagnosticsCLParameters = list[str]

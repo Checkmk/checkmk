@@ -6,7 +6,8 @@
 
 import re
 from collections.abc import Iterator
-from typing import cast
+
+from cmk.utils import urls
 
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
@@ -28,6 +29,8 @@ __all__ = [
     "render_element",
     "normalize_css_spec",
 ]
+
+_SUPPORTED_CSS_CLASS_KEYS = frozenset(["class_", "css", "cssclass", "class"])
 
 
 def render_start_tag(
@@ -62,78 +65,81 @@ def render_element(
     return HTML.without_escaping(f"{open_tag}{tag_content}</{tag_name}>")
 
 
-def _render_attributes(  # pylint: disable=too-many-branches
-    **attrs: HTMLTagAttributeValue,
-) -> Iterator[str]:
-    css = _get_normalized_css_classes(attrs)
-    if css:
-        attrs["class"] = css
+def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
+    normalized = _attrs_with_normalized_class(attrs)
+    yield from (f' {key}="{value}"' for key, value in _extract_attrs(normalized))
+    yield from (f" {key}=''" for key in _extract_options(normalized))
 
-    # options such as 'selected' and 'checked' dont have a value in html tags
-    options = []
 
+def _extract_attrs(
+    raw_attrs: dict[str, HTMLTagAttributeValue],
+) -> Iterator[tuple[str, str]]:
     # Links require href to be first attribute
-    href = attrs.pop("href", None)
-    if href:
-        attributes = list(attrs.items())
-        attributes.insert(0, ("href", href))
-    else:
-        attributes = list(attrs.items())
+    attrs = {"href": href, **raw_attrs} if (href := raw_attrs.get("href", None)) else raw_attrs
+    return (
+        (_format_key(key), _format_value(key, val))
+        for key, val in attrs.items()
+        if val is not None and val != ""
+    )
 
-    # render all attributes
-    for key_unescaped, v in attributes:
-        if v is None:
-            continue
 
-        key = escaping.escape_attribute(key_unescaped.rstrip("_"))
+def _extract_options(raw_attrs: dict[str, HTMLTagAttributeValue]) -> Iterator[str]:
+    # options such as 'selected' and 'checked' dont have a value in html tags
+    return (_format_key(key) for key, val in raw_attrs.items() if val == "")
 
-        if key.startswith("data_"):
-            key = key.replace("_", "-", 1)  # HTML data attribute: 'data-name'
 
-        if v == "":
-            options.append(key)
-            continue
+def _format_key(key: str) -> str:
+    if (escaped_key := escaping.escape_attribute(key.rstrip("_"))).startswith("data_"):
+        return escaped_key.replace("_", "-", 1)
 
-        if not isinstance(v, list):
-            v = escaping.escape_attribute(v)
+    return escaped_key
+
+
+def _format_value(key: str, value: str | list[str]) -> str:
+    if isinstance(value, list):
+        separator = _get_separator(key)
+        joined = separator.join(escaping.escape_attribute(attr) for attr in value if attr)
+
+        # TODO: Can we drop this special feature?
+        if separator.startswith(";"):
+            return re.sub(";+", ";", joined)
+
+        return joined
+
+    if key == "href" and urls.is_allowed_url(value):
+        return value
+
+    return escaping.escape_attribute(value)
+
+
+def _get_separator(key: str) -> str:
+    if key.startswith("on"):
+        return "; "
+    # TODO: Can we drop this special Feature? No idea what it is used for. (defaults to "_")
+    return {"class": " ", "style": "; "}.get(key, "_")
+
+
+def normalize_css_spec(css_classes: CSSSpec | str | None) -> list[str]:
+    match css_classes:
+        case [*css_specs]:
+            return [c for c in css_specs if c is not None]
+        case str(single_css_class):
+            return [single_css_class]
+        case _:
+            return []
+
+
+def _attrs_with_normalized_class(attrs: HTMLTagAttributes) -> HTMLTagAttributes:
+    normalized = {}
+    css = []
+
+    for key, value in attrs.items():
+        if key in _SUPPORTED_CSS_CLASS_KEYS:
+            css += normalize_css_spec(value)
         else:
-            if key == "class":
-                sep = " "
-            elif key == "style" or key.startswith("on"):
-                sep = "; "
-            else:
-                # TODO: Can we drop this special Feature? No idea what it is used for.
-                sep = "_"
+            normalized[key] = value
 
-            joined_value = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
+    if css:
+        normalized["class"] = css
 
-            # TODO: Can we drop this special feature? Find an cleanup the call sites
-            if sep.startswith(";"):
-                joined_value = re.sub(";+", ";", joined_value)
-
-            v = joined_value
-
-        yield f' {key}="{v}"'
-
-    for k in options:
-        yield " %s=''" % k
-
-
-def normalize_css_spec(css_classes: CSSSpec) -> list[str]:
-    if isinstance(css_classes, list):
-        return [c for c in css_classes if c is not None]
-
-    if css_classes is not None:
-        return [css_classes]
-
-    return []
-
-
-def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> list[str]:
-    # make class attribute foolproof
-    css: list[str] = []
-    for k in ["class_", "css", "cssclass", "class"]:
-        if k in attrs:
-            cls_spec = cast(CSSSpec, attrs.pop(k))
-            css += normalize_css_spec(cls_spec)
-    return css
+    return normalized

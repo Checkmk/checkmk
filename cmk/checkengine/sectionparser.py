@@ -212,9 +212,13 @@ def store_piggybacked_sections(
         if host_key.source_type is SourceType.MANAGEMENT:
             # management board (SNMP or IPMI) does not support piggybacking
             continue
-
+        now = time.time()
         store_piggyback_raw_data(
-            host_key.hostname, host_sections.piggybacked_raw_data, time.time(), omd_root
+            host_key.hostname,
+            host_sections.piggybacked_raw_data,
+            message_timestamp=now,
+            contact_timestamp=now if host_sections.piggybacked_raw_data else None,
+            omd_root=omd_root,
         )
 
 

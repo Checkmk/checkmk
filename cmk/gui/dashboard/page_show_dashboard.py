@@ -22,6 +22,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.hooks import call as call_hooks
@@ -402,11 +403,20 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | s
             return output_funnel.drain()
 
         crash_handler.handle_exception_as_gui_crash_report(
-            details={
-                "dashlet_id": dashlet.dashlet_id,
-                "dashlet_type": dashlet.type_name(),
-                "dashlet_spec": dashlet.dashlet_spec,
-            }
+            details=GUIDetails(
+                dashlet_id=dashlet.dashlet_id,
+                dashlet_type=dashlet.type_name(),
+                dashlet_spec=dashlet.dashlet_spec,
+                page="unknown",
+                vars={},
+                username=None,
+                user_agent="unknown",
+                referer="unknown",
+                is_mobile=False,
+                is_ssl_request=False,
+                language="unknown",
+                request_method="unknown",
+            )
         )
         return output_funnel.drain()
 

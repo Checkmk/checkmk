@@ -1,34 +1,39 @@
+# Specify the image to use as a base.
+# Make sure to adjust `DISTRO_CODENAME` if you change this.
 ARG IMAGE_CMK_BASE
 # hadolint ignore=DL3006
 FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
-# Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.4.0b1"
-ARG CMK_EDITION
+# Ports:
+# 5000 - Serves the Checkmk GUI
+# 6557 - Serves Livestatus (if enabled via "omd config")
+EXPOSE 5000 6557
+
+# When all processes of the site are running everything should be fine
+HEALTHCHECK --interval=1m --timeout=5s \
+    CMD omd status || exit 1
 
 # The following variables can be set during container init (docker run -e KEY=val)
-ARG CMK_SITE_ID
 ENV CMK_SITE_ID="cmk"
 # Set this to "on" to enable livestatus via network
-ARG CMK_LIVESTATUS_TCP
 ENV CMK_LIVESTATUS_TCP=""
 # A random password will be generated in case you don't set this
-ARG CMK_PASSWORD
 ENV CMK_PASSWORD=""
 
 # Specify the FQDN of your relay mail server to sent mails to
-ARG MAIL_RELAY_HOST
 ENV MAIL_RELAY_HOST=""
 
 # Set a timezone
 ENV TZ=""
 
-ARG DISTRO_CODENAME="jammy"
-
 # Add helper variable to better detect when running inside container.
 # Used e.g. for omd update
 ENV CMK_CONTAINERIZED="TRUE"
+
+COPY docker-entrypoint.sh /
+# Starts the entrypoint script and hands over CMD by default
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
@@ -65,6 +70,12 @@ RUN set -e \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages
 
+# Pure build time variable declarations (docker build --build-arg KEY=val)
+ARG CMK_VERSION="2.5.0b1"
+ARG CMK_EDITION
+# Distro codename is used to find the corresponding .deb package
+ARG DISTRO_CODENAME="jammy"
+
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.
 COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.${DISTRO_CODENAME}*.deb Check_MK-pubkey.gpg /
@@ -98,16 +109,3 @@ LABEL \
     org.opencontainers.image.vendor="Checkmk GmbH" \
     org.opencontainers.image.source="https://github.com/checkmk/checkmk" \
     org.opencontainers.image.url="https://checkmk.com/"
-
-# Ports:
-# 5000 - Serves the Checkmk GUI
-# 6557 - Serves Livestatus (if enabled via "omd config")
-EXPOSE 5000 6557
-
-# When all processes of the site are running everything should be fine
-HEALTHCHECK --interval=1m --timeout=5s \
-    CMD omd status || exit 1
-
-COPY docker-entrypoint.sh /
-# Starts the entrypoint script and hands over CMD by default
-ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
+from typing import override
 
 import libcst as cst
 import libcst.matchers as m
@@ -24,6 +24,7 @@ STRIP_OPTIONAL = [
 
 # Soothe mypy as we cannot influence order of attributes
 class DataclassArgAppender(cst.CSTTransformer):
+    @override
     def leave_Decorator(
         self, original_node: cst.Decorator, updated_node: cst.Decorator
     ) -> cst.Decorator:
@@ -37,6 +38,7 @@ class DataclassArgAppender(cst.CSTTransformer):
 
 
 class EnumString(cst.CSTTransformer):
+    @override
     def leave_ClassDef(
         self, original_node: cst.ClassDef, updated_node: cst.ClassDef
     ) -> cst.ClassDef:
@@ -51,17 +53,20 @@ class EnumString(cst.CSTTransformer):
 
 class OptionalRemover(cst.CSTTransformer):
     def __init__(self) -> None:
-        self.current_class: Optional[str] = None
+        self.current_class: str | None = None
 
+    @override
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
         self.current_class = node.name.value
 
+    @override
     def leave_ClassDef(
         self, original_node: cst.ClassDef, updated_node: cst.ClassDef
     ) -> cst.ClassDef:
         self.current_class = None
         return updated_node
 
+    @override
     def leave_AnnAssign(
         self, original_node: cst.AnnAssign, updated_node: cst.AnnAssign
     ) -> cst.AnnAssign:

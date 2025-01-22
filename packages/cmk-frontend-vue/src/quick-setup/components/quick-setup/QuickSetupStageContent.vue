@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
+import QuickSetupStageContentError from './QuickSetupStageContentError.vue'
 
 const props = defineProps<QuickSetupStageContent>()
 
@@ -55,9 +55,7 @@ const invokeAction = (waitLabel: string, action: () => void) => {
   <div>
     <component :is="content" v-if="content" />
 
-    <AlertBox v-if="errors && errors.length > 0" variant="error">
-      <p v-for="error in errors" :key="error">{{ error }}</p>
-    </AlertBox>
+    <QuickSetupStageContentError :errors="errors" />
 
     <div v-if="showButtons">
       <div v-if="!loading" class="qs-stage-content__action">
@@ -91,6 +89,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
 .qs-stage-content__action {
   padding-top: var(--spacing);
   position: relative;
+}
+
+.qs-stage-content__action > button {
+  margin-right: 8px;
 }
 
 .qs-stage-content__loading {

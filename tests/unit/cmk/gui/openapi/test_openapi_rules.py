@@ -139,14 +139,13 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
-    r = clients.Rule.create(
+    clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("filesystem"),
         value_raw=value_raw,
         conditions={},
         folder="~",
         properties={"disabled": False, "description": "API2I"},
     )
-    print(r)
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:

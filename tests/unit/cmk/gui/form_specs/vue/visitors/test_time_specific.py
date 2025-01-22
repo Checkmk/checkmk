@@ -5,7 +5,6 @@
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.private import TimeSpecific
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
     DEFAULT_VALUE,
@@ -21,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Integer,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def time_specific_int_spec() -> TimeSpecific:
@@ -103,10 +103,10 @@ def test_time_specific_wrapping_error(
     )
 
     validation_messages = visitor.validate(
-        {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25})]}
+        {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25, "baff": 24})]}
     )
     assert len(validation_messages) == 1
-    assert validation_messages[0].invalid_value == {"bar": 25}
+    assert validation_messages[0].invalid_value == {}
 
     _spec, frontend_value = visitor.to_vue(
         {"tp_default_value": {"foo": 25}, "tp_values": [("24X7", {"bar": 25})]}

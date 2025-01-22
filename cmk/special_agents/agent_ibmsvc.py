@@ -255,4 +255,4 @@ def _check_ssh_result(result: subprocess.CompletedProcess) -> None:
 
     # Quite strange.. Why not simply print stdout?
     for line in lines:
-        print(line)
+        sys.stdout.write(line + "\n")

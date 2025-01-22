@@ -7,9 +7,9 @@ import subprocess
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.integration.linux_test_host import create_linux_test_host
+
+from tests.testlib.site import Site
 
 from cmk.ccc import version as cmk_version
 
@@ -59,7 +59,7 @@ check_info["test_check_3"] = LegacyCheckDefinition(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = _AutochecksSerializer().deserialize(

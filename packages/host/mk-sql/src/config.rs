@@ -18,7 +18,13 @@ pub struct CheckConfig {
 
 impl CheckConfig {
     pub fn load_file(file: &Path) -> Result<Self> {
-        let data = yaml::load_from_file(file)?;
+        CheckConfig::load_vec_yaml(yaml::load_from_file(file)?)
+    }
+    pub fn load_str(content: &str) -> Result<Self> {
+        CheckConfig::load_vec_yaml(yaml::load_from_str(content)?)
+    }
+
+    fn load_vec_yaml(data: Vec<yaml::Yaml>) -> Result<Self> {
         if data.is_empty() {
             bail!("Not yaml document");
         }
@@ -35,32 +41,19 @@ impl CheckConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lazy_static::lazy_static;
-    use std::path::PathBuf;
 
-    lazy_static! {
-        static ref YML_MINI_FILE: PathBuf = PathBuf::new()
-            .join("tests")
-            .join("files")
-            .join("test-mini.yml");
-        static ref NOT_YAML_FILE: PathBuf = PathBuf::new()
-            .join("tests")
-            .join("files")
-            .join("not-yaml.txt");
-        static ref NO_MSSQL_FILE: PathBuf = PathBuf::new()
-            .join("tests")
-            .join("files")
-            .join("no-mssql.yml");
-    }
+    static YML_MINI_FILE: &str = include_str!("../tests/files/test-mini.yml");
+    static NOT_YAML_FILE: &str = include_str!("../tests/files/not-yaml.yml");
+    static NO_MSSQL_FILE: &str = include_str!("../tests/files/no-mssql.yml");
 
     #[test]
     fn test_check_config() {
-        assert!(CheckConfig::load_file(&NOT_YAML_FILE).is_err());
-        assert!(CheckConfig::load_file(&NO_MSSQL_FILE)
+        assert!(CheckConfig::load_str(NOT_YAML_FILE).is_err());
+        assert!(CheckConfig::load_str(NO_MSSQL_FILE)
             .unwrap()
             .ms_sql()
             .is_none());
-        assert!(CheckConfig::load_file(&YML_MINI_FILE)
+        assert!(CheckConfig::load_str(YML_MINI_FILE)
             .unwrap()
             .ms_sql()
             .is_some());

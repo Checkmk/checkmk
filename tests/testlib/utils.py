@@ -242,7 +242,7 @@ def run(
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    with tracer.start_as_current_span("run", attributes={"cmk.command": repr(args_)}):
+    with tracer.span("run", attributes={"cmk.command": repr(args_)}):
         return subprocess.run(args_, check=check, **kwargs)
 
 
@@ -264,7 +264,7 @@ def execute(
 
     kwargs["encoding"] = encoding
 
-    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+    with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
 
 
@@ -309,7 +309,7 @@ def _extend_command(
         else cmd
     )
     cmd_ = sudo_cmd + user_cmd
-    logging.info("Executing command: %s", shlex.join(cmd_))
+    logging.debug("Executing command: %s", shlex.join(cmd_))
     return cmd_
 
 
@@ -427,7 +427,7 @@ def check_output(
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+    with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.check_output(cmd_, **kwargs)
 
 
@@ -511,7 +511,7 @@ def get_services_with_status(
             {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}.get(state, "UNDEFINED"),
             pformat(services),
         )
-    services_list = set(_ for _ in services_by_state[service_status] if _ not in skipped_services)
+    services_list = {_ for _ in services_by_state[service_status] if _ not in skipped_services}
     return services_list
 
 
@@ -520,7 +520,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
     logger.info("Waiting for %r to finish for %ds", condition, timeout)
     while time.time() - start < timeout:
         if condition():
-            logger.info("Wait for %r finished after %ss", condition, time.time() - start)
+            logger.info("Wait for %r finished after %0.2fs", condition, time.time() - start)
             return  # Success. Stop waiting...
         time.sleep(interval)
 
@@ -534,7 +534,7 @@ def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[
     logger.info("Parsing logs for '%s' in %s", pattern, pathname)
     match_dict: dict[str, list[str]] = {}
     for file_path in glob.glob(str(pathname), recursive=True):
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             for line in file:
                 if pattern_obj.search(line):
                     logger.info("Match found in %s: %s", file_path, line.strip())

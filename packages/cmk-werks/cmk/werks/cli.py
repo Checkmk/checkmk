@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage werks"""
 
-# pylint: disable=too-many-lines
-
 import argparse
 import ast
 import datetime
@@ -35,7 +33,7 @@ from .parse import WerkV2ParseResult
 class WerkId:
     __slots__ = ("__id",)
 
-    def __init__(self, id: int):  # pylint: disable=redefined-builtin
+    def __init__(self, id: int):  # noqa: A002
         self.__id = id
 
     @override
@@ -296,7 +294,7 @@ BASE_DIR = ""
 
 
 def goto_werksdir() -> None:
-    global BASE_DIR  # pylint: disable=global-statement
+    global BASE_DIR
     BASE_DIR = os.path.abspath(".")
     while not os.path.exists(".werks") and os.path.abspath(".") != "/":
         os.chdir("..")
@@ -328,7 +326,7 @@ def load_werks() -> dict[WerkId, Werk]:
         if (werk_id := entry.name.removesuffix(".md")).isdigit():
             try:
                 werks[WerkId(int(werk_id))] = load_werk(entry)
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except Exception as e:
                 sys.stderr.write(f"ERROR: Skipping invalid werk {werk_id}: {e}\n")
     return werks
 
@@ -351,7 +349,7 @@ def git_modified_files() -> set[WerkId]:
             try:
                 wid = line.rsplit("/", 1)[-1].strip()
                 modified.add(WerkId(int(wid)))
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
                 pass
     return modified
 
@@ -504,7 +502,7 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write(f"\n{werk.content.description}\n")
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
+def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
@@ -621,7 +619,7 @@ def main_show(args: argparse.Namespace) -> None:
     if "all" in args.ids:
         ids = list(load_werks().keys())
     else:
-        ids = [WerkId(id) for id in args.ids] or [get_last_werk()]
+        ids = [WerkId(i) for i in args.ids] or [get_last_werk()]
 
     for wid in ids:
         if wid != ids[0]:
@@ -870,7 +868,7 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
             # validate the werk, to make sure the commit part at the bottom will work
             cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
             break
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:
             sys.stdout.write(initial_werk_text + "\n\n")
             sys.stdout.write(traceback.format_exc() + "\n\n")
             sys.stdout.write(
@@ -978,7 +976,7 @@ def get_werk_ids() -> list[WerkId]:
             WerkId(i)
             for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8"))
         ]
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         return []
 
 

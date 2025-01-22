@@ -3,6 +3,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+@use "_mixins" as *;
+
 /*-------------------------------------------------------------------------.
 |                     __        ___  _____ ___                             |
 |                     \ \      / / \|_   _/ _ \                            |
@@ -476,6 +478,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 
   .title {
     position: absolute;
+    line-height: 17px; // prevents text from cut of on top
     right: 20px;
     bottom: -4px;
     left: 20px;
@@ -728,6 +731,10 @@ div.filter_buttons {
     width: 317px;
     padding: $spacing 0 0;
     border: $wato-a-border;
+
+    &.large {
+      height: 110px;
+    }
   }
 
   div {

@@ -46,6 +46,8 @@ from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredS
 
 __all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
 
+type _Labels = Mapping[str, str]
+
 
 def execute_checkmk_checks(
     *,
@@ -64,7 +66,7 @@ def execute_checkmk_checks(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
-    get_check_period: Callable[[ServiceName], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
@@ -198,14 +200,16 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
-    get_check_period: Callable[[ServiceName], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
         s
         for s in services
         if s.check_plugin_name in run_plugin_names
-        and not service_outside_check_period(s.description, get_check_period(s.description))
+        and not service_outside_check_period(
+            s.description, get_check_period(s.description, s.labels)
+        )
     ):
         if service.check_plugin_name not in check_plugins:
             yield AggregatedResult(

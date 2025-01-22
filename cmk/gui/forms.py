@@ -16,9 +16,9 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 g_header_open = False
 g_section_open = False

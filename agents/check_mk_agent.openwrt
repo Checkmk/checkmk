@@ -39,6 +39,14 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
+}
+
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -352,7 +360,7 @@ section_cpu() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b1"
+    echo "Version: 2.5.0b1"
     echo "AgentOS: openwrt"
     echo "Hostname: $(cat /proc/sys/kernel/hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -589,7 +597,7 @@ section_diskstat() {
     grep -E ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
-        dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+        sudo_as_root dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
     fi
     if [ -d /dev/vx/dsk ]; then
         echo '[vx_dsk]'
@@ -877,7 +885,7 @@ section_postfix() {
         fi
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 }
 
@@ -1546,6 +1554,8 @@ main_setup() {
     if "${DISABLE_STDERR:-true}"; then
         exec 2>/dev/null
     fi
+
+    init_sudo
 
     set_up_get_epoch
 

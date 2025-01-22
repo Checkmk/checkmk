@@ -138,7 +138,7 @@ def agent_mqtt_main(args: Args) -> int:
     except RuntimeError as e:
         if args.debug:
             raise
-        print(str(e), file=sys.stderr)
+        sys.stderr.write(str(e) + "\n")
         return 1
 
     with SectionWriter("mqtt_statistics") as writer:

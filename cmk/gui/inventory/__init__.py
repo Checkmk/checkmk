@@ -7,14 +7,10 @@ from __future__ import annotations
 
 import json
 import shutil
-import time
-import xml.dom.minidom
 from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal, TypedDict
-
-import dicttoxml  # type: ignore[import-untyped]
 
 import livestatus
 
@@ -40,7 +36,7 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
-from . import _rulespec
+from . import _rulespec, _xml
 from ._history import (
     FilteredInventoryHistoryPaths,
     FilterInventoryHistoryPathsError,
@@ -204,8 +200,7 @@ def _write_json(resp):
 
 
 def _write_xml(resp):
-    unformated_xml = dicttoxml.dicttoxml(resp)
-    dom = xml.dom.minidom.parseString(unformated_xml)
+    dom = _xml.dict_to_document(resp)
     response.set_data(dom.toprettyxml())
 
 

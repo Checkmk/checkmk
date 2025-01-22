@@ -3,6 +3,133 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
+
+_CMK_SERVER_CONDITION = RuleConditionsSpec(
+    host_label_groups=[("and", [("and", "cmk/check_mk_server:yes"), ("and", "")])]
+)
+
+_SHIPPED_RULE_OPTIONS = RuleOptionsSpec(
+    disabled=False,
+    comment=(
+        "This rule is shipped with Checkmk."
+        " It is added to give insights on the resource usage of Checkmk servers."
+        " If you do not want these services, consider disabling this rule, rather than deleting it."
+        " If you delete all of these rules, they might come back after an update.\n"
+    ),
+)
+
+_PS_COMMON_OPTS = {"user": False, "default_params": {"cpu_rescale_max": True}}
+
+PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
+    {
+        "id": id_,
+        "value": {"descr": f"%u {ps_name}", "match": match, **_PS_COMMON_OPTS},
+        "condition": _CMK_SERVER_CONDITION,
+        "options": {
+            "description": f"Shipped rule to monitor sites {ps_name}",
+            **_SHIPPED_RULE_OPTIONS,
+        },
+    }
+    for id_, ps_name, match in [
+        (
+            "94a0ead4-a9d8-428d-8b06-10b9f3b5fe26",
+            "active check helpers",
+            "~/omd/sites/[^/]+/lib/cmc/checkhelper",
+        ),
+        (
+            "94190e27-2836-488a-b6b4-e13f694a455e",
+            "agent receiver",
+            "~gunicorn:.*cmk.agent_receiver",
+        ),
+        (
+            "6b3a78b3-b4e9-4aca-b427-2f656809bf49",
+            "alert helper",
+            "~python3 /omd/sites/[^/]+/bin/cmk --handle-alerts --keepalive$",
+        ),
+        (
+            "7eda3d76-62ff-4ff6-b84b-a26ce202c577",
+            "apache",
+            "~.*/omd/sites/[^/]+/etc/apache/apache.conf$",
+        ),
+        (
+            "feaa2248-08b8-47a3-bc3c-a5502d2b9f3a",
+            "checker helpers",
+            "~python3 /omd/sites/[^/]+/bin/cmk --checker",
+        ),
+        (
+            "9440a0b2-5eb2-4f52-ac4b-17c6ddecd1f2",
+            "cmc",
+            "~/omd/sites/[^/]+/bin/cmc",
+        ),
+        (
+            "f56e8b7a-98f0-4597-a030-1f1f6dc2347d",
+            "dcd",
+            "~dcd",
+        ),
+        (
+            "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7",
+            "event console",
+            "~python3 /omd/sites/[^/]+/bin/mkeventd$",
+        ),
+        (
+            "0846dd4c-cc62-4adf-9400-7f20a651f996",
+            "fetcher helpers",
+            "~python3 /omd/sites/[^/]+/bin/fetcher",
+        ),
+        (
+            "9e123cf5-3717-47a1-ba7a-b00f9ede3435",
+            "jaeger",
+            "~/omd/sites/[^/]+/bin/jaeger",
+        ),
+        (
+            "df8832aa-3054-4a62-96b8-d960381e6726",
+            "livestatus proxy",
+            "~liveproxyd",
+        ),
+        (
+            "f64f23d9-55c5-490c-a7dd-b38a108155e2",
+            "notification spooler",
+            "~python3 /omd/sites/[^/]+/bin/mknotifyd$",
+        ),
+        (
+            "459dd81c-cd2c-40bb-ac43-d25440778e7a",
+            "notify helper",
+            "~python3 /omd/sites/[^/]+/bin/cmk --notify --keepalive$",
+        ),
+        (
+            "aa86dbc4-c390-48f7-b0ed-44231aa79b7c",
+            "piggyback hub",
+            "~python3 /omd/sites/[^/]+/bin/cmk-piggyback-hub$",
+        ),
+        (
+            "65a3dca4-8d71-45d8-8887-53ef0c63d06f",
+            "rabbitmq",
+            "~(/omd/versions/.*/lib/erlang|.*bin/rabbitmq)",
+        ),
+        (
+            "b0d6dc83-fd0e-4382-921b-94415b353eaf",
+            "real-time helper",
+            "~python3 /omd/sites/[^/]+/bin/cmk --keepalive --real-time-checks$",
+        ),
+        (
+            "33e44415-a74c-4146-a6c7-65473eff71ca",
+            "redis-server",
+            "~/omd/sites/[^/]+/bin/redis-server",
+        ),
+        (
+            "0bd2b6cc-bc5c-4244-9658-928870f68f35",
+            "rrd helper",
+            "~python3 /omd/sites/[^/]+/bin/cmk --create-rrd --keepalive$",
+        ),
+        (
+            "bf1601b9-69bb-4f1d-8384-e5e057069656",
+            "rrdcached",
+            "~/omd/sites/[^/]+/bin/rrdcached",
+        ),
+    ]
+]
+
 
 # Rules that match the host tag definition from `sample_tag_config`
 SHIPPED_RULES = {
@@ -156,13 +283,14 @@ SHIPPED_RULES = {
     "inventory_df_rules": [
         {
             "id": "b0ee8a51-703c-47e4-aec4-76430281604d",
-            "condition": {"host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]},
+            "condition": _CMK_SERVER_CONDITION,
             "value": {
                 "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                 "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
             },
         },
     ],
+    "inventory_processes_rules": PS_DISCOVERY_RULES,
 }
 
 

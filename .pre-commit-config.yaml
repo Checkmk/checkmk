@@ -1,6 +1,6 @@
 #
 # This is the configuration file for the pre-commit framework.
-# To use this you need to install it seperately and activate it for your repository.
+# To use this you need to install it separately and activate it for your repository.
 # To do so issue the following commands:
 #
 #     pip3 install pre-commit
@@ -17,10 +17,13 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/charliermarsh/ruff-pre-commit
-      rev: 'v0.4.4'
+      rev: "v0.8.3"
       hooks:
-        - id: ruff
-        - id: ruff-format
+          - id: ruff
+          - id: ruff-format
+          # Run ruff import sorting
+          - id: ruff
+            args: [--select, I, --fix]
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
@@ -46,7 +49,7 @@ repos:
     - repo: https://github.com/gitleaks/gitleaks
       rev: v8.16.1
       hooks:
-        - id: gitleaks
+          - id: gitleaks
     - repo: local
       hooks:
           - id: check-cmk-namespace
@@ -62,7 +65,7 @@ repos:
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high
-            entry: scripts/run-pipenv run bandit --config bandit.yaml -ll
+            entry: scripts/run-uvenv bandit --config bandit.yaml -ll
             language: script
             types: [file, python]
           - id: omd-python-modules
@@ -73,16 +76,11 @@ repos:
             types: [file]
           - id: sphinx
             name: Sphinx Documentation
-            entry: scripts/run-pipenv run make -C doc/documentation html
+            entry: make -C doc/documentation html
             files: ^doc/documentation/.*(rst|puml)$
             pass_filenames: false
             language: script
             types: [file]
-          - id: pylint
-            name: Check pylint
-            entry: scripts/check-pylint
-            language: script
-            types: [file, python]
           - id: doctest
             name: Doctests
             entry: scripts/run-doctests
@@ -104,12 +102,6 @@ repos:
             entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
           - id: unittest
             name: unittests
             entry: scripts/run-unittests
@@ -129,10 +121,10 @@ repos:
             language: script
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
-          - id: pipfile-locking
-            name: Pipfile.lock
-            entry: scripts/run-pipenv verify
+          - id: requirements-locking
+            name: requirements locking
+            entry: bazel test //:requirements_test
             pass_filenames: false
-            language: script
-            files: Pipfile
+            language: system
+            files: ^requirements.*\.txt$
             verbose: true

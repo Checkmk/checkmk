@@ -2,17 +2,17 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.private import Catalog, Topic
-from cmk.gui.form_specs.vue.shared_type_defs import ValidationMessage
+from cmk.gui.form_specs.private.catalog import TopicElement
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 
 def test_catalog_validation_simple(
@@ -21,18 +21,16 @@ def test_catalog_validation_simple(
     with_user: tuple[UserId, str],
 ) -> None:
     spec = Catalog(
-        topics=[
-            Topic(
-                name="some_key",
-                dictionary=Dictionary(
-                    elements={
-                        "key": DictElement(
-                            parameter_form=String(custom_validate=[LengthInRange(5, None)])
-                        )
-                    }
-                ),
+        elements={
+            "some_key": Topic(
+                title=Title("some_key title"),
+                elements={
+                    "key": TopicElement(
+                        parameter_form=String(custom_validate=[LengthInRange(5, None)])
+                    )
+                },
             )
-        ]
+        }
     )
     visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
 
@@ -54,12 +52,16 @@ def test_catalog_validation_simple(
 
 def test_catalog_serializes_empty_topics_to_disk() -> None:
     spec = Catalog(
-        topics=[
-            Topic(
-                name="some_topic",
-                dictionary=Dictionary(elements={"key": DictElement(parameter_form=String())}),
+        elements={
+            "some_topic": Topic(
+                title=Title("some_key title"),
+                elements={
+                    "key": TopicElement(
+                        parameter_form=String(custom_validate=[LengthInRange(5, None)])
+                    )
+                },
             )
-        ]
+        }
     )
     visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
 

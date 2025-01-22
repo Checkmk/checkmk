@@ -151,7 +151,7 @@ def test_get_tracer_after_initialized() -> None:
         service_instance_id="instance",
     )
 
-    tracer = trace.get_tracer()
+    tracer = trace.get_tracer()._tracer  # noqa: SLF001
     assert isinstance(tracer, sdk_trace.Tracer)
     assert tracer.instrumentation_info.name == "cmk.trace"
     assert tracer.instrumentation_info.version == ""
@@ -167,7 +167,7 @@ def test_get_tracer_verify_provider_attributes() -> None:
         host_name="myhost",
     )
 
-    tracer = trace.get_tracer()
+    tracer = trace.get_tracer()._tracer  # noqa: SLF001
     assert isinstance(tracer, sdk_trace.Tracer)
 
     assert tracer.resource.attributes["service.name"] == "service"
@@ -196,7 +196,7 @@ def test_get_current_span_with_span() -> None:
         service_name="service",
         service_instance_id="instance",
     )
-    with trace.get_tracer().start_as_current_span("test") as span:
+    with trace.get_tracer().span("test") as span:
         assert trace.get_current_span() == span
 
 
@@ -220,7 +220,7 @@ def test_logs_initialize_attaches_logs_as_events(caplog: pytest.LogCaptureFixtur
             service_name="service",
             service_instance_id="instance",
         )
-        with trace.get_tracer().start_as_current_span("test") as span:
+        with trace.get_tracer().span("test") as span:
             logger.info("HELLO")
             assert isinstance(span, sdk_trace.ReadableSpan)
             assert len(span.events) == 1

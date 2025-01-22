@@ -4,17 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.multiline_text import MultilineTextVisitor
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
-from ._type_defs import EmptyValue
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from ._type_defs import InvalidValue
 
 
 class CommentTextAreaVisitor(MultilineTextVisitor):
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue[str]
     ) -> tuple[shared_type_defs.CommentTextArea, str]:
         multiline_text, value = super()._to_vue(raw_value, parsed_value)
         multiline_text_args = asdict(multiline_text)

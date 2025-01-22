@@ -5,11 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
-import { Label } from '@/components/ui/label'
+import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import type { QuickSetupStageProps } from './quick_setup_types'
 
@@ -21,38 +21,38 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
 const onClickGoTo = computed(() =>
   !!props.goToThisStage && props.currentStage > props.index ? () => props.goToThisStage!() : null
 )
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
   <li
     class="qs-stage"
     :class="{
-      'qs-stage-active': isSelectedStage && props.mode !== 'overview',
-      'qs-stage-complete': isCompleted && props.mode !== 'overview'
+      'qs-stage--active': isSelectedStage && props.mode !== 'overview',
+      'qs-stage--complete': isCompleted && props.mode !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
   >
     <div class="qs-stage__content">
-      <Label variant="title" :on-click="onClickGoTo">{{ title }}</Label>
-      <Label v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</Label>
+      <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
+      <CmkLabel v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</CmkLabel>
 
       <ErrorBoundary v-if="isCompleted && recapContent">
         <component :is="recapContent" />
       </ErrorBoundary>
 
-      <Collapsible :open="isOpen">
-        <CollapsibleContent>
-          <QuickSetupStageContent
-            :index="index"
-            :number-of-stages="numberOfStages"
-            :loading="loading"
-            :mode="mode"
-            :errors="errors"
-            :actions="actions"
-            :content="content || null"
-          />
-        </CollapsibleContent>
-      </Collapsible>
+      <CmkCollapsible :open="isOpen">
+        <QuickSetupStageContent
+          :index="index"
+          :number-of-stages="numberOfStages"
+          :loading="loading"
+          :mode="mode"
+          :errors="errors"
+          :actions="actions"
+          :content="content || null"
+        />
+      </CmkCollapsible>
     </div>
   </li>
 </template>
@@ -91,12 +91,12 @@ const onClickGoTo = computed(() =>
     background-color: var(--qs-stage-line-color);
   }
 
-  &.qs-stage-active:before,
-  &.qs-stage-complete:before {
+  &.qs-stage--active:before,
+  &.qs-stage--complete:before {
     background-color: var(--success-dimmed);
   }
 
-  &.qs-stage-active:after {
+  &.qs-stage--active:after {
     background: linear-gradient(
       to bottom,
       var(--success-dimmed) 50px,
@@ -104,7 +104,7 @@ const onClickGoTo = computed(() =>
     );
   }
 
-  &.qs-stage-complete {
+  &.qs-stage--complete {
     pointer-events: none;
 
     &:before {

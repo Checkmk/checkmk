@@ -8,29 +8,7 @@ set -e
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
-SOURCES=(
-    python/vue_formspec_components.py
-    python/configuration_entity.py
-    python/notifications.py
-    python/graph_designer.py
-    typescript/vue_formspec_components.ts
-    typescript/configuration_entity.ts
-    typescript/notifications.ts
-    typescript/graph_designer.ts
-)
-# you should also modify the following files if you change something here!
-# buildscripts/scripts/stages.yml
-# packages/cmk-frontend-vue/.prettierignore
-DESTINATIONS=(
-    ../../cmk/gui/form_specs/vue/shared_type_defs.py
-    ../../cmk/gui/watolib/configuration_entity/type_defs.py
-    ../../cmk/gui/watolib/notification_types.py
-    ../../cmk/gui/graphing/cee/_graph_designer_type_defs.py
-    ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
-    ../../packages/cmk-frontend-vue/src/form/components/configuration_entity.ts
-    ../../packages/cmk-frontend-vue/src/notification/type_defs.ts
-    ../../packages/cmk-frontend-vue/src/graph-designer/type_defs.ts
-)
+PYTHON_DESTINATION=../../cmk/shared_typing
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -121,28 +99,43 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv_uv/bin/activate
+    source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
-setup_node_modules() {
-    test -d "node_modules" && return
-    npm ci --yes --unsafe-perm --audit=false
+npm_install_dependencies() {
+    npm \
+        ci \
+        --yes \
+        --unsafe-perm \
+        --audit=false
+}
+
+npm_dependencies_installed() {
+    npm ls --all &>/dev/null
+}
+
+setup_npm() {
+    test "${SETUP_NPM_RAN}" = "yes" && return
+    npm_dependencies_installed || npm_install_dependencies
+    echo "npm version $(npm --version)"
+    echo "node version $(node --version)"
+    SETUP_NPM_RAN=yes
 }
 
 setup() {
     setup_venv
-    setup_node_modules
+    setup_npm
 }
 
 run_clean() {
-    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules
-    find python -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
+    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules typescript
 }
 
 run_build() {
     setup
-    mkdir -p python typescript
+    rm -rf typescript
+    mkdir -p typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
     for file in source/*.json; do
@@ -152,7 +145,7 @@ run_build() {
         if [[ "$file" == "source/graph_designer.json" ]]; then
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
-                --output "python/${target_base}.py" \
+                --output "${PYTHON_DESTINATION}/cee/${target_base}.py" \
                 --target-python-version 3.12 \
                 --output-model-type=pydantic.BaseModel \
                 --collapse-root-models \
@@ -175,7 +168,7 @@ run_build() {
         else
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
-                --output "python/${target_base}.py" \
+                --output "${PYTHON_DESTINATION}/${target_base}.py" \
                 --target-python-version 3.12 \
                 --output-model-type=dataclasses.dataclass \
                 --use-field-description \
@@ -198,29 +191,20 @@ run_build() {
 
     if [ "$CI" == "true" ]; then
         echo "Checking if the generated files are up-to-date..."
-    else
-        echo "Copying the generated files..."
+        git diff --exit-code typescript
+        git diff --exit-code ${PYTHON_DESTINATION}
     fi
-
-    for i in "${!SOURCES[@]}"; do
-        SOURCE=${SOURCES[$i]}
-        DESTINATION=${DESTINATIONS[$i]}
-        if [ "$CI" == "true" ]; then
-            # this is a hack, we should create another "copy" or "diff" target
-            diff "$SOURCE" "$DESTINATION"
-        else
-            cp "$SOURCE" "$DESTINATION"
-        fi
-    done
 
     echo "Done."
 }
 
 run_check_format() {
+    setup
     npm run prettier -- -c source/
 }
 
 run_format() {
+    setup
     npm run prettier -- -w source/
 }
 

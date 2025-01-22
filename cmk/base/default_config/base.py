@@ -307,7 +307,9 @@ check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
 check_periods: list[RuleSpec[str]] = []
-snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
+snmp_check_interval: list[
+    RuleSpec[tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]]
+] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
@@ -351,5 +353,3 @@ logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []
-
-ruleset_matching_stats = False

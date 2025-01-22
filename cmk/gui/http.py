@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
+
 """Wrapper layer between WSGI and GUI application code"""
 
 import ast
@@ -309,6 +311,7 @@ class Request(
 
     # TODO investigate why there are so many form_parts
     max_form_parts = 20000
+    max_form_memory_size = 20 * 1024 * 1024
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

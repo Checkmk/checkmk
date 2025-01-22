@@ -4,13 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 export function makeFloat(title: string, label: string): FormSpec.Float {
   return {
     type: 'float',
     title: title,
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     unit: null,
     label: label,
@@ -27,6 +28,8 @@ export function makeString(
     type: 'string',
     title: title,
     help: '',
+    label: null,
+    i18n_base: { required: 'required' },
     validators: [],
     input_hint: inputHint,
     field_size: 'MEDIUM',
@@ -65,6 +68,7 @@ export function makeSingleChoice(
     type: 'single_choice',
     title: title,
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     elements: elements,
     no_elements_text: '',
@@ -82,6 +86,7 @@ export function makeDictionary(
     type: 'dictionary',
     title: title,
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     elements: elements,
     groups: [],
@@ -99,6 +104,7 @@ export function makeCascadingSingleChoice(
     type: 'cascading_single_choice',
     title: title,
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     elements: elements,
     label: null,

@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
@@ -21,6 +21,7 @@ const spec: FormSpec.Float = {
   type: 'float',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   label: 'fooLabel',
   unit: 'fooUnit',
@@ -39,6 +40,18 @@ test('FormFloat renders value', () => {
   const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
 
   expect(element.value).toBe('42.5')
+})
+
+test('FormFloat renders required', () => {
+  render(FormFloat, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+
+  screen.getByText(/required/)
 })
 
 test('FormFloat updates data', async () => {

@@ -107,6 +107,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     parse_license_state,
 )
+from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -855,7 +856,18 @@ class ModeDistributedMonitoring(WatoMode):
         login_id = request.get_ascii_input("_login")
         if login_id:
             return self._action_login(SiteId(login_id))
+
+        if trigger_certs_site_id := request.get_ascii_input("_trigger_certs_creation"):
+            return self._action_trigger_certs(SiteId(trigger_certs_site_id))
+
         return None
+
+    def _action_trigger_certs(self, trigger_certs_site_id: SiteId) -> ActionResult:
+        configured_sites = self._site_mgmt.load_sites()
+        site = configured_sites[trigger_certs_site_id]
+        trigger_remote_certs_creation(trigger_certs_site_id, site, True)
+        flash(_("Remote broker certificates created for site %s.") % trigger_certs_site_id)
+        return redirect(mode_url("sites"))
 
     def _action_delete(self, delete_id: SiteId) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
@@ -954,6 +966,8 @@ class ModeDistributedMonitoring(WatoMode):
                 message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
+                trigger_remote_certs_creation(login_id, site)
+
                 _audit_log.log_audit("edit-site", message)
                 flash(message)
                 return redirect(mode_url("sites"))
@@ -1198,6 +1212,14 @@ class ModeDistributedMonitoring(WatoMode):
         self, table: Table, site_id: SiteId, site: SiteConfiguration
     ) -> None:
         table.cell("Message broker connection")
+        if is_replication_enabled(site):
+            login_url = make_action_link([("mode", "sites"), ("_trigger_certs_creation", site_id)])
+            html.icon_button(
+                login_url,
+                _("Create remote broker certificates"),
+                "recreate_broker_certificate",
+            )
+
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
         if is_replication_enabled(site):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
@@ -1313,7 +1335,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                     "The configuration checks against the local site"
                 )
             else:
-                connection_status = check_remote_connection(omd_root, remote_host, remote_port)
+                connection_status = check_remote_connection(
+                    omd_root, remote_host, remote_port, site["id"]
+                )
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
@@ -1542,7 +1566,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
-            domains=[config_variable.domain()()],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
 
@@ -1719,7 +1743,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
-            domains=[config_variable.domain()()],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
         save_global_settings(

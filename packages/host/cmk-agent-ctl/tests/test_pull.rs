@@ -10,11 +10,13 @@ use anyhow::{bail, Context, Result as AnyhowResult};
 use cmk_agent_ctl::{certs as lib_certs, configuration::config, site_spec};
 use common::agent;
 use common::certs::{self, X509Certs};
+use rustls::crypto::ring::default_provider;
 use std::io::{Read, Result as IoResult, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::atomic;
+use std::sync::Arc;
 use tokio::process::{Child, Command};
 
 const PULL_BASE_PORT: u16 = 9970;
@@ -74,14 +76,18 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
         .unwrap_err();
     let stderr = std::str::from_utf8(&output_err.as_output().unwrap().stderr)?;
     assert!(stderr.contains("Could not initialize TLS"));
-    assert!(stderr.contains("The server certificate is not valid for the given name"));
+    assert!(stderr.contains("invalid peer certificate: NotValidForName"));
 
     test_dir
         .close()
         .context("Failed to remove temporary test directory")
 }
 
-fn tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConnection {
+fn tls_client_connection(
+    config_builder: rustls::ConfigBuilder<rustls::ClientConfig, rustls::WantsVerifier>,
+    certs: X509Certs,
+    address: String,
+) -> rustls::ClientConnection {
     let root_cert =
         lib_certs::rustls_certificate(&String::from_utf8(certs.ca_cert).unwrap()).unwrap();
     let client_cert =
@@ -91,18 +97,17 @@ fn tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConne
             .unwrap();
 
     let mut root_cert_store = rustls::RootCertStore::empty();
-    root_cert_store.add(&root_cert).unwrap();
+    root_cert_store.add(root_cert.clone()).unwrap();
 
     let client_chain = vec![client_cert, root_cert];
 
     let client_config = std::sync::Arc::new(
-        rustls::ClientConfig::builder()
-            .with_safe_defaults()
+        config_builder
             .with_root_certificates(root_cert_store)
             .with_client_auth_cert(client_chain, private_key)
             .unwrap(),
     );
-    let server_name = rustls::client::ServerName::try_from(address).unwrap();
+    let server_name = rustls::pki_types::ServerName::try_from(address).unwrap();
 
     rustls::ClientConnection::new(client_config, server_name).unwrap()
 }
@@ -241,6 +246,8 @@ async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
         "test_pull_tls_main_ipv4",
         IpAddr::V4(Ipv4Addr::LOCALHOST),
         PULL_BASE_PORT,
+        rustls::ClientConfig::builder_with_provider(Arc::new(default_provider()))
+            .with_safe_default_protocol_versions()?,
     )
     .await
 }
@@ -251,11 +258,18 @@ async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
         "test_pull_tls_main_ipv6",
         IpAddr::V6(Ipv6Addr::LOCALHOST),
         PULL_BASE_PORT + 1,
+        rustls::ClientConfig::builder_with_provider(Arc::new(default_provider()))
+            .with_safe_default_protocol_versions()?,
     )
     .await
 }
 
-async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowResult<()> {
+async fn _test_pull_tls_main(
+    prefix: &str,
+    ip_addr: IpAddr,
+    port: u16,
+    client_config_builder: rustls::ConfigBuilder<rustls::ClientConfig, rustls::WantsVerifier>,
+) -> AnyhowResult<()> {
     if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
@@ -278,8 +292,11 @@ async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> Anyhow
 
     // Talk to the pull thread successfully
     let mut message_buf: Vec<u8> = vec![];
-    let mut client_connection =
-        tls_client_connection(trust_fixture.certs.clone(), &trust_fixture.uuid);
+    let mut client_connection = tls_client_connection(
+        client_config_builder.clone(),
+        trust_fixture.certs.clone(),
+        trust_fixture.uuid,
+    );
 
     let socket_addr = SocketAddr::new(ip_addr, p);
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
@@ -290,8 +307,11 @@ async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> Anyhow
     assert_eq!(message_buf, agent_stream_fixture.compressed_agent_output()?);
 
     // Talk to the pull thread using an unknown uuid
-    let mut client_connection =
-        tls_client_connection(trust_fixture.certs.clone(), "certainly_wrong_uuid");
+    let mut client_connection = tls_client_connection(
+        client_config_builder.clone(),
+        trust_fixture.certs.clone(),
+        "certainly_wrong_uuid".into(),
+    );
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");

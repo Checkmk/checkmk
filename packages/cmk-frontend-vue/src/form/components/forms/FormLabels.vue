@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { X } from 'lucide-vue-next'
 import { onBeforeUpdate, ref, watch } from 'vue'
-import AutoComplete from './AutoComplete.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import { inputSizes } from '../utils/sizes'
 
 type StringMapping = Record<string, string>
 
@@ -126,37 +127,30 @@ const deleteItem = (item: string) => {
       </span>
     </li>
   </ul>
-  <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
-    <AutoComplete
+  <div
+    v-if="
+      !props.spec.autocompleter ||
+      !props.spec.max_labels ||
+      keyValuePairs.length < props.spec.max_labels
+    "
+  >
+    <!-- In formLabel, the size on input is a fixed size -->
+    <FormAutocompleter
+      :size="inputSizes['MEDIUM'].width"
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
       :filter-on="keyValuePairs"
-      @item-selected="addItem"
+      :resest-input-on-add="true"
+      @select="addItem"
     />
   </div>
   <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>
   <FormValidation :validation="validation"></FormValidation>
-
-  <Transition name="fade">
-    <div v-if="error" class="error">{{ error }}</div>
-  </Transition>
+  <div v-if="error" class="error">{{ error }}</div>
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.2s ease-out,
-    transform 0.2s ease-out;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
-}
-
 .label-list {
   list-style-type: none;
   padding: 0;
@@ -168,6 +162,10 @@ const deleteItem = (item: string) => {
     background-color: var(--default-form-element-bg-color);
     margin: 5px 0;
     padding: 2px;
+
+    &:focus-within {
+      background-color: var(--default-form-element-border-color);
+    }
   }
 }
 
@@ -179,6 +177,10 @@ table.nform input {
 .item {
   height: 8px;
   background-color: var(--default-form-element-bg-color);
+
+  &:focus {
+    background-color: var(--default-form-element-border-color);
+  }
 }
 
 .new-item {
@@ -201,7 +203,6 @@ table.nform input {
   width: 10px;
   height: 10px;
   border: none;
-  transition: background-color 0.3s;
 
   &:hover {
     background-color: #c77777;
@@ -217,33 +218,5 @@ table.nform input {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-}
-
-.autocomplete {
-  position: relative;
-}
-
-.suggestions {
-  position: absolute;
-  z-index: 1;
-  color: var(--font-color);
-  background-color: var(--default-form-element-bg-color);
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  max-width: fit-content;
-  margin: 0;
-  padding: 0 16px 0 0;
-  list-style-type: none;
-
-  li {
-    padding: 4px 8px;
-    cursor: pointer;
-
-    &:hover,
-    &.selected {
-      color: var(--default-select-hover-color);
-    }
-  }
 }
 </style>

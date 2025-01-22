@@ -21,7 +21,6 @@ from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
 from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.response_schemas import BackgroundJobStatus
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.openapi.utils import serve_json
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -31,8 +30,6 @@ from cmk.gui.watolib.parent_scan import (
     start_parent_scan,
     WhereChoices,
 )
-
-from cmk import fields
 
 
 @Endpoint(

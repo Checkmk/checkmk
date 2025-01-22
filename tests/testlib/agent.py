@@ -166,7 +166,13 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time
         wait_until(
-            lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
+            lambda: execute(
+                [ctl_path.as_posix(), "dump"],
+                sudo=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).wait()
+            == 0,
             timeout=30,
             interval=0.1,
         )
@@ -298,7 +304,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
     waiting_cycles = 30
     for _ in range(waiting_cycles):
         time.sleep(waiting_time)
-        baking_status = central_site.openapi.get_baking_status()
+        baking_status = central_site.openapi.agents.get_baking_status()
         assert baking_status.state in (
             "initialized",
             "running",
@@ -369,10 +375,10 @@ def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
         yield
     finally:
         deleted = False
-        if site.openapi.get_host(hostname):
+        if site.openapi.hosts.get(hostname):
             logger.info("Delete created host %s", hostname)
-            site.openapi.delete_host(hostname)
+            site.openapi.hosts.delete(hostname)
             deleted = True
 
         if deleted:
-            site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

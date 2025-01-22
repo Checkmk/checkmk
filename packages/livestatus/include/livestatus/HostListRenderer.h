@@ -11,7 +11,6 @@
 
 #include "livestatus/ListColumn.h"
 
-class ListRenderer;
 enum class HostState;
 
 namespace column::host_list {

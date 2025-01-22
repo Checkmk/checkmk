@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 
-import type { SingleChoice } from '@/form/components/vue_formspec_components'
+import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -18,6 +18,7 @@ function getSingleChoiceSpec(): SingleChoice {
     type: 'single_choice',
     title: '',
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     no_elements_text: '',
     frozen: false,

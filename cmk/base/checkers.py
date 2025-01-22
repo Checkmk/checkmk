@@ -120,6 +120,8 @@ __all__ = [
     "SpecialAgentFetcher",
 ]
 
+type _Labels = Mapping[str, str]
+
 
 def _fetch_all(
     sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
@@ -164,14 +166,12 @@ class CMKParser:
         self,
         factory: ParserFactory,
         *,
-        checking_sections: Callable[[HostName], Iterable[SectionName]],
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         self.factory: Final = factory
         self.selected_sections: Final = selected_sections
-        self.checking_sections: Final = checking_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
 
@@ -196,7 +196,6 @@ class CMKParser:
                     self.factory,
                     source.hostname,
                     source.fetcher_type,
-                    checking_sections=self.checking_sections(source.hostname),
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         fetcher_type=source.fetcher_type,
@@ -629,7 +628,9 @@ def _compute_final_check_parameters(
     config = PostprocessingConfig(
         only_from=lambda: config_cache.only_from(host_name),
         prediction=make_prediction,
-        service_level=lambda: config_cache.effective_service_level(host_name, service.description),
+        service_level=lambda: config_cache.effective_service_level(
+            host_name, service.description, service.labels
+        ),
         host_name=str(host_name),
         service_name=str(service.description),
     )
@@ -648,7 +649,9 @@ def _get_check_function(
     assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            *config_cache.get_clustered_service_configuration(
+                host_name, service.description, service.labels
+            ),
             plugin=plugin,
             service_id=service.id(),
             value_store_manager=value_store_manager,
@@ -757,7 +760,7 @@ def _get_monitoring_data_kwargs(
     source_type: SourceType | None = None,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> tuple[Mapping[str, object], UnsubmittableServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
@@ -773,7 +776,7 @@ def _get_monitoring_data_kwargs(
         nodes = _get_clustered_service_node_keys(
             host_name,
             source_type,
-            service.description,
+            service,
             cluster_nodes=cluster_nodes,
             get_effective_host=get_effective_host,
         )
@@ -799,14 +802,18 @@ def _get_monitoring_data_kwargs(
 def _get_clustered_service_node_keys(
     cluster_name: HostName,
     source_type: SourceType,
-    service_descr: ServiceName,
+    service: ConfiguredService,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
     used_nodes = (
-        [nn for nn in cluster_nodes if cluster_name == get_effective_host(nn, service_descr)]
+        [
+            nn
+            for nn in cluster_nodes
+            if cluster_name == get_effective_host(nn, service.description, service.labels)
+        ]
         or cluster_nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
@@ -825,7 +832,7 @@ def get_aggregated_result(
     *,
     parameters: Mapping[str, object],
     rtc_package: AgentRawData | None,
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.

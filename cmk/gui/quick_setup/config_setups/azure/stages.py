@@ -10,7 +10,6 @@ from cmk.ccc.i18n import _
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -43,15 +42,42 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 
-from cmk.plugins.azure.rulesets import (  # pylint: disable=cmk-module-layer-violation
-    azure,
-)
+from cmk.plugins.azure.rulesets import azure  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, Dictionary
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
 PREV_BUTTON_LABEL = _("Back")
+
+
+FIRST_LEVEL_DICT_TITLES: dict[str, Title] = {
+    "proxy": Title("HTTP proxy"),
+    "piggyback_vms": Title("Map data"),
+    "import_tags": Title("Tags"),
+}
+
+
+def _add_first_level_keys_to_config_dict(
+    config_dict: Mapping[str, DictElement],
+) -> Mapping[str, DictElement]:
+    """This ensures we have required first level keys, i.e. keys without a leading checkbox.
+    The duplicate keys are later removed in azure_transform_to_disk()."""
+    return {
+        **config_dict,
+        **{
+            key: DictElement(
+                parameter_form=Dictionary(
+                    title=title,
+                    elements={key: config_dict[key]},
+                ),
+                required=True,
+            )
+            for key, title in FIRST_LEVEL_DICT_TITLES.items()
+            if key in config_dict
+        },
+    }
 
 
 def _collect_params_for_connection_test(
@@ -61,7 +87,9 @@ def _collect_params_for_connection_test(
     The agent option "--connection-test" is added, running only a connection via the Management API
     client (none via the Graph API client)."""
     return {
-        **collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form),
+        **azure_transform_to_disk(
+            collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
+        ),
         "connection_test": True,
     }
 
@@ -97,7 +125,9 @@ def configure_authentication() -> QuickSetupStage:
             FormSpecWrapper(
                 id=FormSpecId("credentials"),
                 form_spec=DictionaryExtended(
-                    elements=azure.configuration_authentication(),
+                    elements=_add_first_level_keys_to_config_dict(
+                        azure.configuration_authentication()
+                    ),
                     layout=DictionaryLayout.two_columns,
                     prefill=DefaultValue({"subscription": ""}),
                 ),
@@ -119,6 +149,7 @@ def configure_authentication() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and authority"),
+                run_in_background=True,
             ),
         ],
     )
@@ -161,7 +192,9 @@ def _configure() -> Sequence[Widget]:
                 FormSpecWrapper(
                     id=FormSpecId("configure_advanced"),
                     form_spec=DictionaryExtended(
-                        elements=azure.configuration_advanced(),
+                        elements=_add_first_level_keys_to_config_dict(
+                            azure.configuration_advanced()
+                        ),
                         layout=DictionaryLayout.two_columns,
                     ),
                 ),
@@ -241,7 +274,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
 
 
 def action(
-    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -257,10 +292,26 @@ def action(
             raise ValueError(f"Unknown mode {mode}")
 
 
+def azure_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
+    # "Unwrap" config dicts where we introduced duplicate first level keys before
+    transformed = dict(params)
+    for key in FIRST_LEVEL_DICT_TITLES:
+        if key in transformed:
+            tmp_dict = transformed[key]
+            assert isinstance(tmp_dict, dict)
+            if key in tmp_dict:
+                transformed[key] = tmp_dict[key]
+            else:
+                del transformed[key]
+    return transformed
+
+
 def azure_collect_params(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
-    return collect_params_from_form_data(all_stages_form_data, parameter_form)
+    return azure_transform_to_disk(
+        collect_params_from_form_data(all_stages_form_data, parameter_form)
+    )
 
 
 quick_setup_azure = QuickSetup(
@@ -277,6 +328,7 @@ quick_setup_azure = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            run_in_background=True,
         ),
     ],
 )

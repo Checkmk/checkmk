@@ -1,5 +1,5 @@
 {
-    "command_line": "BAZEL_CMD=../../scripts/run-bazel.sh TERM=xterm ./run --clean --all",
+    "command_line": "BAZEL_CMD=../../scripts/run-bazel.sh ./run --clean --all",
     "maintainers": ["team-prj-engelbart@checkmk.com"],
     "dependencies": [".werks/"]
 }

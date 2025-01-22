@@ -87,7 +87,7 @@ def _get_context_parameter(raw_context: PluginNotificationContext) -> Errors | C
         "PARAMETER_MODEM_TYPE",
         "PARAMETER_URL",
         "PARAMETER_USERNAME",
-        "PARAMETER_PASSWORD",
+        "PARAMETER_PASSWORD_1",
     ]:
         if mandatory not in raw_context:
             missing_params.append(mandatory)

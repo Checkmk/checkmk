@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from itertools import repeat
 from typing import Self
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -47,6 +48,19 @@ from ._metric_expression import (
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
+type Quantity = (
+    str
+    | metrics_api.Constant
+    | metrics_api.WarningOf
+    | metrics_api.CriticalOf
+    | metrics_api.MinimumOf
+    | metrics_api.MaximumOf
+    | metrics_api.Sum
+    | metrics_api.Product
+    | metrics_api.Difference
+    | metrics_api.Fraction
+)
+
 
 @dataclass(frozen=True)
 class _MetricNamesOrScalars:
@@ -58,21 +72,7 @@ class _MetricNamesOrScalars:
         | metrics_api.MaximumOf
     ]
 
-    def collect_quantity_names(
-        self,
-        quantity: (
-            str
-            | metrics_api.Constant
-            | metrics_api.WarningOf
-            | metrics_api.CriticalOf
-            | metrics_api.MinimumOf
-            | metrics_api.MaximumOf
-            | metrics_api.Sum
-            | metrics_api.Product
-            | metrics_api.Difference
-            | metrics_api.Fraction
-        ),
-    ) -> None:
+    def collect_quantity_names(self, quantity: Quantity) -> None:
         match quantity:
             case str():
                 self._metric_names.append(quantity)
@@ -186,19 +186,7 @@ class _EvaluatedQuantity:
 
 
 def _evaluate_quantity(
-    quantity: (
-        str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
-    ),
-    translated_metrics: Mapping[str, TranslatedMetric],
+    quantity: Quantity, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> _EvaluatedQuantity:
     match quantity:
         case str():
@@ -617,26 +605,10 @@ def _make_projection(
     assert False, focus_range
 
 
-def _filter_segments(
-    segments: Sequence[
-        str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
-    ],
-    translated_metrics: Mapping[str, TranslatedMetric],
+def _evaluate_segments(
+    segments: Iterable[Quantity], translated_metrics: Mapping[str, TranslatedMetric]
 ) -> Sequence[_EvaluatedQuantity]:
-    return [
-        evaluated
-        for segment in segments
-        if (evaluated := _evaluate_quantity(segment, translated_metrics)).value > 0
-    ]
+    return [_evaluate_quantity(segment, translated_metrics) for segment in segments]
 
 
 def _project_segments(
@@ -644,14 +616,29 @@ def _project_segments(
     segments: Sequence[_EvaluatedQuantity],
     themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
-    total = sum(s.value for s in segments)
-    total_projection = projection(total)
+    """Compute which portion of the perfometer needs to be filled with which color.
+
+    The sum of the segments determines the total portion of the perfometer that is filled.
+    This really only makes sense if the represent positve values, but we try to compute this
+    in a way that at least does not crash in the general case.
+    """
+    value_total = sum(s.value for s in segments)
+    filled_total = projection(value_total)  # ∈ [0.0, 100.0]
+
+    projected_values = [projection(s.value) for s in segments]  # ∈ [0.0, 100.0]
+    projected_values_sum = sum(projected_values)  # >= 0.0
+    segments_share_of_filled = (
+        repeat(0.0, len(segments))
+        if projected_values_sum == 0.0
+        else [(p / projected_values_sum) for p in projected_values]
+    )
+
     projections = [
         (
-            round(total_projection * (entry.value / total), 2),
+            round(filled_total * share, 2),
             entry.color,
         )
-        for entry in segments
+        for entry, share in zip(segments, segments_share_of_filled, strict=True)
     ]
     projections.append(
         (
@@ -722,7 +709,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 _PERFOMETER_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _filter_segments(
+            _evaluate_segments(
                 self.perfometer.segments,
                 self.translated_metrics,
             ),
@@ -775,7 +762,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _filter_segments(
+            _evaluate_segments(
                 self.perfometer.left.segments,
                 self.translated_metrics,
             ),
@@ -792,7 +779,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _filter_segments(
+            _evaluate_segments(
                 self.perfometer.right.segments,
                 self.translated_metrics,
             ),

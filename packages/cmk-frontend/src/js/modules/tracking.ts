@@ -21,7 +21,7 @@ export const currentUrl = window.location.pathname + window.location.search;
 export async function activate_tracking(
     url: string,
     startTime: number,
-    backendDuration: number
+    backendDuration: number,
 ) {
     // Expected to be called once all resources have been loaded.
     const fullyLoaded = Date.now() - startTime;
@@ -31,7 +31,7 @@ export async function activate_tracking(
         document.body,
         startTime,
         2000,
-        isMouseoverMutation
+        isMouseoverMutation,
     );
 
     const db: IDBDatabase = await openDatabase();
@@ -49,20 +49,20 @@ export async function activate_tracking(
         db,
         url,
         `${prefix}rendered[backend]`,
-        backendDuration
+        backendDuration,
     );
     await storePageLoadMetric(
         db,
         url,
         `${prefix}rendered[backend+load]`,
-        backendDuration + fullyLoaded
+        backendDuration + fullyLoaded,
     );
     const lastMutation = await mutationWaiter;
     await storePageLoadMetric(
         db,
         url,
         `${prefix}rendered[backend+load+mutations]`,
-        backendDuration + lastMutation
+        backendDuration + lastMutation,
     );
 
     if (repeat && repeat.times > 0) {
@@ -74,7 +74,7 @@ export async function activate_tracking(
 
 async function getRepeat(
     db: IDBDatabase,
-    url: string
+    url: string,
 ): Promise<repeatUrlsEntry | null> {
     const transaction = db.transaction([repeatUrlsTable], "readwrite");
     const store = transaction.objectStore(repeatUrlsTable);
@@ -83,7 +83,7 @@ async function getRepeat(
 
 async function setRepeat(
     db: IDBDatabase,
-    repeat: repeatUrlsEntry
+    repeat: repeatUrlsEntry,
 ): Promise<repeatUrlsEntry> {
     const transaction = db.transaction([repeatUrlsTable], "readwrite");
     const store = transaction.objectStore(repeatUrlsTable);
@@ -94,7 +94,7 @@ async function storePageLoadMetric(
     db: IDBDatabase,
     url: string,
     metricName: string,
-    loadTime: number
+    loadTime: number,
 ) {
     const transaction = db.transaction([metricsTable], "readwrite");
     const store = transaction.objectStore(metricsTable);
@@ -113,7 +113,7 @@ function waitForMutationsToStop(
     observedElement: Node,
     startTime: number,
     timeoutDuration: number,
-    isIgnoredMutation: IsIgnoredMutation
+    isIgnoredMutation: IsIgnoredMutation,
 ): Promise<number> {
     return new Promise(resolve => {
         let lastMutationTime: number = Date.now();
@@ -168,7 +168,7 @@ export async function abortrepeat() {
 
 export async function repeat(
     times: number,
-    prefix = ""
+    prefix = "",
 ): Promise<repeatUrlsEntry> {
     const db = await openDatabase();
 
@@ -194,7 +194,7 @@ export async function nukeDataFromOrbit() {
 
         const clearRequest = store.clear();
         clearRequest.onsuccess = onSuccess(resolve, () =>
-            console.warn("Nuking data: done.")
+            console.warn("Nuking data: done."),
         );
         clearRequest.onerror = onError(reject);
     });
@@ -221,7 +221,7 @@ export async function clearData() {
                 cursor.continue();
             } else {
                 console.warn(
-                    `Clearing all data: ${deletedRows} records deleted.`
+                    `Clearing all data: ${deletedRows} records deleted.`,
                 );
                 resolve(deletedRows);
             }

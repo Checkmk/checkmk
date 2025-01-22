@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         "--version-regex",
         help="regex used to validate the version in the werk",
         default=r"^\d.\d.\d([ipb]\d+)?$",
-        type=lambda x: re.compile(x),  # pylint: disable=unnecessary-lambda
+        type=lambda x: re.compile(x),
     )
     parser.add_argument(
         "--werk-config",

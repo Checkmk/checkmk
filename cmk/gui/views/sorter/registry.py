@@ -9,17 +9,18 @@ from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import EmptyCell, painter_registry
+from cmk.gui.painter.v0 import EmptyCell, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
-from cmk.gui.utils.theme import theme
 
 from .base import Sorter
+from .host_tag_sorters import host_tag_config_based_sorters
 
 
 class SorterRegistry(Registry[Sorter]):
@@ -28,6 +29,10 @@ class SorterRegistry(Registry[Sorter]):
 
 
 sorter_registry = SorterRegistry()
+
+
+def all_sorters(config: Config) -> dict[str, Sorter]:
+    return dict(sorter_registry.items()) | host_tag_config_based_sorters(config.tags.tag_groups)
 
 
 # Kept for pre 1.6 compatibility.
@@ -69,7 +74,7 @@ def declare_1to1_sorter(
     sorter_registry.register(
         Sorter(
             ident=painter_name,
-            title=painter.title(EmptyCell(None, None)),
+            title=painter.title(EmptyCell(None, None, None)),
             columns=painter.columns,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))

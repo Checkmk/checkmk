@@ -108,7 +108,7 @@ def agent_activemq_main(args: Args) -> int:
         sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)
         return 1
 
-    print("\n".join(output_lines))
+    sys.stdout.write("\n".join(output_lines) + "\n")
     return 0
 
 

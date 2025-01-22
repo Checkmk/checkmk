@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import argparse
 import configparser
@@ -38,8 +38,8 @@ from collections import defaultdict
 from urllib.parse import quote_plus
 
 try:
-    from collections.abc import Iterable  # pylint: disable=unused-import,ungrouped-imports
-    from typing import Any  # pylint: disable=unused-import
+    from collections.abc import Iterable  # noqa: F401
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 

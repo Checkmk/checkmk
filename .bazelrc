@@ -1,6 +1,11 @@
 # https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
 try-import %workspace%/user.bazelrc
 
+# The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
+# Jenkins job (or a user) in the form of:
+# common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
+try-import %workspace%/remote.bazelrc
+
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
 common --experimental_remote_cache_async
@@ -17,6 +22,7 @@ common --@//:filesystem_layout=lsb
 common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
 common --remote_upload_local_results=false
+common --lockfile_mode=error
 
 ## For specific commands
 # Always require debug info.
@@ -43,9 +49,8 @@ common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
 common:ci --extra_toolchains="//bazel/toolchains/cc:ci"
-common:ci --local_resources=cpu=HOST_CPUS
+common:ci --local_resources=cpu=HOST_CPUS*.21
 common:ci --local_resources=memory=HOST_RAM*.67
-common:ci --lockfile_mode=error
 # the later flags will override the previous flags
 # upload artifacts only from CI, CMK-18656
 common:ci --remote_upload_local_results=true
@@ -69,8 +74,6 @@ build:ci --@rules_python//python/config_settings:bootstrap_impl=script
 # Flags for Debug builds
 # Definition of "bazel x --config=debug -- ..."
 ## Common
-common:debug --sandbox_debug
-common:debug --subcommands=pretty_print
 common:debug --announce_rc
 # gRPC errors provide stack trace as well
 common:debug --verbose_failures
@@ -105,6 +108,19 @@ build:iwyu --@bazel_iwyu//:iwyu_mappings=//bazel/tools:iwyu_mappings
 ################################################################################
 build:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
 build:mypy --output_groups=mypy
+
+################################################################################
+# Example: bazel build --config=clippy //packages/host/cmk-agent-ctl:all
+################################################################################
+build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build:clippy --output_groups=+clippy_checks
+build:clippy --@rules_rust//:clippy_flags=-Dwarnings
+
+################################################################################
+# Example: bazel build --config=rustfmt //packages/site/check-http:all
+################################################################################
+build:rustfmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build:rustfmt --output_groups=+rustfmt_checks
 
 # Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
 # (see https://blog.aspect.build/bazelrc-flags)

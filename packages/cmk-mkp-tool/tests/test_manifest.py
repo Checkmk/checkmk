@@ -12,7 +12,7 @@ import pytest
 from cmk.mkp_tool import PackageName, PackagePart, PackageVersion
 from cmk.mkp_tool._mkp import Manifest, read_manifest_optionally
 
-TEST_MANIFEST = Manifest(  # type: ignore[call-arg]  # mypy is wrong :-(
+TEST_MANIFEST = Manifest(
     title="Unit test package",
     name=PackageName("test_package"),
     description="A nice package to test with. Also I want to thank my grandma.",

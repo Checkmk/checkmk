@@ -5,9 +5,9 @@
 
 #include "livestatus/opids.h"
 
-#include <algorithm>
 #include <functional>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -40,9 +40,9 @@ const std::unordered_map<std::string_view, RelationalOperator> fl_from_string =
 std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp) {
     // Slightly inefficient, but this doesn't matter for our purposes. We could
     // use Boost.Bimap or use 2 maps if really necessary.
-    auto it = std::find_if(
-        fl_from_string.cbegin(), fl_from_string.cend(),
-        [&](const auto &strAndOp) { return strAndOp.second == relOp; });
+    auto it = std::ranges::find_if(fl_from_string, [&](const auto &strAndOp) {
+        return strAndOp.second == relOp;
+    });
     return it == fl_from_string.cend() ? os : (os << it->first);
 }
 

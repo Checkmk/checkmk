@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """This module contains functionality for dealing with X509 certificates.
 
 At the moment, only certificates based on RSA keys are supported.
@@ -75,7 +75,7 @@ class CertificateWithPrivateKey(NamedTuple):
     private_key: PrivateKey
 
     @classmethod
-    def generate_self_signed(  # pylint: disable=too-many-arguments
+    def generate_self_signed(
         cls,
         *,
         common_name: str,
@@ -100,7 +100,7 @@ class CertificateWithPrivateKey(NamedTuple):
             [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
         )
 
-        certificate = Certificate._create(
+        certificate = Certificate._create(  # noqa: SLF001
             subject_public_key=private_key.public_key,
             subject_name=name,
             subject_alt_dns_names=alt_names,
@@ -139,7 +139,7 @@ class CertificateWithPrivateKey(NamedTuple):
         if passphrase is not None:
             if (
                 key_match := re.search(
-                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",  # pylint: disable=line-too-long
+                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",
                     content,
                 )
             ) is None:
@@ -159,7 +159,7 @@ class CertificateWithPrivateKey(NamedTuple):
             private_key=key,
         )
 
-    def issue_new_certificate(  # pylint: disable=too-many-arguments
+    def issue_new_certificate(
         self,
         *,
         common_name: str,
@@ -185,7 +185,7 @@ class CertificateWithPrivateKey(NamedTuple):
             [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
         )
 
-        issued_certificate = Certificate._create(
+        issued_certificate = Certificate._create(  # noqa: SLF001
             subject_public_key=issued_key.public_key,
             subject_name=issued_name,
             subject_alt_dns_names=issued_alt_names,
@@ -216,7 +216,7 @@ class CertificateWithPrivateKey(NamedTuple):
         if (cn := csr.subject.common_name) is None:
             raise ValueError("common name is expected for CSRs")
 
-        return Certificate._create(
+        return Certificate._create(  # noqa: SLF001
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
             subject_alt_dns_names=[x509.DNSName(cn)],
@@ -319,7 +319,7 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def _create(  # pylint: disable=too-many-arguments
+    def _create(
         cls,
         *,
         # subject info
@@ -349,7 +349,7 @@ class Certificate:
             .not_valid_before(start_date)
             .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
-            .public_key(subject_public_key._key)
+            .public_key(subject_public_key._key)  # noqa: SLF001
         )
 
         # RFC 5280 4.2.1.9.  Basic Constraints
@@ -361,7 +361,8 @@ class Certificate:
         #     ...
         #     this extension SHOULD be included in all end entity certificates
         builder = builder.add_extension(
-            x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key), critical=False
+            x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key),  # noqa: SLF001
+            critical=False,
         )
 
         # RFC 5280 4.2.1.9.  Key Usage
@@ -400,11 +401,11 @@ class Certificate:
 
         hash_algo = (
             hash_.value
-            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))  # noqa: SLF001
             is not None
             else None
         )
-        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))
+        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))  # noqa: SLF001
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
@@ -488,7 +489,7 @@ class Certificate:
             )
 
         try:
-            self._cert.verify_directly_issued_by(signer._cert)
+            self._cert.verify_directly_issued_by(signer._cert)  # noqa: SLF001
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(str(e)) from e
 
@@ -725,12 +726,12 @@ class CertificateSigningRequest:
 
         hash_algo = (
             hash_.value
-            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))  # noqa: SLF001
             is not None
             else None
         )
         builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
-        return cls(builder.sign(subject_private_key._key, hash_algo))
+        return cls(builder.sign(subject_private_key._key, hash_algo))  # noqa: SLF001
 
     @property
     def subject(self) -> X509Name:

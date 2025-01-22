@@ -1218,11 +1218,11 @@ class PasswordIdent(base.String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class PasswordOwner(base.String):
-    """A field representing a password owner group"""
+class PasswordEditableBy(base.String):
+    """A field representing which group can edit a password"""
 
     default_error_messages = {
-        "invalid": "Specified owner value is not valid: {name!r}",
+        "invalid": "Specified contact group does not exist or you do not have the necessary permissions: {name!r}",
     }
 
     def __init__(
@@ -1240,17 +1240,18 @@ class PasswordOwner(base.String):
         )
 
     def _validate(self, value):
-        """Verify if the specified owner is valid for the logged-in user
+        """Verify if the specified editor is valid for the logged-in user
 
-        Non-admin users cannot specify admin as the owner
-
+        Non-admin users cannot specify admin as the editor
         """
         super()._validate(value)
-        permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
         if user.may("wato.edit_all_passwords"):
-            permitted_owners.append("admin")
+            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=False)]
+            permitted_group_ids.append("admin")
+        else:
+            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=True)]
 
-        if value not in permitted_owners:
+        if value not in permitted_group_ids:
             raise self.make_error("invalid", name=value)
 
 
@@ -1595,8 +1596,8 @@ __all__ = [
     "HostField",
     "HostnameOrIP",
     "MultiNested",
+    "PasswordEditableBy",
     "PasswordIdent",
-    "PasswordOwner",
     "PasswordShare",
     "PermissionField",
     "PythonString",

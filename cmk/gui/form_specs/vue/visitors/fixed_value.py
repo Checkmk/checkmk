@@ -7,35 +7,36 @@ from typing import TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FixedValue
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, EmptyValue
+from ._type_defs import InvalidValue
 from ._utils import (
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_title_and_help,
     localize,
 )
 
-T = TypeVar("T", int, float, str, bool, None)
+_FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
+_ParsedValueModel = int | float | str | bool | None
+_FrontendModel = int | float | str | bool | None
 
 
-class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
-    def _parse_value(self, raw_value: object) -> T | EmptyValue:
+class FixedValueVisitor(
+    FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FrontendModel]
+):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         return self.form_spec.value
 
-    def _validators(self) -> Sequence[Callable[[T], object]]:
+    def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[shared_type_defs.FixedValue, object]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.FixedValue, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.FixedValue(
@@ -45,20 +46,10 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
                 value=parsed_value,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
             ),
-            parsed_value,
+            self.form_spec.value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            # Note: this code should be unreachable, because the parse function always returns a valid value
-            return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid FixedValue")
-            )
-        return compute_validation_errors(compute_validators(self.form_spec), raw_value)
-
-    def _to_disk(self, raw_value: object, parsed_value: T | EmptyValue) -> T:
-        if isinstance(parsed_value, EmptyValue):
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
+        if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

@@ -37,13 +37,14 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
-        # Performance impact needs to be investigated (see CMK-19527)
-        # nosemgrep: type-adapter-detected
-        self.validator = TypeAdapter(spec_class)
+        self.spec_class = spec_class
 
     def validate(self, raw: object) -> _G:
         try:
-            return self.validator.validate_python(raw, strict=True)
+            # No performance impact - only called during cmk-update-config
+            return TypeAdapter(self.spec_class).validate_python(  # nosemgrep: type-adapter-detected
+                raw, strict=True
+            )
         except ValidationError as exc:
             raise ConfigValidationError(
                 which_file=self.name,
@@ -120,10 +121,16 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
             lock=lock,
         )
 
+    def save_for_snapshot(self, omd_root_path: Path, work_dir: Path, cfg: _D) -> None:
+        self._save_to_path(work_dir / self._config_file_path.relative_to(omd_root_path), cfg)
+
     def save(self, cfg: _D) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        self._save_to_path(self._config_file_path, cfg)
+
+    def _save_to_path(self, target_path: Path, cfg: _D) -> None:
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path),
+            str(target_path),
             self._config_variable,
             cfg,
             pprint_value=active_config.wato_pprint_config,

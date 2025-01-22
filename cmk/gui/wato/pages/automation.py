@@ -85,7 +85,7 @@ class PageAutomationLogin(AjaxPage):
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
-    @tracer.start_as_current_span("PageAutomationLogin.page")
+    @tracer.instrument("PageAutomationLogin.page")
     def page(self) -> PageResult:  # pylint: disable=useless-return
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
@@ -150,7 +150,7 @@ class PageAutomation(AjaxPage):
         with SuperUserContext():
             self._handle_exc(self.page)
 
-    @tracer.start_as_current_span("PageAutomation.page")
+    @tracer.instrument("PageAutomation.page")
     def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
         # the normal Setup page processing. This might not be needed for some
@@ -169,7 +169,7 @@ class PageAutomation(AjaxPage):
         return None
 
     def _execute_automation(self) -> None:
-        with tracer.start_as_current_span(f"_execute_automation[{self._command}]"):
+        with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
                 self._execute_cmk_automation()

@@ -79,6 +79,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.discover_plugins")),
             _in_component(imported=imported, component=Component("cmk.agent_based")),
             _in_component(imported=imported, component=Component("cmk.rulesets")),
+            _in_component(imported=imported, component=Component("cmk.shared_typing")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls")),
             _in_component(imported=imported, component=Component("cmk.werks")),
             _in_component(imported=imported, component=Component("cmk.messaging")),
@@ -86,6 +87,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.graphing")),
             _in_component(imported=imported, component=Component("cmk.trace")),
             _in_component(imported=imported, component=Component("cmk.events")),
+            _in_component(imported=imported, component=Component("cmk.otel_collector")),
         )
     )
 
@@ -211,7 +213,7 @@ def _allowed_for_base_cee(
         (
             _allowed_for_base(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.html_logs")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.html_log_dir")),
             _in_component(
                 imported=imported, component=Component("cmk.cee.robotmk.bakery.core_bakelets")
             ),
@@ -253,6 +255,7 @@ def _allow_for_gui(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.messaging")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
+            _in_component(imported=imported, component=Component("cmk.diskspace.config")),
         )
     )
 
@@ -274,9 +277,7 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.gui_registration")
-            ),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -297,9 +298,7 @@ def _allow_for_gui_cce(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.gui_registration")
-            ),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -319,9 +318,7 @@ def _allow_for_gui_cme(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.gui_registration")
-            ),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -338,9 +335,7 @@ def _allow_for_gui_cse(
                 _in_component(imported=imported, component=Component("cmk.gui"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.gui_registration")
-            ),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -395,7 +390,21 @@ def _allow_for_cmk_update_config(
             _in_component(imported=imported, component=Component("cmk.base")),
             _in_component(imported=imported, component=Component("cmk.gui")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk")),
+            _in_component(imported=imported, component=Component("cmk.diskspace.config")),
+            _in_component(imported=imported, component=Component("cmk.validate_config")),
+        )
+    )
+
+
+def _is_allowed_for_diskspace(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
             _in_component(imported=imported, component=Component("cmk.diskspace")),
+            _in_component(imported=imported, component=Component("cmk.ccc")),
         )
     )
 
@@ -659,6 +668,7 @@ _COMPONENTS = (
     (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_for_cmk_update_config),
+    (Component("cmk.validate_config"), _allow_default_plus_gui_and_base),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
@@ -670,6 +680,7 @@ _COMPONENTS = (
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
+    (Component("cmk.diskspace"), _is_allowed_for_diskspace),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -682,6 +693,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-wait-for-background-jobs"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),

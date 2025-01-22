@@ -11,7 +11,6 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
@@ -34,6 +33,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 class DummyNotificationParams(NotificationParameter):
@@ -82,8 +82,8 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
-            "parameter_properties": {"test_param": "bar"},
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+            "parameter_properties": {"method_parameters": {"test_param": "bar"}},
         },
     )
 
@@ -108,7 +108,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
         ),
         pytest.param(
             {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
                 "parameter_properties": {"test_param": ""},
             },
             id="empty value",
@@ -137,13 +137,17 @@ def test_get_notification_params_schema(registry: NotificationParameterRegistry)
     # THEN
     assert isinstance(default_values, dict)
     assert isinstance(default_values["parameter_properties"], dict)
-    assert default_values["parameter_properties"]["test_param"] == "some_default_value"
+    assert (
+        default_values["parameter_properties"]["method_parameters"]["test_param"]
+        == "some_default_value"
+    )
     assert isinstance(schema, shared_type_defs.Catalog)
-    assert schema.topics[0].name == "general"
-    assert schema.topics[1].name == "parameter_properties"
-    assert schema.topics[1].dictionary.elements[0].name == "test_param"
+    assert schema.elements[0].name == "general"
+    assert schema.elements[1].name == "parameter_properties"
+    assert schema.elements[1].elements[0].parameter_form.elements[0].name == "test_param"  # type: ignore[union-attr]
     assert isinstance(
-        schema.topics[1].dictionary.elements[0].parameter_form, shared_type_defs.String
+        schema.elements[1].elements[0].parameter_form.elements[0].parameter_form,  # type: ignore[union-attr]
+        shared_type_defs.String,
     )
 
 
@@ -195,7 +199,7 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
     assert param.description == "foo"
     assert param.data["general"]["description"] == "foo"
     # Ignore is needed because every plugin model has different keys (and not "test_param")
-    assert param.data["parameter_properties"]["test_param"] == "bar"
+    assert param.data["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
 
 @pytest.mark.usefixtures("request_context")
@@ -232,4 +236,6 @@ def test_get_notification_parameter_doesnt_just_return_from_disk(
 
     # THEN
     # Ignore is needed because every plugin model has different keys (and not "select_param")
-    assert data["parameter_properties"]["select_param"] == SingleChoiceVisitor.option_id("name1")
+    assert data["parameter_properties"]["method_parameters"][
+        "select_param"
+    ] == SingleChoiceVisitor.option_id("name1")

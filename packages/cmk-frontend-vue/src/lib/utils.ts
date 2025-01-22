@@ -21,3 +21,6 @@ export const localStorageHandler = {
 export function capitalizeFirstLetter(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
+
+export const wait = async (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms))

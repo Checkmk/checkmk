@@ -248,7 +248,9 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    if let Some(installdir) = setup_single_directory() {
+    if let Some(installdir) = setup_single_directory()
+        .context("Failed to initialize under single directory deployment")?
+    {
         return Ok(PathResolver::from_installdir(&installdir));
     }
 
@@ -269,7 +271,29 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(unix)]
-fn setup_single_directory() -> Option<PathBuf> {
+fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
+    let Some(installdir) = detect_installdir() else {
+        return Ok(None);
+    };
+
+    debug!("Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.", installdir);
+
+    let owning_uid = nix::unistd::Uid::from_raw(
+        std::fs::metadata(installdir.join("runtime").join("controller"))
+            .context("Could not determine agent user")?
+            .uid(),
+    );
+
+    become_user(UserRepr::Uid(owning_uid)).context(format!(
+        "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+        owning_uid
+    ))?;
+
+    Ok(Some(installdir))
+}
+
+#[cfg(unix)]
+fn detect_installdir() -> Option<PathBuf> {
     let exe = std::env::current_exe()
         .and_then(std::fs::canonicalize)
         .ok()?;
@@ -283,15 +307,6 @@ fn setup_single_directory() -> Option<PathBuf> {
     {
         return None;
     };
-
-    let owning_user = UserRepr::Uid(nix::unistd::Uid::from_raw(
-        std::fs::metadata(installdir.join("runtime").join("controller"))
-            .ok()?
-            .uid(),
-    ));
-
-    become_user(owning_user).ok()?;
-
     Some(installdir.to_owned())
 }
 

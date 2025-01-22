@@ -8,11 +8,6 @@ select = ["A", "ARG", "E", "F", "W", "C90", "PL", "RUF100", "UP", "SLF"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
-  # Ignore findings which are incompatible with our "import" techonology.
-  "F401", # 'FOO' imported but unused
-  "E402", # module level import not at top of file
-  "F403", # 'from FOO import *' used; unable to detect undefined names
-  "F405", # 'FOO' may be undefined, or defined from star imports: BAR
   # We should probably have a look at these findings.
   "E731", # do not assign a lambda expression, use a def
   "E741", # ambiguous variable name 'FOO'
@@ -42,16 +37,30 @@ ignore = [
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
   "UP035", # Import from `FOO` instead: `BAR`
-  "UP036", # Version block is outdated for minimum Python version
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Explicit re-exports is fine in __init__.py, still a code smell elsewhere.
-"__init__.py" = ["PLC0414"]
-"packages/cmk-agent-based/cmk/*" = ["PLR2004"]
+"cmk/*" = [
+  "A001",
+  "A002",
+  "A004",
+  "ARG001",
+  "ARG002",
+  "ARG003",
+  "ARG004",
+  "ARG005",
+  "SLF001",
+]
+"non-free/packages/cmk-mknotifyd/*" = ["ARG001", "ARG002", "SLF001"]
+"tests/*" = ["A002", "ARG001", "ARG002", "ARG003", "ARG004", "ARG005", "SLF001"]
+"agents/*" = ["ARG001", "ARG002", "SLF001"]
+# Agent plugins still need to support Python 2.7
+"agents/plugins/*" = ["UP036"]
+"tests/agent-plugin-unit/*" = ["UP036"]
+"agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
@@ -66,9 +75,10 @@ section-order = [
   "third-party",
   "werks",
   "cmc_proto",
-  "testlib",
-  "integrationtests",
   "compositiontests",
+  "uitests",
+  "integrationtests",
+  "testlib",
   "unittests",
   "livestatus",
   "omd",
@@ -92,9 +102,10 @@ section-order = [
 werks = ["werks"]
 cmc_proto = ["cmc_proto"]
 testlib = ["tests.testlib"]
-integrationtests = ["tests.integration"]
+integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
 compositiontests = ["tests.composition"]
 unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+uitests = ["tests.gui_crawl", "tests.gui_e2e"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]
@@ -121,8 +132,9 @@ explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmc-protocols:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
     $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
     $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
@@ -147,93 +159,93 @@ warn_unused_configs = true
 
 [[tool.mypy.overrides]]
 module = [
-    # active_checks
-    "check_sql",
-    "check_elasticsearch_query",
-    "check_bi_aggr",
-    "check_uniserv",
-    "check_form_submit",
-    "check_notify_count",
-    "agents.modules.windows.tests.integration.conftest",
-    "agents.plugins.*",
-    # agents/special/*
-    "agent_activemq",
-    "agent_alertmanager",
-    "agent_allnet_ip_sensoric",
-    "agent_appdynamics",
-    "agent_aws",
-    "agent_aws_status",
-    "agent_azure",
-    "agent_azure_status",
-    "agent_bi",
-    "agent_cisco_meraki",
-    "agent_cisco_prime",
-    "agent_couchbase",
-    "agent_datadog",
-    "agent_ddn_s2a",
-    "agent_elasticsearch",
-    "agent_emcvnx",
-    "agent_gcp",
-    "agent_gcp_status",
-    "agent_graylog",
-    "agent_hivemanager",
-    "agent_hivemanager_ng",
-    "agent_hp_msa",
-    "agent_ibmsvc",
-    "agent_innovaphone",
-    "agent_ipmi_sensors",
-    "agent_jira",
-    "agent_jolokia",
-    "agent_kube",
-    "agent_mobileiron",
-    "agent_mqtt",
-    "agent_netapp_ontap",
-    "agent_prism",
-    "agent_prometheus",
-    "agent_proxmox_ve",
-    "agent_pure_storage_fa",
-    "agent_rabbitmq",
-    "agent_random",
-    "agent_ruckus_spot",
-    "agent_salesforce",
-    "agent_siemens_plc",
-    "agent_smb_share",
-    "agent_splunk",
-    "agent_storeonce",
-    "agent_storeonce4x",
-    "agent_tinkerforge",
-    "agent_ucs_bladecenter",
-    "agent_vnx_quotas",
-    "agent_vsphere",
-    "agent_zerto",
-    "agents.wnx.tests.*",
-    "buildscripts.*",
-    "cmk.*",
-    "cmk_update_agent",
-    # omd/packages/maintenance
-    "diskspace",
-    "doc.*",
-    # doc/*
-    "foo.check",
-    "import-memory",
-    "figheader",
-    #
-    "logdate",
-    "omd.*",
-    "omdlib.*",
-    "scripts.create_build_environment_variables",
-    "tests.*",
-    # tests/agent-plugin-unit/*
-    "test_apache_status",
-    "test_mk_filestats",
-    "test_mk_jolokia",
-    "test_mk_logwatch",
-    "test_mk_mongodb",
-    "test_mk_postgres",
-    "test_mk_sap",
-    "test_mtr",
-    "test_plesk_backups",
-    "test_plesk_domains",
+  # active_checks
+  "check_sql",
+  "check_elasticsearch_query",
+  "check_bi_aggr",
+  "check_uniserv",
+  "check_form_submit",
+  "check_notify_count",
+  "agents.modules.windows.tests.integration.conftest",
+  "agents.plugins.*",
+  # agents/special/*
+  "agent_activemq",
+  "agent_alertmanager",
+  "agent_allnet_ip_sensoric",
+  "agent_appdynamics",
+  "agent_aws",
+  "agent_aws_status",
+  "agent_azure",
+  "agent_azure_status",
+  "agent_bi",
+  "agent_cisco_meraki",
+  "agent_cisco_prime",
+  "agent_couchbase",
+  "agent_datadog",
+  "agent_ddn_s2a",
+  "agent_elasticsearch",
+  "agent_emcvnx",
+  "agent_gcp",
+  "agent_gcp_status",
+  "agent_graylog",
+  "agent_hivemanager",
+  "agent_hivemanager_ng",
+  "agent_hp_msa",
+  "agent_ibmsvc",
+  "agent_innovaphone",
+  "agent_ipmi_sensors",
+  "agent_jira",
+  "agent_jolokia",
+  "agent_kube",
+  "agent_mobileiron",
+  "agent_mqtt",
+  "agent_netapp_ontap",
+  "agent_prism",
+  "agent_prometheus",
+  "agent_proxmox_ve",
+  "agent_pure_storage_fa",
+  "agent_rabbitmq",
+  "agent_random",
+  "agent_ruckus_spot",
+  "agent_salesforce",
+  "agent_siemens_plc",
+  "agent_smb_share",
+  "agent_splunk",
+  "agent_storeonce",
+  "agent_storeonce4x",
+  "agent_tinkerforge",
+  "agent_ucs_bladecenter",
+  "agent_vnx_quotas",
+  "agent_vsphere",
+  "agent_zerto",
+  "agents.wnx.tests.*",
+  "buildscripts.*",
+  "cmk.*",
+  "cmk_update_agent",
+  # omd/packages/maintenance
+  "diskspace",
+  "doc.*",
+  # doc/*
+  "foo.check",
+  "import-memory",
+  "figheader",
+  #
+  "logdate",
+  "omd.*",
+  "omdlib.*",
+  "scripts.create_build_environment_variables",
+  "tests.*",
+  # tests/agent-plugin-unit/*
+  "test_apache_status",
+  "test_mk_filestats",
+  "test_mk_jolokia",
+  "test_mk_logwatch",
+  "test_mk_mongodb",
+  "test_mk_postgres",
+  "test_mk_sap",
+  "test_mtr",
+  "test_plesk_backups",
+  "test_plesk_domains",
 ]
 enable_error_code = [
   # "explicit-override",   # 9999 errors in 762 files
@@ -328,10 +340,7 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = [
-    "cmk.server_side_calls.*",
-    "cmk.rulesets.*",
-]
+module = ["cmk.server_side_calls.*", "cmk.rulesets.*"]
 enable_error_code = [
   "explicit-override",
   "ignore-without-code",
@@ -356,6 +365,34 @@ disallow_subclassing_any = true
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.agent_receiver.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
 
 [[tool.mypy.overrides]]
 module = ["cmk.trace.*"]
@@ -413,7 +450,36 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = ["cmk.mkp_tool.*"]
+module = ["cmk.livestatus_client.*", "livestatus.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+# TODO: Disabled for initial move to a package
+disallow_any_explicit = false
+# TODO: Disabled for initial move to a package
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.mkp_tool.*", "cmk.events.*"]
 enable_error_code = [
   "explicit-override",
   "ignore-without-code",
@@ -438,6 +504,36 @@ disallow_subclassing_any = true
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.messaging.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# my-py warns about decorated functions containing type "Any"
+# but they come from pydantic base classes:
+disallow_any_decorated = false
+# Miscellaneous stuff not in --strict
+disallow_any_explicit = false
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
 
 [[tool.mypy.overrides]]
 module = ["cmk.werks.*"]
@@ -506,7 +602,7 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = "cmk.otel.*"
+module = "cmk.otel_collector.*"
 strict = true
 enable_error_code = [
   "explicit-override",

@@ -4,24 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
-import { useId } from '@/form/utils'
-import {
-  ComboboxAnchor,
-  ComboboxCancel,
-  ComboboxContent,
-  ComboboxInput,
-  ComboboxRoot,
-  ComboboxItem,
-  ComboboxTrigger,
-  ComboboxViewport
-} from 'radix-vue'
 
-import { computed, type ComputedRef } from 'vue'
-import { setupAutocompleter } from '@/form/components/utils/autocompleter'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import { useId } from '@/form/utils'
+import { inputSizes } from '../utils/sizes'
+import CmkSpace from '@/components/CmkSpace.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
 
 defineOptions({
   inheritAttrs: false
@@ -39,142 +30,37 @@ const [validation, value] = useValidation<string>(
   () => props.backendValidation
 )
 
-const getSize = (spec: FormSpec.StringFieldSize | undefined): number => {
-  return {
-    SMALL: 7,
-    MEDIUM: 35,
-    LARGE: 100
-  }[spec || 'MEDIUM']
-}
-
 const componentId = useId()
-const comboboxContentSize = computed(() => {
-  return { SMALL: '100px', MEDIUM: '272px', LARGE: '722px' }[props.spec.field_size || 'MEDIUM']
-})
-
-// Autocompleter functions
-type AutocompleterResponse = Record<'choices', [string, string][]>
-const [autocompleterInput, autocompleterOutput] = setupAutocompleter<AutocompleterResponse>(
-  props.spec.autocompleter || null
-)
-
-const options: ComputedRef<string[]> = computed(() => {
-  if (autocompleterOutput.value === undefined) {
-    return []
-  }
-  return autocompleterOutput
-    .value!.choices.map((element: [string, string]) => element[0])
-    .filter((element: string) => element.length > 0)
-    .splice(0, 15)
-})
-
-function updateChoices(event: InputEvent) {
-  autocompleterInput.value = (event.target! as HTMLInputElement).value as string
-}
-
-function resetInput() {
-  value.value = ''
-  autocompleterInput.value = ''
-}
 </script>
 
 <template>
+  <template v-if="props.spec.label">
+    <label :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </label>
+    <FormRequired
+      :spec="props.spec"
+      :i18n-required="props.spec.i18n_base.required"
+      :space="'after'"
+    />
+  </template>
   <input
     v-if="!spec.autocompleter"
     :id="componentId"
     v-model="value"
     :placeholder="spec.input_hint || ''"
     type="text"
-    :size="getSize(spec.field_size)"
-    v-bind="$attrs"
+    :size="inputSizes[props.spec.field_size].width"
   />
-  <!-- @vue-ignore -->
-  <ComboboxRoot v-if="spec.autocompleter" v-model="value" class="ComboboxRoot">
-    <ComboboxAnchor class="ComboboxAnchor">
-      <ComboboxInput
-        class="ComboboxInput"
-        :placeholder="spec.input_hint"
-        :size="getSize(spec.field_size)"
-        @input="updateChoices"
-      />
-      <ComboboxCancel class="cancel"><label @click="resetInput">×</label></ComboboxCancel>
-      <ComboboxTrigger class="trigger">
-        <CmkIcon name="select_arrow" />
-      </ComboboxTrigger>
-    </ComboboxAnchor>
-
-    <ComboboxContent class="ComboboxContent" :style="{ width: comboboxContentSize }">
-      <ComboboxViewport class="ComboboxViewport">
-        <!-- @vue-ignore -->
-        <ComboboxItem v-for="option in options" :key="option" :value="option" class="ComboboxItem">
-          <span>
-            {{ option }}
-          </span>
-        </ComboboxItem>
-      </ComboboxViewport>
-    </ComboboxContent>
-  </ComboboxRoot>
+  <FormAutocompleter
+    v-if="spec.autocompleter"
+    :id="componentId"
+    v-model="value"
+    :size="inputSizes[props.spec.field_size].width"
+    :resest-input-on-add="false"
+    :autocompleter="spec.autocompleter"
+    :placeholder="spec.input_hint ?? ''"
+    :show="true"
+    :filter-on="[]"
+    :show-icon="true"
+  />
   <FormValidation :validation="validation"></FormValidation>
 </template>
-
-<style scoped>
-.trigger img {
-  width: 24px;
-  height: 9px;
-  opacity: 0.3;
-}
-
-button.trigger {
-  margin: unset;
-  padding: unset;
-  position: relative;
-  background: none;
-  border: none;
-  height: 12px;
-  width: 12px;
-  left: -40px;
-}
-
-button.cancel {
-  margin: unset;
-  padding: unset;
-  position: relative;
-  background: none;
-  border: none;
-  height: 12px;
-  width: 12px;
-  left: -40px;
-  top: -4px;
-}
-
-.ComboboxRoot {
-  position: relative;
-}
-
-.ComboboxAnchor {
-  display: inline-flex;
-  align-items: center;
-  justify-content: left;
-}
-
-.ComboboxContent {
-  z-index: 10;
-  position: absolute;
-  overflow: hidden;
-  background-color: var(--default-form-element-bg-color);
-  border-bottom-right-radius: 6px;
-  border-bottom-left-radius: 6px;
-  margin-top: -7px;
-}
-
-.ComboboxItem {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.ComboboxItem[data-highlighted] span {
-  outline: none;
-  color: var(--default-select-hover-color);
-}
-</style>

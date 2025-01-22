@@ -100,6 +100,11 @@ def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     )
 
 
+@pytest.fixture(name="mock_discovery")
+def fixture_mock_discovery(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("cmk.gui.watolib.services.local_discovery")
+
+
 @pytest.fixture(name="mock_set_autochecks")
 def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
@@ -158,6 +163,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     sample_host_name: HostName,
     sample_host: Host,
     mock_discovery_preview: MagicMock,
+    mock_discovery: MagicMock,
 ) -> None:
     discovery_result = get_check_table(
         sample_host,
@@ -165,6 +171,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         raise_errors=True,
     )
 
+    mock_discovery.assert_called_once()
     mock_discovery_preview.assert_has_calls(
         [
             call(sample_host_name, prevent_fetching=False, raise_errors=False),

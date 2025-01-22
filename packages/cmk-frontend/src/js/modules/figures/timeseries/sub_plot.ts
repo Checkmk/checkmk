@@ -154,7 +154,7 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
         // The subplot main_g contains all graphical components for this subplot
         // @ts-ignore
         this.main_g = this._renderer!.g.selectAll(
-            "g.subplot_main_g." + this.definition!.id
+            "g.subplot_main_g." + this.definition!.id,
         )
             .data([null])
             .join("g")
@@ -199,7 +199,7 @@ export class SubPlot<PD extends SubPlotPlotDefinition = SubPlotPlotDefinition> {
 
         // TODO: Refactor, introduces dashlet dependency
         const dashlet = select(
-            other_renderer._div_selection.node()!.closest(".dashlet")
+            other_renderer._div_selection.node()!.closest(".dashlet"),
         );
         if (!dashlet.empty())
             dashlet
@@ -284,7 +284,7 @@ function area_draw_fn(subplot: SubplotSubs) {
                 if (subplot.stack_values != null)
                     return subplot._renderer!.scale_y(
                         // @ts-ignore
-                        subplot.stack_values[d.timestamp] || 0
+                        subplot.stack_values[d.timestamp] || 0,
                     );
                 else return base;
             })
@@ -294,13 +294,13 @@ function area_draw_fn(subplot: SubplotSubs) {
 function graph_data_path(
     subplot: SubplotSubs,
     path_type: string,
-    status_cls: string
+    status_cls: string,
 ) {
     return subplot
         .svg!.selectAll("g.graph_data path." + path_type)
         .data([subplot.transformed_data])
         .join(enter =>
-            enter.append("g").classed("graph_data", true).append("path")
+            enter.append("g").classed("graph_data", true).append("path"),
         )
         .attr("class", `${path_type}${status_cls ? " " + status_cls : ""}`)
         .classed((subplot.definition!.css_classes || []).join(" "), true);
@@ -310,21 +310,21 @@ function draw_subplot(
     subplot: SubplotSubs,
     path_type: string,
     status_cls: string,
-    styles: DrawSubplotStyles
+    styles: DrawSubplotStyles,
 ) {
     const path = graph_data_path(subplot, path_type, status_cls);
     const path_fn = (path_type === "line" ? line_draw_fn : area_draw_fn)(
-        subplot
+        subplot,
     );
 
     const plot = subplot
         ._renderer!.transition(path)
         .attr("d", (d: [number, number][] | Iterable<[number, number]>) =>
-            path_fn(d)
+            path_fn(d),
         );
     if (!status_cls)
         Object.entries(styles).forEach(([property, value]) =>
-            plot.style(property, value)
+            plot.style(property, value),
         );
 }
 
@@ -405,7 +405,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
     render() {
         const plot_size = this._renderer!.plot_size;
         const bars = this.svg!.selectAll<SVGRectElement, unknown>(
-            "rect.bar"
+            "rect.bar",
         ).data(this.transformed_data);
         bars.exit().remove();
 
@@ -420,7 +420,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
             .append("rect")
             // Add new bars
             .each((_d: TransformedData, idx: number, nodes) =>
-                this._renderer!.tooltip_generator.add_support(nodes[idx])
+                this._renderer!.tooltip_generator.add_support(nodes[idx]),
             )
             .classed("bar", true)
             .attr("y", plot_size.height)
@@ -431,10 +431,10 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
                 "width",
                 (d: TransformedData) =>
                     this._renderer!.scale_x(
-                        new Date(d.ending_timestamp! * 1000)
+                        new Date(d.ending_timestamp! * 1000),
                     ) -
                     this._renderer!.scale_x(d.date) -
-                    bar_spacing
+                    bar_spacing,
             )
             .attr("class", css_classes);
 
@@ -444,7 +444,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
             .attr("rx", 2)
             .attr(
                 "y",
-                (d: TransformedData) => this._renderer!.scale_y(d.value) - 1
+                (d: TransformedData) => this._renderer!.scale_y(d.value) - 1,
             )
             .attr("height", (d: TimeseriesFigureDataData) => {
                 let y_base = 0;
@@ -477,11 +477,11 @@ export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
     render() {
         const domain = adjust_domain(
             calculate_domain(this.transformed_data),
-            this.definition!.metric.bounds
+            this.definition!.metric.bounds,
         );
 
         const last_value = this.transformed_data.find(
-            element => element.last_value
+            element => element.last_value,
         );
         const value = renderable_value(last_value, domain, this.definition);
 
@@ -490,12 +490,12 @@ export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
 
         const background_status_cls = svc_status_css(
             "background",
-            svc_status_display
+            svc_status_display,
         );
         const label_paint_style = getIn(svc_status_display, "paint");
         const label_status_cls = svc_status_css(
             label_paint_style,
-            svc_status_display
+            svc_status_display,
         );
         const state_font_size = 14;
         const state_is_visible = label_paint_style && label_status_cls;
@@ -608,13 +608,13 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
             -1,
             -1,
             this._last_canvas_size.width + 2,
-            this._last_canvas_size.height + 2
+            this._last_canvas_size.height + 2,
         );
         const canvas_data = ctx!.getImageData(
             0,
             0,
             plot_size.width,
-            plot_size.height
+            plot_size.height,
         );
 
         const color = this.get_color();

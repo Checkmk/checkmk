@@ -400,7 +400,7 @@ def notify_notify(
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     """
     This function processes one raw notification and decides wether it should be spooled or not.
@@ -485,7 +485,7 @@ def locally_deliver_raw_context(
     plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
@@ -614,7 +614,7 @@ def notification_test(
     backlog_size: int,
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
-    dispatch: bool,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
@@ -735,7 +735,7 @@ def notify_rulebased(
     plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo:
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
@@ -752,7 +752,9 @@ def notify_rulebased(
     num_rule_matches = 0
     rule_info = []
 
-    for rule in itertools.chain(rules, user_notification_rules(config_contacts=config_contacts)):
+    for nr, rule in enumerate(
+        itertools.chain(rules, user_notification_rules(config_contacts=config_contacts))
+    ):
         contact_info = _get_contact_info_text(rule)
 
         why_not = rbn_match_rule(
@@ -780,6 +782,7 @@ def notify_rulebased(
                 host_parameters_cb,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
+                rule_nr=nr,
             )
 
     plugin_info = _process_notifications(
@@ -817,6 +820,7 @@ def _create_notifications(
     *,
     config_contacts: ConfigContacts,
     fallback_email: str,
+    rule_nr: int,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
     contacts = rbn_rule_contacts(
         rule,
@@ -886,11 +890,13 @@ def _create_notifications(
             else plugin_parameter_id
         )
 
-        final_parameters = rbn_finalize_plugin_parameters(
-            HostName(enriched_context["HOSTNAME"]),
-            plugin_name,
-            host_parameters_cb,
-            plugin_parameters,
+        final_parameters: NotifyPluginParamsDict = _rbn_finalize_plugin_parameters(
+            hostname=HostName(enriched_context["HOSTNAME"]),
+            plugin_name=plugin_name,
+            host_parameters_cb=host_parameters_cb,
+            rule_parameters=plugin_parameters,
+            rule_matching_nr=rule_nr,
+            rule_matching_text=rule["description"],
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -912,7 +918,7 @@ def _process_notifications(
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     analyse: bool,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> list[NotifyPluginInfo]:
     # pylint: disable=too-many-branches
     plugin_info: list[NotifyPluginInfo] = []
@@ -930,11 +936,13 @@ def _process_notifications(
                 logger.info("  Sending email to %s", fallback_emails)
 
                 plugin_name, fallback_params = fallback_format
-                fallback_params = rbn_finalize_plugin_parameters(
-                    HostName(enriched_context["HOSTNAME"]),
-                    plugin_name,
-                    host_parameters_cb,
-                    fallback_params,
+                fallback_params = _rbn_finalize_plugin_parameters(
+                    hostname=HostName(enriched_context["HOSTNAME"]),
+                    plugin_name=plugin_name,
+                    host_parameters_cb=host_parameters_cb,
+                    rule_parameters=fallback_params,
+                    rule_matching_nr=-1,
+                    rule_matching_text="No rule matched",
                 )
                 plugin_context = create_plugin_context(
                     enriched_context, fallback_params, get_http_proxy
@@ -953,11 +961,8 @@ def _process_notifications(
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
         for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
-            verb = (
-                "would notify"
-                if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"])
-                else "notifying"
-            )
+            would_notify = analyse and plugin_name != dispatch
+            verb = "would notify" if would_notify else "notifying"
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name
             # Hack for "Call with the following..." find a better solution
@@ -992,7 +997,7 @@ def _process_notifications(
                 for context in plugin_contexts:
                     plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
 
-                    if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"]):
+                    if analyse and would_notify:
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
@@ -1003,6 +1008,8 @@ def _process_notifications(
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),
                         )
                     else:
+                        if dispatch and plugin_name != dispatch:
+                            continue
                         call_notification_script(
                             plugin_name, context, plugin_timeout=plugin_timeout
                         )
@@ -1014,9 +1021,7 @@ def _process_notifications(
                 log_to_history(
                     notification_result_message(
                         plugin=NotificationPluginName(plugin_name),
-                        contact=plugin_context["CONTACTNAME"],
-                        hostname=plugin_context["HOSTNAME"],
-                        service=plugin_context.get("SERVICEDESC"),
+                        context=plugin_context,
                         exit_code=NotificationResultCode(2),
                         output=[str(e)],
                     )
@@ -1041,11 +1046,13 @@ def rbn_fallback_contacts(*, config_contacts: ConfigContacts, fallback_email: st
     return fallback_contacts
 
 
-def rbn_finalize_plugin_parameters(
+def _rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     rule_parameters: NotifyPluginParamsDict,
+    rule_matching_nr: int,
+    rule_matching_text: str,
 ) -> NotifyPluginParamsDict:
     parameters = dict(host_parameters_cb(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
@@ -1055,6 +1062,9 @@ def rbn_finalize_plugin_parameters(
     if plugin_name == "mail":
         parameters.setdefault("graphs_per_notification", 5)
         parameters.setdefault("notifications_with_graphs", 5)
+        # Added in 2.4.0 for HTML Mail templates
+        parameters.setdefault("matching_rule_nr", rule_matching_nr)
+        parameters.setdefault("matching_rule_text", rule_matching_text)
 
     return parameters
 
@@ -1838,9 +1848,7 @@ def call_notification_script(
         log_to_history(
             notification_result_message(
                 plugin=NotificationPluginName(plugin_name),
-                contact=plugin_context["CONTACTNAME"],
-                hostname=plugin_context["HOSTNAME"],
-                service=plugin_context.get("SERVICEDESC"),
+                context=plugin_context,
                 exit_code=NotificationResultCode(exitcode),
                 output=output_lines,
             )
@@ -2358,9 +2366,7 @@ def notify_bulk(
             log_to_history(
                 notification_result_message(
                     plugin=plugin_text,
-                    contact=context["CONTACTNAME"],
-                    hostname=context["HOSTNAME"],
-                    service=context.get("SERVICEDESC"),
+                    context=context,
                     exit_code=exitcode,
                     output=output_lines,
                 )

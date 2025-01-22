@@ -6,7 +6,8 @@
 Quick setup
 
 * GET quick setup guided stages or overview stages
-* POST validate stage and retrieve the next
+* GET a quick setup stage structure
+* POST validate stage
 * POST complete the quick setup and save
 """
 
@@ -14,43 +15,57 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from enum import StrEnum
 from typing import Any
+from urllib.parse import urlparse
+
+from pydantic import BaseModel
 
 from cmk.utils.encoding import json_encode
 
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import Endpoint
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
-    collection_href,
     object_action_href,
     object_href,
+    sub_object_href,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.quick_setup.to_frontend import (
-    AllStageErrors,
-    complete_quick_setup,
-    get_stages_and_formspec_map,
+from cmk.gui.quick_setup.handlers.setup import (
+    CompleteActionResult,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
-    retrieve_next_stage,
-    Stage,
-    validate_custom_validators,
-    validate_stage,
-    validate_stages_formspecs,
+    start_quick_setup_job,
+    validate_stages_form_data,
+    verify_custom_validators_and_complete_quick_setup,
+)
+from cmk.gui.quick_setup.handlers.stage import (
+    get_stage_structure,
+    matching_stage_action,
+    NextStageStructure,
+    StageActionResult,
+    start_quick_setup_stage_job,
+    validate_stage_formspecs,
+    verify_custom_validators_and_recap_stage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 
 from cmk import fields
 
-from .request_schemas import QuickSetupFinalSaveRequest, QuickSetupRequest
+from .. import background_job
+from .request_schemas import (
+    QuickSetupFinalActionRequest,
+    QuickSetupStageActionRequest,
+)
 from .response_schemas import (
     QuickSetupCompleteResponse,
     QuickSetupResponse,
-    QuickSetupStageResponse,
+    QuickSetupStageActionResponse,
+    QuickSetupStageStructure,
 )
 
 QUICKSETUP_ID = {
@@ -58,6 +73,14 @@ QUICKSETUP_ID = {
         required=True,
         description="The quick setup id",
         example="aws",
+    )
+}
+
+STAGE_INDEX = {
+    "stage_index": fields.String(
+        required=True,
+        description="The stage index",
+        example="1",
     )
 }
 
@@ -91,6 +114,14 @@ QUICKSETUP_OBJECT_ID_REQUIRED = {
         required=True,
         description="Select object id to prefill data for the quick setup",
         example="8558f956-3e45-4c4f-bd02-e88da17c99dd",
+    )
+}
+
+JOB_ID = {
+    "job_id": fields.String(
+        required=True,
+        description="The id of the action job result to be fetched",
+        example="quick_setup",
     )
 }
 
@@ -141,18 +172,66 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
 
 
 @Endpoint(
-    collection_href("quick_setup"),
-    "cmk/quick_setup",
+    sub_object_href(
+        domain_type="quick_setup_stage",
+        parent_domain_type="quick_setup",
+        obj_id="{stage_index}",
+        parent_id="{quick_setup_id}",
+    ),
+    "cmk/fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[QUICKSETUP_ID, STAGE_INDEX],
+    query_params=[QUICKSETUP_OBJECT_ID],
+    response_schema=QuickSetupStageStructure,
+)
+def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
+    """Get a Quick setup stage structure"""
+    quick_setup_id = params["quick_setup_id"]
+    object_id = params.get("object_id")
+    stage_index = int(params["stage_index"])
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
+
+    prefill_data: ParsedFormData | None = None
+    if object_id:
+        prefill_data = quick_setup.load_data(object_id)
+        if not prefill_data:
+            return _serve_error(
+                title="Object not found",
+                detail=f"Object with id '{object_id}' does not exist.",
+            )
+
+    return _serve_data(
+        get_stage_structure(
+            stage=quick_setup.stages[stage_index](),
+            prefill_data=prefill_data,
+        )
+    )
+
+
+@Endpoint(
+    object_action_href("quick_setup", "{quick_setup_id}", "run-stage-action"),
+    "cmk/run",
     tag_group="Checkmk Internal",
     method="post",
-    query_params=[QUICKSETUP_OBJECT_ID],
-    request_schema=QuickSetupRequest,
-    response_schema=QuickSetupStageResponse,
+    status_descriptions={
+        303: "The stage validation and recap action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
+    additional_status_codes=[303],
+    path_params=[QUICKSETUP_ID],
+    request_schema=QuickSetupStageActionRequest,
+    response_schema=QuickSetupStageActionResponse,
 )
-def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Response:
-    """Validate the current stage and retrieve the next"""
+def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
+    """Run a Quick setup stage validation and recap action"""
     body = params["body"]
-    quick_setup_id = body["quick_setup_id"]
+    quick_setup_id = params["quick_setup_id"]
     stage_action_id = body["stage_action_id"]
 
     if (quick_setup := quick_setup_registry.get(quick_setup_id)) is None:
@@ -162,57 +241,85 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         )
 
     stage_index = StageIndex(len(body["stages"]) - 1)
-    stages, form_spec_map = get_stages_and_formspec_map(
+    stage_action = matching_stage_action(quick_setup.stages[stage_index](), stage_action_id)
+
+    built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    form_spec_map = build_formspec_map_from_stages(built_stages)
+    # Validate the stage formspec data; this is separate from the custom validators of the stage
+    # as the custom validators can potentially take a long time (and therefore be run in a
+    # background job)
+    errors = validate_stage_formspecs(
+        stage_index=stage_index,
+        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        quick_setup_formspec_map=form_spec_map,
+    )
+    if errors.exist():
+        return _serve_action_result(
+            StageActionResult(validation_errors=errors),
+            status_code=400,
+        )
+
+    if stage_action.run_in_background:
+        background_job_id = start_quick_setup_stage_job(
+            quick_setup=quick_setup,
+            action_id=stage_action_id,
+            stage_index=stage_index,
+            user_input_stages=body["stages"],
+        )
+        background_job_status_link = constructors.link_endpoint(
+            module_name="cmk.gui.openapi.endpoints.background_job",
+            rel="cmk/show",
+            parameters={background_job.JobID.field_name: background_job_id},
+        )
+        response = Response(status=303)
+        response.location = urlparse(background_job_status_link["href"]).path
+        return response
+
+    result = verify_custom_validators_and_recap_stage(
         quick_setup=quick_setup,
         stage_index=stage_index,
+        stage_action_id=stage_action_id,
+        input_stages=body["stages"],
+        form_spec_map=form_spec_map,
+        built_stages=built_stages,
     )
-
-    if (
-        errors := validate_stage(
-            quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-            stage_index=stage_index,
-            stage_action_id=stage_action_id,
-            stages=stages,
-            quick_setup_formspec_map=form_spec_map,
-        )
-    ) is not None:
-        return _serve_data(Stage(errors=errors), status_code=400)
-
-    prefill_data: ParsedFormData | None = None
-    if object_id := params["object_id"]:
-        prefill_data = quick_setup.load_data(object_id)
-        if not prefill_data:
-            return _serve_error(
-                title="Object not found",
-                detail=f"Object with id '{object_id}' does not exist.",
-            )
-    return _serve_data(
-        data=retrieve_next_stage(
-            quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-            stages=stages,
-            quick_setup_formspec_map=form_spec_map,
-            stage_index=stage_index,
-            stage_action_id=stage_action_id,
-            prefill_data=prefill_data,
-        )
+    return _serve_action_result(
+        result, status_code=200 if result.validation_errors is None else 400
     )
 
 
 @Endpoint(
-    object_action_href("quick_setup", "{quick_setup_id}", "save"),
-    "cmk/save_quick_setup",
+    object_href("quick_setup_stage_action_result", "{job_id}"),
+    "cmk/fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[JOB_ID],
+    response_schema=QuickSetupStageActionResponse,
+)
+def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response:
+    """Fetch the Quick setup stage action background job result"""
+    action_background_job_id = params["job_id"]
+    action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
+    return _serve_action_result(action_result)
+
+
+@Endpoint(
+    object_action_href("quick_setup", "{quick_setup_id}", "run-action"),
+    "cmk/run_setup",
     method="post",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_MODE],
-    additional_status_codes=[201],
-    request_schema=QuickSetupFinalSaveRequest,
+    additional_status_codes=[201, 303],
+    status_descriptions={
+        303: "The validation and complete action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
+    request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
-def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
-    """Save the quick setup"""
+def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
+    """Run a quick setup action"""
     return complete_quick_setup_action(params, QuickSetupActionMode.SAVE)
 
 
@@ -223,8 +330,12 @@ def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
-    additional_status_codes=[201],
-    request_schema=QuickSetupFinalSaveRequest,
+    additional_status_codes=[201, 303],
+    status_descriptions={
+        303: "The validation and complete action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
+    request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
 def edit_quick_setup_action(params: Mapping[str, Any]) -> Response:
@@ -248,6 +359,7 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
     action_id = body["button_id"]
+    object_id = params.get("object_id")
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         return _serve_error(
@@ -255,70 +367,86 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
 
-    stage_index = StageIndex(len(body["stages"]) - 1)
-    _stages, form_spec_map = get_stages_and_formspec_map(
-        quick_setup=quick_setup,
-        stage_index=stage_index,
-    )
-
-    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in body["stages"]]
-    if (
-        stage_errors := validate_stages_formspecs(
-            stages_raw_formspecs=stages_raw_formspecs,
-            quick_setup_formspec_map=form_spec_map,
-        )
-    ) is not None:
-        return _serve_data(
-            AllStageErrors(
-                all_stage_errors=stage_errors,
-            ),
-            status_code=400,
-        )
-
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         return _serve_error(
-            title="Save action not found",
-            detail=f"Save action with id '{action_id}' does not exist.",
+            title="Action not found",
+            detail=f"Action with id '{action_id}' does not exist.",
         )
 
-    errors = validate_custom_validators(
-        quick_setup_id=quick_setup_id,
-        custom_validators=action.custom_validators,
-        stages_raw_formspecs=stages_raw_formspecs,
+    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])
+    errors = validate_stages_form_data(
+        stages_raw_form_data=[RawFormData(stage["form_data"]) for stage in body["stages"]],
         quick_setup_formspec_map=form_spec_map,
     )
-    if errors.exist():
-        return _serve_data(
-            AllStageErrors(
-                all_stage_errors=[errors],
-            ),
+    if errors is not None:
+        return _serve_action_result(
+            CompleteActionResult(all_stage_errors=errors),
             status_code=400,
         )
 
-    return _serve_data(
-        complete_quick_setup(
-            action=action,
+    if action.run_in_background:
+        background_job_id = start_quick_setup_job(
+            quick_setup=quick_setup,
+            action_id=action.id,
             mode=mode,
-            stages_raw_formspecs=stages_raw_formspecs,
-            quick_setup_formspec_map=form_spec_map,
-            object_id=params.get("object_id"),
-        ),
-        status_code=201,
+            user_input_stages=body["stages"],
+            object_id=object_id,
+        )
+        background_job_status_link = constructors.link_endpoint(
+            module_name="cmk.gui.openapi.endpoints.background_job",
+            rel="cmk/show",
+            parameters={background_job.JobID.field_name: background_job_id},
+        )
+        response = Response(status=303)
+        response.location = urlparse(background_job_status_link["href"]).path
+        return response
+
+    result = verify_custom_validators_and_complete_quick_setup(
+        quick_setup=quick_setup,
+        action_id=action_id,
+        mode=mode,
+        input_stages=body["stages"],
+        form_spec_map=form_spec_map,
+        object_id=object_id,
     )
+
+    if not result.redirect_url and not result.all_stage_errors:
+        raise ValueError("The Quick setup action did not return a result")
+
+    return _serve_action_result(result, status_code=201 if result.all_stage_errors is None else 400)
+
+
+@Endpoint(
+    object_href("quick_setup_action_result", "{job_id}"),
+    ".../fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[JOB_ID],
+    response_schema=QuickSetupCompleteResponse,
+)
+def fetch_quick_setup_action_result(params: Mapping[str, Any]) -> Response:
+    """Fetch the Quick action background job result"""
+    action_background_job_id = params["job_id"]
+    action_result = CompleteActionResult.load_from_job_result(job_id=action_background_job_id)
+    return _serve_action_result(action_result)
 
 
 def _serve_data(
-    data: QuickSetupOverview
-    | Stage
-    | QuickSetupSaveRedirect
-    | QuickSetupAllStages
-    | AllStageErrors,
+    data: QuickSetupOverview | QuickSetupSaveRedirect | QuickSetupAllStages | NextStageStructure,
     status_code: int = 200,
 ) -> Response:
+    return _prepare_response(asdict(data), status_code)
+
+
+def _serve_action_result(data: BaseModel, status_code: int = 200) -> Response:
+    return _prepare_response(data.model_dump(), status_code)
+
+
+def _prepare_response(data: dict, status_code: int) -> Response:
     response = Response()
     response.set_content_type("application/json")
-    response.set_data(json_encode(asdict(data)))
+    response.set_data(json_encode(data))
     response.status_code = status_code
     return response
 
@@ -333,6 +461,9 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_guided_stages_or_overview_stages)
-    endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)
-    endpoint_registry.register(save_quick_setup_action)
+    endpoint_registry.register(quick_setup_get_stage_structure)
+    endpoint_registry.register(quicksetup_run_stage_action)
+    endpoint_registry.register(fetch_quick_setup_stage_action_result)
+    endpoint_registry.register(quick_setup_run_action)
     endpoint_registry.register(edit_quick_setup_action)
+    endpoint_registry.register(fetch_quick_setup_action_result)

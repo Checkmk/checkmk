@@ -48,10 +48,10 @@ class Search {
                     handler_data: {
                         obj: obj,
                         menu_popup: document.getElementById(
-                            "popup_menu_" + this.id
+                            "popup_menu_" + this.id,
                         )!,
                     },
-                }
+                },
             );
         } else {
             remove_class(document.getElementById(this.clear_id), "clearable");
@@ -79,7 +79,7 @@ class Search {
         if (more_button) {
             remove_class(
                 more_button.parentNode as HTMLElement | null,
-                "hidden"
+                "hidden",
             );
         }
         remove_class(document.getElementById(this.content_id), "hidden");
@@ -99,7 +99,7 @@ class Search {
 
     static handle_search_response(
         handler_data: {obj: HTMLElement; menu_popup: HTMLElement},
-        ajax_response: string
+        ajax_response: string,
     ) {
         const response: {
             result_code: number;
@@ -144,7 +144,7 @@ export function on_input_search(id: string) {
         }, 300);
         remove_class(
             document.getElementById("content_inner_" + id + "_search"),
-            "extended_topic"
+            "extended_topic",
         );
     }
 }
@@ -156,7 +156,7 @@ export function on_click_show_all_topics(topic: string) {
     add_class(current_topic, "extendable");
     remove_class(
         current_topic.closest(".content, .inner, .search"),
-        "extended_topic"
+        "extended_topic",
     );
     Array.from(topic_results).forEach(li => {
         if (li.dataset.extended == "true") {
@@ -169,7 +169,7 @@ export function on_click_show_all_topics(topic: string) {
 
 export function on_click_show_all_results(
     topic: string,
-    popup_menu_id: string
+    popup_menu_id: string,
 ) {
     const current_topic = document.getElementById(topic)!;
     const topic_results = current_topic.getElementsByTagName("li");
@@ -177,7 +177,7 @@ export function on_click_show_all_results(
     add_class(current_topic, "extended");
     add_class(
         current_topic.closest(".content, .inner, .search"),
-        "extended_topic"
+        "extended_topic",
     );
     Array.from(topic_results).forEach(li => {
         if (li.dataset.extended == "false") {
@@ -215,12 +215,12 @@ export function on_click_reset(id: string) {
         current_search.display_menu_items();
         remove_class(
             document.getElementById(current_search.clear_id),
-            "clearable"
+            "clearable",
         );
     }
     remove_class(
         document.getElementById("content_inner_" + id + "_search"),
-        "extended_topic"
+        "extended_topic",
     );
     resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
@@ -237,7 +237,7 @@ export function on_key_down(id: string) {
         case "ArrowUp":
             move_current_search_position(
                 current_key == "ArrowDown" ? 1 : -1,
-                current_search!
+                current_search!,
             );
             event!.preventDefault();
             break;
@@ -256,7 +256,7 @@ export function on_key_down(id: string) {
                     null,
                     null,
                     null,
-                    false
+                    false,
                 );
 
             break;
@@ -281,7 +281,7 @@ function follow_current_search_query(current_search: Search) {
                     null,
                     null,
                     null,
-                    false
+                    false,
                 );
                 on_click_reset(current_search.id);
                 break;
@@ -296,9 +296,9 @@ function follow_current_search_query(current_search: Search) {
         document
             .getElementById(current_search.search_id)!
             .getElementsByTagName("li")
-            [current_search.current_search_position].getElementsByClassName(
-                "active"
-            )[0] as HTMLLIElement
+            [
+                current_search.current_search_position
+            ].getElementsByClassName("active")[0] as HTMLLIElement
     ).click();
     on_click_reset(current_search.id);
 }

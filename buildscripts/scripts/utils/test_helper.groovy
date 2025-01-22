@@ -20,13 +20,7 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'bazel-caching-credentials',
-                    /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                    passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                    usernameVariable: 'BAZEL_CACHE_USER'),
-            ]) {
+            withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
                 sh("""
                     set -o pipefail
                     ${cmd}
@@ -233,6 +227,29 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 mapping: 'return builder.setFileName(matcher.group(1)).setCategory(matcher.group(4)).setMessage(matcher.group(5)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
                 example: "web/htdocs/js/modules/dashboard.js(65,37): error TS1005: ',' expected.s",  // example log message
                 //       |      1                           |2 | 3 |      4      |      5        |
+            ]);
+            issues.add(scanForIssues(
+                tool: groovyScript(
+                    parserId: parserId,
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
+        case "RUFFFORMAT":
+            parserId = 'ruff-format';
+            update_custom_parser([
+                id: parserId, // ID
+                name: 'Ruff Format', // Name shown on left side menu
+                regex: '(^\\+\\+\\+\\s)(.*\\.py$)\\n(@@\\s\\-)(\\d)(\\,\\d\\s\\+.*\\s@@\\n)([\\s\\w\\+\\.\\-\\(\\@\\)]*\\n)*', // RegEx
+                mapping: 'return builder.setFileName(matcher.group(2)).setLineStart(Integer.parseInt(matcher.group(4))).setMessage(matcher.group(6)).buildOptional()', // Mapping script
+                example: """--- gui_e2e/test_menu_help.py
+                +++ gui_e2e/test_menu_help.py
+                @@ -7,8 +7,8 @@
+                 import pytest
+
+                 from tests.testlib.playwright.pom.dashboard import Dashboard
+                +from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
+                """,  // example log message
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(

@@ -148,7 +148,7 @@ pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
     }
 }
 
-fn load_from_str(content: &str) -> Result<Vec<Yaml>> {
+pub(super) fn load_from_str(content: &str) -> Result<Vec<Yaml>> {
     Ok(YamlLoader::load_from_str(content)?)
 }
 
@@ -170,14 +170,7 @@ pub mod test_tools {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lazy_static::lazy_static;
-    use std::path::PathBuf;
-    lazy_static! {
-        static ref TEST_LOG_FILE_META: PathBuf = PathBuf::new()
-            .join("tests")
-            .join("files")
-            .join("test-config.yml");
-    }
+    static TEST_LOG_FILE_META: &str = include_str!("../../tests/files/test-config.yml");
     const YAML_VECTOR: &str = r#"
 vector:
   - yaml1:
@@ -188,7 +181,7 @@ vector:
 
     #[test]
     fn test_yaml_file() {
-        assert!(load_from_file(&TEST_LOG_FILE_META).is_ok());
+        assert!(load_from_str(TEST_LOG_FILE_META).is_ok());
     }
     #[test]
     fn test_to_bool() {

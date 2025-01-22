@@ -42,6 +42,9 @@ def test_registered_config_domains() -> None:
             "mknotifyd",
         ]
 
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+        expected_config_domains.append("otel_collector")
+
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
 
@@ -51,6 +54,7 @@ def test_registered_automation_commands() -> None:
         "activate-changes",
         "push-profiles",
         "check-analyze-config",
+        "create-broker-certs",
         "diagnostics-dump-get-file",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
@@ -159,7 +163,6 @@ def test_registered_configvars() -> None:
         "retention_interval",
         "rrdcached_tuning",
         "rule_optimizer",
-        "ruleset_matching_stats",
         "selection_livetime",
         "service_view_grouping",
         "session_mgmt",
@@ -212,9 +215,10 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
-        "experimental_features",
+        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
+        "automation_helper_active",
         "site_trace_send",
         "site_trace_receive",
     ]
@@ -268,7 +272,7 @@ def test_registered_configvars() -> None:
             "dcd_max_activation_delay",
             "dcd_max_hosts_per_bulk_discovery",
             "dcd_prevent_unwanted_notification",
-            "dcd_web_api_connection",
+            "dcd_use_inter_lock",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",
@@ -302,7 +306,7 @@ def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
-        assert issubclass(var.domain(), ABCConfigDomain)
+        assert isinstance(var.domain(), ABCConfigDomain)
         assert isinstance(var.ident(), str)
         assert isinstance(var.valuespec(), ValueSpec)
 

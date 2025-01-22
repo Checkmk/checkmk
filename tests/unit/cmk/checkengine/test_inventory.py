@@ -17,7 +17,7 @@ from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
     "parameters, expected_results",
     [
         pytest.param(
-            HWSWInventoryParameters(0, 0, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 0, 0, 0, False),
             [
                 ActiveCheckResult(
                     state=0,
@@ -29,7 +29,7 @@ from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
             id="OK",
         ),
         pytest.param(
-            HWSWInventoryParameters(0, 0, 1, 0, False),
+            HWSWInventoryParameters(0, 0, 1, 0, 0, False),
             [
                 ActiveCheckResult(
                     state=0,
@@ -82,7 +82,7 @@ def test__check_trees_hardware_or_software_changes() -> None:
     )
     assert list(
         _check_trees(
-            parameters=HWSWInventoryParameters(1, 2, 0, 0, False),
+            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False),
             inventory_tree=inventory_tree,
             status_data_tree=MutableTree(),
             previous_tree=ImmutableTree(),
@@ -103,6 +103,12 @@ def test__check_trees_hardware_or_software_changes() -> None:
         ActiveCheckResult(
             state=1,
             summary="hardware changes",
+            details=(),
+            metrics=(),
+        ),
+        ActiveCheckResult(
+            state=3,
+            summary="networking changes",
             details=(),
             metrics=(),
         ),

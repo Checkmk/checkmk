@@ -27,6 +27,7 @@ Checks: >
   -readability-avoid-return-with-void-value,
   -readability-identifier-length,
   -readability-magic-numbers,
+  -modernize-use-designated-initializers,
 
 WarningsAsErrors: '*'
 

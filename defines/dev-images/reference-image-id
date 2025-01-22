@@ -34,11 +34,11 @@ fi
 
 # inline cache https://docs.docker.com/build/cache/backends/inline/
 # Cache storage backends: https://docs.docker.com/build/cache/backends/
-# if [ -n "${POPULATE_BUILD_CACHE}" ]; then
-#     EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=inline --push -t ${CACHE_IMAGE}"
-#     # cannot be used currently due to 'Docker driver' but might be better in the future
-#     # EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=registry,ref="${CACHE_IMAGE}""
-# fi
+if [ -n "${POPULATE_BUILD_CACHE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=inline --push -t ${CACHE_IMAGE}"
+    # cannot be used currently due to 'Docker driver' but might be better in the future
+    # EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=registry,ref="${CACHE_IMAGE}""
+fi
 
 if [ -n "${VERBOSE}" ]; then
     echo >&2 "Create reference image"
@@ -58,14 +58,14 @@ else
     DECENT_OUTPUT_TIMEOUT=2
 fi
 
-# if [ -n "${PULL_CACHE_IMAGE}" ]; then
-#     # Pre-fetch caching image. This is not required but was reported to solve some
-#     # issues and keeps fetching and building more transparent
-#     "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
-#         docker pull \
-#         "${CACHE_IMAGE}" \
-#         1>&2 || true
-# fi
+if [ -n "${PULL_CACHE_IMAGE}" ]; then
+    # Pre-fetch caching image. This is not required but was reported to solve some
+    # issues and keeps fetching and building more transparent
+    "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+        docker pull \
+        "${CACHE_IMAGE}" \
+        1>&2 || true
+fi
 
 # Copy over stuff we need for the build process but is located in folders we
 # cannot use as build context
@@ -115,9 +115,8 @@ run_optionally_exclusive "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPU
     docker buildx build \
     ${EXTRA_ARGS} \
     --iidfile "${IIDFILE}" \
+    --cache-from type=registry,ref="${CACHE_IMAGE}" \
     --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
-    --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \
-    --build-context dev_images="${CHECKOUT_ROOT}/defines/dev-images" \
     -f "${CHECKOUT_ROOT}/defines/dev-images/reference/Dockerfile" \
     "${TEMP_CONTEXT_DIR}" \
     1>&2

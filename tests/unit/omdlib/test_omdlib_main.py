@@ -61,7 +61,7 @@ def test_hostname() -> None:
 
 
 def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    omdlib.main.main_help(object(), object())
+    omdlib.main.main_help()
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
 

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Create an initial Checkmk configuration for new sites"""
 
+from ._constants import PS_DISCOVERY_RULES
 from ._impl import (
     ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorAutomationUser,
     ConfigGeneratorBasicWATOConfig,
     ConfigGeneratorRegistrationUser,
     get_default_notification_rule,
@@ -17,11 +17,11 @@ from ._impl import (
 
 __all__ = [
     "ConfigGeneratorAcknowledgeInitialWerks",
-    "ConfigGeneratorAutomationUser",
     "ConfigGeneratorBasicWATOConfig",
     "ConfigGeneratorRegistrationUser",
     "new_notification_parameter_id",
     "new_notification_rule_id",
     "get_default_notification_rule",
     "init_wato_datastructures",
+    "PS_DISCOVERY_RULES",
 ]

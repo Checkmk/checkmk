@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -103,3 +103,26 @@ class ServiceSearchPage(CmkPage):
         self.open_action_menu_button(host_name, check_name).click()
         self.action_menu_item("Reschedule check").click()
         self.page.wait_for_load_state("load")
+
+    def wait_for_check_status_update(
+        self, host_name: str, service_name: str, expected_string: str, attempts: int = 5
+    ) -> str:
+        """Wait for the service summary to contain the expected string.
+
+        After applying a new rule, the service summary should be updated accordingly.
+        This process may take some time, so an attempt is made to check the service summary and
+        reschedule the check if the expected string is not found. Returns the service summary.
+        """
+        for _ in range(attempts):
+            logger.debug("Attempt-%d", _ + 1)
+            try:
+                expect(self.service_summary(host_name, service_name)).to_contain_text(
+                    expected_string
+                )
+                return self.service_summary(host_name, service_name).inner_text()
+            except AssertionError:
+                self.reschedule_check(host_name, "Check_MK")
+        raise AssertionError(
+            f"Expected string '{expected_string}' not found in '{service_name}' service summary "
+            f"after {attempts} attempts"
+        )

@@ -246,7 +246,6 @@ def test_check_proxmox_ve_vm_backup_status(
     params: Mapping[str, object], section: pvbs.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvbs.check_proxmox_ve_vm_backup_status(FROZEN_TIME, params, section))
-    print("\n" + ",\n".join(map(str, results)))
     assert results == expected_results
 
 

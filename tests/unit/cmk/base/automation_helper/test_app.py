@@ -5,76 +5,126 @@
 
 import logging
 import time
+from collections.abc import Callable
 
-from fakeredis import FakeRedis
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 
-from cmk.base.automation_helper._app import AutomationEngine, AutomationRequest, get_application
+from cmk.base.automation_helper._app import (
+    AutomationEngine,
+    AutomationPayload,
+    AutomationResponse,
+    get_application,
+    HealthCheckResponse,
+)
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automations import AutomationExitCode
 
 
-class DummyAutomationEngineSuccess:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
+class _DummyAutomationEngineSuccess:
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
         return AutomationExitCode.SUCCESS
 
 
-class DummyAutomationEngineFailure:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
-        raise SystemExit()
+class _DummyAutomationEngineFailure:
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
+        raise SystemExit(1)
 
 
-class DummyAutomationEngineTimeout:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
-        time.sleep(1)
-        return AutomationExitCode.SUCCESS
-
-
-EXAMPLE_AUTOMATION_REQUEST = AutomationRequest(
+_EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
 
 
-def get_test_client(*, engine: AutomationEngine) -> TestClient:
-    """Helper for fetching fastapi test client."""
-    cache = Cache.setup(client=FakeRedis())
-    app = get_application(engine=engine, cache=cache, reload_config=lambda: None)
+def _get_test_client(
+    engine: AutomationEngine,
+    cache: Cache,
+    reload_config: Callable[[], None],
+) -> TestClient:
+    app = get_application(
+        engine=engine,
+        cache=cache,
+        reload_config=reload_config,
+    )
     return TestClient(app)
 
 
-def test_automation_with_success() -> None:
-    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock()
+    with _get_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        mock_reload_config,
+    ) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        exit_code=AutomationExitCode.SUCCESS,
+        output="",
+    )
+    mock_reload_config.assert_called_once()  # only at application startup
 
 
-def test_automation_with_failure() -> None:
-    with get_test_client(engine=DummyAutomationEngineFailure()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock()
+    with _get_test_client(
+        _DummyAutomationEngineFailure(),
+        cache,
+        mock_reload_config,
+    ) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"exit_code": AutomationExitCode.SYSTEM_EXIT, "output": ""}
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        exit_code=1,
+        output="",
+    )
+    mock_reload_config.assert_called_once()  # only at application startup
 
 
-def test_automation_with_timeout() -> None:
-    with get_test_client(engine=DummyAutomationEngineTimeout()) as client:
-        headers = {"keep-alive": "timeout=0"}
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST, headers=headers)
+def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock()
+    with _get_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        mock_reload_config,
+    ) as client:
+        last_reload_before_cache_update = HealthCheckResponse.model_validate(
+            client.get("/health").json()
+        ).last_reload_at
+        cache.store_last_detected_change(time.time())
+        client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+        assert (
+            HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
+            > last_reload_before_cache_update
+        )
 
-    assert resp.status_code == 408
-    assert resp.json() == {
-        "exit_code": AutomationExitCode.TIMEOUT,
-        "output": "Timed out after 0 seconds",
-    }
+    assert (
+        # once at application startup, once when the endpoint is called
+        mock_reload_config.call_count == 2
+    )
 
 
-def test_health_check() -> None:
-    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
+def test_health_check(cache: Cache) -> None:
+    with _get_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        lambda: None,
+    ) as client:
         resp = client.get("/health")
 
-    last_reload_at = resp.json()["last_reload_at"]
-
     assert resp.status_code == 200
-    assert last_reload_at and last_reload_at < time.time()
+    assert HealthCheckResponse.model_validate(resp.json()).last_reload_at < time.time()

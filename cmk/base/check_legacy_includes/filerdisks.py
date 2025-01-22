@@ -29,9 +29,9 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
 
     for disk in disks:
         total_capacity += disk.get("capacity", 0)
-        for what in state:
+        for what, disks_in_state in state.items():
             if disk["state"] == what:
-                state[what].append(disk)
+                disks_in_state.append(disk)
 
     yield (
         0,

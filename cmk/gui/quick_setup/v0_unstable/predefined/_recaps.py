@@ -12,7 +12,7 @@ from cmk.gui.i18n import ungettext
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
-    build_quick_setup_formspec_map,
+    build_formspec_map_from_stages,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     get_service_discovery_preview,
@@ -39,7 +39,7 @@ def recaps_form_spec(
     if quick_setup is None:
         raise ValueError(f"Quick setup with id {quick_setup_id} not found")
 
-    quick_setup_formspec_map = build_quick_setup_formspec_map([quick_setup.stages[stage_index]()])
+    quick_setup_formspec_map = build_formspec_map_from_stages([quick_setup.stages[stage_index]()])
 
     return [
         FormSpecRecap(

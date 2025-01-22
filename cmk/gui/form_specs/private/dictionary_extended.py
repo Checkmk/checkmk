@@ -6,10 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
-
 from cmk.rulesets.v1 import Message
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, FormSpec
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, DictGroup, FormSpec
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout, DictionaryLayout
 
 T = TypeVar("T")
 
@@ -44,3 +43,12 @@ class DictionaryExtended(FormSpec[Mapping[str, object]]):
 
     prefill: DefaultValue[Mapping[str, object]] | None = None
     layout: DictionaryLayout = DictionaryLayout.one_column
+
+
+@dataclass(frozen=True, kw_only=True)
+class DictGroupExtended(DictGroup):
+    """Specification for a group of dictionary elements that are more closely related thematically
+    than the other elements. A group is identified by its title and help text.
+    """
+
+    layout: DictionaryGroupLayout = DictionaryGroupLayout.horizontal

@@ -1,0 +1,14 @@
+title: Redfish outlets
+agents: agent_redfish_power
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about outlets of Redfish compatible devices.
+ The item format depends on the configured "naming" option in the ruleset "Redfish outlet discovery".
+
+discovery:
+ One service per outlet is created.
+
+item:
+ See ruleset "Redfish outlet discovery" for the naming options.

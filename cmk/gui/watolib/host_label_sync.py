@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 import os
 from dataclasses import asdict, dataclass
+from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
@@ -22,14 +23,12 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-from cmk.gui import log
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -97,6 +96,17 @@ class DiscoveredHostLabelSyncResponse:
     updated_host_labels: list[UpdatedHostLabelsEntry]
 
 
+def register(cron_job_registry: CronJobRegistry) -> None:
+    cron_job_registry.register(
+        CronJob(
+            name="execute_host_label_sync_job",
+            callable=execute_host_label_sync_job,
+            interval=timedelta(minutes=1),
+            run_in_thread=True,
+        )
+    )
+
+
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
     site_spec = get_site_config(active_config, site_id)
@@ -117,42 +127,20 @@ def execute_host_label_sync_job() -> None:
     if not has_wato_slave_sites():
         return
 
-    job = DiscoveredHostLabelSyncJob()
-
-    if (
-        result := job.start(
-            job.do_sync,
-            InitialStatusArgs(
-                title=DiscoveredHostLabelSyncJob.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    ).is_error():
-        logger.error(str(result.error))
+    DiscoveredHostLabelSyncJob().do_sync()
 
 
-class DiscoveredHostLabelSyncJob(BackgroundJob):
+class DiscoveredHostLabelSyncJob:
     """This job synchronizes the discovered host labels from remote sites to the central site
 
     Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 
-    job_prefix = "discovered_host_label_sync"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Discovered host label synchronization")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
-
-    def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            job_interface.send_progress_update(_("Synchronization started..."))
-            self._execute_sync()
-            job_interface.send_result_message(_("The synchronization finished."))
+    def do_sync(self) -> None:
+        logger.info("Synchronization started...")
+        self._execute_sync()
+        logger.info("The synchronization finished.")
 
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
@@ -180,7 +168,6 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
             SiteRequest,
         ],
     ) -> SiteResult:
-        log.init_logging()  # NOTE: We run in a subprocess!
         return _execute_site_sync(*args)
 
     def _process_site_sync_results(
@@ -250,7 +237,7 @@ def _execute_site_sync(
         )
 
     except Exception as e:
-        logger.error("Exception (%s, discovered_host_label_sync)", site_id, exc_info=True)
+        logger.error("Failed to get discovered host labels from site %s: %s", site_id, e)
         return SiteResult(
             site_id=site_id,
             success=False,

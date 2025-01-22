@@ -18,7 +18,7 @@ from urllib3.connectionpool import HTTPConnectionPool
 
 from cmk.utils import paths
 
-from .automation_executor import AutomationExecutor, LocalAutomationResult
+from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
 AUTOMATION_HELPER_HOST: Final = "localhost"
 AUTOMATION_HELPER_BASE_URL: Final = "http://local-automation"
@@ -38,15 +38,14 @@ class HelperExecutor(AutomationExecutor):
         session = requests.Session()
         session.mount(AUTOMATION_HELPER_BASE_URL, _LocalAutomationAdapter())
 
-        headers = {"keep-alive": f"timeout={timeout}"} if timeout else {}
-        payload = _AutomationRequest(
+        payload = _AutomationPayload(
             name=command,
-            args=args,
+            args=arguments_with_timeout(args, timeout),
             stdin=stdin,
             log_level=logger.getEffectiveLevel(),
         ).model_dump(mode="json")
 
-        response = session.post(AUTOMATION_HELPER_ENDPOINT, json=payload, headers=headers)
+        response = session.post(AUTOMATION_HELPER_ENDPOINT, json=payload)
         response.raise_for_status()
         response_data = response.json()
 
@@ -59,10 +58,10 @@ class HelperExecutor(AutomationExecutor):
     def command_description(
         self, command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
     ) -> str:
-        return repr({"command": command, "args": args})
+        return repr({"command": command, "args": arguments_with_timeout(args, timeout)})
 
 
-class _AutomationRequest(BaseModel):
+class _AutomationPayload(BaseModel, frozen=True):
     name: str
     args: Sequence[str]
     stdin: str

@@ -8,7 +8,7 @@ import { computed, ref, watch } from 'vue'
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import CmkList from '@/components/CmkList'
 import formListActions from '@/form/components/forms/utils/formListActions'
-import type { ListUniqueSelection } from '@/form/components/vue_formspec_components'
+import type { ListUniqueSelection } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
@@ -68,6 +68,10 @@ const usedKeys = computed(() => {
 const showAddButton = computed(() => {
   if (props.spec.element_template.elements.length !== props.spec.unique_selection_elements.length) {
     return true
+  }
+
+  if (data.value.length === props.spec.unique_selection_elements.length) {
+    return false
   }
 
   for (const element of props.spec.element_template.elements) {

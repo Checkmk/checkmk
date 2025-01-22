@@ -32,14 +32,14 @@ def _get_status_output_json(
     host_attributes: Mapping[str, object],
 ) -> Iterator[Mapping[str, Any]]:
     try:
-        site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.hosts.create(hostname=hostname, attributes=dict(host_attributes))
+        site.openapi.changes.activate_and_wait_for_completion()
 
         register_controller(ctl_path, site, hostname)
         yield controller_status_json(ctl_path)
     finally:
-        site.openapi.delete_host(hostname=hostname)
-        site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        site.openapi.hosts.delete(hostname=hostname)
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized
@@ -51,7 +51,7 @@ def test_status_pull(
         site=central_site,
         ctl_path=agent_ctl,
         hostname=HostName("pull-host"),
-        host_attributes={},
+        host_attributes={"ipaddress": "127.0.0.1"},
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)
         assert (

@@ -2,21 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Callable, Sequence
+
+from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, InvalidValue
 from ._utils import (
     compute_input_hint,
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_prefill_default,
     get_title_and_help,
     localize,
@@ -43,15 +43,20 @@ _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
     IECMagnitude.YOBI: ("YiB", 1024**8),
 }
 
+_ParseValueModel = int
+_FrontendModel = list[str]
 
-class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
-    def _convert_to_value_and_unit(self, parsed_value: float | EmptyValue) -> tuple[str, str]:
+
+class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel]):
+    def _convert_to_value_and_unit(
+        self, parsed_value: float | InvalidValue[_FrontendModel]
+    ) -> tuple[str, str]:
         displayed_magnitudes = self.form_spec.displayed_magnitudes
         used_magnitudes = [_magnitudes_map[x] for x in displayed_magnitudes]
         # Just in case they are ordered incorrectly..
         used_magnitudes.sort(key=lambda x: x[1])
 
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return "0", used_magnitudes[-1][0]
 
         for unit, factor in reversed(used_magnitudes):
@@ -63,21 +68,28 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
 
         return str(parsed_value), used_magnitudes[-1][0]
 
-    def _convert_to_value(self, value: str, unit: str) -> int | EmptyValue:
+    def _convert_to_value(self, value: str, unit: str) -> int | InvalidValue[_FrontendModel]:
         try:
             converted_value = float(value)
         except ValueError:
-            return EMPTY_VALUE
+            return InvalidValue(
+                reason=_("Invalid number"),
+                fallback_value=["", _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]],
+            )
 
         for unit_name, factor in _magnitudes_map.values():
             if unit_name == unit:
                 return int(converted_value * factor)
         return int(converted_value)
 
-    def _parse_value(self, raw_value: object) -> int | EmptyValue:
+    def _parse_value(self, raw_value: object) -> _ParseValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(
+                    self.form_spec.prefill,
+                    fallback_value=["", _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]],
+                ),
+                InvalidValue,
             ):
                 return prefill_default
             raw_value = prefill_default
@@ -86,18 +98,20 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
             raw_value = self._convert_to_value(raw_value[0], raw_value[1])
 
         if not isinstance(raw_value, int):
-            return EMPTY_VALUE
+            return InvalidValue(
+                reason=_("Invalid number"),
+                fallback_value=["", _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]],
+            )
 
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: int | float | EmptyValue
-    ) -> tuple[shared_type_defs.DataSize, list[str]]:
+        self, raw_value: object, parsed_value: _ParseValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.DataSize, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        if isinstance(parsed_value, EmptyValue):
-            displayed_value = ""
-            displayed_unit = _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]
+        if isinstance(parsed_value, InvalidValue):
+            displayed_value, displayed_unit = parsed_value.fallback_value
         else:
             displayed_value, displayed_unit = self._convert_to_value_and_unit(parsed_value)
 
@@ -120,17 +134,8 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
             [str(displayed_value), displayed_unit],
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: int | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(
-                "" if isinstance(raw_value, DefaultValue) else raw_value,
-                Title("Invalid integer number"),
-            )
-        return compute_validation_errors(
-            [IsInteger()] + compute_validators(self.form_spec), parsed_value
-        )
+    def _validators(self) -> Sequence[Callable[[int], object]]:
+        return [IsInteger()] + compute_validators(self.form_spec)
 
-    def _to_disk(self, raw_value: object, parsed_value: int) -> int:
+    def _to_disk(self, raw_value: object, parsed_value: _ParseValueModel) -> int:
         return int(parsed_value)

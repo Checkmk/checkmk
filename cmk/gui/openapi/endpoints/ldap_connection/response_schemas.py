@@ -671,7 +671,7 @@ class LDAPConnectionConfig(BaseSchema):
     ldap_connection = fields.Nested(LDAPConnection)
     users = fields.Nested(LDAPUsers)
     groups = fields.Nested(LDAPGroups)
-    sync_plugins = fields.Nested(ldap_sync_plugin_schema())
+    sync_plugins = fields.Nested(ldap_sync_plugin_schema)
     other = fields.Nested(LDAPOther)
 
 

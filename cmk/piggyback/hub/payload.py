@@ -6,7 +6,7 @@
 import logging
 import multiprocessing
 import signal
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from multiprocessing.synchronize import Event
 from pathlib import Path
 from typing import Self
@@ -28,20 +28,18 @@ from .utils import make_connection, make_log_and_exit
 
 
 class PiggybackPayload(BaseModel):
-    source_host: str
-    target_host: str
-    last_update: int
-    last_contact: int | None
-    sections: bytes
+    source_host: HostName
+    raw_data: Mapping[HostName, Sequence[bytes]]
+    message_timestamp: int
+    contact_timestamp: int | None
 
     @classmethod
     def from_message(cls, message: PiggybackMessage) -> Self:
         return cls(
             source_host=message.meta.source,
-            target_host=message.meta.piggybacked,
-            last_update=message.meta.last_update,
-            last_contact=message.meta.last_contact,
-            sections=message.raw_data,
+            raw_data={message.meta.piggybacked: (message.raw_data,)},
+            message_timestamp=message.meta.last_update,
+            contact_timestamp=message.meta.last_contact,
         )
 
 
@@ -53,16 +51,14 @@ def save_payload_on_message(
         channel: Channel[PiggybackPayload], delivery_tag: DeliveryTag, received: PiggybackPayload
     ) -> None:
         logger.debug(
-            "Received payload for piggybacked host '%s' from source host '%s'",
-            received.target_host,
-            received.source_host,
+            "Received payload for piggybacked host from source host '%s'", received.source_host
         )
         store_piggyback_raw_data(
-            source_hostname=HostName(received.source_host),
-            piggybacked_raw_data={HostName(received.target_host): (received.sections,)},
-            timestamp=received.last_update,
+            source_hostname=received.source_host,
+            piggybacked_raw_data=received.raw_data,
+            message_timestamp=received.message_timestamp,
+            contact_timestamp=received.contact_timestamp,
             omd_root=omd_root,
-            status_file_timestamp=received.last_contact,
         )
         channel.acknowledge(delivery_tag)
 
@@ -99,7 +95,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         failed_message = None
         try:
             while True:
-                with make_connection(self.omd_root, self.logger, self.task_name) as conn:
+                with make_connection(self.omd_root, self.site, self.logger, self.task_name) as conn:
                     try:
                         channel = conn.channel(PiggybackPayload)
                         if failed_message is not None:

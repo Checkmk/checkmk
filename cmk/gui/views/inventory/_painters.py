@@ -27,12 +27,12 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 

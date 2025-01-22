@@ -119,7 +119,7 @@ export class MultiDataFetcher {
     subscribe_hook(
         post_url: string,
         post_body: string,
-        subscriber_func: (data?: any) => void
+        subscriber_func: (data?: any) => void,
     ) {
         // New url and body
         if (this._fetch_hooks[post_url] == undefined) {
@@ -188,15 +188,15 @@ export class MultiDataFetcher {
             this._fetch_callback(
                 post_url,
                 post_body,
-                response as CMKAjaxReponse<{figure_response: any}>
-            )
+                response as CMKAjaxReponse<{figure_response: any}>,
+            ),
         );
     }
 
     _fetch_callback(
         post_url: string,
         post_body: string,
-        api_response: CMKAjaxReponse<{figure_response: any}>
+        api_response: CMKAjaxReponse<{figure_response: any}>,
     ) {
         const response = api_response.result;
         const data = response.figure_response;
@@ -216,7 +216,7 @@ export class MultiDataFetcher {
         this._fetch_hooks[post_url][post_body].forEach(
             (subscriber_func: (data: any) => void) => {
                 subscriber_func(data);
-            }
+            },
         );
     }
 }

@@ -164,15 +164,24 @@ def remove_source_status_file(source_hostname: HostName, omd_root: Path) -> bool
 def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
-    timestamp: float,
+    message_timestamp: float,
+    contact_timestamp: float | None,
     omd_root: Path,
-    status_file_timestamp: float | None = None,
 ) -> None:
-    if not piggybacked_raw_data:
+    if contact_timestamp is None:
         # Cleanup the status file when no piggyback data was sent this turn.
         logger.debug("Received no piggyback data")
         remove_source_status_file(source_hostname, omd_root)
         return
+    # Store the last contact with this piggyback source to be able to filter outdated data later
+    # We use the mtime of this file later for comparison.
+    # Only do this for hosts that sent piggyback data this turn.
+    logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
+    status_file_path = _get_source_status_file_path(source_hostname, omd_root)
+    # usually the status file is updated with the same timestamp as the piggyback files, but in
+    # case of distributed piggyback we want to keep the original timestamps so the fetchers etc.
+    # work as if on the source system
+    _write_file_with_mtime(file_path=status_file_path, content=b"", mtime=contact_timestamp)
 
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
@@ -182,20 +191,8 @@ def store_piggyback_raw_data(
         _write_file_with_mtime(
             file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname, omd_root),
             content=b"%s\n" % b"\n".join(lines),
-            mtime=timestamp,
+            mtime=message_timestamp,
         )
-
-    # Store the last contact with this piggyback source to be able to filter outdated data later
-    # We use the mtime of this file later for comparison.
-    # Only do this for hosts that sent piggyback data this turn.
-    logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
-    status_file_path = _get_source_status_file_path(source_hostname, omd_root)
-    # usually the status file is updated with the same timestamp as the piggyback files, but in
-    # case of distributed piggyback we want to keep the original timestamps so the fetchers etc.
-    # work as if on the source system
-    _write_file_with_mtime(
-        file_path=status_file_path, content=b"", mtime=status_file_timestamp or timestamp
-    )
 
 
 def _write_file_with_mtime(

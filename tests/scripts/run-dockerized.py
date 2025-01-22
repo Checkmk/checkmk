@@ -24,8 +24,8 @@ from pathlib import Path
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-from tests.testlib.containers import execute_tests_in_container
 from tests.testlib.repo import current_base_branch_name
+from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.ccc.version import Edition

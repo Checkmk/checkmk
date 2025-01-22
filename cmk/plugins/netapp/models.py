@@ -202,7 +202,7 @@ class LunModel(BaseModel):
     space_size: int
     space_used: int | None = None
     enabled: bool
-    read_only: bool
+    read_only: bool | None = None
     svm_name: str
     volume_name: str
 

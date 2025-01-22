@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { renderFormWithData } from '../cmk-form-helper'
@@ -21,7 +21,9 @@ const stringValidators: FormSpec.Validator[] = [
 const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'nestedStringTitle',
+  label: 'nestedStringLabel',
   help: 'nestedStringHelp',
+  i18n_base: { required: 'required' },
   validators: stringValidators,
   input_hint: 'nestedStringInputHint',
   field_size: 'SMALL',
@@ -32,6 +34,7 @@ const integerFormSpec: FormSpec.Integer = {
   type: 'integer',
   title: 'nestedIntegerTitle',
   label: 'nestedIntegerLabel',
+  i18n_base: { required: 'required' },
   help: 'nestedIntegerHelp',
   validators: [],
   input_hint: null,
@@ -42,6 +45,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   type: 'cascading_single_choice',
   title: 'fooTitle',
   label: 'fooLabel',
+  i18n_base: { required: 'required' },
   layout: 'horizontal',
   help: 'fooHelp',
   validators: [],
@@ -73,7 +77,7 @@ test('FormCascadingSingleChoice displays data', async () => {
     name: 'stringChoiceTitle'
   })
 
-  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {})
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox', { name: 'nestedStringLabel' })
   expect(stringElement.value).toBe('some_value')
 
   expect(getCurrentData()).toMatch('["stringChoice","some_value"]')
@@ -185,6 +189,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     type: 'dictionary',
     title: 'fooTitle',
     help: 'fooHelp',
+    i18n_base: { required: 'required' },
     layout: 'one_column',
     validators: [],
     groups: [],
@@ -193,6 +198,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     elements: [
       {
         name: 'value',
+        render_only: false,
         required: false,
         default_value: 'baz',
         parameter_form: stringFormSpec,
@@ -207,6 +213,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     type: 'cascading_single_choice',
     title: 'fooTitle',
     label: 'fooLabel',
+    i18n_base: { required: 'required' },
     layout: 'horizontal',
     help: 'fooHelp',
     validators: [],

@@ -36,8 +36,9 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
+from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import Theme, theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 

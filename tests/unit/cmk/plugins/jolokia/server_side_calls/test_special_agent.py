@@ -73,7 +73,8 @@ HOST_CONFIG = HostConfig(
                     "8080",
                     "--user",
                     "userID",
-                    f"--password {Secret(23).unsafe()}",
+                    "--password",
+                    Secret(23).unsafe(),
                     "--mode",
                     "basic",
                 ]
@@ -84,7 +85,7 @@ HOST_CONFIG = HostConfig(
             {
                 "login": {
                     "user": "userID",
-                    "password": Secret(id=1, pass_safely=True),
+                    "password": Secret(id=1),
                     "mode": "basic",
                 },
                 "port": 8080,
@@ -97,7 +98,8 @@ HOST_CONFIG = HostConfig(
                     "8080",
                     "--user",
                     "userID",
-                    f"--password {Secret(id=1, format='%s', pass_safely=False)}",
+                    "--password",
+                    Secret(id=1).unsafe(),
                     "--mode",
                     "basic",
                 ]

@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef P_INTERNAL_H
 #define P_INTERNAL_H
@@ -15,8 +13,8 @@
 #include <string>
 #include <string_view>
 
-#include "wnx/carrier.h"
 #include "common/stop_watch.h"
+#include "wnx/carrier.h"
 #include "wnx/section_header.h"
 
 namespace cma::srv {
@@ -54,6 +52,12 @@ public:
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
     explicit Basic(std::string_view name) noexcept : Basic(name, '\0') {}
+
+    Basic(const Basic &) = delete;
+    Basic &operator=(const Basic &) = delete;
+
+    Basic(Basic &&) = delete;
+    Basic &operator=(Basic &&) = delete;
     virtual ~Basic() = default;
 
     /// internal_port format "type:value", where type:

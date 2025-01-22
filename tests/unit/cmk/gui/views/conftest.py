@@ -5,12 +5,14 @@
 
 import pytest
 
+from cmk.utils.user import UserId
+
 from cmk.gui.view import View
-from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.views.store import get_all_views
 
 
 @pytest.fixture(name="view")
 def view_fixture(request_context: None) -> View:
     view_name = "allhosts"
-    view_spec = multisite_builtin_views[view_name].copy()
+    view_spec = get_all_views()[(UserId.builtin(), view_name)].copy()
     return View(view_name, view_spec, view_spec.get("context", {}))

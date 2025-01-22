@@ -1,4 +1,3 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -213,30 +212,6 @@ pkg_filegroup(
 pkg_tar(
     name = "python_tar",
     srcs = [":python_files_pkg"],
-    package_file_name = "python.tar",
-    visibility = ["//visibility:public"],
-)
-
-# only necessary for intermediate install
-# can be removed once that is obsolete
-pkg_filegroup(
-    name = "python_files_with_prefix_pkg",
-    srcs = [
-        ":python_bin_pkg",
-        ":python_bin_symlinks_pkg",
-        ":python_lib_dynload_pkg",
-        ":python_lib_symlinks_pkg",
-        ":python_pkgconfig_symlinks_pkg",
-        ":python_rest_pkg",
-        ":python_share_symlinks_pkg",
-    ],
-    prefix = "Python-%s" % PYTHON_VERSION,
-    visibility = ["//visibility:public"],
-)
-
-pkg_tar(
-    name = "python_tar_with_prefix",
-    srcs = [":python_files_with_prefix_pkg"],
     package_file_name = "python.tar",
     visibility = ["//visibility:public"],
 )

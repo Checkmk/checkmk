@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, Literal, NotRequired, TYPE_CHECKING, TypedDict
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from apispec.yaml_utils import dict_to_yaml
@@ -79,25 +79,32 @@ def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
 
 def crash_report_response(exc: Exception) -> WSGIApplication:
     site = omd_site()
-    details: dict[str, Any] = {}
+    details = RestAPIDetails(
+        crash_report_url={},
+        request_info=RequestInfo(
+            method="missing",
+            data_received="missing",
+            headers={"accept": "missing", "content_type": "missing"},
+        ),
+        check_mk_info={},
+    )
 
     if isinstance(exc, GeneralRestAPIException):
-        details["rest_api_exception"] = {
-            "description": exc.description,
-            "detail": exc.detail,
-            "ext": exc.ext,
-            "fields": exc.fields,
-        }
+        details["rest_api_exception"] = RestAPIException(
+            description=exc.description,
+            detail=exc.detail,
+            ext=exc.ext,
+            fields=exc.fields,
+        )
 
-    details["request_info"] = {
-        "method": request.environ["REQUEST_METHOD"],
-        "data_received": request.json if request.data else "",
-        "endpoint_url": request.path,
-        "headers": {
+    details["request_info"] = RequestInfo(
+        method=request.environ["REQUEST_METHOD"],
+        data_received=request.json if request.data else "",
+        headers={
             "accept": request.environ.get("HTTP_ACCEPT", "missing"),
             "content_type": request.environ.get("CONTENT_TYPE", "missing"),
         },
-    }
+    )
 
     details["check_mk_info"] = {
         "site": site,
@@ -108,10 +115,11 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         },
     }
 
-    crash = APICrashReport.from_exception(
+    crash = APICrashReport(
         paths.crash_dir,
-        cmk_version.get_general_version_infos(paths.omd_root),
-        details=details,
+        APICrashReport.make_crash_info(
+            cmk_version.get_general_version_infos(paths.omd_root), details
+        ),
     )
     crash_reporting.CrashReportStore().save(crash)
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
@@ -131,9 +139,8 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
 
     del crash.crash_info["exc_traceback"]
     if user.may("general.see_crash_reports"):
-        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")
+        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")  # type: ignore[typeddict-item]
 
-    crash.crash_info["time"] = datetime.fromtimestamp(crash.crash_info["time"]).isoformat()
     crash_msg = (
         exc.description
         if isinstance(exc, GeneralRestAPIException)
@@ -144,7 +151,12 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         status=500,
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
-        ext=EXT(crash.crash_info),
+        ext=EXT(
+            {
+                **crash.crash_info,
+                **{"time": datetime.fromtimestamp(float(crash.crash_info["time"])).isoformat()},
+            }
+        ),
     )
 
 
@@ -541,7 +553,27 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         return response(environ, start_response)
 
 
-class APICrashReport(crash_reporting.ABCCrashReport):
+class RestAPIException(TypedDict):
+    description: str
+    detail: str
+    ext: dict[str, Any] | None
+    fields: dict[str, Any] | None
+
+
+class RequestInfo(TypedDict):
+    data_received: Any
+    method: str
+    headers: dict[str, Any]
+
+
+class RestAPIDetails(TypedDict):
+    crash_report_url: dict[str, Any]
+    rest_api_exception: NotRequired[RestAPIException]
+    request_info: RequestInfo
+    check_mk_info: dict[str, Any]
+
+
+class APICrashReport(crash_reporting.ABCCrashReport[RestAPIDetails]):
     """API specific crash reporting class."""
 
     @classmethod

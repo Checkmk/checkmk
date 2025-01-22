@@ -2,39 +2,41 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import BooleanChoice
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DefaultValue, InvalidValue
 from ._utils import (
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_title_and_help,
     localize,
 )
 
+type _ParsedValueModel = bool
+type _FrontendModel = bool
 
-class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
-    def _parse_value(self, raw_value: object) -> bool | EmptyValue:
+
+class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
         if not isinstance(raw_value, bool):
-            return EMPTY_VALUE
+            return InvalidValue(
+                reason=_("Invalid choice, falling back to False"), fallback_value=False
+            )
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: bool | EmptyValue
-    ) -> tuple[shared_type_defs.BooleanChoice, bool]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.BooleanChoice, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
-        assert not isinstance(parsed_value, EmptyValue)
         return (
             shared_type_defs.BooleanChoice(
                 title=title,
@@ -44,19 +46,8 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
                 text_on=localize(Label("on")),
                 text_off=localize(Label("off")),
             ),
-            parsed_value,
+            parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: bool | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid boolean choice")
-            )
-        return compute_validation_errors(compute_validators(self.form_spec), raw_value)
-
-    def _to_disk(self, raw_value: object, parsed_value: bool | EmptyValue) -> bool:
-        if isinstance(parsed_value, EmptyValue):
-            raise MKGeneralException("Unable to serialize empty value")
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> bool:
         return parsed_value

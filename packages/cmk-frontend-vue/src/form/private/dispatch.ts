@@ -5,14 +5,15 @@
  */
 
 import { type Component } from 'vue'
-import type { Components } from '@/form/components/vue_formspec_components'
+import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
-import FormCatalog from '@/form/components/forms/FormCatalog.vue'
-import FormConditionChoices from '@/form/components/forms/form_condition_choices'
+import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
+import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
+import FormMetric from '../components/forms/FormMetric.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
@@ -58,6 +59,7 @@ const components: Record<Components['type'], Component> = {
   list: FormList,
   list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
+  metric: FormMetric,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,
   password: FormPassword,

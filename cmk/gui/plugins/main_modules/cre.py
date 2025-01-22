@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Import top level modules into the application to make them able to register with the application."""
-# pylint: disable=unused-import
+# ruff: noqa: F401
 
 import cmk.gui.autocompleters
 import cmk.gui.bi

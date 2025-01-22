@@ -167,7 +167,7 @@ def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpe
             yield component
 
 
-def build_quick_setup_formspec_map(
+def build_formspec_map_from_stages(
     stages: Sequence[QuickSetupStage],
 ) -> Mapping[FormSpecId, FormSpec]:
     return {

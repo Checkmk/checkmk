@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName

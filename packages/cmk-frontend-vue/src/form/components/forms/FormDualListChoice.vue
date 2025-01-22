@@ -4,15 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type Ref } from 'vue'
 import { useValidation, type ValidationMessages } from '../utils/validation'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import type {
   DualListChoice,
   MultipleChoiceElement
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import { useId } from '@/form/utils'
+import { fetchData } from '../utils/autocompleter'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   spec: DualListChoice
@@ -26,6 +30,25 @@ const [validation, value] = useValidation<string[]>(
   () => props.backendValidation
 )
 
+const localElements = ref<{ name: string; title: string }[]>(props.spec.elements)
+const loading: Ref<boolean> = ref(false) // Loading flag
+
+onMounted(async () => {
+  if (!props.spec.autocompleter) {
+    return
+  }
+  loading.value = true
+  await fetchData<{ choices: [string, string][] }>('', props.spec.autocompleter.data).then(
+    (result) => {
+      localElements.value = result['choices'].map(([id, title]) => ({
+        name: id,
+        title: title.length > 60 ? `${title.substring(0, 57)}...` : title
+      }))
+      loading.value = false
+    }
+  )
+})
+
 const searchInactive = ref('')
 const searchActive = ref('')
 
@@ -38,8 +61,7 @@ const items = computed(() => {
   const matchesSearch = (element: MultipleChoiceElement, search: string) => {
     return !search || element.title.toLowerCase().includes(search.toLowerCase())
   }
-
-  props.spec.elements.forEach((element) => {
+  localElements.value.forEach((element) => {
     if (value.value.includes(element.name)) {
       if (matchesSearch(element, searchActive.value)) {
         active.push(element)
@@ -50,7 +72,6 @@ const items = computed(() => {
       }
     }
   })
-
   return { active: active, inactive: inactive }
 })
 
@@ -99,7 +120,7 @@ function toggleAll(allActive: boolean) {
 
 const selectStyle = computed(() => {
   let maxLength = 1
-  props.spec.elements.forEach((element) => {
+  localElements.value.forEach((element) => {
     if (element.title.length > maxLength) {
       maxLength = element.title.length
     }
@@ -107,11 +128,12 @@ const selectStyle = computed(() => {
 
   return {
     height:
-      props.spec.elements.length < 10
+      localElements.value.length < 10
         ? '200px'
-        : `${Math.min(props.spec.elements.length * 15, 400)}px`,
+        : `${Math.min(localElements.value.length * 15, 400)}px`,
     width: `${Math.max(20, Math.min(100, maxLength * 0.7))}em`,
-    marginTop: '3px'
+    marginTop: '3px',
+    maxWidth: '440px'
   }
 })
 
@@ -140,6 +162,10 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 
 <template>
   <div class="container">
+    <div v-if="loading" class="form-duallist-choice__loading">
+      <CmkIcon name="load-graph" variant="inline" size="xlarge" />
+      <span>{{ props.spec.i18n.autocompleter_loading }}</span>
+    </div>
     <table class="vue multiple_choice">
       <thead>
         <tr class="table-header">
@@ -147,14 +173,13 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
             <div class="selected-info">
               <div class="title">{{ props.spec.i18n.available_options }}</div>
               <div>
-                {{ availableSelected.length }}/{{ props.spec.elements.length }}
+                {{ availableSelected.length }}/{{ items.inactive.length }}
                 {{ props.spec.i18n.selected }}
               </div>
             </div>
             <div class="search-input-wrapper" :class="!!searchInactive ? 'active' : ''">
               <input
                 ref="search-inactive-input"
-                tabindex="1"
                 class="search"
                 data-testid="search-inactive"
                 @input="
@@ -174,14 +199,13 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
             <div class="selected-info">
               <div class="title">{{ props.spec.i18n.selected_options }}</div>
               <div>
-                {{ activeSelected.length }}/{{ props.spec.elements.length }}
+                {{ activeSelected.length }}/{{ items.active.length }}
                 {{ props.spec.i18n.selected }}
               </div>
             </div>
             <div class="search-input-wrapper" :class="!!searchActive ? 'active' : ''">
               <input
                 ref="search-active-input"
-                tabindex="3"
                 class="search"
                 data-testid="search-active"
                 @input="
@@ -202,23 +226,24 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
         <tr>
           <td>
             <div v-if="items.inactive.length > 0">
-              <select
-                :id="`${componentId}_available`"
-                v-model="availableSelected"
-                tabindex="2"
-                aria-label="available"
-                multiple
-                :style="selectStyle"
-              >
-                <option
-                  v-for="element in items.inactive"
-                  :key="JSON.stringify(element.name)"
-                  :value="element.name"
-                  @dblclick="() => handleDoubleClickToAddItem(element.name)"
+              <CmkScrollContainer>
+                <select
+                  :id="`${componentId}_available`"
+                  v-model="availableSelected"
+                  aria-label="available"
+                  multiple
+                  :style="selectStyle"
                 >
-                  {{ element.title }}
-                </option>
-              </select>
+                  <option
+                    v-for="element in items.inactive"
+                    :key="JSON.stringify(element.name)"
+                    :value="element.name"
+                    @dblclick="() => handleDoubleClickToAddItem(element.name)"
+                  >
+                    {{ element.title }}
+                  </option>
+                </select>
+              </CmkScrollContainer>
             </div>
 
             <div v-else :style="selectStyle" class="no-element-in-select">
@@ -249,7 +274,6 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <select
                 :id="`${componentId}_active`"
                 v-model="activeSelected"
-                tabindex="4"
                 aria-label="active"
                 multiple
                 :style="selectStyle"
@@ -276,6 +300,11 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 </template>
 
 <style scoped>
+.form-duallist-choice__loading {
+  display: flex;
+  align-items: center;
+  padding-top: 12px;
+}
 .container {
   margin-right: 10px;
 }
@@ -298,7 +327,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 
 .table-header {
   .head {
-    color: white;
+    color: var(--font-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -371,22 +400,5 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
   user-select: none;
   opacity: 0.5;
   border-radius: 3px;
-}
-
-/* custom scroll bar => should be removed or moved to globals*/
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #303946;
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #e0e0e4;
-  border-radius: 1rem;
-  border: 3px solid #303946;
 }
 </style>

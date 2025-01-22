@@ -14,7 +14,6 @@ from typing import Any, cast, Literal, TypedDict
 
 from cmk.ccc.version import __version__, Edition, Version
 
-import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.werks.acknowledgement import (
     is_acknowledged,
@@ -24,7 +23,6 @@ from cmk.utils.werks.acknowledgement import (
 )
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
-from cmk.utils.werks.werk import WerkTranslator
 
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -55,11 +53,11 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -72,6 +70,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+import cmk.werks.utils as werks_utils
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
 
@@ -352,7 +351,7 @@ def page_werk() -> None:
         html.td(content, class_=css)
         html.close_tr()
 
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk))
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
@@ -454,7 +453,7 @@ def num_unacknowledged_incompatible_werks() -> int:
 
 
 def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, ValueSpec, Any]]:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     component_choices: list[tuple[None | str, str]] = [(None, _("All components"))]
     component_choices += sorted(translator.components())
     return [
@@ -524,7 +523,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE, Edition.CSE)
                     ),
                 ],
             ),
@@ -596,9 +595,9 @@ def render_unacknowleged_werks() -> None:
 
 
 def get_sort_key_by_version_and_component(
-    translator: WerkTranslator, werk: Werk
+    translator: werks_utils.WerkTranslator, werk: Werk
 ) -> tuple[str | int, ...]:
-    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk)
+    werk_result = werks_utils.get_sort_key_by_version_and_component(translator, werk)
     result = (
         *werk_result[:4],
         int(is_acknowledged(werk, load_acknowledgements())),
@@ -608,7 +607,7 @@ def get_sort_key_by_version_and_component(
 
 
 def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
@@ -641,7 +640,7 @@ _SORT_AND_GROUP: dict[
 
 
 def render_werks_table(werk_table_options: WerkTableOptions) -> None:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     list_of_werks = sorter(
@@ -672,7 +671,9 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
     return compatibilities[(compatible, acknowledged)]
 
 
-def render_werks_table_row(table: Table, translator: WerkTranslator, werk: Werk) -> None:
+def render_werks_table_row(
+    table: Table, translator: werks_utils.WerkTranslator, werk: Werk
+) -> None:
     table.row()
     table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
     table.cell(_("Version"), werk.version, css=["number narrow"])

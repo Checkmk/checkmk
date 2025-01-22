@@ -7,7 +7,7 @@
 import datetime as dt
 import time
 from collections.abc import Mapping
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.utils.user import UserId
 
@@ -363,32 +363,31 @@ def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict
 class APIAuthOption(TypedDict, total=False):
     # TODO: this should be adapted with the introduction of an enum
     auth_type: Literal["automation", "password", "saml2", "ldap"]
+    store_automation_secret: NotRequired[bool]
     enforce_password_change: bool
 
 
 def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
-    result: APIAuthOption = {}
-
     # TODO: the default ConnectorType.HTPASSWD is currently a bug #CMK-12723 but not wrong
     connector = internal_attributes.get("connector", ConnectorType.HTPASSWD)
     if connector == ConnectorType.HTPASSWD:
-        if "automation_secret" in internal_attributes:
-            result["auth_type"] = "automation"
+        if internal_attributes.get("is_automation_user", False):
+            return APIAuthOption(
+                auth_type="automation",
+                store_automation_secret=internal_attributes.get("store_automation_secret", False),
+            )
         elif "password" in internal_attributes:
-            result["auth_type"] = "password"
-            if (
-                "enforce_pw_change" in internal_attributes
-                and (enforce_password_change := internal_attributes["enforce_pw_change"])
-                is not None
-            ):
-                result["enforce_password_change"] = enforce_password_change
-        return result
+            return APIAuthOption(
+                auth_type="password",
+                enforce_password_change=bool(internal_attributes.get("enforce_pw_change", False)),
+            )
 
     for connection in load_connection_config():
         if connection["id"] == connector:
-            result["auth_type"] = connection["type"]
+            return APIAuthOption(auth_type=connection["type"])
 
-    return result
+    # We probably should raise?
+    return APIAuthOption()
 
 
 def _contact_options_to_api_format(internal_attributes):
@@ -473,7 +472,9 @@ def _update_auth_options(
 
     if auth_options.get("auth_type") == "remove":
         internal_attrs.pop("automation_secret", None)
+        internal_attrs.pop("store_automation_secret", None)
         internal_attrs.pop("password", None)
+        internal_attrs["is_automation_user"] = False
         internal_attrs["serial"] = 1
     else:
         internal_auth_attrs = _auth_options_to_internal_format(auth_options)
@@ -516,7 +517,7 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
         >>> _auth_options_to_internal_format(
         ...     {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"}
         ... )  # doctest:+ELLIPSIS
-        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'last_pw_change': ...}
+        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'store_automation_secret': False, 'is_automation_user': True, 'last_pw_change': ...}
 
     Enforcing password change without changing the password:
 
@@ -562,9 +563,14 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
 
         if auth_type == "password":
             verify_password_policy(password)
+            internal_options["is_automation_user"] = False
 
         if auth_type == "automation":
             internal_options["automation_secret"] = password.raw
+            internal_options["store_automation_secret"] = bool(
+                auth_details.get("store_automation_secret", False)
+            )
+            internal_options["is_automation_user"] = True
 
         # In contrast to enforce_pw_change, the maximum password age is enforced for automation
         # users as well. So set this for both kinds of users.

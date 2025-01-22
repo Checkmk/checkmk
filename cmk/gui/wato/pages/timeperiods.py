@@ -63,14 +63,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.timeperiods import load_timeperiods
 
 logger = logging.getLogger(__name__)
 
 TimeperiodUsage = tuple[str, str]
-
-from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -461,9 +459,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 exception_map[dt] = [timerange]
 
         # If a time period exception has the full day, we can ignore the others (if available)
-        for exception in exception_map:
-            if ("00:00", "24:00") in exception_map[exception]:
-                exception_map[exception] = [("00:00", "24:00")]
+        for timeranges in exception_map.values():
+            if ("00:00", "24:00") in timeranges:
+                timeranges[:] = [("00:00", "24:00")]
 
         get_vars = {
             "timeperiod_p_alias": str(

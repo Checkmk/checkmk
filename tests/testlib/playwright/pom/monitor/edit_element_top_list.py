@@ -77,6 +77,10 @@ class ElementTopList(CmkPage):
         return self.main_area.locator().get_by_text("(Select metric)")
 
     @property
+    def _show_service_name_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_text("Show service name")
+
+    @property
     def service_exact_match_search_field(self) -> Locator:
         return self.service_filter("Service (exact match)").get_by_role("textbox")
 
@@ -111,6 +115,10 @@ class ElementTopList(CmkPage):
         self.select_metric_field.click()
         self.searchbox.fill(metric)
         self.search_option(metric).click()
+
+    def check_show_service_name_checkbox(self, check: bool = True) -> None:
+        if self._show_service_name_checkbox.is_checked() != check:
+            self._show_service_name_checkbox.click()
 
 
 class EditElementTopList(ElementTopList):

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
-import type { CoreStats } from '@/notification/type_defs'
+import type { CoreStats } from 'cmk-shared-typing/typescript/notifications'
 
 defineProps<{
   stats: CoreStats

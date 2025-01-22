@@ -95,3 +95,46 @@ def test_check_oracle_instance_uptime_error(agent_based_plugins: AgentBasedPlugi
                 ),
             )
         )
+
+
+def test_check_oracle_instance_uptime_pdb_mounted(agent_based_plugins: AgentBasedPlugins) -> None:
+    with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
+        assert list(
+            agent_based_plugins.check_plugins[
+                CheckPluginName("oracle_instance_uptime")
+            ].check_function(
+                item="CPMOZD.PDB$SEED",
+                params={},
+                section=parse_oracle_instance(
+                    [
+                        [
+                            "CPMOZD",
+                            "19.25.0.0.0",
+                            "MOUNTED",
+                            "ALLOWED",
+                            "STARTED",
+                            "1988689",
+                            "461957806",
+                            "ARCHIVELOG",
+                            "PHYSICAL STANDBY",
+                            "YES",
+                            "CPMOZ",
+                            "190520200930",
+                            "TRUE",
+                            "2",
+                            "PDB$SEED",
+                            "2225282951",
+                            "MOUNTED",
+                            "",
+                            "2897215488",
+                            "ENABLED",
+                            "-1",
+                            "8192",
+                            "gemhb-ol13.grit.local",
+                        ]
+                    ]
+                ),
+            )
+        ) == [
+            Result(state=State.OK, summary="PDB in mounted state has no uptime information"),
+        ]

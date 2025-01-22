@@ -62,7 +62,7 @@ class AddRuleFilesystems(CmkPage):
     @property
     def levels_for_used_free_space_warning_text_field(self) -> Locator:
         return self._value_section("Levels for used/free space").locator(
-            "input[name='ve_p_levels_0_0_0']"
+            "input[name*='_p_levels_0_0_0']"
         )
 
     def check_levels_for_user_free_space(self, check: bool) -> None:

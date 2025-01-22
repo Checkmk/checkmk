@@ -241,7 +241,7 @@ def combine_netapp_api_volumes(
 def check_netapp_luns(
     item: str,
     online: bool,
-    read_only: bool,
+    read_only: bool | None,
     size_total_bytes: int,
     size_total: float,
     size_available: float,
@@ -256,7 +256,7 @@ def check_netapp_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary=f"read-only is {str(read_only).lower()} (expected: {expected})",
+            summary=f"read-only is {str(read_only if read_only is not None else "unknown").lower()} (expected: {expected})",
         )
 
     if params.get("ignore_levels"):

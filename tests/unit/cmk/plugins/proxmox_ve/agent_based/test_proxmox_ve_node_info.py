@@ -85,7 +85,6 @@ def test_check_proxmox_ve_node_info(
     params: Mapping[str, object], section: pvni.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvni.check_proxmox_ve_node_info(params, section))
-    print("\n" + "\n".join(map(str, results)))
     assert results == expected_results
 
 

@@ -42,7 +42,6 @@ from cmk.gui import (
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
-from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
@@ -52,7 +51,7 @@ from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
@@ -151,10 +150,15 @@ def register(
     help_info_line: Callable[[], str],
     help_learning_items: Callable[[], list[TopicMenuItem]],
     help_developer_items: Callable[[], list[TopicMenuItem]],
+    help_about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> None:
     pagetypes.register(mega_menu_registry)
     help_menu.register(
-        mega_menu_registry, help_info_line, help_learning_items, help_developer_items
+        mega_menu_registry,
+        help_info_line,
+        help_learning_items,
+        help_developer_items,
+        help_about_checkmk_items,
     )
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
@@ -165,7 +169,6 @@ def register(
         permission_registry,
         page_registry,
         visual_type_registry,
-        register_post_config_load_hook,
         multisite_builtin_views,
         row_post_processor_registry,
     )
@@ -260,7 +263,9 @@ def register(
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)
+    quick_setup_registration.register(
+        main_module_registry, mode_registry, quick_setup_registry, job_registry
+    )
     background_job_registration.register(
         page_registry,
         mode_registry,

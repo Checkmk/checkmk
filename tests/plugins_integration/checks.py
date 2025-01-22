@@ -113,7 +113,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     try:
         return {
             check["id"]: check
-            for check in site.openapi.get_host_services(
+            for check in site.openapi.services.get_host_services(
                 host_name,
                 columns=(config.api_services_cols or []) + ["plugin_output"],
                 pending=False,
@@ -135,7 +135,7 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
     host_names = []
     dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
-        hosts = [_ for _ in site.openapi.get_hosts() if _.get("id") not in (None, "", site.id)]
+        hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
         agent_host_names = [
             _.get("id") for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})
         ]
@@ -297,7 +297,7 @@ def process_check_output(  # pylint: disable=too-many-branches
     check_results = {
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
-    for check_id in check_results:
+    for check_id, results in check_results.items():
         if check_id in SkippedChecks.SKIPPED_CHECKS:
             logger.info("Check %s currently skipped", check_id)
             passed = True
@@ -305,19 +305,19 @@ def process_check_output(  # pylint: disable=too-many-branches
 
         logger.debug('> Processing check id "%s"...', check_id)
         if config.mode == CheckModes.ADD and not check_canons.get(check_id):
-            check_canons[check_id] = check_results[check_id]
+            check_canons[check_id] = results
             logger.info("[%s] Canon added!", check_id)
 
         logger.debug('> Verifying check id "%s"...', check_id)
         check_success, diff = _verify_check_result(
             check_id,
             check_canons.get(check_id, {}),
-            check_results[check_id],
+            results,
             output_dir,
             config.mode,
         )
         if config.mode == CheckModes.UPDATE and diff:
-            check_canons[check_id] = check_results[check_id]
+            check_canons[check_id] = results
             logger.info("[%s] Canon updated!", check_id)
             passed = True
             continue
@@ -377,14 +377,14 @@ def setup_site(site: Site, dump_path: str) -> None:
 
     for dump_type in config.dump_types:  # type: ignore[union-attr]
         host_folder = f"/{dump_type}"
-        if site.openapi.get_folder(host_folder):
+        if site.openapi.folders.get(host_folder):
             logger.info('Host folder "%s" already exists!', host_folder)
         else:
             logger.info('Creating host folder "%s"...', host_folder)
-            site.openapi.create_folder(host_folder)
+            site.openapi.folders.create(host_folder)
         ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
         logger.info('Creating rule "%s"...', ruleset_name)
-        site.openapi.create_rule(
+        site.openapi.rules.create(
             ruleset_name=ruleset_name,
             value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
             folder=host_folder,
@@ -401,7 +401,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     }
     if "snmp" in host_name:
         host_attributes["tag_snmp_ds"] = "snmp-v2"
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname=host_name,
         folder="/snmp" if "snmp" in host_name else "/agent",
         attributes=host_attributes,
@@ -413,7 +413,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         site.activate_changes_and_wait_for_core_reload()
 
         logger.info("Running service discovery...")
-        site.openapi.discover_services_and_wait_for_completion(host_name)
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
         logger.info("Activating changes & reloading core...")
         site.activate_changes_and_wait_for_core_reload()
@@ -426,7 +426,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
             # => a second time to calculate differences
             # => a third time since some checks require it
             site.schedule_check(host_name, "Check_MK", 0, 60)
-            pending_checks = site.openapi.get_host_services(host_name, pending=True)
+            pending_checks = site.openapi.services.get_host_services(host_name, pending=True)
             if idx > 0 and len(pending_checks) == 0:
                 break
 
@@ -443,7 +443,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     finally:
         if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
-            site.openapi.delete_host(host_name)
+            site.openapi.hosts.delete(host_name)
             site.activate_changes_and_wait_for_core_reload()
 
 
@@ -451,7 +451,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     logger.info('Creating source host "%s"...', source_host_name)
     host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname=source_host_name,
         attributes=host_attributes,
         bake_agent=False,
@@ -471,55 +471,58 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
         ).returncode
         == 0
     )
-    logger.info("Activating changes & reloading core...")
-    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True, strict=False)
 
     logger.info("Running service discovery...")
-    site.openapi.discover_services_and_wait_for_completion(source_host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)
 
-    try:
-        _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
-        wait_for_dcd_pend_changes(site)
+    with _dcd_connector(site):
+        try:
+            _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
+            wait_for_dcd_pend_changes(site)
 
-        hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
-        for hostname in hostnames:
-            logger.info("Scheduling checks & checking for pending services...")
-            pending_checks = []
-            for idx in range(3):
-                # we have to schedule the checks multiple times (twice at least):
-                # => once to get baseline data
-                # => a second time to calculate differences
-                # => a third time since some checks require it
-                site.schedule_check(hostname, "Check_MK", 0, 60)
-                pending_checks = site.openapi.get_host_services(hostname, pending=True)
-                if idx > 0 and len(pending_checks) == 0:
-                    break
+            hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
+            for hostname in hostnames:
+                logger.info("Scheduling checks & checking for pending services...")
+                pending_checks = []
+                for idx in range(3):
+                    # we have to schedule the checks multiple times (twice at least):
+                    # => once to get baseline data
+                    # => a second time to calculate differences
+                    # => a third time since some checks require it
+                    site.schedule_check(hostname, "Check_MK", 0, 60)
+                    pending_checks = site.openapi.services.get_host_services(hostname, pending=True)
+                    if idx > 0 and len(pending_checks) == 0:
+                        break
 
-            if pending_checks:
-                logger.info(
-                    '%s pending service(s) found on host "%s": %s',
-                    len(pending_checks),
-                    hostname,
-                    ",".join(
-                        _.get("extensions", {}).get("description", _.get("id"))
-                        for _ in pending_checks
-                    ),
+                if pending_checks:
+                    logger.info(
+                        '%s pending service(s) found on host "%s": %s',
+                        len(pending_checks),
+                        hostname,
+                        ",".join(
+                            _.get("extensions", {}).get("description", _.get("id"))
+                            for _ in pending_checks
+                        ),
+                    )
+
+            yield
+
+        finally:
+            if not config.skip_cleanup:
+                logger.info('Deleting source host "%s"...', source_host_name)
+                site.openapi.hosts.delete(source_host_name)
+
+                assert (
+                    run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode
+                    == 0
                 )
 
-        yield
-
-    finally:
-        if not config.skip_cleanup:
-            logger.info('Deleting source host "%s"...', source_host_name)
-            site.openapi.delete_host(source_host_name)
-
-            assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
-
-            logger.info("Activating changes & reloading core...")
-            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
-
-            _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
-            wait_for_dcd_pend_changes(site)
+                site.openapi.changes.activate_and_wait_for_completion(
+                    force_foreign_changes=True, strict=False
+                )
+                _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
+                wait_for_dcd_pend_changes(site)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -548,7 +551,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
         for host_name in snmp_host_names
     ]
     logger.info("Bulk-creating %s hosts...", len(host_entries))
-    site.openapi.bulk_create_hosts(
+    site.openapi.hosts.bulk_create(
         host_entries,
         bake_agent=False,
         ignore_existing=True,
@@ -558,13 +561,17 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.bulk_discover_services_and_wait_for_completion(host_names, bulk_size=10)
+    site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+        host_names, bulk_size=10
+    )
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Checking for pending services...")
-    pending_checks = {_: site.openapi.get_host_services(_, pending=True) for _ in host_names}
+    pending_checks = {
+        _: site.openapi.services.get_host_services(_, pending=True) for _ in host_names
+    }
     for idx in range(3):
         # we have to schedule the checks multiple times (twice at least):
         # => once to get baseline data
@@ -572,33 +579,32 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
         # => a third time since some checks require it
         for host_name in list(pending_checks.keys())[:]:
             site.schedule_check(host_name, "Check_MK", 0, 60)
-            pending_checks[host_name] = site.openapi.get_host_services(host_name, pending=True)
+            pending_checks[host_name] = site.openapi.services.get_host_services(
+                host_name, pending=True
+            )
             if idx > 0 and len(pending_checks[host_name]) == 0:
                 pending_checks.pop(host_name, None)
                 continue
 
-    for host_name in pending_checks:
+    for host_name, value in pending_checks.items():
         logger.info(
             '%s pending service(s) found on host "%s": %s',
-            len(pending_checks[host_name]),
+            len(value),
             host_name,
-            ",".join(
-                _.get("extensions", {}).get("description", _.get("id"))
-                for _ in pending_checks[host_name]
-            ),
+            ",".join(_.get("extensions", {}).get("description", _.get("id")) for _ in value),
         )
 
 
 def cleanup_hosts(site: Site, host_names: list[str]) -> None:
     logger.info("Bulk-deleting %s hosts...", len(host_names))
-    site.openapi.bulk_delete_hosts(host_names)
+    site.openapi.hosts.bulk_delete(host_names)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
+    return [_ for _ in site.openapi.hosts.get_all_names() if _ != source_host]
 
 
 def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
@@ -625,12 +631,10 @@ def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: boo
 
 
 def wait_for_dcd_pend_changes(site: Site) -> None:
-    """Wait up to 60 seconds for DCD to activate changes."""
-    max_count = 60
+    """Wait for DCD to activate changes."""
+    max_count = 180
     count = 0
-    while (
-        n_pending_changes := len(site.openapi.pending_changes([site.id]))
-    ) > 0 and count < max_count:
+    while (n_pending_changes := len(site.openapi.changes.get_pending())) > 0 and count < max_count:
         logger.info(
             "Waiting for changes to be activated by the DCD connector. Count: %s/%s",
             count,
@@ -639,3 +643,35 @@ def wait_for_dcd_pend_changes(site: Site) -> None:
         time.sleep(1)
         count += 1
     assert n_pending_changes == 0, "Pending changes found!"
+
+
+@contextmanager
+def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
+    logger.info("Creating a DCD connection for piggyback hosts...")
+    dcd_id = "dcd_connector"
+    host_attributes = {
+        "tag_snmp_ds": "no-snmp",
+        "tag_agent": "no-agent",
+        "tag_piggyback": "piggyback",
+        "tag_address_family": "no-ip",
+    }
+    test_site_piggyback.openapi.dcd.create(
+        dcd_id=dcd_id,
+        title="DCD Connector for piggyback hosts",
+        host_attributes=host_attributes,
+        interval=1,
+        validity_period=60,
+        max_cache_age=60,
+        delete_hosts=True,
+        no_deletion_time_after_init=60,
+    )
+    with test_site_piggyback.openapi.wait_for_completion(300, "get", "activate_changes"):
+        test_site_piggyback.openapi.changes.activate(force_foreign_changes=True)
+    try:
+        yield
+    finally:
+        if not config.skip_cleanup:
+            test_site_piggyback.openapi.dcd.delete(dcd_id)
+            test_site_piggyback.openapi.changes.activate_and_wait_for_completion(
+                force_foreign_changes=True
+            )

@@ -44,7 +44,6 @@ def test_check_proxmox_ve_mem_usage(
     params: Mapping[str, object], section: pvmu.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvmu.check_proxmox_ve_mem_usage(params, section))
-    print("\n" + "\n".join(map(str, results)))
     assert results == expected_results
 
 

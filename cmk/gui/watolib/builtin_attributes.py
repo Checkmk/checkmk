@@ -18,12 +18,9 @@ from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.generators.host_address import create_host_address
-from cmk.gui.form_specs.generators.host_autocompleters import create_config_host_autocompleter
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
-from cmk.gui.form_specs.private import (
-    ListOfStrings as FSListOfStrings,
-)
+from cmk.gui.form_specs.private import ListOfStrings as FSListOfStrings
 from cmk.gui.form_specs.private import (
     OptionalChoice,
     SingleChoiceElementExtended,
@@ -71,7 +68,7 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
-    host_attribute_registry,
+    host_attribute_choices,
     HostAttributeTopic,
     HostAttributeTopicAddress,
     HostAttributeTopicBasicSettings,
@@ -92,7 +89,7 @@ from cmk.rulesets.v1.form_specs import (
     InvalidElementMode,
     InvalidElementValidator,
     List,
-    SingleChoice,
+    MonitoredHost,
     String,
 )
 
@@ -419,11 +416,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
-                "Configure the community to be used when contacting this host "
-                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
-                'using the <a href="%s">SNMP Communities</a> ruleset. '
-                "Configuring a community when creating a host overrides the "
-                "community defined by the rules."
+                "Configure the community to be used when contacting this host via SNMP v1/v2 or "
+                "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
+                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
+                "is unencrypted. Consider using SNMP v3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
@@ -432,11 +429,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             help_text=Help(
-                "Configure the community to be used when contacting this host "
-                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
-                'using the <a href="%s">SNMP Communities</a> ruleset. '
-                "Configuring a community when creating a host overrides the "
-                "community defined by the rules."
+                "Configure the community to be used when contacting this host via SNMP v1/v2 or "
+                "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
+                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
+                "is unencrypted. Consider using SNMP v3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value="community",
@@ -504,7 +501,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
                 "setup:</b><br>Make sure that the host and all its parents are "
                 "monitored by the same site."
             ),
-            string_spec=create_config_host_autocompleter(),
+            string_spec=MonitoredHost(title=Title("Host")),
         )
 
     def openapi_field(self) -> gui_fields.Field:
@@ -544,13 +541,15 @@ def validate_host_parents(host):
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
-                None, _("You configured the host to be it's own parent, which is not allowed.")
+                None,
+                _("You configured the host to be it's own parent, which is not allowed."),
             )
 
         parent = Host.host(parent_name)
         if not parent:
             raise MKUserError(
-                None, _("You defined the non-existing host '%s' as a parent.") % parent_name
+                None,
+                _("You defined the non-existing host '%s' as a parent.") % parent_name,
             )
 
         if host.site_id() != parent.site_id():
@@ -869,7 +868,8 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.Nested(
-            gui_fields.NetworkScanResult, description="Read only access to the network scan result"
+            gui_fields.NetworkScanResult,
+            description="Read only access to the network scan result",
         )
 
     def valuespec(self) -> ValueSpec:
@@ -1026,7 +1026,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def form_spec(self) -> SingleChoiceExtended:
-        return SingleChoiceExtended[object](
+        return SingleChoiceExtended(
             title=Title("Protocol"),
             help_text=Help("Specify the protocol used to connect to the management board."),
             elements=[
@@ -1043,7 +1043,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
                     title=Title("IPMI"),
                 ),
             ],
-            type=object,
         )
 
     def openapi_field(self) -> gui_fields.Field:
@@ -1193,7 +1192,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             ),
         )
 
-    def form_spec(self) -> SingleChoice:
+    def form_spec(self) -> SingleChoiceExtended[str]:
         return create_setup_site_choice(
             title=Title("Monitored on site"),
             help_text=Help("Specify the site that should monitor this host."),
@@ -1277,7 +1276,10 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         )
 
     def filter_matches(
-        self, crit: list[str], value: list[str] | tuple[str, str, str], hostname: HostName
+        self,
+        crit: list[str],
+        value: list[str] | tuple[str, str, str],
+        hostname: HostName,
     ) -> bool:
         return crit == list(value)
 
@@ -1343,7 +1345,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return ListOf(
-            valuespec=DropdownChoice(choices=host_attribute_registry.get_choices),
+            valuespec=DropdownChoice(choices=host_attribute_choices),
             title=_("Locked attributes"),
             text_if_empty=_("Not locked"),
         )

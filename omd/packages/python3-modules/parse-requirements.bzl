@@ -50,7 +50,6 @@ def parse(content):
       options: List of pip option lines
     """
     content = content.replace("\r", "")
-
     result = struct(
         requirements = [],
         options = [],
@@ -82,11 +81,14 @@ def parse(content):
 
     return new_result
 
+# buildifier: disable=function-docstring
 def sort_hashes(req):
     delim = req.find("--hash")
     if delim < 0:
         return req
-    return " ".join([req[:delim - 1]] + sorted(req[delim:].split(" ")))
+    name_version = req[:delim - 1].strip()
+    sorted_hashes = [h for h in sorted(req[delim:].split(" ")) if h != ""]
+    return " ".join([name_version] + sorted_hashes)
 
 def _handleConsumeSpace(input):
     if input == EOF:

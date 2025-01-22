@@ -16,14 +16,18 @@ from cmk.base.automation_helper._cache import Cache
 def get_cache() -> Generator[Cache]:
     cache = Cache.setup(client=FakeRedis())
     yield cache
-    cache.clear()
 
 
-def test_set_and_get_last_automation_reload(cache: Cache) -> None:
+def test_set_and_get_last_change_detected(cache: Cache) -> None:
     now = time.time()
-    cache.store_last_automation_helper_reload(now)
-    assert cache.last_automation_helper_reload == now
+    cache.store_last_detected_change(now)
+    assert cache.get_last_detected_change() == now
 
 
-def test_last_automation_reload_unset(cache: Cache) -> None:
-    assert cache.last_automation_helper_reload == 0.0
+def test_get_last_change_detected_unset(cache: Cache) -> None:
+    assert cache.get_last_detected_change() == 0.0
+
+
+def test_reload_required(cache: Cache) -> None:
+    cache.store_last_detected_change(1.0)
+    assert cache.reload_required(0.0)

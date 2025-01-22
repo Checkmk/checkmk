@@ -59,7 +59,7 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(
+sys.stdout.write(
     repr(
         (
             get_single_oid(
@@ -71,4 +71,5 @@ print(
             snmp_cache.single_oid_cache(),
         )
     )
+    + "\n"
 )

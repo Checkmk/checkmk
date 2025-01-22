@@ -5,11 +5,6 @@
 
 from collections.abc import Callable
 
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
-
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import TopicMenuTopic
@@ -35,9 +30,10 @@ from ._helpers import snapin_site_choice as snapin_site_choice
 from ._helpers import snapin_width as snapin_width
 from ._helpers import write_snapin_exception as write_snapin_exception
 from ._master_control import MasterControlSnapin
-from ._nagvis_maps import NagVisMaps
 from ._performance import Performance
 from ._permission_section import PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins
+from ._registry import all_snapins as all_snapins
+from ._registry import CustomSnapins as CustomSnapins
 from ._registry import snapin_registry as snapin_registry
 from ._registry import SnapinRegistry as SnapinRegistry
 from ._search import PageSearchMonitoring, PageSearchSetup, QuicksearchSnapin
@@ -45,7 +41,6 @@ from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
 from ._tactical_overview import TacticalOverviewSnapin
-from ._views import ajax_export_views
 from ._views import default_view_menu_topics as default_view_menu_topics
 from ._views import view_menu_items as view_menu_items
 
@@ -61,8 +56,6 @@ def register(
     snapin_registry_.register(HostGroups)
     snapin_registry_.register(ServiceGroups)
     snapin_registry_.register(MasterControlSnapin)
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        snapin_registry_.register(NagVisMaps)
     snapin_registry_.register(Performance)
     snapin_registry_.register(QuicksearchSnapin)
     snapin_registry_.register(CurrentTime)

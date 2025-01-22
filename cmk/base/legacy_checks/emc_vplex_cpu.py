@@ -27,7 +27,7 @@ def check_emc_vplex_cpu(
 ) -> LegacyCheckResult:
     if (util := section.get(item)) is None:
         return
-    yield check_cpu_util(max(100 - util, 0), params)
+    yield from check_cpu_util(max(100 - util, 0), params)
 
 
 check_info["emc_vplex_cpu"] = LegacyCheckDefinition(

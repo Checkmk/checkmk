@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any
+from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -18,7 +18,7 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
             f"Cannot recompose form spec. Expected a HostState form spec, got {type(form_spec)}"
         )
 
-    return SingleChoiceExtended(
+    return SingleChoiceExtended[Literal[0, 1, 2]](
         # FormSpec:
         title=form_spec.title,
         help_text=form_spec.help_text,
@@ -40,6 +40,4 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
             ),
         ],
         prefill=form_spec.prefill,
-        # SingleChoiceExtended
-        type=int,
     )

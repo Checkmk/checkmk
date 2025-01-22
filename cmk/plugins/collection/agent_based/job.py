@@ -142,6 +142,13 @@ def parse_job(string_table: StringTable) -> Section:
                 continue
 
             job = parsed.setdefault(jobname, job_stats)
+            # the setdefault means: the first job wins. so if we see a running job first, and a
+            # stopped afterwards, the job is running.
+            # but if we se a stopped job first and then a running one, then its still reported as
+            # stopped, which is not correct.
+            # running should overwrite stopped, but stopped should not overwrite running:
+            if job_stats["running"] is True:
+                job["running"] = True
 
         elif job and len(line) == 2:
             name, value = _job_parse_metrics(line)
@@ -173,9 +180,8 @@ agent_section_job = AgentSection(
 
 
 def discover_job(section: Section) -> DiscoveryResult:
-    for jobname, job in section.items():
-        if not job["running"]:
-            yield Service(item=jobname)
+    for jobname, _job in section.items():
+        yield Service(item=jobname)
 
 
 _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type { ConfigEntityType } from './configuration_entity'
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 
 export interface CreateConfigurationEntity {
   entity_type: ConfigEntityType

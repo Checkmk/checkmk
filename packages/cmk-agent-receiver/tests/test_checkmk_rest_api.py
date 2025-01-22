@@ -12,9 +12,6 @@ from requests import Response
 
 from cmk.agent_receiver.checkmk_rest_api import link_host_with_uuid
 
-# pylint does not understand the syntax of cmk.agent_receiver.checkmk_rest_api.log_http_exception
-# pylint: disable=too-many-function-args
-
 
 def test_link_host_with_uuid_unauthorized(
     mocker: MockerFixture,
@@ -22,7 +19,7 @@ def test_link_host_with_uuid_unauthorized(
 ) -> None:
     response = Response()
     response.status_code = 403
-    response._content = (  # pylint: disable=protected-access
+    response._content = (  # noqa: SLF001
         b'{"title": "You do not have the permission for agent pairing.", "status": 403}'
     )
     mocker.patch(

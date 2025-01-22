@@ -12,7 +12,7 @@ from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.ccc.version as cmk_version
 

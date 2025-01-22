@@ -1,0 +1,12 @@
+# Cargo.toml file used to lock the deps for bazel.
+#
+# See Also:
+#    https://earthly.dev/blog/rust-monorepo/
+
+[workspace]
+members = [
+    "check-cert",
+    "check-http",
+]
+package.edition = "2021"
+resolver = "2"

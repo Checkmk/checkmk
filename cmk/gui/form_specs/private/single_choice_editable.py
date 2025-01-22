@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
-
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 @dataclass(frozen=True, kw_only=True)

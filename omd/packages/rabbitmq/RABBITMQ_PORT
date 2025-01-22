@@ -40,6 +40,5 @@ case "$1" in
         for i in "${!arr[@]}"; do
             echo "listeners.ssl.$((i + 1)) = ${arr[$i]}:$PORT" >>"$CONF_FILE"
         done
-        echo "$PORT"
         ;;
 esac

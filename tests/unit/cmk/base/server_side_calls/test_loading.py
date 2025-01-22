@@ -9,7 +9,8 @@ from cmk.server_side_calls_backend import load_active_checks, load_special_agent
 
 
 def test_hack_apply_map_special_agents_is_complete() -> None:
-    assert set(password_store.hack.HACK_AGENTS) == {
+    # we can't have equality, because some special agents are not present in some editions.
+    assert set(password_store.hack.HACK_AGENTS) >= {
         p.name for p in load_special_agents(raise_errors=True).values()
     }
 

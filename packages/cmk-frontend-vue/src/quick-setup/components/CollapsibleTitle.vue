@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import InlineChevron from './InlineChevron.vue'
 import HelpText from '@/components/HelpText.vue'
 
 interface CollapsibleTitleProps {
@@ -26,7 +25,10 @@ defineEmits(['toggleOpen'])
 
 <template>
   <button class="qs-collapsible-title" @click="$emit('toggleOpen')">
-    <InlineChevron :variant="open ? 'bottom' : 'right'" />
+    <span
+      class="qs-collapsible-title__chevron"
+      :class="`qs-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"
+    />
     <span class="qs-collapsible-title__text">
       {{ title }}
     </span>
@@ -37,7 +39,8 @@ defineEmits(['toggleOpen'])
 <style scoped>
 .qs-collapsible-title {
   position: relative;
-  left: -27px;
+  margin-left: 0;
+  padding-left: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -54,5 +57,43 @@ defineEmits(['toggleOpen'])
 
 .qs-collapsible-title ::v-deep(.help-text__trigger) {
   margin-left: var(--spacing);
+}
+
+.qs-collapsible-title__chevron {
+  display: inline-block;
+  width: 8px;
+  margin-right: var(--spacing-half);
+
+  &::before {
+    border-color: var(--success-dimmed);
+    border-style: solid;
+    border-width: 1px 1px 0 0;
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    position: relative;
+    top: 0.15em;
+    transform: rotate(-45deg);
+    vertical-align: top;
+  }
+
+  &.qs-collapsible-title__chevron--bottom {
+    padding-left: 3px;
+
+    &:before {
+      top: 2px;
+      transform: rotate(135deg);
+      transition: transform 100ms linear;
+    }
+  }
+
+  &.qs-collapsible-title__chevron--right:before {
+    top: 4px;
+    left: 0;
+    margin-bottom: 16px;
+    transform: rotate(45deg);
+    transition: transform 100ms linear;
+  }
 }
 </style>

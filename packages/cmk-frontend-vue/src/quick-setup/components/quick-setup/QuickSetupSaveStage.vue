@@ -36,4 +36,8 @@ defineProps<QuickSetupSaveStageProps>()
 .qs-save-stage__content .qs-stage-content__action {
   padding-top: 0;
 }
+
+.qs-save-stage__content .qs-stage-content__action > button {
+  margin-right: 8px;
+}
 </style>

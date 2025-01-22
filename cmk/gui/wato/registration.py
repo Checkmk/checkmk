@@ -6,15 +6,10 @@
 
 from collections.abc import Callable
 
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
-
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
@@ -44,7 +39,6 @@ from . import (
     _check_mk_configuration,
     _main_module_topics,
     _main_modules,
-    _nagvis_auth,
     _notification_settings,
     _omd_configuration,
     _permissions,
@@ -96,8 +90,6 @@ def register(
     notification_parameter_registry: NotificationParameterRegistry,
     replication_path_registry: ReplicationPathRegistry,
     user_menu_topics: Callable[[], list[TopicMenuTopic]],
-    edition_supports_ldap: bool,
-    edition_supports_managing_roles: bool,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -127,8 +119,6 @@ def register(
         match_item_generator_registry,
         mega_menu_registry,
         user_menu_topics,
-        edition_supports_ldap,
-        edition_supports_managing_roles,
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
@@ -147,8 +137,6 @@ def register(
         replication_path_registry,
     )
     _tracing.register(config_variable_registry)
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     _notification_settings.register(config_variable_registry)
     _notification_parameter_registration.register(notification_parameter_registry)

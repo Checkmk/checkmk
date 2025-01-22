@@ -5,7 +5,7 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
+UNIT_COUNTER = metrics.Unit(metrics.SINotation(""), metrics.StrictPrecision(2))
 
 metric_inodes_used = metrics.Metric(
     name="inodes_used",

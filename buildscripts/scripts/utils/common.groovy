@@ -16,35 +16,6 @@ cleanup_directory = { directory ->
     sh("mkdir -p '${directory}'");
 }
 
-/// Run a block based on a global "dry run level"
-/// Global level = "0" (or unset) means "run everything"
-/// Global level "1" means "avoid dangerous side effects"
-/// Global level "2" means "avoid dangerous side effects and long running stuff (like builds)"
-LONG_RUNNING = 1;
-GLOBAL_IMPACT = 2;
-on_dry_run_omit = { level, title, fn ->
-    if (("${global_dry_run_level}" == "0" && level <= 2) ||
-        ("${global_dry_run_level}" == "1" && level <= 1) ||
-        ("${global_dry_run_level}" == "2" && level <= 0)) {
-        /*
-        print(
-            """
-            |==========================================================================================
-            | RUN (level=${level} DRY_RUN_LEVEL=${global_dry_run_level}): "${title}"
-            |==========================================================================================
-            """.stripMargin());
-        // return;
-        */
-        return fn();
-    }
-    print(
-        """
-        ||==========================================================================================
-        || OMIT(level=${level} DRY_RUN_LEVEL=${global_dry_run_level}): "${title}"
-        ||==========================================================================================
-        """.stripMargin());
-}
-
 shout = { msg ->
     sh("figlet -w 150 ${msg}");
 }
@@ -99,3 +70,17 @@ provide_clone = { repo_name, credentials_id ->
         ]);
     }
 }
+
+withCredentialFileAtLocation = {Map args, Closure body ->
+    body.resolveStrategy = Closure.OWNER_FIRST;
+    body.delegate = [:];
+    try {
+        withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
+                sh("ln -s ${SECRET_LOCATION} ${args.location}");
+                body();
+        }
+        return true;
+    } finally {
+        sh("rm ${args.location}");
+    }
+};

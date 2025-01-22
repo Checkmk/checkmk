@@ -85,19 +85,21 @@ class ABCConfigDomain(abc.ABC):
         return True
 
     @classmethod
-    def get_all_default_globals(cls) -> Mapping[str, Any]:
+    def get_all_default_globals(cls) -> GlobalSettings:
         return _get_all_default_globals()
 
     @abc.abstractmethod
-    def config_dir(self):
+    def config_dir(self) -> str:
         raise NotImplementedError()
 
-    def config_file(self, site_specific):
+    def config_file(self, site_specific: bool) -> str:
         if site_specific:
             return os.path.join(self.config_dir(), "sitespecific.mk")
         return os.path.join(self.config_dir(), "global.mk")
 
-    def load_full_config(self, site_specific=False, custom_site_path=None):
+    def load_full_config(
+        self, site_specific: bool = False, custom_site_path: str | None = None
+    ) -> GlobalSettings:
         filename = Path(self.config_file(site_specific))
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
@@ -116,13 +118,20 @@ class ABCConfigDomain(abc.ABC):
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
-    def load(self, site_specific=False, custom_site_path=None):
+    def load(
+        self, site_specific: bool = False, custom_site_path: str | None = None
+    ) -> GlobalSettings:
         return filter_unknown_settings(self.load_full_config(site_specific, custom_site_path))
 
-    def load_site_globals(self, custom_site_path=None):
+    def load_site_globals(self, custom_site_path: str | None = None) -> GlobalSettings:
         return self.load(site_specific=True, custom_site_path=custom_site_path)
 
-    def save(self, settings, site_specific=False, custom_site_path=None):
+    def save(
+        self,
+        settings: GlobalSettings,
+        site_specific: bool = False,
+        custom_site_path: str | None = None,
+    ) -> None:
         filename = self.config_file(site_specific)
         if custom_site_path:
             filename = os.path.join(
@@ -136,11 +145,13 @@ class ABCConfigDomain(abc.ABC):
         store.makedirs(os.path.dirname(filename))
         store.save_text_to_file(filename, output)
 
-    def save_site_globals(self, settings, custom_site_path=None):
+    def save_site_globals(
+        self, settings: GlobalSettings, custom_site_path: str | None = None
+    ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
     @abc.abstractmethod
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self) -> GlobalSettings:
         """Returns a dictionary that contains the default settings
         of all configuration variables of this config domain."""
         raise NotImplementedError()
@@ -151,7 +162,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v().domain() == self.__class__
+            if v().domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -164,7 +175,7 @@ class ABCConfigDomain(abc.ABC):
 
 
 @request_memoize()
-def _get_all_default_globals() -> dict[str, Any]:
+def _get_all_default_globals() -> GlobalSettings:
     settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         settings.update(domain.default_globals())
@@ -284,9 +295,9 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         raise NotImplementedError()
 
-    def domain(self) -> type[ABCConfigDomain]:
-        """Returns the class of the config domain this configuration variable belongs to"""
-        return config_domain_registry["check_mk"].__class__
+    def domain(self) -> ABCConfigDomain:
+        """Returns the config domain this configuration variable belongs to"""
+        return config_domain_registry["check_mk"]
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.

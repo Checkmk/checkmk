@@ -2,32 +2,37 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
+
+from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.folder import Folder
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Message, Title
+from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import validators
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
-from ._utils import compute_validation_errors, create_validation_error, get_title_and_help, localize
+from ._type_defs import DefaultValue, InvalidValue
+from ._utils import (
+    get_title_and_help,
+    localize,
+)
+
+_ParsedValueModel = str
+_FrontendModel = str
 
 
-class FolderVisitor(FormSpecVisitor[Folder, str]):
-    def _parse_value(self, raw_value: object) -> str | EmptyValue:
+class FolderVisitor(FormSpecVisitor[Folder, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
-            if isinstance(
-                input_hint_default := self.form_spec.input_hint,
-                EmptyValue,
-            ):
-                return input_hint_default
-            raw_value = input_hint_default
+            if self.form_spec.input_hint is not None:
+                return self.form_spec.input_hint
+            return InvalidValue(reason=_("Using default value"), fallback_value="")
 
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return InvalidValue(reason=_("Invalid choice"), fallback_value="")
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[str], object]]:
@@ -45,8 +50,8 @@ class FolderVisitor(FormSpecVisitor[Folder, str]):
         )
 
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> tuple[shared_type_defs.Folder, str]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.Folder, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.Folder(
@@ -55,18 +60,8 @@ class FolderVisitor(FormSpecVisitor[Folder, str]):
                 validators=build_vue_validators(self._validators()),
                 input_hint=self.form_spec.input_hint,
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
-
-    def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid folder")
-            )
-
-        return compute_validation_errors(self._validators(), parsed_value)
 
     def _to_disk(self, raw_value: object, parsed_value: str) -> str:
         return parsed_value

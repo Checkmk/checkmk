@@ -10,8 +10,6 @@
 
 #include "livestatus/Table.h"
 class ICore;
-class Query;
-class User;
 
 class TableCrashReports : public Table {
 public:

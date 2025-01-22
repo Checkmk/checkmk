@@ -20,7 +20,6 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
 from cmk.gui.auth import (
     check_auth,
@@ -79,7 +78,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             # No persistant sessions for RestAPI
             return False
 
-        return not self.user.is_automation_user()
+        return not self.user.automation_user
 
     def initialize(
         self,
@@ -179,7 +178,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess["_flashes"] = info.flashes
         return sess
 
-    @tracer.start_as_current_span("CheckmkFileBas.login")
+    @tracer.instrument("CheckmkFileBas.login")
     def login(self, user_obj: LoggedInUser) -> None:
         userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
         self.user = user_obj
@@ -355,7 +354,7 @@ class FileBasedSession(SessionInterface):
         }
         userdb.save_custom_attr(userid, "last_login", last_login_info)
 
-    @tracer.start_as_current_span("FileBasedSession.open_session")
+    @tracer.instrument("FileBasedSession.open_session")
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
@@ -368,7 +367,7 @@ class FileBasedSession(SessionInterface):
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
-    @tracer.start_as_current_span("FileBasedSession.save_session")
+    @tracer.instrument("FileBasedSession.save_session")
     def save_session(  # type: ignore[override]  # pylint: disable=redefined-outer-name
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response
     ) -> None:

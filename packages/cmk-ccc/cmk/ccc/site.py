@@ -62,5 +62,5 @@ def resource_attributes_from_config(omd_root: Path) -> dict[str, str]:
     attributes_path = omd_root / "etc" / "omd" / "resource_attributes_from_config.json"
     try:
         return json.loads(attributes_path.read_text())
-    except IOError:
+    except OSError:
         return {}

@@ -10,7 +10,6 @@ from typing import Final
 
 import pytest
 
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
@@ -61,10 +60,10 @@ def fake_notification_parameter(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="test_user")
 def fixture_test_user(site: Site) -> Iterator[None]:
-    initial_users = site.openapi.get_all_users()
+    initial_users = site.openapi.users.get_all()
 
     username = "hh"
-    site.openapi.create_user(
+    site.openapi.users.create(
         username=username,
         fullname="Harry Hirsch",
         password="1234abcdabcd",
@@ -72,26 +71,28 @@ def fixture_test_user(site: Site) -> Iterator[None]:
         contactgroups=["all"],
         customer="global" if site.version.is_managed_edition() else None,
     )
+    site.activate_changes_and_wait_for_core_reload()
 
-    all_users = site.openapi.get_all_users()
+    all_users = site.openapi.users.get_all()
     assert len(all_users) == len(initial_users) + 1
 
     try:
         yield
     finally:
-        site.openapi.delete_user(username)
+        site.openapi.users.delete(username)
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(name="host")
 def fixture_host(site: Site) -> Iterator[HostName]:
     hostname = HostName("notify-test")
-    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.hosts.create(hostname, attributes={"ipaddress": "127.0.0.1"})
     site.activate_changes_and_wait_for_core_reload()
 
     try:
         yield hostname
     finally:
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -101,7 +102,6 @@ def fixture_host(site: Site) -> Iterator[HostName]:
 @pytest.mark.usefixtures("fake_notification_parameter")
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
-@skip_if_raw_edition
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
     with WatchLog(site, default_timeout=20) as log:
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.

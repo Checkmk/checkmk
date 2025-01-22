@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
+
 from __future__ import annotations
 
 import ast
@@ -54,13 +56,14 @@ import livestatus
 from cmk.ccc.version import Edition, Version
 
 from cmk import trace
+from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
 
 ADMIN_USER: Final[str] = "cmkadmin"
-AUTOMATION_USER: Final[str] = "automation"
+AUTOMATION_USER: Final[str] = "not_automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
 
 
@@ -75,6 +78,8 @@ NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resourc
 
 
 class Site:
+    _GLOBAL_SETTINGS_FILE: Final = "etc/check_mk/multisite.d/wato/global.mk"
+
     def __init__(
         self,
         version: CMKVersion,
@@ -100,6 +105,7 @@ class Site:
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
+        self._automation_secret: Password | None = None
 
         self.update = update
         self.update_conflict_mode = update_conflict_mode
@@ -107,11 +113,12 @@ class Site:
 
         self.check_wait_timeout = check_wait_timeout
 
+        # We start with ADMIN_USER and change it to the automation user once it is created
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
             port=self.apache_port if self.exists() else 80,
-            user=AUTOMATION_USER if self.exists() else ADMIN_USER,
-            password=self.get_automation_secret() if self.exists() else self.admin_password,
+            user=ADMIN_USER,
+            password=self.admin_password,
             site=self.id,
             site_version=self.version,
         )
@@ -206,7 +213,7 @@ class Site:
 
         assert config_reloaded()
 
-    @tracer.start_as_current_span("Site.restart_core")
+    @tracer.instrument("Site.restart_core")
     def restart_core(self) -> None:
         # Remember the time for the core reload check and wait a second because the program_start
         # is reported as integer and wait_for_core_reloaded() compares with ">".
@@ -215,7 +222,7 @@ class Site:
         self.omd("restart", "core")
         self.wait_for_core_reloaded(before_restart)
 
-    @tracer.start_as_current_span("Site.send_host_check_result")
+    @tracer.instrument("Site.send_host_check_result")
     def send_host_check_result(
         self,
         hostname: str,
@@ -239,7 +246,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.send_service_check_result")
+    @tracer.instrument("Site.send_service_check_result")
     def send_service_check_result(
         self,
         hostname: str,
@@ -266,7 +273,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.schedule_check")
+    @tracer.instrument("Site.schedule_check")
     def schedule_check(
         self,
         hostname: str,
@@ -298,7 +305,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.reschedule_services")
+    @tracer.instrument("Site.reschedule_services")
     def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
         """Reschedule services in the test-site for a given host until no pending services are
         found."""
@@ -321,7 +328,7 @@ class Site:
             f"\n{pformat(pending_services)}\n"
         )
 
-    @tracer.start_as_current_span("Site.wait_for_service_state_update")
+    @tracer.instrument("Site.wait_for_service_state_update")
     def wait_for_services_state_update(
         self,
         hostname: str,
@@ -373,7 +380,7 @@ class Site:
         If pending=True, return the pending services only.
         """
         services = {}
-        for service in self.openapi.get_host_services(
+        for service in self.openapi.services.get_host_services(
             hostname, columns=["state", "plugin_output"], pending=pending
         ):
             services[service["extensions"]["description"]] = ServiceInfo(
@@ -614,12 +621,11 @@ class Site:
             stderr=subprocess.STDOUT,
             check=False,
         )
-        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
-        logger.log(log_level, "Exit code: %d", completed_process.returncode)
+        logger.debug("Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
-            logger.log(log_level, "Output:")
+            logger.debug("Output:")
         for line in completed_process.stdout.strip().split("\n"):
-            logger.log(log_level, "> %s", line)
+            logger.debug("> %s", line)
 
         if mode == "status":
             logger.info(
@@ -747,15 +753,14 @@ class Site:
     def current_version_directory(self) -> str:
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
-    @tracer.start_as_current_span("Site.install_cmk")
+    @tracer.instrument("Site.install_cmk")
     def install_cmk(self) -> None:
         if not self.version.is_installed():
             logger.info("Installing Checkmk version %s", self.version.version_directory())
             try:
                 _ = run(
                     [
-                        f"{repo_path()}/scripts/run-pipenv",
-                        "run",
+                        f"{repo_path()}/scripts/run-uvenv",
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                     ],
                     env=dict(
@@ -774,7 +779,7 @@ class Site:
                     ) from excp
                 raise excp
 
-    @tracer.start_as_current_span("Site.create")
+    @tracer.instrument("Site.create")
     def create(self) -> None:
         self.install_cmk()
 
@@ -833,9 +838,6 @@ class Site:
         self._update_cmk_core_config()
 
         self.openapi.port = self.apache_port
-        self.openapi.set_authentication_header(
-            user=AUTOMATION_USER, password=self.get_automation_secret()
-        )
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", "UTC"))
 
@@ -853,8 +855,6 @@ class Site:
             "etc/check_mk/conf.d/wato/rules.mk",
             "etc/check_mk/multisite.d/wato/tags.mk",
             "etc/check_mk/conf.d/wato/global.mk",
-            "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret",
         ]
 
         missing = []
@@ -996,7 +996,7 @@ class Site:
             "log_rotation_method=n\n",
         )
 
-    @tracer.start_as_current_span("Site.rm")
+    @tracer.instrument("Site.rm")
     def rm(self, site_id: str | None = None) -> None:
         # Wait a bit to avoid unnecessarily stress testing the site.
         time.sleep(1)
@@ -1012,7 +1012,7 @@ class Site:
             sudo=True,
         )
 
-    @tracer.start_as_current_span("Site.start")
+    @tracer.instrument("Site.start")
     def start(self) -> None:
         if not self.is_running():
             logger.info("Starting site")
@@ -1042,7 +1042,7 @@ class Site:
             self.path("tmp").is_mount()
         ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
-    @tracer.start_as_current_span("Site.stop")
+    @tracer.instrument("Site.stop")
     def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
@@ -1072,7 +1072,7 @@ class Site:
     def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)
 
-    @tracer.start_as_current_span("Site.ensure_running")
+    @tracer.instrument("Site.ensure_running")
     def ensure_running(self) -> None:
         if not self.is_running():
             omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
@@ -1136,9 +1136,28 @@ class Site:
     def core_history_log_timeout(self) -> int:
         return 10 if self.core_name() == "cmc" else 30
 
-    @tracer.start_as_current_span("Site.prepare_for_tests")
+    def _create_automation_user(self, username: str) -> None:
+        self._automation_secret = Password.random(24)
+        logger.info("Creating test-user: '%s'.", username)
+        self.openapi.users.create(
+            username=username,
+            fullname="Automation user for tests",
+            password=self._automation_secret.raw,
+            email="auomation@localhost",
+            contactgroups=[],
+            roles=["admin"],
+            is_automation_user=True,
+        )
+        self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
+
+    @tracer.instrument("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
+        username = AUTOMATION_USER
+        if self.openapi.users.get(username) is None:
+            self._create_automation_user(username)
+        else:
+            logger.info("Reusing existing test-user: '%s' (REUSE=1).", username)
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.version.is_saas_edition():
@@ -1154,7 +1173,7 @@ class Site:
         # load the config without loading the checks in advance, this leads into an
         # exception.
         # We set this config option here trying to catch this kind of issue.
-        self.openapi.create_rule(
+        self.openapi.rules.create(
             ruleset_name="fileinfo_groups",
             value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
             folder="/",
@@ -1164,12 +1183,12 @@ class Site:
         r = web.get("user_profile.py")
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
-        if (user := self.openapi.get_user(ADMIN_USER)) is None:
+        if (user := self.openapi.users.get(ADMIN_USER)) is None:
             raise Exception("User cmkadmin not found!")
         user_spec, etag = user
         user_spec["language"] = "en"
         user_spec.pop("enforce_password_change", None)
-        self.openapi.edit_user(ADMIN_USER, user_spec, etag)
+        self.openapi.users.edit(ADMIN_USER, user_spec, etag)
 
         # Verify the language is as expected now
         r = web.get("user_profile.py", allow_redirect_to_login=True)
@@ -1249,7 +1268,7 @@ class Site:
             )
 
         execute(
-            ["cp", "-r", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
+            ["cp", "-rL", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
         )
 
         # Rename apache logs to get better handling by the browser when opening a log file
@@ -1314,13 +1333,15 @@ class Site:
             crash_json = crash_info.parent / (crash_info.stem + ".json")
             crash_info.rename(crash_json)
 
-    def report_crashes(self):
-        crash_dirs = [
+    def crash_reports_dirs(self) -> list[Path]:
+        return [
             self.crash_report_dir / crash_type / crash_id
             for crash_type in self.listdir(self.crash_report_dir)
             for crash_id in self.listdir(self.crash_report_dir / crash_type)
         ]
-        for crash_dir in crash_dirs:
+
+    def report_crashes(self):
+        for crash_dir in self.crash_reports_dirs():
             crash_file = crash_dir / "crash.info"
             try:
                 crash = json.loads(self.read_file(crash_file))
@@ -1334,6 +1355,12 @@ class Site:
                 continue
             if re.search("Cannot render negative timespan", crash_detail):
                 logger.warning("Ignored crash report due to CMK-18635!")
+                continue
+            if re.search("systime", crash_detail):
+                logger.warning("Ignored crash report. See CMK-20674")
+                continue
+            if re.search("Licensed phase: too many services.", crash_detail):
+                logger.warning("Ignored crash report due to license violation!")
                 continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
@@ -1357,13 +1384,9 @@ class Site:
         return self.root / "var" / "log"
 
     def get_automation_secret(self) -> str:
-        secret_path = "var/check_mk/web/automation/automation.secret"
-        secret = self.read_file(secret_path).strip()
-
-        if secret == "":
-            raise Exception("Failed to read secret from %s" % secret_path)
-
-        return secret
+        if self._automation_secret is None:
+            raise RuntimeError("Automation user was not created yet")
+        return self._automation_secret.raw
 
     def get_site_internal_secret(self) -> Secret:
         secret_path = "etc/site_internal.secret"
@@ -1374,7 +1397,7 @@ class Site:
 
         return Secret(secret)
 
-    @tracer.start_as_current_span("Site.activate_changes_and_wait_for_core_reload")
+    @tracer.instrument("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
@@ -1405,7 +1428,7 @@ class Site:
                             "A previous activation is still running. Does the wait work?"
                         )
 
-            changed = self.openapi.activate_changes_and_wait_for_completion(
+            changed = self.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=allow_foreign_changes
             )
             if changed:
@@ -1450,6 +1473,20 @@ class Site:
         wait_until(
             lambda: self.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
         )
+
+    def read_global_settings(self) -> dict[str, object]:
+        global_settings: dict[str, object] = {}
+        exec(self.read_file(self._GLOBAL_SETTINGS_FILE), {}, global_settings)
+        return global_settings
+
+    def write_global_settings(self, global_settings: Mapping[str, object]) -> None:
+        self.write_text_file(
+            self._GLOBAL_SETTINGS_FILE,
+            "\n".join(f"{key} = {repr(val)}" for key, val in global_settings.items()),
+        )
+
+    def update_global_settings(self, update: dict[str, object]) -> None:
+        self.write_global_settings(self.read_global_settings() | update)
 
 
 class SiteFactory:
@@ -1517,7 +1554,8 @@ class SiteFactory:
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
-            site.activate_changes_and_wait_for_core_reload()
+            # We created a user as AUTH_USER aka cmkadmin, meanwhile we are automationuser...
+            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
         if auto_restart_httpd:
             restart_httpd()
@@ -1770,7 +1808,7 @@ class SiteFactory:
             site.version.edition.short == target_version.edition.short
         ), "Edition mismatch during update!"
 
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.changes.activate_and_wait_for_completion()
 
         return site
 
@@ -1785,6 +1823,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
+        global_settings_update: dict[str, object] | None = None,
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -1795,6 +1834,7 @@ class SiteFactory:
             save_results=save_results,
             report_crashes=report_crashes,
             tracing_config=tracing_config,
+            global_settings_update=global_settings_update,
         )
 
     def get_test_site(
@@ -1807,6 +1847,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
+        global_settings_update: dict[str, object] | None = None,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1829,15 +1870,15 @@ class SiteFactory:
 
         try:
             self.setup_customers(site, ["customer1", "customer2"])
+            if global_settings_update:
+                site.update_global_settings(global_settings_update)
             self.initialize_site(
                 site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
                 tracing_config=tracing_config,
+                auto_restart_httpd=auto_restart_httpd,
             )
-            site.start()
-            if auto_restart_httpd:
-                restart_httpd()
             logger.info(
                 'Site "%s" is ready!%s',
                 site.id,
@@ -2008,7 +2049,6 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
     information is available. In case it is not there, be silent and don't expose the missing
     attribute.
     """
-    logger.warning("Environment: %r", env)
     return {
         name: val
         for name, val in [

@@ -123,7 +123,7 @@ class HostConfig:
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,

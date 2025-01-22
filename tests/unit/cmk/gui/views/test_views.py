@@ -26,12 +26,12 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import base as painter_base
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0 import all_painters, Cell, Painter, PainterRegistry, register_painter
+from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
@@ -331,6 +331,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+    registered_painters = all_painters(active_config)
     painters: list[Painter] = [
         painter_class(
             user=user,
@@ -340,10 +341,11 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
             theme=theme,
             url_renderer=RenderLink(request, response, display_options),
         )
-        for painter_class in painter_registry.values()
+        for painter_class in registered_painters.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
-        (painter, Cell(ColumnSpec(name=painter.ident), None)) for painter in painters
+        (painter, Cell(ColumnSpec(name=painter.ident), None, registered_painters))
+        for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -356,16 +358,12 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
 
 def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    monkeypatch.setattr(
-        painter_base,
-        "painter_registry",
-        PainterRegistry(),
-    )
+    monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
     def rendr(row):
         return ("abc", "xyz")
 
-    painter_base.register_painter(
+    register_painter(
         "abc",
         {
             "title": "A B C",
@@ -379,7 +377,8 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"](
+    registered_painters = all_painters(active_config)
+    painter = registered_painters["abc"](
         user=user,
         config=active_config,
         request=request,
@@ -387,7 +386,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
+    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -591,6 +590,13 @@ def test_registered_display_hints() -> None:
         ".hardware.cpu.threads_per_cpu",
         ".hardware.cpu.type",
         ".hardware.cpu.voltage",
+        ".hardware.firmware.",
+        ".hardware.firmware.redfish:",
+        ".hardware.firmware.redfish:*.component",
+        ".hardware.firmware.redfish:*.description",
+        ".hardware.firmware.redfish:*.location",
+        ".hardware.firmware.redfish:*.updateable",
+        ".hardware.firmware.redfish:*.version",
         ".hardware.memory.",
         ".hardware.memory.arrays:",
         ".hardware.memory.arrays:*.",
@@ -700,6 +706,14 @@ def test_registered_display_hints() -> None:
         ".networking.routes:*.gateway",
         ".networking.routes:*.target",
         ".networking.routes:*.type",
+        ".networking.sip_interfaces:",
+        ".networking.sip_interfaces:*.application_type",
+        ".networking.sip_interfaces:*.device",
+        ".networking.sip_interfaces:*.gateway",
+        ".networking.sip_interfaces:*.name",
+        ".networking.sip_interfaces:*.index",
+        ".networking.sip_interfaces:*.sys_interface",
+        ".networking.sip_interfaces:*.tcp_port",
         ".networking.total_ethernet_ports",
         ".networking.total_interfaces",
         ".networking.tunnels:",
@@ -1135,7 +1149,7 @@ def test_registered_display_hints() -> None:
         ".software.packages:*.version",
     ]
 
-    assert sorted(inventory_displayhints.keys()) == sorted(expected)
+    assert set(inventory_displayhints) == set(expected)
 
 
 def test_get_inventory_display_hint() -> None:
@@ -1143,7 +1157,7 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:

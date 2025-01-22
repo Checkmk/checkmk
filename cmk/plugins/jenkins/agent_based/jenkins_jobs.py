@@ -140,8 +140,6 @@ def _process_job(job: JenkinsJobInfo, params: Mapping[str, Any], now: int | floa
         )
 
     if job.build_timestamp is not None:
-        print(f"Job: {job.build_timestamp}")
-        print(f"now: {now}")
         time_since_last_build = now - job.build_timestamp
         build_timestamp_key = "jenkins_last_build"
         yield from check_levels(

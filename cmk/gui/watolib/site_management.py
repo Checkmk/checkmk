@@ -41,6 +41,7 @@ from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -580,6 +581,7 @@ class SitesApiMgr:
             raise LoginException(str(exc))
 
         self.site_mgmt.save_sites(self.all_sites)
+        trigger_remote_certs_creation(site_id, site)
 
     def logout_of_site(self, site_id: SiteId) -> None:
         site = self.get_a_site(site_id)

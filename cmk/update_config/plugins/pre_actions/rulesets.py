@@ -12,7 +12,6 @@ from cmk.ccc import version
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
-from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
@@ -23,8 +22,12 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.plugins.lib.rulesets import REPLACED_RULESETS
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt, USER_INPUT_CONTINUE
+from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
+from cmk.update_config.plugins.pre_actions.utils import (
+    ConflictMode,
+    continue_per_users_choice,
+    Resume,
+)
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -38,12 +41,8 @@ class PreUpdateRulesets(PreUpdateAction):
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
             logger.error(f"Exception while trying to load rulesets: {exc}\n\n")
-            if (
-                conflict_mode is ConflictMode.ASK
-                and _request_user_input_on_ruleset_exception().lower() in USER_INPUT_CONTINUE
-            ):
-                return None
-            raise MKUserError(None, "an incompatible ruleset") from exc
+            if _continue_on_ruleset_exception(conflict_mode).is_abort():
+                raise MKUserError(None, "an incompatible ruleset") from exc
 
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
@@ -63,25 +62,55 @@ class PreUpdateRulesets(PreUpdateAction):
                         ruleset.name,
                     )
                     logger.exception("This is the exception: ")
-                    if conflict_mode is ConflictMode.ASK:
-                        user_input = prompt(
-                            "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                        )
-                        if user_input.lower() not in USER_INPUT_CONTINUE:
-                            raise MKUserError(None, "broken ruleset")
+                    if _continue_on_broken_ruleset(conflict_mode).is_abort():
+                        raise MKUserError(None, "broken ruleset")
 
         if not result:
             raise MKUserError(None, "failed ruleset validation")
 
-        return None
+
+def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
+        case ConflictMode.ABORT:
+            return Resume.UPDATE
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+            )
 
 
-def _request_user_input_on_ruleset_exception() -> str:
-    return prompt(
-        "You can abort the update process (A) and try to fix "
-        "the incompatibilities or try to continue the update (c).\n"
-        "Abort update? [A/c]\n"
-    )
+def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+            )
+
+
+def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.ABORT
+        case ConflictMode.ASK:
+            return continue_per_users_choice(
+                "You can abort the update process (A) and try to fix "
+                "the incompatibilities or try to continue the update (c).\n"
+                "Abort update? [A/c]\n"
+            )
 
 
 def _validate_rule_values(
@@ -94,27 +123,8 @@ def _validate_rule_values(
 
     Returns True if the update shall continue, False otherwise.
     """
-    rulesets_skip = {
-        # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
-        # see all of them
-        RuleGroup.ExtraServiceConf("_sla_config"),
-        # validating a ruleset for static checks, where we want to replace the ruleset anyway,
-        # does not work:
-        # * the validation checks if there are checks which subscribe to that check group
-        # * when replacing a ruleset, we have no check anymore subscribing to the old name
-        # * in that case, the validation will always fail, so we skip it during update
-        # * the rule validation with the replaced ruleset will happen after the replacing anyway again
-        # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
-        *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
-        # Validating the ignored checks ruleset does not make sense:
-        # Invalid choices are the plugins that don't exist (anymore).
-        # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
-        # could be missing only temporarily, so better not remove it.
-        "ignored_checks",
-    }
-
     for ruleset in all_rulesets.get_rulesets().values():
-        if ruleset.name in rulesets_skip:
+        if ruleset.name in SKIP_PREACTION:
             continue
 
         for folder, index, rule in ruleset.get_rules():
@@ -127,15 +137,9 @@ def _validate_rule_values(
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
                 error_message = _error_message(ruleset, rule.value, folder, index, e)
                 logger.error(error_message)
-                if conflict_mode is not ConflictMode.ASK:
+                if _continue_on_invalid_rule(conflict_mode).is_abort():
                     return False
-                if (
-                    prompt(
-                        "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                    ).lower()
-                    not in USER_INPUT_CONTINUE
-                ):
-                    return False
+
     return True
 
 

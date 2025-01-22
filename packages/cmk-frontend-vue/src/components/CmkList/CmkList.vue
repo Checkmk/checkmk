@@ -86,26 +86,28 @@ function getItemProps(dataIndex: number) {
   }, {} as ItemProps)
 }
 
-function getStyle(index: number, length: number) {
-  return index === 0 ? 'first' : index === length - 1 ? 'last' : null
+function getItemVariant(index: number, length: number) {
+  return length === 1 ? 'only' : index === 0 ? 'first' : index === length - 1 ? 'last' : null
 }
 </script>
 
 <template>
   <div
     v-show="localOrder.length > 0 || props.add?.show"
-    :class="{
-      cmk_list__container: true,
-      horizontal: orientation === 'horizontal'
-    }"
+    class="cmk-list"
+    :class="{ 'cmk-list--horizontal': orientation === 'horizontal' }"
   >
-    <table ref="tableRef" class="cmk_list__table">
+    <table
+      ref="tableRef"
+      class="cmk-list__table"
+      :class="{ 'cmk-list__table-empty': localOrder.length === 0 }"
+    >
       <template v-if="orientation === 'vertical'">
         <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
           <td>
             <CmkListItem
               :remove-element="() => removeElement(dataIndex)"
-              :style="getStyle(listIndex, localOrder.length)"
+              :variant="getItemVariant(listIndex, localOrder.length)"
               :draggable="draggable ? { dragStart, dragEnd, dragging } : null"
             >
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
@@ -125,7 +127,7 @@ function getStyle(index: number, length: number) {
           <td>
             <CmkListAddButton
               v-if="add?.show"
-              class="cmk_list__add_button"
+              class="cmk-list__add-button"
               :add-element-label="add.label"
               :add-element="addElement"
             />
@@ -135,7 +137,7 @@ function getStyle(index: number, length: number) {
     </table>
     <CmkListAddButton
       v-if="props.add?.show && orientation === 'vertical'"
-      class="cmk_list__add_button"
+      class="cmk-list__add-button"
       :add-element-label="add?.label"
       :add-element="addElement"
     />
@@ -143,12 +145,13 @@ function getStyle(index: number, length: number) {
 </template>
 
 <style scoped>
-.cmk_list__container {
+.cmk-list {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
-.cmk_list__table {
+
+.cmk-list__table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing);
@@ -156,22 +159,30 @@ function getStyle(index: number, length: number) {
   td {
     height: 100%;
   }
-}
-.cmk_list__add_button {
-  flex-shrink: 0;
-}
-.cmk_list__container.horizontal {
-  flex-direction: row;
 
-  .cmk_list__table {
-    white-space: normal;
+  &.cmk-list__table-empty {
     margin-bottom: 0;
   }
-  .cmk_list__table td {
-    display: inline-block;
-    vertical-align: top;
+}
+
+.cmk-list__add-button {
+  flex-shrink: 0;
+}
+
+.cmk-list.cmk-list--horizontal {
+  flex-direction: row;
+
+  .cmk-list__table {
+    white-space: normal;
+    margin-bottom: 0;
+
+    td {
+      display: inline-block;
+      vertical-align: top;
+    }
   }
-  .cmk_list__add_button {
+
+  .cmk-list__add-button {
     padding-top: 4px;
   }
 }

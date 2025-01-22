@@ -11,7 +11,7 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.plugin_registry import reset_registries
+from tests.unit.testlib.utils import reset_registries
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry

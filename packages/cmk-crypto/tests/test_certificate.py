@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tests for Certificate and friends"""
 
-# pylint: disable=protected-access
-
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
 from datetime import datetime, timezone
@@ -146,7 +144,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
         == self_signed_cert.private_key.public_key
     )
 
-    assert self_signed_cert.certificate._is_self_signed()
+    assert self_signed_cert.certificate._is_self_signed()  # noqa: SLF001
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
@@ -352,7 +350,7 @@ CdnYjBDhp0Ud
 -----END CERTIFICATE-----"""
     )
     ca = Certificate.load_pem(ca_pem)
-    assert ca._is_self_signed()
+    assert ca._is_self_signed()  # noqa: SLF001
     ca.verify_is_signed_by(ca)
 
     # an ed25519 certificate issued by that CA:
@@ -388,7 +386,7 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
 def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: list[str]) -> None:
     """test setting and retrieval of subject-alt-names (DNS)"""
     assert (
-        Certificate._create(
+        Certificate._create(  # noqa: SLF001
             subject_public_key=self_signed_cert.private_key.public_key,
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=[x509.DNSName(n) for n in sans],
@@ -473,6 +471,6 @@ JxDm8nhVOD3txg6wadiqhhdB
         # Only if the extension is there but the key_cert_sign bit is missing the cert should not be
         # used for signing.
         # This is a regression test.
-        cert._cert.extensions.get_extension_for_class(x509.KeyUsage)
+        cert._cert.extensions.get_extension_for_class(x509.KeyUsage)  # noqa: SLF001
 
     assert cert.may_sign_certificates()

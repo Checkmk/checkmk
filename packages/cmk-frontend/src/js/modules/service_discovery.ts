@@ -76,7 +76,7 @@ interface ServiceDiscoveryHandlerData {
     error_function: (response: AjaxServiceDiscovery) => void;
     update_function: (
         update_data: ServiceDiscoveryHandlerData,
-        response: AjaxServiceDiscovery
+        response: AjaxServiceDiscovery,
     ) => void;
     is_finished_function: (response: AjaxServiceDiscovery) => void;
     finish_function: (response: AjaxServiceDiscovery) => void;
@@ -92,7 +92,7 @@ export function start(
     folder_path: string,
     discovery_options: DiscoveryOptions,
     transid: string,
-    request_vars: Record<string, any> | null
+    request_vars: Record<string, any> | null,
 ) {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = window.setTimeout(function () {
@@ -101,7 +101,7 @@ export function start(
 
     lock_controls(
         true,
-        get_state_independent_controls().concat(get_page_menu_controls())
+        get_state_independent_controls().concat(get_page_menu_controls()),
     );
     monitor({
         update_url: "ajax_service_discovery.py",
@@ -119,7 +119,7 @@ export function start(
             folder_path,
             discovery_options,
             transid,
-            request_vars
+            request_vars,
         ),
     });
 }
@@ -129,7 +129,7 @@ function get_post_data(
     folder_path: string,
     discovery_options: DiscoveryOptions,
     transid: string,
-    request_vars: Record<string, any> | null
+    request_vars: Record<string, any> | null,
 ) {
     let request: Record<string, any> = {
         host_name: host_name,
@@ -145,7 +145,7 @@ function get_post_data(
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         const checked_checkboxes: string[] = [];
         const checkboxes = document.getElementsByClassName(
-            "service_checkbox"
+            "service_checkbox",
         ) as HTMLCollectionOf<HTMLInputElement>;
         for (let i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
@@ -186,7 +186,7 @@ function error(response: string) {
 
 function update(
     handler_data: ServiceDiscoveryHandlerData,
-    response: AjaxServiceDiscovery
+    response: AjaxServiceDiscovery,
 ) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
@@ -204,7 +204,7 @@ function update(
         handler_data.folder_path,
         response.discovery_options,
         handler_data.transid,
-        null
+        null,
     );
 
     // Save values not meant for update
@@ -243,7 +243,7 @@ function update(
     if (response.pending_changes_info) {
         update_pending_changes(
             response.pending_changes_info,
-            response.pending_changes_tooltip
+            response.pending_changes_tooltip,
         );
     }
 
@@ -256,21 +256,21 @@ function get_state_independent_controls() {
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_checkbox"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_button"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call<
             HTMLCollectionOf<Element>,
             [number],
             HTMLElement[]
-        >(document.getElementsByClassName("toggle"), 0)
+        >(document.getElementsByClassName("toggle"), 0),
     );
     return elements;
 }
@@ -305,10 +305,12 @@ export function register_delayed_active_check(
     hostname: string,
     checktype: string,
     item: string | null,
-    divid: string
+    divid: string,
 ) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
+        //2531: Object is possibly 'null'
+        // @ts-ignore
         content_scrollbar("")!
             .getScrollElement()
             .addEventListener("scroll", trigger_delayed_active_checks);

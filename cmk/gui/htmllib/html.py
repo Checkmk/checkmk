@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
 
 from __future__ import annotations
 
@@ -12,7 +13,6 @@ import re
 import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, overload
@@ -20,7 +20,6 @@ from typing import Any, Literal, overload
 from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 
@@ -28,11 +27,12 @@ from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu_entry import enable_page_menu_entry
+from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     Choice,
     ChoiceGroup,
@@ -46,7 +46,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import Theme, theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -64,35 +63,10 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
-class ExperimentalRenderMode(Enum):
-    BACKEND = "backend"
-    FRONTEND = "frontend"
-    BACKEND_AND_FRONTEND = "backend_and_frontend"
-
-
 class _Manifest(typing.NamedTuple):
     main: str
     main_stylesheets: list[str]
     stage1: str
-
-
-@request_memoize()
-def get_render_mode() -> ExperimentalRenderMode:
-    # Settings via url overwrite config based settings
-    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
-        rendering_mode = active_config.experimental_features.get(
-            "render_mode", ExperimentalRenderMode.BACKEND.value
-        )
-
-    match rendering_mode:
-        case ExperimentalRenderMode.BACKEND.value:
-            return ExperimentalRenderMode.BACKEND
-        case ExperimentalRenderMode.FRONTEND.value:
-            return ExperimentalRenderMode.FRONTEND
-        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
-            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
-        case _:
-            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
 
 
 def inject_js_profiling_code():
@@ -261,9 +235,13 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
+        font_css_filepath = "themes/facelift/fonts_inter.css"
         css_filepath = theme.url("theme.css")
+
         if current_app.debug:
             HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
+            HTMLGenerator._verify_file_exists_in_web_dirs(font_css_filepath)
+        self.stylesheet(HTMLGenerator._append_cache_busting_query(font_css_filepath))
         self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
         self._add_custom_style_sheet()

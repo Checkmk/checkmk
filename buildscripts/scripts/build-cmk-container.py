@@ -12,7 +12,7 @@ may require the following env variables
 - DOCKER_USERNAME=carl.lama
 - DOCKER_PASSPHRASE=eatingHands
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
 --edition=enterprise \
@@ -27,7 +27,7 @@ may require the following env variables
 - INTERNAL_DEPLOY_PORT=42
 - INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=2.2.0 \
 --edition=enterprise \
@@ -49,7 +49,6 @@ import tarfile
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Union
 
 import docker  # type: ignore[import-untyped]
 
@@ -126,7 +125,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_cmd(
-    cmd: Union[list[str], str],
+    cmd: list[str] | str,
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:
@@ -292,7 +291,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
 def needed_packages(mk_file: str, output_file: str) -> None:
     """Extract needed packages from MK file"""
     packages = []
-    with open(Path(mk_file).resolve(), "r") as file:
+    with open(Path(mk_file).resolve()) as file:
         lines = [line.rstrip() for line in file]
         for line in lines:
             this = re.findall(r"^(OS_PACKAGES\s*\+=\s*)(.*?)(?=#|$)", line)

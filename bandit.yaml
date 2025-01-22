@@ -1,6 +1,6 @@
 
 ### Bandit config file generated from:
-# 'PIPENV_VENV_IN_PROJECT=true pipenv run bandit-config-generator -o ../bandit.yaml'
+# bandit-config-generator -o ../bandit.yaml'
 
 ### This config may optionally select a subset of tests to run or skip by
 ### filling out the 'tests' and 'skips' lists given below. If no tests are

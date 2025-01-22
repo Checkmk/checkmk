@@ -55,7 +55,6 @@ def _snmpv3_auth_protocol_elements() -> list[FormSpec[Any]]:
                     ("SHA-512", Title("SHA-2 (SHA-512)")),
                 ]
             ],
-            type=str,
             prefill=DefaultValue("md5"),
         ),
         String(
@@ -149,7 +148,6 @@ def _snmpv3_auth_priv_element(for_ec: bool = False) -> Tuple:
                 SingleChoiceElementExtended(name=name, title=title)
                 for (name, title) in priv_protocol_choices
             ],
-            type=str,
             prefill=DefaultValue("DES"),
         ),
         SimplePassword(

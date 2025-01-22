@@ -189,7 +189,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
 
             ruleset_name = "datasource_programs"
             logger.info('Creating rule "%s"...', ruleset_name)
-            site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
+            site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
             logger.info('Rule "%s" created!', ruleset_name)
 
             logger.info("Setting dynamic configuration global settings...")
@@ -279,47 +279,18 @@ def _periodic_service_discovery_rule() -> dict:
 @pytest.fixture(name="create_periodic_service_discovery_rule", scope="function")
 def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[None]:
     existing_rules_ids = []
-    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
         existing_rules_ids.append(rule["id"])
 
-    test_site_update.openapi.create_rule(
+    test_site_update.openapi.rules.create(
         ruleset_name="periodic_discovery",
         value=_periodic_service_discovery_rule(),
     )
-    test_site_update.openapi.activate_changes_and_wait_for_completion()
+    test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     yield
 
-    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
         if rule["id"] not in existing_rules_ids:
-            test_site_update.openapi.delete_rule(rule["id"])
-    test_site_update.openapi.activate_changes_and_wait_for_completion()
-
-
-@pytest.fixture(name="dcd_connector", scope="session")
-def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
-    logger.info("Creating a DCD connection for piggyback hosts...")
-    dcd_id = "dcd_connector"
-    host_attributes = {
-        "tag_snmp_ds": "no-snmp",
-        "tag_agent": "no-agent",
-        "tag_piggyback": "piggyback",
-        "tag_address_family": "no-ip",
-    }
-    test_site_piggyback.openapi.create_dynamic_host_configuration(
-        dcd_id=dcd_id,
-        title="DCD Connector for piggyback hosts",
-        host_attributes=host_attributes,
-        interval=1,
-        validity_period=60,
-        max_cache_age=60,
-        delete_hosts=True,
-        no_deletion_time_after_init=60,
-    )
-    test_site_piggyback.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
-    yield
-    if not checks.config.skip_cleanup:
-        test_site_piggyback.openapi.delete_dynamic_host_configuration(dcd_id)
-        test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
-            force_foreign_changes=True
-        )
+            test_site_update.openapi.rules.delete(rule["id"])
+    test_site_update.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

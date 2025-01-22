@@ -2,10 +2,10 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.i18n import _
 
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def build(

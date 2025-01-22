@@ -34,3 +34,7 @@ class AutomationExecutor(Protocol):
         logger: logging.Logger,
         timeout: int | None,
     ) -> str: ...
+
+
+def arguments_with_timeout(args: Sequence[str], timeout: int | None) -> Sequence[str]:
+    return args if timeout is None else ["--timeout", str(timeout), *args]

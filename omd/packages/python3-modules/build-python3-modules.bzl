@@ -59,7 +59,7 @@ build_cmd = """
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
-    # Keep in sync with scripts/run-pipenv
+    # Keep in sync with scripts/run-uvenv
     export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4
     export NPY_NUM_BUILD_JOBS=4
 
@@ -82,10 +82,6 @@ build_cmd = """
     # install requirements
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freetds/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
-
-    echo "ninja==1.11.1.1" > $$TMPDIR/constraints.txt
-    export PIP_CONSTRAINT="$$TMPDIR/constraints.txt"
-
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -97,7 +93,6 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      --constraint "$$TMPDIR/constraints.txt" \\
       {pip_add_opts} \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

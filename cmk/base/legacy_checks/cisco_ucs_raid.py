@@ -7,7 +7,7 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -28,7 +28,7 @@ def parse_cisco_ucs_raid(string_table: StringTable) -> Section | None:
         return None
     return Section(
         string_table[0][0],
-        *map_operability[string_table[0][1]],
+        *MAP_OPERABILITY[string_table[0][1]],
         string_table[0][2],
         string_table[0][3],
     )

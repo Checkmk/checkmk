@@ -16,7 +16,7 @@ from typing import Any, Final, Literal, NoReturn
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -28,7 +28,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -1460,6 +1460,7 @@ def test_host_config_custom_checks(
                             )
                         ),
                         discovered_parameters={},
+                        labels={},
                         discovered_labels={},
                         is_enforced=True,
                     ),
@@ -1478,6 +1479,7 @@ def test_host_config_custom_checks(
                             )
                         ),
                         discovered_parameters={},
+                        labels={},
                         discovered_labels={},
                         is_enforced=True,
                     ),
@@ -1759,18 +1761,15 @@ def test_config_cache_snmp_credentials_of_version(
     assert config_cache.snmp_credentials_of_version(hostname, version) == result
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
-    "hostname, section_name, result",
+    "hostname, result",
     [
-        (HostName("testhost1"), "uptime", None),
-        (HostName("testhost2"), "uptime", None),
-        (HostName("testhost1"), "snmp_uptime", None),
-        (HostName("testhost2"), "snmp_uptime", 4),
+        (HostName("testhost1"), {}),
+        (HostName("testhost2"), {SectionName("snmp_uptime"): 240}),
     ],
 )
 def test_snmp_check_interval(
-    monkeypatch: MonkeyPatch, hostname: HostName, section_name: str, result: int | None
+    monkeypatch: MonkeyPatch, hostname: HostName, result: Mapping[SectionName, int | None]
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
@@ -1780,13 +1779,11 @@ def test_snmp_check_interval(
             {
                 "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
-                "value": ("snmp_uptime", 4),
+                "value": (["snmp_uptime"], ("cached", 240)),
             },
         ],
     )
-    assert ts.apply(monkeypatch).snmp_fetch_interval(hostname, SectionName(section_name)) == (
-        60 * result if result else None
-    )
+    assert ts.apply(monkeypatch).snmp_fetch_intervals(hostname) == result
 
 
 def test_http_proxies() -> None:
@@ -1802,6 +1799,7 @@ def _service_list() -> list[ConfiguredService]:
             description="description %s" % d,
             parameters=TimespecificParameters(),
             discovered_parameters={},
+            labels={},
             discovered_labels={},
             is_enforced=False,
         )
@@ -2043,7 +2041,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "tcp": "tcp",
         "checkmk-agent": "checkmk-agent",
     }
-    assert config_cache.tags_of_service(xyz_host, "CPU load") == {}
+    assert config_cache.tags_of_service(xyz_host, "CPU load", {}) == {}
 
     assert config_cache.tags(test_host) == {
         "address_family": "ip-v4-only",
@@ -2055,7 +2053,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "site": "unit",
         "snmp_ds": "no-snmp",
     }
-    assert config_cache.tags_of_service(test_host, "CPU load") == {"criticality": "prod"}
+    assert config_cache.tags_of_service(test_host, "CPU load", {}) == {"criticality": "prod"}
 
 
 def test_host_label_rules_default() -> None:
@@ -2208,7 +2206,7 @@ def test_config_cache_extra_attributes_of_service(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
+    assert config_cache.extra_attributes_of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2257,6 +2255,7 @@ def test_config_cache_icons_and_actions(
         config_cache.icons_and_actions_of_service(
             hostname,
             "CPU load",
+            {},
             None,
         )
     ) == sorted(result)
@@ -2288,7 +2287,7 @@ def test_config_cache_servicegroups_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.servicegroups_of_service(hostname, "CPU load") == result
+    assert config_cache.servicegroups_of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2350,7 +2349,7 @@ def test_config_cache_contactgroups_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.contactgroups_of_service(hostname, "CPU load")) == sorted(result)
+    assert sorted(config_cache.contactgroups_of_service(hostname, "CPU load", {})) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -2379,7 +2378,7 @@ def test_config_cache_passive_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.passive_check_period_of_service(hostname, "CPU load") == result
+    assert config_cache.passive_check_period_of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2427,7 +2426,7 @@ def test_config_cache_custom_attributes_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.custom_attributes_of_service(hostname, "CPU load") == result
+    assert config_cache.custom_attributes_of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2464,7 +2463,7 @@ def test_config_cache_service_level_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.service_level_of_service(hostname, "CPU load") == result
+    assert config_cache.service_level_of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2510,7 +2509,7 @@ def test_config_cache_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.check_period_of_service(hostname, "CPU load") == result
+    assert config_cache.check_period_of_service(hostname, "CPU load", {}) == result
 
 
 def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
@@ -2560,38 +2559,6 @@ def test_config_cache_service_discovery_name(
     ts.apply(monkeypatch)
 
     assert ConfigCache.service_discovery_name() == result
-
-
-def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
-    test_host = HostName("test-host")
-    xyz_host = HostName("xyz")
-
-    ts = Scenario()
-    ts.add_host(xyz_host)
-    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
-    ts.set_autochecks(
-        test_host,
-        [
-            AutocheckEntry(
-                CheckPluginName("cpu_load"),
-                None,
-                {},
-                {"abc": "xä"},
-            )
-        ],
-    )
-    matcher = ts.apply(monkeypatch).ruleset_matcher
-
-    obj = matcher._service_match_object(xyz_host, "bla blä")
-    assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
-
-    # Funny service name because the plug-in isn't loaded.
-    # We could patch config.service_description, but this is easier:
-    description = "Unimplemented check cpu_load"
-
-    obj = matcher._service_match_object(test_host, description)
-    service_labels = {"abc": "xä"}
-    assert obj == RulesetMatchObject(HostName("test-host"), description, service_labels)
 
 
 @pytest.mark.parametrize(
@@ -3122,6 +3089,7 @@ def test_boil_down_agent_rules(
                         description="Unimplemented check check1 / item",
                         parameters=TimespecificParameters(()),
                         discovered_parameters={},
+                        labels={},
                         discovered_labels={},
                         is_enforced=True,
                     )
@@ -3139,6 +3107,7 @@ def test_boil_down_agent_rules(
                         description="Unimplemented check check1 / item",
                         parameters=TimespecificParameters(()),
                         discovered_parameters={},
+                        labels={},
                         discovered_labels={},
                         is_enforced=True,
                     )

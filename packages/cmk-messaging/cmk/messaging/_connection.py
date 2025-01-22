@@ -279,7 +279,7 @@ class Channel(Generic[_ModelT]):
 class Connection:
     """Connection to the local message broker
 
-    Instances should be reused, as establishing the connection is comperatively expensive.
+    Instances should be reused, as establishing the connection is comparatively expensive.
     Most of the methods are just wrappers around the corresponding pika methods.
     Feel free to add more methods as needed.
 
@@ -291,7 +291,7 @@ class Connection:
 
     ```python
 
-    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite"), "mysite") as conn:
         channel = conn.channel(MyMessageModel)
         channel.publish_for_site("other_site", my_message_instance, RoutintKey("my_routing"))
 
@@ -301,21 +301,38 @@ class Connection:
 
     ```python
 
-    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite"), "mysite") as conn:
         channel = conn.channel(MyMessageModel)
         channel.queue_declare(QueueName("default"))  # includes default binding
         channel.consume(my_message_handler_callback)
 
     ```
+
+    To name distinguish between different app connections, you can additionally provide a connection
+     name:
+
+    ```python
+
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite"), , "mysite", "my-connection") as conn:
+        ...
+
     """
 
-    def __init__(self, app: AppName, omd_root: Path) -> None:
+    def __init__(
+        self, app: AppName, omd_root: Path, omd_site: str, connection_name: str | None = None
+    ) -> None:
         """Create a connection for a specific app"""
         self.app: Final = app
         self._omd_root = omd_root
         try:
             self._pconnection = pika.BlockingConnection(
-                make_connection_params(omd_root, "localhost", get_local_port())
+                make_connection_params(
+                    omd_root,
+                    "localhost",
+                    get_local_port(),
+                    omd_site,
+                    connection_name if connection_name else app.value,
+                )
             )
         except AMQPConnectionError as e:
             # pika handles exceptions weirdly. We need repr, in order to see something.
@@ -346,7 +363,7 @@ class Connection:
 
 
 def check_remote_connection(
-    omd_root: Path, server: str, port: int
+    omd_root: Path, server: str, port: int, omd_site: str
 ) -> ConnectionOK | ConnectionFailed:
     """
     Check if a connection to a remote message broker can be established
@@ -355,10 +372,15 @@ def check_remote_connection(
         omd_root: The OMD root path of the site to connect from
         server: Hostname or IP Address to connect to
         port: The message broker port to connect to
+        omd_site: The site id to connect to
     """
 
     try:
-        with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
+        with pika.BlockingConnection(
+            make_connection_params(
+                omd_root, server, port, omd_site, f"check-connection-from-{omd_root.name}"
+            )
+        ):
             return ConnectionOK()
     except AMQPConnectionError as exc:
         return (
@@ -367,10 +389,15 @@ def check_remote_connection(
             else ConnectionFailed(str(exc))
         )
     except ssl.SSLError as exc:
-        return (
-            ConnectionFailed("Invalid certificates")
-            if "certificate verify failed" in repr(exc).lower()
-            else ConnectionFailed(str(exc))
-        )
+        msg = repr(exc).lower()
+        if "hostname mismatch" in msg:
+            return ConnectionFailed(
+                "Hostname mismatch. You are probably connecting to the wrong site."
+            )
+        elif "certificate verify failed" in msg:
+            return ConnectionFailed("Certificate verify failed")
+
+        return ConnectionFailed(str(exc))
+
     except (socket.gaierror, RuntimeError) as exc:
         return ConnectionFailed(str(exc))

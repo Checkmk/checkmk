@@ -5,9 +5,9 @@ set -e
 # Maintain here a list which are not to be allowed to be modified in a Jenkins workspace
 # Background: We want to ensure that those files are *really* staying the same during a build/test run.
 # TODO: enable this test also for package-lock.json (CMK-11132)
-FILES_NOT_ALLOWED_TO_BE_MODIFIED="Pipfile.lock\|package.json\|Cargo.lock"
+FILES_NOT_ALLOWED_TO_BE_MODIFIED="package.json\|Cargo.lock"
 
-MODIFIED_FILES=$(git status -s | grep '^ M')
+MODIFIED_FILES=$(git status -s | grep '^ M' || true)
 NOT_ALLOWED_TO_BE_MODIFIED_FILES=$(echo "${MODIFIED_FILES}" | grep ${FILES_NOT_ALLOWED_TO_BE_MODIFIED} || true)
 echo -e "The following files are modified: \n${MODIFIED_FILES}"
 

@@ -5,12 +5,16 @@
  */
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import { ref, watch } from 'vue'
 
 vitest.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: () => [ref(''), ref({ choices: [['os:windows'], ['os:linux']] })]
+  setupAutocompleter: () => ({
+    input: ref(''),
+    focus: ref(false),
+    output: ref({ choices: [['os:windows'], ['os:linux']] })
+  })
 }))
 
 vitest.mock('@/form/components/utils/watch', () => ({
@@ -36,7 +40,8 @@ const spec: FormSpec.Labels = {
       'Labels need to be in the format [KEY]:[VALUE]. For example os:windows.',
     max_labels_reached: 'You can only add up to 10 labels.',
     uniqueness_error: 'Labels need to be unique.'
-  }
+  },
+  label_source: null
 }
 describe('FormLabels', () => {
   test('should be rendered with provided items and entry input', async () => {

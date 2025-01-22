@@ -338,7 +338,7 @@ def test_services_split(
                 "Apr 19 15:02:38 klappmax systemd[1]: Starting Checkmk Monitoring..",
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
-                "cmktest.service loaded active running NOT FROM SYSTEMD",
+                "cmktest.service loaded activating start NOT FROM SYSTEMD",
             ],
             Section(
                 sockets={},
@@ -346,8 +346,8 @@ def test_services_split(
                     "cmktest": UnitEntry(
                         name="cmktest",
                         loaded_status="loaded",
-                        active_status="active",
-                        current_state="running",
+                        active_status="activating",
+                        current_state="start",
                         description="NOT FROM SYSTEMD",
                         enabled_status="disabled",
                         time_since_change=timedelta(minutes=33),
@@ -371,7 +371,7 @@ def test_services_split(
                 " └─ ConditionDirectoryNotEmpty=|/etc/sssd/conf.d was not met",
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
-                "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                "sssd.service loaded inactive dead SSSD NOT FROM SYSTEMD ONLY FOR TEST",
             ],
             Section(
                 sockets={},
@@ -379,8 +379,8 @@ def test_services_split(
                     "sssd": UnitEntry(
                         name="sssd",
                         loaded_status="loaded",
-                        active_status="active",
-                        current_state="running",
+                        active_status="inactive",
+                        current_state="dead",
                         description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
                         enabled_status="enabled",
                         time_since_change=None,
@@ -626,7 +626,7 @@ def test_services_split(
                         current_state="running",
                         description="LSB: Apache2 web server",
                         enabled_status=None,
-                        time_since_change=None,
+                        time_since_change=timedelta(days=2),
                         cpu_seconds=None,
                         memory=None,
                         number_of_tasks=None,
@@ -677,7 +677,7 @@ SEC_PER_YEAR = 31557600
     ],
 )
 def test_parse_time_since_state_change(time: str, expected: timedelta) -> None:
-    condition = f" Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; {time}"
+    condition = f"Active: active (running) since Tue 2022-04-12 12:53:54 CEST; {time}"
     pre_string_table = [
         "[list-unit-files]",
         "[status]",
@@ -716,7 +716,7 @@ def test_all_possible_service_states_in_status_section(icon: str) -> None:
         "[status]",
         f"{icon} sssd.service - System Security Services Daemon",
         "Loaded: loaded (/lib/systemd/system/sssd.service; enabled; vendor preset: enabled)",
-        " Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; 3s ago",
+        "Active: active (running) since Mon Tue 2022-04-12 12:53:54 CEST; 3s ago",
         "[all]",
         "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
         "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
@@ -749,7 +749,7 @@ def test_all_possible_service_states_in_all_section(icon: str) -> None:
         "[status]",
         "● sssd.service - System Security Services Daemon",
         "Loaded: loaded (/lib/systemd/system/sssd.service; enabled; vendor preset: enabled)",
-        " Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; 3s ago",
+        "Active: active (running) since Mon Tue 2022-04-12 12:53:54 CEST; 3s ago",
         "[all]",
         "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
         f"{icon} sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
@@ -1008,7 +1008,13 @@ def test_discover_systemd_units_services_summary(
                 "states_default": 2,
             },
             SECTION,
-            [Result(state=State.CRIT, summary="Service not found")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Unit not found",
+                    details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+                )
+            ],
         ),
         (
             "something",
@@ -1018,7 +1024,13 @@ def test_discover_systemd_units_services_summary(
                 "states_default": 2,
             },
             Section(services={}, sockets={}),
-            [Result(state=State.CRIT, summary="Service not found")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Unit not found",
+                    details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+                )
+            ],
         ),
     ],
 )

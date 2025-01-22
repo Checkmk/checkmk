@@ -245,6 +245,12 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
         thresholds.setdefault(sensor_id, [])
 
     for endoid, severity, relation, thresh_value in levels_info:
+        if thresh_value and not all((severity, relation)):
+            raise ValueError("Threshold value with no relation or severity")
+
+        if not thresh_value:
+            continue
+
         # endoid is e.g. 21549.9 or 21459.10
         sensor_id, _subid = endoid.split(".")
         thresholds.setdefault(sensor_id, []).append(

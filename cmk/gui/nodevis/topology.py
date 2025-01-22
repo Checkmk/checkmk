@@ -74,8 +74,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters

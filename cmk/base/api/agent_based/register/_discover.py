@@ -51,21 +51,21 @@ _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | Inve
 tracer = trace.get_tracer()
 
 
-@tracer.start_as_current_span("load_all_plugins")
+@tracer.instrument("load_all_plugins")
 def load_all_plugins(
     sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
     checks: Iterable[BackendCheckPlugin],
     *,
     raise_errors: bool,
 ) -> list[str]:
-    with tracer.start_as_current_span("discover_plugins"):
+    with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
         )
 
     errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
 
-    with tracer.start_as_current_span("load_discovered_plugins"):
+    with tracer.span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
             try:
                 _register_plugin_by_type(location, plugin, validate=raise_errors)

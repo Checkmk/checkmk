@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia"""
 
-__version__ = "2.4.0b1"
-
-USER_AGENT = "checkmk-special-jolokia-" + __version__
-
 import argparse
 import os
 import sys
@@ -20,7 +16,11 @@ from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
 sys.path.append(os.path.join(cmk.utils.paths.agents_dir, "plugins"))
-import mk_jolokia  # type: ignore[import-not-found]  # pylint: disable=import-error,wrong-import-order
+import mk_jolokia  # type: ignore[import-not-found]
+
+__version__ = "2.5.0b1"
+
+USER_AGENT = "checkmk-special-jolokia-" + __version__
 
 
 def parse_arguments(argv):

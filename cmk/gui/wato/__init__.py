@@ -9,12 +9,12 @@ This package implements the backend rendered UI part of the setup, while `cmk.gu
 backend business and persistence logic, which is also shared with the REST API.
 """
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
-
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# pylint: disable=unused-import
+# ruff: noqa: F401
+
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 import cmk.gui.valuespec

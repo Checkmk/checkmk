@@ -34,7 +34,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
@@ -618,7 +618,7 @@ class PainterAggrGroup(Painter):
         return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", escape_attribute(row["aggr_group"])
+        return "", HTML.with_escaping(row["aggr_group"])
 
 
 class PainterAggrName(Painter):

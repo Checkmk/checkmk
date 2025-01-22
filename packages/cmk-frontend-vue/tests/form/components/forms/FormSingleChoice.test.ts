@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const spec: FormSpec.SingleChoice = {
@@ -13,6 +13,7 @@ const spec: FormSpec.SingleChoice = {
   title: 'fooTitle',
   input_hint: 'some input hint',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   no_elements_text: 'no_text',
   elements: [
     { name: 'choice1', title: 'Choice 1' },

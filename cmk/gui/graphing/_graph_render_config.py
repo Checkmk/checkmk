@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container
-from typing import Literal, Self, Unpack
+from typing import Literal, Self
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import (
-    GraphRenderOptionsBase,
     GraphRenderOptionsVS,
     GraphTitleFormatVS,
     SizeMM,
@@ -34,23 +33,41 @@ class GraphTitleFormat(BaseModel):
         )
 
 
-class GraphRenderOptions(GraphRenderOptionsBase, total=False):
-    title_format: GraphTitleFormat
+class GraphRenderOptions(BaseModel):
+    border_width: SizeMM | None = None
+    color_gradient: float | None = None
+    editing: bool | None = None
+    fixed_timerange: bool | None = None
+    font_size: SizePT | None = None
+    interaction: bool | None = None
+    preview: bool | None = None
+    resizable: bool | None = None
+    show_controls: bool | None = None
+    show_graph_time: bool | None = None
+    show_legend: bool | None = None
+    show_margin: bool | None = None
+    show_pin: bool | None = None
+    show_time_axis: bool | None = None
+    show_time_range_previews: bool | None = None
+    show_title: bool | Literal["inline"] | None = None
+    show_vertical_axis: bool | None = None
+    size: tuple[int, int] | None = None
+    title_format: GraphTitleFormat | None = None
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] | None = None
 
-
-def graph_grender_options_from_vs(options_vs: GraphRenderOptionsVS) -> GraphRenderOptions:
-    # no assignment expressions due to https://github.com/pylint-dev/pylint/issues/8486
-    title_format_vs = options_vs.get("title_format")
-    # Performance impact needs to be investigated (see CMK-19527)
-    # nosemgrep: type-adapter-detected
-    return TypeAdapter(GraphRenderOptions).validate_python(
-        options_vs
-        | (
-            {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
-            if title_format_vs is not None
-            else {}
+    @classmethod
+    def from_graph_render_options_vs(cls, render_options_vs: GraphRenderOptionsVS) -> Self:
+        return cls.model_validate(
+            render_options_vs
+            | (
+                {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
+                if (title_format_vs := render_options_vs.get("title_format"))
+                else {}
+            )
         )
-    )
+
+    def dump_set_fields(self) -> dict[str, object]:
+        return self.model_dump(exclude_none=True)
 
 
 class GraphRenderConfigBase(BaseModel):
@@ -80,6 +97,11 @@ class GraphRenderConfigBase(BaseModel):
     )
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
 
+    def update_from_options(self, options: GraphRenderOptions) -> Self:
+        return self.model_copy(
+            update=options.dump_set_fields(),
+        )
+
 
 class GraphRenderConfig(GraphRenderConfigBase):
     explicit_title: str | None = None
@@ -91,11 +113,11 @@ class GraphRenderConfig(GraphRenderConfigBase):
         cls,
         user: LoggedInUser,
         theme_id: str,
-        **options: Unpack[GraphRenderOptions],
+        options: GraphRenderOptions,
     ) -> Self:
-        return cls(
-            foreground_color="#ffffff" if theme_id == "modern-dark" else "#000000",
-            **_set_user_specific_size(options, user),
+        return cls.model_validate(
+            _set_user_specific_size(options, user).dump_set_fields()
+            | {"foreground_color": "#ffffff" if theme_id == "modern-dark" else "#000000"},
         )
 
 
@@ -108,14 +130,19 @@ class GraphRenderConfigImage(GraphRenderConfigBase):
     def from_user_context_and_options(
         cls,
         user: LoggedInUser,
-        **options: Unpack[GraphRenderOptions],
+        options: GraphRenderOptions,
     ) -> Self:
-        return cls(**_set_user_specific_size(options, user))
+        return cls.model_validate(_set_user_specific_size(options, user).dump_set_fields())
 
 
-def _set_user_specific_size(options: GraphRenderOptions, user: LoggedInUser) -> GraphRenderOptions:
-    if "size" in options:
+def _set_user_specific_size(
+    options: GraphRenderOptions,
+    user: LoggedInUser,
+) -> GraphRenderOptions:
+    if options.size:
         return options
     if user_specific_size := user.load_file("graph_size", None):
-        return options | GraphRenderOptions(size=user_specific_size)
+        options_with_updated_size = options.model_copy()
+        options_with_updated_size.size = user_specific_size
+        return options_with_updated_size
     return options

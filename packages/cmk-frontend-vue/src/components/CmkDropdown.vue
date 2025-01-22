@@ -7,6 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import CmkButton from './CmkButton.vue'
 import useClickOutside from '@/lib/useClickOutside'
+import FormRequired from '@/form/private/FormRequired.vue'
+import ArrowDown from '@/components/graphics/ArrowDown.vue'
+import CmkScrollContainer from './CmkScrollContainer.vue'
 
 export interface DropdownOption {
   name: string
@@ -17,7 +20,9 @@ const {
   inputHint = '',
   noResultsHint = '',
   disabled = false,
-  componentId = '',
+  componentId = null,
+  noElementsText = '',
+  requiredText = '',
   options,
   showFilter
 } = defineProps<{
@@ -26,7 +31,9 @@ const {
   inputHint?: string
   noResultsHint?: string
   disabled?: boolean
-  componentId?: string
+  componentId?: string | null
+  noElementsText?: string
+  requiredText?: string
 }>()
 
 const vClickOutside = useClickOutside()
@@ -36,7 +43,10 @@ const selectedOptionTitle = computed(
   () => options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint
 )
 
+const noChoiceAvailable = computed(() => options.length === 0)
+
 const suggestionsShown = ref(false)
+const suggestionsRef = ref<HTMLUListElement | null>(null)
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
 const optionRefs = ref<(HTMLLIElement | null)[]>([])
@@ -57,12 +67,24 @@ watch(filterString, (newFilterString) => {
 })
 
 function showSuggestions(): void {
-  if (!disabled && options.length > 0) {
+  if (!disabled && !noChoiceAvailable.value) {
     suggestionsShown.value = !suggestionsShown.value
+    if (!suggestionsShown.value) {
+      return
+    }
     filterString.value = ''
     filteredOptions.value = options.map((_, index) => index)
     selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     nextTick(() => {
+      if (suggestionsRef.value) {
+        const suggestionsRect = suggestionsRef.value.getBoundingClientRect()
+        if (window.innerHeight - suggestionsRect.bottom < suggestionsRect.height) {
+          suggestionsRef.value.style.bottom = `calc(2 * var(--spacing))`
+        } else {
+          suggestionsRef.value.style.removeProperty('bottom')
+        }
+      }
       suggestionInputRef.value?.focus()
     })
   }
@@ -88,6 +110,7 @@ function selectSuggestion(filteredOptionIndex: number | null): void {
     throw new Error('Invalid filtered option index')
   }
   selectedSuggestionOptionIndex.value = optionIndex
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   nextTick(() => {
     optionRefs.value[optionIndex]?.scrollIntoView({ block: 'nearest' })
   })
@@ -131,23 +154,35 @@ function wrap(index: number, length: number): number {
         if (suggestionsShown) suggestionsShown = false
       }
     "
-    class="cmk_dropdown__container"
+    class="cmk-dropdown"
   >
     <CmkButton
+      v-if="options.length > 0"
       :id="componentId"
       ref="comboboxButtonRef"
       role="combobox"
       :aria-label="selectedOptionTitle"
       :aria-expanded="suggestionsShown"
-      :class="{ 'drop-down': true, disabled: disabled || options.length === 0 }"
+      class="cmk-dropdown__button"
+      :class="{
+        disabled,
+        no_choices: noChoiceAvailable,
+        no_value: !selectedOption
+      }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
-      <div>{{ selectedOptionTitle }}</div>
+      {{ selectedOptionTitle
+      }}<template v-if="requiredText !== '' && !selectedOption!!">
+        {{ ' '
+        }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText" /></template
+      ><ArrowDown class="cmk-dropdown__button_arrow" />
     </CmkButton>
+    <span v-else>{{ noElementsText }}</span>
     <ul
       v-if="!!suggestionsShown"
-      class="suggestions"
+      ref="suggestionsRef"
+      class="cmk-dropdown__suggestions"
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"
       @keydown.enter="keyEnter"
@@ -157,43 +192,47 @@ function wrap(index: number, length: number): number {
       <span :class="{ hidden: !showFilter, input: true }">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
-      <div class="options-container">
-        <template v-for="(option, index) in options" :key="option.name">
-          <li
-            v-show="filteredOptions.includes(index)"
-            :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
-            role="option"
-            :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
-            @click.prevent="() => selectOption(index)"
-          >
-            {{ option.title }}
+      <CmkScrollContainer>
+        <div class="cmk-dropdown__options-container">
+          <template v-for="(option, index) in options" :key="option.name">
+            <li
+              v-show="filteredOptions.includes(index)"
+              :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
+              role="option"
+              :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
+              @click.prevent="() => selectOption(index)"
+            >
+              {{ option.title }}
+            </li>
+          </template>
+          <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
+            {{ noResultsHint }}
           </li>
-        </template>
-        <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
-          {{ noResultsHint }}
-        </li>
-      </div>
+        </div>
+      </CmkScrollContainer>
     </ul>
   </div>
 </template>
 
 <style scoped>
-.cmk_dropdown__container {
+.cmk-dropdown {
   display: inline-block;
   position: relative;
+  white-space: nowrap;
 }
 
-.drop-down {
+.cmk-dropdown__button {
   cursor: pointer;
   background-color: var(--default-form-element-bg-color);
   margin: 0;
-  padding: 3px 2.5em 3px 6px;
-  background-image: var(--icon-select-arrow);
-  background-position: right 50%;
-  background-repeat: no-repeat;
-  background-size: 20px 11px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  padding: 3px 2.5em 4px 6px;
+
+  .cmk-dropdown__button_arrow {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
 
   &:hover {
     background-color: var(--input-hover-bg-color);
@@ -206,9 +245,27 @@ function wrap(index: number, length: number): number {
       background-color: var(--default-form-element-bg-color);
     }
   }
+
+  &.no_value {
+    color: var(--font-color-dimmed);
+
+    > .cmk-dropdown__button_arrow {
+      color: var(--font-color);
+    }
+  }
+
+  &.no_choices {
+    cursor: auto;
+    &:hover {
+      background-color: var(--default-form-element-bg-color);
+    }
+    > .cmk-dropdown__button_arrow {
+      color: var(--font-color-dimmed);
+    }
+  }
 }
 
-.suggestions {
+.cmk-dropdown__suggestions {
   position: absolute;
   z-index: 1;
   color: var(--font-color);
@@ -241,14 +298,16 @@ function wrap(index: number, length: number): number {
 
     &.selectable {
       cursor: pointer;
-      &:hover,
       &.selected {
+        color: var(--default-select-focus-color);
+      }
+      &:hover {
         color: var(--default-select-hover-color);
       }
     }
   }
 
-  .options-container {
+  .cmk-dropdown__options-container {
     width: 100%;
     max-height: 200px;
     overflow-y: auto;

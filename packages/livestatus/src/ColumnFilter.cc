@@ -6,6 +6,7 @@
 #include "livestatus/ColumnFilter.h"
 
 #include <functional>
+#include <memory>
 
 #include "livestatus/AndingFilter.h"
 #include "livestatus/opids.h"

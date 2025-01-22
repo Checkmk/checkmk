@@ -37,6 +37,14 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
+}
+
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -309,8 +317,125 @@ detect_python() {
 # END COMMON AGENT CODE
 #
 
-# encryption not implemented
-optionally_encrypt() { cat; }
+encryption_panic() {
+    echo "<<<check_mk>>>"
+    echo "EncryptionPanic: true"
+    exit 1
+}
+
+set_up_encryption() {
+    # shellcheck source=agents/cfg_examples/encryption.cfg
+    [ -f "${MK_CONFDIR}/encryption.cfg" ] && {
+        . "${MK_CONFDIR}/encryption.cfg" || encryption_panic
+    }
+    define_optionally_encrypt "${ENCRYPTED:-"no"}"
+}
+
+hex_decode() {
+    # We might not have xxd available, so we have to do it manually.
+    # Be aware that this implementation is very slow and should not be used for large data.
+    local hex="$1"
+    for ((i = 0; i < ${#hex}; i += 2)); do
+        printf '%b' "\x${hex:i:2}"
+    done
+}
+
+parse_kdf_output() {
+    local kdf_output="$1"
+    salt_hex=$(echo "$kdf_output" | grep -oP "(?<=salt=)[0-9A-F]+")
+    key_hex=$(echo "$kdf_output" | grep -oP "(?<=key=)[0-9A-F]+")
+    iv_hex=$(echo "$kdf_output" | grep -oP "(?<=iv =)[0-9A-F]+")
+    # Make sure this rather brittle grepping worked. For example, some openssl update might decide
+    # to remove that odd-looking space behind 'iv'.
+    # Note that the expected LENGTHS ARE DOUBLED because the values are hex encoded.
+    if [ ${#salt_hex} -ne 16 ] || [ ${#key_hex} -ne 64 ] || [ ${#iv_hex} -ne 32 ]; then
+        encryption_panic
+    fi
+    echo "$salt_hex" "$key_hex" "$iv_hex"
+}
+
+encrypt_then_mac() {
+    # Encrypt the input data, calculate a MAC over IV and ciphertext, then
+    # print mac and ciphertext.
+    local salt_hex="$1"
+    local key_hex="$2"
+    local iv_hex="$3"
+    local ciphertext_b64
+
+    # We need the ciphertext twice: for the mac and for the output. But we can only store it in
+    # encoded form because it can contain null bytes.
+    ciphertext_b64=$(openssl enc -aes-256-cbc -K "$key_hex" -iv "$iv_hex" | openssl enc -base64)
+
+    (
+        hex_decode "$iv_hex"
+        echo "$ciphertext_b64" | openssl enc -base64 -d
+    ) | openssl dgst -sha256 -mac HMAC -macopt hexkey:"$key_hex" -binary
+
+    echo "$ciphertext_b64" | openssl enc -base64 -d
+}
+
+define_optionally_encrypt() {
+    # if things fail, make sure we don't accidentally send unencrypted data
+    unset optionally_encrypt
+
+    if [ "${1}" != "no" ]; then
+        OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+        #
+        # Encryption scheme for version 04 and 05:
+        #
+        #   salt    <- random_salt()
+        #   key, IV <- version_specific_kdf( salt, password )
+        #
+        #   ciphertext <- aes_256_cbc_encrypt( key, IV, message )
+        #   mac        <- hmac_sha256( key, iv:ciphertext )
+        #
+        #   // The output blob is formed as:
+        #   // - 2 bytes version
+        #   // - optional: rtc timestamp
+        #   // - 8 bytes salt
+        #   // - 32 bytes MAC
+        #   // - the ciphertext
+        #   result <- [version:salt:mac:ciphertext]
+
+        if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
+            optionally_encrypt() {
+                # version: 05
+                # kdf: pbkdf2, 600.000 iterations
+
+                local salt_hex key_hex iv_hex
+                read -r salt_hex key_hex iv_hex <<<"$(
+                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -k "${1}" -P)"
+                )"
+
+                printf "05"
+                printf "%s" "${2}"
+                hex_decode "$salt_hex"
+                encrypt_then_mac "$salt_hex" "$key_hex" "$iv_hex"
+            }
+        else
+            optionally_encrypt() {
+                # version: 04
+                # kdf: openssl custom kdf based on sha256
+
+                local salt_hex key_hex iv_hex
+                read -r salt_hex key_hex iv_hex <<<"$(
+                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
+                )"
+
+                printf "04"
+                printf "%s" "${2}"
+                hex_decode "$salt_hex"
+                encrypt_then_mac "$salt_hex" "$key_hex" "$iv_hex"
+            }
+        fi
+    else
+        optionally_encrypt() {
+            [ -n "${2}" ] && printf "99%s" "${2}"
+            cat
+        }
+    fi
+
+}
 
 preamble_2() {
     if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
@@ -341,7 +466,7 @@ export_utility_functions() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b1"
+    echo "Version: 2.5.0b1"
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -1086,6 +1211,8 @@ main_setup() {
         exec 2>/dev/null
     fi
 
+    init_sudo
+
     set_up_get_epoch
 
     set_up_current_shell
@@ -1105,6 +1232,8 @@ main_setup() {
     set_up_profiling
 
     detect_python
+
+    set_up_encryption
 
     preamble_2
 

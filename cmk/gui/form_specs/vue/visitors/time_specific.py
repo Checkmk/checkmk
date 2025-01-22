@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
-from typing import Any, Sequence, TypedDict
-
-from cmk.ccc.i18n import _
+from collections.abc import Sequence
+from typing import Any, TypedDict
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
@@ -18,12 +17,12 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     List,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DEFAULT_VALUE, InvalidValue
 from ._utils import (
-    compute_validation_errors,
     compute_validators,
     get_title_and_help,
 )
@@ -37,15 +36,19 @@ class _TimeperiodConfig(TypedDict):
     parameters: object
 
 
-class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+_ParsedValueModel = object
+_FrontendModel = object
+
+
+class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         # Since an inactive time specific form spec leaves no traces in the data
         # we can not make any assumptions/tests on the raw_value and return it "as is".
         if self._is_active(raw_value):
             # At least some basic tests if both keys are present
             assert isinstance(raw_value, dict)
             if not (_ts_values_key in raw_value and _default_value_key in raw_value):
-                return EMPTY_VALUE
+                return InvalidValue(reason="Invalid time specific data", fallback_value={})
 
             if self.options.data_origin == DataOrigin.DISK:
                 return {
@@ -66,7 +69,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
         return [(x["timeperiod"], x["parameters"]) for x in config]
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.TimeSpecific, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -92,15 +95,11 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        validation_errors = compute_validation_errors(
-            compute_validators(self.form_spec), parsed_value
-        )
-        validation_errors.extend(self._get_current_visitor(parsed_value).validate(parsed_value))
-        return validation_errors
+        return self._get_current_visitor(parsed_value).validate(parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: object) -> object:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> object:
         disk_value = self._get_current_visitor(parsed_value).to_disk(parsed_value)
         if self._is_active(parsed_value):
             # Convert value to ugly tuple format
@@ -115,7 +114,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
             return _default_value_key in data
         return False
 
-    def _get_current_visitor(self, parsed_value: object) -> FormSpecVisitor[Any, Any]:
+    def _get_current_visitor(self, parsed_value: object) -> FormSpecVisitor[Any, Any, Any]:
         return (
             self._time_specific_enabled_visitor()
             if self._is_active(parsed_value)
@@ -146,7 +145,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
                             elements={
                                 "timeperiod": DictElement(
                                     parameter_form=create_timeperiod_selection(
-                                        title=Title("Time period")
+                                        title=Title("Match only during time period")
                                     ),
                                     required=True,
                                 ),
@@ -162,8 +161,8 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
             },
         )
 
-    def _time_specific_enabled_visitor(self) -> FormSpecVisitor[Any, Any]:
+    def _time_specific_enabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
         return get_visitor(self._time_specific_spec(), self.options)
 
-    def _time_specific_disabled_visitor(self) -> FormSpecVisitor[Any, Any]:
+    def _time_specific_disabled_visitor(self) -> FormSpecVisitor[Any, Any, Any]:
         return get_visitor(self.form_spec.parameter_form, self.options)

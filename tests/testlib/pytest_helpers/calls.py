@@ -5,7 +5,7 @@
 import traceback
 from contextlib import contextmanager
 from subprocess import CalledProcessError
-from typing import Any, Type
+from typing import Any
 
 import pytest
 
@@ -35,7 +35,7 @@ def abort_if_saas_edition(condition: bool = True) -> None:
 
 @contextmanager
 def exit_pytest_on_exceptions(
-    exceptions: tuple[Type[BaseException]] | None = None, exit_msg: str = ""
+    exceptions: tuple[type[BaseException]] | None = None, exit_msg: str = ""
 ) -> Any:
     exceptions = (BaseException,) if exceptions is None else exceptions
     msg = f"{exit_msg}\n"

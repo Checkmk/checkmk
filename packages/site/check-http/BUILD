@@ -1,0 +1,85 @@
+load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+
+rust_library(
+    name = "check-http-lib",
+    srcs = [
+        "src/checking_types.rs",
+        "src/checks.rs",
+        "src/http.rs",
+        "src/http/client.rs",
+        "src/http/request.rs",
+        "src/lib.rs",
+        "src/output.rs",
+        "src/runner.rs",
+    ],
+    aliases = aliases(),
+    crate_name = "check_http",
+    edition = "2021",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps() + ["@openssl"],
+)
+
+rust_test(
+    name = "check-http-lib-test-internal",
+    crate = ":check-http-lib",
+)
+
+rust_test_suite(
+    name = "check-http-lib-test-external",
+    srcs = [
+        "tests/test_http.rs",
+    ],
+    deps = all_crate_deps() + [
+        ":check-http-lib",
+    ],
+)
+
+file_from_flag(
+    name = "version.rs",
+    out = "src/version.rs",
+    content = ["pub const VERSION: &str = %r;"],
+    value = "//:cmk_version",
+    visibility = ["//visibility:private"],
+)
+
+rust_binary(
+    name = "check-http",
+    srcs = [
+        "src/cli.rs",
+        "src/main.rs",
+        "src/pwstore.rs",
+        ":version.rs",
+    ],
+    aliases = aliases(),
+    crate_name = "check_http",
+    edition = "2021",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [":check-http-lib"],
+)
+
+pkg_files(
+    name = "check_http_pkg",
+    srcs = [
+        "check-http",
+    ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/nagios/plugins/",
+    renames = {"check-http": "check_httpv2"},
+    visibility = ["//omd:__pkg__"],
+)
+
+pkg_tar(
+    name = "check_http_tar",
+    srcs = [":check_http_pkg"],
+)

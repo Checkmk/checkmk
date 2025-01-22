@@ -8,19 +8,21 @@ from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 
-from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
-from ._utils import create_validation_error, get_title_and_help
+from ._type_defs import DataOrigin, DefaultValue, InvalidValue
+from ._utils import get_title_and_help
+
+_ParsedValueModel = object
+_FrontendModel = object
 
 
-class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
+class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel, _FrontendModel]):
     """Visitor for LegacyValuespecs. Due to the nature of the legacy valuespecs, we can not
     directly convert them to Vue components. Instead, we need to generate the HTML code in the backend
     and pass it to the frontend. The frontend will then render the form as HTML.
@@ -32,9 +34,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         try:
             return super()._migrate_disk_value(value)
         except MKUserError:
-            return EMPTY_VALUE
+            return InvalidValue(reason="Unable to migrate value", fallback_value=value)
 
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         return raw_value
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
@@ -51,8 +53,8 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         return input_html, str(readonly_html)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> tuple[shared_type_defs.LegacyValuespec, object]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.LegacyValuespec, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 
         varprefix = None
@@ -83,6 +85,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                         shared_type_defs.LegacyValuespec(
                             title=title,
                             help=help_text,
+                            validators=[],
                             varprefix=varprefix,
                         ),
                         {"input_html": input_html, "readonly_html": readonly_html},
@@ -98,17 +101,15 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
             shared_type_defs.LegacyValuespec(
                 title=title,
                 help=help_text,
+                validators=[],
                 varprefix=varprefix,
             ),
             {"input_html": input_html, "readonly_html": readonly_html},
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(raw_value, Title("Invalid value for valuespec"))
-
         varprefix = ""
         with output_funnel.plugged():
             try:
@@ -136,7 +137,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                 output_funnel.drain()
         return []
 
-    def _to_disk(self, raw_value: object, parsed_value: object) -> Any:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> Any:
         if isinstance(parsed_value, DefaultValue):
             return self.form_spec.valuespec.default_value()
 

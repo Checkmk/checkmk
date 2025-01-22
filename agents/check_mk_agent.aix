@@ -37,6 +37,14 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
+}
+
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -344,7 +352,7 @@ waitmax() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b1"
+    echo "Version: 2.5.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -540,7 +548,7 @@ section_libelle() {
 section_mailqueue() {
     if [ -x /usr/sbin/sendmail ]; then
         echo '<<<postfix_mailq>>>'
-        mailq 2>&1 | tail -n 6
+        sudo_as_root mailq 2>&1 | tail -n 6
     fi
 }
 
@@ -1045,6 +1053,7 @@ main_setup() {
     if "${DISABLE_STDERR:-true}"; then
         exec 2>/dev/null
     fi
+    init_sudo
     set_up_get_epoch
     set_up_current_shell
     determine_sync_async

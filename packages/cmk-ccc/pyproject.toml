@@ -19,30 +19,9 @@ dependencies = { file = ["requirements.txt"] }
 target-version = "py312"
 line-length = 100
 
-[tool.ruff.lint]
-# (not yet) implemented pylint rules under ruff (by the time writting...):
-# | too-many-instance-attributes rule (R0902)
-# | too-many-function-args            (E1121)
-# | duplicate-code                    (R0801)
-select = ["A", "ARG", "E", "F", "I", "W", "C90", "PL", "RUF100", "SLF", "UP"]
-ignore = [
-  # Black is our formatting tool, so ignore any formatting-related findings.
-  "E501", # line too long
-  # pylint doesn't complain about these
-  "PLR0911", # Too many return statements
-  "PLR0913", # Too many arguments in function definition
-  "PLR2004", # Magic value used in comparison, consider replacing `FOO` with a constant variable
-  "PLW0603", # Using the global statement to update `FOO` is discouraged
-]
-
-[tool.ruff.lint.per-file-ignores]
-# Explicit re-exports is fine in __init__.py, still a code smell elsewhere.
-"__init__.py" = ["PLC0414"]
+[tool.ruff.lint.isort]
+order-by-type = false
 
 [tool.mypy]
 packages = ["cmk", "tests"]
 strict = true
-
-[tool.pytest.ini_options]
-consider_namespace_packages = true
-testpaths = ["tests"]

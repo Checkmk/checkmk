@@ -55,6 +55,7 @@ def test_hooks(site: Site) -> None:
     if site.version.is_cloud_edition() or site.version.is_managed_edition():
         hooks += [
             "OPENTELEMETRY_COLLECTOR",
+            "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
         ]
 
     installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")

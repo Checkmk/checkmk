@@ -142,7 +142,7 @@ def extract_manifests(paths: Iterable[Path]) -> list[Manifest]:
 def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
     try:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Do not make broken files / packages fail the whole mechanism
         _logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None

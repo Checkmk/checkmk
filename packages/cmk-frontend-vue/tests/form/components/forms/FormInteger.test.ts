@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormInteger from '@/form/components/forms/FormInteger.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
@@ -21,6 +21,7 @@ const spec: FormSpec.Integer = {
   type: 'integer',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   label: 'fooLabel',
   unit: 'fooUnit',
@@ -38,6 +39,18 @@ test('FormInteger renders value', () => {
 
   const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
   expect(element.value).toBe('42')
+})
+
+test('FormFloat renders required', () => {
+  render(FormInteger, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+
+  screen.getByText(/required/)
 })
 
 test('FormInteger updates data', async () => {

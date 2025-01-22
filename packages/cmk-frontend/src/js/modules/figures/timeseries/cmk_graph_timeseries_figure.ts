@@ -34,7 +34,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
     constructor(div_selector: string, fixed_size: null | ElementSize = null) {
         super(div_selector, fixed_size);
         this.subscribe_data_pre_processor_hook(data =>
-            this._convert_graph_to_figures(data)
+            this._convert_graph_to_figures(data),
         );
         this._div_selection.classed("graph", true).style("width", "100%");
     }
@@ -71,7 +71,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             curve.points.forEach(
                 (
                     point: [TimeSeriesValue, TimeSeriesValue] | TimeSeriesValue,
-                    idx: number
+                    idx: number,
                 ) => {
                     const timestamp = start_time + idx * step;
                     let value: TimeSeriesValue = 0;
@@ -99,7 +99,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                             value: base_value,
                             tag: stack_tag,
                         });
-                }
+                },
             );
 
             const plot_definition: SubPlotPlotDefinition = {
@@ -154,7 +154,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                     value: rule.value,
                     tag: rule_tag,
                 });
-            }
+            },
         );
 
         return {
@@ -164,7 +164,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
     }
 
     override _process_api_response(
-        graph_data: CMKAjaxReponse<{figure_response: any}>
+        graph_data: CMKAjaxReponse<{figure_response: any}>,
     ) {
         //@ts-ignore
         this.process_data(graph_data);
@@ -211,7 +211,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             definition: SubPlotPlotDefinition;
             data: SubplotDataData;
         }[],
-        small: boolean
+        small: boolean,
     ) {
         const new_table = this._legend.selectAll("tbody").empty();
         const table = this._legend
@@ -222,7 +222,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                     .append("table")
                     .classed("legend", true)
                     .style("width", "100%")
-                    .append("tbody")
+                    .append("tbody"),
             );
 
         table
@@ -239,7 +239,9 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
         let rows = table
             .selectAll<HTMLTableRowElement, unknown>("tr.metric")
             .data(
-                subplot_data.filter(d => d.definition!.id.startsWith("metric_"))
+                subplot_data.filter(d =>
+                    d.definition!.id.startsWith("metric_"),
+                ),
             )
             .join("tr")
             .classed("metric", true);
@@ -261,14 +263,14 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             .join("td")
             .classed("scalar min", true)
             .text(d =>
-                d.data.data.length == 0 ? "NaN" : d.data.y[0].toFixed(2)
+                d.data.data.length == 0 ? "NaN" : d.data.y[0].toFixed(2),
             );
         rows.selectAll<HTMLTableCellElement, unknown>("td.max")
             .data<any>(d => [d])
             .join("td")
             .classed("scalar max", true)
             .text(d =>
-                d.data.data.length == 0 ? "NaN" : d.data.y[1].toFixed(2)
+                d.data.data.length == 0 ? "NaN" : d.data.y[1].toFixed(2),
             );
         rows.selectAll<HTMLTableCellElement, unknown>("td.average")
             .data<any>(d => [d])
@@ -278,7 +280,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                 d.data.data.length == 0
                     ? "NaN"
                     : // @ts-ignore
-                      mean(d.data.data, d => d.value).toFixed(2)
+                      mean(d.data.data, d => d.value).toFixed(2),
             );
         rows.selectAll<HTMLTableCellElement, unknown>("td.last")
             .data<any>(d => [d])
@@ -298,7 +300,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
         rows = table
             .selectAll<HTMLTableRowElement, unknown>("tr.level")
             .data(
-                subplot_data.filter(d => d.definition!.id.startsWith("level_"))
+                subplot_data.filter(d => d.definition!.id.startsWith("level_")),
             )
             .join(enter =>
                 enter
@@ -306,7 +308,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                     .classed("level scalar", true)
                     .each((_d, idx, nodes) => {
                         if (idx == 0) select(nodes[idx]).classed("first", true);
-                    })
+                    }),
             );
         rows.selectAll<HTMLTableCellElement, SubPlot>("td.name")
             //@ts-ignore
@@ -344,7 +346,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             .text(d =>
                 d.data.data.length == 0
                     ? "NaN"
-                    : d.data.data[0].value.toFixed(2)
+                    : d.data.data[0].value.toFixed(2),
             );
 
         if (small) {
@@ -376,7 +378,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                         "top",
                         this.figure_size.height -
                             this._get_legend_height() +
-                            "px"
+                            "px",
                     )
                     .style("left", "40px");
             else
@@ -386,7 +388,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                         "top",
                         this.figure_size.height -
                             this._get_legend_height() +
-                            "px"
+                            "px",
                     )
                     .style("left", "40px");
         }

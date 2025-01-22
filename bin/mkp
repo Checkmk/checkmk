@@ -6,21 +6,22 @@
 import sys
 from typing import Final
 
+import cmk.ccc.store
+from cmk.ccc.version import __version__, parse_check_mk_version
+
 import cmk.utils.paths
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.ccc.store
-from cmk.ccc.version import __version__, parse_check_mk_version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,
     make_post_package_change_actions,
     PackageStore,
     PathConfig,
-    reload_apache,
+    reload_services_affected_by_mkp_changes,
 )
 
 _PATH_CONFIG = PathConfig(
@@ -56,7 +57,11 @@ _SITE_CONTEXT: Final = cli.SiteContext(
     ),
     callbacks=ec.mkp_callbacks(),
     post_package_change_actions=make_post_package_change_actions(
-        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
+        on_any_change=(
+            reload_services_affected_by_mkp_changes,
+            invalidate_visuals_cache,
+            request_index_rebuild,
+        )
     ),
     version=__version__,
     parse_version=parse_check_mk_version,

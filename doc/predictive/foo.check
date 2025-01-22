@@ -6,6 +6,7 @@
 # Example check. Put this into local/share/check_mk/checks
 
 # pylint: disable=blacklisted-name
+# ruff: noqa: F821
 
 
 # Inventory function without any specialities. Return

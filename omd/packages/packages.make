@@ -22,33 +22,35 @@ BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 # intermediate_install used to be necessary to link external dependecies with each other.
 # This is now done inside of Bazel
 # This target can be removed once `dest` is created inside of Bazel
-INTERMEDIATE_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/intermediate_install_bazel'
+DEPS_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/deps_install_bazel'
 
 # Human make target
-.PHONY: intermediate_install_bazel
-intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
+.PHONY: deps_install_bazel
+deps_install_bazel: $(DEPS_INSTALL_BAZEL)
 
-$(INTERMEDIATE_INSTALL_BAZEL):
+$(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	$(BAZEL_CMD) build \
+	$(BAZEL_CMD) build --cmk_version=$(VERSION) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    //omd:intermediate_install
-	mkdir -p $(INTERMEDIATE_INSTALL_BASE)
-	tar -C $(INTERMEDIATE_INSTALL_BASE) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
+	    //omd:deps_install_$(EDITION_SHORT)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
+	tar -C $(DESTDIR)$(OMD_ROOT) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata
-	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
-	# set RPATH for all ELF binaries we find
-	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)" -maxdepth 2 -type f -exec file {} \; \
-	    | grep ELF | cut -d ':' -f1 \
-	    | xargs patchelf --set-rpath "\$$ORIGIN/../lib"
-	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/lib-dynload" -name "*.so" -exec file {} \; \
-	    | grep ELF | cut -d ':' -f1 \
-	    | xargs patchelf --set-rpath "\$$ORIGIN/../.."
-	chmod +x $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/bin/pip*
+	$(SED) -i "s|/replace-me|$(OMD_ROOT)|g" \
+	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/_sysconfigdata__linux_x86_64-linux-gnu.py
+
+	# pre-compile pyc files enforcing `checked-hash` invalidation
+	# note: this is a workaround and should be handled in according Bazel project
+	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
+	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
+	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
 
 	# This will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
@@ -57,16 +59,15 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	#openssl-install-intermediate target simultaneously enough to run into
 	#string-replacements which have been done before. So we don't add `--strict`
 	# for now
-	$(REPO_PATH)/omd/run-pipenv run cmk-dev binreplace \
+	$(REPO_PATH)/omd/run-binreplace \
 	    --regular-expression \
 	    --inplace \
 	    "/home/.*?/openssl.build_tmpdir/openssl/" \
 	    "$(OMD_ROOT)/" \
-	    "$(OPENSSL_INSTALL_DIR)/lib/libcrypto.so.3"
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"
 
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
-
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
@@ -178,23 +179,19 @@ debug:
 
 # Include rules to make packages
 include \
-    packages/openssl/openssl.make \
     packages/erlang/erlang.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/xinetd/xinetd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
-    packages/perl-modules/perl-modules.make \
     packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
-    packages/check-http/check-http.make \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
@@ -203,13 +200,8 @@ include \
     packages/nrpe/nrpe.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/protobuf/protobuf.make \
-    packages/Python/Python.make \
-    packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
-    packages/net-snmp/net-snmp.make \
     packages/mod_wsgi/mod_wsgi.make \
-    packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \

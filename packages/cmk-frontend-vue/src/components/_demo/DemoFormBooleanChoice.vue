@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
-import type { BooleanChoice } from '@/form/components/vue_formspec_components'
+import type { BooleanChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()

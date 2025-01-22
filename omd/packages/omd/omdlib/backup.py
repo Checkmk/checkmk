@@ -42,7 +42,7 @@ def backup_site_to_tarfile(
             for glob_pattern in excludes
         )
 
-    with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
+    with RRDSocket(site.is_stopped(), site.name, verbose) as rrd_socket:
         with tarfile.TarFile.open(
             fileobj=fh,
             mode=mode,
@@ -117,7 +117,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
 
 
 class RRDSocket(contextlib.AbstractContextManager):
-    def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
+    def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path

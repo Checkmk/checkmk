@@ -242,14 +242,13 @@ class SiteBrokerCertificate:
         The certificate and key are not persisted to disk directly because this method is also used
         to create certificates for remote sites.
         """
-        common_name = site_name  # Note: this is used to identify the rabbitmq user
         organization = f"Checkmk Site {site_name}"
         expires = relativedelta(years=2)
         is_ca = False
         key_size = 4096
 
         cert_bundle = issuer.issue_new_certificate(
-            common_name=common_name,
+            common_name=site_name,
             organization=organization,
             expiry=expires,
             key_size=key_size,
@@ -273,7 +272,6 @@ class SiteBrokerCertificate:
     ) -> None:
         """Persist the received certificates to disk."""
         cert_path = cls.cert_path(omd_root)
-        key_path = cls.key_path(omd_root)
 
         ca = Certificate.load_pem(CertificatePEM(received.signing_ca))
         Certificate.load_pem(CertificatePEM(received.cert)).verify_is_signed_by(ca)
@@ -282,7 +280,6 @@ class SiteBrokerCertificate:
 
         MessagingTrustedCAs.write(omd_root, received.signing_ca + received.additionally_trusted_ca)
         cert_path.write_bytes(received.cert)
-        key_path.write_bytes(received.key)
 
 
 class SiteBrokerCA:

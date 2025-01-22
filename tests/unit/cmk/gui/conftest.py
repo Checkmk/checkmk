@@ -93,6 +93,11 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
+
+
+@pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -119,15 +124,15 @@ def patch_theme() -> Iterator[None]:
             "cmk.gui.htmllib.html.HTMLGenerator._inject_vue_frontend",
         ),
         patch(
-            "cmk.gui.utils.theme.Theme.detect_icon_path",
+            "cmk.gui.theme.Theme.detect_icon_path",
             new=fake_detect_icon_path,
         ),
         patch(
-            "cmk.gui.utils.theme.Theme.get",
+            "cmk.gui.theme.Theme.get",
             return_value="modern-dark",
         ),
         patch(
-            "cmk.gui.utils.theme.theme_choices",
+            "cmk.gui.theme.choices.theme_choices",
             return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
         ),
     ):
@@ -395,6 +400,7 @@ class WebTestAppForCMK(FlaskClient):
         query_string: dict | None = None,
         expect_errors: bool = False,
         extra_environ: dict | None = None,
+        follow_redirects: bool = False,
         **kw: Any,
     ) -> CmkTestResponse:
         """Call a method using the Flask (test) client.
@@ -407,7 +413,7 @@ class WebTestAppForCMK(FlaskClient):
         """
 
         @contextmanager
-        def _update_environ_base(extra_env: dict) -> Generator[None, None, None]:
+        def _update_environ_base(extra_env: dict) -> Generator[None]:
             backup = dict(self.environ_base)
             self.environ_base.update(extra_env)
             try:
@@ -432,7 +438,9 @@ class WebTestAppForCMK(FlaskClient):
         kw["query_string"] = kw.pop("json_data", query_string)
 
         with _update_environ_base(extra_environ) if extra_environ else nullcontext():
-            resp = getattr(super(), method.lower())(url, headers=headers, **kw)
+            resp = getattr(super(), method.lower())(
+                url, headers=headers, follow_redirects=follow_redirects, **kw
+            )
 
         if status:
             assert (
@@ -565,7 +573,7 @@ def _reset_cache_for_folders_and_hosts_setup() -> None:
 
 
 @pytest.fixture()
-def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request, None, None]:
+def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
     # environment dict. When however a Request is passed in, the environment of the Request will
@@ -577,7 +585,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
 @pytest.fixture()
 def admin_auth_request(
     with_admin: tuple[UserId, str],
-) -> typing.Generator[http.Request, None, None]:
+) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
     # environment dict. When however a Request is passed in, the environment of the Request will
@@ -729,7 +737,11 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app(patch_omd_site: None, use_fakeredis_client: None) -> Iterator[Flask]:
+def flask_app(
+    patch_omd_site: None,
+    use_fakeredis_client: None,
+    load_plugins: None,
+) -> Iterator[Flask]:
     """Initialize a Flask app for testing purposes.
 
     Register a global htmllib.html() instance, just like in the regular GUI.
@@ -760,6 +772,7 @@ class WebTestAppRequestHandler(RequestHandler):
         query_params: Mapping[str, str | typing.Sequence[str]] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
+        follow_redirects: bool = False,
     ) -> Response:
         """Perform a request to the server.
 
@@ -779,6 +792,7 @@ class WebTestAppRequestHandler(RequestHandler):
             params=body,
             headers=dict(headers or {}),
             expect_errors=True,
+            follow_redirects=follow_redirects,
         )
         return Response(status_code=resp.status_code, body=resp.body, headers=dict(resp.headers))
 

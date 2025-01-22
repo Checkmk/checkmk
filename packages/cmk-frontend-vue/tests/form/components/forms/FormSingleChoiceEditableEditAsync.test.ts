@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { FormSpec, Dictionary } from '@/form/components/vue_formspec_components'
+import type {
+  FormSpec,
+  Dictionary,
+  String
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
@@ -30,18 +34,25 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
             title: 'dict title',
             validators: [],
             help: 'dict help',
+            i18n_base: { required: 'required' },
             elements: [
               {
                 name: 'element_ident',
+                render_only: false,
                 group: null,
                 required: false,
                 default_value: '',
                 parameter_form: {
                   type: 'string',
                   title: 'string title',
+                  label: 'string label',
                   help: 'some string help',
-                  validators: []
-                }
+                  i18n_base: { required: 'required' },
+                  validators: [],
+                  input_hint: null,
+                  autocompleter: null,
+                  field_size: 'SMALL'
+                } as String
               }
             ],
             layout: 'one_column',
@@ -71,7 +82,7 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
   })
 
   // form is rendered correctly
-  const stringInput = await screen.findByRole<HTMLInputElement>('textbox', { name: 'string title' })
+  const stringInput = await screen.findByRole<HTMLInputElement>('textbox', { name: /string label/ })
 
   // data of form is visible in form
   expect(stringInput.value).toBe('some_data null')

@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from werkzeug.test import create_environ
 
+from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlencode_vars
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    makeuri_contextless,
+    urlencode,
+    urlencode_vars,
+)
 
 
 @pytest.mark.parametrize(
@@ -55,3 +63,21 @@ def test_empty_doc_reference(request_context: None) -> None:
 
 def test_doc_references(request_context: None) -> None:
     assert [doc_reference_url(r) for r in DocReference]
+
+
+def test_makeuri_contextless() -> None:
+    request = Request(create_environ())
+
+    value = makeuri_contextless(request, [("foo", "val"), ("bar", "val")], "wato.py")
+    expected = "wato.py?bar=val&foo=val"  # query params are sorted
+
+    assert value == expected
+
+
+def test_makeuri_contextless_no_variables() -> None:
+    request = Request(create_environ())
+
+    value = makeuri_contextless(request, [], "wato.py")
+    expected = "wato.py"
+
+    assert value == expected

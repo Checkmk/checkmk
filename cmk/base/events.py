@@ -12,6 +12,7 @@ import select
 import socket
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any, cast
 from urllib.parse import quote, urlencode
@@ -485,7 +486,10 @@ def apply_matchers(
     all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context, analyse, all_timeperiods)
+        try:
+            result = matcher(rule, context, analyse, all_timeperiods)
+        except Exception:
+            return f"Error in matcher: {traceback.format_exc()}"
         if result is not None:
             return result
     return None

@@ -66,7 +66,7 @@ function draw_overlay(seconds: number) {
     if (container) {
         // only render once. Just update the counter.
         const existingCounter = document.getElementById(
-            "reload_pause_counter"
+            "reload_pause_counter",
         )!;
         /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         existingCounter.innerHTML = seconds.toString();

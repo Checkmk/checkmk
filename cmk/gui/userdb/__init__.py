@@ -72,11 +72,15 @@ from ._connector import (
     UserConnector,
     UserConnectorRegistry,
 )
-from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
-from ._need_to_change_pw import is_automation_user, need_to_change_pw
+from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
-from ._roles import load_roles, register_userroles_config_file, UserRole, UserRolesConfigFile
+from ._roles import (
+    load_roles,
+    register_userroles_config_file,
+    UserRole,
+    UserRolesConfigFile,
+)
 from ._two_factor import (
     disable_two_factor_authentication,
     is_two_factor_backup_code_valid,
@@ -85,6 +89,7 @@ from ._two_factor import (
     make_two_factor_backup_codes,
 )
 from ._user_attribute import (
+    all_user_attributes,
     get_user_attributes,
     get_user_attributes_by_topic,
     user_attribute_registry,
@@ -125,6 +130,7 @@ __all__ = [
     "add_internal_attributes",
     "ActivePlugins",
     "ACTIVE_DIR",
+    "all_user_attributes",
     "builtin_connections",
     "check_credentials",
     "clear_user_connection_cache",
@@ -161,7 +167,6 @@ __all__ = [
     "GroupsToAttributes",
     "GroupsToContactGroups",
     "GroupsToSync",
-    "is_automation_user",
     "is_customer_user_allowed_to_login",
     "is_two_factor_backup_code_valid",
     "is_two_factor_login_enabled",
@@ -209,7 +214,6 @@ __all__ = [
     "SAMLUserConnectionConfig",
     "HtpasswdUserConnectionConfig",
     "TEMP_UNIT",
-    "update_config_based_user_attributes",
     "user_attribute_registry",
     "user_connector_registry",
     "user_exists",

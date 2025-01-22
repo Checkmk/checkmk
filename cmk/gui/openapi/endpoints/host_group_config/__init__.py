@@ -7,6 +7,8 @@
 Host groups are a way to organize hosts in Checkmk for monitoring.
 By using a host group you can generate suitable views for overview and/or analysis.
 
+The hosts part of a host group can be queried using the Monitoring's relevant host_status endpoints.
+
 You can find an introduction to hosts including host groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 

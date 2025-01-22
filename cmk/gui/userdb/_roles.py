@@ -98,8 +98,6 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
             if "basedon" in role and role["basedon"] in builtin_role_ids:
                 role["basedon"] = BuiltInUserRoleValues(role["basedon"])
 
-        self.validate(cfg)
-
     def save(self, cfg: Roles) -> None:
         active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)

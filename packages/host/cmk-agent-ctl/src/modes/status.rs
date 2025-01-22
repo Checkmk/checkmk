@@ -86,8 +86,8 @@ impl CertInfo {
         let x509 = pem.parse_x509()?;
         Ok(CertInfo {
             issuer: certs::common_names(x509.issuer())?.join(", "),
-            from: x509.validity().not_before.to_rfc2822(),
-            to: x509.validity().not_after.to_rfc2822(),
+            from: certs::render_asn1_time(&x509.validity().not_before),
+            to: certs::render_asn1_time(&x509.validity().not_after),
         })
     }
 }

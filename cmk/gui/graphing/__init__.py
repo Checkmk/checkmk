@@ -7,7 +7,6 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from . import _perfometer
 from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import graph_specification_registry
@@ -20,6 +19,7 @@ from ._metric_operation import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
+from ._metrics import registered_metrics
 from ._perfometer import get_first_matching_perfometer, parse_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
@@ -47,4 +47,5 @@ __all__ = [
     "parse_perfometer",
     "perfometer_info",
     "PerfometerSpec",
+    "registered_metrics",
 ]

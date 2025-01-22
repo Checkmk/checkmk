@@ -1,7 +1,13 @@
+#!/usr/bin/env python3
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.gui.watolib.configuration_entity import configuration_entity as ce
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
+
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 @pytest.mark.parametrize(

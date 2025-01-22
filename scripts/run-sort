@@ -6,4 +6,4 @@
 set -e
 
 REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
-exec "$REPO_PATH/scripts/run-pipenv" run ruff check --select I --fix "$@"
+exec "$REPO_PATH/scripts/run-uvenv" ruff check --select I --fix "$@"

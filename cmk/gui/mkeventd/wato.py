@@ -3840,8 +3840,8 @@ class ConfigVariableEventConsole(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_mkeventd"
@@ -3875,8 +3875,8 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "remote_status"
@@ -3941,8 +3941,8 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "replication"
@@ -4064,8 +4064,8 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "retention_interval"
@@ -4085,8 +4085,8 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "housekeeping_interval"
@@ -4107,8 +4107,8 @@ class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "sqlite_housekeeping_interval"
@@ -4129,8 +4129,8 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "sqlite_freelist_size"
@@ -4151,8 +4151,8 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "statistics_interval"
@@ -4173,8 +4173,8 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "log_messages"
@@ -4197,8 +4197,8 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "rule_optimizer"
@@ -4215,8 +4215,8 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "actions"
@@ -4353,8 +4353,8 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "archive_orphans"
@@ -4376,8 +4376,8 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "hostname_translation"
@@ -4476,8 +4476,8 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "event_limit"
@@ -4530,8 +4530,8 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "history_rotation"
@@ -4550,8 +4550,8 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "history_lifetime"
@@ -4569,8 +4569,8 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "socket_queue_len"
@@ -4595,8 +4595,8 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "eventsocket_queue_len"
@@ -4621,8 +4621,8 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "translate_snmptraps"
@@ -4662,8 +4662,8 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "snmp_credentials"
@@ -4722,8 +4722,8 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "debug_rules"
@@ -4745,8 +4745,8 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "log_level"
@@ -4820,8 +4820,8 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainEventConsole
+    def domain(self) -> ABCConfigDomain:
+        return config_domain_registry["ec"]
 
     def ident(self) -> str:
         return "log_rulehits"
@@ -4844,8 +4844,8 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_connect_timeout"
@@ -4868,8 +4868,8 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_pprint_rules"
@@ -4893,8 +4893,8 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_notify_contactgroup"
@@ -4922,8 +4922,8 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_notify_remotehost"
@@ -4954,8 +4954,8 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_notify_facility"
@@ -4979,8 +4979,8 @@ class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "mkeventd_service_levels"
@@ -5608,7 +5608,6 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                             )
                             for ident, title in syslog_facilities
                         ],
-                        type=int,
                     ),
                 ),
                 "remote": DictElement(

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: F405
+
 from __future__ import annotations
 
 import contextlib
@@ -62,7 +64,12 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
-from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RulesetName, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import (
+    LabelManager,
+    RulesetMatcher,
+    RulesetName,
+    RuleSpec,
+)
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.structured_data import RawIntervalFromConfig
@@ -104,7 +111,6 @@ from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutochecksManager,
     CheckPreviewEntry,
-    DiscoveredLabelsCache,
     DiscoveryCheckParameters,
     merge_cluster_autochecks,
 )
@@ -134,7 +140,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legac
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     convert_legacy_sections,
 )
-from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
 
@@ -226,15 +232,20 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         return {s.check_plugin_name for s in self.values()}
 
 
-class IgnoredServices(Container[ServiceName]):
+class IgnoredActiveServices(Container[ServiceName]):
+    # only works for active and custom services, b/c we assume there are no discovered labels
     def __init__(self, config_cache: ConfigCache, host_name: HostName) -> None:
         self._config_cache = config_cache
         self._host_name = host_name
 
-    def __contains__(self, _item: object) -> bool:
-        if not isinstance(_item, ServiceName):
+    def __contains__(self, service_name: object) -> bool:
+        if not isinstance(service_name, ServiceName):
             return False
-        return self._config_cache.service_ignored(self._host_name, _item)
+        return self._config_cache.service_ignored(
+            self._host_name,
+            service_name,
+            self._config_cache.ruleset_matcher.labels_of_service(self._host_name, service_name, {}),
+        )
 
 
 def _aggregate_check_table_services(
@@ -333,7 +344,11 @@ class _ServiceFilter:
     def keep(self, service: ConfiguredService) -> bool:
         if self._skip_ignored and (
             self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
-            or self._config_cache.service_ignored(self._host_name, service.description)
+            or self._config_cache.service_ignored(
+                self._host_name,
+                service.description,
+                service.labels,
+            )
         ):
             return False
 
@@ -354,6 +369,7 @@ class _ServiceFilter:
             self._config_cache.effective_host(
                 self._host_name,
                 service.description,
+                service.labels,
                 part_of_clusters=self._config_cache.clusters_of(self._host_name),
             )
             == self._host_name
@@ -389,11 +405,23 @@ def _get_clustered_services(
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
-            description = service_description(
-                config_cache.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+            service_name = service_description(
+                config_cache.ruleset_matcher,
+                node_name,
+                entry.check_plugin_name,
+                service_name_template=(
+                    None
+                    if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                    else p.service_name
+                ),
+                item=entry.item,
             )
-            return not config_cache.service_ignored(node_name, description) and (
-                config_cache.effective_host(node_name, description) == cluster_name
+            service_labels = config_cache.ruleset_matcher.labels_of_service(
+                node_name, service_name, entry.service_labels
+            )
+
+            return not config_cache.service_ignored(node_name, service_name, service_labels) and (
+                config_cache.effective_host(node_name, service_name, service_labels) == cluster_name
             )
 
         yield from configure_autochecks(
@@ -406,8 +434,19 @@ def _get_clustered_services(
 
     yield from merge_enforced_services(
         {node_name: config_cache.enforced_services_table(node_name) for node_name in nodes},
-        lambda node_name, service_name: (
-            config_cache.effective_host(node_name, service_name) == cluster_name
+        # similiar to appears_on_cluster, but we don't check for ignored services
+        lambda node_name, service_name, discovered_labels: (
+            config_cache.effective_host(
+                node_name,
+                service_name,
+                config_cache.ruleset_matcher.labels_of_service(
+                    node_name, service_name, discovered_labels
+                ),
+            )
+            == cluster_name
+        ),
+        lambda description, disovered_labels: config_cache.ruleset_matcher.labels_of_service(
+            cluster_name, description, disovered_labels
         ),
     )
 
@@ -1164,7 +1203,17 @@ def _make_service_description_cb(
     """
 
     def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return service_description(matcher, hostname, check_plugin_name, item)
+        return service_description(
+            matcher,
+            hostname,
+            check_plugin_name,
+            service_name_template=(
+                None
+                if (p := agent_based_register.get_check_plugin(check_plugin_name)) is None
+                else p.service_name
+            ),
+            item=item,
+        )
 
     return callback
 
@@ -1173,18 +1222,21 @@ def service_description(
     matcher: RulesetMatcher,
     hostname: HostName,
     check_plugin_name: CheckPluginName,
+    *,
+    service_name_template: str | None,
     item: Item,
 ) -> ServiceName:
-    check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if check_plugin is None:
-        if item:
-            return f"Unimplemented check {check_plugin_name} / {item}"
-        return f"Unimplemented check {check_plugin_name}"
+    if service_name_template is None:
+        return (
+            f"Unimplemented check {check_plugin_name} / {item}"
+            if item
+            else f"Unimplemented check {check_plugin_name}"
+        )
 
     return get_final_service_description(
         _format_item_with_template(
             *_get_service_description_template_and_item(
-                check_plugin_name, check_plugin.service_name, item
+                check_plugin_name, service_name_template, item
             )
         ),
         get_service_translations(matcher, hostname),
@@ -1393,8 +1445,8 @@ def load_all_plugins(
     local_checks_dir: Path,
     checks_dir: str,
 ) -> list[str]:
-    with tracer.start_as_current_span("load_legacy_check_plugins"):
-        with tracer.start_as_current_span("discover_legacy_check_plugins"):
+    with tracer.span("load_legacy_check_plugins"):
+        with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
@@ -1408,7 +1460,7 @@ def load_all_plugins(
     return errors + legacy_errors
 
 
-@tracer.start_as_current_span("load_and_convert_legacy_checks")
+@tracer.instrument("load_and_convert_legacy_checks")
 def load_and_convert_legacy_checks(
     filelist: Iterable[str],
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin], Sequence[CheckPlugin]]:
@@ -1453,7 +1505,7 @@ def load_and_convert_legacy_checks(
 def _make_compute_check_parameters_cb(
     matcher: RulesetMatcher,
 ) -> Callable[
-    [HostName, CheckPluginName, Item, Mapping[str, object]],
+    [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
     TimespecificParameters,
 ]:
     """Replacement for functools.partial(compute_check_parameters, matcher)
@@ -1462,21 +1514,25 @@ def _make_compute_check_parameters_cb(
     """
 
     def callback(
-        host: HostName,
+        host_name: HostName,
         plugin_name: CheckPluginName,
         item: Item,
+        service_labels: Labels,
         params: Mapping[str, object],
     ) -> TimespecificParameters:
-        return compute_check_parameters(matcher, host, plugin_name, item, params, None)
+        return compute_check_parameters(
+            matcher, host_name, plugin_name, item, service_labels, params, None
+        )
 
     return callback
 
 
 def compute_check_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
+    host_name: HostName,
     plugin_name: CheckPluginName,
     item: Item,
+    service_labels: Labels,
     params: Mapping[str, object],
     configured_parameters: TimespecificParameters | None = None,
 ) -> TimespecificParameters:
@@ -1493,7 +1549,12 @@ def compute_check_parameters(
 
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(
-            matcher, host, plugin_name, check_plugin.check_ruleset_name, item
+            matcher,
+            host_name,
+            plugin_name,
+            service_labels,
+            ruleset_name=check_plugin.check_ruleset_name,
+            item=item,
         )
 
     return TimespecificParameters(
@@ -1507,43 +1568,46 @@ def compute_check_parameters(
 
 def _get_configured_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
+    host_name: HostName,
     plugin_name: CheckPluginName,
+    service_labels: Labels,
+    *,  # the following are all the same type :-(
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
-    descr = service_description(matcher, host, plugin_name, item)
+
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
-            for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
+            for p in _get_checkgroup_parameters(
+                matcher, host_name, item, service_labels, str(ruleset_name)
+            )
         ]
     )
 
 
 def _get_checkgroup_parameters(
     matcher: RulesetMatcher,
-    host: HostName,
-    checkgroup: RulesetName,
+    host_name: HostName,
     item: Item,
-    descr: ServiceName,
+    service_labels: Labels,
+    checkgroup: RulesetName,
 ) -> Sequence[Mapping[str, object]]:
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
 
     try:
-        # checks without an item
         if item is None and checkgroup not in service_rule_groups:
-            return matcher.get_host_values(host, rules)
+            return matcher.get_host_values(host_name, rules)
 
         # checks with an item need service-specific rules
-        return matcher.get_checkgroup_ruleset_values(host, descr, item, rules)
+        return matcher.get_checkgroup_ruleset_values(host_name, item, service_labels, rules)
     except MKGeneralException as e:
-        raise MKGeneralException(f"{e} (on host {host}, checkgroup {checkgroup})")
+        raise MKGeneralException(f"{e} (on host {host_name}, checkgroup {checkgroup})")
 
 
 def lookup_mgmt_board_ip_address(
@@ -1581,7 +1645,7 @@ def lookup_ip_address(
     host_name: HostName | HostAddress,
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
-) -> HostAddress | None:
+) -> HostAddress:
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
@@ -1711,15 +1775,35 @@ class AutochecksConfigurer:
         return self._config_cache.check_plugin_ignored(host_name, plugin_name)
 
     def ignore_service(self, host_name: HostName, entry: AutocheckEntry) -> bool:
-        description = self.service_description(host_name, entry)
-        return self._config_cache.service_ignored(host_name, description)
+        service_name = self.service_description(host_name, entry)
+        service_labels = self._config_cache.ruleset_matcher.labels_of_service(
+            host_name, service_name, entry.service_labels
+        )
+        return self._config_cache.service_ignored(host_name, service_name, service_labels)
 
     def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
-        return self._config_cache.effective_host_of_autocheck(host_name, entry)
+        service_name = self.service_description(host_name, entry)
+        service_labels = self._config_cache.ruleset_matcher.labels_of_service(
+            host_name, service_name, entry.service_labels
+        )
+        return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
         return service_description(
-            self._config_cache.ruleset_matcher, host_name, entry.check_plugin_name, entry.item
+            self._config_cache.ruleset_matcher,
+            host_name,
+            entry.check_plugin_name,
+            service_name_template=(
+                None
+                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                else p.service_name
+            ),
+            item=entry.item,
+        )
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Labels:
+        return self._config_cache.ruleset_matcher.labels_of_service(
+            host_name, self.service_description(host_name, entry), entry.service_labels
         )
 
 
@@ -1746,7 +1830,7 @@ class ConfigCache:
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
-        self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
+        self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
@@ -1767,10 +1851,10 @@ class ConfigCache:
         ) = _make_clusters_nodes_maps()
 
         self._autochecks_manager = AutochecksManager()
-        self._discovered_labels_cache = DiscoveredLabelsCache(
-            self._nodes_cache, self._autochecks_manager.get_autochecks
-        )
-        self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
+        self._effective_host_cache: dict[
+            tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]],
+            HostName,
+        ] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config()
@@ -1785,7 +1869,6 @@ class ConfigCache:
                 host_labels,
                 host_label_rules,
                 service_label_rules,
-                self._discovered_labels_of_service,
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
@@ -1797,7 +1880,6 @@ class ConfigCache:
                 )
             ),
             builtin_host_labels_store=BuiltinHostLabelsStore(),
-            debug_matching_stats=ruleset_matching_stats,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -1812,6 +1894,7 @@ class ConfigCache:
             _make_compute_check_parameters_cb(self.ruleset_matcher),
             _make_service_description_cb(self.ruleset_matcher),
             self.effective_host,
+            self.ruleset_matcher.labels_of_service,
         )
 
         return self
@@ -1839,18 +1922,6 @@ class ConfigCache:
 
     def datasource_programs(self, host_name: HostName) -> Sequence[str]:
         return self.ruleset_matcher.get_host_values(host_name, datasource_programs)
-
-    def _discovered_labels_of_service(
-        self,
-        hostname: HostName,
-        service_desc: ServiceName,
-    ) -> Labels:
-        return self._discovered_labels_cache.discovered_labels_of(
-            hostname,
-            service_desc,
-            _make_service_description_cb(self.ruleset_matcher),
-            self.effective_host_of_autocheck,
-        )
 
     @staticmethod
     def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:
@@ -2099,10 +2170,27 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             return self.__enforced_services_table[hostname]
 
-        return self.__enforced_services_table.setdefault(
-            hostname,
-            {
-                ServiceID(check_plugin_name, item): (
+        table = {}
+        for checkgroup_name, ruleset in static_checks.items():
+            for check_plugin_name, item, params in (
+                ConfigCache._sanitize_enforced_entry(*entry)
+                for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
+            ):
+                descr = service_description(
+                    self.ruleset_matcher,
+                    hostname,
+                    check_plugin_name,
+                    service_name_template=(
+                        None
+                        if (p := agent_based_register.get_check_plugin(check_plugin_name)) is None
+                        else p.service_name
+                    ),
+                    item=item,
+                )
+                labels = self.ruleset_matcher.labels_of_service(
+                    hostname, descr, discovered_labels={}
+                )
+                table[ServiceID(check_plugin_name, item)] = (
                     RulesetName(checkgroup_name),
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
@@ -2110,29 +2198,21 @@ class ConfigCache:
                         description=descr,
                         parameters=compute_check_parameters(
                             self.ruleset_matcher,
-                            self.effective_host(hostname, descr),
+                            self.effective_host(hostname, descr, labels),
                             check_plugin_name,
                             item,
+                            labels,
                             {},
                             configured_parameters=TimespecificParameters((params,)),
                         ),
                         discovered_parameters={},
                         discovered_labels={},
+                        labels={},
                         is_enforced=True,
                     ),
                 )
-                for checkgroup_name, ruleset in static_checks.items()
-                for check_plugin_name, item, params in (
-                    ConfigCache._sanitize_enforced_entry(*entry)
-                    for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
-                )
-                if (
-                    descr := service_description(
-                        self.ruleset_matcher, hostname, check_plugin_name, item
-                    )
-                )
-            },
-        )
+
+        return table
 
     @staticmethod
     def _sanitize_enforced_entry(
@@ -2389,9 +2469,8 @@ class ConfigCache:
         )
 
         def make_discovery_check_parameters() -> DiscoveryCheckParameters:
-            service_discovery_name = ConfigCache.service_discovery_name()
             if self.is_ping_host(host_name) or self.service_ignored(
-                host_name, service_discovery_name
+                host_name, ConfigCache.service_discovery_name(), {}
             ):
                 return dataclasses.replace(defaults, commandline_only=True)
 
@@ -2535,7 +2614,7 @@ class ConfigCache:
 
     def custom_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
         custom_checks_ = self.custom_checks(host_name)
-        ignored_services = IgnoredServices(self, host_name)
+        ignored_services = IgnoredActiveServices(self, host_name)
 
         def make_check_source(desc: str) -> str:
             return "ignored_custom" if desc in ignored_services else "custom"
@@ -2736,38 +2815,26 @@ class ConfigCache:
     def missing_sys_description(self, host_name: HostName) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, snmp_without_sys_descr)
 
-    def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
-        """Return the fetch interval of SNMP sections in seconds
+    def snmp_fetch_intervals(self, host_name: HostName) -> Mapping[SectionName, int | None]:
+        """Return the configured fetch intervals of SNMP sections in seconds
 
         This has been added to reduce the fetch interval of single SNMP sections
         to be executed less frequently than the "Check_MK" service is executed.
         """
 
-        def snmp_fetch_interval_impl() -> int | None:
-            # TODO: move this up the call stack, of course.
-            plugins = agent_based_register.get_previously_loaded_plugins()
-
-            if section_name not in plugins.snmp_sections:
-                return None  # no values at all for non snmp section
-
-            # Previous to 1.5 "match" could be a check name (including subchecks) instead of
-            # only main check names -> section names. This has been cleaned up, but we still
-            # need to be compatible. Strip of the sub check part of "match".
-            for match, minutes in self.ruleset_matcher.get_host_values(
-                host_name,
-                snmp_check_interval,
-            ):
-                if match is None or match.split(".")[0] == str(section_name):
-                    return minutes * 60  # use first match
-
-            return None
+        def snmp_fetch_interval_impl() -> Mapping[SectionName, int | None]:
+            return {
+                SectionName(section_name): None if seconds is None else round(seconds)
+                for sections, (_option_id, seconds) in reversed(  # use first match
+                    self.ruleset_matcher.get_host_values(host_name, snmp_check_interval)
+                )
+                for section_name in sections
+            }
 
         with contextlib.suppress(KeyError):
-            return self.__snmp_fetch_interval[(host_name, section_name)]
+            return self.__snmp_fetch_interval[host_name]
 
-        return self.__snmp_fetch_interval.setdefault(
-            (host_name, section_name), snmp_fetch_interval_impl()
-        )
+        return self.__snmp_fetch_interval.setdefault(host_name, snmp_fetch_interval_impl())
 
     def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TagGroupID]) -> None:
         """Calculate the effective tags for all configured hosts
@@ -2981,17 +3048,18 @@ class ConfigCache:
 
     def effective_service_level(
         self,
-        host: HostName,
+        host_name: HostName,
         service_name: ServiceName,
+        service_labels: Labels,
     ) -> int:
         """Get the service level that applies to the current service."""
-        service_level = self.service_level_of_service(host, service_name)
+        service_level = self.service_level_of_service(host_name, service_name, service_labels)
         if service_level is not None:
             return service_level
 
-        return self.service_level(host) or 0
+        return self.service_level(host_name) or 0
 
-    def _snmp_credentials(self, host_name: HostName | HostAddress) -> SNMPCredentials:
+    def _snmp_credentials(self, host_name: HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
 
         It the host is found int the map snmp_communities, that community is
@@ -3104,12 +3172,19 @@ class ConfigCache:
         return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
     def check_mk_check_interval(self, hostname: HostName) -> float:
-        if hostname not in self._check_mk_check_interval:
-            self._check_mk_check_interval[hostname] = (
-                self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"] * 60
-            )
+        if (interval := self._check_mk_check_interval.get(hostname)) is not None:
+            return interval
 
-        return self._check_mk_check_interval[hostname]
+        description = "Check_MK"
+        return self._check_mk_check_interval.setdefault(
+            hostname,
+            self.extra_attributes_of_service(
+                hostname,
+                description,
+                self.ruleset_matcher.labels_of_service(hostname, description, discovered_labels={}),
+            )["check_interval"]
+            * 60,
+        )
 
     @staticmethod
     def ip_stack_config(host_name: HostName | HostAddress) -> IPStackConfig:
@@ -3249,7 +3324,7 @@ class ConfigCache:
         return flat_rule
 
     def tags_of_service(
-        self, hostname: HostName, svc_desc: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> Mapping[TagGroupID, TagID]:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
@@ -3257,19 +3332,21 @@ class ConfigCache:
         return {
             TagGroupID(k): TagID(v)
             for entry in self.ruleset_matcher.service_extra_conf(
-                hostname, svc_desc, service_tag_rules
+                host_name, service_name, service_labels, service_tag_rules
             )
             for k, v in entry
         }
 
     def extra_attributes_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, Any]:
         attrs = {
             "check_interval": SERVICE_CHECK_INTERVAL,
         }
         for key, ruleset in extra_service_conf.items():
-            values = self.ruleset_matcher.service_extra_conf(hostname, description, ruleset)
+            values = self.ruleset_matcher.service_extra_conf(
+                host_name, service_name, service_labels, ruleset
+            )
             if not values:
                 continue
 
@@ -3300,13 +3377,14 @@ class ConfigCache:
 
     def icons_and_actions_of_service(
         self,
-        hostname: HostName,
-        description: ServiceName,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
         extra_icon: str | None,
     ) -> list[str]:
         actions = set(
             self.ruleset_matcher.service_extra_conf(
-                hostname, description, service_icons_and_actions
+                host_name, service_name, service_labels, service_icons_and_actions
             )
         )
 
@@ -3316,12 +3394,19 @@ class ConfigCache:
         return list(actions)
 
     def servicegroups_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> list[ServicegroupName]:
         """Returns the list of servicegroups of this service"""
-        return self.ruleset_matcher.service_extra_conf(hostname, description, service_groups)
+        return self.ruleset_matcher.service_extra_conf(
+            host_name, service_name, service_labels, service_groups
+        )
 
-    def contactgroups_of_service(self, hostname: HostName, description: ServiceName) -> list[str]:
+    def contactgroups_of_service(
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
+    ) -> list[str]:
         """Returns the list of contactgroups of this service"""
         cgrs: set[str] = set()
 
@@ -3339,7 +3424,7 @@ class ConfigCache:
         # It would be clearer to have independent rulesets for this...
         folder_cgrs: list[list[str]] = []
         for entry in self.ruleset_matcher.service_extra_conf(
-            hostname, description, service_contactgroups
+            host_name, service_name, service_labels, service_contactgroups
         ):
             if isinstance(entry, list):
                 folder_cgrs.append(entry)
@@ -3355,29 +3440,39 @@ class ConfigCache:
 
         return list(cgrs)
 
-    def passive_check_period_of_service(self, hostname: HostName, description: ServiceName) -> str:
-        out = self.ruleset_matcher.service_extra_conf(hostname, description, check_periods)
+    def passive_check_period_of_service(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> str:
+        out = self.ruleset_matcher.service_extra_conf(
+            host_name, service_name, service_labels, check_periods
+        )
         return out[0] if out else "24X7"
 
     def custom_attributes_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, str]:
         return dict(
             itertools.chain(
                 *self.ruleset_matcher.service_extra_conf(
-                    hostname, description, custom_service_attributes
+                    host_name, service_name, service_labels, custom_service_attributes
                 )
             )
         )
 
-    def service_level_of_service(self, hostname: HostName, description: ServiceName) -> int | None:
-        out = self.ruleset_matcher.service_extra_conf(hostname, description, service_service_levels)
+    def service_level_of_service(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> int | None:
+        out = self.ruleset_matcher.service_extra_conf(
+            host_name, service_name, service_labels, service_service_levels
+        )
         return out[0] if out else None
 
     def check_period_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> TimeperiodName | None:
-        out = self.ruleset_matcher.service_extra_conf(hostname, description, check_periods)
+        out = self.ruleset_matcher.service_extra_conf(
+            host_name, service_name, service_labels, check_periods
+        )
         return out[0] if out and out[0] != "24X7" else None
 
     @staticmethod
@@ -3681,8 +3776,12 @@ class ConfigCache:
 
         return _translate_host_macros(_translate_legacy_macros(template))
 
-    def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
-        return self.ruleset_matcher.get_service_bool_value(host_name, description, ignored_services)
+    def service_ignored(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> bool:
+        return self.ruleset_matcher.get_service_bool_value(
+            host_name, service_name, service_labels, ignored_services
+        )
 
     def check_plugin_ignored(
         self,
@@ -3714,15 +3813,28 @@ class ConfigCache:
     def effective_host_of_autocheck(self, node_name: HostName, entry: AutocheckEntry) -> HostName:
         return self.effective_host(
             node_name,
-            service_description(
-                self.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+            (
+                service_name := service_description(
+                    self.ruleset_matcher,
+                    node_name,
+                    entry.check_plugin_name,
+                    service_name_template=(
+                        None
+                        if (p := agent_based_register.get_check_plugin(entry.check_plugin_name))
+                        is None
+                        else p.service_name
+                    ),
+                    item=entry.item,
+                )
             ),
+            self.ruleset_matcher.labels_of_service(node_name, service_name, entry.service_labels),
         )
 
     def effective_host(
         self,
-        node_name: HostName,
-        servicedesc: str,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
         part_of_clusters: Sequence[HostName] = (),
     ) -> HostName:
         """Compute the effective host (node or cluster) of a service
@@ -3733,21 +3845,20 @@ class ConfigCache:
         If yes, return the cluster host of the service.
         If no, return the host name of the node.
         """
-        key = (node_name, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        key = (host_name, service_name, tuple(service_labels.items()), tuple(part_of_clusters))
         if (actual_hostname := self._effective_host_cache.get(key)) is not None:
             return actual_hostname
 
         self._effective_host_cache[key] = self._effective_host(
-            node_name,
-            servicedesc,
-            part_of_clusters,
+            host_name, service_name, service_labels, part_of_clusters
         )
         return self._effective_host_cache[key]
 
     def _effective_host(
         self,
         node_name: HostName,
-        servicedesc: str,
+        service_name: ServiceName,
+        service_labels: Labels,
         part_of_clusters: Sequence[HostName],
     ) -> HostName:
         if part_of_clusters:
@@ -3759,7 +3870,7 @@ class ConfigCache:
             return node_name
 
         cluster_mapping = self.ruleset_matcher.service_extra_conf(
-            node_name, servicedesc, clustered_services_mapping
+            node_name, service_name, service_labels, clustered_services_mapping
         )
         for cluster in cluster_mapping:
             # Check if the host is in this cluster
@@ -3773,26 +3884,24 @@ class ConfigCache:
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )
             if node_name in self.nodes(cluster) and self.ruleset_matcher.get_service_bool_value(
-                node_name, servicedesc, conf
+                node_name, service_name, service_labels, conf
             ):
                 return cluster
 
         # 1. Old style: clustered_services assumes that each host belong to
         #    exactly on cluster
-        if self.ruleset_matcher.get_service_bool_value(node_name, servicedesc, clustered_services):
+        if self.ruleset_matcher.get_service_bool_value(
+            node_name, service_name, service_labels, clustered_services
+        ):
             return the_clusters[0]
 
         return node_name
 
     def get_clustered_service_configuration(
-        self,
-        host_name: HostName,
-        service_descr: str,
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> tuple[ClusterMode, Mapping[str, Any]]:
         matching_rules = self.ruleset_matcher.service_extra_conf(
-            host_name,
-            service_descr,
-            clustered_services_configuration,
+            host_name, service_name, service_labels, clustered_services_configuration
         )
 
         effective_mode = matching_rules[0][0] if matching_rules else "native"
@@ -4032,15 +4141,11 @@ class ParserFactory:
         *,
         keep_outdated: bool,
         logger: logging.Logger,
-        checking_sections: Iterable[SectionName],
     ) -> SNMPParser:
         return SNMPParser(
             host_name,
             section_store,
-            check_intervals={
-                section_name: self._config_cache.snmp_fetch_interval(host_name, section_name)
-                for section_name in checking_sections
-            },
+            persist_periods=self._config_cache.snmp_fetch_intervals(host_name),
             host_check_interval=self._config_cache.check_mk_check_interval(host_name),
             keep_outdated=keep_outdated,
             logger=logger,
@@ -4093,7 +4198,6 @@ class FetcherFactory:
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
                 redetect=name in checking_sections and name in redetect_sections,
-                fetch_interval=self._config_cache.snmp_fetch_interval(host_name, name),
             )
             for name in (checking_sections | disabled_sections)
         }
@@ -4393,42 +4497,55 @@ class CEEConfigCache(ConfigCache):
         return self.__agent_config.setdefault(host_name, _impl())
 
     def rrd_config_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName
     ) -> RRDObjectConfig | None:
-        out = self.ruleset_matcher.service_extra_conf(hostname, description, cmc_service_rrd_config)
+        out = self.ruleset_matcher.service_extra_conf(
+            host_name,
+            service_name,
+            self.ruleset_matcher.labels_of_service(host_name, service_name, {}),
+            cmc_service_rrd_config,
+        )
         return out[0] if out else None
 
     def recurring_downtimes_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> list[RecurringDowntime]:
         return self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             service_recurring_downtimes,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
 
     def flap_settings_of_service(
-        self, hostname: HostName, description: ServiceName
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> tuple[float, float, float]:
         out = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             cmc_service_flap_settings,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else cmc_flap_settings  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
-    def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
+    def log_long_output_of_service(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> bool:
         out = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else False
 
-    def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> dict:
+    def state_translation_of_service(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> dict:
         entries = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             service_state_translation,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
 
@@ -4437,56 +4554,55 @@ class CEEConfigCache(ConfigCache):
             spec |= entry
         return spec
 
-    def check_timeout_of_service(self, hostname: HostName, description: ServiceName) -> int:
+    def check_timeout_of_service(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> int:
         """Returns the check timeout in seconds"""
         out = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             cmc_service_check_timeout,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else cmc_check_timeout  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
-    def graphite_metrics_of(
+    def graphite_metrics_of_host(
         self,
-        hostname: HostName,
-        description: ServiceName | None,
-        *,
-        default: list[str],
-    ) -> Sequence[str]:
-        if description is None:
-            return next(
-                iter(
-                    self.ruleset_matcher.get_host_values(
-                        hostname,
-                        cmc_graphite_host_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
-                    )
-                ),
-                default,
-            )
+        host_name: HostName,
+    ) -> Sequence[str] | None:
+        out = self.ruleset_matcher.get_host_values(
+            host_name,
+            cmc_graphite_host_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+        )
+        return out[0] if out else None
 
+    def graphite_metrics_of_service(
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
+    ) -> Sequence[str] | None:
         out = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             cmc_graphite_service_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
-        return out[0] if out else default
+        return out[0] if out else None
 
     def influxdb_metrics_of_service(
         self,
-        hostname: HostName,
-        description: ServiceName | None,
-        *,
-        default: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        if description is None:
-            return default
-
+        host_name: HostName,
+        service_name: ServiceName,
+        service_labels: Labels,
+    ) -> Mapping[str, Any] | None:
         out = self.ruleset_matcher.service_extra_conf(
-            hostname,
-            description,
+            host_name,
+            service_name,
+            service_labels,
             cmc_influxdb_service_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
-        return out[0] if out else default
+        return out[0] if out else None
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {
@@ -4556,85 +4672,6 @@ class CEEConfigCache(ConfigCache):
             ("agent_encryption", agent_encryption),
             ("agent_exclude_sections", agent_exclude_sections),
         ]
-
-
-def get_ruleset_id_mapping() -> Mapping[int, str]:
-    def get_nested_rules(prefix: str, rulesets: dict[str, list]) -> Mapping[int, str]:
-        return {id(ruleset): f"{prefix}:{name}]" for name, ruleset in rulesets.items()}
-
-    return {
-        **get_nested_rules("static_checks", static_checks),
-        **get_nested_rules("checkgroup_parameters", checkgroup_parameters),
-        **get_nested_rules("inv_parameters", inv_parameters),
-        **get_nested_rules("active_checks", active_checks),
-        **get_nested_rules("special_agents", special_agents),
-        **get_nested_rules("extra_host_conf", extra_host_conf),
-        **get_nested_rules("extra_service_conf", extra_service_conf),
-        **get_nested_rules("notification_parameters", notification_parameters),
-        **get_nested_rules("agent_config", agent_config),
-        id(agent_ports): "agent_ports",
-        id(agent_encryption): "agent_encryption",
-        id(encryption_handling): "encryption_handling",
-        id(agent_exclude_sections): "agent_exclude_sections",
-        id(snmp_ports): "snmp_ports",
-        id(tcp_connect_timeouts): "tcp_connect_timeouts",
-        id(piggyback_translation): "piggyback_translation",
-        id(service_description_translation): "service_description_translation",
-        id(snmp_backend_hosts): "snmp_backend_hosts",
-        id(non_inline_snmp_hosts): "non_inline_snmp_hosts",
-        id(snmp_limit_oid_range): "snmp_limit_oid_range",
-        id(snmp_bulk_size): "snmp_bulk_size",
-        id(snmp_communities): "snmp_communities",
-        id(snmp_timing): "snmp_timing",
-        id(snmp_character_encodings): "snmp_character_encodings",
-        id(management_board_config): "management_board_config",
-        id(cmc_host_rrd_config): "cmc_host_rrd_config",
-        id(cmc_service_rrd_config): "cmc_service_rrd_config",
-        id(inv_retention_intervals): "inv_retention_intervals",
-        id(periodic_discovery): "periodic_discovery",
-        id(custom_checks): "custom_checks",
-        id(host_label_rules): "host_label_rules",
-        id(bulkwalk_hosts): "bulkwalk_hosts",
-        id(snmpv2c_hosts): "snmpv2c_hosts",
-        id(snmp_without_sys_descr): "snmp_without_sys_descr",
-        id(snmpv3_contexts): "snmpv3_contexts",
-        id(usewalk_hosts): "usewalk_hosts",
-        id(dyndns_hosts): "dyndns_hosts",
-        id(primary_address_family): "primary_address_family",
-        id(ignored_checktypes): "ignored_checktypes",
-        id(ignored_services): "ignored_services",
-        id(ignored_checks): "ignored_checks",
-        id(host_groups): "host_groups",
-        id(service_groups): "service_groups",
-        id(service_contactgroups): "service_contactgroups",
-        id(service_notification_periods): "service_notification_periods",
-        id(host_notification_periods): "host_notification_periods",
-        id(host_contactgroups): "host_contactgroups",
-        id(parents): "parents",
-        id(clustered_services): "clustered_services",
-        id(clustered_services_of): "clustered_services_of",
-        id(clustered_services_mapping): "clustered_services_mapping",
-        id(clustered_services_configuration): "clustered_services_configuration",
-        id(datasource_programs): "datasource_programs",
-        id(ping_levels): "ping_levels",
-        id(only_hosts): "only_hosts",
-        id(host_check_commands): "host_check_commands",
-        id(service_label_rules): "service_label_rules",
-        id(status_data_inventory): "status_data_inventory",
-        id(logwatch_rules): "logwatch_rules",
-        id(automatic_host_removal): "automatic_host_removal",
-        id(piggybacked_host_files): "piggybacked_host_files",
-        id(check_mk_exit_status): "check_mk_exit_status",
-        id(check_mk_agent_target_versions): "check_mk_agent_target_versions",
-        id(check_periods): "check_periods",
-        id(snmp_check_interval): "snmp_check_interval",
-        id(snmp_exclude_sections): "snmp_exclude_sections",
-        id(host_icons_and_actions): "host_icons_and_actions",
-        id(service_icons_and_actions): "service_icons_and_actions",
-        id(custom_service_attributes): "custom_service_attributes",
-        id(service_tag_rules): "service_tag_rules",
-        id(management_bulkwalk_hosts): "management_bulkwalk_hosts",
-    }
 
 
 class CMEConfigCache(CEEConfigCache):

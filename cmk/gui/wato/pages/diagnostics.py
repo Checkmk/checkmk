@@ -67,10 +67,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -325,6 +325,15 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Optional general information"),
                         elements=self._get_optional_information_elements(),
+                        default_keys=[
+                            OPT_LOCAL_FILES,
+                            OPT_OMD_CONFIG,
+                            OPT_CHECKMK_OVERVIEW,
+                            OPT_CHECKMK_CRASH_REPORTS,
+                            OPT_CHECKMK_LOG_FILES,
+                            OPT_CHECKMK_CONFIG_FILES,
+                            OPT_PERFORMANCE_GRAPHS,
+                        ],
                     ),
                 ),
                 (
@@ -332,6 +341,11 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Component specific information"),
                         elements=self._get_component_specific_elements(),
+                        default_keys=[
+                            OPT_COMP_BUSINESS_INTELLIGENCE,
+                            OPT_COMP_CMC,
+                            OPT_COMP_LICENSING,
+                        ],
                     ),
                 ),
             ],
@@ -752,7 +766,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                     url=download_url,
                     title=_("Download"),
                     icon="diagnostics_dump_file",
-                    theme=Theme(),
+                    theme=make_theme(),
                 )
             )
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.diskspace import Config, DEFAULT_CONFIG, read_config
+from cmk.diskspace.config import Config, DEFAULT_CONFIG, read_config
 from cmk.update_config.plugins.actions import diskspace
 
 DISKSPACE_CONF_01 = ""

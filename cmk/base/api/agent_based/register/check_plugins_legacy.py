@@ -302,6 +302,6 @@ def convert_legacy_check_plugins(
             #       will be silently droppend on most (all?) occasions.
             if raise_errors:
                 raise
-            errors.append("Failed to auto-migrate legacy plug-in to check plug-in: {file}\n")
+            errors.append(f"Failed to auto-migrate legacy plug-in to check plug-in: {file}\n")
 
     return errors, checks

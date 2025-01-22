@@ -21,6 +21,7 @@ from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
+from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -1703,7 +1704,10 @@ class BIModeEditAggregation(ABCBIMode):
             try:
                 bi_aggregation = self.bi_pack.get_aggregation_mandatory(clone_id)
                 self._bi_aggregation = bi_aggregation.clone()
-                self._bi_aggregation.id = ""
+                self._bi_aggregation.id = unique_clone_increment_suggestion(
+                    self._bi_aggregation.id,
+                    list(self.bi_pack.get_aggregations()),
+                )
             except KeyError:
                 raise MKUserError("id", _("This BI aggregation does not exist"))
         elif aggr_id == "":
@@ -1750,7 +1754,11 @@ class BIModeEditAggregation(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
-        vs_aggregation = self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id)
+        vs_aggregation = self.get_vs_aggregation(
+            aggregation_id=request.get_str_input_mandatory(
+                varname="aggr_p_id", deflt=self._bi_aggregation.id
+            )
+        )
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
 
@@ -1805,9 +1813,10 @@ class BIModeEditAggregation(ABCBIMode):
             schema_inst = BIAggregationSchema()
             aggr_vs_config = schema_inst.load(schema_inst.dump(self._bi_aggregation))
 
-            self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
-                "aggr", aggr_vs_config
-            )
+            self.get_vs_aggregation(
+                aggregation_id=self._bi_aggregation.id,
+                aggregation_exists=(self._bi_aggregation.id in self.bi_pack.get_aggregations()),
+            ).render_input("aggr", aggr_vs_config)
             forms.end()
             html.hidden_fields()
             html.set_focus("aggr_p_groups_0")
@@ -1815,11 +1824,13 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
+    def get_vs_aggregation(
+        cls, aggregation_id: str | None, aggregation_exists: bool = True
+    ) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
 
-        if aggregation_id:
+        if aggregation_id and aggregation_exists:
             id_valuespec: ValueSpec = FixedValue(
                 value=aggregation_id,
                 title=_("Aggregation ID"),

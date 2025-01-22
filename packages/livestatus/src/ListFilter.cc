@@ -5,6 +5,7 @@
 
 #include "livestatus/ListFilter.h"
 
+#include <optional>
 #include <utility>
 
 #include "livestatus/Logger.h"

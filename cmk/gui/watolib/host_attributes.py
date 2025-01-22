@@ -12,7 +12,6 @@ from __future__ import annotations
 import abc
 import functools
 import re
-import warnings
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, NotRequired, TypedDict
 
@@ -23,7 +22,6 @@ from livestatus import SiteId
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils import deprecation_warnings
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
@@ -32,14 +30,14 @@ from cmk.utils.user import UserId
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
@@ -554,26 +552,27 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
         else:
             self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
-    def attributes(self) -> list[ABCHostAttribute]:
-        return [cls() for cls in self.values()]
-
-    def get_sorted_host_attributes(self) -> list[ABCHostAttribute]:
-        """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
-
-    def get_choices(self) -> Choices:
-        return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
-
 
 host_attribute_registry = HostAttributeRegistry()
+
+
+def sorted_host_attributes() -> list[ABCHostAttribute]:
+    """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
+    return sorted(
+        all_host_attributes(active_config).values(),
+        key=lambda a: (a.sort_index(), a.topic()().title),
+    )
+
+
+def host_attribute_choices() -> Choices:
+    return [(a.name(), a.title()) for a in sorted_host_attributes()]
 
 
 def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics: set[type[HostAttributeTopic]] = set()
-    for attr_class in host_attribute_registry.values():
-        attr = attr_class()
+    for attr in all_host_attributes(active_config).values():
         if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
             needed_topics.add(attr.topic())
 
@@ -597,7 +596,7 @@ def get_sorted_host_attributes_by_topic(
 
     sorted_attributes = []
     for attr in sorted(
-        host_attribute_registry.get_sorted_host_attributes(),
+        sorted_host_attributes(),
         key=functools.cmp_to_key(sort_host_attributes),
     ):
         if attr.topic() == host_attribute_topic_registry[topic_id]:
@@ -605,8 +604,7 @@ def get_sorted_host_attributes_by_topic(
     return sorted_attributes
 
 
-# Is used for dynamic host attribute declaration (based on host tags)
-# + Kept for comatibility with pre 1.6 plugins
+# Kept for comatibility with pre 1.6 plugins
 def declare_host_attribute(
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
@@ -706,47 +704,52 @@ def _declare_host_attribute_topic(
     return topic_class
 
 
-def undeclare_host_attribute(attrname: str) -> None:
-    if attrname in host_attribute_registry:
-        host_attribute_registry.unregister(attrname)
-
-
-def undeclare_host_tag_attribute(tag_id: str) -> None:
-    attrname = "tag_" + tag_id
-    undeclare_host_attribute(attrname)
-
-
-def _clear_config_based_host_attributes() -> None:
-    for attr in host_attribute_registry.attributes():
-        if attr.from_config():
-            undeclare_host_attribute(attr.name())
-
-
-def _declare_host_tag_attributes() -> None:
-    for topic_spec, tag_groups in active_config.tags.get_tag_groups_by_topic():
+def config_based_tag_group_attributes(
+    tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]],
+) -> dict[str, ABCHostAttribute]:
+    attributes: dict[str, ABCHostAttribute] = {}
+    for topic_spec, tag_groups in tag_groups_by_topic:
         for tag_group in tag_groups:
             # Try to translate the title to a built-in topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
             # TODO: We need to adapt the tag data structure to contain topic IDs
-            topic_id = _transform_attribute_topic_title_to_id(topic_spec)
+            topic_id = transform_attribute_topic_title_to_id(topic_spec)
 
             # Build an internal ID from the given topic
             if topic_id is None:
                 topic_id = str(re.sub(r"[^A-Za-z0-9_]+", "_", topic_spec)).lower()
 
-            if topic_id not in host_attribute_topic_registry:
-                topic = _declare_host_attribute_topic(topic_id, topic_spec)
-            else:
-                topic = host_attribute_topic_registry[topic_id]
+            attribute = type(
+                "HostAttributeTag%s" % str(tag_group.id).title(),
+                (
+                    ABCHostAttributeHostTagCheckbox
+                    if tag_group.is_checkbox_tag_group
+                    else ABCHostAttributeHostTagList,
+                ),
+                {
+                    "_tag_group": tag_group,
+                    "help": lambda _: tag_group.help,
+                    "_topic": _declare_host_attribute_topic(topic_id, topic_spec)
+                    if topic_id not in host_attribute_topic_registry
+                    else host_attribute_topic_registry[topic_id],
+                    "topic": lambda self: self._topic,
+                    "show_in_table": lambda self: False,
+                    "show_in_folder": lambda self: True,
+                    "from_config": lambda self: True,
+                    "openapi_field": lambda self: String(description=self.help()),
+                }
+                | (
+                    {
+                        "_sort_index": sort_index,
+                        "sort_index": classmethod(lambda c: c._sort_index),
+                    }
+                    if (sort_index := _tag_attribute_sort_index(tag_group))
+                    else {}
+                ),
+            )()
 
-            declare_host_attribute(
-                _create_tag_group_attribute(tag_group),
-                show_in_table=False,
-                show_in_folder=True,
-                topic=topic,
-                sort_index=_tag_attribute_sort_index(tag_group),
-                from_config=True,
-            )
+            attributes[attribute.name()] = attribute
+    return attributes
 
 
 def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
@@ -762,24 +765,11 @@ def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
     return None
 
 
-def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag]:
-    if tag_group.is_checkbox_tag_group:
-        base_class: type = ABCHostAttributeHostTagCheckbox
-    else:
-        base_class = ABCHostAttributeHostTagList
-
-    return type(
-        "HostAttributeTag%s" % str(tag_group.id).title(),
-        (base_class,),
-        {
-            "_tag_group": tag_group,
-            "help": lambda _: tag_group.help,
-        },
-    )
-
-
-def declare_custom_host_attrs() -> None:
-    for attr in transform_pre_16_host_topics(active_config.wato_host_attrs):
+def config_based_custom_host_attribute_sync_plugins(
+    host_attributes: Sequence[CustomHostAttrSpec],
+) -> dict[str, ABCHostAttribute]:
+    attributes: dict[str, ABCHostAttribute] = {}
+    for attr in host_attributes:
         vs = TextInput(
             title=attr["title"],
             help=attr["help"],
@@ -791,48 +781,25 @@ def declare_custom_host_attrs() -> None:
         else:
             a = ValueSpecAttribute(attr["name"], vs)
 
-        # Previous to 1.6 the topic was a the "topic title". Since 1.6
-        # it's the internal ID of the topic. Because referenced topics may
-        # have been removed, be compatible and dynamically create a topic
-        # in case one is missing.
-        topic_class = _declare_host_attribute_topic(attr["topic"], attr["topic"].title())
-
-        declare_host_attribute(
-            a,
-            show_in_table=attr["show_in_table"],
-            topic=topic_class,
-            from_config=True,
+        final_class = type(
+            "%sCustomHostAttr" % a.__name__,
+            (a,),
+            {
+                "from_config": lambda self: True,
+                "openapi_field": lambda self: String(description=self.help()),
+                # Previous to 1.6 the topic was a the "topic title". Since 1.6
+                # it's the internal ID of the topic. Because referenced topics may
+                # have been removed, be compatible and dynamically create a topic
+                # in case one is missing.
+                "_topic": _declare_host_attribute_topic(attr["topic"], attr["topic"].title()),
+                "topic": lambda self: self._topic,
+            },
         )
+        attributes[attr["name"]] = final_class()
+    return attributes
 
 
-def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Previous to 1.6 the titles of the host attribute topics were stored.
-
-    This lead to issues with localized topics. We now have internal IDs for
-    all the topics and try to convert the values here to the new format.
-
-    We translate the titles which have been distributed with Checkmk to their
-    internal topic ID. No action should be needed. Custom topics or topics of
-    other languages are not translated. The attributes are put into the
-    "Custom attributes" topic once. Users will have to re-configure the topic,
-    sorry :-/."""
-    for custom_attr in custom_attributes:
-        if custom_attr["topic"] in host_attribute_topic_registry:
-            continue
-
-        # The topic not being in the registry means that is most likely an unconverted one.
-        warnings.warn(
-            "Use of free-text topics in custom attributes deprecated.",
-            deprecation_warnings.DeprecatedSince20Warning,
-        )
-        custom_attr["topic"] = (
-            _transform_attribute_topic_title_to_id(custom_attr["topic"]) or "custom_attributes"
-        )
-
-    return custom_attributes
-
-
-def _transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
+def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
     _topic_title_to_id_map = {
         "Basic settings": "basic",
         "Address": "address",
@@ -858,8 +825,16 @@ def _transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
         return None
 
 
+def all_host_attributes(config: Config) -> dict[str, ABCHostAttribute]:
+    return (
+        {ident: cls() for ident, cls in host_attribute_registry.items()}
+        | config_based_tag_group_attributes(config.tags.get_tag_groups_by_topic())
+        | config_based_custom_host_attribute_sync_plugins(config.wato_host_attrs)
+    )
+
+
 def host_attribute(name: str) -> ABCHostAttribute:
-    return host_attribute_registry[name]()
+    return all_host_attributes(active_config)[name]
 
 
 # This is the counterpart of "configure_attributes". Another place which
@@ -869,7 +844,7 @@ def collect_attributes(
 ) -> HostAttributes:
     """Read attributes from HTML variables"""
     host = HostAttributes()
-    for attr in host_attribute_registry.attributes():
+    for attr in all_host_attributes(active_config).values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
             continue
@@ -1080,7 +1055,6 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
                 for choice in choices
             ],
             prefill=DefaultValue(choices[0][0]),
-            type=str,
         )
 
     @property

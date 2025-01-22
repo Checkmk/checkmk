@@ -46,7 +46,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
-from cmk import diskspace
+from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
 
 
 def register(
@@ -90,8 +90,8 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_autostart"
@@ -110,8 +110,8 @@ class ConfigVariableSiteCore(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_core"
@@ -200,8 +200,8 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_livestatus_tcp"
@@ -251,15 +251,15 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return cmk.utils.paths.diskspace_config_dir
 
     def default_globals(self) -> Mapping[str, Any]:
-        return {"diskspace_cleanup": diskspace.DEFAULT_CONFIG.model_dump(exclude_none=True)}
+        return {"diskspace_cleanup": diskspace_DEFAULT_CONFIG.model_dump(exclude_none=True)}
 
 
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainDiskspace
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainDiskspace()
 
     def ident(self) -> str:
         return "diskspace_cleanup"
@@ -410,9 +410,10 @@ class ConfigDomainApache(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {
@@ -443,8 +444,8 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainApache
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainApache()
 
     def ident(self) -> str:
         return "apache_process_tuning"
@@ -530,9 +531,10 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {
@@ -566,8 +568,8 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainRRDCached
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainRRDCached()
 
     def ident(self) -> str:
         return "rrdcached_tuning"

@@ -6,44 +6,9 @@
 import argparse
 from pathlib import Path
 
-from cmk.ccc.version import __version__, Version
-
-from cmk.werks.models import Edition, Werk
-
-from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks
 from .announce import main as main_announce
 from .collect import main as collect
 from .mail import main as mail
-
-
-def main_changelog(args: argparse.Namespace) -> None:
-    werks: dict[int, Werk] = {}
-    for path in (Path(p) for p in args.precompiled_werk):
-        werks.update(load_precompiled_werks_file(path))
-
-    with open(args.destination, "w", encoding="utf-8") as f:
-        write_as_text(werks, f)
-
-
-def main_precompile(args: argparse.Namespace) -> None:
-    werks_list = load_raw_files(args.werk_dir)
-
-    filter_by_edition = (
-        Edition(args.filter_by_edition) if args.filter_by_edition is not None else None
-    )
-    current_version = Version.from_str(__version__)
-
-    def _filter(werk: Werk) -> bool:
-        if filter_by_edition is not None and werk.edition != filter_by_edition:
-            return False
-        # only include werks of this major version:
-        if Version.from_str(werk.version).base != current_version.base:
-            return False
-        return True
-
-    werks = {werk.id: werk for werk in werks_list if _filter(werk)}
-
-    write_precompiled_werks(args.destination, werks)
 
 
 def main_collect(args: argparse.Namespace) -> None:
@@ -70,23 +35,6 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
-
-    parser_changelog = subparsers.add_parser("changelog", help="Show who worked on a werk")
-    parser_changelog.add_argument("destination")
-    parser_changelog.add_argument("precompiled_werk", nargs="+")
-    parser_changelog.set_defaults(func=main_changelog)
-
-    parser_precompile = subparsers.add_parser(
-        "precompile", help="Collect werk files of current major version into json."
-    )
-    parser_precompile.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
-    parser_precompile.add_argument("destination", type=Path)
-    parser_precompile.add_argument(
-        "--filter-by-edition",
-        default=None,
-        choices=list(x.value for x in Edition),
-    )
-    parser_precompile.set_defaults(func=main_precompile)
 
     parser_announce = subparsers.add_parser("announce", help="Output announce text")
     parser_announce.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")

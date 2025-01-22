@@ -15,12 +15,6 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
-    compile_builtin_po_files,
-    locale_base_dir,
-    locale_paths,
-)
-
 from livestatus import SiteId
 
 from cmk.utils.object_diff import make_diff_text

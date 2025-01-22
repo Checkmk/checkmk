@@ -4,13 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, within } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 
 const stringSpec1: FormSpec.String = {
   type: 'string',
   title: 'firstFooTitle',
   help: 'firstFooHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: [],
   input_hint: 'firstFooInputHint',
   autocompleter: null,
@@ -21,6 +23,8 @@ const stringSpec2: FormSpec.String = {
   type: 'string',
   title: 'secondFooTitle',
   help: 'secondFooHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: [],
   input_hint: 'secondFooInputHint',
   autocompleter: null,

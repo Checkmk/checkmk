@@ -6,8 +6,7 @@
 
 import type {Dimension} from "crossfilter2";
 import type {ScaleBand, ScaleLinear, Selection} from "d3";
-import {axisRight, axisTop, max, scaleBand, scaleLinear} from "d3";
-import range from "lodash.range";
+import {axisRight, axisTop, max, range, scaleBand, scaleLinear} from "d3";
 
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import {getIn, make_levels} from "@/modules/figures/cmk_figures_utils";
@@ -83,18 +82,18 @@ export class BarplotFigure extends FigureBase<
         FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
-            this.figure_size.height
+            this.figure_size.height,
         );
         this.scale_x.range([0, this.plot_size.width]);
         this.scale_y.range([this.plot_size.height, 0]);
         this.plot.attr(
             "transform",
-            "translate(" + this.margin.left + "," + this.margin.top + ")"
+            "translate(" + this.margin.left + "," + this.margin.top + ")",
         );
     }
 
     _update_plot_definitions(
-        plot_definitions: SingleMetricDataPlotDefinitions[]
+        plot_definitions: SingleMetricDataPlotDefinitions[],
     ) {
         this._plot_definitions = [];
 
@@ -119,7 +118,7 @@ export class BarplotFigure extends FigureBase<
                     .axisTop(this.scale_x)
                     .tickValues(ticks)
                     .tickSize(-height)
-                    .tickFormat((_x, _y) => "")
+                    .tickFormat((_x, _y) => ""),
             );
     }
 
@@ -135,7 +134,7 @@ export class BarplotFigure extends FigureBase<
         // Set the time dimension filter to the latest value
         // If this needs to be changed someday, simply iterate over all plot_definitions
         this._time_dimension.filter(
-            d => d == this._time_dimension.top(1)[0].timestamp
+            d => d == this._time_dimension.top(1)[0].timestamp,
         );
 
         this.resize();
@@ -179,8 +178,8 @@ export class BarplotFigure extends FigureBase<
             x_domain,
             tickcount,
             domainIntervals(
-                getIn(this._plot_definitions[0], "metric", "unit", "stepping")
-            )
+                getIn(this._plot_definitions[0], "metric", "unit", "stepping"),
+            ),
         );
 
         const domain: Domain = [min_val, max_val];
@@ -200,7 +199,7 @@ export class BarplotFigure extends FigureBase<
                 d3
                     .axisTop(this.scale_x)
                     .tickValues(tick_vals)
-                    .tickFormat(d => render_function(d).replace(/\.0+\b/, ""))
+                    .tickFormat(d => render_function(d).replace(/\.0+\b/, "")),
             );
         this.render_grid(range(min_val, max_val, step / 2));
         return domain;
@@ -231,7 +230,7 @@ export class BarplotFigure extends FigureBase<
             .attr("y", d => (this.scale_y(d.label) ?? 0) + 6) // 6 is half the default font size. Thus bar stays bellow text
             .attr(
                 "height",
-                Math.max(Math.min(24, this.scale_y.bandwidth() - 12), 4)
+                Math.max(Math.min(24, this.scale_y.bandwidth() - 12), 4),
             )
             .attr("width", d => this.scale_x(d.value))
             .attr("rx", 2)

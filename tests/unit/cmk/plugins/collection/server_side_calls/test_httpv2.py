@@ -40,7 +40,9 @@ def test_active_check_httpv2_cert_validity_individually() -> None:
                     {
                         "service_name": {"prefix": "auto", "name": "My service name"},
                         "url": "https://subomain.domain.tld:123",
-                        "individual_settings": {"cert": ("fixed", (3456000.0, 1728000.0))},
+                        "individual_settings": {
+                            "cert": ("validate", ("fixed", (3456000.0, 1728000.0)))
+                        },
                     },
                 ],
                 "standard_settings": {},
@@ -71,14 +73,19 @@ def test_active_check_httpv2_cert_validity_globally() -> None:
                     {
                         "service_name": {"prefix": "auto", "name": "My service name"},
                         "url": "https://subomain.domain.tld:123",
-                        "individual_settings": {"cert": ("fixed", (345600.0, 172800.0))},
+                        "individual_settings": {
+                            "cert": ("validate", ("fixed", (345600.0, 172800.0)))
+                        },
                     },
                     {
-                        "service_name": {"prefix": "auto", "name": "My other service name"},
+                        "service_name": {
+                            "prefix": "auto",
+                            "name": "My other service name",
+                        },
                         "url": "https://subomain.domain.tld:123",
                     },
                 ],
-                "standard_settings": {"cert": ("fixed", (3456000.0, 1728000.0))},
+                "standard_settings": {"cert": ("validate", ("fixed", (3456000.0, 1728000.0)))},
             },
             HostConfig(
                 name="testhost",
@@ -125,7 +132,7 @@ def test_active_check_httpv2_options_dont_merge() -> None:
                     },
                 ],
                 "standard_settings": {
-                    "cert": ("fixed", (3456000.0, 1728000.0)),
+                    "cert": ("validate", ("fixed", (3456000.0, 1728000.0))),
                 },
             },
             HostConfig(

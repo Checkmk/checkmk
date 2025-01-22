@@ -8,6 +8,12 @@ from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
 
+QUICK_SETUP_ID = fields.String(
+    required=True,
+    description="The quick setup id",
+    example="aws",
+)
+
 
 class QuickSetupStageRequest(BaseSchema):
     form_data = fields.Dict(
@@ -17,18 +23,12 @@ class QuickSetupStageRequest(BaseSchema):
     )
 
 
-class QuickSetupRequest(BaseSchema):
-    quick_setup_id = fields.String(
-        required=True,
-        description="The quick setup id",
-        example="aws",
-    )
+class QuickSetupStageActionRequest(BaseSchema):
     stage_action_id = fields.String(
         required=True,
         description="The id of the stage action to be performed",
         example="test_connection",
     )
-
     stages = fields.List(
         fields.Nested(
             QuickSetupStageRequest,
@@ -40,10 +40,10 @@ class QuickSetupRequest(BaseSchema):
     )
 
 
-class QuickSetupFinalSaveRequest(BaseSchema):
+class QuickSetupFinalActionRequest(BaseSchema):
     button_id = fields.String(
         required=True,
-        description="Unique id of the save button clicked by the user",
+        description="Unique id of the action button clicked by the user",
         example="save",
     )
     stages = fields.List(

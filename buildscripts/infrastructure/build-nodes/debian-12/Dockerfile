@@ -80,7 +80,6 @@ RUN rm /etc/cron.daily/apt-compat
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
-# - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
 FROM base as builder
@@ -103,34 +102,28 @@ COPY \
     defines.make \
     /opt/
 
-COPY --from=scripts \
+COPY \
     build_lib.sh \
     Check_MK-pubkey.gpg \
     /opt/
 
-COPY --from=scripts install-gnu-toolchain.sh /opt/
+COPY install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 
-COPY --from=scripts install-valgrind.sh /opt/
+COPY install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
 
-COPY --from=scripts install-cmake.sh /opt/
-RUN /opt/install-cmake.sh
-
-COPY --from=scripts install-protobuf-cpp.sh /opt/
+COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY --from=scripts install-openssl.sh /opt/
-RUN /opt/install-openssl.sh
-
-COPY --from=scripts install-python.sh /opt/
+COPY install-python.sh /opt/
 RUN /opt/install-python.sh
 
 # install GDB after Python as it requires shared object files, see CMK-15854
-COPY --from=scripts install-gdb.sh /opt/
+COPY install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
 
-COPY --from=scripts install-rust-cargo.sh /opt/
+COPY install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
@@ -139,7 +132,7 @@ COPY strip_binaries /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!
-COPY --from=scripts install-bazel.sh /opt/
+COPY install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 
 ### Actual Build Image ###
@@ -158,24 +151,20 @@ ENV \
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
 RUN /opt/install-valgrind.sh link-only
-RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
-COPY --from=scripts install-pipenv.sh /opt/
-RUN /opt/install-pipenv.sh
-
-COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
-COPY --from=scripts install-cmk-dependencies.sh /opt/
+COPY "${DISTRO_MK_FILE}" /opt/
+COPY install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
-COPY --from=scripts install-patchelf.sh /opt/
+COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
-COPY --from=scripts ci.bazelrc /etc/
+COPY ci.bazelrc /etc/
 RUN echo "common:ci --@//:filesystem_layout=lsb" >> /etc/ci.bazelrc
 
 ARG VERS_TAG
@@ -185,5 +174,5 @@ ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.checkmk.image_type="build-image"
 
-COPY --from=dev_images entrypoint.sh /opt/
+COPY entrypoint.sh /opt/
 ENTRYPOINT ["/opt/entrypoint.sh"]

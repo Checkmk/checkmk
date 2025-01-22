@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=unused-import
-
-import functools
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import TypeVar
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyResult
 from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
@@ -18,10 +15,10 @@ from cmk.agent_based.v2 import (
     render,
     Service,
 )
-from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
-from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
-from cmk.plugins.lib.azure import iter_resource_attributes as iter_resource_attributes
-from cmk.plugins.lib.azure import parse_resources as parse_resources
+from cmk.plugins.lib.azure import (
+    get_service_labels_from_resource_tags,
+    Resource,
+)
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
@@ -43,9 +40,15 @@ def get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
     raise IgnoreResultsError("Data not present at the moment")
 
 
-def check_azure_metric(  # pylint: disable=too-many-locals
-    resource, metric_key, cmk_key, display_name, levels=None, levels_lower=None, use_rate=False
-):
+def check_azure_metric(
+    resource: Resource,
+    metric_key: str,
+    cmk_key: str,
+    display_name: str,
+    levels: tuple[float, float] | None = None,
+    levels_lower: tuple[float, float] | None = None,
+    use_rate: bool = False,
+) -> None | LegacyResult:
     metric = resource.metrics.get(metric_key)
     if metric is None:
         return None
@@ -83,19 +86,9 @@ def check_azure_metric(  # pylint: disable=too-many-locals
     )
 
 
-# .
-
-#   .--Discovery-----------------------------------------------------------.
-#   |              ____  _                                                 |
-#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
-#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
-#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
-#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
-#   |                                                  |___/               |
-#   +----------------------------------------------------------------------+
-
-
-def discover_azure_by_metrics(*desired_metrics):
+def discover_azure_by_metrics(
+    *desired_metrics: str,
+) -> Callable[[Mapping[str, Resource]], Iterable[Service]]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
     def discovery_function(parsed):
@@ -107,6 +100,3 @@ def discover_azure_by_metrics(*desired_metrics):
                 )
 
     return discovery_function
-
-
-# .

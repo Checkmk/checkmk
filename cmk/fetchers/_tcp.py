@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import errno
 import logging
+import os
 import socket
 import ssl
 from collections.abc import Buffer
@@ -150,7 +152,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         sock = self._socket
         if sock is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
         agent_data = self._get_agent_data(

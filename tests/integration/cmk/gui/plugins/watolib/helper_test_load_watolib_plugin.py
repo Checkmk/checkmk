@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui import main_modules
+import sys
 
-main_modules.load_plugins()
+from cmk.gui import main_modules
 from cmk.gui.watolib.config_domain_name import config_domain_registry
 
-print("test" in config_domain_registry)
+main_modules.load_plugins()
+
+sys.stdout.write(f"{"test" in config_domain_registry}\n")

@@ -7,7 +7,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import DemoEmpty from './DemoEmpty.vue'
-import DemoAlertBox from './DemoAlertBox.vue'
+import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
@@ -16,15 +16,21 @@ import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoCmkCheckbox from './DemoCmkCheckbox.vue'
 import DemoFormList from './DemoFormList.vue'
+import DemoFormMetric from './DemoFormMetric.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
+import DemoFormAll from './DemoFormAll.vue'
+import DemoFormString from './DemoFormString.vue'
+import DemoFormListOfStrings from './DemoFormListOfStrings.vue'
 import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
+import DemoCmkHtml from './DemoCmkHtml.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
@@ -47,8 +53,8 @@ const routes: Route[] = [
   },
   {
     path: '/alertbox',
-    name: 'AlertBox',
-    component: DemoAlertBox
+    name: 'CmkAlertBox',
+    component: DemoCmkAlertBox
   },
   {
     path: '/slidein',
@@ -91,6 +97,11 @@ const routes: Route[] = [
     component: DemoCmkDropdown
   },
   {
+    path: '/errorboundary',
+    name: 'ErrorBoundary',
+    component: DemoErrorBoundary
+  },
+  {
     path: '/cmk_switch',
     name: 'CmkSwitch',
     component: DemoCmkSwitch
@@ -99,6 +110,11 @@ const routes: Route[] = [
     path: '/cmk_color_picker',
     name: 'CmkColorPicker',
     component: DemoCmkColorPicker
+  },
+  {
+    path: '/cmk_html',
+    name: 'CmkHtml',
+    component: DemoCmkHtml
   },
   {
     path: '/form',
@@ -121,6 +137,21 @@ const routes: Route[] = [
         component: DemoFormList
       },
       {
+        path: 'formstring',
+        name: 'FormString',
+        component: DemoFormString
+      },
+      {
+        path: 'formlistofstrings',
+        name: 'FormListOfStrings',
+        component: DemoFormListOfStrings
+      },
+      {
+        path: 'formmetric',
+        name: 'FormMetric',
+        component: DemoFormMetric
+      },
+      {
         path: 'formbooleanchoice',
         name: 'FormBoleanChoice',
         component: DemoFormBooleanChoice
@@ -131,7 +162,7 @@ const routes: Route[] = [
         component: DemoFormOptionalChoice
       },
       {
-        path: 'formodictionary',
+        path: 'formdictionary',
         name: 'FormDictionary',
         component: DemoFormDictionary
       },
@@ -149,6 +180,11 @@ const routes: Route[] = [
         path: 'formtuple',
         name: 'FormTuple',
         component: DemoFormTuple
+      },
+      {
+        path: 'formall',
+        name: 'form all',
+        component: DemoFormAll
       },
       {
         path: 'formlabels',

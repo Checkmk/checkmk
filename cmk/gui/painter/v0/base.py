@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
 
 import cmk.utils.paths
 
@@ -31,6 +30,8 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -47,7 +48,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import Theme, theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
@@ -102,7 +102,7 @@ class Painter(abc.ABC):
             return rows
 
         # Needed because of old calling conventions. Doesn't have any effect.
-        empty_cell = EmptyCell(None, None)
+        empty_cell = EmptyCell(None, None, None)
 
         def format_html(row: Row, _painter_configuration: PainterConfiguration) -> CellSpec:
             return self.render(row, empty_cell)
@@ -307,68 +307,6 @@ class Painter(abc.ABC):
         return self._compute_data(row, cell)
 
 
-class PainterRegistry(Registry[type[Painter]]):
-    def plugin_name(self, instance: type[Painter]) -> str:
-        return instance(
-            user=user,
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        ).ident
-
-
-painter_registry = PainterRegistry()
-
-
-# Kept for pre 1.6 compatibility.
-def register_painter(ident: str, spec: dict[str, Any]) -> None:
-    paint_function = spec["paint"]
-    cls = type(
-        "LegacyPainter%s" % ident.title(),
-        (Painter,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": lambda s, cell: s._spec["title"],
-            "short_title": lambda s, cell: s._spec.get("short", s.title),
-            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
-            "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell: paint_function(row),
-            "export_for_python": (
-                lambda self, row, cell: (
-                    spec["export_for_python"](row, cell)
-                    if "export_for_python" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_csv": (
-                lambda self, row, cell: (
-                    spec["export_for_csv"](row, cell)
-                    if "export_for_csv" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_json": (
-                lambda self, row, cell: (
-                    spec["export_for_json"](row, cell)
-                    if "export_for_json" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "group_by": lambda self, row, cell: self._spec.get("groupby"),
-            "parameters": property(lambda s: s._spec.get("params")),
-            "painter_options": property(lambda s: s._spec.get("options", [])),
-            "printable": property(lambda s: s._spec.get("printable", True)),
-            "sorter": property(lambda s: s._spec.get("sorter", None)),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-        },
-    )
-    painter_registry.register(cls)
-
-
 # .
 #   .--Cells---------------------------------------------------------------.
 #   |                           ____     _ _                               |
@@ -381,10 +319,6 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
 #   | View cell handling classes. Each cell instanciates a multisite       |
 #   | painter to render a table cell.                                      |
 #   '----------------------------------------------------------------------'
-
-
-def painter_exists(column_spec: ColumnSpec) -> bool:
-    return column_spec.name in painter_registry
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
@@ -401,9 +335,11 @@ class Cell:
         self,
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
+        registered_painters: Mapping[str, type[Painter]] | None,
     ) -> None:
         self._painter_name: PainterName | None
         self._painter_params: PainterParameters | None
+        self._registered_painters = registered_painters
 
         if column_spec:
             self._painter_name = column_spec.name
@@ -412,8 +348,9 @@ class Cell:
                 column_spec.parameters.get("column_title") or column_spec.column_title
             )
             self._link_spec = column_spec.link_spec
+            assert registered_painters is not None
             self._tooltip_painter_name = (
-                column_spec.tooltip if column_spec.tooltip in painter_registry else None
+                column_spec.tooltip if column_spec.tooltip in registered_painters else None
             )
         else:
             self._painter_name = None
@@ -465,7 +402,8 @@ class Cell:
                 url_renderer=RenderLink(request, response, display_options),
             )
         except KeyError:
-            return painter_registry[self.painter_name()](
+            assert self._registered_painters is not None
+            return self._registered_painters[self.painter_name()](
                 user=user,
                 config=active_config,
                 request=request,
@@ -535,7 +473,8 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name](
+        assert self._registered_painters is not None
+        return self._registered_painters[self._tooltip_painter_name](
             user=user,
             config=active_config,
             request=request,
@@ -597,7 +536,9 @@ class Cell:
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             assert isinstance(content, (str, HTML))
-            tooltip_cell = Cell(ColumnSpec(self.tooltip_painter_name()), None)
+            tooltip_cell = Cell(
+                ColumnSpec(self.tooltip_painter_name()), None, self._registered_painters
+            )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
@@ -751,8 +692,9 @@ class JoinCell(Cell):
         self,
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
+        registered_painters: Mapping[str, type[Painter]],
     ) -> None:
-        super().__init__(column_spec, sort_url_parameter)
+        super().__init__(column_spec, sort_url_parameter, registered_painters)
         if (join_value := column_spec.join_value) is None:
             raise ValueError()
 

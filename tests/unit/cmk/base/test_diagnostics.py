@@ -252,8 +252,8 @@ def test_diagnostics_element_environment_content(
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
     with monkeypatch.context() as m:
-        for key in environment_vars:
-            m.setenv(key, environment_vars[key])
+        for key, value in environment_vars.items():
+            m.setenv(key, value)
 
         diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")
@@ -265,8 +265,8 @@ def test_diagnostics_element_environment_content(
         content = json.loads(filepath.open().read())
         assert "France" in content
 
-        for key in environment_vars:
-            assert content[key] == environment_vars[key]
+        for key, value in environment_vars.items():
+            assert content[key] == value
 
         assert content["OMD_SITE"] == cmk.ccc.site.omd_site()
 
@@ -945,12 +945,11 @@ def test_diagnostics_element_cma_content(tmp_path):
         "/ro/usr/share/cma/version": "1.7.5",
     }
 
-    def open_side_effect(name, options):
+    def open_side_effect(name, *_args, **_kwargs):
         return mock_open(read_data=data_dict.get(name))()
 
-    with patch("builtins.open") as bo, patch("os.path.exists") as ope:
+    with patch("builtins.open") as bo:
         bo.side_effect = open_side_effect
-        ope.return_value = True
 
         diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")

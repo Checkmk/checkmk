@@ -56,9 +56,7 @@ def try_load_current_version_from_defines_make(defines_make: Path) -> str | None
 
 def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
     data: dict[str, object] = {}
-    exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-        werk_config.read_text(encoding="utf-8"), data, data
-    )
+    exec(werk_config.read_text(encoding="utf-8"), data, data)  # nosec B102 # BNS:aee528
 
     data.pop("__builtins__")
     return Config.model_validate(

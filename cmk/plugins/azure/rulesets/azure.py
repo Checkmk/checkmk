@@ -46,9 +46,18 @@ RAW_AZURE_SERVICES: Final = [
     ("Microsoft.Storage/storageAccounts", Title("Storage")),
     ("Microsoft.Web/sites", Title("Web Servers (IIS)")),
     ("Microsoft.DBforMySQL/servers", Title("Database for MySQL single server")),
-    ("Microsoft.DBforMySQL/flexibleServers", Title("Database for MySQL flexible server")),
-    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL single server")),
-    ("Microsoft.DBforPostgreSQL/flexibleServers", Title("Database for PostgreSQL flexible server")),
+    (
+        "Microsoft.DBforMySQL/flexibleServers",
+        Title("Database for MySQL flexible server"),
+    ),
+    (
+        "Microsoft.DBforPostgreSQL/servers",
+        Title("Database for PostgreSQL single server"),
+    ),
+    (
+        "Microsoft.DBforPostgreSQL/flexibleServers",
+        Title("Database for PostgreSQL flexible server"),
+    ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
 ]
@@ -111,7 +120,7 @@ def _special_agents_azure_explicit_config():
                     ),
                 },
             ),
-            title=Title("explicitly specified groups"),
+            title=Title("Explicitly specified groups"),
             add_element_label=Label("Add resource group"),
         )
     )
@@ -166,7 +175,7 @@ def _special_agents_azure_tag_based_config():
                     ),
                 },
             ),
-            title=Title("resources matching tag based criteria"),
+            title=Title("Resources matching tag based criteria"),
             add_element_label=Label("Add resource tag"),
         )
     )
@@ -258,6 +267,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         ),
         "proxy": DictElement(
             parameter_form=Proxy(
+                title=Title("HTTP proxy"),
                 migrate=migrate_to_proxy,
             ),
         ),
@@ -290,7 +300,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
     return {
         "config": DictElement(
             parameter_form=Dictionary(
-                title=Title("Retrieve information about..."),
+                title=Title("Retrieve information"),
                 # Since we introduced this, Microsoft has already reduced the number
                 # of allowed API requests. At the time of this writing (11/2018)
                 # you can find the number here:

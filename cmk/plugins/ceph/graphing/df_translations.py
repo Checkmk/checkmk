@@ -18,7 +18,9 @@ translation_ceph = Translation(
         PassiveCheck("cephosdbluefs_slow"),
     ],
     translations={
-        "~(?!%s).*$": RenameToAndScaleBy("fs_used", MIB),
+        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count|fs_used_percent).*$": RenameToAndScaleBy(
+            "fs_used", MIB
+        ),
         "fs_used": ScaleBy(MIB),
         "fs_size": ScaleBy(MIB),
         "reserved": ScaleBy(MIB),

@@ -11,7 +11,7 @@ import time
 from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
 from urllib.parse import urlencode
 
@@ -44,7 +44,8 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, LegacyValueSpec
+from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
@@ -91,6 +92,7 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -137,19 +139,6 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
-from cmk.gui.watolib.notification_types import (
-    CoreStats,
-    CoreStatsI18n,
-    FallbackWarning,
-    FallbackWarningI18n,
-    NotificationParametersOverview,
-    Notifications,
-    NotificationStats,
-    NotificationStatsI18n,
-    Rule,
-    RuleSection,
-    RuleTopic,
-)
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     NotificationParameterConfigFile,
@@ -170,6 +159,20 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+from cmk.shared_typing.notifications import (
+    CoreStats,
+    CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
+    NotificationParametersOverview,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 
 
 def register(
@@ -985,7 +988,7 @@ def _fallback_mail_contacts_configured() -> bool:
 
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
-    total_send_notifications = get_total_sent_notifications()
+    total_send_notifications = _get_total_sent_notifications_last_seven_days()
     return Notifications(
         overview_title_i18n=_("Notification overview"),
         fallback_warning=(
@@ -1027,10 +1030,11 @@ def _get_vue_data() -> Notifications:
                     ("view_name", "notifications"),
                     ("_show_filter_form", "0"),
                     ("filled_in", "filter"),
-                    ("_active", "logtime;log_notification_phase;log_class"),
+                    ("_active", "logtime;log_notification_phase;log_class;log_type"),
                     ("logtime_from", "7"),
                     ("is_log_notification_phase", "0"),
                     ("logclass3", "on"),
+                    ("log_type", ".*NOTIFICATION RESULT$"),
                 ],
                 filename="view.py",
             ),
@@ -1081,6 +1085,13 @@ def _get_vue_data() -> Notifications:
     )
 
 
+def _get_total_sent_notifications_last_seven_days() -> LivestatusResponse:
+    current_time = datetime.now()
+    seven_days_ago = current_time - timedelta(days=7)
+    from_timestamp = int(seven_days_ago.timestamp())
+    return get_total_sent_notifications(from_timestamp=from_timestamp)
+
+
 def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
     all_rulesets = AllRulesets.load_all_rulesets()
     rule_topic_list: list[RuleTopic] = []
@@ -1121,6 +1132,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         super().__init__()
         options = user.load_file("analyze_notification_display_options", {})
         self._show_bulks = options.get("show_bulks", False)
+        self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
     def name(cls) -> str:
@@ -1147,7 +1159,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
                                     ),
                                     is_shortcut=False,
                                     is_suggested=False,
@@ -1259,10 +1273,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         title=(
                             _("Hide user rules") if self._show_user_rules else _("Show user rules")
                         ),
-                        icon_name={
-                            "icon": "checkbox",
-                            "emblem": "disable" if self._show_user_rules else "enable",
-                        },
+                        icon_name="toggle_on" if self._show_user_rules else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -1414,7 +1425,12 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_analyze_notification_display_options()
 
-        elif request.has_var("_replay"):
+        if request.has_var("_show_user"):
+            if transactions.check_transaction():
+                self._show_user_rules = bool(request.var("_show_user"))
+                self._save_analyze_notification_display_options()
+
+        if request.has_var("_replay"):
             if transactions.check_transaction():
                 replay_nr = request.get_integer_input_mandatory("_replay")
                 notification_replay(replay_nr)
@@ -1428,6 +1444,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             "analyze_notification_display_options",
             {
                 "show_bulks": self._show_bulks,
+                "show_user_rules": self._show_user_rules,
             },
         )
 
@@ -1435,8 +1452,8 @@ class ModeAnalyzeNotifications(ModeNotifications):
 class ModeTestNotifications(ModeNotifications):
     def __init__(self) -> None:
         super().__init__()
-        options = user.load_file("analyze_notification_display_options", {})
-        self._show_bulks = options.get("show_bulks", False)
+        options = user.load_file("test_notification_display_options", {})
+        self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
     def name(cls) -> str:
@@ -1463,7 +1480,9 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
                                     ),
                                     is_shortcut=False,
                                     is_suggested=False,
@@ -1550,14 +1569,20 @@ class ModeTestNotifications(ModeNotifications):
     def action(self) -> ActionResult:
         check_csrf_token()
 
+        if request.has_var("_show_user"):
+            if transactions.check_transaction():
+                self._show_user_rules = bool(request.var("_show_user"))
+                self._save_test_notification_display_options()
+
         if self._test_notification_ongoing():
             if transactions.check_transaction():
+                context, dispatch = self._context_and_dispatch_from_vars()
                 return redirect(
                     mode_url(
                         "test_notifications",
                         test_notification="1",
-                        test_context=json.dumps(self._context_from_vars()),
-                        dispatch=request.var("dispatch", ""),
+                        test_context=json.dumps(context),
+                        dispatch=dispatch or "",
                     )
                 )
 
@@ -1577,11 +1602,14 @@ class ModeTestNotifications(ModeNotifications):
             )
 
         self._render_test_notifications()
-        context, analyse = self._result_from_request()
-        self._show_notification_test_overview(context, analyse)
-        self._show_notification_test_details(context, analyse)
-        if request.var("test_notification") and analyse:
-            self._show_resulting_notifications(result=analyse)
+
+        analyse = None
+        if not user_errors:
+            context, analyse = self._result_from_request()
+            self._show_notification_test_overview(context, analyse)
+            self._show_notification_test_details(context, analyse)
+            if request.var("test_notification") and analyse:
+                self._show_resulting_notifications(result=analyse)
         self._show_rules(analyse)
 
     def _result_from_request(
@@ -1600,7 +1628,8 @@ class ModeTestNotifications(ModeNotifications):
             return (
                 context,
                 notification_test(
-                    raw_context=context, dispatch=bool(request.var("dispatch"))
+                    raw_context=context,
+                    dispatch=request.var("dispatch", ""),
                 ).result,
             )
         return None, None
@@ -1612,18 +1641,8 @@ class ModeTestNotifications(ModeNotifications):
     ) -> None:
         if not context or not analyse:
             return
-        html.open_div(class_="test_notifications_matching_help")
-        html.icon("toggle_details")
-        html.b(_("Matching: "))
-        html.write_text_permissive(
-            _(
-                "Each parameter is defined by the first matching rule where that parameter "
-                "is set (checked)."
-            )
-        )
-        html.close_div()
-        html.open_div(id_="notification_analysis_container")
 
+        html.open_div(id_="notification_analysis_container")
         html.open_div(class_="state_bar state0")
         html.open_span()
         html.icon("check")
@@ -1633,17 +1652,52 @@ class ModeTestNotifications(ModeNotifications):
         html.open_div(class_="message_container")
         html.h2(_("Analysis results"))
         analyse_rules, analyse_resulting_notifications = analyse
+        match_count_all = len(tuple(entry for entry in analyse_rules if "match" in entry))
+        match_count_user = len(
+            [rule for rule in analyse_rules if rule[1].get("contact") and "match" in rule]
+        )
+        match_count_global = match_count_all - match_count_user
+
         html.write_text_permissive(
-            _("%s notification rules are matching")
-            % len(tuple(entry for entry in analyse_rules if "match" in entry))
+            _("%s notification %s (%d global %s, %d user %s)")
+            % (
+                match_count_all,
+                ungettext(
+                    "rule matches",
+                    "rules are matching",
+                    match_count_all,
+                ),
+                match_count_global,
+                ungettext(
+                    "rule",
+                    "rules",
+                    match_count_global,
+                ),
+                match_count_user,
+                ungettext(
+                    "rule",
+                    "rules",
+                    match_count_user,
+                ),
+            )
         )
         html.br()
+        resulting_notifications_count = len(analyse_resulting_notifications)
         html.write_text_permissive(
-            _("%s resulting notifications") % len(analyse_resulting_notifications)
+            ("%d resulting %s")
+            % (
+                resulting_notifications_count,
+                ungettext(
+                    "notification",
+                    "notifications",
+                    resulting_notifications_count,
+                ),
+            )
         )
-        html.br()
-        if request.var("dispatch"):
+        if request.var("notify_plugin"):
             html.write_text_permissive(_("Notifications have been sent. "))
+        html.br()
+        html.br()
         html.write_text_permissive("View the following tables for more details.")
         html.close_div()
         html.close_div()
@@ -1740,7 +1794,7 @@ class ModeTestNotifications(ModeNotifications):
                 "general_opts",
                 self._get_default_options(request.var("host_name"), request.var("service_name")),
             )
-            self._vs_dispatched_option().render_input("dispatch", False)
+            self._vs_notify_plugin().render_input("notify_plugin", {})
             self._vs_advanced_test_options().render_input("advanced_opts", "")
             html.hidden_fields()
             forms.end()
@@ -1751,14 +1805,17 @@ class ModeTestNotifications(ModeNotifications):
             cssclass="hot",
             form="form_test_notifications",
         )
-        html.buttonlink(makeuri(request, []), _("Cancel"))
+        html.buttonlink(
+            makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
+            _("Cancel"),
+        )
 
     def _test_notification_ongoing(self) -> bool:
         return request.has_var("_test_host_notifications") or request.has_var(
             "_test_service_notifications"
         )
 
-    def _context_from_vars(self) -> dict[str, Any]:
+    def _context_and_dispatch_from_vars(self) -> tuple[dict[str, Any], str | None]:
         general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
         self._vs_general_test_options().validate_value(general_test_options, "general_opts")
 
@@ -1770,10 +1827,20 @@ class ModeTestNotifications(ModeNotifications):
             "HOSTNAME": hostname,
         }
 
+        notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
+        dispatch = None
+        if notify_plugin:
+            method, parameter_id = notify_plugin["notify_plugin"]
+            dispatch = method
+            all_parameters = NotificationParameterConfigFile().load_for_reading()
+            method_parameters = all_parameters[method][parameter_id]["parameter_properties"]
+            context.update({key: str(value) for key, value in method_parameters.items()})
+
         simulation_mode = general_test_options["simulation_mode"]
         assert isinstance(simulation_mode, tuple)
         if "status_change" in simulation_mode:
             context["NOTIFICATIONTYPE"] = "PROBLEM"
+            context["HOSTPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
             context["PREVIOUSHOSTHARDSTATE"] = host_state_name(
                 int(simulation_mode[1]["host_states"][0])
             )
@@ -1827,7 +1894,7 @@ class ModeTestNotifications(ModeNotifications):
         else:
             context["HOSTOUTPUT"] = plugin_output
 
-        return context
+        return context, dispatch
 
     def _add_missing_host_context(self, context: NotificationContext) -> None:
         """We don't want to transport all possible informations via HTTP vars
@@ -1836,7 +1903,7 @@ class ModeTestNotifications(ModeNotifications):
         resp = sites.live().query(
             "GET hosts\n"
             "Columns: custom_variable_names custom_variable_values groups "
-            "contact_groups labels host_alias\n"
+            "contact_groups labels host_alias host_address\n"
             f"Filter: host_name = {hostname}\n"
         )
         if len(resp) < 1:
@@ -1850,6 +1917,7 @@ class ModeTestNotifications(ModeNotifications):
         context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
         self._set_labels(context, resp[0][4], "HOST")
         context["HOSTALIAS"] = resp[0][5]
+        context["HOSTADDRESS"] = resp[0][6]
 
     def _set_custom_variables(
         self,
@@ -1889,6 +1957,8 @@ class ModeTestNotifications(ModeNotifications):
         context["SERVICECHECKCOMMAND"] = resp[0][4]
         self._set_labels(context, resp[0][5], "SERVICE")
 
+        context["SERVICEPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
+
     def _set_labels(
         self,
         context: NotificationContext,
@@ -1918,6 +1988,34 @@ class ModeTestNotifications(ModeNotifications):
         html.close_td()
         html.close_tr()
         html.close_table()
+
+    def _notification_script_choices_with_parameters(self):
+        return_choices = []
+        all_parameters = NotificationParameterConfigFile().load_for_reading()
+        for script_name, title in notification_script_choices():
+            choices = []
+            if script_name in notification_parameter_registry and script_name in all_parameters:
+                for parameter_id in all_parameters[script_name]:
+                    choices.append(
+                        (
+                            parameter_id,
+                            all_parameters[script_name][parameter_id]["general"]["description"],
+                        )
+                    )
+
+            vs: DropdownChoice = DropdownChoice(
+                title=_("Notification parameter"),
+                choices=choices,
+                empty_text=_(
+                    "There are no parameters defined for this method yet. Please "
+                    '<a href="wato.py?mode=notification_parameters&method=%s">create</a> '
+                    "at least one first."
+                )
+                % script_name,
+            )
+
+            return_choices.append((script_name, title, vs))
+        return return_choices
 
     def _vs_general_test_options(self) -> Dictionary:
         return Dictionary(
@@ -2012,11 +2110,20 @@ class ModeTestNotifications(ModeNotifications):
             validate=_validate_general_opts,
         )
 
-    def _vs_dispatched_option(self) -> Checkbox:
-        return Checkbox(
-            title=_("Dispatch notification"),
-            label=_("Send out HTML/ASCII email notification according to notification rules"),
-            default_value=False,
+    def _vs_notify_plugin(self) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "notify_plugin",
+                    CascadingDropdown(
+                        label=_("Notification method and parameter"),
+                        title=_("Send out notification for specific method"),
+                        choices=self._notification_script_choices_with_parameters,
+                        default_value=("mail", None),
+                        orientation="horizontal",
+                    ),
+                ),
+            ],
         )
 
     def _vs_advanced_test_options(self) -> Foldable:
@@ -2074,6 +2181,14 @@ class ModeTestNotifications(ModeNotifications):
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
             )
+
+    def _save_test_notification_display_options(self) -> None:
+        user.save_file(
+            "test_notification_display_options",
+            {
+                "show_user_rules": self._show_user_rules,
+            },
+        )
 
 
 def _validate_general_opts(value: dict, varprefix: str) -> None:
@@ -3162,7 +3277,7 @@ class ABCNotificationParameterMode(WatoMode):
             if self._clone_id and not request.var("_clear"):
                 try:
                     self._parameter = deepcopy(method_parameters[self._clone_id])
-                except IndexError:
+                except KeyError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
             else:
                 self._parameter = NotificationParameterItem(
@@ -3522,7 +3637,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return _("Created new notification parameter")
         return _("Changed notification parameter #%s") % edit_nr
 
-    def _form_spec(self) -> Catalog:
+    def _form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return notification_parameter_registry.form_spec(self._method())
 
     def action(self) -> ActionResult:
@@ -3588,12 +3703,25 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
+        self._clone_nr = request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
         notifications_rules = list(NotificationRuleConfigFile().load_for_reading())
+        if self._clone_nr >= 0 and not request.var("_clear"):
+            try:
+                rule = deepcopy(notifications_rules[self._clone_nr])
+                rule["rule_id"] = new_notification_rule_id()
+                notifications_rules.append(rule)
+                NotificationRuleConfigFile().save(notifications_rules)
+                self._edit_nr = len(notifications_rules) - 1
+            except IndexError:
+                raise MKUserError(None, _("Notification rule does not exist."))
+
         if self._edit_nr >= len(notifications_rules):
             raise MKUserError(None, _("Notification rule does not exist."))
         self._object_id: str | None = (
-            None if self._new else notifications_rules[self._edit_nr]["rule_id"]
+            None
+            if self._new and self._clone_nr < 0
+            else notifications_rules[self._edit_nr]["rule_id"]
         )
         quick_setup = quick_setup_registry["notification_rule"]
         self._quick_setup_id = quick_setup.id
@@ -3636,7 +3764,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
             app_name="quick_setup",
             data={
                 "quick_setup_id": self._quick_setup_id,
-                "mode": "guided" if self._new else "overview",
+                "mode": "guided" if self._new and self._clone_nr < 0 else "overview",
                 "toggle_enabled": True,
                 "object_id": self._object_id,
             },

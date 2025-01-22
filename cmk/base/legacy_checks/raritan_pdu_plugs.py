@@ -38,7 +38,7 @@ def check_raritan_pdu_plugs(item, params, parsed):
     expected_state = params["required_state"] or params["discovered_state"]
 
     if state != expected_state:
-        yield (2, "Status: %s (expected: %s)" % (state, expected_state))
+        yield (2, f"Status: {state} (expected: {expected_state})")
     else:
         yield 0, "Status: %s" % state
 

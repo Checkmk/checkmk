@@ -275,6 +275,7 @@ def ipmi_status_txt_mapping(status_txt: str) -> State:
             "drive fault",
             "predictive failure",
             "power supply ac lost",
+            "redundancy lost",
         )
     ):
         return State.OK

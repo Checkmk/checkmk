@@ -2,46 +2,23 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:proto.bzl", "py_proto_library")
+load("//:bazel_variables.bzl", "edition_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
-
-# TODO: It would be way better if rules_proto would already support the mypy plugin, see:
-# https://github.com/protocolbuffers/protobuf/issues/10366
-load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
-load("//bazel/rules:proto.bzl", "mypy_compile")
-
-genrule(
-    name = "_generate_requirements_in",
-    srcs = [
-        "@//:Pipfile",
-        "@//:Pipfile.lock",
-    ],
-    outs = ["requirements_in.orig"],
-    # We need to filter out editable reqs are the relative paths are not
-    # accessible in the sandbox.  Failing to do so raises an `InstallationError`.
-    cmd = "pipenv requirements --dev | grep -Ev '^\\-e[[:space:]]' > $@",
-)
-
-FILTER_OUT = [
-    # Provided elsewhere
-    "rrdtool",
-]
 
 genrule(
     name = "_prune_requirements_in",
-    srcs = ["requirements_in.orig"],
+    srcs = ["//cmk:requirements.txt"],
     outs = ["requirements_pruned.txt"],
-    cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
+    cmd = "cat $< | grep -v -e ^rrdtool > $@",
 )
 
 genrule(
     name = "_pin_protobuf_requirement",
-    srcs = ["requirements_pruned.txt"],
-    outs = ["requirements.txt"],
+    srcs = [":requirements_pruned.txt"],
+    outs = ["requirements_protobuf_pinned.txt"],
     # We go for "compatible release" with `~=`.
     cmd = "cat $< <(echo protobuf~=%s) > $@" % PROTOBUF_PYTHON_VERSION,
-    visibility = ["//:__pkg__"],
+    visibility = ["//:__subpackages__"],
 )
 
 REQUIRED_EXTERNAL_DEPS = [
@@ -55,7 +32,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "botocore",
     "cryptography",
     "cython",
-    "dicttoxml",
     "docstring-parser",
     "exchangelib",  # missing wheel
     "feedparser",
@@ -81,6 +57,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "openapi-spec-validator",
     "opentelemetry-api",
     "opentelemetry-exporter-otlp",
+    "opentelemetry-instrumentation-fastapi",
     "opentelemetry-instrumentation-redis",
     "opentelemetry-instrumentation-requests",
     "opentelemetry-instrumentation-wsgi",
@@ -119,14 +96,12 @@ REQUIRED_EXTERNAL_DEPS = [
     "redis",
     "reportlab",
     "requests",
-    "requests-kerberos",  # krb5: missing wheel
     "requests-oauthlib",
     "robotframework",
     "roman",
     "setproctitle",
     "setuptools-scm",
     "snmpsim-lextudio",
-    "typing-extensions",
     "urllib3",
     "vcrpy",
     "watchdog",
@@ -164,6 +139,7 @@ CMK_PACKAGES = [
     "//packages/cmk-agent-receiver",
     "//packages/cmk-ccc",
     "//packages/cmk-crypto",
+    "//packages/cmk-events",
     "//packages/cmk-graphing",
     "//packages/cmk-livestatus-client",
     "//packages/cmk-livestatus-client:py_livestatus",
@@ -173,7 +149,13 @@ CMK_PACKAGES = [
     "//packages/cmk-server-side-calls",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
-]
+] + select({
+    "@//:gpl_repo": [],
+    "@//:gpl+enterprise_repo": [
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+    ],
+})
 
 py_library(
     name = "lib_cmk",
@@ -205,63 +187,16 @@ py_library(
     ],
 )
 
-py_console_script_binary(
-    name = "protoc-gen-mypy",
-    pkg = requirement("mypy-protobuf"),
-    script = "protoc-gen-mypy",
-)
-
-proto_plugin(
-    name = "mypy",
-    outputs = ["{protopath}_pb2.pyi"],
-    tool = ":protoc-gen-mypy",
-)
-
-mypy_compile(
-    name = "mypy_proto_stubs",
-    protos = [
-        "//:config_proto",
-        "//:cycletime_proto",
-        "//:state_proto",
-    ],
-)
-
-filegroup(
-    name = "python_proto_files",
-    srcs = [
-        ":config_proto_pb2",
-        ":mypy_proto_stubs",
-        ":state_proto_pb2",
-    ],
-)
-
-py_proto_library(
-    name = "config_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:config_proto"],
-)
-
-py_proto_library(
-    name = "cycletime_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:cycletime_proto"],
-)
-
-py_proto_library(
-    name = "state_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:state_proto"],
-)
-
 [py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
     deps = [
-        "config_proto_pb2",
+        # TODO: Shouldn't we add "cycletime_" and "state_" here?
+        "//non-free/packages/cmc-protocols:config_proto_pb2",
         "lib_cmk",
-    ],
+    ] + edition_deps[edition],
 ) for edition, srcs in [
     ("cce", CCE_PY),
     ("cee", CEE_PY),
@@ -277,13 +212,14 @@ py_library(
     imports = [".."],
     visibility = ["//tests/unit:__pkg__"],
     deps = [
+        "//agents/plugins:mk_jolokia",
         "@rrdtool_native//:rrdtool_python_lib",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
-            "config_proto_pb2",
-            "cycletime_proto_pb2",
-            "state_proto_pb2",
+            "//non-free/packages/cmc-protocols:config_proto_pb2",
+            "//non-free/packages/cmc-protocols:cycletime_proto_pb2",
+            "//non-free/packages/cmc-protocols:state_proto_pb2",
         ],
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
@@ -311,7 +247,7 @@ py_wheel(
     deps = [
         "lib_cmk",
         "lib_cmk_" + edition,
-        "config_proto_pb2",
+        "//non-free/packages/cmc-protocols:config_proto_pb2",
     ],
 ) for edition in [
     "cce",
@@ -332,8 +268,7 @@ py_pytest_main(
 py_doc_test(
     name = "doctest",
     srcs = [
-        "//cmk:lib_cmk",
-        "//cmk:lib_cmk_cre",
+        "//cmk:lib_cmk_repo",
     ],
     env = {
         "PYTHONWARNINGS": "ignore",

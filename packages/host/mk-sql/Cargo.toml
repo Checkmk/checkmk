@@ -1,12 +1,13 @@
 [package]
 name = "mk-sql"
 version = "0.1.0"
+workspace = ".."
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tiberius = { version = "0.12.2", features = [
+tiberius = { version = "0.12.3", features = [
   "winauth",
   "sql-browser-tokio",
   # "integrated-auth-gssapi",
@@ -16,27 +17,25 @@ tiberius = { version = "0.12.2", features = [
 # need to compile OpenSSL. See:
 # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
 # https://github.com/rust-cross/rust-musl-cross/issues/44
-openssl = { version = "0.10.57", features = ["vendored"] }
-tokio = { version = "1.32.0", features = [
+openssl = { version = "0.10.68", features = ["vendored"] }
+tokio = { version = "1.42.0", features = [
   "full",
   "rt",
   "rt-multi-thread",
   "macros",
 ] }
 # tokio-rustls = "0.24.1"
-tokio-util = { version = "0.7.8", features = ["compat"] }
-anyhow = "1.0.75"
+tokio-util = { version = "0.7.13", features = ["compat"] }
+anyhow = "1.0.94"
 # tokio-macros = "2.1.0"
-flexi_logger = { version = "0.27", default-features = false } # extension for log to allow log redirection
+flexi_logger = { version = "0.29", default-features = false } # extension for log to allow log redirection
 log = { version = "0.4" }
-clap = { version = "4.1.*", features = [
-  "derive",
-] } # replace with 4.4.2 if rutsc >= 1.70
-yaml-rust2 = "0.8.0"
-lazy_static = { version = "1.4" }
-futures = { version = "0.3.25" }
+clap = { version = "4.5.22", features = ["derive"] }
+yaml-rust2 = "0.9.0"
+lazy_static = { version = "1.5" }
+futures = { version = "0.3.31" }
 # used for New Types derives, may be removed
-derive_more = { version = "0.99", features = [
+derive_more = { version = "1.0", features = [
   "from",
   "display",
   "into",
@@ -46,7 +45,7 @@ derive_more = { version = "0.99", features = [
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
-odbc-api = "7.2.3"
+odbc-api = "10.0.0"
 
 [dev-dependencies]
 tempfile = { version = "*" }

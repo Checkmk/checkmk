@@ -11,10 +11,12 @@ be called manually.
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from itertools import chain
 from pathlib import Path
 from typing import Literal
@@ -41,6 +43,7 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
@@ -69,10 +72,11 @@ def main(
         tty.yellow,
         tty.normal,
     )
-    exit_code = main_check_config(logger, arguments.conflict)
-    if exit_code != 0 or arguments.dry_run:
-        return exit_code
-    return main_update_config(logger, arguments.conflict)
+    with _force_automations_cli_interface():
+        exit_code = main_check_config(logger, arguments.conflict)
+        if exit_code != 0 or arguments.dry_run:
+            return exit_code
+        return main_update_config(logger, arguments.conflict)
 
 
 def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
@@ -132,7 +136,8 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         type=ConflictMode,
         help=(
             f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
-            f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"With '{ConflictMode.FORCE}', '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"'{ConflictMode.FORCE}' continues the update even if errors occur during the pre-flight checks. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
     )
@@ -295,3 +300,12 @@ def _initialize_base_environment() -> None:
     # Watch out: always load the plugins before loading the config.
     # The validation step will not be executed otherwise.
     base_config.load()
+
+
+@contextmanager
+def _force_automations_cli_interface() -> Generator[None]:
+    try:
+        os.environ[ENV_VARIABLE_FORCE_CLI_INTERFACE] = "True"
+        yield
+    finally:
+        os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)

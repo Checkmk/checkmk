@@ -85,6 +85,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -110,7 +111,6 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
@@ -3956,7 +3956,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         self._empty_text = empty_text if empty_text is not None else _("(nothing selected)")
         self._loaded_at: int | None = None
         self._render_function = (
-            render_function if render_function is not None else (lambda id, val: val)
+            render_function if render_function is not None else (lambda _id, val: val)
         )
         self._toggle_all = toggle_all
         self._render_orientation = render_orientation

@@ -18,8 +18,9 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.import_module_hack import import_module_hack
 from tests.testlib.utils import wait_until
+
+from tests.unit.testlib.utils import import_module_hack
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -618,14 +619,11 @@ def test_blocking_lock_from_multiple_threads(
 ) -> None:
     path = path_type(test_file)
 
-    debug = False
     acquired = []
     saw_someone_wait: list[int] = []
 
     def acquire(n):
         assert not store.have_lock(path)
-        if debug:
-            print(f"{n}: Trying lock\n")
         store.acquire_lock(path, blocking=True)
         assert store.have_lock(path)
 
@@ -633,9 +631,6 @@ def test_blocking_lock_from_multiple_threads(
         if not saw_someone_wait:
             _wait_for_waiting_lock()
             saw_someone_wait.append(1)
-
-        if debug:
-            print(f"{n}: Got lock\n")
 
         acquired.append(1)
         # This part is guarded by the lock, so we should never have more than one entry in here,
@@ -645,8 +640,6 @@ def test_blocking_lock_from_multiple_threads(
         acquired.pop()
         store.release_lock(path)
         assert not store.have_lock(path)
-        if debug:
-            print(f"{n}: Released lock\n")
 
     # We try to append 100 ints to `acquired` in 20 threads simultaneously. As it is guarded by
     # the lock, we only ever can have one entry in the list at the same time.

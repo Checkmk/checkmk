@@ -5,13 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import SlideIn from '@/components/slidein/SlideIn.vue'
-import type { Catalog } from '@/form/components/vue_formspec_components'
+import SlideIn from '@/components/SlideIn.vue'
+import type { Catalog, Dictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import FormCatalog from '@/form/components/forms/FormCatalog.vue'
+import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
 import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -28,35 +28,47 @@ const catalog = ref<Catalog>({
   title: 'title',
   help: 'some_help',
   validators: [],
-  topics: [
+  elements: [
     {
       name: 'some_topic_id',
-      dictionary: {
-        type: 'dictionary',
-        title: 'dict title',
-        validators: [],
-        help: 'dict help',
-        no_elements_text: 'no_text',
-        additional_static_elements: {},
-        elements: [
-          {
-            name: 'element_name',
-            required: false,
-            default_value: '',
-            group: null,
-            parameter_form: {
-              type: 'string',
-              title: 'string title',
-              help: 'some string help',
-              validators: []
-            }
-          }
-        ],
-        layout: 'one_column',
-        groups: []
-      }
+      title: 'some_topic_title',
+      elements: [
+        {
+          name: 'element_name',
+          required: true,
+          default_value: {},
+          type: 'topic_element',
+          parameter_form: {
+            type: 'dictionary',
+            title: 'dict title',
+            validators: [],
+            help: 'dict help',
+            i18n_base: { required: 'required' },
+            no_elements_text: 'no_text',
+            additional_static_elements: {},
+            elements: [
+              {
+                name: 'element_name',
+                render_only: false,
+                required: false,
+                default_value: '',
+                group: null,
+                parameter_form: {
+                  type: 'string',
+                  title: 'string title',
+                  help: 'some string help',
+                  validators: []
+                }
+              }
+            ],
+            layout: 'one_column',
+            groups: []
+          } as Dictionary
+        }
+      ]
     }
-  ]
+  ],
+  i18n_base: { required: 'required' }
 })
 </script>
 

@@ -11,26 +11,38 @@ def main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_EDITIONS",
     ]);
-    /// Might also be taken from editions.yml - there we also have 'saas' and 'raw' but
-    /// AFAIK there is no way to extract the editions we want to test generically, so we
-    /// hard-code these:
-    def all_editions = ["enterprise", "cloud", "managed"];
-    def editions = params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep() ?: all_editions;
-    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
+
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
+    def all_editions = ["enterprise", "cloud", "managed", "raw", "saas"];
+    def selected_editions_default = ["enterprise", "cloud", "saas"];
+    def params_editions = params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep();
+    def selected_editions = [];
+    if (params_editions) {
+      selected_editions = params_editions;
+    } else if ("editions" in job_params_from_comments) {
+      selected_editions = job_params_from_comments.get("editions");
+    } else {
+      selected_editions = selected_editions_default;
+    }
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_editions:.. │${all_editions}│
-        |editions:...... │${editions}│
-        |base_folder:... │${base_folder}│
+        |all_editions:....... │${all_editions}│
+        |selected_edtions:... │${selected_editions}│
+        |branch_base_folder:. │${branch_base_folder}│
         |===================================================
         """.stripMargin());
+    currentBuild.description += "<br>Selected editions: <b>${selected_editions.join(" ")}</b>";
 
     currentBuild.result = parallel(
-        all_editions.collectEntries { edition -> [
-            ("${edition}") : {
-                def run_condition = edition in editions;
+        all_editions.collectEntries { edition ->
+            [("${edition}") : {
+                def run_condition = edition in selected_editions;
                 /// this makes sure the whole parallel thread is marked as skipped
                 if (! run_condition){
                     Utils.markStageSkippedForConditional("${edition}");
@@ -40,13 +52,13 @@ def main() {
                     condition: run_condition,
                     raiseOnError: false,
                 ) {
-                    build(
-                        job: "${base_folder}/builders/test-gui-e2e-f12less",
+                    smart_build(
+                        job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
-                            string(name: 'EDITION', value: edition),
-                            string(name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF),
-                            string(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                            string(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: 'EDITION', value: edition),
+                            stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+                            stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
                         ]
                     );
                 }
@@ -56,4 +68,3 @@ def main() {
 }
 
 return this;
-

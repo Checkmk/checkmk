@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { DataSize } from '@/form/components/vue_formspec_components'
+import type { DataSize } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -37,6 +38,7 @@ const magnitudeOptions = computed(() => {
 
 <template>
   <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+  <CmkSpace size="small" />
   <input
     :id="componentId"
     v-model="value[0]"
@@ -45,6 +47,7 @@ const magnitudeOptions = computed(() => {
     step="any"
     type="number"
   />
+  <CmkSpace size="small" />
   <CmkDropdown
     v-model:selected-option="value[1]"
     :options="magnitudeOptions"

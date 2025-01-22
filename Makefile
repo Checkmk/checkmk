@@ -10,12 +10,8 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-PIPENV             := scripts/run-pipenv
+UVENV              := scripts/run-uvenv
 
-OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
-
-LOCK_FD := 200
-LOCK_PATH := .venv.lock
 PY_PATH := .venv/bin/python
 ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
@@ -26,12 +22,12 @@ endif
 # The CI environment variable should only be set by Jenkins
 CI ?= false
 
-.PHONY: announcement all build check-setup \
+.PHONY: announcement all build \
         clean dist documentation \
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        Pipfile.lock protobuf-files frontend-vue .venv
+        requirements_all_lock.txt protobuf-files frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -49,15 +45,6 @@ deb:
 
 cma:
 	$(MAKE) -C omd cma
-
-check-setup:
-	echo "From here on we check the successful setup of some parts ..."
-	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
-	  echo "Your PATH is missing '~/.local/bin' to work properly with pipenv."; \
-	  exit 1; \
-	else \
-		echo "Checks passed"; \
-	fi
 
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
@@ -126,8 +113,8 @@ frontend-vue:
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
 
 packages:
@@ -154,18 +141,6 @@ ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 endif
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
-	@export PYTHONPATH=${REPO_PATH} ; \
-	export TMPFILE=$$(mktemp);  \
-	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
-	mv $$TMPFILE $@
-
-
-openapi-clean:
-	rm -f $(OPENAPI_SPEC)
-openapi: $(OPENAPI_SPEC)
-
-
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
 # fact, we should really clean up all this cleaning-chaos and finally follow the
@@ -179,13 +154,14 @@ clean:
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
+	    --exclude="**/*.code-workspace" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
-	    --exclude=".werks/.my_ids"
+	    --exclude=".werks/.my_ids" \
+	    --exclude="user.bazelrc"
 
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock" \
 	    --exclude=".cargo" \
 	    --exclude="node_modules" \
 	    --exclude=".cache"
@@ -215,14 +191,13 @@ buildclean:
 setup:
 	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
 	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
-	$(MAKE) check-setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C non-free/cmc-protocols protobuf-files
+	$(MAKE) -C non-free/packages/cmc-protocols protobuf-files
 endif
 
 format: format-python format-c format-shell format-bazel
@@ -244,7 +219,7 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 format-python:
-	./scripts/run-pipenv run ruff check --select I --fix
+	./scripts/run-uvenv ruff check --select I --fix
 	./.venv/bin/ruff format
 
 
@@ -255,34 +230,41 @@ what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
 
 format-bazel:
-	scripts/run-buildifier --lint=fix --mode=fix
+	scripts/run-buildifier --mode=fix
+
+lint-bazel:
+	scripts/run-buildifier --lint=fix
 
 documentation:
 	echo Nothing to do here remove this target
 
 sw-documentation-docker:
-	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
+	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
-Pipfile.lock:
-	@( \
-		flock $(LOCK_FD); \
-		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify > /dev/null; then \
-			if [ "${CI}" == "true" ]; then \
-				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
-				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
-				echo "make Pipfile.lock"; \
-				exit 1; \
-			fi; \
-			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
-			|| ( $(RM) -r .venv ; exit 1 ) \
-			&& ( exec $(LOCK_FD)>&- ; bazel run //:requirements.update ) \
-		fi \
-	) $(LOCK_FD)>$(LOCK_PATH)
+# Use this target to update the requirements_*_lock.txt files
+# TODO: Find a _way_ better ways to handle this
+relock_venv:
+	for type in runtime all; do \
+	    filename=requirements_$${type}_lock.txt; \
+	    > $${filename}; \
+	done; \
+	bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
 
-
-# .venv is PHONY because the dependencies are resolved now in the make_venv script
-.venv: Pipfile.lock
-	@( \
-		flock $(LOCK_FD); \
-		$(REPO_PATH)/scripts/make_venv \
-	) $(LOCK_FD)>$(LOCK_PATH)
+# .venv is PHONY because the dependencies are resolved by bazel
+.venv:
+	@set -e; \
+	if ! bazel test //:requirements_test > /dev/null; then \
+		if [ "${CI}" == "true" ]; then \
+			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
+			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \
+			echo "bazel run //:requirements.update"; \
+			exit 1; \
+		fi; \
+		# TODO: We currently need to first have an updated runtime lock file as this is the input for the all_lock file. \
+		# Therefore execution order matters! \
+		bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
+		bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
+	fi; \
+	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

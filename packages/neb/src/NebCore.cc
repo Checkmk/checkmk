@@ -170,16 +170,16 @@ const IHostGroup *NebCore::find_hostgroup(const std::string &name) const {
 
 bool NebCore::all_of_hosts(
     const std::function<bool(const IHost &)> &pred) const {
-    return std::all_of(
-        ihosts_by_handle_.cbegin(), ihosts_by_handle_.cend(),
-        [pred](const auto &entry) { return pred(*entry.second); });
+    return std::ranges::all_of(ihosts_by_handle_, [pred](const auto &entry) {
+        return pred(*entry.second);
+    });
 }
 
 bool NebCore::all_of_services(
     const std::function<bool(const IService &)> &pred) const {
-    return std::all_of(
-        iservices_by_handle_.cbegin(), iservices_by_handle_.cend(),
-        [pred](const auto &entry) { return pred(*entry.second); });
+    return std::ranges::all_of(iservices_by_handle_, [pred](const auto &entry) {
+        return pred(*entry.second);
+    });
 }
 
 const IHost *NebCore::getHostByDesignation(
@@ -242,8 +242,8 @@ const IContact *NebCore::find_contact(const std::string &name) const {
 
 bool NebCore::all_of_contacts(
     const std::function<bool(const IContact &)> &pred) const {
-    return std::all_of(
-        icontacts_by_handle_.cbegin(), icontacts_by_handle_.cend(),
+    return std::ranges::all_of(
+        icontacts_by_handle_,
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
@@ -332,12 +332,10 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments(
 bool NebCore::all_of_comments(
     const std::function<bool(const IComment &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
-    return std::all_of(_comments.cbegin(), _comments.cend(),
-                       [this, &pred](const auto &comment) {
-                           return pred(NebComment{
-                               *comment.second, *ihost(comment.second->_host),
+    return std::ranges::all_of(_comments, [this, &pred](const auto &comment) {
+        return pred(NebComment{*comment.second, *ihost(comment.second->_host),
                                iservice(comment.second->_service)});
-                       });
+    });
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
@@ -383,12 +381,11 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
 bool NebCore::all_of_downtimes(
     // TODO(sp): Do we need a mutex here?
     const std::function<bool(const IDowntime &)> &pred) const {
-    return std::all_of(_downtimes.cbegin(), _downtimes.cend(),
-                       [this, &pred](const auto &downtime) {
-                           return pred(NebDowntime{
-                               *downtime.second, *ihost(downtime.second->_host),
-                               iservice(downtime.second->_service)});
-                       });
+    return std::ranges::all_of(_downtimes, [this, &pred](const auto &downtime) {
+        return pred(NebDowntime{*downtime.second,
+                                *ihost(downtime.second->_host),
+                                iservice(downtime.second->_service)});
+    });
 }
 
 bool NebCore::all_of_timeperiods(
@@ -404,22 +401,22 @@ bool NebCore::all_of_timeperiods(
 
 bool NebCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
-    return std::all_of(
-        icontactgroups_by_handle_.cbegin(), icontactgroups_by_handle_.cend(),
+    return std::ranges::all_of(
+        icontactgroups_by_handle_,
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NebCore::all_of_host_groups(
     const std::function<bool(const IHostGroup &)> &pred) const {
-    return std::all_of(
-        ihostgroups_by_handle_.cbegin(), ihostgroups_by_handle_.cend(),
+    return std::ranges::all_of(
+        ihostgroups_by_handle_,
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NebCore::all_of_service_groups(
     const std::function<bool(const IServiceGroup &)> &pred) const {
-    return std::all_of(
-        iservicegroups_by_handle_.cbegin(), iservicegroups_by_handle_.cend(),
+    return std::ranges::all_of(
+        iservicegroups_by_handle_,
         [pred](const auto &entry) { return pred(*entry.second); });
     return true;
 }
@@ -548,9 +545,8 @@ std::vector<std::string> toMetrics(const std::string &host_name,
     std::vector<std::string> metrics;
     auto names = scan_rrd(paths.rrd_multiple_directory() / host_name,
                           description, logger);
-    std::transform(std::begin(names), std::end(names),
-                   std::back_inserter(metrics),
-                   [](auto &&m) { return m.string(); });
+    std::ranges::transform(names, std::back_inserter(metrics),
+                           [](auto &&m) { return m.string(); });
     return metrics;
 }
 }  // namespace
@@ -635,10 +631,10 @@ MetricLocation NebCore::metricLocation(const std::string &host_name,
                                        const std::string &service_description,
                                        const Metric::Name &var) const {
     return MetricLocation{
-        paths()->rrd_multiple_directory() / host_name /
-            pnp_cleanup(service_description + "_" +
-                        Metric::MangledName(var).string() + ".rrd"),
-        "1"};
+        .path_ = paths()->rrd_multiple_directory() / host_name /
+                 pnp_cleanup(service_description + "_" +
+                             Metric::MangledName(var).string() + ".rrd"),
+        .data_source_name_ = "1"};
 }
 
 bool NebCore::pnp4nagiosEnabled() const {

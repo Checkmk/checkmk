@@ -398,6 +398,7 @@ class DocReference(Enum):
     ANALYZE_CONFIG = "analyze_configuration"
     ANALYZE_NOTIFICATIONS = "notifications#_rule_evaluation_by_the_notification_module"
     AWS = "monitoring_aws"
+    AWS_EC2 = "monitoring_aws#_manually_creating_hosts_for_ec2_instances"
     AZURE = "monitoring_azure"
     BACKUPS = "backup"
     BI = "bi"  # Business Intelligence
@@ -424,6 +425,7 @@ class DocReference(Enum):
     INTRO_LINUX = "intro_setup_monitor#linux"
     INTRO_SERVICES = "intro_setup_monitor#services"
     INTRO_WELCOME = "welcome"
+    INTRO_SETUP = "intro_setup"
     KUBERNETES = "monitoring_kubernetes"
     LICENSING = "license"
     LDAP = "ldap"

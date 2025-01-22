@@ -87,7 +87,6 @@ pkg_filegroup(
         ":freetds_include_files",
         ":freetds_lib_pkg",
     ],
-    prefix = "freetds",
     visibility = ["//visibility:public"],
 )
 

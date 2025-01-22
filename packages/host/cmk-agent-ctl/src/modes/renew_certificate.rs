@@ -119,8 +119,8 @@ fn conditionally_renew_connection_cert(
     connection: &mut config::TrustedConnectionWithRemote,
     renew_certificate_api: &impl agent_receiver_api::RenewCertificate,
 ) -> AnyhowResult<()> {
-    let raw_cert = certs::rustls_certificate(&connection.trust.certificate)?.0;
-    let (_rem, cert) = x509_parser::parse_x509_certificate(&raw_cert)?;
+    let cert = certs::rustls_certificate(&connection.trust.certificate)?;
+    let (_rem, cert) = x509_parser::parse_x509_certificate(cert.as_ref())?;
     let Some(validity) = cert.validity().time_to_expiration() else {
         warn!("Certificate for {} expired, can't renew", site_id);
         return Ok(());

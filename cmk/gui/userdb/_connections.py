@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, Literal, Mapping, NewType, NotRequired, Sequence, TypedDict
+from typing import Any, cast, Literal, NewType, NotRequired, TypedDict
 
 from cmk.ccc import store
 
@@ -164,6 +164,11 @@ SerializedCertificateSpec = (
 ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
 
 
+class SAMLRequestedAuthnContext(TypedDict):
+    comparison: Literal["exact", "minimum", "maximum", "better"]
+    authn_context_class_ref: Sequence[str]
+
+
 class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     name: str
     description: str
@@ -177,6 +182,7 @@ class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     connection_timeout: tuple[int, int]  # connection timeout, read timeout
     signature_certificate: SerializedCertificateSpec
     encryption_certificate: NotRequired[SerializedCertificateSpec]
+    requested_authn_context: NotRequired[SAMLRequestedAuthnContext]
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str
@@ -287,18 +293,6 @@ def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
         for saml_id, saml_connection in get_saml_connections().items()
         if not saml_connection["disabled"]
     }
-
-
-# The saved configuration for user connections is a bit inconsistent, let's fix
-# this here once and for all.
-def fix_user_connections() -> None:
-    for cfg in active_config.user_connections:
-        # Although our current configuration always seems to have a 'disabled'
-        # entry, this might not have always been the case.
-        cfg.setdefault("disabled", False)
-        # Only migrated configurations have a 'type' entry, all others are
-        # implictly LDAP connections.
-        cfg.setdefault("type", "ldap")
 
 
 def locked_attributes(connection_id: str | None) -> Sequence[str]:

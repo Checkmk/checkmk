@@ -13,8 +13,9 @@ def build_stages(packages_file, force_build) {
         parallel packages.collectEntries { p ->
             [("${p.name}"): {
                 stage(p.name) {
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                         def job = upstream_build(
+                            omit_build_venv: true,
                             download: false,
                             relative_job_name: "builders/build-cmk-package",
                             force_build: force_build,
@@ -25,7 +26,7 @@ def build_stages(packages_file, force_build) {
                                 "COMMAND_LINE": p.command_line,
                             ],
                             build_params_no_check: ["CUSTOM_GIT_REF": cmd_output("git rev-parse HEAD")],
-                        )
+                        );
                         if (!job.new_build.asBoolean()) {
                             Utils.markStageSkippedForConditional("${p.name}");
                         }
@@ -44,9 +45,8 @@ def build_stages(packages_file, force_build) {
 def preparation(packages_file) {
     stage("Preparation") {
         inside_container() {
-            sh("rm -rf results; mkdir results")
-            sh("buildscripts/scripts/collect_packages.py packages > ${packages_file}");
-            sh("buildscripts/scripts/collect_packages.py non-free/packages >> ${packages_file}")
+            sh("rm -rf results; mkdir results");
+            sh("buildscripts/scripts/collect_packages.py packages non-free/packages > ${packages_file}");
         }
     }
 }
@@ -57,10 +57,10 @@ def main() {
     ]);
 
     dir("${checkout_dir}") {
-        def results_dir = "results"
-        def packages_file = "${results_dir}/packages_generated.json"
+        def results_dir = "results";
+        def packages_file = "${results_dir}/packages_generated.json";
 
-        preparation(packages_file)
+        preparation(packages_file);
 
         build_stages(packages_file, params.FORCE_BUILD);
 

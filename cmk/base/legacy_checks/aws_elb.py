@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_http_errors,
     check_aws_metrics,
     inventory_aws_generic_single,
+    MetricInfo,
 )
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
@@ -74,17 +75,17 @@ def check_aws_elb_statistics(item, params, parsed):
     for cw_metric_name, info_name, human_readable_func in zip(
         _aws_elb_statistics_metrics,
         ["Surge queue length", "Spillover"],
-        [int, aws_get_counts_rate_human_readable],
+        [lambda x: f"{round(x)}", aws_get_counts_rate_human_readable],
     ):
         key = "_".join(word.lower() for word in info_name.split())
         metric_infos.append(
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "levels": params.get("levels_%s" % key),
-                "human_readable_func": human_readable_func,
-                "info_name": info_name,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s" % key,
+                levels=params.get("levels_%s" % key),
+                human_readable_func=human_readable_func,
+                info_name=info_name,
+            )
         )
     return check_aws_metrics(metric_infos)
 
@@ -120,12 +121,12 @@ check_info["aws_elb"] = LegacyCheckDefinition(
 def check_aws_elb_latency(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get("Latency"),
-                "metric_name": "aws_load_balancer_latency",
-                "levels": params.get("levels_latency"),
-                "human_readable_func": render.timespan,
-            }
+            MetricInfo(
+                metric_val=parsed.get("Latency"),
+                metric_name="aws_load_balancer_latency",
+                levels=params.get("levels_latency"),
+                human_readable_func=render.timespan,
+            )
         ]
     )
 
@@ -296,13 +297,13 @@ check_info["aws_elb.healthy_hosts"] = LegacyCheckDefinition(
 def check_aws_elb_backend_connection_errors(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get("BackendConnectionErrors"),
-                "metric_name": "aws_backend_connection_errors_rate",
-                "levels": params.get("levels_backend_connection_errors_rate"),
-                "human_readable_func": aws_get_counts_rate_human_readable,
-                "info_name": "Backend connection errors",
-            }
+            MetricInfo(
+                metric_val=parsed.get("BackendConnectionErrors"),
+                metric_name="aws_backend_connection_errors_rate",
+                levels=params.get("levels_backend_connection_errors_rate"),
+                human_readable_func=aws_get_counts_rate_human_readable,
+                info_name="Backend connection errors",
+            )
         ]
     )
 

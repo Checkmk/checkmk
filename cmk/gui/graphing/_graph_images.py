@@ -94,7 +94,7 @@ def _answer_graph_image_request() -> None:
 
         graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
             user,
-            **graph_image_render_options(),
+            graph_image_render_options(),
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
@@ -154,7 +154,7 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
     )
     # Enforce settings optionally setable via request
     if api_request and api_request.get("render_options"):
-        graph_render_options.update(api_request["render_options"])
+        graph_render_options.model_copy(update=api_request["render_options"])
 
     return graph_render_options
 

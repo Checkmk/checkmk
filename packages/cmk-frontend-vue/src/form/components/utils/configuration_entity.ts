@@ -3,8 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ConfigEntityType } from '@/form/components/configuration_entity'
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+
+import { cmkFetch, type CmkFetchResponse } from '@/lib/cmkFetch'
 
 export interface EntityDescription {
   ident: string
@@ -37,15 +39,18 @@ const fetchRestAPI = async (url: string, method: string, body?: Payload) => {
   if (body) {
     params.body = JSON.stringify(body)
   }
-  const response = await fetch(url, params)
+  const response = await cmkFetch(url, params)
   return response
 }
 
-async function processSaveResponse(response: Response): Promise<SetDataResult<EntityDescription>> {
+async function processSaveResponse(
+  response: CmkFetchResponse
+): Promise<SetDataResult<EntityDescription>> {
   const returnData = await response.json()
   if (response.status === 422) {
     return { type: 'error', validationMessages: returnData.ext.validation_errors }
   }
+  await response.raiseForStatus()
   /* TODO: Handle generic errors everywhere*/
   return { type: 'success', entity: { ident: returnData.id, description: returnData.title } }
 }
@@ -56,12 +61,14 @@ export const configEntityAPI = {
       GET_CONFIG_ENTITY_SCHEMA(entityType, entityTypeSpecifier),
       'GET'
     )
+    await response.raiseForStatus()
     const data = await response.json()
     return { schema: data.extensions.schema, defaultValues: data.extensions.default_values }
   },
   getData: async (entityType: ConfigEntityType, entityId: string) => {
     const response = await fetchRestAPI(GET_CONFIG_ENTITY_DATA(entityType, entityId), 'GET')
     const data = await response.json()
+    await response.raiseForStatus()
     return data.extensions
   },
   /* TODO we should use an openAPI-generated client here */

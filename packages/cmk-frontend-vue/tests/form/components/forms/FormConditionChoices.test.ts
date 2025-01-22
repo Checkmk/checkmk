@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
-import FormConditionChoices from '@/form/components/forms/form_condition_choices'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -20,6 +20,7 @@ const spec: FormSpec.ConditionChoices = {
   type: 'condition_choices',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   condition_groups: {
     group1: {
@@ -63,6 +64,57 @@ test('FormConditionChoices shows backendValidation', async () => {
 
   screen.getByText('some message')
   screen.getByText('Condition 1')
+})
+
+test('FormConditionChoices shows required', async () => {
+  render(FormConditionChoices, {
+    props: {
+      spec,
+      data: [],
+      backendValidation: []
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'select group' })
+  expect(dropdown.textContent).toBe('select group (required)')
+})
+
+test('FormConditionChoices does not show required without validator', async () => {
+  const localSpec: FormSpec.ConditionChoices = {
+    type: 'condition_choices',
+    title: 'fooTitle',
+    help: 'fooHelp',
+    i18n_base: { required: 'required' },
+    validators: [],
+    condition_groups: {
+      group1: {
+        title: 'Group 1',
+        conditions: [
+          { name: 'condition1', title: 'Condition 1' },
+          { name: 'condition2', title: 'Condition 2' }
+        ]
+      }
+    },
+    i18n: {
+      add_condition_label: 'add condition',
+      select_condition_group_to_add: 'select group',
+      no_more_condition_groups_to_add: 'no more groups',
+      eq_operator: 'is',
+      ne_operator: 'is not',
+      or_operator: 'any of',
+      nor_operator: 'none of'
+    }
+  }
+  render(FormConditionChoices, {
+    props: {
+      spec: localSpec,
+      data: [],
+      backendValidation: []
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'select group' })
+  expect(dropdown.textContent).toBe('select group')
 })
 
 test('FormConditionChoices checks validators', async () => {

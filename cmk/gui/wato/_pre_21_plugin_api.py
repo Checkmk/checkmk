@@ -12,9 +12,16 @@ import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domain_name
+import cmk.gui.watolib.config_domains
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
+
+# Make some functions of watolib available to Setup plug-ins without using the
+# watolib module name. This is mainly done for compatibility reasons to keep
+# the current plug-in API functions working
+import cmk.gui.watolib.network_scan
+import cmk.gui.watolib.read_only
 import cmk.gui.watolib.rulespecs
 import cmk.gui.watolib.sites
 import cmk.gui.watolib.timeperiods
@@ -34,29 +41,6 @@ from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-vio
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
 )
-from cmk.gui.watolib.main_menu import register_modules, WatoModule
-from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
-from cmk.gui.watolib.rulespecs import register_check_parameters, register_rule
-
-# Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plug-in context
-subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
-subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
-subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
-subgroup_printing = RulespecGroupCheckParametersPrinters().sub_group_name
-subgroup_environment = RulespecGroupCheckParametersEnvironment().sub_group_name
-subgroup_applications = RulespecGroupCheckParametersApplications().sub_group_name
-subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
-subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
-subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
-
-import cmk.gui.watolib.config_domains
-
-# Make some functions of watolib available to Setup plug-ins without using the
-# watolib module name. This is mainly done for compatibility reasons to keep
-# the current plug-in API functions working
-import cmk.gui.watolib.network_scan
-import cmk.gui.watolib.read_only
 from cmk.gui.wato._main_module_topics import (
     MainModuleTopicAgents,
     MainModuleTopicEvents,
@@ -67,11 +51,14 @@ from cmk.gui.wato._main_module_topics import (
     MainModuleTopicServices,
     MainModuleTopicUsers,
 )
+from cmk.gui.watolib.main_menu import register_modules, WatoModule
+from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     NotificationParameter,
     register_notification_parameters,
 )
+from cmk.gui.watolib.rulespecs import register_check_parameters, register_rule
 
 from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
@@ -94,6 +81,18 @@ from .pages._password_store_valuespecs import (
     MigrateToIndividualOrStoredPassword,
     PasswordFromStore,
 )
+
+# Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
+# calls in the Setup plug-in context
+subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
+subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
+subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
+subgroup_printing = RulespecGroupCheckParametersPrinters().sub_group_name
+subgroup_environment = RulespecGroupCheckParametersEnvironment().sub_group_name
+subgroup_applications = RulespecGroupCheckParametersApplications().sub_group_name
+subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
+subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
+subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def register() -> None:  # pylint: disable=too-many-branches

@@ -51,6 +51,7 @@ module.exports = {
         mobile: "./src/js/mobile.ts",
         tracking_entry: "./src/js/tracking_entry.ts",
         side: "./src/js/side_index.ts",
+        fonts_lato: "./src/themes/facelift/fonts_inter.scss",
         facelift: "./src/themes/facelift/theme.scss",
         modern_dark: "./src/themes/modern-dark/theme.scss",
     },
@@ -115,6 +116,10 @@ module.exports = {
                                 // https://github.com/sass/dart-sass#javascript-api
                                 outputStyle: "expanded",
                                 precision: 10,
+                                // https://sass-lang.com/blog/import-is-deprecated/
+                                // we have to adjust our themes implementation first
+                                // CMK-20712
+                                silenceDeprecations: ["import"],
                             },
                         },
                     },
@@ -137,6 +142,10 @@ module.exports = {
                         {
                             source: "src/themes/facelift/images",
                             destination: "dist/themes/facelift/images",
+                        },
+                        {
+                            source: "src/themes/facelift/fonts",
+                            destination: "dist/themes/facelift/fonts",
                         },
                         {
                             source: "src/themes/facelift/theme.json",

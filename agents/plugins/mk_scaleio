@@ -9,10 +9,10 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Plugin for EMCs ScaleIO software. This plugins needs to be installed
-# on all MDM servers as the information is provdided only by an active
+# on all MDM servers as the information is provided only by an active
 # MDM member. Also it is recommended to configure a cluster host with
 # these members as nodes in Checkmk and apply the ScaleIO services to
 # this cluster host.

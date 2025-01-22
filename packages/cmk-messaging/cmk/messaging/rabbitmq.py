@@ -4,17 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for RabbitMq definitions creation"""
 
+import subprocess
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from logging import Logger
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
+DEFAULT_DEFINITIONS_FILE_NAME = "00-default.json"
+ACTIVE_DEFINITIONS_FILE_NAME = "definitions.json"
+
 DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
-DEFINITIONS_FILE = f"{DEFINITIONS_PATH}/definitions.json"
+ACTIVE_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/{ACTIVE_DEFINITIONS_FILE_NAME}"
+NEW_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/definitions.next.json"
 
 
 class User(BaseModel):
@@ -76,12 +83,7 @@ class ShovelValue(BaseModel):
 
     @classmethod
     def from_kwargs(cls, *, src_queue: str, src_uri: str, dest_uri: str) -> Self:
-        # centralized suppression.
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
-        return cls(  # type: ignore[call-arg]
-            src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri
-        )
+        return cls(src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri)
 
 
 class Shovel(BaseModel, frozen=True):
@@ -137,9 +139,25 @@ class Connection:
     connecter: Connecter
 
 
+def make_default_remote_user_permission(user_name: str) -> Permission:
+    return Permission(
+        user=user_name,
+        vhost=DEFAULT_VHOST_NAME,
+        configure="^$",
+        write=INTERSITE_EXCHANGE,
+        read="cmk.intersite..*",
+    )
+
+
 def find_shortest_paths(
     edges: Sequence[tuple[str, str]],
 ) -> Mapping[tuple[str, str], tuple[str, ...]]:
+    """
+    >>> sorted(find_shortest_paths([]).items())
+    []
+    >>> sorted(find_shortest_paths([("a", "b"), ("b", "c"), ("a", "c")]).items())
+    [(('a', 'b'), ('a', 'b')), (('a', 'c'), ('a', 'c')), (('b', 'a'), ('b', 'a')), (('b', 'c'), ('b', 'c')), (('c', 'a'), ('c', 'a')), (('c', 'b'), ('c', 'b'))]
+    """
     known_paths: dict[tuple[str, str], tuple[str, ...]] = {
         (start, end): (start, end) for start, end in edges
     }
@@ -313,13 +331,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
 
 def add_connectee_definitions(connection: Connection, definition: Definitions) -> None:
     user = User(name=connection.connecter.site_id)
-    permission = Permission(
-        user=user.name,
-        vhost=DEFAULT_VHOST_NAME,
-        configure="^$",
-        write=INTERSITE_EXCHANGE,
-        read="cmk.intersite..*",
-    )
+    permission = make_default_remote_user_permission(user.name)
     queue = Queue(
         name=f"cmk.intersite.{connection.connecter.site_id}",
         vhost=DEFAULT_VHOST_NAME,
@@ -343,3 +355,80 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
     definition.users.append(user)
     definition.permissions.append(permission)
     definition.queues.append(queue)
+
+
+def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> None:
+    definitions_file = omd_root / ACTIVE_DEFINITIONS_FILE_PATH
+    new_definitions_file = omd_root / NEW_DEFINITIONS_FILE_PATH
+    try:
+        old_definitions = Definitions.loads(definitions_file.read_text())
+    except FileNotFoundError:
+        old_definitions = Definitions()
+
+    try:
+        new_definitions = Definitions.loads(new_definitions_file.read_text())
+    except FileNotFoundError:
+        return
+
+    new_definitions_file.rename(definitions_file)
+
+    if old_definitions == new_definitions:
+        return
+
+    # run in parallel
+    for process in [
+        *_start_cleanup_unused_definitions(old_definitions, new_definitions),
+        _start_import_new_definitions(definitions_file),
+    ]:
+        (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
+
+
+def _start_cleanup_unused_definitions(
+    old_definitions: Definitions, new_definitions: Definitions
+) -> Iterator[subprocess.Popen[str]]:
+    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
+        yield rabbitmqctl_process(("delete_user", user), wait=False)
+
+    for vhost in {v.name for v in old_definitions.vhosts} - {
+        v.name for v in new_definitions.vhosts
+    }:
+        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+
+    for queue in set(
+        binding.destination
+        for binding in old_definitions.bindings
+        if binding.destination_type == "queue" and binding not in new_definitions.bindings
+    ):
+        # removed bindings are not correctly actualized in rabbitmq
+        # we delete the queue to remove the bindings
+        yield rabbitmqctl_process(("delete_queue", queue), wait=False)
+
+    # currently only shovels, but we don't have to care here
+    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
+        yield rabbitmqctl_process(
+            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
+        )
+
+
+def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
+    return rabbitmqctl_process(("import_definitions", str(definitions_file)), wait=False)
+
+
+def rabbitmqctl_process(cmd: tuple[str, ...], /, *, wait: bool) -> subprocess.Popen[str]:
+    proc = subprocess.Popen(
+        ["rabbitmqctl", *cmd],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if wait:
+        proc.wait()
+    return proc
+
+
+def _format_process(p: subprocess.Popen[str]) -> str:
+    return (
+        f"{'FAILED' if p.returncode else 'OK'}: {p.args!r}\n"  # type: ignore[misc]  # contains Any
+        f"{' '.join(p.stdout or ())}\n"
+        f"{' '.join(p.stderr or ())}"
+    )

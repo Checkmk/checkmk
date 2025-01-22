@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormString from '@/form/components/forms/FormString.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
@@ -21,6 +21,8 @@ const spec: FormSpec.String = {
   type: 'string',
   title: 'fooTitle',
   help: 'fooHelp',
+  label: 'fooLabel',
+  i18n_base: { required: 'required' },
   validators: validators,
   input_hint: 'fooInputHint',
   autocompleter: null,
@@ -36,7 +38,7 @@ test('FormString renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
 
   expect(element.value).toBe('fooData')
 })
@@ -48,7 +50,7 @@ test('FormString updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, 'some_other_value')
 
   expect(getCurrentData()).toBe('"some_other_value"')
@@ -63,7 +65,7 @@ test('FormString checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -85,6 +87,55 @@ test('FormString renders backend validation messages', async () => {
   })
 
   await screen.findByText('Backend error message')
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   expect(element.value).toBe('some_invalid_value')
+})
+
+test('FormString displays required', async () => {
+  render(FormString, {
+    props: {
+      spec,
+      data: 'fooData',
+      backendValidation: []
+    }
+  })
+
+  screen.getByText('(required)')
+})
+
+test('FormString with autocompleter loads value', async () => {
+  render(FormString, {
+    props: {
+      spec: {
+        type: 'string',
+        title: '',
+        help: '',
+        validators: [],
+        label: 'ut_label',
+        input_hint: '',
+        field_size: 'MEDIUM',
+        autocompleter: {
+          data: {
+            ident: 'config_hostname',
+            params: {
+              show_independent_of_context: true,
+              strict: true,
+              escape_regex: true,
+              world: 'world',
+              context: {}
+            }
+          },
+          fetch_method: 'ajax_vs_autocomplete'
+        },
+        i18n_base: {
+          required: 'required'
+        }
+      },
+      data: 'some value',
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'ut_label' })
+  expect(element.value).toBe('some value')
 })

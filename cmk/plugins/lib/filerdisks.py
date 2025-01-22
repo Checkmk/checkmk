@@ -118,9 +118,9 @@ def check_filer_disks(disks: Sequence[FilerDisk], params: Mapping[str, Any]) -> 
     }
 
     for disk in disks:
-        for what in state:
+        for what, disks_in_state in state.items():
             if disk.state == what:
-                state[what].append(disk)
+                disks_in_state.append(disk)
 
     unavail_disks = len(state["prefailed"] + state["failed"] + state["offline"])
     yield Result(state=State.OK, summary=f"Total disks: {len(disks) - unavail_disks}")

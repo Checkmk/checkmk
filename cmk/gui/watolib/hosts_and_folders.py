@@ -88,8 +88,8 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.host_attributes import (
+    all_host_attributes,
     collect_attributes,
-    host_attribute_registry,
     HostAttributes,
     HostContactGroupSpec,
     mask_attributes,
@@ -1404,8 +1404,7 @@ class Folder(FolderProtocol):
                         )
                     group_rules_list.append((group_rules, cgconfig["use_for_services"]))
 
-            for attr in host_attribute_registry.attributes():
-                attrname = attr.name()
+            for attrname, attr in all_host_attributes(active_config).items():
                 if attrname in effective:
                     custom_varname = attr.nagios_name()
                     if custom_varname:
@@ -1890,8 +1889,7 @@ class Folder(FolderProtocol):
         effective.update(self.attributes)
 
         # now add default values of attributes for all missing values
-        for host_attribute in host_attribute_registry.attributes():
-            attrname = host_attribute.name()
+        for attrname, host_attribute in all_host_attributes(active_config).items():
             if attrname not in effective:
                 # Mypy can not help here with the dynamic key
                 effective.setdefault(attrname, host_attribute.default_value())  # type: ignore[misc]
@@ -3011,8 +3009,7 @@ class SearchFolder(FolderProtocol):
 
             # Check attributes
             dont_match = False
-            for attr in host_attribute_registry.attributes():
-                attrname = attr.name()
+            for attrname, attr in all_host_attributes(active_config).items():
                 if attrname in self._criteria and not attr.filter_matches(
                     self._criteria[attrname], effective.get(attrname), host_name
                 ):
@@ -3155,7 +3152,7 @@ class Host:
 
         tag_groups: dict[TagGroupID, TagID] = {}
         effective = self.effective_attributes()
-        for attr in host_attribute_registry.attributes():
+        for attr in all_host_attributes(active_config).values():
             value = effective.get(attr.name())
             tag_groups.update(attr.get_tag_groups(value))
 
@@ -3754,7 +3751,7 @@ def ajax_popup_host_action_menu() -> None:
     # Detect network parents
     if request.get_str_input("show_parentscan_link"):
         html.open_a(
-            href="",
+            href=None,
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
             % json.dumps([form_name, "_parentscan"]),
         )
@@ -3771,7 +3768,7 @@ def ajax_popup_host_action_menu() -> None:
             warning=True,
         )
         html.open_a(
-            href="",
+            href=None,
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
             % json.dumps(
                 [
@@ -3793,7 +3790,7 @@ def ajax_popup_host_action_menu() -> None:
             suffix=host.name(),
         )
         html.open_a(
-            href="",
+            href=None,
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
             % json.dumps(
                 [

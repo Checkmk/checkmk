@@ -82,7 +82,7 @@ class MigrateNotifications(UpdateAction):
 
                 parameters_per_method[method].update(
                     {
-                        parameter_id[0]: self._get_visitor_data(
+                        parameter_id[0]: self._get_data_for_disk(
                             method=method,
                             parameter=parameter,  # type: ignore[arg-type]
                             nr=nr,
@@ -111,7 +111,7 @@ class MigrateNotifications(UpdateAction):
             "       If everything works as expected you can remove the backup.\n"
         )
 
-    def _get_visitor_data(
+    def _get_data_for_disk(
         self,
         method: NotificationParameterMethod,
         parameter: dict[str, Any],
@@ -123,7 +123,7 @@ class MigrateNotifications(UpdateAction):
                 comment="Auto migrated on update",
                 docu_url="",
             ),
-            parameter_properties=parameter,
+            parameter_properties={"method_parameters": parameter},
         )
         form_spec = notification_parameter_registry.form_spec(method)
         visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))

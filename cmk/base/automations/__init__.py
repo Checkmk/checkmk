@@ -6,11 +6,8 @@
 import abc
 import enum
 import os
-import signal
 import sys
-from contextlib import redirect_stdout, suppress
-from types import FrameType
-from typing import NoReturn
+from contextlib import nullcontext, redirect_stdout, suppress
 
 import cmk.ccc.debug
 from cmk.ccc import version as cmk_version
@@ -19,6 +16,7 @@ from cmk.ccc.exceptions import MKException, MKTimeout
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.timeout import Timeout
 
 from cmk.automations.results import ABCAutomationResult
 
@@ -35,13 +33,9 @@ class MKAutomationError(MKException):
 
 
 class AutomationExitCode(enum.IntEnum):
-    """Supported exit code for an executed automation command."""
-
     SUCCESS = 0
     KNOWN_ERROR = 1
     UNKNOWN_ERROR = 2
-    SYSTEM_EXIT = 3
-    TIMEOUT = 4
 
 
 class Automations:
@@ -54,12 +48,24 @@ class Automations:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    # TODO: remove `reload_config` when automation helper is fully integrated.
     def execute(
-        self, cmd: str, args: list[str], *, reload_config: bool = True
+        self, cmd: str, args: list[str], *, called_from_automation_helper: bool = False
     ) -> AutomationExitCode:
-        self._handle_generic_arguments(args)
+        remaining_args, timeout = self._extract_timeout_from_args(args)
+        with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
+            return self._execute(
+                cmd,
+                remaining_args,
+                called_from_automation_helper=called_from_automation_helper,
+            )
 
+    def _execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
         try:
             try:
                 automation = self._automations[cmd]
@@ -69,9 +75,9 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            if reload_config and automation.needs_checks:
+            if not called_from_automation_helper and automation.needs_checks:
                 with (
-                    tracer.start_as_current_span("load_all_plugins"),
+                    tracer.span("load_all_plugins"),
                     redirect_stdout(open(os.devnull, "w")),
                 ):
                     log.setup_console_logging()
@@ -80,12 +86,12 @@ class Automations:
                         checks_dir=paths.checks_dir,
                     )
 
-            if reload_config and automation.needs_config:
-                with tracer.start_as_current_span("load_config"):
+            if not called_from_automation_helper and automation.needs_config:
+                with tracer.span("load_config"):
                     config.load(validate_hosts=False)
 
-            with tracer.start_as_current_span(f"execute_automation[{cmd}]"):
-                result = automation.execute(args)
+            with tracer.span(f"execute_automation[{cmd}]"):
+                result = automation.execute(args, called_from_automation_helper)
 
         except (MKAutomationError, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -110,18 +116,12 @@ class Automations:
 
         return AutomationExitCode.SUCCESS
 
-    def _handle_generic_arguments(self, args: list[str]) -> None:
-        """Handle generic arguments (currently only the optional timeout argument)"""
-        if len(args) > 1 and args[0] == "--timeout":
-            args.pop(0)
-            timeout = int(args.pop(0))
-
-            if timeout:
-                signal.signal(signal.SIGALRM, self._raise_automation_timeout)
-                signal.alarm(timeout)
-
-    def _raise_automation_timeout(self, _signum: int, _stackframe: FrameType | None) -> NoReturn:
-        raise MKTimeout("Action timed out.")
+    def _extract_timeout_from_args(self, args: list[str]) -> tuple[list[str], int | None]:
+        match args:
+            case ["--timeout", timeout, *remaining_args]:
+                return remaining_args, int(timeout)
+            case _:
+                return args, None
 
 
 class Automation(abc.ABC):
@@ -130,7 +130,11 @@ class Automation(abc.ABC):
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: list[str]) -> ABCAutomationResult: ...
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ABCAutomationResult: ...
 
 
 #

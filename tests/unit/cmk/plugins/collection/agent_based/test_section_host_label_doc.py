@@ -63,6 +63,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/rmk/node_type",
+    "cmk/otel/metrics",  # CCE, actually.
 }
 
 

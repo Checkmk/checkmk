@@ -19,13 +19,13 @@
 namespace mk {
 std::string unsafe_tolower(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
+    std::ranges::transform(str, result.begin(), ::tolower);
     return result;
 }
 
 std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    std::ranges::transform(str, result.begin(), ::toupper);
     return result;
 }
 

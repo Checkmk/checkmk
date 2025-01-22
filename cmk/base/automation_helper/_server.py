@@ -3,54 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Launches automation helper application for processing automation commands."""
-
-import dataclasses
-from pathlib import Path
-from typing import Final
-
 import gunicorn.app.base  # type: ignore[import-untyped]
-import gunicorn.util  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
-APPLICATION_SOCKET: Final = "unix:tmp/run/automation-helper.sock"
-APPLICATION_WORKER_CLASS: Final = "uvicorn.workers.UvicornWorker"
-APPLICATION_WORKER_COUNT: Final = 2
+from ._config import ServerConfig
 
 
-@dataclasses.dataclass(frozen=True)
-class ApplicationServerConfig:
-    daemon: bool
-    pid_file: Path
-    access_log: Path
-    error_log: Path
+def run(
+    config: ServerConfig,
+    app: FastAPI,
+) -> None:
+    _ApplicationServer(app, config).run()
 
 
-class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
-    def __init__(self, app: FastAPI, cfg: ApplicationServerConfig) -> None:
+class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
+    def __init__(
+        self,
+        app: FastAPI,
+        config: ServerConfig,
+    ) -> None:
         self._app = app
-        self._options = {
-            "daemon": cfg.daemon,
-            "umask": 0o077,
-            "bind": APPLICATION_SOCKET,
-            "workers": APPLICATION_WORKER_COUNT,
-            "worker_class": APPLICATION_WORKER_CLASS,
-            "pidfile": str(cfg.pid_file),
-            "accesslog": str(cfg.access_log),
-            "errorlog": str(cfg.error_log),
-        }
+        self._config = config
         super().__init__()
 
     def load_config(self) -> None:
-        assert self.cfg is not None, "Default server config expected to be loaded post-init."
-        for key, value in self._options.items():
-            self.cfg.set(key, value)
+        self.cfg.set("umask", 0o077)
+        self.cfg.set("bind", f"unix:{self._config.unix_socket}")
+        self.cfg.set("workers", self._config.num_workers)
+        self.cfg.set("worker_class", "uvicorn.workers.UvicornWorker")
+        self.cfg.set("pidfile", str(self._config.pid_file))
+        self.cfg.set("accesslog", str(self._config.access_log))
+        self.cfg.set("errorlog", str(self._config.error_log))
+        # clients can dynamically set a timeout per request
+        self.cfg.set("timeout", 0)
 
     def load(self) -> FastAPI:
         return self._app
-
-    def run(self) -> None:
-        assert self.cfg is not None, "Gunicorn server config is required to run application."
-        if self.cfg.daemon:
-            gunicorn.util.daemonize()
-        super().run()

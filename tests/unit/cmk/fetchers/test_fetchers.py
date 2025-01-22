@@ -484,7 +484,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -521,7 +520,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -579,7 +577,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
             do_status_data_inventory=True,
@@ -616,7 +613,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
         )
@@ -652,7 +648,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
             do_status_data_inventory=True,
@@ -744,8 +739,8 @@ class TestSNMPSectionMeta:
     @pytest.mark.parametrize(
         "meta",
         [
-            SNMPSectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
-            SNMPSectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
+            SNMPSectionMeta(checking=False, disabled=False, redetect=False),
+            SNMPSectionMeta(checking=True, disabled=False, redetect=False),
         ],
     )
     def test_serialize(self, meta: SNMPSectionMeta) -> None:

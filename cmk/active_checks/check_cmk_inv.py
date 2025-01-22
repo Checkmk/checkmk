@@ -50,6 +50,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="State when software packages info is missing",
     )
 
+    parser.add_argument(
+        "--nw-changes",
+        type=int,
+        default=0,
+        help="State when networking changes are detected",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -60,6 +67,7 @@ def get_command(args: argparse.Namespace) -> Sequence[str]:
         f"--hw-changes={args.hw_changes}",
         f"--sw-changes={args.sw_changes}",
         f"--sw-missing={args.sw_missing}",
+        f"--nw-changes={args.nw_changes}",
         "--inventory-as-check",
         args.hostname,
     ]

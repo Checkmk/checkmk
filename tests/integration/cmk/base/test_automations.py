@@ -10,7 +10,6 @@ from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -33,34 +32,34 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
     logger.info("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "offline",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "host_with_secondary_ip",
         attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
     )
@@ -81,11 +80,11 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
-    site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
-    icmp_rule_id = site.openapi.create_rule(
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("host_with_secondary_ip")
+    icmp_rule_id = site.openapi.rules.create(
         ruleset_name=RuleGroup.ActiveChecks("icmp"),
         value={"address": "all_ipv4addresses"},
     )
@@ -103,12 +102,12 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
-        site.openapi.delete_host("host_with_secondary_ip")
-        site.openapi.delete_rule(icmp_rule_id)
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
+        site.openapi.hosts.delete("host_with_secondary_ip")
+        site.openapi.rules.delete(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -354,7 +353,7 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
             r"Failed to lookup IPv4 address of xxx-not-existing-host. "
             r"via DNS: (\[Errno -2\] Name or service not known"
             r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with host name)\n"
+            r"|\[Errno -5\] No address associated with hostname)\n"
         ),
         expect_stdout="",
         expect_exit_code=2,
@@ -483,7 +482,7 @@ def test_automation_set_autochecks_v2(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> None:
+def test_automation_update_dns_cache(site: Site) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
@@ -492,8 +491,8 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
     # use .internal. FQDN to avoid false positives in name resolution
     unknown_host = "update-dns-cache-host.internal."
     try:
-        clients.HostConfig.create(host_name=unknown_host)
-        clients.HostConfig.create(host_name="localhost")
+        site.openapi.hosts.create(hostname=unknown_host)
+        site.openapi.hosts.create(hostname="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -512,9 +511,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
-        clients.HostConfig.delete("localhost")
-        clients.HostConfig.delete(unknown_host)
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+        site.openapi.hosts.delete("localhost")
+        site.openapi.hosts.delete(unknown_host)
+        site.openapi.changes.activate_and_wait_for_completion(timeout=120)
 
 
 # TODO: Test with the different cores
@@ -711,6 +710,19 @@ def test_automation_create_diagnostics_dump(site: Site) -> None:
     assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
     assert result.tarfile_path.endswith(".tar.gz")
     assert "var/check_mk/diagnostics" in result.tarfile_path
+
+
+def test_automation_restart_with_non_resolvable_host(site: Site) -> None:
+    host = "modes-test-host-unresolvable"
+    site.openapi.hosts.create(host)
+    try:
+        result = _execute_automation(site, "restart", expect_stderr_pattern=".*")
+    finally:
+        site.openapi.hosts.delete(host)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+    assert isinstance(result, results.RestartResult)
+    assert any(f"Failed to lookup IPv4 address of {host}" in w for w in result.config_warnings)
 
 
 # TODO: rename-hosts

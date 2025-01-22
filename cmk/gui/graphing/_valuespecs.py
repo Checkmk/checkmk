@@ -64,16 +64,10 @@ from ._unit import (
 
 def migrate_graph_render_options_title_format(
     p: (
-        Literal["plain"]
-        | Literal["add_host_name"]
-        | Literal["add_host_alias"]
+        Literal["plain", "add_host_name", "add_host_alias"]
         | tuple[
-            Literal["add_title_infos"],
-            list[
-                Literal["add_host_name"]
-                | Literal["add_host_alias"]
-                | Literal["add_service_description"]
-            ],
+            Literal["add_title_infos", "plain"],
+            list[Literal["add_host_name", "add_host_alias", "add_service_description"]],
         ]
         | Sequence[GraphTitleFormatVS]
     ),
@@ -94,6 +88,7 @@ def migrate_graph_render_options_title_format(
             return infos
         if p[0] == "plain":
             return ["plain"]
+        raise ValueError(f"invalid graph title format {p}")
 
     # Because the spec could come from a JSON request CMK-6339
     if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":

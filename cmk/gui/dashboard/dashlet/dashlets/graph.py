@@ -19,7 +19,10 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
+from cmk.gui.graphing._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderOptions,
+)
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import (
     get_graph_template_choices,
@@ -35,9 +38,9 @@ from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -293,7 +296,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             GraphRenderConfig.from_user_context_and_options(
                 user,
                 theme.get(),
-                **graph_grender_options_from_vs(
+                GraphRenderOptions.from_graph_render_options_vs(
                     default_dashlet_graph_render_options()
                     # Something is wrong with the typing here. self._dashlet_spec is a subclass of
                     # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be

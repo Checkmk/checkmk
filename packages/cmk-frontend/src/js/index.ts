@@ -71,7 +71,7 @@ register();
 type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
     node: HTMLElement,
-    options: CallableFunctionArguments
+    options: CallableFunctionArguments,
 ) => Promise<void>;
 
 // See cmk.gui.htmllib.generator:KnownTSFunction
@@ -111,7 +111,7 @@ $(() => {
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
         .forEach((form, _) => {
             const confirmation: RequireConfirmation = JSON.parse(
-                form.dataset.cmk_form_confirmation!
+                form.dataset.cmk_form_confirmation!,
             );
             forms.add_confirm_on_submit(form, confirmation);
         });

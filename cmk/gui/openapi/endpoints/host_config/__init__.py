@@ -42,10 +42,10 @@ import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
-from typing import Any, Literal
+from typing import Any
 from urllib.parse import urlparse
 
-from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
@@ -745,7 +745,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     result = background_job.start(
         partial(rename_hosts_background_job, [(host.folder().path(), host_name, new_name)]),
         InitialStatusArgs(
-            title="Renaming of %s -> %s" % (host_name, new_name),
+            title=f"Renaming of {host_name} -> {new_name}",
             lock_wato=True,
             stoppable=False,
             estimated_duration=background_job.get_status().duration,

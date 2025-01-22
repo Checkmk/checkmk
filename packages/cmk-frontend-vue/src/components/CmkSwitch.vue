@@ -9,30 +9,30 @@ const data = defineModel('data', { type: Boolean, default: false })
 </script>
 
 <template>
-  <label class="switch">
+  <label class="cmk-switch">
     <input v-model="data" type="checkbox" />
-    <span class="slider round"></span>
+    <span class="cmk-switch__slider"></span>
   </label>
 </template>
 
 <style scoped>
 /* The switch - the box around the slider */
-.switch {
+.cmk-switch {
   position: relative;
   display: inline-block;
   width: 18px;
   height: 10px;
-}
 
-/* Hide default HTML checkbox */
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+  /* Hide default HTML checkbox */
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
 }
 
 /* The slider */
-.slider {
+.cmk-switch__slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -42,40 +42,33 @@ const data = defineModel('data', { type: Boolean, default: false })
   background-color: #ccc;
   -webkit-transition: 0.4s;
   transition: 0.4s;
+  border-radius: 5px; /* Rounded sliders */
+
+  &:before {
+    position: absolute;
+    content: '';
+    height: 8px;
+    width: 8px;
+    left: 1px;
+    bottom: 1px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+    border-radius: 50%; /* Rounded sliders */
+  }
 }
 
-.slider:before {
-  position: absolute;
-  content: '';
-  height: 8px;
-  width: 8px;
-  left: 1px;
-  bottom: 1px;
-  background-color: white;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
-
-input:checked + .slider {
+input:checked + .cmk-switch__slider {
   background-color: #13d389;
+
+  &:before {
+    -webkit-transform: translateX(8px);
+    -ms-transform: translateX(8px);
+    transform: translateX(8px);
+  }
 }
 
-input:focus + .slider {
+input:focus + .cmk-switch__slider {
   box-shadow: 0 0 1px #2196f3;
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(8px);
-  -ms-transform: translateX(8px);
-  transform: translateX(8px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 5px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
 }
 </style>

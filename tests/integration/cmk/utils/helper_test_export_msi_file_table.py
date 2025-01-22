@@ -27,6 +27,6 @@ try:
     )
     f = out_dir / f"{name}.idt"
 
-    print(f.stat().st_size)
+    sys.stdout.write(f"{f.stat().st_size}\n")
 finally:
     shutil.rmtree(str(out_dir))

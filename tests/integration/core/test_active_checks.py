@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="test_cfg", scope="module", autouse=True)
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "test-host",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -30,14 +30,14 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         yield
     finally:
         print("Cleaning up test config")
-        site.openapi.delete_host("test-host")
+        site.openapi.hosts.delete("test-host")
         site.activate_changes_and_wait_for_core_reload()
 
 
 @skip_if_saas_edition  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="custom_checks",
         value={
             "service_description": "\xc4ctive-Check",
@@ -59,7 +59,7 @@ def test_active_check_execution(site: Site) -> None:
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        site.openapi.delete_rule(rule_id)
+        site.openapi.rules.delete(rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -102,7 +102,7 @@ def test_active_check_macros(site: Site) -> None:
     try:
         for var, value in macros.items():
             rule_ids.append(
-                site.openapi.create_rule(
+                site.openapi.rules.create(
                     ruleset_name="custom_checks",
                     value={
                         "service_description": descr(var),
@@ -146,5 +146,5 @@ def test_active_check_macros(site: Site) -> None:
 
     finally:
         for rule_id in rule_ids:
-            site.openapi.delete_rule(rule_id)
+            site.openapi.rules.delete(rule_id)
         site.activate_changes_and_wait_for_core_reload()

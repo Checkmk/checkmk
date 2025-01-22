@@ -94,16 +94,16 @@ def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
         )
 
     # For every member uuid, we have more metrics in the dashboard
-    for hostname in parsed:
+    for hostname, prop in parsed.items():
         for dashboard_elem in dashboard_json_list:
             if hostname == dashboard_elem["hostname"]:
                 for dashboard_property in _PROPERTIES_DASHBOARD:
-                    parsed[hostname][dashboard_property] = dashboard_elem[dashboard_property]
+                    prop[dashboard_property] = dashboard_elem[dashboard_property]
 
         # Calculate missing metrics (which where previously available in REST API 3x)
         for name in ("Free", "Capacity"):
-            parsed[hostname]["combined%sBytes" % name] = (
-                parsed[hostname]["cloud%sBytes" % name] + parsed[hostname]["local%sBytes" % name]
+            prop["combined%sBytes" % name] = (
+                prop["cloud%sBytes" % name] + prop["local%sBytes" % name]
             )
 
     return parsed

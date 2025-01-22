@@ -8,9 +8,8 @@ import abc
 import dataclasses
 import datetime
 import json
-import multiprocessing
 import pprint
-import queue
+import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
@@ -24,7 +23,8 @@ from cmk.gui.openapi.endpoints.configuration_entity import _to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
+
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 if TYPE_CHECKING:
     from cmk.gui.openapi.endpoints.downtime import FindByType
@@ -32,7 +32,6 @@ if TYPE_CHECKING:
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 IF_MATCH_HEADER_OPTIONS = Literal["valid_etag", "invalid_etag", "star"] | None
-
 
 API_DOMAIN = Literal[
     "configuration_entity",
@@ -70,9 +69,11 @@ API_DOMAIN = Literal[
     "saml_connection",
     "parent_scan",
     "quick_setup",
+    "quick_setup_stage",
     "managed_robots",
     "notification_parameter",
     "broker_connection",
+    "background_job",
 ]
 
 
@@ -224,6 +225,7 @@ class RequestHandler(abc.ABC):
         query_params: Mapping[str, Any] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
+        follow_redirects: bool = False,
     ) -> Response: ...
 
 
@@ -326,6 +328,7 @@ class RestApiClient:
         follow_redirects: bool = True,
         url_is_complete: bool = False,
         use_default_headers: bool = True,
+        redirect_timeout_seconds: int = 60,
     ) -> Response:
         default_headers: Mapping[str, str] = {
             **(JSON_HEADERS if use_default_headers else {}),
@@ -335,28 +338,55 @@ class RestApiClient:
         if not url_is_complete:
             url = self._url_prefix + url
 
+        req_body = None if body is None else json.dumps(body)
         resp = self.request_handler.request(
             method=method,
             url=url,
             query_params=query_params,
-            body="" if body is None else json.dumps(body),
+            body=req_body,
             headers=default_headers,
+            follow_redirects=False,  # we handle redirects ourselves
         )
+        if follow_redirects:
+            end = time.time() + redirect_timeout_seconds
+            while 300 <= resp.status_code < 400:
+                if time.time() > end:
+                    raise TimeoutError("Redirect timeout reached")
+
+                if resp.status_code == 303:
+                    # 303 See Other: we should explicitly use GET for the redirect
+                    # other redirect codes should reuse the method of the original request
+                    method = "get"
+                    req_body = None
+
+                resp = self.request_handler.request(
+                    method=method,
+                    url=self._get_redirect_url(resp.headers["Location"]),
+                    query_params=query_params,
+                    body=req_body,
+                    headers=default_headers,
+                    follow_redirects=False,
+                )
 
         if expect_ok and resp.status_code >= 400:
             raise RestApiException(
                 url, method, body, default_headers, resp, query_params=query_params
             )
-        if follow_redirects and 300 <= resp.status_code < 400:
-            return self.request(
-                method="get" if resp.status_code == 303 else method,
-                url=resp.headers["Location"],
-                query_params=query_params,
-                body=body,
-                headers=default_headers,
-                url_is_complete=True,
-            )
         return resp
+
+    def _get_redirect_url(self, location_header: str) -> str:
+        prefix = urllib.parse.urlparse(self._url_prefix)
+        location = urllib.parse.urlparse(location_header)
+        return urllib.parse.urlunparse(
+            (
+                location.scheme or prefix.scheme,
+                location.netloc or prefix.netloc,
+                location.path,
+                location.params,
+                location.query,
+                location.fragment,
+            )
+        )
 
     def follow_link(
         self,
@@ -408,7 +438,10 @@ class RestApiClient:
             body["site"] = site
 
         return self.request(
-            "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
+            "post",
+            url="/domain-types/metric/actions/get/invoke",
+            body=body,
+            expect_ok=expect_ok,
         )
 
 
@@ -499,7 +532,7 @@ class ActivateChangesClient(RestApiClient):
     ) -> Response | NoReturn:
         if sites is None:
             sites = []
-        response = self.request(
+        return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/activate-changes/invoke",
             body={
@@ -507,38 +540,11 @@ class ActivateChangesClient(RestApiClient):
                 "sites": sites,
                 "force_foreign_changes": force_foreign_changes,
             },
-            expect_ok=False,
+            expect_ok=True,
             headers=self._set_etag_header(etag),
-            follow_redirects=False,
+            follow_redirects=True,
+            redirect_timeout_seconds=timeout_seconds,
         )
-
-        if not 300 <= response.status_code < 400:
-            return response
-
-        que: multiprocessing.Queue[Response] = multiprocessing.Queue()
-
-        def waiter(result_que: multiprocessing.Queue, initial_response: Response) -> None:
-            wait_response = initial_response
-            while 300 <= wait_response.status_code < 400:
-                wait_response = self.request(
-                    "get",
-                    url=wait_response.headers["Location"],
-                    expect_ok=False,
-                    url_is_complete=True,
-                )
-            result_que.put(wait_response)
-
-        p = multiprocessing.Process(target=waiter, args=(que, response))
-        p.start()
-        try:
-            result = que.get(timeout=timeout_seconds)
-        except queue.Empty:
-            raise TimeoutError
-        finally:
-            p.kill()
-            p.join()
-
-        return result
 
     def list_pending_changes(self, expect_ok: bool = True) -> Response:
         return self.request(
@@ -610,7 +616,10 @@ class UserClient(RestApiClient):
         )
 
     def get(
-        self, username: str | None = None, url: str | None = None, expect_ok: bool = True
+        self,
+        username: str | None = None,
+        url: str | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         url_is_complete = False
         actual_url = ""
@@ -764,7 +773,11 @@ class HostConfigClient(RestApiClient):
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             query_params=query_params,
-            body={"host_name": host_name, "folder": folder, "attributes": attributes or {}},
+            body={
+                "host_name": host_name,
+                "folder": folder,
+                "attributes": attributes or {},
+            },
             expect_ok=expect_ok,
         )
 
@@ -1182,7 +1195,10 @@ class TimePeriodClient(RestApiClient):
         )
 
     def edit(
-        self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
+        self,
+        time_period_id: str,
+        time_period_data: dict[str, object],
+        expect_ok: bool = True,
     ) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
         return self.request(
@@ -1418,24 +1434,29 @@ class PasswordClient(RestApiClient):
         self,
         ident: str,
         title: str,
-        owner: str,
         password: str,
         shared: Sequence[str],
+        editable_by: str | None = None,
+        _owner: str | None = None,
+        comment: str | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "ident": ident,
-            "title": title,
-            "owner": owner,
-            "password": password,
-            "shared": shared,
-            "customer": "provider" if customer is None else customer,
-        }
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            body=body,
+            body=_only_set_keys(
+                {
+                    "ident": ident,
+                    "title": title,
+                    "password": password,
+                    "shared": shared,
+                    "editable_by": editable_by,
+                    "owner": _owner,
+                    "comment": comment,
+                    "customer": "provider" if customer is None else customer,
+                }
+            ),
             expect_ok=expect_ok,
         )
 
@@ -1460,24 +1481,38 @@ class PasswordClient(RestApiClient):
     def edit(
         self,
         ident: str,
-        title: str,
-        owner: str,
-        password: str,
-        shared: Sequence[str],
+        title: str | None = None,
+        comment: str | None = None,
+        editable_by: str | None = None,
+        password: str | None = None,
+        shared: Sequence[str] | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "title": title,
-            "owner": owner,
-            "password": password,
-            "shared": shared,
-            "customer": "provider" if customer is None else customer,
-        }
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{ident}",
-            body=body,
+            body=_only_set_keys(
+                {
+                    "title": title,
+                    "comment": comment,
+                    "editable_by": editable_by,
+                    "password": password,
+                    "shared": shared,
+                    "customer": customer,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        ident: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{ident}",
             expect_ok=expect_ok,
         )
 
@@ -1569,7 +1604,7 @@ class DowntimeClient(RestApiClient):
     ) -> Response:
         body = {
             "downtime_type": downtime_type,
-            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "start_time": (start_time if isinstance(start_time, str) else start_time.isoformat()),
             "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "comment": comment,
@@ -1608,7 +1643,7 @@ class DowntimeClient(RestApiClient):
     ) -> Response:
         body: dict[str, Any] = {
             "downtime_type": downtime_type,
-            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "start_time": (start_time if isinstance(start_time, str) else start_time.isoformat()),
             "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "duration": duration,
@@ -1874,6 +1909,7 @@ class HostClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    # TODO: DEPRECATED(17003) - remove in 2.5
     def get_all(
         self,
         query: dict[str, Any],
@@ -1885,6 +1921,20 @@ class HostClient(RestApiClient):
             "get",
             url="/domain-types/host/collections/all",
             query_params=params,
+            expect_ok=expect_ok,
+        )
+
+    def list_all(
+        self,
+        query: dict[str, Any],
+        columns: Sequence[str] = ("name",),
+        expect_ok: bool = True,
+    ) -> Response:
+        params = {"query": query, "columns": columns}
+        return self.request(
+            "post",
+            url="/domain-types/host/collections/all",
+            body=params,
             expect_ok=expect_ok,
         )
 
@@ -2073,7 +2123,12 @@ class EventConsoleClient(RestApiClient):
         if filter_type == "query":
             body.update({"query": query})
         else:
-            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            filters = {
+                "state": state,
+                "host": host,
+                "application": application,
+                "phase": phase,
+            }
             body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
 
         return self.request(
@@ -2107,7 +2162,12 @@ class EventConsoleClient(RestApiClient):
             body.update({"query": query})
 
         else:
-            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            filters = {
+                "state": state,
+                "host": host,
+                "application": application,
+                "phase": phase,
+            }
             body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
 
         return self.request(
@@ -2240,7 +2300,10 @@ class CommentClient(RestApiClient):
         return self._get("service", None, expect_ok)
 
     def _get(
-        self, collection: str, query: Mapping[str, Any] | None = None, expect_ok: bool = True
+        self,
+        collection: str,
+        query: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
@@ -2846,6 +2909,7 @@ class ParentScanClient(RestApiClient):
 
 class QuickSetupClient(RestApiClient):
     domain: API_DOMAIN = "quick_setup"
+    domain_stage: API_DOMAIN = "quick_setup_stage"
 
     def get_overview_mode_or_guided_mode(
         self,
@@ -2861,36 +2925,55 @@ class QuickSetupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def send_stage_retrieve_next(
+    def run_stage_action(
         self,
         quick_setup_id: str,
         stage_action_id: str,
         stages: list[dict[str, Any]],
+        follow_redirects: bool = True,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{quick_setup_id}/actions/run-stage-action/invoke",
+            body={
+                "stages": stages,
+                "stage_action_id": stage_action_id,
+            },
+            follow_redirects=follow_redirects,
+            expect_ok=expect_ok,
+        )
+
+    def get_stage_structure(
+        self,
+        quick_setup_id: str,
+        stage_index: int,
         object_id: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            body={
-                "quick_setup_id": quick_setup_id,
-                "stages": stages,
-                "stage_action_id": stage_action_id,
-            },
-            query_params=_only_set_keys({"object_id": object_id}),
+            "get",
+            url=f"/objects/{self.domain}/{quick_setup_id}/quick_setup_stage/{stage_index}",
+            query_params=_only_set_keys(
+                {
+                    "object_id": object_id,
+                }
+            ),
             expect_ok=expect_ok,
         )
 
-    def save_quick_setup(
+    def run_quick_setup_action(
         self,
         quick_setup_id: str,
         payload: dict[str, Any],
+        follow_redirects: bool = True,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
-            url=f"/objects/{self.domain}/{quick_setup_id}/actions/save/invoke",
+            url=f"/objects/{self.domain}/{quick_setup_id}/actions/run-action/invoke",
             body=payload,
+            follow_redirects=follow_redirects,
             expect_ok=expect_ok,
         )
 
@@ -3067,6 +3150,17 @@ class BrokerConnectionClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class BackgroundJobClient(RestApiClient):
+    domain: API_DOMAIN = "background_job"
+
+    def get(self, job_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{job_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3116,6 +3210,7 @@ class ClientRegistry:
     QuickSetup: QuickSetupClient
     ManagedRobots: ManagedRobotsClient
     BrokerConnection: BrokerConnectionClient
+    BackgroundJob: BackgroundJobClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3157,4 +3252,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
         ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
+        BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
     )

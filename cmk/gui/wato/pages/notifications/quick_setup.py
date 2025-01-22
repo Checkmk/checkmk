@@ -7,7 +7,6 @@ from typing import Any, assert_never, cast, Literal
 
 from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
@@ -17,6 +16,7 @@ from cmk.gui.form_specs.private import (
     CommentTextArea,
     ConditionChoices,
     DictionaryExtended,
+    Labels,
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
@@ -26,18 +26,17 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+    StringAutocompleter,
+    World,
+)
+from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+    CascadingSingleChoiceElementExtended,
 )
 from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import (
-    CascadingSingleChoiceLayout,
-    Condition,
-    ConditionGroup,
-    DictionaryLayout,
-    ListOfStringsLayout,
-)
+from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
@@ -77,8 +76,6 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
-from cmk.gui.watolib.check_mk_automations import get_check_information_cached
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
@@ -102,7 +99,6 @@ from cmk.rulesets.v1.form_specs import (
     HostState,
     InputHint,
     Integer,
-    MultipleChoiceElement,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
@@ -110,7 +106,25 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import EmailAddress, LengthInRange, ValidationError
+from cmk.rulesets.v1.form_specs.validators import (
+    EmailAddress,
+    LengthInRange,
+    NumberInRange,
+    Url,
+    UrlProtocol,
+    ValidationError,
+)
+from cmk.shared_typing.configuration_entity import ConfigEntityType
+from cmk.shared_typing.vue_formspec_components import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    CascadingSingleChoiceLayout,
+    Condition,
+    ConditionGroup,
+    DictionaryLayout,
+    ListOfStringsLayout,
+)
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -152,7 +166,7 @@ def _event_choices(
     return [
         UniqueCascadingSingleChoiceElement(
             unique=False,
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="status_change",
                 title=Title("Status change"),
                 parameter_form=Tuple(
@@ -161,7 +175,6 @@ def _event_choices(
                         SingleChoiceExtended(
                             label=Label("From"),
                             prefill=DefaultValue(-1),
-                            type=int,
                             elements=[
                                 SingleChoiceElementExtended(name=state, title=title)
                                 for state, title in _get_states(what)
@@ -170,7 +183,6 @@ def _event_choices(
                         SingleChoiceExtended(
                             label=Label("to"),
                             prefill=DefaultValue(1) if what == "host" else DefaultValue(2),
-                            type=int,
                             elements=[
                                 SingleChoiceElementExtended(name=state, title=title)
                                 for state, title in _get_states(what)
@@ -182,21 +194,21 @@ def _event_choices(
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="downtime",
                 title=Title("Start or end of downtime"),
                 parameter_form=FixedValue(value=None),
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="acknowledgement",
                 title=Title("Acknowledgement of problem"),
                 parameter_form=FixedValue(value=None),
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="flapping_state",
                 title=Title("Start or end of flapping state"),
                 parameter_form=FixedValue(value=None),
@@ -204,7 +216,7 @@ def _event_choices(
         ),
         UniqueCascadingSingleChoiceElement(
             unique=False,
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="alert_handler",
                 title=Title("Alert handler execution"),
                 parameter_form=SingleChoice(
@@ -370,14 +382,6 @@ def _get_contact_group_users() -> list[tuple[UserId, str]]:
     )
 
 
-def _get_check_types() -> list[tuple[str, str]]:
-    return [
-        (str(cn), (str(cn) + " - " + c["title"])[:60])
-        for (cn, c) in get_check_information_cached().items()
-        if not cn.is_management_name()
-    ]
-
-
 def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended]:
     return [
         SingleChoiceElementExtended(
@@ -423,13 +427,26 @@ def _get_condition_choices() -> dict[str, ConditionGroup]:
     return choices
 
 
+def custom_recap_formspec_filter_for_hosts_and_services(
+    quick_setup_id: QuickSetupId,
+    stage_index: StageIndex,
+    all_stages_form_data: ParsedFormData,
+) -> Sequence[Widget]:
+    cleaned_stages_form_data = {
+        form_spec_wrapper_id: form_data
+        for form_spec_wrapper_id, form_data in all_stages_form_data.items()
+        if len(form_data) > 0
+    }
+    return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
             ConditionalNotificationECAlertStageWidget(
                 items=[
                     Collapsible(
-                        title=_("Event console alert filters"),
+                        title=_("Event Console alert filters"),
                         items=[
                             FormSpecWrapper(
                                 id=FormSpecId("ec_alert_filters"),
@@ -452,7 +469,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 elements=[
                                                     SingleChoiceExtended(
                                                         title=Title("from:"),
-                                                        type=int,
                                                         elements=[
                                                             SingleChoiceElementExtended(
                                                                 name=name,
@@ -463,7 +479,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     ),
                                                     SingleChoiceExtended(
                                                         title=Title("to:"),
-                                                        type=int,
                                                         elements=[
                                                             SingleChoiceElementExtended(
                                                                 name=name,
@@ -479,7 +494,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         "syslog_facility": DictElement(
                                             parameter_form=SingleChoiceExtended(
                                                 title=Title("Syslog facility"),
-                                                type=int,
                                                 elements=[
                                                     SingleChoiceElementExtended(
                                                         name=name,
@@ -528,18 +542,20 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                     ),
                                 ),
-                                "host_labels": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "host_labels": DictElement(
+                                    parameter_form=Labels(
                                         title=Title("Host labels"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
-                                    ),
+                                        help_text=Help(
+                                            "Use this condition to select hosts based on the configured host labels."
+                                        ),
+                                        world=World.CORE,
+                                    )
                                 ),
                                 "match_host_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Match host groups"),
+                                        title=Title("Host groups"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=group_name,
                                                 title=Title("%s") % group_name,
                                             )
@@ -549,18 +565,30 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
-                                "match_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "match_hosts": DictElement(
+                                    parameter_form=ListOfStrings(
                                         title=Title("Hosts"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
+                                        string_spec=StringAutocompleter(
+                                            autocompleter=Autocompleter(
+                                                data=AutocompleterData(
+                                                    ident="config_hostname",
+                                                    params=AutocompleterParams(),
+                                                ),
+                                            ),
+                                        ),
                                     ),
                                 ),
-                                "exclude_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "exclude_hosts": DictElement(
+                                    parameter_form=ListOfStrings(
                                         title=Title("Exclude hosts"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
+                                        string_spec=StringAutocompleter(
+                                            autocompleter=Autocompleter(
+                                                data=AutocompleterData(
+                                                    ident="config_hostname",
+                                                    params=AutocompleterParams(),
+                                                ),
+                                            ),
+                                        ),
                                     ),
                                 ),
                             },
@@ -578,18 +606,20 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
                                     elements={
-                                        "service_labels": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
+                                        "service_labels": DictElement(
+                                            parameter_form=Labels(
                                                 title=Title("Service labels"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
+                                                help_text=Help(
+                                                    "Use this condition to select services based on the configured service labels."
+                                                ),
+                                                world=World.CORE,
+                                            )
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(
-                                                title=Title("Match service groups"),
+                                                title=Title("Service groups"),
                                                 elements=[
-                                                    MultipleChoiceElement(
+                                                    MultipleChoiceElementExtended(
                                                         name=group_name,
                                                         title=Title("%s") % group_name,
                                                     )
@@ -603,7 +633,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=MultipleChoiceExtended(
                                                 title=Title("Exclude service groups"),
                                                 elements=[
-                                                    MultipleChoiceElement(
+                                                    MultipleChoiceElementExtended(
                                                         name=group_name,
                                                         title=Title("%s") % group_name,
                                                     )
@@ -637,9 +667,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 ],
             ),
             Collapsible(
-                title=_("Assignee filters"),
+                title=_("Contact group filters"),
                 help_text=_(
-                    "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
+                    "Not the recipient, but filters hosts and services assigned "
+                    "to a contact group or members of a contact group",
                 ),
                 items=[
                     FormSpecWrapper(
@@ -649,9 +680,9 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                             elements={
                                 "contact_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Contact groups"),
+                                        title=Title("Groups"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
@@ -663,15 +694,20 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "users": DictElement(
                                     parameter_form=ListExtended(
-                                        title=Title("Users"),
+                                        title=Title("Members"),
                                         editable_order=False,
-                                        element_template=SingleChoice(
+                                        help_text=Help(
+                                            "Filters for hosts or services that "
+                                            "have at least one of the contact "
+                                            "group members assigned to them."
+                                        ),
+                                        element_template=SingleChoiceExtended(
                                             prefill=InputHint(Title("Select user")),
                                             no_elements_text=Message(  # TODO:  Doesn't seem to do anything.
                                                 "No users available"
                                             ),
                                             elements=[
-                                                SingleChoiceElement(
+                                                SingleChoiceElementExtended(
                                                     name=userid,
                                                     title=Title("%s") % user,
                                                 )
@@ -707,7 +743,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name="explicit",
                                                 title=Title("Explicit"),
                                                 parameter_form=SingleChoiceExtended(
-                                                    type=int,
                                                     elements=_get_service_levels_single_choice(),
                                                 ),
                                             ),
@@ -719,12 +754,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     elements=[
                                                         SingleChoiceExtended(
                                                             title=Title("From:"),
-                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
                                                         SingleChoiceExtended(
                                                             title=Title("to:"),
-                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
                                                     ],
@@ -737,7 +770,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "folder": DictElement(
                                     parameter_form=SingleChoiceExtended(
                                         title=Title("Folder"),
-                                        type=str,
                                         elements=[
                                             SingleChoiceElementExtended(
                                                 name=name,
@@ -749,9 +781,9 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "sites": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Match sites"),
+                                        title=Title("Sites"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
@@ -761,21 +793,19 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
-                                # TODO disabled until we found a solution to load on demand or faster
-                                # "check_type_plugin": DictElement(
-                                #    parameter_form=MultipleChoiceExtended(
-                                #        title=Title("Match check types"),
-                                #        elements=[
-                                #            MultipleChoiceElement(
-                                #                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
-                                #                title=Title("%s") % title,
-                                #            )
-                                #            for name, title in _get_check_types()
-                                #        ],
-                                #        show_toggle_all=True,
-                                #        layout=MultipleChoiceExtendedLayout.dual_list,
-                                #    ),
-                                # ),
+                                "check_type_plugin": DictElement(
+                                    parameter_form=MultipleChoiceExtended(
+                                        title=Title("Check types"),
+                                        elements=Autocompleter(
+                                            data=AutocompleterData(
+                                                ident="check_types",
+                                                params=AutocompleterParams(),
+                                            ),
+                                        ),
+                                        show_toggle_all=True,
+                                        layout=MultipleChoiceExtendedLayout.dual_list,
+                                    ),
+                                ),
                             },
                         ),
                     ),
@@ -794,7 +824,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
             QuickSetupStageAction(
                 id=ActionId("action"),
                 custom_validators=[],
-                recap=[recaps.recaps_form_spec],
+                recap=[custom_recap_formspec_filter_for_hosts_and_services],
                 next_button_label=_("Next step: Notification method (plug-in)"),
             )
         ],
@@ -825,10 +855,10 @@ def notification_method() -> QuickSetupStage:
                     CascadingSingleChoiceElement(
                         name="timeperiod",
                         title=Title("During time period"),
-                        parameter_form=CascadingSingleChoice(
+                        parameter_form=CascadingSingleChoiceExtended(
                             elements=[
-                                CascadingSingleChoiceElement(
-                                    name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
+                                CascadingSingleChoiceElementExtended(
+                                    name=name,
                                     title=Title("%s") % (_("%s") % timeperiod),
                                     parameter_form=bulk_notification(
                                         title="timeperiod",
@@ -957,6 +987,7 @@ def notification_method() -> QuickSetupStage:
                         title=Title("Max. notifications per bulk"),
                         unit_symbol="notifications",
                         prefill=DefaultValue(1000),
+                        custom_validate=[NumberInRange(min_value=2, max_value=1000)],
                     ),
                 ),
                 "subject": DictElement(
@@ -1010,7 +1041,7 @@ def notification_method() -> QuickSetupStage:
                                         parameter_form=CascadingSingleChoiceExtended(
                                             title=Title("Method"),
                                             elements=[
-                                                CascadingSingleChoiceElement(
+                                                CascadingSingleChoiceElementExtended(
                                                     title=Title("%s") % (_("%s") % title),
                                                     name=script_name,
                                                     parameter_form=Dictionary(
@@ -1049,7 +1080,7 @@ def notification_method() -> QuickSetupStage:
                                         parameter_form=CascadingSingleChoiceExtended(
                                             title=Title("Method"),
                                             elements=[
-                                                CascadingSingleChoiceElement(
+                                                CascadingSingleChoiceElementExtended(
                                                     title=Title("%s") % (_("%s") % title),
                                                     name=script_name,
                                                     parameter_form=FixedValue(value=None),
@@ -1100,7 +1131,7 @@ def _get_sorted_users() -> list[tuple[UserId, str]]:
 def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
     return [
         UniqueSingleChoiceElement(
-            parameter_form=SingleChoiceElement(
+            parameter_form=SingleChoiceElementExtended(
                 name=ident,
                 title=Title(title),  # pylint: disable=localization-of-non-literal-string
             ),
@@ -1125,21 +1156,21 @@ def recipient() -> QuickSetupStage:
                                 cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
                                 elements=[
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All contacts of the affected object"),
                                             name="all_contacts_affected",
                                             parameter_form=FixedValue(value=None),
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All users with an email address"),
                                             name="all_email_users",
                                             parameter_form=FixedValue(value=None),
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Contact group"),
                                             name="contact_group",
                                             parameter_form=ListUniqueSelection(
@@ -1161,7 +1192,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Explicit email addresses"),
                                             name="explicit_email_addresses",
                                             parameter_form=ListOfStrings(
@@ -1181,7 +1212,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Specific users"),
                                             name="specific_users",
                                             parameter_form=ListUniqueSelection(
@@ -1192,7 +1223,7 @@ def recipient() -> QuickSetupStage:
                                                 single_choice_type=SingleChoice,
                                                 elements=[
                                                     UniqueSingleChoiceElement(
-                                                        parameter_form=SingleChoiceElement(
+                                                        parameter_form=SingleChoiceElementExtended(
                                                             name=ident,
                                                             title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                                         )
@@ -1211,7 +1242,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All users"),
                                             name="all_users",
                                             parameter_form=FixedValue(value=None),
@@ -1236,7 +1267,7 @@ def recipient() -> QuickSetupStage:
                                 single_choice_type=CascadingSingleChoice,
                                 elements=[
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             name="contact_group",
                                             title=Title("Users of contact groups"),
                                             parameter_form=ListUniqueSelection(
@@ -1258,8 +1289,8 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
-                                            name="custom_macros",
+                                        parameter_form=CascadingSingleChoiceElementExtended(
+                                            name="custom_macro",
                                             title=Title("Custom macros"),
                                             parameter_form=ListExtended(
                                                 prefill=DefaultValue([]),
@@ -1333,7 +1364,6 @@ def sending_conditions() -> QuickSetupStage:
                                     "restrict_timeperiod": DictElement(
                                         parameter_form=SingleChoiceExtended(
                                             title=Title("Restrict notifications to a time period"),
-                                            type=str,
                                             prefill=InputHint(Title("Select time period")),
                                             elements=[
                                                 SingleChoiceElementExtended(
@@ -1437,13 +1467,6 @@ def sending_conditions() -> QuickSetupStage:
     )
 
 
-def _validate_documentation_url(value: str) -> None:
-    if not is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
-        raise ValidationError(
-            Message("Not a valid URL (Only http and https URLs are allowed)."),
-        )
-
-
 def general_properties() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -1489,9 +1512,9 @@ def general_properties() -> QuickSetupStage:
                         "documentation_url": DictElement(
                             required=True,
                             parameter_form=String(
-                                title=Title("Documentation"),
+                                title=Title("Documentation URL"),
                                 field_size=FieldSize.LARGE,
-                                custom_validate=(_validate_documentation_url,),
+                                custom_validate=[_validate_optional_url],
                             ),
                         ),
                     },
@@ -1502,8 +1525,8 @@ def general_properties() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("General properties"),
         sub_title=_(
-            "Review your notification rule before applying it. They will take effect right "
-            'away without "Activate changes".'
+            "Make your rule more recognizable with a meaningful description and other metadata. "
+            'Note: Notification rules take effect immediately without "Activate changes".'
         ),
         configure_components=_components,
         actions=[
@@ -1511,11 +1534,19 @@ def general_properties() -> QuickSetupStage:
                 id=ActionId("action"),
                 custom_validators=[],
                 recap=[recaps.recaps_form_spec],
-                next_button_label=_("Next step: Summary"),
+                next_button_label=_("Next step: Review all settings"),
             )
         ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
+
+
+def _validate_optional_url(value: str) -> None:
+    if not value:
+        return
+
+    url_validator_instance = Url(protocols=[UrlProtocol.HTTP, UrlProtocol.HTTPS])
+    url_validator_instance(value)
 
 
 def save_and_test_action(

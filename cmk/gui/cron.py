@@ -18,6 +18,7 @@ class CronJob:
     # the callable should really return None, but some jobs return something (which is then ignored)
     callable: Callable[[], Any] | partial
     interval: timedelta
+    run_in_thread: bool = False
 
 
 class CronJobRegistry(Registry[CronJob]):

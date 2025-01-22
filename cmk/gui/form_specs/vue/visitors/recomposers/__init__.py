@@ -8,12 +8,18 @@ from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
 from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
+from .metric import recompose as recompose_metric
+from .monitored_host import recompose as recompose_monitored_host
+from .monitored_host_extended import recompose as recompose_monitored_host_extended
+from .monitored_service import recompose as recompose_monitored_service
 from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
+from .proxy import recompose as recompose_proxy
 from .regular_expression import recompose as recompose_regular_expression
 from .service_state import recompose as recompose_service_state
 from .single_choice import recompose as recompose_single_choice
 from .string import recompose as recompose_string
+from .time_period import recompose as recompose_time_period
 from .unknown_form_spec import recompose as recompose_unknown_form_spec
 
 __all__ = [
@@ -22,11 +28,17 @@ __all__ = [
     "recompose_levels",
     "recompose_list",
     "recompose_percentage",
+    "recompose_proxy",
     "recompose_regular_expression",
     "recompose_single_choice",
     "recompose_unknown_form_spec",
     "recompose_host_state",
     "recompose_service_state",
     "recompose_string",
+    "recompose_metric",
     "recompose_multiple_choice",
+    "recompose_monitored_service",
+    "recompose_monitored_host",
+    "recompose_monitored_host_extended",
+    "recompose_time_period",
 ]

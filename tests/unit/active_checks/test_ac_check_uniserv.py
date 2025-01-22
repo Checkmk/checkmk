@@ -9,7 +9,7 @@ from types import ModuleType
 # pylint: disable=protected-access
 import pytest
 
-from tests.testlib.import_module_hack import import_module_hack
+from tests.unit.testlib.utils import import_module_hack
 
 
 @pytest.fixture(name="check_uniserv", scope="module")

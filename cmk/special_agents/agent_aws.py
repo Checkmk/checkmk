@@ -6479,7 +6479,7 @@ class AWSSections(abc.ABC):
             raise
 
     def run(self, use_cache: bool = True) -> None:
-        exceptions = []
+        exceptions: list[AssertionError | Exception] = []
         results: Results = {}
 
         for section in self._sections:
@@ -6536,10 +6536,22 @@ class AWSSections(abc.ABC):
             with ConditionalPiggybackSection(hostname):
                 self._write_labels_section(host_labels)
 
+    def _safe_exception(self, exception: Exception) -> str:
+        """
+        Secure proper exception output.
+        boto3 sometimes throws unpropper exceptions without a 'message' parameter.
+        TODO: Avoid using aws_exception-section
+        """
+        if hasattr(exception, "message"):
+            return exception.message
+
+        return repr(exception)
+
     def _write_exceptions(self, exceptions: Sequence) -> None:
         sys.stdout.write("<<<aws_exceptions>>>\n")
+
         if exceptions:
-            out = "\n".join([e.message for e in exceptions])
+            out = "\n".join([self._safe_exception(e) for e in exceptions])
         else:
             out = "No exceptions"
         sys.stdout.write(f"{self.__class__.__name__}: {out}\n")
@@ -7167,10 +7179,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
     parser.add_argument(
         "--access-key-id",
-        required=True,
+        required=False,
         help="The access key ID for your AWS account",
     )
-    group_secret_access_key = parser.add_mutually_exclusive_group(required=True)
+    group_secret_access_key = parser.add_mutually_exclusive_group(required=False)
     group_secret_access_key.add_argument(
         "--secret-access-key-reference",
         help="Password store reference to the secret access key for your AWS account.",
@@ -7314,9 +7326,39 @@ def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def _create_session(
-    access_key_id: str, secret_access_key: str, region: str
+def _create_anonymous_session(
+    region: str,
+    config: botocore.config.Config | None,
 ) -> boto3.session.Session:
+    try:
+        # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
+        # However this does not work and has to be left out (a reported bug on github).
+        # Leave it here for potential future bugfix of the AWS botocore.
+        # https://github.com/boto/botocore/issues/1395
+        # https://github.com/boto/botocore/issues/2442
+        # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
+        # ---------------------------------
+        # if config is None:
+        #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+        # else:
+        #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
+
+        return boto3.session.Session(
+            region_name=region,
+        )
+    except Exception as e:
+        raise AwsAccessError(e)
+
+
+def _create_session(
+    access_key_id: str | None,
+    secret_access_key: str | None,
+    region: str,
+    config: botocore.config.Config | None,
+) -> boto3.session.Session:
+    if access_key_id is None or secret_access_key is None:
+        return _create_anonymous_session(region=region, config=config)
+
     try:
         return boto3.session.Session(
             aws_access_key_id=access_key_id,
@@ -7328,8 +7370,8 @@ def _create_session(
 
 
 def _sts_assume_role(
-    access_key_id: str,
-    secret_access_key: str,
+    access_key_id: str | None,
+    secret_access_key: str | None,
     role_arn: str,
     external_id: str,
     region: str,
@@ -7346,8 +7388,10 @@ def _sts_assume_role(
     :return: AWS session
     """
     try:
-        session = _create_session(access_key_id, secret_access_key, region)
+        session = _create_session(access_key_id, secret_access_key, region, config)
+
         sts_client = session.client("sts", config=config)
+
         if external_id:
             assumed_role_object = sts_client.assume_role(
                 RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
@@ -7431,9 +7475,11 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
         if args.proxy_password:
             proxy_password = args.proxy_password
-        else:
+        elif args.proxy_password_reference:
             pw_id, pw_file = args.proxy_password_reference.split(":", 1)
             proxy_password = password_store.lookup(Path(pw_file), pw_id)
+        else:
+            proxy_password = None
         return botocore.config.Config(
             proxies={
                 "https": _proxy_address(
@@ -7516,11 +7562,13 @@ def _configure_aws(args: Args) -> AWSConfig:
 def _create_session_from_args(
     args: Args, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
+    secret_access_key = None
     if args.secret_access_key:
         secret_access_key = args.secret_access_key
-    else:
+    elif args.secret_access_key_reference:
         pw_id, pw_file = args.secret_access_key_reference.split(":", 1)
         secret_access_key = password_store.lookup(Path(pw_file), pw_id)
+
     if args.assume_role:
         return _sts_assume_role(
             args.access_key_id,
@@ -7530,7 +7578,8 @@ def _create_session_from_args(
             region,
             config,
         )
-    return _create_session(args.access_key_id, secret_access_key, region)
+
+    return _create_session(args.access_key_id, secret_access_key, region, config=config)
 
 
 def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:

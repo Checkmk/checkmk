@@ -79,11 +79,11 @@ export class GaugeFigure extends FigureBase<
         FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
-            this.figure_size.height
+            this.figure_size.height,
         );
         this._radius = Math.min(
             this.plot_size.width / 2,
-            (3 / 4) * this.plot_size.height
+            (3 / 4) * this.plot_size.height,
         );
         this.plot.attr(
             "transform",
@@ -91,7 +91,7 @@ export class GaugeFigure extends FigureBase<
                 (this.plot_size.width / 2 + this.margin.left) +
                 ", " +
                 (this._radius + this.margin.top) +
-                ")"
+                ")",
         );
         this._render_fixed_elements();
     }
@@ -133,13 +133,13 @@ export class GaugeFigure extends FigureBase<
                     .innerRadius(this._radius * 0.75)
                     .outerRadius(this._radius * 0.85)
                     .startAngle(-limit)
-                    .endAngle(limit)
+                    .endAngle(limit),
             );
     }
 
     _render_gauge_range_labels(
         domain: Domain,
-        formatter: (nr: number) => string
+        formatter: (nr: number) => string,
     ) {
         const limit = (15 * Math.PI) / 24;
         const label_rad = 0.8 * this._radius;
@@ -171,7 +171,7 @@ export class GaugeFigure extends FigureBase<
     _render_levels() {
         const data = this._crossfilter.allFiltered();
         const plot = this._data.plot_definitions.filter(
-            d => d.plot_type == "single_value"
+            d => d.plot_type == "single_value",
         )[0];
         if (!data.length || !plot || !plot.metric.bounds) {
             this.plot.selectAll("path.level").remove();
@@ -185,7 +185,7 @@ export class GaugeFigure extends FigureBase<
         let domain = adjust_domain(
             //@ts-ignore
             calculate_domain(data),
-            plot.metric.bounds
+            plot.metric.bounds,
         );
         if (Array.isArray(display_range) && display_range[0] === "fixed")
             domain = display_range[1][1];
@@ -216,19 +216,19 @@ export class GaugeFigure extends FigureBase<
                     .outerRadius(this._radius * 0.85)
                     .startAngle(() => -limit)
                     // @ts-ignore
-                    .endAngle(d => scale_x(d.value))
+                    .endAngle(d => scale_x(d.value)),
             );
 
         const svc_status_display = getIn(plot, "status_display");
 
         const background_status_cls = svc_status_css(
             "background",
-            svc_status_display
+            svc_status_display,
         );
         const label_paint_style = getIn(svc_status_display, "paint");
         const label_status_cls = svc_status_css(
             label_paint_style,
-            svc_status_display
+            svc_status_display,
         );
 
         background_status_component(this.plot, {
@@ -239,7 +239,7 @@ export class GaugeFigure extends FigureBase<
                     this._radius * 0.69,
                     (-13 * Math.PI) / 12,
                     Math.PI / 12,
-                    false
+                    false,
                 ),
             css_class: background_status_cls,
             visible: background_status_cls !== "",
@@ -265,7 +265,7 @@ export class GaugeFigure extends FigureBase<
     metric_thresholds_stripe(
         plot: SingleMetricDataPlotDefinitions,
         domain: Domain,
-        scale_x: ScaleLinear<number, number>
+        scale_x: ScaleLinear<number, number>,
     ) {
         this.plot
             .selectAll<SVGPathElement, Levels>("path.level")
@@ -278,7 +278,7 @@ export class GaugeFigure extends FigureBase<
                     .innerRadius(this._radius * 0.71)
                     .outerRadius(this._radius * 0.73)
                     .startAngle(d => scale_x(d.from))
-                    .endAngle(d => scale_x(d.to))
+                    .endAngle(d => scale_x(d.to)),
             )
             .selectAll("title")
             .data(d => [d])
@@ -316,15 +316,15 @@ export class GaugeFigure extends FigureBase<
                     .innerRadius(innerRadius)
                     .outerRadius(
                         // @ts-ignore
-                        d => bin_scale(d.length) + (d.length > 0 ? 2 : 0)
+                        d => bin_scale(d.length) + (d.length > 0 ? 2 : 0),
                     )
                     .startAngle((_d, idx) => -limit + idx * angle_between_bins)
                     .endAngle(
                         (_d, idx) =>
                             -limit +
                             (idx + 1) * angle_between_bins -
-                            bin_spacing
-                    )
+                            bin_spacing,
+                    ),
             )
             .selectAll("title")
             .data(d => [d])

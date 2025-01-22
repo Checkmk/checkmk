@@ -17,14 +17,13 @@ import traceback
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager, ExitStack
 from pathlib import Path
-from typing import Any, IO, NamedTuple, NoReturn
+from typing import IO, NamedTuple, NoReturn
 
-import cmk.ccc.daemon as daemon
 import cmk.ccc.version as cmk_version
+from cmk.ccc import daemon
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 
-import cmk.utils.render as render
-import cmk.utils.schedule as schedule
+from cmk.utils import render, schedule
 from cmk.utils.backup.config import Config
 from cmk.utils.backup.job import Job
 from cmk.utils.backup.targets import TargetId
@@ -270,13 +269,13 @@ modes = {
         description="Lists all configured backup jobs of the current user context.",
         args=[],
         opts={},
-        runner=lambda args, opts, config: mode_jobs(opts=opts, config=config),
+        runner=lambda _args, _opts, config: mode_jobs(config=config),
     ),
     "targets": Mode(
         description="Lists all configured backup targets of the current user context.",
         args=[],
         opts={},
-        runner=lambda args, opts, config: mode_targets(opts=opts, config=config),
+        runner=lambda _args, _opts, config: mode_targets(config=config),
     ),
     "list": Mode(
         description="Output the list of all backups found on the given backup target",
@@ -287,7 +286,7 @@ modes = {
             ),
         ],
         opts={},
-        runner=lambda args, opts, config: mode_list(args[0], opts=opts, config=config),
+        runner=lambda args, _opts, config: mode_list(args[0], config=config),
     ),
 }
 
@@ -323,7 +322,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             success = True
 
         except MKGeneralException as e:
-            sys.stderr.write("%s\n" % e)
+            sys.stderr.write(f"{e}\n")
             if opt_debug:
                 raise
 
@@ -346,12 +345,7 @@ def complete_backup(state_admin: State, info: SiteBackupInfo) -> None:
     state_admin.update_and_save(size=info.size)
     duration = time.time() - (state_admin.current_state.started or 0)
     log(
-        "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
-        % (
-            render.timespan(duration),
-            render.fmt_bytes(info.size),
-            render.fmt_bytes(state_admin.current_state.bytes_per_second or 0),
-        )
+        f"--- Backup completed (Duration: {render.timespan(duration)}, Size: {render.fmt_bytes(info.size)}, IO: {render.fmt_bytes(state_admin.current_state.bytes_per_second or 0)}/s) ---"
     )
 
 
@@ -389,9 +383,9 @@ def save_next_run(job: Job, state: State) -> None:
 
 
 def cleanup_backup_job_states() -> None:
-    path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+    path = f"{os.environ['OMD_ROOT']}/var/check_mk/backup"
 
-    for f in glob.glob("%s/*.state" % path):
+    for f in glob.glob(f"{path}/*.state"):
         if os.path.basename(f) != "restore.state" and not os.path.basename(f).startswith(
             "restore-"
         ):
@@ -416,10 +410,10 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         start_logging(state)
 
-        log("--- Collecting data for restore (%s) ---" % backup_id)
+        log(f"--- Collecting data for restore ({backup_id}) ---")
         backup = target.get_backup(backup_id)
 
-        log("--- Starting restore (%s) ---" % backup_id)
+        log(f"--- Starting restore ({backup_id}) ---")
 
         success = False
         try:
@@ -430,7 +424,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             success = True
 
         except MKGeneralException as e:
-            sys.stderr.write("%s\n" % e)
+            sys.stderr.write(f"{e}\n")
             if opt_debug:
                 raise
 
@@ -457,11 +451,10 @@ def complete_restore(state: State) -> None:
     )
 
 
-def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
+def mode_list(target_id: str, config: Config) -> None:
     if target_id not in config.all_targets:
         raise MKGeneralException(
-            "This backup target does not exist. Choose one of: %s"
-            % ", ".join(config.all_targets.keys())
+            f"This backup target does not exist. Choose one of: {', '.join(config.all_targets.keys())}"
         )
     target = load_target(config, TargetId(target_id))
     target.check_ready()
@@ -472,7 +465,7 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
     sys.stdout.write("%s\n" % ("-" * 100))
     for backup_id, info in target.list_backups():
         from_info = info.hostname
-        from_info += " (Site: %s)" % info.site_id
+        from_info += f" (Site: {info.site_id})"
         sys.stdout.write(fmt % (info.job_id, "Backup-ID:", backup_id))
 
         sys.stdout.write(fmt_detail % ("From:", from_info))
@@ -486,7 +479,7 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
     sys.stdout.write("\n")
 
 
-def mode_jobs(opts: Mapping[str, str], config: Config) -> None:
+def mode_jobs(config: Config) -> None:
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
@@ -494,7 +487,7 @@ def mode_jobs(opts: Mapping[str, str], config: Config) -> None:
         sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
-def mode_targets(opts: dict[str, str], config: Config) -> None:
+def mode_targets(config: Config) -> None:
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
@@ -504,7 +497,7 @@ def mode_targets(opts: dict[str, str], config: Config) -> None:
 
 def usage(error: str | None = None) -> NoReturn:
     if error:
-        sys.stderr.write("ERROR: %s\n" % error)
+        sys.stderr.write(f"ERROR: {error}\n")
     sys.stdout.write("Usage: mkbackup [OPTIONS] MODE [MODE_ARGUMENTS...] [MODE_OPTIONS...]\n")
     sys.stdout.write("\n")
     sys.stdout.write("OPTIONS:\n")
@@ -521,25 +514,25 @@ def usage(error: str | None = None) -> NoReturn:
         wrapped_descr = textwrap.fill(
             mode.description,
             width=82,
-            initial_indent="    %-13s " % mode_name,
+            initial_indent=f"    {mode_name:13} ",
             subsequent_indent=mode_indent,
         )
         sys.stdout.write(wrapped_descr + "\n")
         sys.stdout.write("\n")
         if mode.args:
-            sys.stdout.write("%sMODE ARGUMENTS:\n" % mode_indent)
+            sys.stdout.write(f"{mode_indent}MODE ARGUMENTS:\n")
             sys.stdout.write("\n")
             for arg in mode.args:
-                sys.stdout.write("%s  %-10s %s\n" % (mode_indent, arg.id, arg.description))
+                sys.stdout.write(f"{mode_indent}  {arg.id:10} {arg.description}\n")
             sys.stdout.write("\n")
 
         opts = mode_options(mode)
         if opts:
-            sys.stdout.write("%sMODE OPTIONS:\n" % mode_indent)
+            sys.stdout.write(f"{mode_indent}MODE OPTIONS:\n")
             sys.stdout.write("\n")
 
             for opt_id, opt in sorted(opts.items(), key=lambda k_v: k_v[0]):
-                sys.stdout.write("%s  --%-13s %s\n" % (mode_indent, opt_id, opt.description))
+                sys.stdout.write(f"{mode_indent}  --{opt_id:13} {opt.description}\n")
             sys.stdout.write("\n")
 
     sys.stdout.write("\n")
@@ -552,8 +545,8 @@ def mode_options(mode: Mode) -> dict[str, Opt]:
     return opts
 
 
-def interrupt_handler(signum: int, frame: Any) -> NoReturn:
-    raise MKTerminate("Caught signal: %d" % signum)
+def interrupt_handler(signum: int, _frame: object) -> NoReturn:
+    raise MKTerminate(f"Caught signal: {signum}")
 
 
 def register_signal_handlers() -> None:
@@ -572,13 +565,13 @@ def parse_arguments():  # type: ignore[no-untyped-def]
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
     except getopt.GetoptError as e:
-        usage("%s" % e)
+        usage(f"{e}")
 
     for o, _unused_a in opts:
         if o in ["-h", "--help"]:
             usage()
         elif o == "--version":
-            sys.stdout.write("mkbackup %s\n" % cmk_version.__version__)
+            sys.stdout.write(f"mkbackup {cmk_version.__version__}\n")
             sys.exit(0)
         elif o == "--verbose":
             opt_verbose += 1
@@ -599,7 +592,7 @@ def parse_arguments():  # type: ignore[no-untyped-def]
     try:
         mode_opts, mode_args = getopt.getopt(args, "", list(mode_options(mode).keys()))
     except getopt.GetoptError as e:
-        usage("%s" % e)
+        usage(f"{e}")
 
     # Validate arguments
     if len(mode_args) != len(mode.args):
@@ -626,7 +619,7 @@ if __name__ == "__main__":
     try:
         main()
     except MKTerminate as exc:
-        sys.stderr.write("%s\n" % exc)
+        sys.stderr.write(f"{exc}\n")
         sys.exit(1)
 
     except KeyboardInterrupt:
@@ -634,7 +627,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     except MKGeneralException as exc:
-        sys.stderr.write("%s\n" % exc)
+        sys.stderr.write(f"{exc}\n")
         if opt_debug:
             raise
         sys.exit(3)

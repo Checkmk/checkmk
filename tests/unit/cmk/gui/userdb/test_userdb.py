@@ -21,9 +21,8 @@ import cmk.ccc.version
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
-import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
+import cmk.gui.userdb.session  # pylint: disable-unused-import
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -36,7 +35,6 @@ from cmk.gui.type_defs import (
     WebAuthnCredential,
 )
 from cmk.gui.userdb import ldap_connector as ldap
-from cmk.gui.userdb import UserAttributeRegistry
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
@@ -59,9 +57,7 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def single_user_session_enabled(
-    set_config: SetConfig, user_id: UserId
-) -> Generator[None, None, None]:
+def single_user_session_enabled(set_config: SetConfig, user_id: UserId) -> Generator[None]:
     with set_config(single_user_session=10):
         assert active_config.single_user_session == 10
         yield
@@ -368,6 +364,17 @@ def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> 
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
+def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId) -> None:
+    session.initialize(user_id, auth_type="web_server")
+    session.invalidate()
+    userdb.session.save_session_infos(
+        user_id, {session.session_info.session_id: session.session_info}
+    )
+
+    userdb.session.ensure_user_can_init_session(user_id, datetime.now())
+
+
+@pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_not_init_with_previous_session(single_auth_request: SingleRequest) -> None:
     now = datetime.now()
     user_id, _session_info = single_auth_request()
@@ -488,21 +495,7 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
-    monkeypatch.setattr(userdb, "user_attribute_registry", UserAttributeRegistry())
-    monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._registry, "user_attribute_registry", UserAttributeRegistry()
-    )
-    monkeypatch.setattr(
-        userdb._user_attribute._registry,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(
-        cmk.gui.userdb._custom_attributes,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
+    # Need to use a new context here to patch the config initialized by request_context
     with monkeypatch.context() as m:
         m.setattr(
             active_config,
@@ -520,14 +513,6 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
                 }
             ],
         )
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
-
-        userdb.update_config_based_user_attributes()
-
-        assert "vip" in userdb.user_attribute_registry
-        assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
             LDAPUserConnectionConfig(
@@ -586,19 +571,15 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
             )
         )
 
-        ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
+        plugins = dict(ldap.all_attribute_plugins())
+        ldap_plugin = plugins["vip"]()
         assert ldap_plugin.title == "VIP"
         assert ldap_plugin.help == "VIP attribute"
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
-        # Test removing previously registered ones
-        with set_config(wato_user_attrs=[]):
-            userdb.update_config_based_user_attributes()
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
+        assert "vip" in dict(ldap.ldap_attribute_plugins_elements(connection)).keys()
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
@@ -647,9 +628,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def make_cme(
-    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
-) -> Generator[None, None, None]:
+def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -> Generator[None]:
     monkeypatch.setattr(cmk.ccc.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.CME
 

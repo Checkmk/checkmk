@@ -15,7 +15,6 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from types import ModuleType
 from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
 
 import livestatus
@@ -29,11 +28,10 @@ import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, tty
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.config_path import LATEST_CONFIG
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
@@ -47,8 +45,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.resulttype import Result
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
@@ -70,7 +66,6 @@ from cmk.snmplib import (
     oids_to_walk,
     SNMPBackend,
     SNMPBackendEnum,
-    SNMPRawData,
     walk_for_export,
 )
 
@@ -92,7 +87,7 @@ from cmk.checkengine.discovery import (
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -136,7 +131,7 @@ from cmk.base.config import (
 )
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
-from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.modes import Mode, modes, Option
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
@@ -345,7 +340,6 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts = _list_all_hosts(
         config_cache,
-        config_cache.ruleset_matcher,
         args,
         options,
     )
@@ -356,7 +350,6 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
-    ruleset_matcher: RulesetMatcher,
     hostgroups: list[str],
     options: dict,
 ) -> list[HostName]:
@@ -702,9 +695,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     config_cache.parser_factory(),
                     source_info.hostname,
                     source_info.fetcher_type,
-                    checking_sections=config_cache.make_checking_sections(
-                        plugins, hostname, selected_sections=NO_SELECTION
-                    ),
                     persisted_section_dir=make_persisted_section_dir(
                         source_info.hostname,
                         fetcher_type=source_info.fetcher_type,
@@ -1238,6 +1228,8 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
+    effective_host_callback = config.AutochecksConfigurer(config_cache).effective_host
+
     if not hosts:
         hosts = sorted(
             {
@@ -1298,12 +1290,8 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
 
         # autochecks
         count = sum(
-            remove_autochecks_of_host(
-                node,
-                host,
-                config_cache.effective_host_of_autocheck,
-            )
-            for node in config_cache.nodes(host) or [host]
+            remove_autochecks_of_host(node, host, effective_host_callback)
+            for node in (config_cache.nodes(host) or [host])
         )
         # config_cache.remove_autochecks(host)
         if count:
@@ -1721,7 +1709,7 @@ def mode_automation(args: list[str]) -> None:
         log.logger.setLevel(logging.INFO)
 
     name, automation_args = args[0], args[1:]
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"mode_automation[{name}]",
         attributes={
             "cmk.automation.name": name,
@@ -1756,15 +1744,7 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    # pylint: disable=import-outside-toplevel
     from cmk.base import notify
-
-    keepalive_mod: ModuleType | None
-    try:
-        from cmk.base.cee import keepalive as keepalive_mod  # type: ignore[no-redef, unused-ignore]
-    except ImportError:
-        # Edition layering...
-        keepalive_mod = None
 
     with store.lock_checkmk_configuration(configuration_lockfile):
         config.load(with_conf_d=True, validate_hosts=False)
@@ -1773,11 +1753,11 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         if config.is_cmc():
             raise RuntimeError(msg)
 
-    keepalive = False
-    if keepalive_mod and "keepalive" in options:
-        keepalive_mod.enable()
+    keepalive = "keepalive" in options and (
+        cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
+    )
+    if keepalive:
         register_sigint_handler()
-        keepalive = True
 
     return notify.do_notify(
         options,
@@ -1818,7 +1798,10 @@ modes.register(
                 long_option="log-to-stdout",
                 short_help="Also write log messages to console",
             ),
-            keepalive_option,
+            Option(
+                long_option="keepalive",
+                short_help="Execute in keepalive mode (CEE only)",
+            ),
         ],
     )
 )
@@ -1878,9 +1861,6 @@ def mode_check_discovery(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -1899,41 +1879,50 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
+
+    check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        checks_result = execute_check_discovery(
-            hostname,
-            is_cluster=hostname in config_cache.hosts_config.clusters,
-            cluster_nodes=config_cache.nodes(hostname),
-            params=config_cache.discovery_check_parameters(hostname),
-            fetched=((f[0], f[1]) for f in fetched),
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(
-                {**plugins.agent_sections, **plugins.snmp_sections}
+        with CPUTracker(console.debug) as tracker:
+            check_results = execute_check_discovery(
+                hostname,
+                is_cluster=hostname in config_cache.hosts_config.clusters,
+                cluster_nodes=config_cache.nodes(hostname),
+                params=config_cache.discovery_check_parameters(hostname),
+                fetched=((f[0], f[1]) for f in fetched),
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=hostname,
+                    rtc_package=None,
+                ),
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=ruleset_matcher,
+                    sections={**plugins.agent_sections, **plugins.snmp_sections},
+                ),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+                autochecks_config=autochecks_config,
+                enforced_services=config_cache.enforced_services_table(hostname),
+            )
+        check_results = [
+            *check_results,
+            make_timing_results(
+                tracker.duration,
+                tuple((f[0], f[2]) for f in fetched),
+                perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                operation="parsing",
-                section_name=section_name,
-                section_content=raw_data,
-                host_name=hostname,
-                rtc_package=None,
-            ),
-            host_label_plugins=HostLabelPluginMapper(
-                ruleset_matcher=ruleset_matcher,
-                sections={**plugins.agent_sections, **plugins.snmp_sections},
-            ),
-            plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            autochecks_config=autochecks_config,
-            enforced_services=config_cache.enforced_services_table(hostname),
-        )
+        ]
 
     if error_handler.result is not None:
-        checks_result = [error_handler.result]
+        check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(*checks_result)
-
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())
@@ -1945,7 +1934,7 @@ def mode_check_discovery(
 
 
 def register_mode_check_discovery(
-    *, active_check_handler: Callable[[HostName, str], object], keepalive: bool
+    *, active_check_handler: Callable[[HostName, str], object]
 ) -> None:
     modes.register(
         Mode(
@@ -1953,7 +1942,7 @@ def register_mode_check_discovery(
             handler_function=partial(
                 mode_check_discovery,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -1970,7 +1959,7 @@ def register_mode_check_discovery(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check_discovery(active_check_handler=lambda *_: None)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -2172,9 +2161,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2322,6 +2308,7 @@ class GetSubmitter(Protocol):
         dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
+        keepalive: bool,
     ) -> Submitter: ...
 
 
@@ -2381,9 +2368,6 @@ def mode_check(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
@@ -2403,14 +2387,8 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
-    fetched: Sequence[
-        tuple[
-            SourceInfo,
-            Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ] = ()
+
+    checks_result: Sequence[ActiveCheckResult] = []
     with (
         error_handler,
         set_value_store_manager(
@@ -2447,7 +2425,10 @@ def mode_check(
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(hostname),
                 run_plugin_names=run_plugin_names,
-                get_check_period=partial(config_cache.check_period_of_service, hostname),
+                get_check_period=lambda service_name,
+                service_labels: config_cache.check_period_of_service(
+                    hostname, service_name, service_labels
+                ),
                 submitter=get_submitter_(
                     check_submission=config.check_submission,
                     monitoring_core=config.monitoring_core,
@@ -2455,6 +2436,7 @@ def mode_check(
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
+                    keepalive=keepalive,
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
@@ -2469,10 +2451,9 @@ def mode_check(
         ]
 
     if error_handler.result is not None:
-        checks_result = [error_handler.result]
+        checks_result = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*checks_result)
-
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())
@@ -2480,14 +2461,6 @@ def mode_check(
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
-
-    # TODO: Nur fuer die aktuellen tests (cmk -v heute)
-    #       Denke wir sollten fuer das stats recording so etwas aehnliches wie
-    #       den --profile schalter fuers profiling einbauen
-    if config.ruleset_matching_stats:
-        config_cache.ruleset_matcher.persist_matching_stats(
-            "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
-        )
     return check_result.state
 
 
@@ -2495,7 +2468,6 @@ def register_mode_check(
     get_submitter_: GetSubmitter,
     *,
     active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
 ) -> None:
     modes.register(
         Mode(
@@ -2504,7 +2476,7 @@ def register_mode_check(
                 mode_check,
                 get_submitter_,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOST [IPADDRESS]",
@@ -2546,7 +2518,7 @@ def register_mode_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check(get_submitter, active_check_handler=lambda *_: None)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2629,9 +2601,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2889,9 +2858,6 @@ def mode_inventory_as_check(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2912,21 +2878,31 @@ def mode_inventory_as_check(
     )
     check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
-        check_results = _execute_active_check_inventory(
-            hostname,
-            config_cache=config_cache,
-            hosts_config=hosts_config,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(
-                {**plugins.agent_sections, **plugins.snmp_sections}
+        with CPUTracker(console.debug) as tracker:
+            check_results = _execute_active_check_inventory(
+                hostname,
+                config_cache=config_cache,
+                hosts_config=hosts_config,
+                fetcher=fetcher,
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                inventory_plugins=InventoryPluginMapper(),
+                inventory_parameters=config_cache.inventory_parameters,
+                parameters=parameters,
+                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
+            )
+        check_results = [
+            *check_results,
+            make_timing_results(
+                tracker.duration,
+                # FIXME: This is inconsistent with the other two calls.
+                (),  # nothing to add here, b/c fetching is triggered further down the call stack.
+                perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-            inventory_plugins=InventoryPluginMapper(),
-            inventory_parameters=config_cache.inventory_parameters,
-            parameters=parameters,
-            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
-        )
+        ]
 
     if error_handler.result is not None:
         check_results = (error_handler.result,)
@@ -2943,9 +2919,7 @@ def mode_inventory_as_check(
 
 
 def register_mode_inventory_as_check(
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
+    *, active_check_handler: Callable[[HostName, str], object]
 ) -> None:
     modes.register(
         Mode(
@@ -2953,7 +2927,7 @@ def register_mode_inventory_as_check(
             handler_function=partial(
                 mode_inventory_as_check,
                 active_check_handler=active_check_handler,
-                keepalive=keepalive,
+                keepalive=False,
             ),
             argument=True,
             argument_descr="HOST",
@@ -2989,16 +2963,20 @@ def register_mode_inventory_as_check(
                     argument_conv=int,
                     short_help="Use monitoring state S in case of error",
                 ),
+                Option(
+                    long_option="nw-changes",
+                    argument=True,
+                    argument_descr="S",
+                    argument_conv=int,
+                    short_help="Use monitoring state S for NW changes",
+                ),
             ],
         )
     )
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(
-        active_check_handler=lambda *args: None,
-        keepalive=False,
-    )
+    register_mode_inventory_as_check(active_check_handler=lambda *_: None)
 
 # .
 #   .--inventorize-marked-hosts--------------------------------------------.
@@ -3033,9 +3011,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     plugins = agent_based_register.get_previously_loaded_plugins()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

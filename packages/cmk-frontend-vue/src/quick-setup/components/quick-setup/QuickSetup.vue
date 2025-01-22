@@ -81,14 +81,4 @@ function handleBrowserDialog(event: BeforeUnloadEvent) {
   padding-left: 0;
   counter-reset: stage-index;
 }
-
-.quick-setup__action {
-  padding-left: 40px;
-}
-
-.quick-setup__loading {
-  display: flex;
-  align-items: center;
-  padding-top: 12px;
-}
 </style>

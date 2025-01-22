@@ -137,21 +137,26 @@ function Start-ShortenPath($tgt_link, $path) {
 }
 
 
-function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package_name" -ForegroundColor White
-    & cargo $cmd
+function Invoke-Cargo-With-Explicit-Package {
+    param(
+        [Parameter(
+            Mandatory=$True,
+            Position = 0
+        )]
+        $cmd,
+        [Parameter(
+            Mandatory=$False,
+            ValueFromRemainingArguments=$true,
+            Position = 1
+        )]
+        $further_args
+    )
+    $further_args_string = $further_args -join ' '
+    Write-Host "${package_name}: $cmd --package $package_name $further_args_string" -ForegroundColor White
+    & cargo $cmd --package $package_name $further_args
 
     if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
-    }
-}
-
-function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package_name" -ForegroundColor White
-    & cargo $cmd
-
-    if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
+        Write-Error "${package_name}: Failed to $cmd --package $package_name $further_args_string with code $lastexitcode" -ErrorAction Stop
     }
 }
 
@@ -208,50 +213,37 @@ try {
     Update-Dirs
 
     if ($packClean) {
-        Invoke-Cargo "clean"
+        Invoke-Cargo-With-Explicit-Package "clean"
     }
     if ($packBuild) {
         $cwd = Get-Location
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
-        &cargo build --release --target $cargo_target
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop
-        }
+        Invoke-Cargo-With-Explicit-Package "build" "--release" "--target" $cargo_target
     }
     if ($packClippy) {
-        &cargo clippy --release --target $cargo_target --tests -- --deny warnings
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to clippy $package_name with code $lastexitcode" -ErrorAction Stop
-        }
+        Invoke-Cargo-With-Explicit-Package "clippy" "--release" "--target" $cargo_target "--tests" "--" "--deny" "warnings"
     }
 
     if ($packFormat) {
-        Invoke-Cargo "fmt"
+        Invoke-Cargo-With-Explicit-Package "fmt"
     }
 
     if ($packCheckFormat) {
-        Write-Host "test format $package_name" -ForegroundColor White
-        cargo fmt -- --check
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test format $package_name" -ErrorAction Stop
-        }
+        Invoke-Cargo-With-Explicit-Package "fmt" "--" "--check"
     }
     if ($packTest) {
         if (-not (Test-Administrator)) {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
-        cargo test --release --target $cargo_target -- --test-threads=4
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test $package_name" -ErrorAction Stop
-        }
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {
         Write-Host "Uploading artifacts: [ $exe_dir/$exe_name -> $arte_dir/$exe_name ] ..." -Foreground White
         Copy-Item $exe_dir/$exe_name $arte_dir/$exe_name -Force -ErrorAction Stop
     }
     if ($packDoc) {
-        Invoke-Cargo "doc"
+        Invoke-Cargo-With-Explicit-Package "doc"
     }
 
     Write-Host "SUCCESS" -ForegroundColor Green

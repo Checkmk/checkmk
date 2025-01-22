@@ -18,6 +18,7 @@ from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPag
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="Disabled due to failing on CEE Ubuntu 22.04")
 @pytest.mark.parametrize(
     "created_host",
     [

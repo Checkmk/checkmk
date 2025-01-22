@@ -13,7 +13,7 @@ from cmk.ccc.store import makedirs, save_text_to_file
 
 from cmk.utils.paths import diskspace_config_dir, omd_root
 
-from cmk.diskspace import Config
+from cmk.diskspace.config import Config
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

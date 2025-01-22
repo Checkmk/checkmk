@@ -68,3 +68,73 @@ def test_check_netapp_luns_no_used_space() -> None:
         Result(state=State.OK, summary="SVM: test_svm_name"),
         Result(state=State.UNKNOWN, summary="Space used is unknown"),
     ]
+
+
+def test_check_netapp_luns_no_read_only() -> None:
+    lun_model = LunModelFactory.build(
+        name="/vol/test/lun1",
+        volume_name="test_volume_name",
+        svm_name="test_svm_name",
+        read_only=None,
+        space_used=20,
+        enabled=False,
+    )
+    section = {lun_model.item_name(): lun_model}
+
+    result = list(
+        _check_netapp_ontap_luns(
+            "lun1",
+            {
+                "read_only": False,
+                # not revelevant for this test - but needed:
+                "levels": (80.0, 90.0),
+                "trend_range": 24,
+            },
+            section,
+            # not revelevant for this test - but needed:
+            {"lun1.delta": (0.0, 0.0)},
+            0.0,
+        )
+    )
+
+    assert result[:4] == [
+        Result(state=State.OK, summary="Volume: test_volume_name"),
+        Result(state=State.OK, summary="SVM: test_svm_name"),
+        Result(state=State.CRIT, summary="LUN is offline"),
+        Result(state=State.WARN, summary="read-only is unknown (expected: false)"),
+    ]
+
+
+def test_check_netapp_luns_read_only_false() -> None:
+    lun_model = LunModelFactory.build(
+        name="/vol/test/lun1",
+        volume_name="test_volume_name",
+        svm_name="test_svm_name",
+        read_only=False,
+        space_used=20,
+        enabled=False,
+    )
+    section = {lun_model.item_name(): lun_model}
+
+    result = list(
+        _check_netapp_ontap_luns(
+            "lun1",
+            {
+                "read_only": True,
+                # not revelevant for this test - but needed:
+                "levels": (80.0, 90.0),
+                "trend_range": 24,
+            },
+            section,
+            # not revelevant for this test - but needed:
+            {"lun1.delta": (0.0, 0.0)},
+            0.0,
+        )
+    )
+
+    assert result[:4] == [
+        Result(state=State.OK, summary="Volume: test_volume_name"),
+        Result(state=State.OK, summary="SVM: test_svm_name"),
+        Result(state=State.CRIT, summary="LUN is offline"),
+        Result(state=State.WARN, summary="read-only is false (expected: true)"),
+    ]

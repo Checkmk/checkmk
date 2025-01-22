@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # Monitors FTP backup spaces of plesk domains.
 # Data format
@@ -18,7 +18,7 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any  # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 

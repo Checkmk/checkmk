@@ -27,8 +27,8 @@ from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.session import session
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
 

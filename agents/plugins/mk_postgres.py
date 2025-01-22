@@ -52,7 +52,7 @@ The only difference being `/home/postgres/does-not-exist.env` does not exist in 
 Different defaults are chosen for Windows.
 """
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import abc
 import io
@@ -69,8 +69,8 @@ import sys
 import tempfile
 
 try:
-    from collections.abc import Callable, Iterable, Sequence  # pylint: disable=unused-import
-    from typing import Any  # pylint: disable=unused-import
+    from collections.abc import Callable, Iterable, Sequence  # noqa: F401
+    from typing import Any  # noqa: F401
 except ImportError:
     # We need typing only for testing
     pass

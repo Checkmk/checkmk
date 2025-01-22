@@ -10,17 +10,16 @@ import logging
 import os
 import tarfile
 from collections.abc import Mapping
-from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from tests.unit.testlib.rabbitmq import get_expected_definition
+from tests.unit.testlib.utils import reset_registries
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -29,12 +28,10 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.watolib.utils
-from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import (
-    ActivationCleanupBackgroundJob,
+    ActivationCleanupJob,
     ConfigSyncFileInfo,
     default_rabbitmq_definitions,
 )
@@ -85,7 +82,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ty="dir",
             ident="rabbitmq",
             site_path="etc/rabbitmq/definitions.d",
-            excludes=["00-default.json", ".*new*"],
+            excludes=["00-default.json", "definitions.json", ".*new*"],
         ),
         ReplicationPath(
             ty="dir",
@@ -118,6 +115,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
+            # CMK-20769
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato", []),
         ]
 
     expected += [
@@ -184,6 +183,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+            # CMK-20769
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato/", []),
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
@@ -305,9 +306,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/omd/site.conf": (
                 33200,
-                979,
+                980,
                 None,
-                "130b9aad980f16f8e20e065a4b57106532d67b910295f30d6997366ee2df172b",
+                "c1823be092bf50bf9bd62cde30f34514b8a3198354546f36287d7a11ae0ed310",
             ),
         },
         0,
@@ -751,7 +752,7 @@ def test_get_current_config_generation() -> None:
     assert activate_changes._get_current_config_generation() == 3
 
 
-def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -> None:
+def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> None:
     act_dir = (
         cmk.utils.paths.tmp_dir / "wato" / "activation" / "9a61e24f-d991-4710-b8e7-04700c309594"
     )
@@ -798,24 +799,9 @@ def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -
     )
     os.utime(act_dir, (1720800187.7206023, 1720800187.7206023))
 
-    job = ActivationCleanupBackgroundJob()
-    os.makedirs(job.get_work_dir())
-    interface = BackgroundProcessInterface(
-        job.get_work_dir(),
-        job.get_job_id(),
-        logging.getLogger(),
-        lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
-    )
-
-    job.do_execute(interface)
-
-    stdout, stderr = capsys.readouterr()
-    assert stdout == ""
-    assert stderr == ""
-
-    result = Path(job.get_work_dir(), BackgroundJobDefines.result_message_filename).read_text()
-    assert result == "Activation cleanup finished\n"
-
+    with caplog.at_level(logging.INFO, logger="cmk.web"):
+        ActivationCleanupJob().do_execute()
+    assert any("Activation cleanup finished" in m for m in caplog.messages)
     assert not act_dir.exists()
 
 

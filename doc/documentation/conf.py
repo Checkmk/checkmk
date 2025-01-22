@@ -17,6 +17,7 @@
 #
 import os
 import sys
+from datetime import datetime
 
 DOC_ROOT = os.path.dirname(__file__)
 
@@ -25,9 +26,10 @@ sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 
 # -- Project information -----------------------------------------------------
 
+year = datetime.now().year
 project = "CheckMK"
-copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin
 author = "Checkmk GmbH"
+copyright = f"{year}, {author}"  # pylint: disable=redefined-builtin # noqa: A001
 
 
 # -- General configuration ---------------------------------------------------

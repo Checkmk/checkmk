@@ -22,6 +22,7 @@ import {
     remove_class,
     update_contents,
 } from "./utils";
+import type SimpleBar from "simplebar";
 
 let g_content_loc: null | string = null;
 let g_scrollbar: SimpleBar | null | undefined = null;
@@ -30,7 +31,7 @@ export function initialize_sidebar(
     update_interval: number,
     refresh: [string, string][],
     restart: string[],
-    static_: string[]
+    static_: string[],
 ) {
     if (restart) {
         sidebar_restart_time = Math.floor(new Date().getTime() / 1000);
@@ -47,13 +48,13 @@ export function initialize_sidebar(
     execute_sidebar_scheduler();
 
     g_scrollbar = add_simplebar_scrollbar("side_content");
-    g_scrollbar?.getScrollElement().addEventListener(
+    g_scrollbar?.getScrollElement()?.addEventListener(
         "scroll",
         function () {
             store_scroll_position();
             return false;
         },
-        false
+        false,
     );
     register_event_handlers();
     if (is_content_frame_accessible()) {
@@ -68,7 +69,7 @@ export function register_event_handlers() {
             snapinDrag(e);
             return false;
         },
-        false
+        false,
     );
 }
 
@@ -466,7 +467,7 @@ export function add_snapin(name: string) {
                 ? window.frames[0].document
                 : document;
             const preview = add_snapin_page.getElementById(
-                "snapin_container_" + name
+                "snapin_container_" + name,
             );
             if (preview) {
                 const container = preview.parentElement?.parentElement;
@@ -530,7 +531,7 @@ function remove_snapin(id: string) {
 export function toggle_sidebar_snapin(
     oH2: HTMLElement,
     url: string,
-    imgId: string
+    imgId: string,
 ) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
     const childs = oH2.parentNode!.parentNode!
@@ -571,7 +572,7 @@ export function switch_customer(customer_id: string, switch_state: string) {
             customer_id +
             ":" +
             switch_state,
-        {response_handler: reload_whole_page, handler_data: null}
+        {response_handler: reload_whole_page, handler_data: null},
     );
 }
 
@@ -692,8 +693,7 @@ export function execute_sidebar_scheduler() {
     }
 
     if (g_sidebar_notify_interval !== null) {
-        const timestamp = new Date().getTime() / 1000;
-        if (timestamp % g_sidebar_notify_interval == 0) {
+        if (g_seconds_to_update == 0) {
             update_messages();
             if (g_may_ack) {
                 update_unack_incomp_werks();
@@ -729,7 +729,7 @@ export function execute_sidebar_scheduler() {
 function setCookie(
     cookieName: string,
     value: number,
-    expiredays: null | number
+    expiredays: null | number,
 ) {
     const exdate = new Date();
     exdate.setDate(exdate.getDate() + (expiredays ?? 0));
@@ -752,7 +752,7 @@ function getCookie(cookieName: string) {
     let cookieEnd = document.cookie.indexOf(";", cookieStart);
     if (cookieEnd == -1) cookieEnd = document.cookie.length;
     return decodeURIComponent(
-        document.cookie.substring(cookieStart, cookieEnd)
+        document.cookie.substring(cookieStart, cookieEnd),
     );
 }
 
@@ -762,14 +762,19 @@ export function initialize_scroll_position() {
     const scrollPos: number = scrollPosFromCookie
         ? parseInt(scrollPosFromCookie)
         : 0;
+    // 2531: Object is possibly 'null'
+    // @ts-ignore
     g_scrollbar.getScrollElement().scrollTop = scrollPos;
 }
 
 function store_scroll_position() {
     setCookie(
         "sidebarScrollPos",
-        g_scrollbar!.getScrollElement().scrollTop,
-        null
+        // 2345: Argument of type 'number | undefined' is not assignable to
+        // parameter of type 'number'
+        // @ts-ignore
+        g_scrollbar!.getScrollElement()?.scrollTop,
+        null,
     );
 }
 
@@ -794,11 +799,11 @@ function highlight_link(link_obj: HTMLElement, container_id: string) {
         let links: HTMLCollectionOf<HTMLElement>;
         if (this_snapin.getElementsByClassName)
             links = this_snapin.getElementsByClassName(
-                "link"
+                "link",
             ) as HTMLCollectionOf<HTMLElement>;
         else
             links = document.getElementsByClassName(
-                "link"
+                "link",
             ) as HTMLCollectionOf<HTMLElement>;
 
         for (let i = 0; i < links.length; i++) {
@@ -811,7 +816,7 @@ function highlight_link(link_obj: HTMLElement, container_id: string) {
 
 export function wato_folders_clicked(
     link_obj: HTMLElement,
-    folderpath: string
+    folderpath: string,
 ) {
     g_last_folder = folderpath;
     highlight_link(link_obj, "snapin_container_wato_folders");
@@ -909,7 +914,7 @@ export function wato_tree_target_changed(target_field: HTMLSelectElement) {
 export function set_snapin_site(
     event: Event,
     ident: string,
-    select_field: HTMLSelectElement
+    select_field: HTMLSelectElement,
 ) {
     call_ajax(
         "sidebar_ajax_set_snapin_site.py?ident=" +
@@ -919,11 +924,11 @@ export function set_snapin_site(
         {
             response_handler: function (
                 _handler_data: string,
-                _response_body: any
+                _response_body: any,
             ) {
                 refresh_single_snapin(ident);
             },
-        }
+        },
     );
     return prevent_default_events(event);
 }
@@ -952,7 +957,7 @@ export function fetch_nagvis_snapin_contents() {
         add_ajax_id: false,
         response_handler: function (
             _unused_handler_data: any,
-            ajax_response: string
+            ajax_response: string,
         ) {
             // Then hand over the data to the python code which is responsible
             // to render the data.
@@ -962,11 +967,11 @@ export function fetch_nagvis_snapin_contents() {
                 post_data: "request=" + encodeURIComponent(ajax_response),
                 response_handler: function (
                     _unused_handler_data: any,
-                    snapin_content_response: string
+                    snapin_content_response: string,
                 ) {
                     update_contents(
                         "snapin_nagvis_maps",
-                        snapin_content_response
+                        snapin_content_response,
                     );
                 },
             });
@@ -1027,7 +1032,7 @@ interface Speedometer {
 export function speedometer_show_speed(
     last_perc: number,
     program_start: number,
-    scheduled_rate: number
+    scheduled_rate: number,
 ) {
     const url =
         "sidebar_ajax_speedometer.py" +
@@ -1041,7 +1046,7 @@ export function speedometer_show_speed(
     call_ajax(url, {
         response_handler: function (
             handler_data: Speedometer,
-            response_body: string
+            response_body: string,
         ) {
             let data: Speedometer;
             try {
@@ -1069,17 +1074,17 @@ export function speedometer_show_speed(
                         speedometer_show_speed(
                             data.percentage,
                             data.program_start,
-                            data.scheduled_rate
+                            data.scheduled_rate,
                         );
                     };
                 })(data),
-                5000
+                5000,
             );
         },
         error_handler: function (
             handler_data: Speedometer,
             _status_code: number,
-            _error_msg: string
+            _error_msg: string,
         ) {
             setTimeout(
                 (function (data: Speedometer) {
@@ -1087,11 +1092,11 @@ export function speedometer_show_speed(
                         return speedometer_show_speed(
                             data.percentage,
                             data.program_start,
-                            data.scheduled_rate
+                            data.scheduled_rate,
                         );
                     };
                 })(handler_data),
-                5000
+                5000,
             );
         },
         method: "GET",
@@ -1150,7 +1155,7 @@ function move_needle(from_perc: number, to_perc: number) {
                 move_needle(new_perc, to_perc);
             };
         })(new_perc, to_perc),
-        50
+        50,
     );
 }
 
@@ -1164,7 +1169,7 @@ let g_may_ack = false;
 
 export function init_messages_and_werks(
     interval: null | number,
-    may_ack: boolean
+    may_ack: boolean,
 ) {
     g_sidebar_notify_interval = interval;
     create_initial_ids("user", "messages", "user_message.py");
@@ -1180,7 +1185,7 @@ export function init_messages_and_werks(
     create_initial_ids(
         "help_links",
         "werks",
-        "change_log.py?show_unack=1&wo_compatibility=3"
+        "change_log.py?show_unack=1&wo_compatibility=3",
     );
     update_unack_incomp_werks();
 }
@@ -1242,24 +1247,28 @@ function update_messages() {
 }
 
 export function update_message_trigger(msg_text: string, msg_count: number) {
-    const l = document.getElementById("messages_label")!;
-    if (msg_count === 0) {
-        l.style.display = "none";
-        return;
+    const l = document.getElementById("messages_label");
+    if (l) {
+        if (msg_count === 0) {
+            l.style.display = "none";
+            return;
+        }
+
+        l.innerText = msg_count.toString();
+        l.style.display = "inline";
     }
 
-    l.innerText = msg_count.toString();
-    l.style.display = "inline";
-
-    const user_messages = document.getElementById("messages_link_to")!;
-    const text_content = msg_count + " " + msg_text;
-    user_messages.textContent = text_content;
+    const user_messages = document.getElementById("messages_link_to");
+    if (user_messages) {
+        const text_content = msg_count + " " + msg_text;
+        user_messages.textContent = text_content;
+    }
 }
 
 function mark_message_read(
     msg_id: string,
     msg_text: string,
-    msg_count: number
+    msg_count: number,
 ) {
     call_ajax("sidebar_message_read.py?id=" + msg_id);
 
@@ -1293,7 +1302,7 @@ function update_unack_incomp_werks() {
 export function update_werks_trigger(
     werks_count: number,
     text: string,
-    tooltip: string
+    tooltip: string,
 ) {
     const l = document.getElementById("werks_label")!;
     if (werks_count === 0) {
@@ -1312,7 +1321,7 @@ export function update_werks_trigger(
 }
 function create_initial_ids(menu: string, what: string, start_url: string) {
     const mega_menu_help_div = document.getElementById(
-        "popup_trigger_mega_menu_" + menu
+        "popup_trigger_mega_menu_" + menu,
     )!.firstChild;
     const help_div = mega_menu_help_div!.childNodes[2];
 

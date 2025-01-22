@@ -28,10 +28,14 @@ from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec
-from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    parse_data_from_frontend,
+    render_form_spec,
+    RenderMode,
+)
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
-from cmk.gui.htmllib.html import ExperimentalRenderMode, html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -434,6 +438,9 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         # Note: We may skip the CatalogConverter and build the Catalog ourselves
         return self._get_catalog_converter().catalog
 
+    def _validate_vs(self, entry: dict[str, Any], varprefix: str) -> None:
+        pass
+
     def valuespec(self) -> Dictionary:
         general_elements = self._vs_mandatory_elements()
         general_keys = [k for k, _v in general_elements]
@@ -451,6 +458,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 (_("%s properties") % self._mode_type.name_singular().title(), individual_keys),
             ],
             render="form",
+            validate=self._validate_vs,
         )
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
@@ -638,10 +646,10 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def _update_entry_from_vars(self) -> None:
         render_mode, form_spec = self._get_render_mode()
         match render_mode:
-            case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
                 assert form_spec is not None
                 self._update_entry_from_vars_form_spec(form_spec)
-            case ExperimentalRenderMode.BACKEND:
+            case RenderMode.BACKEND:
                 self._update_entry_from_vars_valuespec()
 
     def _update_entry_from_vars_valuespec(self) -> None:
@@ -749,24 +757,24 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     def _page_form_quick_setup_warning(self) -> None:
         pass
 
-    def _get_render_mode(self) -> tuple[ExperimentalRenderMode, FormSpec | None]:
+    def _get_render_mode(self) -> tuple[RenderMode, FormSpec | None]:
         # No longer depends on global switch, but on the global switch
         # but on existence of the fs_individual_elements implementation
         try:
             self._fs_individual_elements()
         except NotImplementedError:
-            return ExperimentalRenderMode.BACKEND, None
+            return RenderMode.BACKEND, None
 
         # Frontend rendering is done via the Catalog class. There is no valuespec fallback
-        return ExperimentalRenderMode.FRONTEND, self.catalog()
+        return RenderMode.FRONTEND, self.catalog()
 
     def _page_form_render_entry(self) -> None:
         render_mode, form_spec = self._get_render_mode()
         match render_mode:
-            case ExperimentalRenderMode.BACKEND:
+            case RenderMode.BACKEND:
                 self._page_form_render_entry_valuespec()
 
-            case ExperimentalRenderMode.FRONTEND:
+            case RenderMode.FRONTEND:
                 assert form_spec is not None
                 # This prevents sending the form when pressing enter in an input field
                 html.form_has_submit_button = True

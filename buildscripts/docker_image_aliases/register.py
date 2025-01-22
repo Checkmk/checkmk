@@ -25,8 +25,8 @@ import os
 import shlex
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
 
 import docker  # type: ignore[import-untyped]
 import yaml
@@ -35,7 +35,7 @@ LOG = logging.getLogger("register-dia")
 REGISTRY = "artifacts.lan.tribe29.com:4000"
 
 
-def split_source_name(raw_source: str) -> Tuple[str, str, List[str]]:
+def split_source_name(raw_source: str) -> tuple[str, str, list[str]]:
     """
     >>> split_source_name("artifacts.lan.tribe29.com:4000/debian:latest")
     ('artifacts.lan.tribe29.com:4000', 'debian', ['latest'])
@@ -52,13 +52,11 @@ def split_source_name(raw_source: str) -> Tuple[str, str, List[str]]:
     return "/".join(registry_name), base_name, tags if tags else ["latest"]
 
 
-def cmd_result(cmd: str, cwd: Optional[str] = None) -> Sequence[str]:
+def cmd_result(cmd: str, cwd: str | None = None) -> Sequence[str]:
     """Run @cmd and return non-empty lines"""
     return [
         line
-        for line in subprocess.check_output(
-            shlex.split(cmd), cwd=cwd, universal_newlines=True
-        ).split("\n")
+        for line in subprocess.check_output(shlex.split(cmd), cwd=cwd, text=True).split("\n")
         if line.strip()
     ]
 
@@ -69,7 +67,7 @@ def commit_id(directory: str) -> str:
 
 def cmk_branch(directory: str) -> str:
     return min(
-        ("master", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
+        ("master", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
         key=lambda b: int(
             cmd_result(f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[
                 0
@@ -78,7 +76,7 @@ def cmk_branch(directory: str) -> str:
     )
 
 
-def git_info() -> List[str]:
+def git_info() -> list[str]:
     cwd = os.path.dirname(__file__)
     a, b = cmk_branch(directory=cwd), commit_id(directory=cwd)
     return [a, b]

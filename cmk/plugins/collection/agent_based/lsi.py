@@ -44,12 +44,42 @@ def parse_lsi(string_table: StringTable) -> Section:
     return section
 
 
+agent_section_lsi = AgentSection(
+    name="lsi",
+    parse_function=parse_lsi,
+)
+
+
 def discover_lsi_disk(section: Section) -> DiscoveryResult:
     # Set the discovered state as desired/expected state
     yield from (
         Service(item=item, parameters={"expected_state": value})
         for item, value in section["disks"].items()
     )
+
+
+def check_lsi_disk(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    expected_state = params.get("expected_state")
+    state = section["disks"].get(item)
+    if state is None:
+        yield Result(state=State.CRIT, summary="Disk not present")
+    elif state == expected_state:
+        yield Result(state=State.OK, summary=f"Disk has state '{state}'")
+    else:
+        yield Result(
+            state=State.CRIT, summary=f"Disk has state '{state}' (should be '{expected_state}')"
+        )
+
+
+check_plugin_lsi_disk = CheckPlugin(
+    name="lsi_disk",
+    sections=["lsi"],
+    service_name="RAID disk %s",
+    discovery_function=discover_lsi_disk,
+    check_function=check_lsi_disk,
+    check_default_parameters={},
+    check_ruleset_name="raid_disk",
+)
 
 
 def discover_lsi_array(section: Section) -> DiscoveryResult:
@@ -66,24 +96,6 @@ def check_lsi_array(item: str, params: object, section: Section) -> CheckResult:
         )
 
 
-def check_lsi_disk(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    expected_state = params.get("expected_state")
-    state = section["disks"].get(item)
-    if state is None:
-        yield Result(state=State.CRIT, summary="Disk not present")
-    elif state == expected_state:
-        yield Result(state=State.OK, summary=f"Disk has state '{state}'")
-    else:
-        yield Result(
-            state=State.CRIT, summary=f"Disk has state '{state}' (should be '{expected_state}')"
-        )
-
-
-agent_section_lsi = AgentSection(
-    name="lsi",
-    parse_function=parse_lsi,
-)
-
 check_plugin_lsi_array = CheckPlugin(
     name="lsi_array",
     sections=["lsi"],
@@ -93,14 +105,4 @@ check_plugin_lsi_array = CheckPlugin(
     check_default_parameters={},
     # in order to be listed in the enforced service section 'RAID: overall state'.
     check_ruleset_name="raid",
-)
-
-check_plugin_lsi_disk = CheckPlugin(
-    name="lsi_disk",
-    sections=["lsi"],
-    service_name="RAID disk %s",
-    discovery_function=discover_lsi_disk,
-    check_function=check_lsi_disk,
-    check_default_parameters={},
-    check_ruleset_name="raid_disk",
 )

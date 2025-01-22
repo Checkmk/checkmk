@@ -6,14 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
-
+import { CmkError, formatError } from '@/lib/error.ts'
 import {
-  saveQuickSetup,
   getOverview,
-  validateStage,
   getAllStages,
-  editQuickSetup
-} from './rest_api'
+  validateAndRecapStage,
+  getStageStructure,
+  saveOrEditQuickSetup
+} from './rest-api/api'
 import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
@@ -21,17 +21,10 @@ import { ActionType, processActionData, renderContent, renderRecap } from './ren
 import type {
   QuickSetupSaveStageSpec,
   QuickSetupStageAction,
-  QuickSetupStageSpec
+  QuickSetupStageSpec,
+  DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import type {
-  QSInitializationResponse,
-  ValidationError,
-  GeneralError,
-  RestApiError,
-  QSStageResponse,
-  AllStagesValidationError
-} from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
   StageData,
@@ -39,6 +32,13 @@ import type {
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import usePersistentRef from '@/lib/usePersistentRef'
+import {
+  QuickSetupCompleteActionValidationResponse,
+  QuickSetupStageActionValidationResponse,
+  type Action,
+  type QuickSetupGuidedResponse,
+  type QuickSetupStageStructure
+} from '@/lib/rest-api-client/quick-setup/response_schemas'
 
 /**
  * Type definition for internal stage storage
@@ -69,7 +69,7 @@ const loadedAllStages = ref(false)
 const showQuickSetup = ref(false)
 const preventLeaving = ref(false)
 const stages = ref<QSStageStore[]>([])
-const globalError = ref<string | null>(null) //Main error message
+const globalError = ref<string | DetailedError | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
 
 const numberOfStages = computed(() => stages.value.length) //Number of stages
@@ -83,7 +83,7 @@ provide(formDataKey, readonly(formData))
 // Stages flow control and user input update
 //
 //
-const nextStage = async (actionId: string | null = null) => {
+const nextStage = async (actionId: string) => {
   loading.value = true
   globalError.value = null
 
@@ -97,41 +97,56 @@ const nextStage = async (actionId: string | null = null) => {
     userInput.push(formData)
   }
 
-  let result: QSStageResponse | null = null
-
   try {
-    result = await validateStage(props.quick_setup_id, userInput, actionId, props.objectId)
-  } catch (err) {
-    handleError(err as RestApiError)
-  }
+    const actionResponse = await validateAndRecapStage(props.quick_setup_id, actionId, userInput)
+    loading.value = false
 
-  loading.value = false
-  if (!result) {
+    if (actionResponse instanceof QuickSetupStageActionValidationResponse) {
+      handleValidationError(actionResponse, thisStageNumber)
+      handleBackgroundJobError(actionResponse)
+      return
+    }
+
+    stages.value[thisStageNumber]!.form_spec_errors =
+      actionResponse.validation_errors?.formspec_errors || {}
+    stages.value[thisStageNumber]!.errors = actionResponse.validation_errors?.stage_errors || []
+    stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
+  } catch (err: unknown) {
+    handleExceptionError(err)
     return
+  } finally {
+    loading.value = false
   }
-
-  //Clear form_spec_errors and other_errors from thisStageNumber
-  stages.value[thisStageNumber]!.form_spec_errors = {}
-  stages.value[thisStageNumber]!.errors = []
-
-  stages.value[thisStageNumber]!.recap = result.stage_recap
 
   //If we have not finished the quick setup yet, but still on the, regular step
   if (nextStageNumber < numberOfStages.value - 1) {
+    let nextStageStructure: QuickSetupStageStructure
+    try {
+      nextStageStructure = await getStageStructure(
+        props.quick_setup_id,
+        nextStageNumber,
+        props.objectId
+      )
+    } catch (err: unknown) {
+      handleExceptionError(err)
+    }
+
     const acts: QuickSetupStageAction[] = stages.value[nextStageNumber]?.actions || []
 
     acts.length = 0
 
-    for (const action of result.next_stage_structure.actions) {
+    for (const action of nextStageStructure!.actions) {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       acts.push(processActionData(ActionType.Next, action, nextStage))
     }
 
-    if (result.next_stage_structure.prev_button) {
+    if (nextStageStructure!.prev_button) {
       acts.push(
         processActionData(
           ActionType.Prev,
           {
-            button: result.next_stage_structure.prev_button,
+            id: 'prev',
+            button: nextStageStructure!.prev_button,
             load_wait_label: ''
           },
           prevStage
@@ -141,7 +156,7 @@ const nextStage = async (actionId: string | null = null) => {
 
     stages.value[nextStageNumber] = {
       ...stages.value[nextStageNumber]!,
-      components: result.next_stage_structure.components,
+      components: nextStageStructure!.components,
       recap: [],
       form_spec_errors: {},
       errors: [],
@@ -170,6 +185,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     const acts: QuickSetupStageAction[] = []
     if (stageIndex !== data.stages.length - 1) {
       for (const action of stage.actions) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         acts.push(processActionData(ActionType.Next, action, nextStage))
       }
     }
@@ -178,6 +194,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
         processActionData(
           ActionType.Prev,
           {
+            id: 'prev',
             button: stage.prev_button,
             load_wait_label: ''
           },
@@ -208,6 +225,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     form_spec_errors: {},
     errors: [],
     user_input: ref({}),
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     actions: [...data.actions.map((action) => processActionData(ActionType.Save, action, save))]
   })
   loadedAllStages.value = true
@@ -215,7 +233,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
 }
 
 const loadGuidedStages = async (): Promise<QSStageStore[]> => {
-  const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
+  const data: QuickSetupGuidedResponse = await getOverview(props.quick_setup_id, props.objectId)
   const result: QSStageStore[] = []
 
   guidedModeLabel = data.guided_mode_string
@@ -231,7 +249,8 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     const acts: QuickSetupStageAction[] = []
 
     if (isFirst) {
-      for (const action of data.stage.next_stage_structure.actions) {
+      for (const action of data.stage.actions) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         acts.push(processActionData(ActionType.Next, action, nextStage))
       }
     }
@@ -239,7 +258,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     result.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
-      components: isFirst ? data.stage.next_stage_structure.components : [],
+      components: isFirst ? data.stage.components : [],
       recap: [],
       form_spec_errors: {},
       errors: [],
@@ -258,11 +277,13 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     errors: [],
     user_input: ref({}),
     actions: [
-      ...data.actions.map((action) => processActionData(ActionType.Save, action, save)),
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      ...data.actions.map((action: Action) => processActionData(ActionType.Save, action, save)),
       processActionData(
         ActionType.Prev,
         {
-          button: data.prev_button,
+          id: 'prev',
+          button: data.prev_button!,
           load_wait_label: ''
         },
         prevStage
@@ -288,27 +309,27 @@ const save = async (buttonId: string) => {
   }
 
   try {
-    if (props.objectId) {
-      preventLeaving.value = false
-      const { redirect_url: redirectUrl } = await editQuickSetup(
-        props.quick_setup_id,
-        buttonId,
-        props.objectId,
-        userInput
-      )
-      window.location.href = redirectUrl
+    preventLeaving.value = false
+    const data = await saveOrEditQuickSetup(
+      props.quick_setup_id,
+      buttonId,
+      userInput,
+      props.objectId
+    )
+    loading.value = true
+
+    if (data instanceof QuickSetupCompleteActionValidationResponse) {
+      handleAllStagesValidationError(data)
+      handleBackgroundJobError(data)
+      return
     } else {
-      preventLeaving.value = false
-      const { redirect_url: redirectUrl } = await saveQuickSetup(
-        props.quick_setup_id,
-        buttonId,
-        userInput
-      )
-      window.location.href = redirectUrl
+      window.location.href = data.redirect_url
     }
-  } catch (err) {
+  } catch (err: unknown) {
     loading.value = false
-    handleError(err as RestApiError)
+    handleExceptionError(err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -363,31 +384,60 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const handleError = (err: RestApiError) => {
-  if (err.type === 'general') {
-    globalError.value = `An error occurred while trying to proceed to the next step.
-The underlying call raised the following error: ${(err as GeneralError).general_error}
-Please try again to confirm this is not a one-time occurrence.
-Please verify the logs if this error persists.`
-  } else if (err.type === 'validation_all_stages') {
-    const errs = err as AllStagesValidationError
+const handleValidationError = (
+  actionResponse: QuickSetupStageActionValidationResponse,
+  thisStageNumber: number
+) => {
+  stages.value[thisStageNumber]!.form_spec_errors =
+    actionResponse.validation_errors?.formspec_errors || {}
+  stages.value[thisStageNumber]!.errors = actionResponse.validation_errors?.stage_errors || []
+}
 
-    for (const stageError of errs.all_stage_errors) {
-      const stageIndex =
-        typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
-          ? stageError.stage_index
-          : stages.value.length - 1
+const handleAllStagesValidationError = (data: QuickSetupCompleteActionValidationResponse) => {
+  const errs = data.all_stage_errors || []
+  for (const stageError of errs) {
+    const stageIndex =
+      typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
+        ? stageError.stage_index
+        : stages.value.length - 1
 
-      stages.value[stageIndex]!.errors = stageError.stage_errors
-      stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
-    }
-  } else {
-    stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors
-    stages.value[quickSetupHook.stage.value]!.form_spec_errors = (
-      err as ValidationError
-    ).formspec_errors
+    stages.value[stageIndex]!.errors = stageError.stage_errors
+    stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
   }
 }
+
+const handleBackgroundJobError = (
+  data: QuickSetupStageActionValidationResponse | QuickSetupCompleteActionValidationResponse
+) => {
+  if (data.background_job_exception) {
+    globalError.value = {
+      type: 'DetailedError',
+      message: data.background_job_exception.message,
+      details: data.background_job_exception.traceback
+    }
+  }
+}
+
+const handleExceptionError = (err: unknown) => {
+  if (err instanceof CmkError) {
+    globalError.value = {
+      type: 'DetailedError',
+      message: err.message,
+      details: formatError(err)
+    }
+  } else if (err instanceof Error) {
+    const message =
+      'An unknown error occurred. Refresh the page to try again. If the problem persists, reach out to the Checkmk support.'
+    globalError.value = {
+      type: 'DetailedError',
+      message: message,
+      details: formatError(err)
+    }
+  } else {
+    throw Error('Can not handle error')
+  }
+}
+
 const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   'quick_setup_wizard_mode',
   props.mode

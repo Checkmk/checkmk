@@ -1181,7 +1181,9 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
+def test_openapi_bulk_discovery_with_default_options(
+    base: str, clients: ClientRegistry, mocker: MockerFixture
+) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(
         entries=[
@@ -1196,10 +1198,12 @@ def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientR
         ]
     )
 
+    automation = mocker.patch("cmk.gui.watolib.bulk_discovery.discovery")
     resp = clients.ServiceDiscovery.bulk_discovery(
         hostnames=["foobar", "sample"],
         monitor_undecided_services=True,
     )
+    automation.assert_called_once()
     assert resp.json["id"] == "bulk_discovery"
     assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
         "is finished"

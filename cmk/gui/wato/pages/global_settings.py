@@ -129,10 +129,10 @@ class ABCGlobalSettingsMode(WatoMode):
     def _should_show_config_variable(self, config_variable: ConfigVariable) -> bool:
         varname = config_variable.ident()
 
-        if not config_variable.domain().enabled():
+        if not (domain := config_variable.domain()).enabled():
             return False
 
-        if config_variable.domain() == ConfigDomainCore and varname not in self._default_values:
+        if isinstance(domain, ConfigDomainCore) and varname not in self._default_values:
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
@@ -387,13 +387,11 @@ class ABCEditGlobalSettingMode(WatoMode):
             "edit-configvar",
             msg,
             sites=self._affected_sites(),
-            domains=[self._config_variable.domain()()],
+            domains=[(domain := self._config_variable.domain())],
             need_restart=self._config_variable.need_restart(),
             need_apache_reload=self._config_variable.need_apache_reload(),
             domain_settings={
-                self._config_variable.domain().ident(): {
-                    "need_apache_reload": self._config_variable.need_apache_reload()
-                }
+                domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
             },
         )
 
@@ -562,13 +560,11 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         _changes.add_change(
             "edit-configvar",
             msg,
-            domains=[config_variable.domain()()],
+            domains=[(domain := config_variable.domain())],
             need_restart=config_variable.need_restart(),
             need_apache_reload=config_variable.need_apache_reload(),
             domain_settings={
-                config_variable.domain().ident(): {
-                    "need_apache_reload": config_variable.need_apache_reload()
-                }
+                domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
             },
         )
 

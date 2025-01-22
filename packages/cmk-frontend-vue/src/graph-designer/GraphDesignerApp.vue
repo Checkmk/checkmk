@@ -32,7 +32,7 @@ import {
   type I18N,
   type Operation,
   type Transformation
-} from '@/graph-designer/type_defs'
+} from 'cmk-shared-typing/typescript/graph_designer'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'
@@ -92,6 +92,7 @@ const specUnit = makeCascadingSingleChoice('', [
     parameter_form: makeDictionary('', [
       {
         name: 'notation',
+        render_only: false,
         required: true,
         parameter_form: makeCascadingSingleChoice(props.i18n.graph_options.unit_custom_notation, [
           {
@@ -156,10 +157,12 @@ const specUnit = makeCascadingSingleChoice('', [
       },
       {
         name: 'precision',
+        render_only: false,
         required: true,
         parameter_form: makeDictionary(props.i18n.graph_options.unit_custom_precision, [
           {
             name: 'type',
+            render_only: false,
             required: true,
             parameter_form: makeSingleChoice(props.i18n.graph_options.unit_custom_precision_type, [
               {
@@ -176,6 +179,7 @@ const specUnit = makeCascadingSingleChoice('', [
           },
           {
             name: 'digits',
+            render_only: false,
             required: true,
             parameter_form: makeFloat(props.i18n.graph_options.unit_custom_precision_digits, ''),
             default_value: 2,
@@ -207,6 +211,7 @@ const specExplicitVerticalRange = makeCascadingSingleChoice('', [
     parameter_form: makeDictionary('', [
       {
         name: 'lower',
+        render_only: false,
         required: true,
         parameter_form: makeFloat(
           props.i18n.graph_options.explicit_vertical_range_explicit_lower,
@@ -217,6 +222,7 @@ const specExplicitVerticalRange = makeCascadingSingleChoice('', [
       },
       {
         name: 'upper',
+        render_only: false,
         required: true,
         parameter_form: makeFloat(
           props.i18n.graph_options.explicit_vertical_range_explicit_upper,

@@ -38,7 +38,7 @@ export function start(
     event: Event,
     dragger: HTMLAnchorElement,
     dragging_tag: string,
-    drop_handler: (index: number) => void
+    drop_handler: (index: number) => void,
 ) {
     const button = get_button(event as MouseEvent);
 

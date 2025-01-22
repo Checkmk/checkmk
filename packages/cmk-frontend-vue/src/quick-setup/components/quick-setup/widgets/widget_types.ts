@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { FormSpec } from '@/form/components/vue_formspec_components'
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { ValidationMessages } from '@/form'
 
 export interface FormSpecRecapWidgetProps {

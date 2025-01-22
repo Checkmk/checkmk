@@ -6,13 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
-import type { ListOfStrings } from '@/form/components/vue_formspec_components'
+import type { ListOfStrings } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
-import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: ListOfStrings
@@ -102,7 +101,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
         >
           <td class="vlof_content">
-            <HelpText :help="spec.help" />
             <FormEditDispatcher
               v-model:data="backendData[index]"
               :spec="spec.string_spec"
@@ -124,6 +122,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
   > tbody > .listof_element > .vlof_content {
     vertical-align: top;
+    padding-bottom: 8px;
   }
 }
 </style>

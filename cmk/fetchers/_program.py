@@ -129,7 +129,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get data from program")
         if self._process is None:
-            raise MKFetcherError("No process")
+            raise TypeError("no process")
         # ? do they have the default byte type, because in open() none of the "text", "encoding",
         #  "errors", "universal_newlines" were specified?
         stdout, stderr = self._process.communicate(

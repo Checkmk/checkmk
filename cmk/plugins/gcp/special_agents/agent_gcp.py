@@ -23,17 +23,16 @@ from googleapiclient.discovery import build, Resource  # type: ignore[import-unt
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
 from cmk.plugins.gcp.lib.constants import Extractors
-
-# Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = GoogleAggregation.Aligner
-Reducer = GoogleAggregation.Reducer
-
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+
+# Those are enum classes defined in the Aggregation class. Not nice but works
+Aligner = GoogleAggregation.Aligner
+Reducer = GoogleAggregation.Reducer
 
 ####################
 # Type Definitions #
@@ -102,11 +101,28 @@ class Client:
         return self.asset().list_assets(request)
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
-        prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
+        first_of_month = self.date.replace(day=1)
         if "`" in tableid:
             raise ValueError("tableid contains invalid character")
 
-        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'  # nosec B608 # BNS:d840de
+        # the query is based on a example query from the official docs:
+        # https://cloud.google.com/billing/docs/how-to/export-data-bigquery-tables/standard-usage#sum-costs-per-invoice
+        # table id is similar to: <project_id>.<dataset_id>.gcp_billing_export_v1_<billing_account_id>
+        query = (
+            "SELECT "  # nosec B608 # BNS:d840de
+            "project.name, "
+            "project.id, "
+            "(SUM(CAST(cost AS NUMERIC)) + SUM(IFNULL((SELECT SUM(CAST(c.amount AS NUMERIC)) FROM UNNEST(credits) c), 0))) AS cost, "
+            "currency, "
+            "invoice.month "
+            f"FROM `{tableid}`"
+            f'WHERE invoice.month = "{first_of_month.strftime("%Y%m")}" '
+            f'AND DATE(_PARTITIONTIME) >= "{first_of_month.strftime("%Y-%m-%d")}" '
+            "AND project.name IS NOT NULL "
+            "GROUP BY project.name, project.id, currency, invoice.month "
+            "ORDER BY project.name, invoice.month"
+        )
+
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()

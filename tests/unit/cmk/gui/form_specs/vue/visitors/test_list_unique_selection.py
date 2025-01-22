@@ -5,13 +5,12 @@
 
 import pytest
 
-from cmk.gui.form_specs.private import ListUniqueSelection
+from cmk.gui.form_specs.private import ListUniqueSelection, SingleChoiceElementExtended
 from cmk.gui.form_specs.private.list_unique_selection import UniqueSingleChoiceElement
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import SingleChoiceElement
 
 
 @pytest.fixture(scope="module", name="list_unique_selection_spec")
@@ -19,19 +18,19 @@ def spec() -> ListUniqueSelection:
     return ListUniqueSelection(
         elements=[
             UniqueSingleChoiceElement(
-                parameter_form=SingleChoiceElement(
+                parameter_form=SingleChoiceElementExtended(
                     name="foo",
                     title=Title("Foo"),
                 )
             ),
             UniqueSingleChoiceElement(
                 unique=False,
-                parameter_form=SingleChoiceElement(
+                parameter_form=SingleChoiceElementExtended(
                     name="bar",
                     title=Title("Bar"),
                 ),
             ),
-        ]
+        ],
     )
 
 

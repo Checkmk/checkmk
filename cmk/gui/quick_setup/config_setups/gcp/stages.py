@@ -10,7 +10,6 @@ from cmk.ccc.i18n import _
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -48,6 +47,7 @@ from cmk.plugins.gcp.rulesets import (  # pylint: disable=cmk-module-layer-viola
 )
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -115,6 +115,7 @@ def configure_authentication() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host"),
+                run_in_background=True,
             )
         ],
     )
@@ -275,6 +276,7 @@ quick_setup_gcp = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            run_in_background=True,
         ),
     ],
 )

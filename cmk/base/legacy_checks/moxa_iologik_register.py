@@ -20,7 +20,7 @@ def inventory_iologik_register(info):
     return inventory
 
 
-def check_iologik_register(item, params, info):
+def check_iologik_register(item, _no_params, info):
     for line in info:
         if line[0] == item:
             if int(line[2]) in range(0, 2):
@@ -48,7 +48,6 @@ check_info["moxa_iologik_register"] = LegacyCheckDefinition(
     service_name="Moxa Register",
     discovery_function=inventory_iologik_register,
     check_function=check_iologik_register,
-    check_ruleset_name="iologik_register",
 )
 
 # DIOEntry

@@ -749,7 +749,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         if (cap_installed) {
             ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
                                     FOLDERID_ProgramData)} /
-                                    ac::kCmkAgentUnistall,
+                                    ac::kCmkAgentUninstall,
                                 controller_params.has_value());
         }
         if (is_service) {

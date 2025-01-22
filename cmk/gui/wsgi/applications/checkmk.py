@@ -162,7 +162,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
-    @tracer.start_as_current_span("CheckmkApp.wsgi_app")
+    @tracer.instrument("CheckmkApp.wsgi_app")
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():

@@ -2,27 +2,25 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from collections.abc import Callable, Iterator, Sequence
+
+from cmk.ccc.i18n import _
 
 from cmk.utils.render import SecondsRenderer
 
 from cmk.gui.form_specs.private.validators import IsFloat
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1 import Label, Message
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DefaultValue, InvalidValue
 from ._utils import (
     compute_input_hint,
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_prefill_default,
     get_title_and_help,
     localize,
@@ -50,22 +48,30 @@ def _render_value(value: float) -> str:
     return SecondsRenderer.detailed_str(int(value)) + (f" {round(frac * 1000)} ms" if frac else "")
 
 
-class TimeSpanVisitor(FormSpecVisitor[TimeSpan, float]):
-    def _parse_value(self, raw_value: object) -> float | EmptyValue:
+_ParsedValueModel = float
+_FrontendModel = float | None
+
+
+class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
+            fallback_value: _FrontendModel = None
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(
+                    self.form_spec.prefill, fallback_value=fallback_value
+                ),
+                InvalidValue,
             ):
                 return prefill_default
             raw_value = prefill_default
 
         if not isinstance(raw_value, (float, int)):
-            return EMPTY_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value=None)
 
         try:
             return float(raw_value)
         except ValueError:
-            return EMPTY_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value=None)
 
     def _validators(self) -> Sequence[Callable[[float], object]]:
         def custom_validate() -> Iterator[Callable[[float], object]]:
@@ -100,8 +106,8 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, float]):
         return [IsFloat()] + list(custom_validate())
 
     def _to_vue(
-        self, raw_value: object, parsed_value: float | EmptyValue
-    ) -> tuple[shared_type_defs.TimeSpan, None | float]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.TimeSpan, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.TimeSpan(
@@ -121,23 +127,12 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, float]):
                     minute=localize(Label("mins")),
                     hour=localize(Label("hours")),
                     day=localize(Label("days")),
+                    validation_negative_number=localize(Label("Negative values not allowed")),
                 ),
                 input_hint=compute_input_hint(self.form_spec.prefill),
             ),
-            None if isinstance(parsed_value, EmptyValue) else parsed_value,
+            parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: float | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid float number")
-            )
-        return compute_validation_errors(self._validators(), parsed_value)
-
-    def _to_disk(self, raw_value: object, parsed_value: float) -> float:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> float:
         return parsed_value
-
-
-# TODO: this is mainly a copy of float?!

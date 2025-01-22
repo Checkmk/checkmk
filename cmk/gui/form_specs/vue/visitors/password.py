@@ -7,7 +7,6 @@ from typing import Literal
 
 from cmk.utils.password_store import ad_hoc_password_id
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
@@ -15,10 +14,12 @@ from cmk.gui.watolib.password_store import passwordstore_choices
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Password
+from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, InvalidValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validators,
     create_validation_error,
     get_title_and_help,
@@ -35,28 +36,35 @@ Encrypted = bool
 VuePassword = tuple[Literal["explicit_password", "stored_password"], PasswordId, str, Encrypted]
 
 
-class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
-    def _parse_value(self, raw_value: object) -> ParsedPassword | EmptyValue:
+class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
+    def _parse_value(self, raw_value: object) -> ParsedPassword | InvalidValue[VuePassword]:
+        fallback_value: VuePassword = ("explicit_password", "", "", False)
         if isinstance(raw_value, DefaultValue):
-            return EMPTY_VALUE
+            return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
         if not isinstance(raw_value, (tuple, list)):
-            return EMPTY_VALUE
+            return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
         match self.options.data_origin:
             case DataOrigin.DISK:
                 if not raw_value[0] == "cmk_postprocessed":
-                    return EMPTY_VALUE
+                    return InvalidValue(
+                        reason=_("No password provided"), fallback_value=fallback_value
+                    )
                 try:
                     password_type, (password_id, password) = raw_value[1:]
                 except (TypeError, ValueError):
-                    return EMPTY_VALUE
+                    return InvalidValue(
+                        reason=_("No password provided"), fallback_value=fallback_value
+                    )
                 encrypted = False
             case DataOrigin.FRONTEND:
                 try:
                     password_type, password_id, password, encrypted = raw_value
                 except (TypeError, ValueError):
-                    return EMPTY_VALUE
+                    return InvalidValue(
+                        reason=_("No password provided"), fallback_value=fallback_value
+                    )
             case _:
                 # Unreachable, just here for type checking
                 raise NotImplementedError
@@ -65,14 +73,14 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
             "explicit_password",
             "stored_password",
         ):
-            return EMPTY_VALUE
+            return InvalidValue(reason=_("Invalid data format"), fallback_value=fallback_value)
 
         if (
             not isinstance(password_id, str)
             or not isinstance(password, str)
             or not isinstance(encrypted, bool)
         ):
-            return EMPTY_VALUE
+            return InvalidValue(reason=_("Invalid data format"), fallback_value=fallback_value)
 
         if encrypted:
             password = Encrypter.decrypt(base64.b64decode(password.encode("ascii")))
@@ -80,12 +88,12 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
         return "cmk_postprocessed", password_type, (password_id, password)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: ParsedPassword | EmptyValue
+        self, raw_value: object, parsed_value: ParsedPassword | InvalidValue[VuePassword]
     ) -> tuple[VueComponents.Password, VuePassword]:
         title, help_text = get_title_and_help(self.form_spec)
         value: VuePassword = (
-            ("explicit_password", "", "", False)
-            if isinstance(parsed_value, EmptyValue)
+            parsed_value.fallback_value
+            if isinstance(parsed_value, InvalidValue)
             else (
                 parsed_value[1],
                 parsed_value[2][0],
@@ -111,15 +119,14 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
                     ),
                     password_choice_invalid=_("Password does not exist or using not permitted."),
                 ),
+                i18n_base=base_i18n_form_spec(),
             ),
             value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: ParsedPassword | EmptyValue
+        self, raw_value: object, parsed_value: ParsedPassword
     ) -> list[VueComponents.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error("", Title("No password provided"))
         if parsed_value[1] == "explicit_password":
             return [
                 VueComponents.ValidationMessage(location=[], message=x, invalid_value="")

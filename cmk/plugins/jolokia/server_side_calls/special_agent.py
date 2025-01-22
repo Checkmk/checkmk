@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="list-item"
-
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -14,40 +13,40 @@ from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAge
 from cmk.server_side_calls.v1._utils import Secret
 
 
+class Login(BaseModel):
+    user: str
+    password: Secret
+    mode: Literal["basic", "digest"]
+
+
 class Params(BaseModel):
     port: int | None = None
     suburi: str | None = None
     instance: str | None = None
     protocol: str | None = None
-    login: Mapping[str, str | Secret] | None = None
+    login: Login | None = None
+
+
+def _get_login_options(login: Login | None) -> tuple[()] | tuple[str, str, str, Secret, str, str]:
+    return (
+        ("--user", login.user, "--password", login.password.unsafe(), "--mode", login.mode)
+        if login
+        else ()
+    )
 
 
 def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
-    command_arguments = ["--server", host_config.primary_ip_config.address]
-
-    command_arguments += ["--%s" % "port", "%s" % params.port] if params.port else []
-    command_arguments += ["--%s" % "suburi", "%s" % params.suburi] if params.suburi else []
-    command_arguments += ["--%s" % "instance", "%s" % params.instance] if params.instance else []
-    command_arguments += ["--%s" % "protocol", "%s" % params.protocol] if params.protocol else []
-
-    if not params.login:
-        yield SpecialAgentCommand(command_arguments=command_arguments)
-        return
-
-    user = params.login["user"]
-    password = params.login["password"]
-    assert isinstance(password, Secret)
-    mode = params.login["mode"]
-
-    command_arguments += [
-        "--user",
-        user,
-        f"--password {password.unsafe()}",
-        "--mode",
-        mode,
-    ]
-
-    yield SpecialAgentCommand(command_arguments=command_arguments)
+    yield SpecialAgentCommand(
+        command_arguments=[
+            "--server",
+            host_config.primary_ip_config.address,
+            *(["--%s" % "port", "%s" % params.port] if params.port else []),
+            *(["--%s" % "suburi", "%s" % params.suburi] if params.suburi else []),
+            *(["--%s" % "instance", "%s" % params.instance] if params.instance else []),
+            *(["--%s" % "protocol", "%s" % params.protocol] if params.protocol else []),
+            *_get_login_options(params.login),
+        ]
+    )
 
 
 special_agent_jolokia = SpecialAgentConfig(

@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, IO
 
 from tests.testlib.site import AUTOMATION_USER, Site
 from tests.testlib.utils import ServiceInfo
@@ -34,7 +34,7 @@ def create_local_check(
     """
 
     bash_command = f"cmk-piggyback create-sections 'Local service piggybacked from $HOSTNAME$' {" ".join(hostnames_piggybacked)}"
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="datasource_programs",
         value=bash_command,
         conditions={
@@ -47,7 +47,7 @@ def create_local_check(
     try:
         yield
     finally:
-        site.openapi.delete_rule(rule_id)
+        site.openapi.rules.delete(rule_id)
 
 
 def _get_piggybacked_service(
@@ -68,7 +68,9 @@ def get_piggybacked_service_time(
 def piggybacked_service_discovered(
     central_site: Site, source_hostname: str, piggybacked_hostname: str
 ) -> bool:
-    services = central_site.openapi.service_discovery_result(piggybacked_hostname)["extensions"]
+    services = central_site.openapi.service_discovery.get_discovery_result(piggybacked_hostname)[
+        "extensions"
+    ]
     if isinstance(services, dict) and isinstance((check_table := services["check_table"]), dict):
         return f"local-Local service piggybacked from {source_hostname}" in check_table
     raise TypeError("Expected 'extensions' and its nested fields to be a dictionary")
@@ -127,14 +129,12 @@ def disable_piggyback_hub_globally(central_site: Site, remote_site_id: str) -> I
         ):
             _write_replication_changes(central_site, central_site.id)
             _write_replication_changes(central_site, remote_site_id)
-            central_site.openapi.activate_changes_and_wait_for_completion(
-                force_foreign_changes=True
-            )
+            central_site.openapi.changes.activate_and_wait_for_completion()
             yield
     finally:
         _write_replication_changes(central_site, central_site.id)
         _write_replication_changes(central_site, remote_site_id)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @contextmanager
@@ -143,13 +143,11 @@ def disable_piggyback_hub_remote_site(central_site: Site, remote_site_id: str) -
         # fake changes to trigger replication
         with _write_sitespecific_config_file(central_site):
             _write_replication_changes(central_site, remote_site_id)
-            central_site.openapi.activate_changes_and_wait_for_completion(
-                force_foreign_changes=True
-            )
+            central_site.openapi.changes.activate_and_wait_for_completion()
             yield
     finally:
         _write_replication_changes(central_site, remote_site_id)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @contextmanager
@@ -187,18 +185,26 @@ def _timeout(seconds: int, exc: Timeout) -> Iterator[None]:
         signal.signal(signal.SIGALRM, alarm_handler)
 
 
+def _wait_for_piggyback_track_ready(stdout: IO[str]) -> None:
+    """Wait for the cmk-broker-test to be ready"""
+    with _timeout(3, Timeout("`cmk-piggyback track` did not start in time")):
+        while line := stdout.readline():
+            if "Tracking incoming messages" in line:
+                return
+
+
 def piggybacked_data_gets_updated(
     source_site: Site, target_site: Site, hostname_source: str, hostname_piggybacked: str
 ) -> bool:
     """Track incoming piggybacked data on the target site"""
 
     try:
+        track = target_site.execute(["cmk-piggyback", "track"], stdout=subprocess.PIPE, text=True)
+        assert track.stdout
+        _wait_for_piggyback_track_ready(track.stdout)
+
+        source_site.schedule_check(hostname_source, "Check_MK")
         with _timeout(5, Timeout("`cmk-piggyback track` timed out after 5s")):
-            track = target_site.execute(
-                ["cmk-piggyback", "track"], stdout=subprocess.PIPE, text=True
-            )
-            source_site.schedule_check(hostname_source, "Check_MK")
-            assert track.stdout
             while line := track.stdout.readline():
                 if f"{hostname_source} -> {hostname_piggybacked}" in line:
                     return True

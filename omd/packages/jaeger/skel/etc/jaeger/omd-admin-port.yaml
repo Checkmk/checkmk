@@ -1,7 +1,0 @@
----
-service:
-    telemetry:
-        metrics:
-            level: detailed
-            # Updated by TRACE_JAEGER_ADMIN_PORT hook
-            address: "[::1]:0"

@@ -141,6 +141,9 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                     ),
                                     SingleChoiceElement(name="basic", title=Title("HTTP Basic")),
                                     SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
+                                    # Kerberos auth support was removed with 2.4.0 but kept here to
+                                    # show a helpful error message in case a user still has
+                                    # configured it. Can be removed with 2.5.
                                     SingleChoiceElement(name="kerberos", title=Title("Kerberos")),
                                 ],
                             ),

@@ -41,7 +41,7 @@ export class TopologyNode extends AbstractGUINode {
         )
             this.selection().on("dblclick", () => {
                 const nodevis_node = this._world.viewport.get_node_by_id(
-                    this.node.data.id
+                    this.node.data.id,
                 );
                 if (!nodevis_node) return;
                 _toggle_growth_continue(nodevis_node);
@@ -63,7 +63,7 @@ export class TopologyNode extends AbstractGUINode {
                 show_tooltip(
                     event,
                     this.node.data.type_specific.tooltip || {},
-                    this._world.viewport
+                    this._world.viewport,
                 );
             })
             .on("mouseout.tooltip", event => {
@@ -73,7 +73,7 @@ export class TopologyNode extends AbstractGUINode {
                 show_tooltip(
                     event,
                     this.node.data.type_specific.tooltip || {},
-                    this._world.viewport
+                    this._world.viewport,
                 );
             });
     }
@@ -89,14 +89,16 @@ export class TopologyNode extends AbstractGUINode {
         this.selection()
             .selectAll("circle.indicator_growth_root")
             .data(
-                growth_settings.indicator_growth_root ? [this.node.data.id] : []
+                growth_settings.indicator_growth_root
+                    ? [this.node.data.id]
+                    : [],
             )
             .join(enter =>
                 enter
                     .append("circle")
                     .classed("indicator_growth_root", true)
                     .attr("r", this.radius + 4)
-                    .attr("fill", "none")
+                    .attr("fill", "none"),
             );
 
         // Growth possible
@@ -105,7 +107,7 @@ export class TopologyNode extends AbstractGUINode {
             .data(
                 growth_settings.indicator_growth_possible
                     ? [this.node.data.id]
-                    : []
+                    : [],
             )
             .join(enter =>
                 enter
@@ -113,14 +115,14 @@ export class TopologyNode extends AbstractGUINode {
                     .classed("indicator_growth_possible", true)
                     .attr(
                         "xlink:href",
-                        "themes/facelift/images/icon_hierarchy.svg"
+                        "themes/facelift/images/icon_hierarchy.svg",
                     )
                     .attr("width", 16)
                     .attr("height", 16)
                     .attr("x", -8)
                     .attr("y", 0)
                     .append("title")
-                    .text(get("can_grow_here"))
+                    .text(get("can_grow_here")),
             );
 
         // Growth forbidden
@@ -133,14 +135,14 @@ export class TopologyNode extends AbstractGUINode {
                     .classed("growth_forbidden", true)
                     .attr(
                         "xlink:href",
-                        "themes/facelift/images/icon_topic_general.png"
+                        "themes/facelift/images/icon_topic_general.png",
                     )
                     .attr("width", 16)
                     .attr("height", 16)
                     .attr("x", -28)
                     .attr("y", 0)
                     .append("title")
-                    .text(get("growth_stops_here"))
+                    .text(get("growth_stops_here")),
             );
 
         // Growth continue
@@ -153,14 +155,14 @@ export class TopologyNode extends AbstractGUINode {
                     .classed("growth_continue", true)
                     .attr(
                         "xlink:href",
-                        "themes/facelift/images/icon_topic_agents.png"
+                        "themes/facelift/images/icon_topic_agents.png",
                     )
                     .attr("width", 16)
                     .attr("height", 16)
                     .attr("x", -28)
                     .attr("y", 0)
                     .append("title")
-                    .text(get("growth_continues_here"))
+                    .text(get("growth_continues_here")),
             );
     }
 
@@ -171,7 +173,7 @@ export class TopologyNode extends AbstractGUINode {
             "view.py?view_name=topology_hover_host&display_options=I&host=" +
             encodeURIComponent(this.node.data.type_specific.core.hostname);
         html(view_url, {credentials: "include"}).then(html =>
-            this._got_quickinfo(html)
+            this._got_quickinfo(html),
         );
     }
 
@@ -413,7 +415,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
                 encodeURIComponent(core_info.hostname);
 
         html(view_url, {credentials: "include"}).then(html =>
-            this._got_quickinfo(html)
+            this._got_quickinfo(html),
         );
     }
 
@@ -504,7 +506,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             on: event => {
                 event!.stopPropagation();
                 this.expand_node_including_children(
-                    this._world.viewport.get_all_nodes()[0]
+                    this._world.viewport.get_all_nodes()[0],
                 );
                 this._world.viewport.recompute_node_and_links();
             },

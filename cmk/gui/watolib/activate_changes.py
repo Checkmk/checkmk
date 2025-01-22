@@ -105,7 +105,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.broker_certificates import BrokerCertificateSync, clean_dead_sites_certs
+from cmk.gui.watolib.broker_certificates import (
+    broker_certificate_sync_registry,
+    BrokerCertificateSync,
+    clean_dead_sites_certs,
+)
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -115,7 +119,7 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.config_sync import (
-    create_rabbitmq_definitions_file,
+    create_rabbitmq_new_definitions_file,
     replication_path_registry,
     ReplicationPath,
     ReplicationPathRegistry,
@@ -137,7 +141,6 @@ from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
-from cmk.messaging.rabbitmq import DEFINITIONS_PATH as RABBITMQ_DEFINITIONS_PATH
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -164,8 +167,6 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
-
-RABBITMQ_DEFS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_defs_hash"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
@@ -292,8 +293,11 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath(
             ty="dir",
             ident="rabbitmq",
-            site_path=RABBITMQ_DEFINITIONS_PATH,
-            excludes=["00-default.json"],
+            site_path=rabbitmq.DEFINITIONS_PATH,
+            excludes=[
+                rabbitmq.DEFAULT_DEFINITIONS_FILE_NAME,
+                rabbitmq.ACTIVE_DEFINITIONS_FILE_NAME,
+            ],
         ),
         ReplicationPath(
             ty="dir",
@@ -726,7 +730,7 @@ def fetch_sync_state(
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"fetch_sync_state[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -767,7 +771,7 @@ def calc_sync_delta(
 ) -> tuple[SyncDelta, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"calc_sync_delta[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -799,7 +803,7 @@ def synchronize_files(
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"synchronize_files[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -978,7 +982,7 @@ def activate_site_changes(
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"activate_site_changes[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -1297,21 +1301,6 @@ def default_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
-@tracer.start_as_current_span("create_and_activate_central_rabbitmq_changes")
-def create_and_activate_central_rabbitmq_changes(
-    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
-) -> None:
-    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
-    create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
-    new_definitions_hash = _create_folder_content_hash(
-        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
-    )
-
-    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
-
-    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
-
-
 @contextmanager
 def _debug_log_message(msg: str) -> Iterator[None]:
     logger.debug(msg)
@@ -1396,7 +1385,7 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    @tracer.start_as_current_span("activate_changes")
+    @tracer.instrument("activate_changes")
     def start(
         self,
         sites: list[SiteId],
@@ -1473,10 +1462,6 @@ class ActivateChangesManager(ActivateChanges):
             self._verify_valid_host_config()
         self._save_activation()
 
-        # Always do housekeeping. We chose to only delete activations older than one minute, as we
-        # don't want to accidentally "clean up" our soon-to-be started activations.
-        execute_activation_cleanup_background_job(maximum_age=60)
-
         with _debug_log_message("Calling pre-activate changes"):
             self._pre_activate_changes()
 
@@ -1487,12 +1472,13 @@ class ActivateChangesManager(ActivateChanges):
         with _debug_log_message("Starting activation"):
             self._start_activation()
 
-        with _debug_log_message("Create and activate central rabbitmq changes"):
-            create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
+        with _debug_log_message("Update and activate central rabbitmq changes"):
+            create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
+            rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             with (
-                tracer.start_as_current_span("distribute_piggyback_hub_configs"),
+                tracer.span("distribute_piggyback_hub_configs"),
                 _debug_log_message("Starting piggyback hub config distribution"),
             ):
                 activation_features.distribute_piggyback_hub_configs(
@@ -1530,27 +1516,6 @@ class ActivateChangesManager(ActivateChanges):
 
     def activate_until(self):
         return self._activate_until
-
-    def wait_for_completion(self, timeout: float | None = None) -> bool:
-        """Wait for activation to be complete.
-
-        Optionally a soft timeout can be given and waiting will stop. The return value will then
-        be True if everything is completed and False if it isn't.
-
-        Args:
-            timeout: Optional timeout in seconds. If omitted the call will wait until completion.
-
-        Returns:
-            True if completed, False if still running.
-        """
-        start = time.time()
-        while self.is_running():
-            time.sleep(0.5)
-            if timeout and start + timeout >= time.time():
-                break
-
-        completed = not self.is_running()
-        return completed
 
     def is_running(self) -> bool:
         return bool(self.running_sites())
@@ -1671,7 +1636,7 @@ class ActivateChangesManager(ActivateChanges):
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
-    @tracer.start_as_current_span("create_snapshots")
+    @tracer.instrument("create_snapshots")
     def _create_snapshots(
         self,
         snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
@@ -1704,6 +1669,7 @@ class ActivateChangesManager(ActivateChanges):
                     backup_snapshots.snapshot_secret(),
                     active_config.wato_max_snapshots,
                     active_config.wato_use_git,
+                    active_config.debug,
                     trace.get_current_span().get_span_context(),
                 ),
             )
@@ -1785,11 +1751,11 @@ class ActivateChangesManager(ActivateChanges):
                     "There are some changes made by your colleagues and you did not "
                     "confirm to activate these changes. In order to proceed, you will "
                     "have to confirm the activation or ask you colleagues to activate "
-                    "these changes in their own."
+                    "these changes on their own."
                 ),
             )
 
-    @tracer.start_as_current_span("start_activation")
+    @tracer.instrument("start_activation")
     def _start_activation(self) -> None:
         self._log_activation()
         assert self._activation_id is not None
@@ -1846,13 +1812,7 @@ class ActivateChangesManager(ActivateChanges):
         return "site_%s.mk" % site_id
 
 
-class ActivationCleanupBackgroundJob(BackgroundJob):
-    job_prefix = "activation_cleanup"
-
-    @classmethod
-    def gui_title(cls):
-        return _("Activation cleanup")
-
+class ActivationCleanupJob:
     def __init__(self, maximum_age: int = 300) -> None:
         """
         Args:
@@ -1871,22 +1831,17 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 The default value is 300 (seconds), which are exactly 5 minutes.
 
         """
-        super().__init__(self.job_prefix)
         self.maximum_age = maximum_age
 
     def shall_start(self) -> bool:
         """Some basic preliminary check to decide quickly whether to start the job"""
         return bool(self._existing_activation_ids())
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        self._do_housekeeping()
-        job_interface.send_result_message(_("Activation cleanup finished"))
-
-    def _do_housekeeping(self) -> None:
+    def do_execute(self) -> None:
         """Cleanup non-running activation directories"""
         with store.lock_checkmk_configuration(configuration_lockfile):
             for activation_id in self._existing_activation_ids():
-                self._logger.info("Check activation: %s", activation_id)
+                logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
 
@@ -1904,14 +1859,14 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                     except MKUserError:
                         # "Unknown activation process", is normal after activation -> Delete, but no
                         # error message logging
-                        self._logger.debug("Is not running")
+                        logger.debug("Is not running")
                 except Exception as e:
-                    self._logger.warning(
+                    logger.warning(
                         "  Failed to load activation (%s), trying to delete...", e, exc_info=True
                     )
 
-                self._logger.info("  -> %s", "Delete" if delete else "Keep")
                 if not delete:
+                    logger.info("  -> Keep (is running)")
                     continue
 
                 # Because the heuristic to detect if an activation is or isn't running is not
@@ -1924,6 +1879,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
                     if not os.path.isdir(activation_dir):
+                        logger.info("  -> Keep (not a directory)")
                         continue
 
                     # TODO:
@@ -1931,15 +1887,22 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                     #   to consider completion time.
                     dir_stat = os.stat(activation_dir)
                     if time.time() - dir_stat.st_mtime < self.maximum_age:
+                        logger.info(
+                            "  -> Keep (created %d seconds ago)", time.time() - dir_stat.st_mtime
+                        )
                         continue
 
                     try:
+                        logger.info("  -> Delete")
                         shutil.rmtree(activation_dir)
                     except Exception:
-                        self._logger.error(
-                            "  Failed to delete the activation directory '%s'" % activation_dir,
+                        logger.error(
+                            "  Failed to delete the activation directory '%s'",
+                            activation_dir,
                             exc_info=True,
                         )
+
+        logger.info("Activation cleanup finished")
 
     def _existing_activation_ids(self) -> list[str]:
         files = set()
@@ -1960,31 +1923,17 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         return ids
 
 
-def execute_activation_cleanup_background_job(maximum_age: int | None = None) -> None:
+def execute_activation_cleanup_job() -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    if maximum_age is not None:
-        job = ActivationCleanupBackgroundJob(maximum_age=maximum_age)
-    else:
-        job = ActivationCleanupBackgroundJob()
+    job = ActivationCleanupJob(maximum_age=60)
 
     if not job.shall_start():
         logger.debug("Job shall not start")
         return
 
-    if (
-        result := job.start(
-            job.do_execute,
-            InitialStatusArgs(
-                title=job.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    ).is_error():
-        logger.debug(str(result))
+    job.do_execute()
 
 
 def _handle_distributed_sites_in_free(
@@ -2157,7 +2106,7 @@ def _error_callback(error: BaseException) -> None:
     logger.error(str(error))
 
 
-@tracer.start_as_current_span("sync_and_activate")
+@tracer.instrument("sync_and_activate")
 def sync_and_activate(
     activation_id: str,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
@@ -2205,9 +2154,7 @@ def sync_and_activate(
             site_activation_states,
             site_snapshot_settings,
             task_pool,
-            activation_features_registry[
-                str(version.edition(paths.omd_root))
-            ].broker_certificate_sync,
+            broker_certificate_sync_registry["broker_certificate_sync"],
         )
         clean_dead_sites_certs(list(get_all_replicated_sites()))
 
@@ -2284,7 +2231,7 @@ def create_broker_certificates(
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"create_broker_certificates[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -2329,7 +2276,7 @@ def _create_broker_certificates_for_remote_sites(
                 (
                     broker_sync,
                     central_ca,
-                    customer_ca.cert_bundle if customer_ca else None,
+                    customer_ca,
                     settings,
                     site_activation_states[site_id],
                     trace.get_current_span(),
@@ -2504,7 +2451,7 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
     store.save_object_to_file(state_path, state)
 
 
-@tracer.start_as_current_span("execute_activate_changes")
+@tracer.instrument("execute_activate_changes")
 def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     domain_names = [x.name for x in domain_requests]
 
@@ -2518,7 +2465,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        with tracer.start_as_current_span(
+        with tracer.span(
             f"activate[{domain_request.name}]",
             attributes={
                 "cmk.activate_changes.domain.name": domain_request.name,
@@ -2539,36 +2486,9 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     return results
 
 
-def _create_folder_content_hash(folder_path: str) -> str:
-    sha256_hash = hashlib.sha256()
-    for root, _dir, files in sorted(os.walk(folder_path)):
-        for filename in sorted(files):
-            file_path = os.path.join(root, filename)
-            with open(file_path, "rb") as f:
-                while chunk := f.read(8192):
-                    sha256_hash.update(chunk)
-
-    return sha256_hash.hexdigest()
-
-
-@tracer.start_as_current_span("_reload_rabbitmq_when_changed")
-def _reload_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
-    if old_definitions_hash != new_definitions_hash:
-        # make sure stdout and stderr is available in local variables (crash report!)
-        process = subprocess.run(["omd", "reload", "rabbitmq"], capture_output=True, check=False)
-        process.check_returncode()
-
-
-@tracer.start_as_current_span("_activate_local_rabbitmq_changes")
+@tracer.instrument("_activate_local_rabbitmq_changes")
 def _activate_local_rabbitmq_changes():
-    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
-    new_definitions_hash = _create_folder_content_hash(
-        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
-    )
-
-    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
-
-    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
+    rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
 
 def _add_extensions_for_license_usage():
@@ -2693,47 +2613,52 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            uninstalled, installed = mkp_tool.update_active_packages(
-                mkp_tool.Installer(paths.installed_packages_dir),
-                mkp_tool.PathConfig(
-                    cmk_plugins_dir=plugins_local_path(),
-                    cmk_addons_plugins_dir=addons_plugins_local_path(),
-                    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-                    agents_dir=paths.local_agents_dir,
-                    alert_handlers_dir=paths.local_alert_handlers_dir,
-                    bin_dir=paths.local_bin_dir,
-                    check_manpages_dir=paths.local_legacy_check_manpages_dir,
-                    checks_dir=paths.local_checks_dir,
-                    doc_dir=paths.local_doc_dir,
-                    gui_plugins_dir=paths.local_gui_plugins_dir,
-                    installed_packages_dir=paths.installed_packages_dir,
-                    inventory_dir=paths.local_inventory_dir,
-                    lib_dir=paths.local_lib_dir,
-                    locale_dir=paths.local_locale_dir,
-                    local_root=paths.local_root,
-                    mib_dir=paths.local_mib_dir,
-                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-                    notifications_dir=paths.local_notifications_dir,
-                    pnp_templates_dir=paths.local_pnp_templates_dir,
-                    manifests_dir=paths.tmp_dir,
-                    web_dir=paths.local_web_dir,
-                ),
-                mkp_tool.PackageStore(
-                    enabled_dir=paths.local_enabled_packages_dir,
-                    local_dir=paths.local_optional_packages_dir,
-                    shipped_dir=paths.optional_packages_dir,
-                ),
-                ec.mkp_callbacks(),
-                version.__version__,
-                parse_version=version.parse_check_mk_version,
-            )
-            mkp_tool.make_post_package_change_actions(
-                on_any_change=(
-                    mkp_tool.reload_apache,
-                    invalidate_visuals_cache,
-                    setup_search_index.request_index_rebuild,
+
+            local_path = plugins_local_path()
+            addons_path = addons_plugins_local_path()
+
+            if local_path is not None and addons_path is not None:
+                uninstalled, installed = mkp_tool.update_active_packages(
+                    mkp_tool.Installer(paths.installed_packages_dir),
+                    mkp_tool.PathConfig(
+                        cmk_plugins_dir=local_path,
+                        cmk_addons_plugins_dir=addons_path,
+                        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+                        agents_dir=paths.local_agents_dir,
+                        alert_handlers_dir=paths.local_alert_handlers_dir,
+                        bin_dir=paths.local_bin_dir,
+                        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+                        checks_dir=paths.local_checks_dir,
+                        doc_dir=paths.local_doc_dir,
+                        gui_plugins_dir=paths.local_gui_plugins_dir,
+                        installed_packages_dir=paths.installed_packages_dir,
+                        inventory_dir=paths.local_inventory_dir,
+                        lib_dir=paths.local_lib_dir,
+                        locale_dir=paths.local_locale_dir,
+                        local_root=paths.local_root,
+                        mib_dir=paths.local_mib_dir,
+                        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+                        notifications_dir=paths.local_notifications_dir,
+                        pnp_templates_dir=paths.local_pnp_templates_dir,
+                        manifests_dir=paths.tmp_dir,
+                        web_dir=paths.local_web_dir,
+                    ),
+                    mkp_tool.PackageStore(
+                        enabled_dir=paths.local_enabled_packages_dir,
+                        local_dir=paths.local_optional_packages_dir,
+                        shipped_dir=paths.optional_packages_dir,
+                    ),
+                    ec.mkp_callbacks(),
+                    version.__version__,
+                    parse_version=version.parse_check_mk_version,
                 )
-            )([*uninstalled, *installed])
+                mkp_tool.make_post_package_change_actions(
+                    on_any_change=(
+                        mkp_tool.reload_services_affected_by_mkp_changes,
+                        invalidate_visuals_cache,
+                        setup_search_index.request_index_rebuild,
+                    )
+                )([*uninstalled, *installed])
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
@@ -3453,35 +3378,11 @@ def activate_changes_start(
     return activation_attributes_for_rest_api_response(manager)
 
 
-def activate_changes_wait(
-    activation_id: ActivationId, timeout: float | int | None = None
-) -> ActivationState | None:
-    """Wait for configuration changes to complete activating.
-
-    Args:
-        activation_id:
-            The activation_id representing the activation to wait for.
-
-        timeout:
-            An optional timeout for the waiting time. If timeout is set to None, it will run
-            until finished. A timeout set to 0 will time out immediately.
-
-    Returns:
-        The activation-state when finished, if not yet finished it will return None
-    """
-    manager = ActivateChangesManager()
-    manager.load_activation(activation_id)
-    if manager.wait_for_completion(timeout=timeout):
-        return manager.get_state()
-    return None
-
-
 @dataclass(frozen=True)
 class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
-    broker_certificate_sync: BrokerCertificateSync
     get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
     distribute_piggyback_hub_configs: Callable[
         [

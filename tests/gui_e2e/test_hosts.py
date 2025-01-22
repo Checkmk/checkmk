@@ -100,7 +100,7 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
         else:
             host_details.labels = {label_key: label_value_bar}
             bar_label_hosts.append(host_details)
-        test_site.openapi.create_host(
+        test_site.openapi.hosts.create(
             host_details.name,
             attributes=host_details.rest_api_attributes(),
         )
@@ -110,7 +110,7 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
 
     logger.info("Delete all hosts via API")
     for host in foo_label_hosts + bar_label_hosts:
-        site.openapi.delete_host(host.name)
+        site.openapi.hosts.delete(host.name)
     site.activate_changes_and_wait_for_core_reload()
 
 

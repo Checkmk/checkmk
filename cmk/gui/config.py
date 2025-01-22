@@ -134,7 +134,7 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
             return {"saml2": 50}
 
 
-@tracer.start_as_current_span("config.initialize")
+@tracer.instrument("config.initialize")
 def initialize() -> None:
     load_config()
     log_levels = {
@@ -287,18 +287,18 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
 def _config_plugin_modules() -> list[ModuleType]:
     return [
         module
-        for name, module in sys.modules.items()
+        for name, module in list(sys.modules.items())
         if (
-            name.startswith("cmk.gui.plugins.config.")  #
-            or name.startswith("cmk.gui.cee.plugins.config.")  #
+            name.startswith("cmk.gui.plugins.config.")
+            or name.startswith("cmk.gui.cee.plugins.config.")
             or name.startswith("cmk.gui.cme.plugins.config.")
-        )  #
+        )
         and name
         not in (
-            "cmk.gui.plugins.config.base",  #
-            "cmk.gui.cee.plugins.config.cee",  #
+            "cmk.gui.plugins.config.base",
+            "cmk.gui.cee.plugins.config.cee",
             "cmk.gui.cme.plugins.config.cme",
-        )  #
+        )
         and module is not None
     ]
 

@@ -21,24 +21,3 @@ line-length = 100
 
 [tool.ruff.lint.isort]
 order-by-type = false
-
-# [tool.mypy]
-# mypy config moved to overrides in the root pyproject.toml
-
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = [
-  # We should at least document modules and classes. :-/
-  "missing-module-docstring",
-  "missing-class-docstring",
-  "missing-function-docstring",
-]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
-testpaths = ["cmk", "tests"]
-addopts = "--doctest-modules --import-mode=importlib"

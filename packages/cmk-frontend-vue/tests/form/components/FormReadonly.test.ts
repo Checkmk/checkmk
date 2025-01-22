@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 
 function getSpec(specType: 'integer' | 'float'): FormSpec.Integer | FormSpec.Float {
@@ -12,6 +12,7 @@ function getSpec(specType: 'integer' | 'float'): FormSpec.Integer | FormSpec.Flo
     type: specType,
     title: 'fooTitle',
     help: 'fooHelp',
+    i18n_base: { required: 'required' },
     label: 'fooLabel',
     unit: 'fooUnit',
     validators: [],
@@ -60,6 +61,8 @@ const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: null,
+  i18n_base: { required: 'required' },
   validators: [],
   input_hint: '',
   autocompleter: null,
@@ -82,6 +85,7 @@ const dictionaryFormSpec: FormSpec.Dictionary = {
   layout: 'one_column',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: [],
   groups: [],
   no_elements_text: 'no_text',
@@ -89,6 +93,7 @@ const dictionaryFormSpec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'bar',
+      render_only: false,
       required: true,
       default_value: 'baz',
       parameter_form: stringFormSpec,
@@ -125,6 +130,7 @@ const singleChoiceFormSpec: FormSpec.SingleChoice = {
   title: 'fooTitle',
   input_hint: '',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   no_elements_text: 'no_text',
   elements: [
     { name: 'choice1', title: 'Choice 1' },
@@ -178,6 +184,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   label: 'fooLabel',
   layout: 'horizontal',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: [],
   input_hint: null,
   elements: [
@@ -204,8 +211,6 @@ test('FormReadonly renders cascading/string, 1st choice', () => {
       data: ['stringChoice', 'baz']
     }
   })
-  // Title of cascading
-  screen.getByText('fooTitle')
   // Title of element choice
   screen.getByText('stringChoiceTitle')
   // Value of element
@@ -220,8 +225,6 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
       data: ['integerChoice', 23]
     }
   })
-  // Title of cascading
-  screen.getByText('fooTitle')
   // Title of element choice
   screen.getByText('integerChoiceTitle')
   // Value of element
@@ -247,7 +250,7 @@ test('FormReadonly renders boolean: on', () => {
     }
   })
   // Title of cascading
-  screen.getByText('on')
+  screen.getByText('fooLabel: on')
 })
 
 test('FormReadonly renders boolean: off', () => {
@@ -259,7 +262,7 @@ test('FormReadonly renders boolean: off', () => {
     }
   })
   // Title of cascading
-  screen.getByText('off')
+  screen.getByText('fooLabel: off')
 })
 
 test('FormReadonly renders time_span: simple', () => {
@@ -310,7 +313,10 @@ const labelsFormSpec: FormSpec.Labels = {
     uniqueness_error: 'Uniqueness error'
   },
   max_labels: 3,
-  autocompleter: { data: [], fetch_method: 'ajax_vs_autocomplete' } as FormSpec.Autocompleter,
+  autocompleter: {
+    data: { ident: '', params: {} },
+    fetch_method: 'ajax_vs_autocomplete'
+  } as FormSpec.Autocompleter,
   label_source: 'discovered',
   validators: []
 }

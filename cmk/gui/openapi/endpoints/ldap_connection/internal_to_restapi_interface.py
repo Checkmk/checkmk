@@ -1188,7 +1188,7 @@ class LDAPConnectionInterface:
 
     @classmethod
     def from_api_request(cls, config: APIConnection) -> LDAPConnectionInterface:
-        c = cls(
+        return cls(
             general_properties=GeneralProperties.from_api_request(config["general_properties"]),
             connection_config=ConnectionConfig.from_api_request(config["ldap_connection"]),
             users=Users.from_api_request(config["users"]),
@@ -1196,16 +1196,6 @@ class LDAPConnectionInterface:
             sync_plugins=SyncPlugins.from_api_request(config["sync_plugins"]),
             other=Other.from_api_request(config["other"]),
         )
-
-        # The UI raises an error when the group dn is not set and you try to configure
-        # the groups to roles plugin.
-        for _user_role, grouplist in c.sync_plugins.active_plugins.get(
-            "groups_to_roles", {}
-        ).items():
-            for dn, _search_in in grouplist:
-                if dn != c.groups.group_dn:
-                    raise ValueError("The configured DN does not match the group base DN.")
-        return c
 
     def api_response(self) -> dict:
         r = {

@@ -766,7 +766,7 @@ impl SqlInstance {
                                 self.generate_datafiles_section(endpoint, chunk, query, sep),
                             ),
                             names::CLUSTERS => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
+                                self.generate_clusters_section(endpoint, chunk, query, sep),
                             ),
                             _ => format!("{} not implemented\n", section.name()).to_string(),
                         }
@@ -1001,7 +1001,7 @@ impl SqlInstance {
         }
         let (nodes, active_node) = self.get_cluster_nodes(client, query).await?;
         Ok(Some(format!(
-            "{}{sep}{}{sep}{}{sep}{}",
+            "{}{sep}{}{sep}{}{sep}{}\n",
             self.name,
             database.replace(' ', "_"),
             active_node,
@@ -1022,7 +1022,7 @@ impl SqlInstance {
         query: &str,
     ) -> Result<(String, String)> {
         let answers = &run_custom_query(client, query).await?;
-        if answers.len() > 2 && !answers[0].is_empty() && !answers[1].is_empty() {
+        if answers.len() >= 2 && !answers[1].is_empty() {
             return Ok((answers[0].get_node_names(), answers[1].get_active_node()));
         }
         Ok((String::default(), String::default()))
@@ -1727,7 +1727,7 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
@@ -1769,7 +1769,7 @@ fn to_backup_entry_odbc(
         .get_value_by_name(row, "is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() || is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" || is_primary_replica == "1" {
         format!(
             "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
@@ -2016,7 +2016,7 @@ async fn find_working_instances(
     ms_sql: &config::ms_sql::Config,
     environment: &Env,
 ) -> Result<Vec<SqlInstance>> {
-    let builders = find_allowed_instance_builders(ms_sql).await?;
+    let builders = find_all_instance_builders(ms_sql).await?;
     if builders.is_empty() {
         log::warn!("Found NO allowed SQL server instances");
         return Ok(Vec::new());
@@ -2033,32 +2033,21 @@ async fn find_working_instances(
         .collect::<Vec<SqlInstance>>())
 }
 
-async fn find_allowed_instance_builders(
-    ms_sql: &config::ms_sql::Config,
-) -> Result<Vec<SqlInstanceBuilder>> {
-    let builders = find_all_instance_builders(ms_sql).await?;
-    Ok(builders
-        .into_iter()
-        .filter(|i| ms_sql.is_instance_allowed(&i.get_name()))
-        .collect::<Vec<SqlInstanceBuilder>>())
-}
-
 pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let found = find_detectable_instance_builders(ms_sql).await;
-    log::info!(
-        "Found {} instances by discovery: [ {} ]",
-        found.len(),
-        found
-            .iter()
-            .map(|i| format!("{}", i.get_name()))
-            .collect::<Vec<_>>()
-            .join(", ")
-    );
-
     let detected = if ms_sql.discovery().detect() {
-        found
+        let builders = detect_instance_builders(ms_sql).await;
+        log::info!(
+            "Found {} instances by discovery: [ {} ]",
+            builders.len(),
+            builders
+                .iter()
+                .map(|i| format!("{}", i.get_name()))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        builders
     } else {
         ms_sql
             .discovery()
@@ -2086,9 +2075,7 @@ pub async fn find_all_instance_builders(
 }
 
 /// find instances described in the config but not detected by the discovery
-async fn find_detectable_instance_builders(
-    ms_sql: &config::ms_sql::Config,
-) -> Vec<SqlInstanceBuilder> {
+async fn detect_instance_builders(ms_sql: &config::ms_sql::Config) -> Vec<SqlInstanceBuilder> {
     obtain_instance_builders(&ms_sql.endpoint(), &[], ms_sql.discovery())
         .await
         .unwrap_or_else(|e| {

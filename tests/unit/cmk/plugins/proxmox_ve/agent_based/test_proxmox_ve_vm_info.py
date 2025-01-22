@@ -57,7 +57,6 @@ def test_check_proxmox_ve_vm_info(
     params: Mapping[str, object], section: pvvi.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvvi.check_proxmox_ve_vm_info(params, section))
-    print("\n" + "\n".join(map(str, results)))
     assert results == expected_results
 
 

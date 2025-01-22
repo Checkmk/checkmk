@@ -1,0 +1,13 @@
+title: Redfish logical drives
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about logical drives of Redfish compatible devices.
+
+discovery:
+ One service per logical drive is created.
+
+item:
+ The ID of the logical drive.

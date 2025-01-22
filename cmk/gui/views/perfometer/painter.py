@@ -10,7 +10,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row

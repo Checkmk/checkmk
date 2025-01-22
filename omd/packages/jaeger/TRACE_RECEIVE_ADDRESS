@@ -24,7 +24,15 @@ case "$1" in
         echo "@{IP_LISTEN_ADDRESS}"
         ;;
     set)
-        sed -ri 's/endpoint: .*/endpoint: "'"$2:$CONFIG_TRACE_RECEIVE_PORT"'"/' "$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
+---
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: "$2:$CONFIG_TRACE_RECEIVE_PORT"
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

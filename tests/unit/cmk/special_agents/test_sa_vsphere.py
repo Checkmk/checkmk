@@ -67,8 +67,8 @@ def test_parse_arguments(
     argv: Sequence[str], expected_non_default_args: Mapping[str, object]
 ) -> None:
     args = agent_vsphere.parse_arguments([*argv, "test_host"])
-    for attr in DEFAULT_AGRS:
-        expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
+    for attr, value in DEFAULT_AGRS.items():
+        expected = expected_non_default_args.get(attr, value)
         actual = getattr(args, attr)
         assert actual == expected
 

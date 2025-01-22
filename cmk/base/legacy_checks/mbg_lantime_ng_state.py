@@ -38,7 +38,7 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
         else float(refclock_offset_str.lstrip("=")) * 1000
     )
     newinfo = [[ntp_state, stratum, refclock_name.lstrip("="), refclock_offset]]
-    return check_mbg_lantime_state_common(states, _no_item, params, newinfo)
+    return check_mbg_lantime_state_common(states, params["stratum"], params["offset"], newinfo)
 
 
 def parse_mbg_lantime_ng_state(string_table: StringTable) -> StringTable:

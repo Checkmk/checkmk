@@ -114,6 +114,7 @@ py_test(
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             requirement("python-multipart"),
+            "//non-free/packages/cmk-mknotifyd",
         ],
     }),
 )

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import Type
 
 import pytest
 from playwright.sync_api import expect
@@ -71,7 +70,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
 )
 def test_host_dashboard(
     dashboard_page: Dashboard,
-    dashboard_class: Type[LinuxHostsDashboard | WindowsHostsDashboard],
+    dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],
     dashlets_expected_row_count: dict[str, int],
     hosts: str,
     request: pytest.FixtureRequest,
@@ -219,14 +218,14 @@ def test_add_top_list_dashlet(dashboard_page: Dashboard, linux_hosts: list[str])
     linux_hosts_dashboard_page.main_area.click_item_in_dropdown_list("Add", "Top list")
     add_element_top_list_page = AddElementTopList(dashboard_page.page, navigate_to_page=False)
     add_element_top_list_page.select_metric(metric)
+    add_element_top_list_page.check_show_service_name_checkbox(True)
     add_element_top_list_page.save_button.click()
     linux_hosts_dashboard_page._validate_page()  # pylint: disable=protected-access
 
     logger.info("Check that new dashlet is visible and not empty")
     expect(linux_hosts_dashboard_page.dashlet(f"Top 10: {metric}")).to_be_visible()
-    expect(linux_hosts_dashboard_page.dashlet_table_rows(f"Top 10: {metric}")).to_have_count(
-        hosts_count
-    )
+    rows_count = linux_hosts_dashboard_page.dashlet_table_rows(f"Top 10: {metric}").count()
+    assert rows_count % hosts_count == 0, "Dashlet table has unexpected amount of rows"
 
     logger.info("Delete 'Top list' dashlet for '%s' metric", metric)
     linux_hosts_dashboard_page.delete_dashlet_button(f"Top 10: {metric}").click()

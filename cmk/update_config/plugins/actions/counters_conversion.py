@@ -45,12 +45,18 @@ class ConvertCounters(UpdateAction):
                 logger.debug(msg_temp, "skipped (already JSON)", f)
                 continue
 
-            f.write_text(
-                json.dumps(
-                    [(k, repr(v)) for k, v in ast.literal_eval(content).items()],
+            logger.debug(msg_temp, "converting", f)
+            try:
+                f.write_text(
+                    json.dumps(
+                        [(k, repr(v)) for k, v in ast.literal_eval(content).items()],
+                    )
                 )
-            )
-            logger.debug(msg_temp, "converted", f)
+            except Exception as exc:
+                # We've seen this conversion fail upon what seemed to be partially written files.
+                # After the fact, we've never seen any traces of them.
+                # At least continue with all the other files.
+                logger.warning(msg_temp, f"failed ({exc})", f)
 
 
 update_action_registry.register(

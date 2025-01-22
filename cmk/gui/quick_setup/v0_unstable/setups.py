@@ -65,6 +65,10 @@ class QuickSetupStageAction:
             load_wait_label:
                 The label of the loading spinner. If not set, the default label is used.
 
+            run_in_background:
+                A flag indicating if the action should be executed in the background. This should
+                be used for actions that CAN take a long time to complete. This is
+                necessary as the interface will run into a Gateway Timeout error after 120 seconds
     """
 
     id: ActionId
@@ -72,6 +76,7 @@ class QuickSetupStageAction:
     recap: Iterable[CallableRecap]
     next_button_label: str | None = None
     load_wait_label: str | None = None
+    run_in_background: bool = False
 
 
 @dataclass(frozen=True)
@@ -126,12 +131,17 @@ class QuickSetupAction:
 
             Therefore, relevant custom validators should be included again here (especially
             if the 'overview' mode is enabled)
+        run_in_background:
+            A flag indicating if the action should be executed in the background. This should
+            be used for actions that CAN take a long time to complete. This is
+            necessary as the interface will run into a Gateway Timeout error after 120 seconds
     """
 
     id: ActionId
     label: str
     action: CallableAction
     custom_validators: Iterable[CallableValidator] = ()
+    run_in_background: bool = False
 
 
 @dataclass(frozen=True)

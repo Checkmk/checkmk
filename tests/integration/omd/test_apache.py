@@ -10,7 +10,6 @@ import pytest
 import requests
 
 from tests.testlib.site import Site
-from tests.testlib.utils import check_output
 
 
 def test_http_methods(site: Site) -> None:
@@ -23,9 +22,8 @@ def test_http_methods(site: Site) -> None:
         "PROPFIND", site.internal_url, timeout=5, headers={"User-Agent": user_agent}
     )
     assert response.status_code == 405
-    apache_log_file = check_output(
-        ["cat", site.path("var/log/apache/access_log").as_posix()], sudo=True
-    )
+
+    apache_log_file = site.read_file("var/log/apache/access_log")
     for line in apache_log_file.splitlines():
         if re.match(r'^.*"PROPFIND /\w+/check_mk/ HTTP/1.1" 405 \d+ "-" "' + user_agent, line):
             return

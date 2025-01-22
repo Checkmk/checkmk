@@ -24,7 +24,7 @@ from cmk.gui.inventory._tree import (
     InventoryPath,
     load_filtered_and_merged_tree,
 )
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals import get_livestatus_filter_headers

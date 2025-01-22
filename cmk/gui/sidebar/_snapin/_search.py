@@ -741,6 +741,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
                 livestatus.lqencode(query)
@@ -761,6 +762,9 @@ class QuicksearchSnapin(SidebarSnapin):
             if active_config.debug:
                 raise
             html.show_error(traceback.format_exc())
+
+        if not search_objects:
+            return
 
         QuicksearchResultRenderer().show(
             self._quicksearch_manager._evaluate_results(search_objects), query
@@ -1490,7 +1494,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                 if use_show_all:
                     html.open_li(class_="show_all_items")
                     html.open_a(
-                        href="",
+                        href=None,
                         onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
                     )
                     html.write_text_permissive(_("Show all results"))
@@ -1519,7 +1523,7 @@ class MenuSearchResultsRenderer(abc.ABC):
 
         html.open_a(
             class_="show_all_topics",
-            href="",
+            href=None,
             onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
         )
         html.icon(icon="collapse_arrow", title=_("Show all topics"))

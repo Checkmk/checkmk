@@ -5,4 +5,4 @@ if test -d /opt/gcc-13.2.0 -a "$(id --user --name)" = "jenkins"; then
     set -- "$@" "--gcc-toolchain=/opt/gcc-13.2.0"
 fi
 
-exec clang-tidy-18 "$@"
+exec clang-tidy-19 "$@"

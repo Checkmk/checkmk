@@ -54,7 +54,7 @@ test('dropdown updates selecedOption', async () => {
   expect(selectedOption).toBe('option1')
 
   // Check that dropdown now shows the selected option
-  rerender({ ...props, selectedOption })
+  await rerender({ ...props, selectedOption })
   await waitFor(() => screen.getByText('Option 1'))
 })
 
@@ -154,6 +154,73 @@ test('dropdown option immediate focus and filtering', async () => {
   await fireEvent.click(dropdown)
   await userEvent.keyboard('2[Backspace][Enter]')
   expect(selectedOption).toBe('option1')
+})
+
+test('dropdown shows required if requiredText is passed', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' }
+      ],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option',
+      requiredText: 'required'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  expect(dropdown.textContent).toBe('Select an option (required)')
+})
+
+test('dropdown does not show required if requiredText is not passed', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' }
+      ],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  expect(dropdown.textContent).toBe('Select an option')
+})
+
+test('dropdown still clickable if only option is already selected', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [{ title: 'Option 1', name: 'option1' }],
+      showFilter: true,
+      selectedOption: 'option1'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Option 1' })
+  await fireEvent.click(dropdown)
+
+  // show it twice: once as current value and second time as the only value to choose.
+  expect(screen.queryAllByText('Option 1')).toHaveLength(2)
+})
+
+test('dropdown clickable if only one option is available', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [{ title: 'Option 1', name: 'option1' }],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  await fireEvent.click(dropdown)
+
+  screen.getByText('Option 1')
 })
 
 test('dropdown doesnt interfere with tab order', async () => {

@@ -3,30 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import logging
+from collections.abc import Generator
+from logging import Logger
 from pathlib import Path
 from typing import Final
 
-APP_LOGGER_NAME: Final = "automation-helper"
-WATCHER_LOGGER_NAME: Final = "automation-watcher"
+_LOGGER_NAME: Final = "automation-helper"
 
-app_logger = logging.getLogger(APP_LOGGER_NAME)
-watcher_logger = logging.getLogger(WATCHER_LOGGER_NAME)
+LOGGER = logging.getLogger(_LOGGER_NAME)
 
 
-def configure_app_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / f"{APP_LOGGER_NAME}.log", encoding="UTF-8")
-    log_format = f"%(asctime)s [%(levelno)s] [{APP_LOGGER_NAME} %(process)d] %(message)s"
-    formatter = logging.Formatter(log_format)
+def configure_logger(log_directory: Path) -> None:
+    handler = logging.FileHandler(log_directory / f"{_LOGGER_NAME}.log", encoding="UTF-8")
+    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d] %(message)s")
     handler.setFormatter(formatter)
-    app_logger.addHandler(handler)
-    app_logger.setLevel(logging.INFO)
+    LOGGER.addHandler(handler)
+    LOGGER.setLevel(logging.INFO)
 
 
-def configure_watcher_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / f"{WATCHER_LOGGER_NAME}.log", encoding="UTF-8")
-    log_format = f"%(asctime)s [%(levelno)s] [{WATCHER_LOGGER_NAME} %(process)d] %(message)s"
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
-    watcher_logger.addHandler(handler)
-    watcher_logger.setLevel(logging.INFO)
+@contextlib.contextmanager
+def temporary_log_level(logger: Logger, level: int) -> Generator[None]:
+    prev_level = logger.level
+    try:
+        logger.setLevel(level)
+        yield
+    finally:
+        logger.setLevel(prev_level)

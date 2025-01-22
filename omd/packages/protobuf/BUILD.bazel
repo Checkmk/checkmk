@@ -58,7 +58,6 @@ pkg_filegroup(
         ":protobuf_library",
         ":well_known_protos",
     ],
-    prefix = "protobuf",
     visibility = ["//omd:__pkg__"],
 )
 

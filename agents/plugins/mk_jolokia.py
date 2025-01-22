@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
-
-USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
-
 import io
 import os
 import re
 import socket
 import sys
 import urllib.parse
+
+__version__ = "2.5.0b1"
+
+USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
@@ -26,8 +26,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from collections.abc import Callable  # pylint: disable=unused-import
-    from typing import Any  # pylint: disable=unused-import
+    from collections.abc import Callable  # noqa: F401
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 

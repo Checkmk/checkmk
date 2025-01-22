@@ -27,7 +27,6 @@ import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from types import MappingProxyType
 from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
 from uuid import uuid4
 
@@ -123,7 +122,13 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
+from cmk.ccc.version import (
+    Edition,
+    edition_has_enforced_licensing,
+    Version,
+    versions_compatible,
+    VersionsIncompatible,
+)
 
 import cmk.utils.log
 from cmk.utils import tty
@@ -361,6 +366,9 @@ def walk_skel(
         # to delete their existing htpasswd.
         "etc/htpasswd",
         "etc/diskspace.conf",
+        "local/lib/python3/cmk/base/plugins/agent_based",
+        "local/lib/python3/cmk/base/plugins",
+        "local/lib/python3/cmk/base",
     ]
 
     with contextlib.chdir(root):
@@ -1616,9 +1624,7 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
         sys.stdout.write("\n")
 
 
-def config_configure(
-    site: SiteContext, global_opts: GlobalOptions, config_hooks: ConfigHooks
-) -> Iterator[str]:
+def config_configure(site: SiteContext, config_hooks: ConfigHooks) -> Iterator[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: str | None = ""
     menu_open = False
@@ -1662,9 +1668,7 @@ def config_configure(
             )
             if change:
                 try:
-                    yield from config_configure_hook(
-                        site, global_opts, config_hooks, current_hook_name
-                    )
+                    yield from config_configure_hook(site, config_hooks, current_hook_name)
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1674,7 +1678,7 @@ def config_configure(
 
 
 def config_configure_hook(
-    site: SiteContext, global_opts: GlobalOptions, config_hooks: ConfigHooks, hook_name: str
+    site: SiteContext, config_hooks: ConfigHooks, hook_name: str
 ) -> Iterator[str]:
     if not site.is_stopped():
         if not dialog_yesno(
@@ -1929,13 +1933,7 @@ def _call_script(
 #   '----------------------------------------------------------------------'
 
 
-def main_help(
-    _version_info: object,
-    _site: object,
-    _global_opts: object = None,
-    args: Sequence[str] = (),
-    options: Mapping[str, str | None] = MappingProxyType({}),
-) -> None:
+def main_help() -> None:
     sys.stdout.write(
         "Manage multiple monitoring sites comfortably with OMD. "
         "The Open Monitoring Distribution.\n"
@@ -2291,7 +2289,7 @@ def main_rm(
         if not kill:
             bail_out("User '%s' still logged in or running processes." % site.name)
         else:
-            kill_site_user_processes(site, global_opts, exclude_current_and_parents=True)
+            kill_site_user_processes(site, exclude_current_and_parents=True)
 
     if tmpfs_mounted(site.name):
         unmount_tmpfs(site, kill=kill)
@@ -2570,7 +2568,7 @@ def main_diff(
         )
 
     for arg in args:
-        diff_list(global_opts, options, site, from_skelroot, from_version, arg)
+        diff_list(global_opts, options, site, from_skelroot, arg)
 
 
 def diff_list(
@@ -2578,7 +2576,6 @@ def diff_list(
     options: CommandOptions,
     site: SiteContext,
     from_skelroot: str,
-    from_version: str,
     orig_path: str,
 ) -> None:
     # Compare a list of files/directories with the original state and output differences. In verbose
@@ -2618,24 +2615,13 @@ def diff_list(
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(
-            rel_path, global_opts, options, site, from_skelroot, site.dir, from_version, old_perms
-        )
+        print_diff(rel_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
     else:
         if not rel_path:
             rel_path = "."
 
         for file_path in walk_skel(from_skelroot, depth_first=False, relbase=rel_path):
-            print_diff(
-                file_path,
-                global_opts,
-                options,
-                site,
-                from_skelroot,
-                site.dir,
-                from_version,
-                old_perms,
-            )
+            print_diff(file_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
 
 
 def print_diff(
@@ -2645,7 +2631,6 @@ def print_diff(
     site: SiteContext,
     source_path: str,
     target_path: str,
-    source_version: str,
     source_perms: Permissions,
 ) -> None:
     source_file = source_path + "/" + rel_path
@@ -2961,13 +2946,16 @@ def main_update(  # pylint: disable=too-many-branches
 
     call_scripts(site, "post-update", open_pty=is_tty)
 
-    if from_edition != "cloud" and to_edition == "cloud":
+    if from_edition != to_edition and edition_has_enforced_licensing(
+        to_ed := Edition.from_long_edition(to_edition)
+    ):
         sys.stdout.write(
-            f"{tty.bold}You are now starting your trial of Checkmk Cloud Edition. If you are "
-            f"intending to use Checkmk to monitor more than 750 services after 30 days, you must "
-            f"purchase a license. In case you already have a license, please enter your license "
-            f"credentials on the product's licensing page "
-            f"(Setup > Maintenance > Licensing > Edit settings).{tty.normal}\n"
+            f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
+            f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
+            f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
+            f"must purchase a license. In case you already have a license, please enter your "
+            f"license credentials on the product's licensing page "
+            f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"
         )
 
     sys.stdout.write("Finished update.\n\n")
@@ -3257,7 +3245,7 @@ def main_config(  # pylint: disable=too-many-branches
     config_hooks = load_config_hooks(site)
     set_hooks: list[str] = []
     if len(args) == 0:
-        set_hooks = list(config_configure(site, global_opts, config_hooks))
+        set_hooks = list(config_configure(site, config_hooks))
     else:
         command = args[0]
         args = args[1:]
@@ -3378,7 +3366,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         site.set_config(load_config(site))
         orig_apache_port = site.conf["APACHE_TCP_PORT"]
 
-        prepare_restore_as_site_user(site, global_opts, options)
+        prepare_restore_as_site_user(site, options)
 
     # Now extract all files
     for tarinfo in tar:
@@ -3520,9 +3508,7 @@ def prepare_restore_as_root(
     os.mkdir(site.dir)
 
 
-def prepare_restore_as_site_user(
-    site: SiteContext, global_opts: GlobalOptions, options: CommandOptions
-) -> None:
+def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions) -> None:
     if not site.is_stopped() and "kill" not in options:
         bail_out("Cannot restore site while it is running.")
 
@@ -3530,7 +3516,7 @@ def prepare_restore_as_site_user(
 
     sys.stdout.write("Stopping site processes...\n")
     stop_site(site)
-    kill_site_user_processes(site, global_opts, exclude_current_and_parents=True)
+    kill_site_user_processes(site, exclude_current_and_parents=True)
     ok()
 
     unmount_tmpfs(site)
@@ -3606,9 +3592,7 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         ok()
 
 
-def kill_site_user_processes(
-    site: SiteContext, global_opts: GlobalOptions, exclude_current_and_parents: bool = False
-) -> None:
+def kill_site_user_processes(site: SiteContext, exclude_current_and_parents: bool = False) -> None:
     pids = site_user_processes(site, exclude_current_and_parents)
     tries = 5
     while tries > 0 and pids:
@@ -4606,7 +4590,7 @@ def _run_command(
     try:
         match command.command:
             case "help":
-                main_help(object(), object())
+                main_help()
             case "setversion":
                 main_setversion(object(), object(), object(), args, object())
             case "version":
@@ -4705,7 +4689,7 @@ def main() -> None:  # pylint: disable=too-many-branches
                 global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
 
     if len(main_args) < 1:
-        main_help(object(), object())
+        main_help()
         sys.exit(1)
 
     args = main_args[1:]
@@ -4762,5 +4746,5 @@ def _get_command(command_arg: str) -> Command:
             return command
 
     sys.stderr.write("omd: no such command: %s\n" % command_arg)
-    main_help(object(), object())
+    main_help()
     sys.exit(1)

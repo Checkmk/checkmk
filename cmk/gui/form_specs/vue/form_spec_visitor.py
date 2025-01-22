@@ -8,9 +8,10 @@ import pprint
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Literal, TypeVar
+from typing import Any, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.config import active_config
@@ -32,6 +33,8 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
+    MetricExtended,
+    MonitoredHostExtended,
     MultipleChoiceExtended,
     OptionalChoice,
     SingleChoiceEditable,
@@ -40,20 +43,26 @@ from cmk.gui.form_specs.private import (
     TimeSpecific,
     UnknownFormSpec,
 )
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
+from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
     recompose_levels,
     recompose_list,
+    recompose_metric,
+    recompose_monitored_host,
+    recompose_monitored_host_extended,
+    recompose_monitored_service,
     recompose_multiple_choice,
     recompose_percentage,
+    recompose_proxy,
     recompose_regular_expression,
     recompose_service_state,
     recompose_single_choice,
     recompose_string,
+    recompose_time_period,
     recompose_unknown_form_spec,
 )
 from cmk.gui.htmllib.html import html
@@ -74,17 +83,23 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     Levels,
     List,
+    Metric,
+    MonitoredHost,
+    MonitoredService,
     MultilineText,
     MultipleChoice,
     Password,
     Percentage,
+    Proxy,
     RegularExpression,
     ServiceState,
     SimpleLevels,
     SingleChoice,
     String,
+    TimePeriod,
     TimeSpan,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .validators import (
     build_float_validator,
@@ -132,13 +147,25 @@ from .visitors._type_defs import FormSpecValidationError as FormSpecValidationEr
 T = TypeVar("T")
 
 
+class DisplayMode(Enum):
+    EDIT = "edit"
+    READONLY = "readonly"
+    BOTH = "both"
+
+
+class RenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
     spec: shared_type_defs.FormSpec
     data: Any
     validation: Any
-    render_mode: Literal["edit", "readonly", "both"]
+    display_mode: str
 
 
 def register_form_specs():
@@ -155,6 +182,7 @@ def register_form_specs():
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
+    register_visitor_class(MetricExtended, MetricVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
     register_visitor_class(DataSize, DataSizeVisitor)
@@ -178,6 +206,10 @@ def register_form_specs():
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)
     register_recomposer_function(MultipleChoice, recompose_multiple_choice)
+    register_recomposer_function(Metric, recompose_metric)
+    register_recomposer_function(MonitoredHost, recompose_monitored_host)
+    register_recomposer_function(MonitoredHostExtended, recompose_monitored_host_extended)
+    register_recomposer_function(MonitoredService, recompose_monitored_service)
     register_recomposer_function(String, recompose_string)
     register_recomposer_function(HostState, recompose_host_state)
     register_recomposer_function(ServiceState, recompose_service_state)
@@ -189,6 +221,8 @@ def register_form_specs():
     register_recomposer_function(UnknownFormSpec, recompose_unknown_form_spec)
     register_recomposer_function(Dictionary, recompose_dictionary)
     register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
+    register_recomposer_function(Proxy, recompose_proxy)
+    register_recomposer_function(TimePeriod, recompose_time_period)
 
 
 def register_validators():
@@ -217,7 +251,7 @@ def _process_validation_errors(
     first_error = validation_errors[0]
     raise MKUserError(
         "" if not first_error.location else first_error.location[-1],
-        first_error.message,
+        _("Cannot save the form because it contains errors."),
     )
 
 
@@ -243,26 +277,22 @@ def get_vue_value(field_id: str, fallback_value: Any) -> Any:
     return fallback_value
 
 
-class RenderMode(Enum):
-    EDIT = "edit"
-    READONLY = "readonly"
-    BOTH = "both"
-
-
 def render_form_spec(
     form_spec: FormSpec[T],
     field_id: str,
     value: Any,
     origin: DataOrigin,
     do_validate: bool,
-    display_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
     vue_app_config = serialize_data_for_frontend(
         form_spec, field_id, origin, do_validate, value, display_mode
     )
     if active_config.load_frontend_vue == "inject":
-        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
+        logger.warning(
+            "Vue app config:\n%s", pprint.pformat(asdict(vue_app_config), width=220, indent=2)
+        )
         logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
         logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
@@ -296,7 +326,7 @@ def serialize_data_for_frontend(
     origin: DataOrigin,
     do_validate: bool,
     value: Any = DEFAULT_VALUE,
-    render_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
@@ -311,5 +341,5 @@ def serialize_data_for_frontend(
         spec=vue_component,
         data=vue_value,
         validation=validation,
-        render_mode=render_mode.value,
+        display_mode=display_mode.value,
     )

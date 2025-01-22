@@ -8,7 +8,11 @@ import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 
-import type { Tuple, String, SingleChoice } from '@/form/components/vue_formspec_components'
+import type {
+  Tuple,
+  String,
+  SingleChoice
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -19,6 +23,8 @@ function getStringSpec(name: string): String {
     type: 'string',
     title: `title ${name}`,
     help: `some string help ${name}`,
+    i18n_base: { required: 'required' },
+    label: null,
     input_hint: `some string input hint ${name}`,
     field_size: 'SMALL',
     autocompleter: null,
@@ -31,6 +37,7 @@ function getSingleChoiceSpec(name: string): SingleChoice {
     type: 'single_choice',
     title: 'sc title',
     help: '',
+    i18n_base: { required: 'required' },
     validators: [],
     no_elements_text: '',
     frozen: false,

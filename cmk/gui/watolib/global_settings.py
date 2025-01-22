@@ -23,7 +23,7 @@ from cmk.gui.watolib.config_domain_name import (
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> GlobalSettings:
-    settings = {}
+    settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
             settings.update(domain.load_full_config())
@@ -58,11 +58,11 @@ def save_global_settings(
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()
-        domain_cls = config_variable.domain()
+        domain = config_variable.domain()
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain_cls().ident(), {})[varname] = vars_[varname]
+        per_domain.setdefault(domain.ident(), {})[varname] = vars_[varname]
 
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.

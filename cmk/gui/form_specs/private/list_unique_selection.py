@@ -7,31 +7,33 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.gui.form_specs.private import SingleChoiceElementExtended
+from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+    CascadingSingleChoiceElementExtended,
+)
 from cmk.gui.form_specs.private.validators import ModelT
-from cmk.gui.form_specs.vue.shared_type_defs import CascadingSingleChoiceLayout
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
-    CascadingSingleChoiceElement,
     DefaultValue,
     FormSpec,
     InputHint,
     SingleChoice,
-    SingleChoiceElement,
 )
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 @dataclass(frozen=True, kw_only=True)
 class UniqueSingleChoiceElement:
     unique: bool = True
-    parameter_form: SingleChoiceElement
+    parameter_form: SingleChoiceElementExtended[Any]
 
 
 @dataclass(frozen=True, kw_only=True)
 class UniqueCascadingSingleChoiceElement:
     unique: bool = True
-    parameter_form: CascadingSingleChoiceElement[Any]
+    parameter_form: CascadingSingleChoiceElementExtended[Any]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -56,7 +58,7 @@ class ListUniqueSelection(FormSpec[Sequence[ModelT]]):
     """Text to show if no elements are given."""
     single_choice_label: Label | None = None
     """Text displayed in front of the input field."""
-    single_choice_prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
+    single_choice_prefill: DefaultValue[Any] | InputHint[Title] = InputHint(Title("Please choose"))
     """Name of pre-selected choice. If DefaultValue is used, it must be one of the elements names.
     If InputHint is used, its title will be shown as a placeholder in the UI, requiring the user to
     select a value."""

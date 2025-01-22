@@ -82,6 +82,20 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.cpu.nodes:*.node_name": {"title": _l("Node name")},
         ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
         ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
+        ".hardware.firmware.": {"title": _l("Firmware")},
+        ".hardware.firmware.redfish:": {
+            "title": _l("Redfish"),
+            "keyorder": ["component", "version", "location", "description", "updateable"],
+            "view": "invfirmwareredfish",
+        },
+        ".hardware.firmware.redfish:*.component": {"title": _l("Component")},
+        ".hardware.firmware.redfish:*.version": {"title": _l("Version")},
+        ".hardware.firmware.redfish:*.location": {"title": _l("Location")},
+        ".hardware.firmware.redfish:*.description": {"title": _l("Description")},
+        ".hardware.firmware.redfish:*.updateable": {
+            "title": _l("Update possible"),
+            "paint": "bool",
+        },
         ".hardware.memory.": {
             "title": _l("Memory (RAM)"),
             "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],
@@ -1820,5 +1834,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.tunnels:*.peername": {"title": _l("Peer name")},
         ".networking.tunnels:*.sourceip": {"title": _l("Source IP address")},
         ".networking.tunnels:*.tunnelinterface": {"title": _l("Tunnel interface")},
+        ".networking.sip_interfaces:": {
+            "title": _l("SIP Interfaces"),
+            "keyorder": [
+                "index",
+                "name",
+                "application_type",
+                "sys_interface",
+                "device",
+                "tcp_port",
+                "gateway"
+            ],
+        },
+        ".networking.sip_interfaces:*.index": {"title": _l("Index")},
+        ".networking.sip_interfaces:*.name": {"title": _l("Name")},
+        ".networking.sip_interfaces:*.application_type": {"title": _l("Application Type")},
+        ".networking.sip_interfaces:*.sys_interface": {"title": _l("System Interface")},
+        ".networking.sip_interfaces:*.device": {"title": _l("Device")},
+        ".networking.sip_interfaces:*.tcp_port": {"title": _l("TCP Port")},
+        ".networking.sip_interfaces:*.gateway": {"title": _l("Gateway")},
     })
 # fmt: on

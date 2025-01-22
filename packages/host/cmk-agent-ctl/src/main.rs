@@ -1,7 +1,9 @@
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
+
 use log::{error, info};
+use rustls::crypto::ring::default_provider;
 
 fn main() {
     let (cli, paths) = match cmk_agent_ctl::init(std::env::args_os()) {
@@ -12,6 +14,10 @@ fn main() {
     };
 
     info!("starting");
+    if let Err(err) = default_provider().install_default() {
+        return exit_with_error(err);
+    }
+
     let result = cmk_agent_ctl::run_requested_mode(cli, paths);
 
     if let Err(error) = &result {

@@ -20,7 +20,7 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import sys
 
@@ -45,13 +45,13 @@ import socket
 import time
 
 try:
-    from collections.abc import (  # pylint: disable=unused-import
+    from collections.abc import (  # noqa: F401
         Collection,
         Iterable,
         Iterator,
         Sequence,
     )
-    from typing import Any  # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     # We need typing only for testing
     pass

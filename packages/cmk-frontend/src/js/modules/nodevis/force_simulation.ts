@@ -61,10 +61,10 @@ export class ForceSimulation {
                 this._force_config.changed_options(options),
             () => {
                 this._force_config.changed_options(
-                    this._force_config.get_default_options()
+                    this._force_config.get_default_options(),
                 );
                 this.show_force_config();
-            }
+            },
         );
     }
 
@@ -113,10 +113,10 @@ export class ForceSimulation {
                 style.force_style_translation();
                 style.translate_coords();
                 compute_node_positions_from_list_of_nodes(
-                    style.filtered_descendants
+                    style.filtered_descendants,
                 );
                 style.filtered_descendants.forEach(
-                    node => (node.use_transition = false)
+                    node => (node.use_transition = false),
                 );
             }
         }
@@ -129,7 +129,7 @@ export class ForceSimulation {
 
     update_nodes_and_links(
         all_nodes: NodevisNode[],
-        all_links: NodevisLink[]
+        all_links: NodevisLink[],
     ): void {
         this._all_nodes = all_nodes;
         this._all_links = all_links;
@@ -154,7 +154,7 @@ export class ForceSimulation {
 
     _compute_link_force(
         link: NodevisLink,
-        force_name: SimulationForce
+        force_name: SimulationForce,
     ): number {
         const link_instance =
             this._viewport.get_nodes_layer().link_instances[

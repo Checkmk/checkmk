@@ -16,7 +16,7 @@ json = json_module
 parse_graylog_agent_data = graylog.deserialize_and_merge_json
 
 
-def handle_iso_utc_to_localtimestamp(iso_8601_time):
+def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
     if len(iso_8601_time) == 20:
         time_format = "%Y-%m-%dT%H:%M:%SZ"
     else:
@@ -76,7 +76,7 @@ def handle_graylog_messages(messages, params):
     )
 
 
-def _get_value_diff(diff_name, svc_value, timespan):
+def _get_value_diff(diff_name: str, svc_value: float, timespan: float) -> float:
     this_time = time.time()
     value_store = get_value_store()
 

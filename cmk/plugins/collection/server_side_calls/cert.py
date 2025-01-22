@@ -57,7 +57,7 @@ class Subject(BaseModel):
     organization: str | None = None
     org_unit: str | None = None
     pubkey_algorithm: PubKey | None = None
-    pubkey_size: str | None = None
+    pubkeysize: str | None = None
 
 
 class Certificate(BaseModel):
@@ -231,7 +231,7 @@ def _subject_args(subject: Subject, host_config: HostConfig) -> Iterator[str]:
     if (pubkey := subject.pubkey_algorithm) is not None:
         yield "--pubkey-algorithm"
         yield pubkey[0]
-    if (pubkey_size := subject.pubkey_size) is not None:
+    if (pubkey_size := subject.pubkeysize) is not None:
         yield "--pubkey-size"
         yield replace_macros(pubkey_size, host_config.macros)
 

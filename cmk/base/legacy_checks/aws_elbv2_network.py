@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     check_aws_metrics,
     inventory_aws_generic_single,
+    MetricInfo,
 )
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
@@ -104,12 +105,12 @@ _aws_elbv2_network_connection_types = [
 def check_aws_elbv2_network_connections(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s_connections" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s_connections" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_connection_types,
                 [
@@ -216,12 +217,12 @@ _aws_elbv2_network_tls_types = [
 def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_failed_tls_%s_handshake" % info_name.lower(),
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_failed_tls_%s_handshake" % info_name.lower(),
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, info_name in zip(_aws_elbv2_network_tls_types, ["Client", "Target"])
         ]
     )
@@ -259,12 +260,12 @@ _aws_elbv2_network_rst_packets_types = [
 def check_aws_elbv2_network_rst_packets(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_rst_packets_types,
                 [
@@ -308,12 +309,12 @@ _aws_elbv2_network_statistics_metric_names = [
 def check_aws_elbv2_network_statistics(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_statistics_metric_names,
                 [

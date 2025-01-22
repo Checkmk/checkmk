@@ -5,19 +5,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref, watch, toRaw } from 'vue'
-import { immediateWatch } from '@/lib/watch'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import HelpText from '@/components/HelpText.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import FormValidation from '@/form/components/FormValidation.vue'
+import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
-} from '@/form/components/vue_formspec_components'
-import { useId } from '@/form/utils'
-import FormValidation from '@/form/components/FormValidation.vue'
-import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
-import HelpText from '@/components/HelpText.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useFormEditDispatcher } from '@/form/private'
+import { useId } from '@/form/utils'
+import { immediateWatch } from '@/lib/watch'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -37,13 +39,13 @@ watch(
     newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
         validation.value.push(msg.message)
-        return
+      } else {
+        elementValidation.value.push({
+          location: msg.location.slice(1),
+          message: msg.message,
+          invalid_value: msg.invalid_value
+        })
       }
-      elementValidation.value.push({
-        location: msg.location.slice(1),
-        message: msg.message,
-        invalid_value: msg.invalid_value
-      })
     })
   },
   { immediate: true }
@@ -71,8 +73,11 @@ const selectedOption = computed({
     return data.value[0] as string
   },
   set(value: string) {
-    // keep old data in case user switches back and they don't loose their modifications
+    // Keep old data in case user switches back and they don't loose their modifications
     currentValues[data.value[0]] = data.value[1]
+
+    // Erase backend validation. It does not make sense to keep it when switching between elements.
+    elementValidation.value = []
 
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]
@@ -128,32 +133,38 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <span class="form-cascading-single-choice__choice">
-    <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+    <label v-if="$props.spec.label" :for="componentId">
+      {{ props.spec.label }}
+      <CmkSpace size="small" />
+    </label>
     <template v-if="!layoutSettings.side_by_side">
       <CmkDropdown
         v-model:selected-option="selectedOption"
         :component-id="componentId"
         :options="spec.elements"
         :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
-        :input-hint="props.spec.input_hint as string"
+        :required-text="props.spec.i18n_base.required"
+        :input-hint="props.spec.input_hint || ''"
       />
     </template>
     <template v-else>
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
+    <template v-if="activeElement !== null">
+      <CmkSpace size="small" />
+      <HelpText :help="activeElement.spec.help" />
+    </template>
   </span>
   <span class="form-cascading-single-choice__cascade">
     <template v-if="activeElement !== null">
-      <HelpText :help="activeElement.spec.help" />
       <FormEditDispatcher
         :key="data[0]"
         v-model:data="data[1]"
         :spec="activeElement.spec"
         :backend-validation="elementValidation"
       />
-
-      <FormValidation :validation="validation"></FormValidation>
     </template>
+    <FormValidation :validation="validation"></FormValidation>
   </span>
 </template>
 

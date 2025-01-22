@@ -111,7 +111,7 @@ export function update_position(event_: MouseEvent) {
                 g_hover_menu,
                 container_size,
                 scrollLeft,
-                hoverSpacer
+                hoverSpacer,
             );
             covers_full_width = true;
         }
@@ -149,7 +149,7 @@ export function update_position(event_: MouseEvent) {
                     g_hover_menu,
                     container_size,
                     scrollLeft,
-                    hoverSpacer
+                    hoverSpacer,
                 );
             }
         } else {
@@ -157,7 +157,7 @@ export function update_position(event_: MouseEvent) {
                 g_hover_menu,
                 container_size,
                 scrollLeft,
-                hoverSpacer
+                hoverSpacer,
             );
         }
     }
@@ -169,7 +169,7 @@ function stretch_to_full_width(
     _hover_menu: HTMLDivElement,
     container_size: ContainerSize,
     scrollLeft: number,
-    hoverSpacer: number
+    hoverSpacer: number,
 ) {
     g_hover_menu!.style.left = hoverSpacer + scrollLeft + "px";
     g_hover_menu!.style.width = container_size.width! - 2 * hoverSpacer + "px";
@@ -185,7 +185,7 @@ function hover_container() {
     }
 
     const simplebar_wrapper = container.getElementsByClassName(
-        "simplebar-content-wrapper"
+        "simplebar-content-wrapper",
     );
     if (simplebar_wrapper.length == 0) {
         return container;

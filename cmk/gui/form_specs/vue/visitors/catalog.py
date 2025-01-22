@@ -4,105 +4,202 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, cast, Self
+from typing import Any, Self
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
 
-from cmk.gui.form_specs.private.catalog import Catalog, Topic
-from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.private.catalog import Catalog, Topic, TopicElement, TopicGroup
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
 from ._utils import (
-    compute_validation_errors,
-    compute_validators,
+    base_i18n_form_spec,
     create_validation_error,
     get_title_and_help,
+    localize,
 )
 
+ModelTopic = str
+ModelTopicElement = str
+_ParsedValueModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
+_FrontendModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
 
-class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
-    def _compute_default_values(self) -> Mapping[str, object]:
-        return {topic.name: DEFAULT_VALUE for topic in self.form_spec.topics}
 
-    def _parse_value(self, raw_value: object) -> Mapping[str, object] | EmptyValue:
+class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]):
+    def _resolve_topic_to_elements(self, topic: Topic) -> Mapping[str, TopicElement]:
+        topic_to_elements: dict[str, TopicElement] = {}
+        if isinstance(topic.elements, list):
+            # A list of TopicGroups
+            for topic_group in topic.elements:
+                for element_name, element in topic_group.elements.items():
+                    topic_to_elements[element_name] = element
+            return topic_to_elements
+
+        # This topic only has TopicElements
+        return topic.elements
+
+    def _resolve_default_values(
+        self, raw_value: DefaultValue | dict[str, dict[str, object] | DefaultValue]
+    ) -> _ParsedValueModel:
+        # The catalog can be treated as a dictionary of dictionaries
+        # Because of this, the default value are resolved one level deeper
+        tmp_value: dict[str, Any]
         if isinstance(raw_value, DefaultValue):
-            raw_value = self._compute_default_values()
-        if not isinstance(raw_value, dict):
-            return EMPTY_VALUE
+            tmp_value = {topic_name: DEFAULT_VALUE for topic_name in self.form_spec.elements.keys()}
+        else:
+            tmp_value = raw_value
+
+        # Specific topics can be set to DefaultValue, too
+        resolved_value: dict[str, dict[str, object]] = {}
+        for topic_name, topic in self.form_spec.elements.items():
+            topic_value = tmp_value.get(topic_name, DEFAULT_VALUE)
+            resolved_value[topic_name] = (
+                {
+                    element_name: DEFAULT_VALUE
+                    for element_name, element in self._resolve_topic_to_elements(topic).items()
+                    if element.required
+                }
+                if isinstance(topic_value, DefaultValue)
+                else topic_value
+            )
+
+        return resolved_value
+
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+        if not isinstance(raw_value, dict) and not isinstance(raw_value, DefaultValue):
+            return InvalidValue(reason="Invalid catalog data", fallback_value={})
+
+        raw_value = self._resolve_default_values(raw_value)
+
+        if not all(topic_name in raw_value for topic_name in self.form_spec.elements.keys()):
+            return InvalidValue(reason="Invalid catalog data", fallback_value={})
+
         return raw_value
 
-    def _to_vue(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> tuple[shared_type_defs.Catalog, Mapping[str, object]]:
-        title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
-            parsed_value = {}
-        topics = []
-        topic_values = {}
-        for topic in self.form_spec.topics:
-            topic_value = parsed_value.get(topic.name, {})
-            dict_visitor = get_visitor(topic.dictionary, self.options)
-            topic_schema, topic_vue_value = dict_visitor.to_vue(topic_value)
-            topics.append(
-                shared_type_defs.Topic(
-                    name=topic.name,
-                    dictionary=cast(shared_type_defs.Dictionary, topic_schema),
-                )
-            )
-            topic_values[topic.name] = topic_vue_value
+    def _compute_topic_group_spec(self, topic_group: TopicGroup) -> shared_type_defs.TopicGroup:
+        vue_topic_group = shared_type_defs.TopicGroup(
+            title=localize(topic_group.title),
+            elements=[],
+        )
+        for element_name, element in topic_group.elements.items():
+            element_spec = self._compute_topic_element_spec(element, element_name)
+            vue_topic_group.elements.append(element_spec)
+        return vue_topic_group
 
-        return (
-            shared_type_defs.Catalog(title=title, help=help_text, topics=topics),
-            topic_values,
+    def _compute_topic_element_spec(
+        self, element: TopicElement, element_name: str
+    ) -> shared_type_defs.TopicElement:
+        element_visitor = get_visitor(element.parameter_form, self.options)
+        element_spec, element_default_value = element_visitor.to_vue(DEFAULT_VALUE)
+
+        return shared_type_defs.TopicElement(
+            name=element_name,
+            required=element.required,
+            parameter_form=element_spec,
+            default_value=element_default_value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(
-                "" if isinstance(raw_value, DefaultValue) else raw_value,
-                Title("Invalid integer number"),
+    def _to_vue(
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.Catalog, _FrontendModel]:
+        title, help_text = get_title_and_help(self.form_spec)
+        if isinstance(parsed_value, InvalidValue):
+            parsed_value = parsed_value.fallback_value
+
+        vue_value: dict[str, dict[str, object]] = {}
+        vue_catalog = shared_type_defs.Catalog(
+            title=title,
+            help=help_text,
+            elements=[],
+            validators=[],
+            i18n_base=base_i18n_form_spec(),
+        )
+        for topic_name, topic in self.form_spec.elements.items():
+            vue_value[topic_name] = {}
+            actual_elements = self._resolve_topic_to_elements(topic)
+
+            # Compute vue value
+            topic_values = parsed_value.get(topic_name, {})
+
+            for element_name, element in actual_elements.items():
+                element_visitor = get_visitor(element.parameter_form, self.options)
+                is_active = element_name in topic_values
+                element_vue_value = element_visitor.to_vue(
+                    topic_values[element_name] if is_active else DEFAULT_VALUE
+                )[1]
+                if is_active or element.required:
+                    vue_value[topic_name][element_name] = element_vue_value
+
+            # Compute vue spec, either a list of TopicElements or a list of TopicGroup
+            vue_topic = shared_type_defs.Topic(
+                name=topic_name, title=localize(topic.title), elements=[]
             )
-        validations = [*compute_validation_errors(compute_validators(self.form_spec), parsed_value)]
 
-        for topic in self.form_spec.topics:
-            if topic.name not in parsed_value:
-                validations.append(
-                    shared_type_defs.ValidationMessage(
-                        location=[topic.name],
-                        message=_("Missing catalog topic."),
-                        invalid_value=None,
-                    )
-                )
-                continue
+            # tmp_group_element / tmp_element is required since mypy can differentiate
+            # between list[TopicElement] and list[TopicGroup]
+            if isinstance(topic.elements, list):
+                tmp_group_elements: list[shared_type_defs.TopicGroup] = []
+                for topic_group in topic.elements:
+                    vue_topic_group = self._compute_topic_group_spec(topic_group)
+                    tmp_group_elements.append(vue_topic_group)
+                vue_topic.elements = tmp_group_elements
+            else:
+                tmp_elements: list[shared_type_defs.TopicElement] = []
+                for element_name, element in topic.elements.items():
+                    element_spec = self._compute_topic_element_spec(element, element_name)
+                    tmp_elements.append(element_spec)
+                vue_topic.elements = tmp_elements
 
-            element_visitor = get_visitor(topic.dictionary, self.options)
-            for validation in element_visitor.validate(parsed_value[topic.name]):
-                validations.append(
-                    shared_type_defs.ValidationMessage(
-                        location=[topic.name] + validation.location,
-                        message=validation.message,
-                        invalid_value=validation.invalid_value,
+            vue_catalog.elements.append(vue_topic)
+
+        return vue_catalog, vue_value
+
+    def _validate(
+        self, raw_value: object, parsed_value: _ParsedValueModel
+    ) -> list[shared_type_defs.ValidationMessage]:
+        element_validations: list[shared_type_defs.ValidationMessage] = []
+        for topic_name, topic in self.form_spec.elements.items():
+            topic_values = parsed_value[topic_name]
+            for element_name, element in self._resolve_topic_to_elements(topic).items():
+                if element_name not in topic_values:
+                    if element.required:
+                        return create_validation_error(
+                            raw_value,
+                            f"Required element {element_name} missing in topic {topic_name}",
+                            location=[topic_name, element_name],
+                        )
+                    continue
+
+                element_visitor = get_visitor(element.parameter_form, self.options)
+                for validation in element_visitor.validate(topic_values[element_name]):
+                    element_validations.append(
+                        shared_type_defs.ValidationMessage(
+                            location=[topic_name, element_name] + validation.location,
+                            message=validation.message,
+                            invalid_value=validation.invalid_value,
+                        )
                     )
-                )
-        return validations
+        return element_validations
 
     def _to_disk(
-        self, raw_value: object, parsed_value: Mapping[str, object]
-    ) -> Mapping[str, object]:
-        disk_values = {}
-        for topic in self.form_spec.topics:
-            element_visitor = get_visitor(topic.dictionary, self.options)
-            if (topic_value := parsed_value.get(topic.name)) is not None:
-                disk_values[topic.name] = element_visitor.to_disk(topic_value)
+        self, raw_value: object, parsed_value: _ParsedValueModel
+    ) -> Mapping[str, dict[str, object]]:
+        disk_values: dict[str, dict[str, object]] = {}
+        for topic_name, topic in self.form_spec.elements.items():
+            disk_values[topic_name] = {}
+            topic_values = parsed_value[topic_name]
+            for element_name, element in self._resolve_topic_to_elements(topic).items():
+                if element_name in topic_values:
+                    element_visitor = get_visitor(element.parameter_form, self.options)
+                    disk_values[topic_name][element_name] = element_visitor.to_disk(
+                        topic_values[element_name]
+                    )
         return disk_values
 
 
@@ -155,28 +252,34 @@ class Dict2CatalogConverter:
             topic_name = element_to_topic[dict_name]
             topic_elements[topic_name][dict_name] = dict_value
 
-        topics = []
+        topics = {}
         for topic_name, elements in topic_elements.items():
-            topics.append(
-                Topic(
-                    name=topic_name,
-                    dictionary=FormSpecDictionary(title=topic_title[topic_name], elements=elements),
-                )
+            topics[topic_name] = Topic(
+                title=topic_title[topic_name],
+                elements={
+                    element_name: TopicElement(parameter_form=element.parameter_form, required=True)
+                    for element_name, element in elements.items()
+                },
             )
 
-        return cls(catalog=Catalog(topics=topics))
+        return cls(catalog=Catalog(elements=topics))
 
     def convert_flat_to_catalog_config(
         self, flat_config: dict[str, object]
     ) -> Mapping[str, dict[str, object]]:
-        topic_for_name: dict[str, str] = {}
-        for topic in self.catalog.topics:
-            for element_name, _element_value in topic.dictionary.elements.items():
-                topic_for_name[element_name] = topic.name
+        topic_for_element: dict[str, str] = {}
+        for topic_name, topic in self.catalog.elements.items():
+            if isinstance(topic.elements, list):
+                for topic_group in topic.elements:
+                    for element_name, _element_value in topic_group.elements.items():
+                        topic_for_element[element_name] = topic_name
+            else:
+                for element_name, _element_value in topic.elements.items():
+                    topic_for_element[element_name] = topic_name
 
         catalog_config: dict[str, dict[str, object]] = {}
         for name, value in flat_config.items():
-            if (target_topic := topic_for_name.get(name)) is None:
+            if (target_topic := topic_for_element.get(name)) is None:
                 raise MKGeneralException(
                     f"Cannot convert to catalog config. Key {name} has no topic"
                 )

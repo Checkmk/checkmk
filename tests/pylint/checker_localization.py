@@ -90,7 +90,7 @@ class LiteralStringChecker(LocalizationBaseChecker):
 
 class HTMLTagsChecker(LocalizationBaseChecker):
     _MESSAGE_ID = "localization-forbidden-html-tags"
-    name = "localization-html-tags-checkerr"
+    name = "localization-html-tags-checker"
     msgs = {
         "E7810": (
             "Localization function called with a string that contains forbidden HTML tags.",

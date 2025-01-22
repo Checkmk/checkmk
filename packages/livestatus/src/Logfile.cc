@@ -7,10 +7,10 @@
 
 #include <fcntl.h>
 
-#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <fstream>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
@@ -77,14 +77,18 @@ void Logfile::load(const LogRestrictions &restrictions) {
         if (_logclasses_read != 0U) {
             (void)fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(restrictions, file, _logclasses_read);
-            (void)fgetpos(file, &_read_pos);
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         if (missing_types != 0U) {
             (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(restrictions, file, missing_types);
             _logclasses_read |= missing_types;
-            (void)fgetpos(file, &_read_pos);  // remember current end of file
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
@@ -123,9 +127,8 @@ void Logfile::loadRange(const LogRestrictions &restrictions, FILE *file,
         }
         _lineno++;
         // remove trailing newline (should be nuked, see above)
-        auto it =
-            std::find_if(linebuffer.begin(), linebuffer.end(),
-                         [](auto ch) { return ch == '\0' || ch == '\n'; });
+        auto it = std::ranges::find_if(
+            linebuffer, [](auto ch) { return ch == '\0' || ch == '\n'; });
         if (it != linebuffer.end()) {
             *it = '\0';
         }

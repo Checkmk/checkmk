@@ -74,8 +74,8 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
+    all_host_attributes,
     collect_attributes,
-    host_attribute_registry,
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -963,7 +963,7 @@ class ModeFolder(WatoMode):
             with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
-                for attr in host_attribute_registry.attributes():
+                for attr in all_host_attributes(active_config).values():
                     if attr.show_in_table():
                         colspan += 1
                 if (
@@ -1066,7 +1066,7 @@ class ModeFolder(WatoMode):
         html.a(hostname, href=host.edit_url())
 
         # Show attributes
-        for attr in host_attribute_registry.attributes():
+        for attr in all_host_attributes(active_config).values():
             if attr.show_in_table():
                 attrname = attr.name()
                 if attrname in host.attributes:

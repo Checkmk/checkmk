@@ -18,7 +18,6 @@
 #include "livestatus/Logfile.h"
 #include "livestatus/Table.h"
 
-class Column;
 class ColumnOffsets;
 class ICore;
 class LogEntry;

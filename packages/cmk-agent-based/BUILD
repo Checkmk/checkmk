@@ -53,16 +53,16 @@ py_doc_test(
 
 py_pytest_main(
     name = "__test__",
-    tags = ["no-mypy"],
+    deps = [
+        requirement("pytest"),
+    ],
 )
 
 py_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    args = ["--config-file=$(location pyproject.toml)"],
-    data = ["pyproject.toml"],
-    main = ":__test__.py",
+    main = "__test__.py",
     deps = [
         ":__test__",
         ":cmk-agent-based",

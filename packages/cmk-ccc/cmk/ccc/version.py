@@ -9,7 +9,7 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import enum
 import functools
@@ -21,8 +21,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, Self
 
+from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.site import get_omd_config
 
 
@@ -36,7 +37,7 @@ class Edition(enum.Enum):
     CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
     CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
     CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
-    CSE = _EditionValue("cse", "saas", "Checkmk SaaS Edition")
+    CSE = _EditionValue("cse", "saas", "Checkmk Cloud (SaaS)")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
     @classmethod
@@ -227,7 +228,7 @@ class Version:
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
-    )  # e.g. "2.1.0p17-rc3+securtiy"
+    )  # e.g. "2.1.0p17-rc3+security"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # -> The master branch also uses the [branch_version]-[date] schema since 2023-11-16.
@@ -498,7 +499,7 @@ def parse_check_mk_version(v: str) -> int:
         _, multiply = var_map[var_type]
         val += num * multiply
 
-    return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
+    return int(f"{int(major):02}{int(minor):02}{sub:02}{val:05}")
 
 
 class VersionsCompatible:
@@ -703,7 +704,7 @@ def _check_minimum_patch_release(
 # and diagnostics.
 
 
-def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
+def get_general_version_infos(omd_root: Path) -> VersionInfo:
     return {
         "time": time.time(),
         "os": _get_os_info(),
@@ -715,7 +716,7 @@ def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
     }
 
 
-def _get_os_info() -> str:  # noqa: C901
+def _get_os_info() -> str:
     for path_release_file in (
         Path("/etc/redhat-release"),
         Path("/etc/SuSE-release"),

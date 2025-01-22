@@ -36,7 +36,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version.from_str("2.4.0i1")
+            if for_cmk_version >= cmk_version.Version.from_str("2.5.0b1")
             else SerializedResult(repr((self.field_1,)))
         )
 
@@ -124,7 +124,7 @@ class TestPageAutomation:
             m.setattr(
                 request,
                 "headers",
-                {"x-checkmk-version": "2.3.0p11", "x-checkmk-edition": "cee"},
+                {"x-checkmk-version": "2.4.0b1", "x-checkmk-edition": "cee"},
             )
             automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2),)"

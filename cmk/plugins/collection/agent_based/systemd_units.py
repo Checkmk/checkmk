@@ -244,7 +244,8 @@ class UnitStatus:
         name = entry[0][1].split(".", 1)[0]
         enabled_status = entry[1][3].rstrip(";)") if len(entry[1]) >= 4 else None
 
-        timestr = " ".join(entry[2]).split(";", 1)[-1]
+        time_line = next((line for line in entry if line[0].lstrip().startswith("Active:")), [])
+        timestr = " ".join(time_line).split(";", 1)[-1]
         if "ago" in timestr:
             time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
         else:
@@ -562,7 +563,11 @@ def check_systemd_sockets(item: str, params: Mapping[str, Any], section: Section
 def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
     if item not in units:
-        yield Result(state=State(params["else"]), summary="Service not found")
+        yield Result(
+            state=State(params["else"]),
+            summary="Unit not found",
+            details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+        )
         return
     unit = units[item]
     # TODO: this defaults unknown states to CRIT with the default params

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
 from cmk import fields
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class CreateConfigurationEntity(BaseSchema):

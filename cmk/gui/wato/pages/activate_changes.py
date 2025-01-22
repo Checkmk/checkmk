@@ -143,7 +143,10 @@ def _get_snapshots() -> list[str]:
 
 def _get_last_wato_snapshot_file():
     for snapshot_file in _get_snapshots():
-        status = backup_snapshots.get_snapshot_status(snapshot_file)
+        status = backup_snapshots.get_snapshot_status(
+            snapshot=snapshot_file,
+            debug=active_config.debug,
+        )
         if status["type"] == "automatic" and not status["broken"]:
             return snapshot_file
     return None

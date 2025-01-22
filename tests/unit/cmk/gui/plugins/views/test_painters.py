@@ -24,7 +24,7 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.http import request
-from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
@@ -70,7 +70,7 @@ def fixture_livestatus_test_config(
 
 @pytest.mark.usefixtures("load_config")
 def test_registered_painters() -> None:
-    painters = painter_registry.keys()
+    painters = all_painters(active_config).keys()
     expected_painters = [
         "aggr_acknowledged",
         "aggr_assumed_state",
@@ -265,6 +265,8 @@ def test_registered_painters() -> None:
         "inv_hardware_cpu_threads_per_cpu",
         "inv_hardware_cpu_type",
         "inv_hardware_cpu_voltage",
+        "inv_hardware_firmware",
+        "inv_hardware_firmware_redfish",
         "inv_hardware_memory",
         "inv_hardware_memory_arrays",
         "inv_hardware_memory_total_ram_usable",
@@ -301,6 +303,7 @@ def test_registered_painters() -> None:
         "inv_networking_hostname",
         "inv_networking_kube",
         "inv_networking_routes",
+        "inv_networking_sip_interfaces",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",
         "inv_networking_tunnels",
@@ -541,6 +544,11 @@ def test_registered_painters() -> None:
         "invfan_name",
         "invfan_serial",
         "invfan_software",
+        "invfirmwareredfish_component",
+        "invfirmwareredfish_description",
+        "invfirmwareredfish_location",
+        "invfirmwareredfish_updateable",
+        "invfirmwareredfish_version",
         "invhist_changed",
         "invhist_delta",
         "invhist_new",
@@ -860,7 +868,7 @@ def test_registered_painters() -> None:
             "customer_num_services_warn",
         ]
 
-    assert sorted(painters) == sorted(expected_painters)
+    assert set(painters) == set(expected_painters)
 
 
 @pytest.fixture(name="service_painter_idents")

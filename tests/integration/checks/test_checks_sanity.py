@@ -52,21 +52,23 @@ def _host_services(
         pytest.skip("Active mode requires pull agent, which is not available in CSE")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
-    site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
+    site.openapi.hosts.create(
+        hostname, attributes={"ipaddress": site.http_address, "site": site.id}
+    )
     site.activate_changes_and_wait_for_core_reload()
 
     try:
         register_controller(agent_ctl, site, hostname, site_address="127.0.0.1")
         wait_until_host_receives_data(site, hostname)
         wait_for_agent_cache_omd_status(site)
-        site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([str(hostname)])
+        site.openapi.changes.activate_and_wait_for_completion()
         if active_mode:
             site.reschedule_services(hostname)
         else:
             if not version_from_env().is_saas_edition():
                 # Reduce check interval to 3 seconds
-                rule_id = site.openapi.create_rule(
+                rule_id = site.openapi.rules.create(
                     ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
                     value=0.05,
                     conditions={
@@ -93,8 +95,8 @@ def _host_services(
         raise e
     finally:
         if rule_id:
-            site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+            site.openapi.rules.delete(rule_id)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 

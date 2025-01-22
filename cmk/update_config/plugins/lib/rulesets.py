@@ -8,10 +8,12 @@
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
+from typing import Final
 
 from cmk.ccc import debug
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
 from cmk.base import config
@@ -25,11 +27,36 @@ from cmk.gui.watolib.rulesets import (
     RulesetCollection,
 )
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "entersekt_soaprrors": "entersekt_soaperrors",  # 2.4 -> 2.5
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
 DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
+
+SKIP_ACTION: Final = {
+    # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
+    # see all of them
+    RuleGroup.ExtraServiceConf("_sla_config"),
+    # Validating the ignored checks ruleset does not make sense:
+    # Invalid choices are the plugins that don't exist (anymore).
+    # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
+    # could be missing only temporarily, so better not remove it.
+    "ignored_checks",
+    "snmp_exclude_sections",  # same as "ignored_checks".
+}
+
+SKIP_PREACTION: Final = SKIP_ACTION | {
+    # validating a ruleset for static checks, where we want to replace the ruleset anyway,
+    # does not work:
+    # * the validation checks if there are checks which subscribe to that check group
+    # * when replacing a ruleset, we have no check anymore subscribing to the old name
+    # * in that case, the validation will always fail, so we skip it during update
+    # * the rule validation with the replaced ruleset will happen after the replacing anyway again
+    # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
+    *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
+}
 
 
 def load_and_transform(logger: Logger) -> AllRulesets:

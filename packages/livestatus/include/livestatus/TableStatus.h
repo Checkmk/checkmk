@@ -8,14 +8,11 @@
 
 #include <string>
 
-#include "livestatus/Row.h"
 #include "livestatus/Table.h"
 
 class ColumnOffsets;
 enum class Counter;
 class ICore;
-class Query;
-class User;
 
 class TableStatus : public Table {
 public:

@@ -14,10 +14,12 @@ import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   Dictionary,
   FormSpec,
+  String,
   ValidationMessage
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
+import { dispatcherKey } from '@/form/private'
 
 // demo stuff
 
@@ -69,12 +71,14 @@ const api: API<ObjectId, ObjectId> = {
       title: 'dict title',
       validators: [],
       help: 'dict help',
+      i18n_base: { required: 'required' },
       layout: 'one_column',
       no_elements_text: 'no_text',
       additional_static_elements: null,
       elements: [
         {
           name: 'element_name',
+          render_only: false,
           group: null,
           required: false,
           default_value: '',
@@ -82,8 +86,13 @@ const api: API<ObjectId, ObjectId> = {
             type: 'string',
             title: 'string title',
             help: 'some string help',
-            validators: []
-          }
+            label: null,
+            i18n_base: { required: 'required' },
+            validators: [],
+            input_hint: null,
+            autocompleter: null,
+            field_size: 'SMALL'
+          } as String
         }
       ],
       groups: []
@@ -93,7 +102,7 @@ const api: API<ObjectId, ObjectId> = {
 }
 // this is a hack to use FormSingleChoiceEditableEditAsync outside a FormEdit context:
 // if you need this in production code, we should think about a better solution
-provide('dispatcher', FormEditDispatcher)
+provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>

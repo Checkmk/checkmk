@@ -53,12 +53,12 @@ crates_repository(
             ),
         ],
     },
-    cargo_lockfile = "//:Cargo.site.lock",
-    lockfile = "//:Cargo.site.lock.bazel",
+    cargo_lockfile = "//packages/site:Cargo.lock",
+    lockfile = "//packages/site:Cargo.lock.bazel",
     manifests = [
-        "//:Cargo.site.toml",
-        "//packages/check-cert:Cargo.toml",
-        "//packages/check-http:Cargo.toml",
+        "//packages/site:Cargo.toml",
+        "//packages/site/check-cert:Cargo.toml",
+        "//packages/site/check-http:Cargo.toml",
     ],
 )
 
@@ -193,29 +193,11 @@ load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_py
 
 create_python_requirements(
     name = "python_modules",
-    # TODO: differentiate between own code and things we get from other omd packages
     ignored_modules = [
-        # Third party modules with special handling
-        "rrdtool",  # don't build with pip -> see rrdtool omd packages
-        # Our own packages
-        "agent-based",
-        "agent-receiver",
-        "ccc",
-        "crypto",
-        "graphing",
-        "messaging",
-        "mkp-tool",
-        "rulesets",
-        "server-side-calls",
-        "werks",
-        "trace",
-        "livestatus-client",
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
-    # TODO: Use the already existing requirements_lock.txt generated from _generate_requirements_in
-    pipfile_lock = "//:Pipfile.lock",
-    requirements = "//:Pipfile",
+    requirements_lock = "//:requirements_runtime_lock.txt",
 )
 
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")
@@ -261,13 +243,6 @@ load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
 jaeger_workspace()
 
-http_archive(
-    name = "bazel_clang_tidy",
-    sha256 = "3f31e513bba1cba41ace515c3a0474b7793abc6f10ed5f6e08fa6e6b6d2411b0",
-    strip_prefix = "bazel_clang_tidy-bff5c59c843221b05ef0e37cef089ecc9d24e7da",
-    url = "https://github.com/erenon/bazel_clang_tidy/archive/bff5c59c843221b05ef0e37cef089ecc9d24e7da.tar.gz",
-)
-
 load("//omd/packages/erlang:erlang_http.bzl", "erlang_workspace")
 
 erlang_workspace()
@@ -285,7 +260,3 @@ http_archive(
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()
-
-load("//non-free/packages/otel-collector:otelcol_http.bzl", "otelcol_workspace")
-
-otelcol_workspace()

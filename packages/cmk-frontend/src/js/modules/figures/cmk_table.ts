@@ -129,7 +129,7 @@ export class TableFigure extends FigureBase<TableFigureData> {
             .join(enter =>
                 enter.append(d => {
                     return document.createElement(d.cell_type || "td");
-                })
+                }),
             )
             .attr("class", d => ["cell"].concat(d.classes || []).join(" "))
             .attr("id", d => d.id || null)
@@ -154,7 +154,7 @@ class HTMLTableCellElement extends HTMLElement {
 }
 
 function _update_figures_in_selection(
-    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
 ) {
     selection
         .selectAll<HTMLTableCellElement, Cell>(".figure_cell")
@@ -163,7 +163,7 @@ function _update_figures_in_selection(
             if (nodes[idx].__figure_instance__ == undefined) {
                 const figure_class = figure_registry.get_figure(
                     //@ts-ignore
-                    figure_config["figure_type"]
+                    figure_config["figure_type"],
                 );
                 if (figure_class == undefined)
                     // unknown figure type
@@ -171,7 +171,7 @@ function _update_figures_in_selection(
 
                 const new_figure = new figure_class(
                     figure_config["selector"],
-                    (<NtopTalkerData>figure_config)["size"]
+                    (<NtopTalkerData>figure_config)["size"],
                 );
                 new_figure.initialize(false);
                 nodes[idx].__figure_instance__ = new_figure;
@@ -185,7 +185,7 @@ function _update_figures_in_selection(
 
 function _update_dc_graphs_in_selection(
     selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
-    graph_group: string | null
+    graph_group: string | null,
 ) {
     selection
         .selectAll<HTMLTableCellElement, Cell<PieChartData>>(".figure_cell")
@@ -206,7 +206,7 @@ function _update_dc_graphs_in_selection(
                     .reduceSum(d => +d.value);
                 const pie_chart = pieChart(
                     d.figure_config.selector,
-                    String(graph_group)
+                    String(graph_group),
                 );
                 pie_chart
                     .width(450)

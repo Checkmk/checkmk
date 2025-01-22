@@ -108,8 +108,8 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             API_PATH,
         )
         for service, request_string in REQUESTS.items():
-            print(
-                "<<<cisco_prime_%s:sep(0)>>>\n%s"
+            sys.stdout.write(
+                "<<<cisco_prime_%s:sep(0)>>>\n%s\n"
                 % (
                     service,
                     fetch_json_data(url_prefix + request_string, args),
@@ -120,7 +120,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         if args.debug:
             raise
         # In the non-debug case the first (and only) line on stderr should tell what happended
-        print(str(exc), file=sys.stderr)
+        sys.stderr.write(f"{exc}\n")
         raise SystemExit(-1)
 
 

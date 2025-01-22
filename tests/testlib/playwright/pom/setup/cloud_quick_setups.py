@@ -77,7 +77,7 @@ class AWSAddNewConfiguration(CmkPage):
     def _get_row(self, name: str) -> Locator:
         # TODO: change to accessibility elements once available
         return self.main_area.locator(
-            f'div[class*="form-dictionary"]:has(span > label:has-text("{name}"))'
+            f'div[class*="form-dictionary"]:has(span > span:has-text("{name}"))'
         )
 
     # stage-2

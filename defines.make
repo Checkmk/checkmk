@@ -41,7 +41,7 @@ else
 SAAS              := no
 endif
 
-VERSION            := 2.4.0b1
+VERSION            := 2.5.0b1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)
@@ -50,7 +50,7 @@ PKG_VERSION        := $(VERSION)
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.4.0
+BRANCH_VERSION     := 2.5.0
 
 # return nothing if the branch name, e.g. "master" is not the version e.g. 2.4.0
 # this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does
@@ -68,7 +68,7 @@ BRANCH_NAME_IS_BRANCH_VERSION :=
 #endif
 
 SHELL              := /bin/bash
-CLANG_VERSION      := 18
+CLANG_VERSION      := 19
 
 PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
 
@@ -106,7 +106,6 @@ PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR := $(PYTHON_VERSION_WINDOWS_MAJOR).$(PYTH
 AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
 
 # Needed for bootstrapping CI and development environments
-PIPENV_VERSION := 2023.11.15
 VIRTUALENV_VERSION := 20.25.0
 NODEJS_VERSION := 22
 NPM_VERSION := 10

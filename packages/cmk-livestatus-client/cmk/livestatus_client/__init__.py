@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
-# pylint: disable=broad-exception-caught,raise-missing-from,consider-using-f-string
-# pylint: disable=too-many-lines,too-many-ancestors,too-many-arguments,too-many-locals
-# pylint: disable=too-many-instance-attributes,too-many-statements
-# pylint: disable=too-many-public-methods
-
 from __future__ import annotations
 
 import ast
@@ -21,14 +16,16 @@ import socket
 import ssl
 import threading
 import time
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
 
-from opentelemetry import trace
+from cmk import trace
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -169,7 +166,7 @@ class LivestatusTestingError(RuntimeError):
 #   |  Global variables and Exception classes                              |
 #   '----------------------------------------------------------------------'
 
-tracer = trace.get_tracer("cmk.livestatus_client")
+tracer = trace.get_tracer()
 
 # TODO: This mechanism does not take different connection options into account
 # Keep a global array of persistent connections
@@ -385,6 +382,22 @@ class Helpers:
             )
         return [sum(column) for column in zip(*data)]
 
+    @staticmethod
+    def _serialize_command(command: Command) -> str:
+        def _serialize_type(value: Command.Arguments) -> str:
+            match value:
+                case str():
+                    return lqencode(value)
+                case bool():
+                    return str(int(value))
+                case int():
+                    return str(value)
+                case datetime():
+                    return str(int(value.timestamp()))
+
+        serialized_args = ";".join(map(_serialize_type, command.args))
+        return f"{command.name};{serialized_args}"
+
 
 @cache
 def get_livestatus_blob_columns() -> set[LivestatusColumn]:
@@ -505,9 +518,7 @@ def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, i
         >>> parse_socket_url('Hallo Welt!')
         Traceback (most recent call last):
         ...
-        livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
-Must begin with 'tcp:', 'tcp6:' or 'unix:'
-
+        packages.cmk-livestatus-client.cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. Must begin with 'tcp:', 'tcp6:' or 'unix:'
     """
     if ":" in url:
         family_txt, url = url.split(":", 1)
@@ -536,7 +547,7 @@ class SingleSiteConnection(Helpers):
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         socketurl: str,
         site_name: SiteId | None = None,
@@ -654,7 +665,7 @@ class SingleSiteConnection(Helpers):
     def _create_socket(
         self,
         family: socket.AddressFamily,
-        site_name: SiteId | None = None,  # pylint: disable=unused-argument
+        site_name: SiteId | None = None,  # noqa: ARG002
     ) -> socket.socket:
         """Creates the Livestatus client socket
 
@@ -709,7 +720,7 @@ class SingleSiteConnection(Helpers):
 
     def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
         with (
-            tracer.start_as_current_span(
+            tracer.span(
                 "do_query",
                 kind=trace.SpanKind.CLIENT,
                 attributes={
@@ -899,13 +910,13 @@ class SingleSiteConnection(Helpers):
     def command(
         self,
         command: str,
-        site: SiteId | None = None,  # pylint: disable=unused-argument
+        site: SiteId | None = None,  # noqa: ARG002
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
 
-        with tracer.start_as_current_span(
+        with tracer.span(
             "send_command",
             kind=trace.SpanKind.CLIENT,
             attributes={
@@ -914,6 +925,13 @@ class SingleSiteConnection(Helpers):
             },
         ):
             self.send_command(f"COMMAND {command_str}")
+
+    def command_obj(
+        self,
+        command: Command,
+        _site: SiteId | None = None,
+    ) -> None:
+        self.command(self._serialize_command(command))
 
     def send_command(self, command: str) -> None:
         if self.socket is None:
@@ -979,7 +997,7 @@ ConnectedSites = list[ConnectedSite]
 
 
 class MultiSiteConnection(Helpers):
-    def __init__(  # pylint: disable=too-many-branches
+    def __init__(
         self,
         sites: SiteConfigurations,
         disabled_sites: SiteConfigurations | None = None,
@@ -1260,9 +1278,7 @@ class MultiSiteConnection(Helpers):
         else:
             connect_to_sites = self.connections
 
-        with tracer.start_as_current_span(
-            "query_parallel", attributes={"cmk.livestatus.query": str(query)}
-        ):
+        with tracer.span("query_parallel", attributes={"cmk.livestatus.query": str(query)}):
             # First send all queries
             retrieve_responses = self._send_queries(
                 query,
@@ -1285,7 +1301,7 @@ class MultiSiteConnection(Helpers):
     ) -> list[tuple[str, trace.Span, ConnectedSite]]:
         retrieve_responses: list[tuple[str, trace.Span, ConnectedSite]] = []
         for connected_site in connect_to_sites:
-            with tracer.start_as_current_span(
+            with tracer.span(
                 f"send_query_to_site[{connected_site.id}]",
                 kind=trace.SpanKind.PRODUCER,
                 attributes={
@@ -1316,7 +1332,7 @@ class MultiSiteConnection(Helpers):
     ) -> list[tuple[ConnectedSite, bytes]]:
         site_responses: list[tuple[ConnectedSite, bytes]] = []
         for str_query, request_span, connected_site in retrieve_responses:
-            with tracer.start_as_current_span(
+            with tracer.span(
                 f"receive_from_site[{connected_site.id}]",
                 kind=trace.SpanKind.CONSUMER,
                 links=[trace.Link(request_span.get_span_context())],
@@ -1387,6 +1403,9 @@ class MultiSiteConnection(Helpers):
                 "Cannot send command to unconfigured site '%s'" % sitename
             )
         conn[0].command(command)
+
+    def command_obj(self, command: Command, sitename: SiteId | None = SiteId("local")) -> None:
+        self.command(self._serialize_command(command), sitename)
 
     # Return connection to localhost (UNIX), if available
     def local_connection(self) -> SingleSiteConnection:
@@ -1545,7 +1564,7 @@ def livestatus_lql(
     return f"GET {what}s\n{query_filter}"
 
 
-def get_rrd_data(  # pylint: disable=too-many-positional-arguments
+def get_rrd_data(
     connection: SingleSiteConnection,
     host_name: str,
     service_description: str,
@@ -1599,3 +1618,18 @@ def get_rrd_data(  # pylint: disable=too-many-positional-arguments
         if (step := int(raw_step)) == 0
         else RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )
+
+
+@dataclass(frozen=True)
+class Command(ABC):
+    type Arguments = int | str | datetime | bool
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Name of the command to be sent."""
+
+    @property
+    @abstractmethod
+    def args(self) -> list[Arguments]:
+        """Arguments for the command."""

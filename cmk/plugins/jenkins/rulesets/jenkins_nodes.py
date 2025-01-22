@@ -59,11 +59,38 @@ def _parameter_valuespec_jenkins_nodes() -> Dictionary:
                     migrate=migrate_to_integer_simple_levels,
                 )
             ),
+            "jenkins_numexecutors_upper": DictElement(
+                parameter_form=SimpleLevels[int](
+                    title=Title("Upper level for number of executors of this node"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
+                )
+            ),
+            "jenkins_busyexecutors_lower": DictElement(
+                parameter_form=SimpleLevels[int](
+                    title=Title("Lower level for number of busy executors of this node"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
+                )
+            ),
             "jenkins_busyexecutors": DictElement(
                 parameter_form=SimpleLevels[int](
                     title=Title("Upper level for number of busy executors of this node"),
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
+                )
+            ),
+            "jenkins_idleexecutors_lower": DictElement(
+                parameter_form=SimpleLevels[int](
+                    title=Title("Lower level for number of idle executors of this node"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint(value=(0, 0)),
                     migrate=migrate_to_integer_simple_levels,
                 )

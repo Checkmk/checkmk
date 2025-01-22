@@ -270,7 +270,7 @@ public:
 
     [[nodiscard]] double value() const override {
         auto mean = sum_ / count_;
-        return sqrt(sum_of_squares_ / count_ - mean * mean);
+        return sqrt((sum_of_squares_ / count_) - (mean * mean));
     }
 
 private:

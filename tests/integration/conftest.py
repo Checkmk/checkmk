@@ -7,9 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.openapi_session import RequestSessionRequestHandler
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.rest_api_client import ClientRegistry, get_client_registry, RestApiClient
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -25,7 +23,8 @@ def get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
         yield from get_site_factory(prefix="int_").get_test_site(
-            name="test", auto_restart_httpd=True
+            name="test",
+            auto_restart_httpd=True,
         )
 
 
@@ -42,21 +41,3 @@ def fixture_web(site: Site) -> CMKWebSession:
 @pytest.fixture(scope="session")
 def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)
-
-
-@pytest.fixture()
-def rest_api_client(site: Site) -> RestApiClient:
-    rq = RequestSessionRequestHandler()
-    rq.set_credentials("cmkadmin", site.admin_password)
-    return RestApiClient(
-        rq, f"{site.http_proto}://{site.http_address}:{site.apache_port}/{site.id}/check_mk/api/1.0"
-    )
-
-
-@pytest.fixture()
-def clients(site: Site) -> ClientRegistry:
-    rq = RequestSessionRequestHandler()
-    rq.set_credentials("cmkadmin", site.admin_password)
-    return get_client_registry(
-        rq, f"{site.http_proto}://{site.http_address}:{site.apache_port}/{site.id}/check_mk/api/1.0"
-    )

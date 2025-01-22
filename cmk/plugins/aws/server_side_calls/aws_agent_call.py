@@ -3,11 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal
+from typing import cast, Literal, Union
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
+
+
+class AuthAccessKey(BaseModel):
+    access_key_id: str
+    secret_access_key: Secret
+
+
+class AuthSts(BaseModel):
+    role_arn_id: str
+    external_id: str | None = None
+
+
+class AuthAccessKeySts(AuthAccessKey, AuthSts): ...
 
 
 class ProxyDetails(BaseModel):
@@ -17,14 +30,8 @@ class ProxyDetails(BaseModel):
     proxy_password: Secret | None = None
 
 
-class RoleArnId(BaseModel):
-    role_arn: str
-    external_id: str | None = None
-
-
 class APIAccess(BaseModel):
     global_service_region: str | None = None
-    role_arn_id: tuple[str, str] | None = None
 
 
 Tag = tuple[str, list[str]]
@@ -40,8 +47,13 @@ ServiceConfig = Mapping[str, LimitsActivated | HostAssignment | Selection | None
 
 
 class AwsParams(BaseModel):
-    access_key_id: str
-    secret_access_key: Secret
+    auth: Union[
+        tuple[Literal["access_key_sts"], AuthAccessKeySts],
+        tuple[Literal["access_key"], AuthAccessKey],
+        tuple[Literal["sts"], AuthSts],
+        Literal["none"],
+        None,
+    ] = None
     proxy_details: ProxyDetails | None = None
     access: APIAccess | None = None
     global_services: Mapping[str, ServiceConfig] | None = None
@@ -125,21 +137,37 @@ def aws_arguments(
     params: AwsParams,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
-    args: list[str | Secret] = [
-        "--access-key-id",
-        params.access_key_id,
-        "--secret-access-key-reference",
-        params.secret_access_key,
-    ]
+    args: list[str | Secret] = []
+
+    auth = params.auth
+    access = params.access or APIAccess()
+
+    match auth:
+        case ("sts", sts):
+            assert isinstance(sts, AuthSts)
+            args.extend(("--assume-role", "--role-arn", sts.role_arn_id))
+            if sts.external_id:
+                args.extend(("--external-id", sts.external_id))
+        case ("access_key", ak):
+            assert isinstance(ak, AuthAccessKey)
+            args.extend(("--access-key-id", ak.access_key_id))
+            args.extend(("--secret-access-key-reference", ak.secret_access_key))
+        case ("access_key_sts", aksts):
+            assert isinstance(aksts, AuthAccessKeySts)
+            args.extend(("--access-key-id", aksts.access_key_id))
+            args.extend(("--secret-access-key-reference", aksts.secret_access_key))
+            args.extend(("--assume-role", "--role-arn", aksts.role_arn_id))
+            if aksts.external_id:
+                args.extend(("--external-id", aksts.external_id))
+        case ("none", _):
+            ...
+
     if params.proxy_details:
         args.extend(_proxy_args(params.proxy_details))
-    access = params.access or APIAccess()
+
     if global_service_region := access.global_service_region:
         args.extend(("--global-service-region", global_service_region))
-    if role_arn_id := access.role_arn_id:
-        args.extend(("--assume-role", "--role-arn", role_arn_id[0]))
-        if role_arn_id[1]:
-            args.extend(("--external-id", role_arn_id[1]))
+
     if params.regions:
         args.extend(("--regions", *params.regions))
     global_services = params.global_services or {}

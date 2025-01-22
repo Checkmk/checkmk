@@ -3,30 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import asyncio
 import io
-import re
 import sys
 import time
+from collections.abc import AsyncGenerator, Callable, Iterator, Sequence
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
-from typing import AsyncGenerator, Callable, Coroutine, Final, Iterator, Protocol, Sequence
+from typing import Protocol
 
-from fastapi import FastAPI, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
 from cmk.utils import paths
+from cmk.utils.caching import cache_manager
 
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
 from ._cache import Cache
-from ._log import app_logger
+from ._log import LOGGER, temporary_log_level
+from ._tracer import TRACER
 
-APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
-
-class AutomationRequest(BaseModel, frozen=True):
+class AutomationPayload(BaseModel, frozen=True):
     name: str
     args: Sequence[str]
     stdin: str
@@ -43,7 +42,7 @@ class HealthCheckResponse(BaseModel, frozen=True):
 
 
 def reload_automation_config() -> None:
-    config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
+    cache_manager.clear()
     config.load(validate_hosts=False)
 
 
@@ -58,62 +57,75 @@ def redirect_stdin(stream: io.StringIO) -> Iterator[None]:
 
 
 class AutomationEngine(Protocol):
-    # TODO: remove `reload_config` when automation helper is fully integrated.
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode: ...
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode: ...
 
 
 def get_application(
-    *, engine: AutomationEngine, cache: Cache, reload_config: Callable[[], None]
+    *,
+    engine: AutomationEngine,
+    cache: Cache,
+    reload_config: Callable[[], None],
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-        cache.store_last_automation_helper_reload(time.time())
+        app.state.last_reload_at = time.time()
+        config.load_all_plugins(
+            local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
+        )
         reload_config()
         yield
 
     app = FastAPI(lifespan=lifespan, openapi_url=None, docs_url=None, redoc_url=None)
 
-    @app.middleware("http")
-    async def timeout_middleware(
-        request: Request, call_next: Callable[[Request], Coroutine[None, None, Response]]
-    ) -> Response:
-        if timeout_header := re.match(r"timeout=(\d+)", request.headers.get("keep-alive", "")):
-            timeout = min(int(timeout_header.group(1)), APPLICATION_MAX_REQUEST_TIMEOUT)
-        else:
-            timeout = APPLICATION_MAX_REQUEST_TIMEOUT
-        try:
-            return await asyncio.wait_for(call_next(request), timeout=float(timeout))
-        except asyncio.TimeoutError:
-            resp = AutomationResponse(
-                exit_code=AutomationExitCode.TIMEOUT,
-                output=f"Timed out after {timeout} seconds",
-            )
-            return JSONResponse(resp.model_dump(), status_code=status.HTTP_408_REQUEST_TIMEOUT)
+    FastAPIInstrumentor.instrument_app(app)
 
     @app.post("/automation")
-    async def automation(request: AutomationRequest) -> AutomationResponse:
-        # TODO: when the watcher service is implemented, we will want to conditionally reload the
-        # configuration when we are out-of-sync, not everytime.
-        cache.store_last_automation_helper_reload(time.time())
-        reload_config()
-
-        app_logger.setLevel(request.log_level)
+    async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
+        LOGGER.info("[automation] %s with args: %s received.", payload.name, payload.args)
+        if cache.reload_required(request.app.state.last_reload_at):
+            request.app.state.last_reload_at = time.time()
+            reload_config()
+            LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
         with (
+            TRACER.span(
+                f"automation[{payload.name}]",
+                attributes={
+                    "cmk.automation.name": payload.name,
+                    "cmk.automation.args": payload.args,
+                },
+            ),
             redirect_stdout(output_buffer := io.StringIO()),
             redirect_stderr(output_buffer),
-            redirect_stdin(io.StringIO(request.stdin)),
+            redirect_stdin(io.StringIO(payload.stdin)),
+            temporary_log_level(LOGGER, payload.log_level),
         ):
             try:
-                # TODO: remove `reload_config` when automation helper is fully integrated.
-                exit_code = engine.execute(request.name, list(request.args), reload_config=False)
-            except SystemExit:
-                exit_code = AutomationExitCode.SYSTEM_EXIT
+                exit_code: int = engine.execute(
+                    payload.name,
+                    list(payload.args),
+                    called_from_automation_helper=True,
+                )
+            except SystemExit as system_exit:
+                LOGGER.error("[automation] command raised a system exit exception.")
+                exit_code = (
+                    system_exit_code
+                    if isinstance(system_exit_code := system_exit.code, int)
+                    else AutomationExitCode.UNKNOWN_ERROR
+                )
+            else:
+                LOGGER.info("[automation] %s with args: %s processed.", payload.name, payload.args)
 
             return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
 
     @app.get("/health")
-    async def check_health() -> HealthCheckResponse:
-        return HealthCheckResponse(last_reload_at=cache.last_automation_helper_reload)
+    async def check_health(request: Request) -> HealthCheckResponse:
+        return HealthCheckResponse(last_reload_at=request.app.state.last_reload_at)
 
     return app

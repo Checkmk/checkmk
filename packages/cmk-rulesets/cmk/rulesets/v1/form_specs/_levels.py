@@ -97,7 +97,7 @@ class LevelsType(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):  # pylint: disable=too-many-instance-attributes
+class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels without predictive levels.
 
     This creates a FormSpec that allows to configure simple levels, i.e.
@@ -131,7 +131,6 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):  # pylint: disa
     **********
     """
 
-    # no idea why pylint will not see that we inherit these four anyway.
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], SimpleLevelsConfigModel[_NumberT]] | None = None
@@ -152,7 +151,7 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):  # pylint: disa
 
 
 @dataclass(frozen=True, kw_only=True)
-class Levels(FormSpec[LevelsConfigModel[_NumberT]]):  # pylint: disable=too-many-instance-attributes
+class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels including predictive levels
 
     This creates a FormSpec that extends the SimpleLevels with the possibility to configure
@@ -186,7 +185,6 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):  # pylint: disable=too-many
 
     """
 
-    # no idea why pylint will not see that we inherit these four anyway.
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None

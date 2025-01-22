@@ -54,6 +54,7 @@ def _automation_serialized(
     timeout: int | None = None,
     sync: bool = True,
     non_blocking_http: bool = False,
+    force_cli_interface: bool = False,
 ) -> AutomationResponse:
     if args is None:
         args = []
@@ -65,6 +66,7 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            force_cli_interface=force_cli_interface,
         )
         return AutomationResponse(
             command=command,
@@ -491,11 +493,11 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
     )
 
 
-def notification_test(raw_context: EventContext, dispatch: bool) -> results.NotificationTestResult:
+def notification_test(raw_context: EventContext, dispatch: str) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",
-            args=[json.dumps(raw_context), str(dispatch)],
+            args=[json.dumps(raw_context), dispatch],
         ),
         results.NotificationTestResult,
     )
@@ -528,11 +530,15 @@ def create_diagnostics_dump(
     )
 
 
-def bake_agents(indata: Mapping[str, Any] | None = None) -> results.BakeAgentsResult:
+def bake_agents(
+    indata: Mapping[str, Any] | None = None,
+    force_automation_cli_interface: bool = False,
+) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
             "bake-agents",
             indata="" if indata is None else indata,
+            force_cli_interface=force_automation_cli_interface,
         ),
         results.BakeAgentsResult,
     )

@@ -27,13 +27,17 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
-from cmk.gui.watolib.custom_attributes import (
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    PermissionName,
+)
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
@@ -494,10 +498,12 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if not request.var("_delete"):
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         delname = request.get_ascii_input_mandatory("_delete")
         for index, attr in enumerate(self._attrs):

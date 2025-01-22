@@ -64,6 +64,7 @@ unsigned long decode(const std::vector<AttributeBit> &mask) {
 std::vector<AttributeBit> encode(unsigned long mask) {
     std::vector<AttributeBit> out;
     modified_attributes values{mask};
+    out.reserve(values.size());
     for (std::size_t ii = 0; ii < values.size(); ++ii) {
         out.emplace_back(ii, values[ii]);
     }

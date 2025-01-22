@@ -16,7 +16,6 @@ from cmk.ccc.site import omd_site, url_prefix
 import cmk.utils.paths
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
-from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -42,6 +41,7 @@ from cmk.gui.logged_in import (
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils import roles
@@ -49,7 +49,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
@@ -220,7 +219,7 @@ class LoginPage(Page):
                 # from mixed case to lower case.
                 username = result
 
-                if _is_automation_user(username):
+                if roles.is_automation_user(username):
                     raise MKUserError(None, _("Automation user rejected"))
 
                 # The login succeeded! Now:
@@ -449,10 +448,6 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     html.close_div()
 
     html.close_div()
-
-
-def _is_automation_user(user_id: UserId) -> bool:
-    return AutomationUserSecret(user_id).exists()
 
 
 class LogoutPage(Page):

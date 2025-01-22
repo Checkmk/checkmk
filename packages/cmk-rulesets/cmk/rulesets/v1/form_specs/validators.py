@@ -27,7 +27,7 @@ class ValidationError(ValueError):
         return self._message
 
 
-class LengthInRange:  # pylint: disable=too-few-public-methods
+class LengthInRange:
     """Custom validator that ensures the validated size is in a given interval."""
 
     def __init__(
@@ -64,7 +64,7 @@ class LengthInRange:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class NumberInRange:  # pylint: disable=too-few-public-methods
+class NumberInRange:
     """Custom validator that ensures the validated number is in a given interval."""
 
     def __init__(
@@ -101,7 +101,7 @@ class NumberInRange:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
+class RegexGroupsInRange:
     """Custom validator that ensures the validated value is in a given interval."""
 
     def __init__(
@@ -142,7 +142,7 @@ class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class MatchRegex:  # pylint: disable=too-few-public-methods
+class MatchRegex:
     """Custom validator that ensures the validated value matches the given regular expression."""
 
     def __init__(self, regex: re.Pattern[str] | str, error_msg: Message | None = None) -> None:
@@ -156,7 +156,7 @@ class MatchRegex:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class NetworkPort:  # pylint: disable=too-few-public-methods
+class NetworkPort:
     """Validator that ensures that an integer is in the network port range"""
 
     def __init__(self, error_msg: Message | None = None) -> None:
@@ -199,7 +199,7 @@ class UrlProtocol(enum.StrEnum):
     WSS = "wss"
 
 
-class Url:  # pylint: disable=too-few-public-methods
+class Url:
     """Custom validator that ensures the validated value is a URL with the specified scheme."""
 
     def __init__(self, protocols: Sequence[UrlProtocol], error_msg: Message | None = None) -> None:
@@ -215,7 +215,7 @@ class Url:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class EmailAddress:  # pylint: disable=too-few-public-methods
+class EmailAddress:
     """Validator that ensures the validated value is an email address"""
 
     def __init__(self, error_msg: Message | None = None) -> None:

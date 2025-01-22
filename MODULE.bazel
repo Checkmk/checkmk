@@ -12,10 +12,27 @@ git_override(
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
 )
 
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+git_override(
+    module_name = "bazel_clang_tidy",
+    # No tags, no releases.  Live on head.
+    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
+
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "0.37.0")
-bazel_dep(name = "rules_uv", version = "0.35.0")
+bazel_dep(name = "rules_uv", version = "0.44.0")
+single_version_override(
+    module_name = "rules_uv",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_uv_rm_venv.patch",
+        "//bazel/patches:rules_uv_quiet.patch",
+        "//bazel/patches:rules_uv_create_venv_whls.patch",
+    ],
+)
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
 PYTHON_VERSION = "3.12.3"
@@ -30,13 +47,13 @@ python.toolchain(
     python_version = PYTHON_VERSION,
 )
 
-bazel_dep(name = "rules_mypy", version = "0.11.0")
+bazel_dep(name = "rules_mypy", version = "0.17.0")
 
-# Switch to upstream as soon https://github.com/theoremlp/rules_mypy/pull/54 is merged
+# Remove the override when upgrading to 0.18.
 git_override(
     module_name = "rules_mypy",
-    commit = "9a8ddd0a166830ea89f7d05311030df708762272",
-    remote = "https://github.com/Synss/rules_mypy",
+    commit = "c477d2a124ce4a0ee60a9e5df6be0dd92acba6d8",
+    remote = "https://github.com/theoremlp/rules_mypy",
 )
 
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
@@ -60,10 +77,18 @@ pip.parse(
     hub_name = "cmk_requirements",
     python_version = PYTHON_VERSION,
     requirements_by_platform = {
-        "@//:requirements_lock.txt": "linux_*",
+        "@//:requirements_all_lock.txt": "linux_*",
     },
 )
 use_repo(pip, "cmk_requirements")
+
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "cmk_types",
+    pip_requirements = "@cmk_requirements//:requirements.bzl",
+    requirements_txt = "//:requirements_all_lock.txt",
+)
+use_repo(types, "cmk_types")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "28.3", repo_name = "com_google_protobuf")
@@ -78,7 +103,7 @@ fork_cc_toolchain_config(
 register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 
 # bazel_skylib: Required for setting up rules_foreign_cc
-bazel_dep(name = "bazel_skylib", version = "1.6.1")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
 
 single_version_override(
     module_name = "rules_foreign_cc",
@@ -116,4 +141,59 @@ http_archive(
         "https://ftp.gnu.org/gnu/patch/patch-" + PATCH_FILENAME,
         UPSTREAM_MIRROR_URL + PATCH_FILENAME,
     ],
+)
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "otel-collector",
+    executable = True,
+    sha256 = "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
+    url = "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
+)
+
+SHELLCHECK_VERSION = "v0.10.0"
+
+http_archive(
+    name = "shellcheck",
+    build_file_content = """
+exports_files([
+    "shellcheck",
+])
+""",
+    sha256 = "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87",
+    strip_prefix = "shellcheck-" + SHELLCHECK_VERSION,
+    urls = [
+        "https://github.com/koalaman/shellcheck/releases/download/" + SHELLCHECK_VERSION + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+        UPSTREAM_MIRROR_URL + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+    ],
+)
+
+SHFMT_VERSION = "v3.10.0"
+
+http_file(
+    name = "shfmt",
+    executable = True,
+    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
+    urls = [
+        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+    ],
+)
+
+TAPLO_VERSION = "0.9.3"
+
+http_file(
+    name = "taplo.gz",
+    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+    urls = [
+        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
+    ],
+)
+
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
 )

@@ -17,6 +17,7 @@ DomainType = Literal[
     "agent",
     "agent_binary",
     "audit_log",
+    "background_job",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
@@ -64,6 +65,9 @@ DomainType = Literal[
     "aux_tag",
     "autocomplete",
     "quick_setup",
+    "quick_setup_action_result",
+    "quick_setup_stage",
+    "quick_setup_stage_action_result",
     "managed_robots",
     "onboarding",
 ]
@@ -71,6 +75,7 @@ DomainType = Literal[
 
 CmkEndpointName = Literal[
     "cmk/run",
+    "cmk/run_setup",
     "cmk/activate",
     "cmk/bake",
     "cmk/bake_and_sign",
@@ -91,6 +96,7 @@ CmkEndpointName = Literal[
     "cmk/download_by_hash",
     "cmk/download_by_host",
     "cmk/download_license_request",
+    "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",
     "cmk/move",
@@ -168,6 +174,7 @@ RestfulEndpointName = Literal[
     ".../domain-types",
     ".../element",
     ".../element-type",
+    ".../fetch",
     ".../invoke",
     ".../modify",
     ".../persist",

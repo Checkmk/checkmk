@@ -34,8 +34,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
-from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -332,7 +332,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         job_interface.send_result_message(
             _("%s Click on the icon to download the agent output.")
             % HTMLGenerator.render_icon_button(
-                url=download_url, title=_("Download"), icon="agent_output", theme=Theme()
+                url=download_url, title=_("Download"), icon="agent_output", theme=make_theme()
             )
         )
 

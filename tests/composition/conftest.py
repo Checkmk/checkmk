@@ -15,6 +15,8 @@ from typing import Any, Literal
 import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
+from tests.composition.utils import get_cre_agent_path
+
 from tests.testlib.agent import (
     agent_controller_daemon,
     bake_agents,
@@ -27,8 +29,6 @@ from tests.testlib.site import (
     tracing_config_from_env,
 )
 from tests.testlib.utils import is_containerized, run
-
-from tests.composition.utils import get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
 
@@ -130,7 +130,7 @@ def _connection(
             "site_id": remote_site.id,
         }
 
-    central_site.openapi.create_site(
+    central_site.openapi.sites.create(
         {
             "basic_settings": basic_settings,
             "status_connection": {
@@ -163,18 +163,17 @@ def _connection(
             },
         }
     )
-    central_site.openapi.login_to_site(remote_site.id)
-    central_site.openapi.activate_changes_and_wait_for_completion(
+    central_site.openapi.sites.login(remote_site.id)
+    central_site.openapi.changes.activate_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures
         force_foreign_changes=True,
     )
     try:
         yield
     finally:
-        hostnames = {h["id"] for h in central_site.openapi.get_hosts()}
-        logger.warning("Hosts left: %s", hostnames)
-        central_site.openapi.delete_site(remote_site.id)
-        central_site.openapi.activate_changes_and_wait_for_completion(
+        logger.warning("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+        central_site.openapi.sites.delete(remote_site.id)
+        central_site.openapi.changes.activate_and_wait_for_completion(
             # this seems to be necessary to avoid sporadic CI failures
             force_foreign_changes=True,
         )

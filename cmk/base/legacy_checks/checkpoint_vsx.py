@@ -361,6 +361,5 @@ check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("vs_ha_status"),
     check_function=check_checkpoint_vsx_status,
-    check_ruleset_name="checkpoint_vsx_traffic_status",
 )
 # .

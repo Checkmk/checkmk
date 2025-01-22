@@ -128,7 +128,7 @@ def main() {
                 name: "Build BOM",
                 raiseOnError: false,
             ) {
-                smart_build(
+                def build_instance = smart_build(
                     job: "${branch_base_folder}/builders/build-cmk-bom",
                     parameters: [
                         stringParam(name: "VERSION", value: params.VERSION),
@@ -141,6 +141,12 @@ def main() {
                         stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
                     ]
                 );
+                copyArtifacts(
+                    projectName: build_instance.getFullProjectName(),
+                    selector: specific(build_instance.getId()),
+                    target: relative_deliverables_dir,
+                    fingerprintArtifacts: true,
+                )
             }
         }
     ];
@@ -193,7 +199,7 @@ def main() {
         dir("${deliverables_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*",
+                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*, **/*.json",
                     fingerprint: true,
                 );
             }

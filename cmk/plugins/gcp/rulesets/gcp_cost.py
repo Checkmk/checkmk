@@ -10,16 +10,27 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Float,
     InputHint,
+    LevelDirection,
     SimpleLevels,
+    SimpleLevelsConfigModel,
 )
-from cmk.rulesets.v1.form_specs._levels import LevelDirection
 from cmk.rulesets.v1.form_specs._migrations import (
     migrate_to_float_simple_levels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_gcp_cost():
+def migrate_to_float_simple_levels_ignoring_predictive(
+    value: object,
+) -> SimpleLevelsConfigModel[float]:
+    match value:
+        case ("cmk_postprocessed", "predictive_levels", value):
+            return ("no_levels", None)
+        case _:
+            return migrate_to_float_simple_levels(value)
+
+
+def _parameter_valuespec_gcp_cost() -> Dictionary:
     return Dictionary(
         title=Title("Levels monthly GCP costs"),
         elements={
@@ -29,7 +40,7 @@ def _parameter_valuespec_gcp_cost():
                     title=Title("Amount in billed currency"),
                     form_spec_template=Float(),
                     prefill_fixed_levels=InputHint(value=(0, 0)),
-                    migrate=migrate_to_float_simple_levels,
+                    migrate=migrate_to_float_simple_levels_ignoring_predictive,
                 )
             ),
         },

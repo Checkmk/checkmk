@@ -162,6 +162,15 @@ ldap_filter_map = {
 }
 
 
+def logged_in_user_id() -> UserId | None:
+    """LDAP user sync within a REST-API context can happen before the user session
+    is created which would cause a crash when trying to get the logged in user id."""
+    try:
+        return logged_in_user.id
+    except AttributeError:
+        return None
+
+
 class MKLDAPException(MKGeneralException):
     pass
 
@@ -234,10 +243,13 @@ def _get_ad_locator():
 
 
 def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
-    html.show_error(
-        "<b>" + connection_id + " - " + title + "</b>"
-        "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
-    )
+    try:
+        html.show_error(
+            "<b>" + connection_id + " - " + title + "</b>"
+            "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
+        )
+    except AttributeError:
+        pass
 
 
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
@@ -1170,11 +1182,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         save_users(existing_users, datetime.now())
 
         try:
+            # logged_in_user_id() can return None when a user is created on login
+            # via the REST-API.
             log_security_event(
                 UserManagementEvent(
                     event="user created",
                     affected_user=userid,
-                    acting_user=None,
+                    acting_user=logged_in_user_id(),
                     connector=self.type(),
                     connection_id=self.id,
                 )
@@ -1348,11 +1362,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if user_connection_id == self.id and self._strip_suffix(user_id) not in ldap_users:
                 del users[user_id]  # remove the user
                 changes.append(_("LDAP [%s]: Removed user %s") % (self.id, user_id))
+                # When a user is created on login via the REST-API, and then we do the
+                # user sync, logged_in_user_id() can return None.
                 log_security_event(
                     UserManagementEvent(
                         event="user deleted",
                         affected_user=user_id,
-                        acting_user=logged_in_user.id,
+                        acting_user=logged_in_user_id(),
                         connector=self.type(),
                         connection_id=self.id,
                     )
@@ -1492,11 +1508,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 if removed:
                     details.append(_("Removed: %s") % ", ".join(removed))
                 if added or removed or changed:
+                    # When a user is created on login via the REST-API, and then we do the
+                    # user sync, logged_in_user_id() can return None.
                     log_security_event(
                         UserManagementEvent(
                             event="user modified",
                             affected_user=checkmk_user_id,
-                            acting_user=logged_in_user.id,
+                            acting_user=logged_in_user_id(),
                             connector=self.type(),
                             connection_id=self.id,
                         )
@@ -1529,7 +1547,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                         % (self.id, checkmk_user_id, ", ".join(details))
                     )
 
-        hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
+        try:
+            hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
+        except AttributeError:
+            # The hooks can fail if a user is created on login via the REST-API and is then
+            # modified by the ldap sync process but the user has been updated correctly.
+            pass
 
         duration = time.time() - start_time
         self._logger.info(

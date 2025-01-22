@@ -97,7 +97,11 @@ function wrap(index: number, length: number): number {
 }
 
 function focus(): void {
-  suggestionInputRef.value?.focus()
+  if (showFilter) {
+    suggestionInputRef.value?.focus()
+  } else if (suggestions.length > 0) {
+    suggestionRefs.value[0]?.focus()
+  }
 }
 
 defineExpose({
@@ -121,6 +125,7 @@ defineExpose({
           <li
             v-show="filteredSuggestions.includes(index)"
             :ref="(el) => (suggestionRefs[index] = el as HTMLLIElement)"
+            tabindex="-1"
             role="suggestion"
             :class="{ selected: index === selectedSuggestionIndex, selectable: true }"
             @click.prevent="() => selectSuggestion(index)"
@@ -167,6 +172,10 @@ defineExpose({
   li {
     padding: 6px;
     cursor: default;
+
+    &:focus {
+      outline: none;
+    }
 
     &.selectable {
       cursor: pointer;

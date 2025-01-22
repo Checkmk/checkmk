@@ -50,6 +50,7 @@ def main() {
         [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF],
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
         [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_BISECT_COMMENT', value: params.CIPARAM_BISECT_COMMENT],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
         [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],

@@ -11,6 +11,7 @@ def main() {
 
     def job_parameters = [
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_BISECT_COMMENT', value: params.CIPARAM_BISECT_COMMENT],
     ];
 
     def override_distros = params.EDITIONS.trim() ?: "";

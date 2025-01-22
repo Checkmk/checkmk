@@ -546,16 +546,21 @@ def _get_wafv2_web_acls(
         byte_match_statement["SearchString"] = byte_match_statement["SearchString"].decode()
 
     def _byte_convert_statement(general_statement: dict[str, Any]) -> None:
-        for name, statement in general_statement.items():
-            if "ByteMatchStatement" == name:
-                _convert_byte_match_statement(statement)
-            elif name in ["RateBasedStatement", "NotStatement"] and (
-                "ByteMatchStatement" in statement["ScopeDownStatement"]
-            ):
-                _convert_byte_match_statement(statement["ScopeDownStatement"]["ByteMatchStatement"])
-            elif name in ["AndStatement", "OrStatement"]:
-                for s in statement["Statements"]:
-                    _byte_convert_statement(s)
+        for statement_item in general_statement.items():
+            match statement_item:
+                case ("ByteMatchStatement", statement):
+                    _convert_byte_match_statement(statement)
+                case (
+                    "RateBasedStatement"
+                    | "NotStatement",
+                    {"ScopeDownStatement": {"ByteMatchStatement": statement}},
+                ):
+                    _convert_byte_match_statement(statement)
+                case ("AndStatement" | "OrStatement", statement):
+                    for s in statement["Statements"]:
+                        _byte_convert_statement(s)
+                case _:
+                    pass
 
     for acl in web_acls:
         for rule in acl["Rules"]:

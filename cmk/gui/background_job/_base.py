@@ -24,8 +24,9 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 
 from ._defines import BackgroundJobDefines
-from ._executor import ThreadedJobExecutor
+from ._executor import JobExecutor, ThreadedJobExecutor
 from ._interface import JobTarget, SpanContextModel
+from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -66,7 +67,13 @@ class BackgroundJob:
 
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
-        self._executor = ThreadedJobExecutor(self._logger)
+
+        use_job_scheduler = False
+        self._executor: JobExecutor = (
+            JobSchedulerExecutor(self._logger)
+            if use_job_scheduler
+            else ThreadedJobExecutor(self._logger)
+        )
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:

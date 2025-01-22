@@ -158,11 +158,14 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         # exclude all treasures.
         basepath / "doc/treasures/migration_helpers",
     )
+    exclusions_from_exclusions = (basepath / "agents/plugins/mk_jolokia.py",)
 
     for source_file_path in iter_sourcefiles(basepath):
-        if any(source_file_path.resolve().is_relative_to(e.resolve()) for e in exclusions):
+        if (
+            any(source_file_path.resolve().is_relative_to(e.resolve()) for e in exclusions)
+            and source_file_path not in exclusions_from_exclusions
+        ):
             continue
-
         yield source_file_path
 
 
@@ -374,6 +377,7 @@ def test_dependencies_are_declared() -> None:
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
+        "simplejson",  # remove after adding to the requirements
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

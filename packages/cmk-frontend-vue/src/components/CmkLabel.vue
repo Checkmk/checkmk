@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
-import { Label, type LabelProps } from 'radix-vue'
+import { Label } from 'radix-vue'
 
 const labelVariants = cva('', {
   variants: {
@@ -22,26 +22,27 @@ const labelVariants = cva('', {
 })
 type LabelVariants = VariantProps<typeof labelVariants>
 
-const props = defineProps<
-  LabelProps & {
-    variant?: LabelVariants['variant']
-    onClick?: (() => void) | null
-  }
->()
+interface LabelProps {
+  variant?: LabelVariants['variant']
+  onClick?: (() => void) | null
+}
+
+const props = defineProps<LabelProps>()
 
 const delegatedProps = computed(() => {
   const { variant: _, ...delegated } = props
 
   return delegated
 })
+
+const onClickCallback = props.onClick ? props.onClick : undefined
 </script>
 
 <template>
-  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <Label
     v-bind="delegatedProps"
     :class="[labelVariants({ variant }), { 'cmk-label--clickable': !!props.onClick }]"
-    @click="onClick"
+    @click="onClickCallback"
   >
     <slot />
   </Label>

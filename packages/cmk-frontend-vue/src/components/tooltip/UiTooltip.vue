@@ -4,21 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import {
-  TooltipRoot,
-  type TooltipRootEmits,
-  type TooltipRootProps,
-  useForwardPropsEmits
-} from 'radix-vue'
+import { TooltipRoot, useForwardPropsEmits } from 'radix-vue'
 
-const props = defineProps<TooltipRootProps>()
-const emits = defineEmits<TooltipRootEmits>()
+type TooltipEmits = {
+  'update:open': [value: boolean]
+}
+interface TooltipProps {
+  open?: boolean
+  disableClosingTrigger?: boolean
+}
+
+const props = defineProps<TooltipProps>()
+const emits = defineEmits<TooltipEmits>()
 
 const forwarded = useForwardPropsEmits(props, emits)
 </script>
 
 <template>
-  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <TooltipRoot v-bind="forwarded">
     <slot />
   </TooltipRoot>

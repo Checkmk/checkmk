@@ -4,14 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { TooltipTrigger, type TooltipTriggerProps } from 'radix-vue'
+import { TooltipTrigger } from 'radix-vue'
 
-const props = defineProps<TooltipTriggerProps>()
+defineEmits(['click'])
+
+interface TooltipTriggerProps {
+  asChild?: boolean
+}
+
+defineProps<TooltipTriggerProps>()
 </script>
 
 <template>
-  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
-  <TooltipTrigger v-bind="props">
+  <TooltipTrigger :as-child="!!asChild" @click="(event) => $emit('click', event)">
     <slot />
   </TooltipTrigger>
 </template>

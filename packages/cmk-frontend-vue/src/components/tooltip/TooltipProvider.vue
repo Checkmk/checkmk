@@ -4,14 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { TooltipProvider, type TooltipProviderProps } from 'radix-vue'
+import { TooltipProvider } from 'radix-vue'
 
-const props = defineProps<TooltipProviderProps>()
+interface TooltipProviderProps {
+  delayDuration?: number
+}
+
+const props = withDefaults(defineProps<TooltipProviderProps>(), {
+  delayDuration: 700
+})
 </script>
 
 <template>
-  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
-  <TooltipProvider v-bind="props">
+  <TooltipProvider :delay-duration="props.delayDuration">
     <slot />
   </TooltipProvider>
 </template>

@@ -5,27 +5,36 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type HTMLAttributes, computed } from 'vue'
-import {
-  TooltipContent,
-  type TooltipContentEmits,
-  type TooltipContentProps,
-  TooltipPortal,
-  useForwardPropsEmits
-} from 'radix-vue'
+import { TooltipContent, TooltipPortal, useForwardPropsEmits } from 'radix-vue'
 
 defineOptions({
   inheritAttrs: false
 })
 
+type TooltipContentEmits = {
+  escapeKeyDown: [event: KeyboardEvent]
+  pointerDownOutside: [event: Event]
+}
+
+const emits = defineEmits<TooltipContentEmits>()
+
+interface TooltipContentProps {
+  asChild?: boolean
+  sideOffset?: number
+  side?: 'right' | 'left' | 'top' | 'bottom'
+  align?: 'center' | 'end' | 'start'
+  class?: string
+}
+
 const props = withDefaults(
   defineProps<TooltipContentProps & { class?: HTMLAttributes['class'] }>(),
   {
     sideOffset: 4,
-    class: ''
+    class: '',
+    side: 'top',
+    align: 'center'
   }
 )
-
-const emits = defineEmits<TooltipContentEmits>()
 
 const delegatedProps = computed(() => {
   const delegated = { ...props }
@@ -39,7 +48,6 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 <template>
   <TooltipPortal>
-    <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
     <TooltipContent v-bind="{ ...forwarded, ...$attrs }" :class="props.class">
       <slot />
     </TooltipContent>

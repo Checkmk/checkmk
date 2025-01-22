@@ -20,7 +20,8 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib.omd_broker import Queue, SectionQueues
+
+from .libbroker import Queue, SectionQueues
 
 
 @dataclass(frozen=True)

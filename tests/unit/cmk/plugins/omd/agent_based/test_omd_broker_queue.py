@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.lib.omd_broker import Queue, SectionQueues
+from cmk.plugins.omd.agent_based.libbroker import Queue, SectionQueues
 from cmk.plugins.omd.agent_based.omd_broker_queue import (
     check,
     discover_omd_broker_queues,

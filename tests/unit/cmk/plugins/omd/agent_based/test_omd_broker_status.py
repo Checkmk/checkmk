@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.omd_broker import Queue, SectionQueues
+from cmk.plugins.omd.agent_based.libbroker import Queue, SectionQueues
 from cmk.plugins.omd.agent_based.omd_broker_status import (
     BrokerStatus,
     check_omd_broker_status,

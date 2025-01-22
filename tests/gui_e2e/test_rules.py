@@ -110,7 +110,6 @@ def _create_rules(pw: LoginPage) -> dict[str, list[str]]:
     return created_rules
 
 
-@pytest.mark.skip(reason="CMK-21375; broken web-element(s)")
 def test_create_rules(
     test_site: Site, logged_in_page: LoginPage, pytestconfig: pytest.Config
 ) -> None:
@@ -134,9 +133,18 @@ def test_create_rules(
         logged_in_page.main_area.locator().get_by_role(
             role="button", name="Add new element"
         ).click()
-        logged_in_page.main_area.locator('[name="ve_1_0"]').fill("test")
-        logged_in_page.main_area.locator("#ve_1_1_p_icon_img").click()
-        logged_in_page.main_area.locator("#ve_1_1_p_icon_i_2fa").click()
+
+        # Locator corresponding to (added) elements for 'current settings'.
+        current_setting = (
+            logged_in_page.main_area.locator()
+            .get_by_role("row")
+            .filter(has=logged_in_page.main_area.locator().get_by_title("Current setting"))
+            .locator("td[class='content']")
+        )
+
+        current_setting.get_by_role("textbox").fill("test")
+        current_setting.get_by_role("link", name="Choose another icon").click()
+        current_setting.locator("a[class='icon']").get_by_title("2fa", exact=True).click()
         logged_in_page.click_and_wait(
             logged_in_page.main_area.get_suggestion("Save"), navigate=True
         )

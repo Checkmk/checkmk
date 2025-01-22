@@ -1187,11 +1187,25 @@ fn validate_stdout(stdout: &str, label: &str) {
 
     let rtm_count = contains(&lines, "|RTM|Express Edition");
     let sp3_count = contains(&lines, "|SP3|Express Edition");
-    assert_eq!(rtm_count + sp3_count, 2, "{}\n{}", &label, stdout);
+    let sp2_count = contains(&lines, "|SP2|Express Edition");
+    assert_eq!(
+        rtm_count + std::cmp::max(sp3_count, sp2_count),
+        2,
+        "{}\n{}",
+        &label,
+        stdout
+    );
 
     let rtm_count = contains(&lines, "|RTM|Express Edition (64-bit)");
     let sp3_count = contains(&lines, "|SP3|Express Edition (64-bit)");
-    assert_eq!(rtm_count + sp3_count, 1, "{}\n{}", &label, stdout);
+    let sp2_count = contains(&lines, "|SP2|Express Edition (64-bit)");
+    assert_eq!(
+        rtm_count + std::cmp::max(sp3_count, sp2_count),
+        1,
+        "{}\n{}",
+        &label,
+        stdout
+    );
 
     assert_eq!(
         contains(&lines, "|RTM|Standard Edition"),

@@ -474,10 +474,15 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
         if not (rpm_binary := shutil.which("rpm")):
             return ""
 
-        output = subprocess.check_output(
-            [rpm_binary, "-qa", "--queryformat", r'"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n"'],
-            text=True,
-        )
+        try:
+            output = subprocess.check_output(
+                [rpm_binary, "-qa", "--queryformat", r"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n"],
+                text=True,
+                stderr=subprocess.STDOUT,
+            )
+
+        except subprocess.CalledProcessError:
+            return ""
 
         return "\n".join(sorted(output.split("\n")))
 

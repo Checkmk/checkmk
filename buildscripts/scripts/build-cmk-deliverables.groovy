@@ -198,7 +198,7 @@ def main() {
         dir("${deliverables_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*, *.json",
+                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*, **/*.json",
                     fingerprint: true,
                 );
             }

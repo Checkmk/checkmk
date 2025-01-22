@@ -30,6 +30,7 @@ class Params(BaseModel):
     timeout: int | None = None
     infos: Sequence[str]
     skip_placeholder_vms: bool
+    ignore_templates: bool
     host_pwr_display: str | None = None
     vm_pwr_display: str | None = None
     snapshots_on_host: bool
@@ -55,6 +56,9 @@ def commands_function(  # pylint: disable=too-many-branches
 
     if params.skip_placeholder_vms:
         command_arguments.append("-P")
+    
+    if params.ignore_templates:
+        command_arguments.append("-T")
 
     if params.spaces:
         command_arguments += ["--spaces", params.spaces]

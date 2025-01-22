@@ -1186,6 +1186,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 load_users_func=load_users,
                 save_users_func=save_users,
             )
+
+            # When a user is created on login via the REST-API, the user may or may not
+            # be authorized for the request that triggered the user creation. If they
+            # are authorized, the active_config.multisite_users has not yet been updated
+            # when the response is formed. So we need to update it here.
+            active_config.multisite_users[userid] = new_user
+
         except MKLDAPException as e:
             _show_exception(self.id, _("Error during sync"), e, debug=active_config.debug)
         except Exception as e:

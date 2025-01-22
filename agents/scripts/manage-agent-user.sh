@@ -250,7 +250,7 @@ main() {
             "${handle_user}"
             _set_agent_controller_user_permissions
         else
-            handle_user_legacy
+            _handle_user_legacy
         fi
     }
 }

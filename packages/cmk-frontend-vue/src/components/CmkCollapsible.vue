@@ -4,18 +4,17 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { CollapsibleContent, CollapsibleRoot, useForwardPropsEmits } from 'radix-vue'
-import type { CollapsibleRootEmits, CollapsibleRootProps } from 'radix-vue'
+import { CollapsibleContent, CollapsibleRoot } from 'radix-vue'
 
-const props = defineProps<CollapsibleRootProps>()
-const emits = defineEmits<CollapsibleRootEmits>()
+interface CmkCollapsibleProps {
+  open: boolean
+}
 
-const forwarded = useForwardPropsEmits(props, emits)
+defineProps<CmkCollapsibleProps>()
 </script>
 
 <template>
-  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
-  <CollapsibleRoot v-slot="{ open: openSlot }" v-bind="forwarded" class="cmk-collapsible">
+  <CollapsibleRoot v-slot="{ open: openSlot }" :open="open" class="cmk-collapsible">
     <CollapsibleContent :open="openSlot" class="cmk-collapsible__content">
       <slot />
     </CollapsibleContent>

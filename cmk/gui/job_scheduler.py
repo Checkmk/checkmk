@@ -105,17 +105,25 @@ def _setup_console_logging() -> None:
 def _run_scheduler(crash_report_callback: Callable[[Exception], str]) -> None:
     job_threads: dict[str, threading.Thread] = {}
     while True:
-        cycle_start = time.time()
-        _collect_finished_threads(job_threads)
-
         try:
-            run_scheduled_jobs(list(cron_job_registry.values()), job_threads, crash_report_callback)
-        except Exception as exc:
-            crash_msg = crash_report_callback(exc)
-            logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
+            cycle_start = time.time()
+            _collect_finished_threads(job_threads)
 
-        if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
-            time.sleep(sleep_time)
+            try:
+                run_scheduled_jobs(
+                    list(cron_job_registry.values()), job_threads, crash_report_callback
+                )
+            except Exception as exc:
+                crash_msg = crash_report_callback(exc)
+                logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
+
+            if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
+                time.sleep(sleep_time)
+        finally:
+            # The UI code does not clean up locks properly in all cases, so we need to do it here
+            # in case there were some locks left over
+            store.release_all_locks()
+
     _wait_for_job_threads(job_threads)
 
 
@@ -216,6 +224,10 @@ def job_thread_main(
             crash_msg,
             exc_info=True,
         )
+    finally:
+        # The UI code does not clean up locks properly in all cases, so we need to do it here
+        # in case there were some locks left over
+        store.release_all_locks()
 
 
 @tracer.start_as_current_span("wait_for_job_threads")

@@ -5,11 +5,8 @@
 
 from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from pydantic import BaseModel
 
-
-class HealthResponse(BaseModel, frozen=True):
-    loaded_at: int
+from cmk.gui.background_job import HealthResponse
 
 
 def get_application(loaded_at: int) -> FastAPI:

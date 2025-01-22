@@ -5,7 +5,8 @@
 
 from fastapi.testclient import TestClient
 
-from cmk.gui.job_scheduler._background_jobs._app import get_application, HealthResponse
+from cmk.gui.background_job import HealthResponse
+from cmk.gui.job_scheduler._background_jobs._app import get_application
 
 
 def _get_test_client(loaded_at: int) -> TestClient:

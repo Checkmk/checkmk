@@ -12,6 +12,7 @@ from ._interface import JobTarget as JobTarget
 from ._interface import NoArgs as NoArgs
 from ._interface import simple_job_target as simple_job_target
 from ._manager import BackgroundJobManager as BackgroundJobManager
+from ._models import HealthResponse as HealthResponse
 from ._registry import BackgroundJobRegistry as BackgroundJobRegistry
 from ._registry import job_registry as job_registry
 from ._status import BackgroundStatusSnapshot as BackgroundStatusSnapshot

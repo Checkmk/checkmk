@@ -1218,7 +1218,7 @@ class ModeEditUser(WatoMode):
             html.radiobutton(
                 "authmethod", "password", not is_automation, _("Normal user login with password")
             )
-            html.open_ul()
+            html.open_div(class_="user_security_form_container")
             html.open_table()
             html.open_tr()
             html.td(_("password:"))
@@ -1263,14 +1263,14 @@ class ModeEditUser(WatoMode):
             html.close_td()
             html.close_tr()
             html.close_table()
-            html.close_ul()
+            html.close_div()
 
         if "automation" in options_to_render:
             html.radiobutton(
                 "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
             )
-            html.open_ul()
-            html.open_li()
+            html.open_div(class_="user_security_form_container")
+            html.open_div()
             html.password_input(
                 "_auth_secret",
                 "",
@@ -1289,18 +1289,20 @@ class ModeEditUser(WatoMode):
                 "random",
             )
             html.close_b()
-            html.close_li()
-            html.open_li()
+            html.close_div()
+            html.open_div()
             html.checkbox(
                 "store_automation_secret",
                 self._user.get("store_automation_secret", False),
-                label=_("store the secret"),
-                help=_(
-                    "In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, <i>Dynamic host configuration</i>"
-                ),
+                label=_("Store the secret in cleartext"),
             )
-            html.close_li()
-            html.close_ul()
+            html.help(
+                _(
+                    "In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, <i>Dynamic host configuration</i>"
+                )
+            )
+            html.close_div()
+            html.close_div()
 
         if "password" in options_to_render:
             html.help(

@@ -10,8 +10,8 @@ def main() {
     def editions = versioning.get_editions();
 
     def job_parameters = [
-        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_BISECT_COMMENT', value: params.CIPARAM_BISECT_COMMENT],
+        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE),
+        stringParam(name: 'CIPARAM_BISECT_COMMENT', value: params.CIPARAM_BISECT_COMMENT),
     ];
 
     def override_distros = params.EDITIONS.trim() ?: "";
@@ -32,7 +32,7 @@ def main() {
     for ( edition in editions ) {
         catchError(buildResult: "FAILURE", stageResult: "FAILURE") {
             stage("Trigger ${edition}") {
-                def this_job_parameters = job_parameters + [$class: 'StringParameterValue', name: 'EDITION', value: edition];
+                def this_job_parameters = job_parameters + [stringParam(name: 'EDITION', value: edition)];
 
                 print(
                     """

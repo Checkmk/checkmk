@@ -111,4 +111,5 @@ def main() {
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 }
+
 return this;

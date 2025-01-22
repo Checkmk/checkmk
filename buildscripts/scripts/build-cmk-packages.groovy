@@ -352,13 +352,11 @@ def main() {
     }
 }
 
-
 def get_agent_list(edition) {
     return (edition == "raw" ?
         ["windows"] :
         ["au-linux-64bit", "au-linux-32bit", "windows"]);
 }
-
 
 def build_linux_agent_updater(agent, edition, branch_version, registry) {
     print("FN build_linux_agent_updater(agent=${agent}, edition=${edition}, branch_version=${branch_version}, registry=${registry})");

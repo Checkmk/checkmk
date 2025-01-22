@@ -26,9 +26,10 @@ def main() {
 
     dir("${WORKSPACE}/dependencyscanner") {
         def scanner_image;
-        def bom_path = "${checkout_dir}/omd/bill-of-materials.json";
+        def relative_bom_path = "omd/bill-of-materials.json";
+        def bom_path = "${checkout_dir}/${relative_bom_path}";
 
-        stage("Prepare BOM") {
+        stage("Prepare Dependencyscanner") {
             checkout([
                 $class: 'GitSCM',
                 branches: [[name: 'refs/heads/master']],
@@ -45,6 +46,7 @@ def main() {
             ]);
             scanner_image = docker.build("dependencyscanner", "--tag dependencyscanner .");
         }
+
         stage('Create BOM') {
             // Further: the BOM image does not yet have a DISTRO label...
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -66,6 +68,17 @@ def main() {
                 }
             }
         }
+
+        // remember: only one archiveArtifacts step per job allowed
+        dir("${checkout_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: relative_bom_path,
+                    fingerprint: true,
+                );
+            }
+        }
+
         stage("Upload BOM") {
             withCredentials([
                 string(

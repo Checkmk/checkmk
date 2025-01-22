@@ -67,6 +67,7 @@ from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
 from ._snapin import view_menu_items as view_menu_items
 from ._snapin import write_snapin_exception as write_snapin_exception
+from ._snapin._bookmarks import BookmarkList
 from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
     ajax_message_read,
@@ -108,6 +109,8 @@ def register(
         view_menu_topics,
     )
     dashlet_registry.register(SnapinDashlet)
+    pagetypes.declare(CustomSnapins)
+    pagetypes.declare(BookmarkList)
 
 
 def load_plugins() -> None:
@@ -764,8 +767,6 @@ def move_snapin() -> None:
     user_config.save()
     return None
 
-
-pagetypes.declare(CustomSnapins)
 
 # .
 #   .--Add Snapin----------------------------------------------------------.

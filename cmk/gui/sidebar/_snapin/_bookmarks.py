@@ -270,9 +270,6 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         self.config.bookmarks.append(BookmarkList.new_bookmark(title, url))
 
 
-pagetypes.declare(BookmarkList)
-
-
 class Bookmarks(SidebarSnapin):
     @staticmethod
     def type_name() -> str:

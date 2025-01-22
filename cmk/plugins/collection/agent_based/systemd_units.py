@@ -756,10 +756,14 @@ def check_systemd_units_summary(
     yield Result(state=State.OK, summary=f"Total: {len(units):d}")
     services_organised = _services_split(units, blacklist)
     yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
-    # some of the failed ones might be ignored, so this is OK:
+
     yield Result(
-        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in units):d}"
+        state=State(params["states"].get("failed", params["states_default"]))
+        if (number_of_failed_units := sum(s.active_status == "failed" for s in units))
+        else State.OK,
+        summary=f"Failed: {number_of_failed_units:d}",
     )
+
     included_template = "{count:d} {unit_type} {status} ({service_text})"
     yield from _check_non_ok_services(
         services_organised["included"], params, included_template, unit_type

@@ -17,7 +17,6 @@ mypy_aspect = mypy(
             requirement("awscrt"),
             requirement("html5lib"),
             requirement("pika-ts"),
-            requirement("simplejson"),
         ]
     } | {
         # `types-pika-ts` wrongfully resolves `pika-ts` instead of `pika`.

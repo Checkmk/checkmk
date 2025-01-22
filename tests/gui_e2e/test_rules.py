@@ -117,7 +117,6 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
-@pytest.mark.skip(reason="Ongoing investigation - CMK-21219")
 def test_create_rules(
     test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
 ) -> None:
@@ -141,9 +140,18 @@ def test_create_rules(
         dashboard_page.main_area.locator().get_by_role(
             role="button", name="Add new element"
         ).click()
-        dashboard_page.main_area.locator('[name="ve_1_0"]').fill("test")
-        dashboard_page.main_area.locator("#ve_1_1_p_icon_img").click()
-        dashboard_page.main_area.locator("#ve_1_1_p_icon_i_2fa").click()
+
+        # Locator corresponding to (added) elements for 'current settings'.
+        current_setting = (
+            dashboard_page.main_area.locator()
+            .get_by_role("row")
+            .filter(has=dashboard_page.main_area.locator().get_by_title("Current setting"))
+            .locator("td[class='content']")
+        )
+
+        current_setting.get_by_role("textbox").fill("test")
+        current_setting.get_by_role("link", name="Choose another icon").click()
+        current_setting.locator("a[class='icon']").get_by_title("2fa", exact=True).click()
         dashboard_page.click_and_wait(
             dashboard_page.main_area.get_suggestion("Save"), navigate=True
         )

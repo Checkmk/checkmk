@@ -484,7 +484,7 @@ def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry
         rule_id=resp.json["id"],
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
-    )
+    ).assert_rest_api_crash()
 
 
 def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:

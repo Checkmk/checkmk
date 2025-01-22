@@ -162,17 +162,22 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
+    def __init__(self, debug: bool = False, testing: bool = False) -> None:
+        super().__init__(debug)
+        self.testing = testing
+
     @tracer.start_as_current_span("CheckmkApp.wsgi_app")
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():
-            return _process_request(environ, start_response, debug=self.debug)
+            return _process_request(environ, start_response, debug=self.debug, testing=self.testing)
 
 
 def _process_request(  # pylint: disable=too-many-branches
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
+    testing: bool = False,
 ) -> WSGIResponse:
     resp: Response
     try:
@@ -231,9 +236,9 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
-        resp = handle_unhandled_exception()
-        if debug:
+        if debug or testing:
             raise
+        resp = handle_unhandled_exception()
 
     resp.set_caching_headers()
     return resp(environ, start_response)

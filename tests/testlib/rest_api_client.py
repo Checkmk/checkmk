@@ -12,7 +12,7 @@ import pprint
 import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
+from typing import Any, cast, Literal, NoReturn, NotRequired, Self, TYPE_CHECKING, TypedDict
 
 from cmk.ccc import version
 
@@ -107,6 +107,19 @@ class Response:
     def json(self) -> Any:
         assert self.body is not None
         return json.loads(self.body.decode("utf-8"))
+
+    def assert_rest_api_crash(self) -> Self:
+        """Assert that the response is a REST API crash report. Then delete the underlying file."""
+        assert self.status_code == 500
+        assert_and_delete_rest_crash_report(self.json["ext"]["id"])
+        return self
+
+
+def assert_and_delete_rest_crash_report(crash_id: str) -> None:
+    """Assert that the REST API crash report with the given ID exists and delete it."""
+    crash_file = paths.crash_dir / "rest_api" / crash_id / "crash.info"
+    assert crash_file.exists()
+    crash_file.unlink()
 
 
 class RestApiRequestException(Exception):

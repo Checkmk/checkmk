@@ -247,7 +247,7 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
         {"Accept": "application/json"},  # headers
         status=500,
     )
-
+    response.assert_rest_api_crash()
     assert response.json["title"] == "Internal Server Error"
     assert response.json["ext"]["exc_type"] == "RestAPIResponseException"
     exc = response.json["ext"]["details"]["rest_api_exception"]
@@ -362,7 +362,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
     with mock.patch("cmk.gui.utils.permission_verification.BasePerm.validate", validate):
         resp = clients.AuxTag.get(aux_tag_id="ping", expect_ok=False)
 
-    resp.assert_status_code(500)
+    resp.assert_rest_api_crash()
 
     assert resp.json["ext"]["exc_type"] == "RestAPIPermissionException"
     exc = resp.json["ext"]["details"]["rest_api_exception"]
@@ -400,7 +400,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
         tag_data=test_data,
         expect_ok=False,
     )
-    resp.assert_status_code(500)
+    resp.assert_rest_api_crash()
     assert resp.json["title"] == "Internal Server Error"
     assert (
         resp.json["detail"]

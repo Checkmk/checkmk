@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
 import os
+import pprint
 import shutil
 from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
@@ -227,19 +229,33 @@ def cleanup_after_test():
         logger.warning("OMD_ROOT not set, skipping cleanup")
         return
 
-    # Ensure there is no file left over in the unit test fake site
-    # to prevent tests involving eachother
-    for entry in cmk.utils.paths.omd_root.iterdir():
-        # This randomly fails for some unclear reasons. Looks like a race condition, but I
-        # currently have no idea which triggers this since the tests are not executed in
-        # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
-        try:
-            if entry.is_dir():
-                shutil.rmtree(str(entry))
-            else:
-                entry.unlink()
-        except OSError as e:
-            logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
+    # Fail the execution in case any crash reports were created
+    try:
+        _report_crashes(cmk.utils.paths.crash_dir)
+    finally:
+        # Ensure there is no file left over in the unit test fake site
+        # to prevent tests involving each other
+        for entry in cmk.utils.paths.omd_root.iterdir():
+            # This randomly fails for some unclear reasons. Looks like a race condition, but I
+            # currently have no idea which triggers this since the tests are not executed in
+            # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
+            try:
+                if entry.is_dir():
+                    shutil.rmtree(str(entry))
+                else:
+                    entry.unlink()
+            except OSError as e:
+                logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
+
+
+def _report_crashes(crash_dir: Path) -> None:
+    for crash_file in crash_dir.glob("**/crash.info"):
+        crash = json.loads(crash_file.read_text())
+        pytest.fail(
+            f"Crash report detected! {crash.get('exc_type', '')}: {crash.get('exc_value', '')}\n"
+            "If this is an intended crash (for rest api tests), use `assert_rest_api_crash` to "
+            f"remove the file as part of the test.\n{pprint.pformat(crash)}"
+        )
 
 
 # Unit tests should not be executed in site.

@@ -77,7 +77,7 @@ def make_wsgi_app(edition: Edition, debug: bool = False, testing: bool = False) 
     if debug:
         app.wsgi_app = DebuggedApplication(  # type: ignore[method-assign]
             app.wsgi_app,
-            evalex=True,
+            evalex=not testing,  # sets werkzeug.debug.preserve_context, which changes the flask globals behaviour
             pin_logging=False,
             pin_security=False,
         )

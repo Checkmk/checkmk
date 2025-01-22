@@ -392,13 +392,14 @@ def _ensure_authenticated() -> None:
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
-    def __init__(self, debug: bool = False) -> None:
+    def __init__(self, debug: bool = False, testing: bool = False) -> None:
         super().__init__(debug)
         # This intermediate data structure is necessary because `Rule`s can't contain anything
         # other than str anymore. Technically they could, but the typing is now fixed to str.
         self._endpoints: dict[str, AbstractWSGIApp] = {}
         self._url_map: Map | None = None
         self._rules: list[Rule] = []
+        self.testing = testing
 
     def _build_url_map(self) -> Map:
         self._endpoints.clear()
@@ -536,7 +537,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             )
 
         except (MKException, MKCryptoException) as exc:
-            if self.debug:
+            if self.debug and not self.testing:
                 raise
             response = problem(
                 status=EXCEPTION_STATUS.get(type(exc), 500),
@@ -545,7 +546,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             )
 
         except Exception as exc:
-            if self.debug:
+            if self.debug and not self.testing:
                 raise
             response = crash_report_response(exc)
 

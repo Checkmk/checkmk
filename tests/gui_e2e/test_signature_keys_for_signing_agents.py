@@ -7,13 +7,15 @@ import logging
 import re
 import time
 from collections.abc import Callable, Iterator
+from urllib.parse import quote_plus
 
 import pytest
-from playwright.sync_api import expect, FilePayload
-from playwright.sync_api import TimeoutError as PWTimeoutError
+from playwright.sync_api import expect, FilePayload, Locator
 
 from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
 from tests.testlib.site import Site
+from tests.testlib.utils import wait_until
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password
@@ -31,51 +33,72 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
 def go_to_signature_page(page: LoginPage) -> None:
     """Go to the `Signature keys for signing agents` page."""
-    page.click_and_wait(page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True)
-    page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
-    page.click_and_wait(page.main_area.get_text("Signature keys"), navigate=True)
+    logger.info("Navigate to 'Windows, Linux, ...' / Agent bakery page.")
+    page.main_menu.setup_menu("Windows, Linux, Solaris, AIX").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?mode=agents")))
+    page.main_area.check_page_title("Windows, Linux, Solaris, AIX")
+
+    logger.info("Navigate to 'Signature keys for signing agents' page.")
+
+    # flake-proofing: interaction with 'Agents menu' is unreliable.
+    def _click_on_agents_menu() -> bool:
+        page.main_area.locator("#page_menu_dropdown_agents").click()
+        time.sleep(0.1)
+        return page.main_area.locator("div[id='menu_agents']").is_visible()
+
+    wait_until(_click_on_agents_menu, interval=1, timeout=TIMEOUT_ASSERTIONS)
+
+    page.get_link("Signature keys").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?folder=&mode=signature_keys")))
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
 def delete_key(page: LoginPage, identifier: str | None = None) -> None:
-    """Delete a key based on some text, e.g. alias or hash.
+    """Delete a key, if key identifier is provided. Otherwise, delete all the listed keys.
 
-    Note: you already have to be on the `Signature keys for signing agents` site.
+    `identifier` can be a key description or a fingerprint.
+
+    Note: you already have to be on the page
+    `Setup > Windows, Linux, ... > Signature keys for signing agents`
     """
-    locator = f"tr.data:has-text('{identifier}')" if identifier else "tr.data"
-    try:
-        for row in page.main_area.locator(f"{locator}").all():
-            row.locator("td.buttons >> a[title='Delete this key']").click()
-            page.main_area.locator("#page_menu_popups").locator("button.swal2-confirm").click()
-    except PWTimeoutError:
-        pass
+
+    def _delete_key(row: Locator) -> None:
+        key_identifier = identifier if identifier else row.inner_text().replace("\t", " ")
+        logger.info("Deleting key: '%s'!", key_identifier)
+
+        row.get_by_role("link", name="Delete this key").click()
+        page.main_area.locator().get_by_role("dialog").get_by_role("button", name="Delete").click()
+        expect(row, f"Key: '{key_identifier}' not deleted from the list!").to_have_count(0)
+
+    if identifier:
+        _delete_key(page.main_area.locator(f"tr.data:has-text('{identifier}')"))
+    else:
+        rows = page.main_area.locator("tr.data").all()
+        if not rows:
+            logger.info("There are no keys available. Skip deletion ...")
+        # delete the listed keys, if any.
+        for row in rows:
+            _delete_key(row)
 
 
 def send_pem_content(page: LoginPage, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
-    go_to_signature_page(page)
-    delete_key(page, description)
 
-    page.click_and_wait(page.main_area.get_suggestion("Upload key"), navigate=True)
-    page.main_area.check_page_title("Upload agent signature key")
-
+    _navigate_to_upload_key(page)
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.locator("#select2-key_p_key_file_sel-container").click()
     page.main_area.get_text("Paste CRT/PEM Contents").click()
     page.main_area.locator("textarea[name='key_p_key_file_1']").fill(content)
 
+    logger.info("Upload key '%s'.", description)
     page.main_area.get_suggestion("Upload").click()
 
 
 def send_pem_file(page: LoginPage, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via upload."""
-    go_to_signature_page(page)
-    delete_key(page, description)
 
-    page.click_and_wait(page.main_area.get_suggestion("Upload key"), navigate=True)
-    page.main_area.check_page_title("Upload agent signature key")
-
+    _navigate_to_upload_key(page)
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.get_input("key_p_key_file_0").set_input_files(
@@ -88,7 +111,29 @@ def send_pem_file(page: LoginPage, description: str, password: str, content: str
         ]
     )
 
+    logger.info("Upload key '%s'.", description)
     page.main_area.get_suggestion("Upload").click()
+
+
+def _navigate_to_upload_key(page: LoginPage) -> None:
+    """Navigate to 'Upload key' page.
+
+    The page can be accessed at
+    ```
+    Setup
+        > Main menu
+            > Windows, Linux, ... (Agent bakery)
+                > Signature keys for signing agents
+    ```             > Upload key
+    """
+    go_to_signature_page(page)
+    # TODO: move to test teardown.
+    delete_key(page)
+
+    logger.info("Navigate to 'Upload key' page.")
+    page.main_area.get_suggestion("Upload key").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?mode=upload_signature_key")))
+    page.main_area.check_page_title("Upload agent signature key")
 
 
 def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
@@ -146,11 +191,11 @@ def test_upload_signing_keys(
 
 def test_generate_key(logged_in_page: LoginPage) -> None:
     """Add a key, aka let Checkmk generate it."""
+    key_name = "e2e-test"
     go_to_signature_page(logged_in_page)
 
-    # clean up from previous runs (and ensure it actually was deleted)
-    # todo: remove redundant deletion and replace by "try...finally (will be done in a follow-up)"
-    delete_key(logged_in_page, "e2e-test")
+    # TODO: move to test teardown.
+    delete_key(logged_in_page)
     expect(
         logged_in_page.main_area.get_text("e2e-test"),
         "Cleanup of key 'e2e-test' failed.",
@@ -167,7 +212,7 @@ def test_generate_key(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.get_suggestion("Create").click()
     logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
 
-    logged_in_page.main_area.get_input("key_p_alias").fill("e2e-test")
+    logged_in_page.main_area.get_input("key_p_alias").fill(key_name)
     logged_in_page.main_area.get_input("key_p_passphrase").fill("123456789012")
     logged_in_page.main_area.get_suggestion("Create").click()
     expect(
@@ -176,7 +221,7 @@ def test_generate_key(logged_in_page: LoginPage) -> None:
     ).to_be_visible()
 
     # now remove the key again (and ensure it was actually deleted)
-    delete_key(logged_in_page, "e2e-test")
+    delete_key(logged_in_page, key_name)
     expect(
         logged_in_page.main_area.get_text("e2e-test"),
         "Cleanup of key 'e2e-test' failed.",
@@ -202,6 +247,7 @@ def with_key_fixture(
 
     yield key_name
 
+    go_to_signature_page(logged_in_page)
     delete_key(logged_in_page, key_name)
 
 

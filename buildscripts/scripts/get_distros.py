@@ -71,6 +71,7 @@ class Registry:
             in requests.get(
                 f"{self.url}/v2/{edition}/check-mk-{edition}/tags/list",
                 auth=(self.credentials.username, self.credentials.password),
+                timeout=60,
             ).json()["tags"]
         )
         if not exists:

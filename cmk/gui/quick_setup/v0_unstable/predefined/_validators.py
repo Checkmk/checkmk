@@ -25,7 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _create_diag_special_agent_input,
     _find_id_in_form_data,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator
+from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, ProgressLogger
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -74,18 +74,22 @@ def _validate_test_connection(
     error_message: str | None,
     _quick_setup_id: QuickSetupId,
     all_stages_form_data: ParsedFormData,
+    progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
+    progress_logger.log_progress("Parsing the configuration data")
     site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = _find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    progress_logger.log_progress("Evaluating the connection with parsed configuration")
     output = diag_special_agent(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),
     )
+    progress_logger.log_progress("Evaluating the connection result")
     for result in output.results:
         if result.return_code != 0:
             if error_message:
@@ -98,6 +102,7 @@ def _validate_test_connection(
 def validate_unique_id(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
@@ -112,6 +117,7 @@ def validate_unique_id(
 def validate_host_name_doesnt_exists(
     _quick_setup_id: QuickSetupId,
     stages_form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     host_name = _find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None

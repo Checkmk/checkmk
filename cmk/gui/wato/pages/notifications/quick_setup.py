@@ -48,6 +48,7 @@ from cmk.gui.quick_setup.private.widgets import (
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    ProgressLogger,
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
@@ -265,6 +266,7 @@ def _event_choices(
 def _validate_at_least_one_event(
     _quick_setup_id: QuickSetupId,
     form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     match form_data[FormSpecId("triggering_events")]:
         case ("specific_events", data):
@@ -371,6 +373,7 @@ def custom_recap_formspec_triggering_events(
     quick_setup_id: QuickSetupId,
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: (
@@ -385,7 +388,9 @@ def custom_recap_formspec_triggering_events(
         )
         for form_spec_wrapper_id, (mode, form_data) in all_stages_form_data.items()
     }
-    return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
+    return recaps.recaps_form_spec(
+        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger
+    )
 
 
 def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:
@@ -454,13 +459,16 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     quick_setup_id: QuickSetupId,
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: form_data
         for form_spec_wrapper_id, form_data in all_stages_form_data.items()
         if len(form_data) > 0
     }
-    return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
+    return recaps.recaps_form_spec(
+        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger
+    )
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:

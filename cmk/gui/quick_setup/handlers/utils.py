@@ -11,13 +11,15 @@ from pydantic import BaseModel
 
 from cmk.ccc.i18n import _
 
+from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
     serialize_data_for_frontend,
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, FormspecMap
+from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, FormspecMap, ProgressLogger
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -41,6 +43,20 @@ PREV_BUTTON_LABEL = _("Back")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
 NEXT_BUTTON_LABEL = _("Next")
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
+
+
+class InfoLogger:
+    @staticmethod
+    def log_progress(message: str) -> None:
+        logger.info("[QuickSetup] %s", message)
+
+
+class JobBasedProgressLogger:
+    def __init__(self, progress_interface: BackgroundProcessInterface):
+        self._progress_interface = progress_interface
+
+    def log_progress(self, message: str) -> None:
+        self._progress_interface.send_progress_update("[QuickSetup] %s" % message)
 
 
 @dataclass
@@ -133,6 +149,7 @@ def validate_custom_validators(
     custom_validators: Iterable[CallableValidator],
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
+    progress_logger: ProgressLogger,
 ) -> ValidationErrors:
     errors = ValidationErrors(stage_index=None)
     for custom_validator in custom_validators:
@@ -140,6 +157,7 @@ def validate_custom_validators(
             custom_validator(
                 quick_setup_id,
                 form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
+                progress_logger,
             )
         )
     return errors

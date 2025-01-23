@@ -18,7 +18,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     get_service_discovery_preview,
     group_services_by_interest,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap
+from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap, ProgressLogger
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
@@ -34,6 +34,7 @@ def recaps_form_spec(
     quick_setup_id: QuickSetupId,
     stage_index: StageIndex,
     parsed_form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:

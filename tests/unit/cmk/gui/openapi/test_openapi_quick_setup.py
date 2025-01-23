@@ -15,6 +15,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, Uniqu
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    ProgressLogger,
     QuickSetup,
     QuickSetupAction,
     QuickSetupStage,
@@ -147,7 +148,9 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
 
 
 def _form_spec_extra_validate(
-    _quick_setup_id: QuickSetupId, _stages: ParsedFormData
+    _quick_setup_id: QuickSetupId,
+    _stages: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     return ["this is a general error", "and another one"]
 

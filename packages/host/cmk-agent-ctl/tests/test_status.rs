@@ -5,7 +5,12 @@
 // Test files are compiled to seperate crates, so there
 // may be some unused functions in the common module
 #![allow(dead_code)]
+
+#[cfg(not(feature = "build_system_bazel"))]
 mod common;
+
+#[cfg(feature = "build_system_bazel")]
+extern crate common;
 
 use common::agent;
 

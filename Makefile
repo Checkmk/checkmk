@@ -12,13 +12,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 UVENV              := scripts/run-uvenv
 
-PY_PATH := .venv/bin/python
-ifneq ("$(wildcard $(PY_PATH))","")
-  PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
-else
-  PY_VIRT_MAJ_MIN := "unknown"
-endif
-
 # The CI environment variable should only be set by Jenkins
 CI ?= false
 

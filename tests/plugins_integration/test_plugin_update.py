@@ -18,15 +18,10 @@ logger = logging.getLogger(__name__)
 # * BIG-IP cluster containing several checks remaining in PEND state, leading to assertion-error
 #   after update. See CMK-19103.
 # * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
-# * The 'MSSQL Job: ...' services have been renamed
-#   See Werk 17503, SUP-21714
-#   Should be handled by adding the service to the SKIPPED_CHECKS list, but didn't work. Will be
-#   investigated.
 SKIPPED_DUMPS = [
     "snmp-sw-arista.demo.checkmk.com_2_2_p12",
     "snmp-f5-bigip-failover-cluster",
     "agent-2.2.0p8-ceph-17.2.6",
-    "agent-2.3.0p12-windows-mssql",
 ]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.
@@ -35,7 +30,13 @@ SKIPPED_DUMPS = [
 #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
 # * The 'Power x' (x=1,2,...) services have been renamed into 'Power supply'
 #   See Werk 16905.
-SKIPPED_CHECKS = ["Postfix status", "Postfix Queue", "Power 1"]
+# * "MSSQL Job: syspolicy_purge_history" service renamed between 2.3.0 and 2.4.0. See SUP-21714.
+SKIPPED_CHECKS = [
+    "Postfix status",
+    "Postfix Queue",
+    "Power 1",
+    "MSSQL Job: syspolicy_purge_history",
+]
 
 
 def test_plugin_update(

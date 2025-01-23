@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import importlib
 import logging
 import os
 import shutil
-import threading
 import time
-from dataclasses import dataclass
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -27,7 +24,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 
 from ._defines import BackgroundJobDefines
-from ._interface import JobParameters, JobTarget, SpanContextModel
+from ._executor import ThreadedJobExecutor
+from ._interface import JobTarget, SpanContextModel
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
@@ -38,15 +36,6 @@ class AlreadyRunningError(Exception): ...
 
 
 class StartupError(Exception): ...
-
-
-@dataclass
-class RunningJob:
-    thread: threading.Thread
-    stop_event: threading.Event
-
-
-running_jobs: dict[str, RunningJob] = {}
 
 
 class BackgroundJob:
@@ -77,6 +66,7 @@ class BackgroundJob:
 
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
+        self._executor = ThreadedJobExecutor(self._logger)
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:
@@ -144,7 +134,7 @@ class BackgroundJob:
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
         try:
-            return running_jobs[self._job_id].thread.is_alive()
+            return self._executor.is_alive(self._job_id)
         except KeyError:
             return False
 
@@ -194,11 +184,7 @@ class BackgroundJob:
             pass
 
     def _terminate_processes(self) -> None:
-        self._logger.debug("Stop job %s using stop event", self._job_id)
-        running_jobs[self._job_id].stop_event.set()
-        self._logger.debug("Wait for job to finish")
-        running_jobs[self._job_id].thread.join()
-        del running_jobs[self._job_id]
+        self._executor.terminate(self._job_id)
 
     def get_status(self) -> JobStatusSpec:
         status = self._jobstatus_store.read()
@@ -282,29 +268,16 @@ class BackgroundJob:
         )
         self._jobstatus_store.write(initial_status)
 
-        p = threading.Thread(
-            # The import hack here is done to avoid circular imports. Actually run_process is
-            # only needed in the background job. A better way to approach this, could be to
-            # launch the background job with a subprocess instead to get rid of this import
-            # hack.
-            # TODO
-            target=importlib.import_module("cmk.gui.background_job._process").run_process,
-            args=(
-                JobParameters(
-                    stop_event=(stop_event := threading.Event()),
-                    work_dir=self._work_dir,
-                    job_id=self._job_id,
-                    target=target,
-                    lock_wato=initial_status_args.lock_wato,
-                    is_stoppable=initial_status_args.stoppable,
-                    override_job_log_level=override_job_log_level,
-                    span_id=self.job_prefix,
-                    origin_span_context=SpanContextModel.from_span_context(origin_span_context),
-                ),
-            ),
+        self._executor.start(
+            self._job_id,
+            self._work_dir,
+            self.job_prefix,
+            target,
+            initial_status_args.lock_wato,
+            initial_status_args.stoppable,
+            override_job_log_level,
+            origin_span_context=SpanContextModel.from_span_context(origin_span_context),
         )
-        running_jobs[self._job_id] = RunningJob(thread=p, stop_event=stop_event)
-        p.start()
 
         return result.OK(None)
 

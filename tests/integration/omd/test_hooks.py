@@ -35,6 +35,7 @@ def test_hooks(site: Site) -> None:
         "TRACE_SERVICE_NAMESPACE",
         "RABBITMQ_PORT",
         "RABBITMQ_ONLY_FROM",
+        "RABBITMQ_MANAGEMENT_PORT",
         "RABBITMQ_DIST_PORT",
     ]
 

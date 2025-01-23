@@ -25,7 +25,7 @@ def branch_base_folder(with_testing_prefix) {
 }
 
 
-def provide_agent_updaters(version, edition, disable_cache) {
+def provide_agent_binaries(version, edition, disable_cache) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387

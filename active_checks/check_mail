@@ -180,14 +180,14 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
     # b) local pipe
     # c) remote via udp
     # d) remote via tcp
-    def evaluate_forward_method(description: str) -> str | tuple[str, str, str]:
+    def evaluate_forward_method(description: str) -> str | tuple[str, str, int]:
         if not description:
             return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
         if description == "spool:":
             return "spool:%s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
         if "," in description:
             prot_addr_port = description.split(",")
-            return prot_addr_port[0], prot_addr_port[1], prot_addr_port[3]
+            return prot_addr_port[0], prot_addr_port[1], int(prot_addr_port[2])
         return description
 
     forward_method = evaluate_forward_method(args.forward_method)

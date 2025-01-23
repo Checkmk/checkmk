@@ -70,7 +70,7 @@ class Registry:
             in requests.get(
                 url,
                 auth=(self.credentials.username, self.credentials.password),
-                timeout=10,
+                timeout=60,
             ).json()["tags"]
         )
         if not exists:

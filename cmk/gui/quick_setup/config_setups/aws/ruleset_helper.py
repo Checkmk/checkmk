@@ -6,9 +6,25 @@
 from collections.abc import Sequence
 from typing import Any
 
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+    CascadingSingleChoiceElementExtended,
+)
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FormSpec, List, String
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    FormSpec,
+    List,
+    MatchingScope,
+    RegularExpression,
+    String,
+)
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 def _validate_aws_tags(values: Sequence[Any]) -> object:
@@ -90,10 +106,48 @@ def formspec_aws_tags(title: Title | None = None) -> FormSpec:
                         _validate_aws_tags,
                         LengthInRange(
                             min_value=1,
-                            error_msg=Message("Tags enabled but no tags defined."),
+                            error_msg=Message("Restriction tags enabled but no tags defined."),
                         ),
                     ],
                 )
-            )
+            ),
+            "import_tags": DictElement(
+                parameter_form=CascadingSingleChoiceExtended(
+                    title=Title("Import tags as host labels"),
+                    elements=[
+                        CascadingSingleChoiceElementExtended(
+                            name="all_tags",
+                            title=Title("Import all valid tags"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElementExtended(
+                            name="filter_tags",
+                            title=Title("Filter valid tags by key pattern"),
+                            parameter_form=RegularExpression(
+                                predefined_help_text=MatchingScope.INFIX,
+                                custom_validate=[
+                                    LengthInRange(
+                                        min_value=1,
+                                        error_msg=Message(
+                                            "Filtering tags enabled but no tags defined."
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                    layout=CascadingSingleChoiceLayout.horizontal,
+                    help_text=Help(
+                        "By default, Checkmk imports the AWS tags for EC2 and ELB instances as "
+                        "host labels for the respective piggyback hosts. The label syntax is "
+                        "'cmk/aws/tag/{key}:{value}'.<br>Additionally, the piggyback hosts for EC2 "
+                        "instances are given the host label 'cmk/aws/ec2:instance', which is done "
+                        "independent of this option.<br>You can further restrict the imported tags "
+                        "by specifying a pattern which Checkmk searches for in the key of the AWS "
+                        "tag, or you can disable the import of AWS tags altogether."
+                    ),
+                    prefill=DefaultValue("all_tags"),
+                ),
+            ),
         },
     )

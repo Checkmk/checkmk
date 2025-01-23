@@ -39,7 +39,10 @@ QUICK_SETUP_PARAMS = {
         "ecs",
         "elasticache",
     ],
-    "overall_tags": {"restriction_tags": [{"key": "foo", "values": ["a", "b"]}]},
+    "overall_tags": {
+        "restriction_tags": [{"key": "foo", "values": ["a", "b"]}],
+        "import_tags": ("filter_tags", "foo:bar"),
+    },
 }
 
 EXPECTED_RULE_PARAMS = {
@@ -64,7 +67,7 @@ EXPECTED_RULE_PARAMS = {
     },
     "access": {},
     "regions": ["eu-central-1"],
-    "services": {
+    "regional_services": {
         "ec2": {"selection": "all", "limits": True},
         "ebs": {"selection": "all", "limits": True},
         "s3": {"selection": "all", "limits": True},
@@ -82,6 +85,7 @@ EXPECTED_RULE_PARAMS = {
     },
     "piggyback_naming_convention": "ip_region_instance",
     "overall_tags": [("foo", ["a", "b"])],
+    "import_tags": ("filter_tags", "foo:bar"),
 }
 
 
@@ -149,6 +153,8 @@ def test_quick_setup_aws_to_ssc() -> None:
         "--overall-tag-values",
         "a",
         "b",
+        "--import-matching-tags-as-labels",
+        "foo:bar",
         "--hostname",
         "foo",
         "--piggyback-naming-convention",

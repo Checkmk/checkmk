@@ -368,7 +368,7 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "regions": [region.replace("_", "-") for region in regions_to_monitor],
         "access": {},
         # TODO required key but not yet implemented. It's part of quick_setup_advanced()
-        "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
+        "regional_services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
     }
     if proxy_details is not None:
@@ -378,6 +378,9 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
 
     if overall_tags is not None:
         assert isinstance(overall_tags, dict)
+        if (import_tags := overall_tags.get("import_tags")) is not None:
+            assert isinstance(import_tags, tuple)
+            params["import_tags"] = import_tags
         if (restriction_tags := overall_tags.get("restriction_tags")) is not None:
             assert isinstance(restriction_tags, list)
             params["overall_tags"] = [(tag["key"], tag["values"]) for tag in restriction_tags]

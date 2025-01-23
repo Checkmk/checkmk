@@ -49,7 +49,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     },
                 },
                 "regions": ["ap-northeast-2", "ap-southeast-2"],
-                "services": {
+                "regional_services": {
                     "ec2": {
                         "selection": (
                             "tags",
@@ -62,7 +62,10 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     "glacier": {"selection": "all", "limits": True},
                     "elbv2": {"selection": ("tags", []), "limits": True},
                     "rds": {
-                        "selection": ("names", ["explicit_rds_name1", "explicit_rds_name2"]),
+                        "selection": (
+                            "names",
+                            ["explicit_rds_name1", "explicit_rds_name2"],
+                        ),
                         "limits": True,
                     },
                     "cloudwatch_alarms": {"alarms": ("names", ["explicit_cloudwatch_name"])},
@@ -144,6 +147,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "global_restrict_key",
                 "--overall-tag-values",
                 "value1",
+                "--ignore-all-tags",
                 "--hostname",
                 "foo",
                 "--piggyback-naming-convention",
@@ -166,7 +170,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                         "external_id": "foo_external_id",
                     },
                 ),
-                "services": {
+                "regional_services": {
                     "cloudwatch_alarms": {},
                 },
                 "piggyback_naming_convention": "ip_region_instance",
@@ -183,6 +187,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "foo_external_id",
                 "--services",
                 "cloudwatch_alarms",
+                "--ignore-all-tags",
                 "--hostname",
                 "foo",
                 "--piggyback-naming-convention",
@@ -196,7 +201,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     "sts",
                     {"role_arn_id": "foo_arn_id", "external_id": "foo_external_id"},
                 ),
-                "services": {
+                "regional_services": {
                     "cloudwatch_alarms": {"alarms": "all"},
                 },
                 "piggyback_naming_convention": "ip_region_instance",
@@ -210,6 +215,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--services",
                 "cloudwatch_alarms",
                 "--cloudwatch-alarms",
+                "--ignore-all-tags",
                 "--hostname",
                 "foo",
                 "--piggyback-naming-convention",
@@ -223,9 +229,43 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": ("cmk_postprocessed", "stored_password", ("banana123", "")),
+                    "proxy_password": (
+                        "cmk_postprocessed",
+                        "stored_password",
+                        ("banana123", ""),
+                    ),
                 },
                 "piggyback_naming_convention": "ip_region_instance",
+            },
+            [
+                "--proxy-host",
+                "1.1.1",
+                "--proxy-user",
+                "banana",
+                "--proxy-password-reference",
+                ANY,
+                "--ignore-all-tags",
+                "--hostname",
+                "foo",
+                "--piggyback-naming-convention",
+                "ip_region_instance",
+            ],
+            id="minimal_config_without_auth",
+        ),
+        pytest.param(
+            {
+                "auth": ("none"),
+                "proxy_details": {
+                    "proxy_host": "1.1.1",
+                    "proxy_user": "banana",
+                    "proxy_password": (
+                        "cmk_postprocessed",
+                        "stored_password",
+                        ("banana123", ""),
+                    ),
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+                "import_tags": ("all_tags", None),
             },
             [
                 "--proxy-host",
@@ -239,7 +279,38 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--piggyback-naming-convention",
                 "ip_region_instance",
             ],
-            id="minimal_config_without_auth",
+            id="minimal_config_import_all_tags",
+        ),
+        pytest.param(
+            {
+                "auth": ("none"),
+                "proxy_details": {
+                    "proxy_host": "1.1.1",
+                    "proxy_user": "banana",
+                    "proxy_password": (
+                        "cmk_postprocessed",
+                        "stored_password",
+                        ("banana123", ""),
+                    ),
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+                "import_tags": ("filter_tags", "foo:bar"),
+            },
+            [
+                "--proxy-host",
+                "1.1.1",
+                "--proxy-user",
+                "banana",
+                "--proxy-password-reference",
+                ANY,
+                "--import-matching-tags-as-labels",
+                "foo:bar",
+                "--hostname",
+                "foo",
+                "--piggyback-naming-convention",
+                "ip_region_instance",
+            ],
+            id="minimal_config_import_filtered_tags",
         ),
     ],
 )

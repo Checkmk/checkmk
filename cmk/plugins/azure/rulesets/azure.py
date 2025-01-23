@@ -341,7 +341,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
             parameter_form=CascadingSingleChoice(
                 title=Title("Import tags as host/service labels"),
                 help_text=Help(
-                    "By default, Checkmk imports all Azure tags as host/service labels. "
+                    "Enable this option to import Azure tags as host/service labels. "
                     "The imported tags are added as host labels for resource groups and "
                     "VMs monitored as hosts and as service labels for resources monitored "
                     "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"

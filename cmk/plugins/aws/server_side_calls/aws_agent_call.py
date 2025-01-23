@@ -58,9 +58,10 @@ class AwsParams(BaseModel):
     access: APIAccess | None = None
     global_services: Mapping[str, ServiceConfig] | None = None
     regions: list[str] | None = None
-    services: Mapping[str, ServiceConfig] | None = None
+    regional_services: Mapping[str, ServiceConfig] | None = None
     piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
     overall_tags: list[Tag] | None = None
+    import_tags: tuple[str, str | None] | None = None
 
 
 def _get_tag_options(tags: list[Tag], prefix: str) -> Sequence[str]:
@@ -173,7 +174,7 @@ def aws_arguments(
     global_services = params.global_services or {}
     if global_service_args := _get_services_args(global_services):
         args.extend(("--global-services", *global_service_args))
-    services = params.services or {}
+    services = params.regional_services or {}
     if service_args := _get_services_args(services):
         args.extend(("--services", *service_args))
     if "requests" in (services.get("s3", {}) or {}):
@@ -189,6 +190,13 @@ def aws_arguments(
         args.extend(("--cloudfront-host-assignment", cloudfront_host_assignment))
     if params.overall_tags:
         args.extend(_get_tag_options(params.overall_tags, "overall"))
+    if (import_tags := params.import_tags) is None:
+        args.append("--ignore-all-tags")
+    elif isinstance(import_tags, tuple) and import_tags[0] == "filter_tags":
+        if not isinstance(import_tags[1], str):
+            raise ValueError(f"Invalid value for tag filtering pattern: {import_tags[1]}")
+        args.extend(("--import-matching-tags-as-labels", import_tags[1]))
+
     args.extend(
         (
             "--hostname",

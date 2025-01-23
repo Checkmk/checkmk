@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.gui.plugins.wato.special_agents.aws import _migrate_auth
+from cmk.gui.plugins.wato.special_agents.aws import _migrate
 
 from cmk.plugins.aws.server_side_calls.aws_agent_call import AwsParams
 from cmk.server_side_calls.v1 import Secret
@@ -59,12 +59,76 @@ AUTH_STS = (
             id="minimal_config_with_access_key_and_assume_role",
         ),
         pytest.param(
-            {"access_key_id": ACCESS_KEY_ID, "secret_access_key": ACCESS_KEY_SECRET, "access": {}},
+            {
+                "access_key_id": ACCESS_KEY_ID,
+                "secret_access_key": ACCESS_KEY_SECRET,
+                "access": {},
+            },
             {
                 "access": {},
                 "auth": AUTH_ACCESS_KEY,
             },
             id="minimal_config_with_access_key",
+        ),
+        pytest.param(
+            {
+                "access_key_id": ACCESS_KEY_ID,
+                "secret_access_key": ACCESS_KEY_SECRET,
+                "access": {},
+                "global_services": {
+                    "ce": None,
+                    "route53": None,
+                    "cloudfront": {"selection": "all", "host_assignment": "aws_host"},
+                },
+                "regions": ["eu-central-1", "eu-west-1"],
+                "regional_services": {
+                    "ec2": {"selection": "all", "limits": True},
+                    "ebs": {"selection": "all", "limits": True},
+                    "s3": {"selection": "all", "limits": True},
+                    "glacier": {"selection": "all", "limits": True},
+                    "elb": {"selection": "all", "limits": True},
+                    "elbv2": {"selection": "all", "limits": True},
+                    "rds": {"selection": "all", "limits": True},
+                    "cloudwatch_alarms": {"alarms": "all", "limits": True},
+                    "dynamodb": {"selection": "all", "limits": True},
+                    "wafv2": {"selection": "all", "limits": True, "cloudfront": None},
+                    "lambda": {"selection": "all", "limits": True},
+                    "sns": {"selection": "all", "limits": True},
+                    "ecs": {"selection": "all", "limits": True},
+                    "elasticache": {"selection": "all", "limits": True},
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+                "import_tags": ("filter_tags", "foo:bar"),
+            },
+            {
+                "access": {},
+                "auth": AUTH_ACCESS_KEY,
+                "global_services": {
+                    "ce": None,
+                    "route53": None,
+                    "cloudfront": {"selection": "all", "host_assignment": "aws_host"},
+                },
+                "regions": ["eu-central-1", "eu-west-1"],
+                "regional_services": {
+                    "ec2": {"selection": "all", "limits": True},
+                    "ebs": {"selection": "all", "limits": True},
+                    "s3": {"selection": "all", "limits": True},
+                    "glacier": {"selection": "all", "limits": True},
+                    "elb": {"selection": "all", "limits": True},
+                    "elbv2": {"selection": "all", "limits": True},
+                    "rds": {"selection": "all", "limits": True},
+                    "cloudwatch_alarms": {"alarms": "all", "limits": True},
+                    "dynamodb": {"selection": "all", "limits": True},
+                    "wafv2": {"selection": "all", "limits": True, "cloudfront": None},
+                    "lambda": {"selection": "all", "limits": True},
+                    "sns": {"selection": "all", "limits": True},
+                    "ecs": {"selection": "all", "limits": True},
+                    "elasticache": {"selection": "all", "limits": True},
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+                "import_tags": ("filter_tags", "foo:bar"),
+            },
+            id="max_config_with_access_key",
         ),
         pytest.param(
             {
@@ -104,7 +168,7 @@ AUTH_STS = (
                     "cloudfront": {"selection": "all", "host_assignment": "aws_host"},
                 },
                 "regions": ["eu-central-1", "eu-west-1"],
-                "services": {
+                "regional_services": {
                     "ec2": {"selection": "all", "limits": True},
                     "ebs": {"selection": "all", "limits": True},
                     "s3": {"selection": "all", "limits": True},
@@ -121,13 +185,14 @@ AUTH_STS = (
                     "elasticache": {"selection": "all", "limits": True},
                 },
                 "piggyback_naming_convention": "ip_region_instance",
+                "import_tags": ("all_tags", None),
             },
-            id="max_config_with_access_key",
+            id="max_config_old_services_key",
         ),
     ],
 )
-def test_migrate_auth(value: dict, expected: dict[str, object]) -> None:
-    params = _migrate_auth(value)
+def test_migrate(value: dict, expected: dict[str, object]) -> None:
+    params = _migrate(value)
 
     assert params == expected
 

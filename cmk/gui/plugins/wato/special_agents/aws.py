@@ -31,6 +31,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.valuespec.definitions import RegExp
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
@@ -506,36 +507,49 @@ class AWSSpecialAgentValuespecBuilder:
         ]
 
 
-def _migrate_auth(value: object) -> dict[str, object]:
+def _migrate(value: object) -> dict[str, object]:
     """
     migrate to new auth config with explicit auth types
+    migrate key "services" to "regional_services" and add default for "import_tags"
     """
 
     assert isinstance(value, dict)
 
-    if "auth" in value:
-        return value
+    if "auth" not in value:
+        auth = {}
+        if "access_key_id" in value:
+            auth["access_key_id"] = value["access_key_id"]
+            auth["secret_access_key"] = value["secret_access_key"]
 
-    auth = {}
-    if "access_key_id" in value:
-        auth["access_key_id"] = value["access_key_id"]
-        auth["secret_access_key"] = value["secret_access_key"]
+            # values required for migration 2.3->2.4 reuse for 2.5
+            del value["access_key_id"]
+            del value["secret_access_key"]
 
-        # values required for migration 2.3->2.4 reuse for 2.5
-        del value["access_key_id"]
-        del value["secret_access_key"]
+        if "access" not in value or "role_arn_id" not in value["access"]:
+            value["auth"] = ("access_key", auth)
+        else:
+            auth["role_arn_id"] = value["access"]["role_arn_id"][0]
 
-    if "access" not in value or "role_arn_id" not in value["access"]:
-        value["auth"] = ("access_key", auth)
-    else:
-        auth["role_arn_id"] = value["access"]["role_arn_id"][0]
+            if value["access"]["role_arn_id"][1]:
+                auth["external_id"] = value["access"]["role_arn_id"][1]
 
-        if value["access"]["role_arn_id"][1]:
-            auth["external_id"] = value["access"]["role_arn_id"][1]
+            # values required for migration 2.3->2.4 reuse for 2.5
+            del value["access"]["role_arn_id"]
+            value["auth"] = ("access_key_sts", auth)
 
-        # values required for migration 2.3->2.4 reuse for 2.5
-        del value["access"]["role_arn_id"]
-        value["auth"] = ("access_key_sts", auth)
+    # "services" was renamed to "regional_services" as a surrogate migration in 2.4.0 to add the
+    # optional parameter "import_tags". By default, "import_tags" is unselected (set to None) so no
+    # tags are imported with a new default config, while in earlier configs without this parameter
+    # all tags were imported at all times.
+    # So to detect old configs we check for the old key "services" to set "import_tags" to import
+    # all tags ("all_tags"). Checking for a missing param "import_tags" does not work as that's the
+    # parameter's default.
+    # Note that if "regional_services" is renamed back to "services" in the future, this needs to
+    # be done for both the rule and the quick setup code.
+    if "services" in value:
+        assert "regional_services" not in value
+        value["regional_services"] = value.pop("services")
+        value["import_tags"] = ("all_tags", None)
 
     return value
 
@@ -554,6 +568,7 @@ def _valuespec_special_agents_aws() -> Migrate:
             optional_keys=[
                 "overall_tags",
                 "proxy_details",
+                "import_tags",
             ],
             elements=[
                 (
@@ -758,7 +773,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                     ),
                 ),
                 (
-                    "services",
+                    "regional_services",
                     MigrateNotUpdated(
                         valuespec=Dictionary(
                             title=_("Services per region to monitor"),
@@ -777,9 +792,42 @@ def _valuespec_special_agents_aws() -> Migrate:
                     "overall_tags",
                     _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
                 ),
+                (
+                    "import_tags",
+                    CascadingDropdown(
+                        title=("Import tags as host labels"),
+                        choices=[
+                            (
+                                "all_tags",
+                                _("Import all valid tags"),
+                                FixedValue(None, totext=""),
+                            ),
+                            (
+                                "filter_tags",
+                                _("Filter valid tags by key pattern"),
+                                RegExp(
+                                    mode=RegExp.infix,
+                                    allow_empty=False,
+                                    size=50,
+                                ),
+                            ),
+                        ],
+                        orientation="horizontal",
+                        help=_(
+                            "Enable this option to import the AWS tags for EC2 and ELB instances "
+                            "as host labels for the respective piggyback hosts. The label syntax "
+                            "is 'cmk/aws/tag/{key}:{value}'.<br>Additionally, the piggyback hosts "
+                            "for EC2 instances are given the host label 'cmk/aws/ec2:instance', "
+                            "which is done independent of this option.<br>You can further restrict "
+                            "the imported tags by specifying a pattern which Checkmk searches for "
+                            "in the key of the AWS tag, or you can disable the import of AWS tags "
+                            "altogether."
+                        ),
+                    ),
+                ),
             ],
         ),
-        migrate=_migrate_auth,
+        migrate=_migrate,
     )
 
 

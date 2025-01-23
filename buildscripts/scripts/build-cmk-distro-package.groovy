@@ -13,6 +13,8 @@ def main() {
         "DEPENDENCY_PATH_HASHES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
+        // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -132,8 +134,14 @@ def main() {
                 );
             }
 
-            stage("Fetch agent binaries") {
+            smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
                 package_helper.provide_agent_updaters(version, edition, disable_cache);
+            }
+
+            smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
+                dir("${checkout_dir}") {
+                    sh("scripts/fake-artifacts");
+                }
             }
         }
     }

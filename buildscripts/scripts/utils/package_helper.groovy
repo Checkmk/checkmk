@@ -130,6 +130,8 @@ def provide_agent_updaters(version, edition, disable_cache) {
                 VERSION: version,
             ],
             dependency_paths: details.dependency_paths,
+            no_venv: true,          // run ci-artifacts call without venv
+            omit_build_venv: true,  // do not check or build a venv first
             dest: "${artifacts_base_dir}/${job_name}",
         );
         dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {

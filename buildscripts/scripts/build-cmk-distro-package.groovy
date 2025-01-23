@@ -103,9 +103,33 @@ def main() {
             dir("${checkout_dir}") {
                 sh("make cmk-frontend frontend-vue");
             }
+        }
 
-            dir("${checkout_dir}") {
-                sh("make .venv");
+        def image_name = "minimal-alpine-checkmk-ci-${safe_branch_name}:latest";
+        def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+        def docker_build_args = "-f ${dockerfile} .";
+        def minimal_image = docker.build(image_name, docker_build_args);
+
+        minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+            stage("Build BOM") {
+                upstream_build(
+                    relative_job_name: "${package_helper.branch_base_folder(with_testing_prefix=false)}/builders/build-cmk-bom",
+                    build_params: [
+                        /// currently CUSTOM_GIT_REF must match, but in the future
+                        /// we should define dependency paths for build-cmk-distro-package
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: version,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                        DISABLE_CACHE: disable_cache,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    no_venv: true,          // run ci-artifacts call without venv
+                    omit_build_venv: true,  // do not check or build a venv first
+                    dest: "/checkmk/",
+                );
             }
 
             stage("Fetch agent binaries") {
@@ -189,7 +213,7 @@ def main() {
             );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb,*.rpm,*.cma",
+                    artifacts: "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*, omd/bill-of-materials.json",
                     fingerprint: true,
                 );
             }

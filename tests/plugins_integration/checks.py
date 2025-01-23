@@ -11,7 +11,6 @@ import subprocess
 import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -24,16 +23,6 @@ from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 dump_path_site = Path("var/check_mk/dumps")
-
-
-@dataclass
-class SkippedDumps:
-    SKIPPED_DUMPS: list[str] = []
-
-
-@dataclass
-class SkippedChecks:
-    SKIPPED_CHECKS: list[str] = []
 
 
 class CheckModes(IntEnum):
@@ -59,6 +48,9 @@ class CheckConfig:
         check_names: list[str] | None = None,
         api_services_cols: list[str] | None = None,
     ) -> None:
+        self.skipped_dumps: list[str] = []
+        self.skipped_checks: list[str] = []
+
         self.mode = mode
         self.skip_cleanup = skip_cleanup
         self.data_dir_integration = data_dir_integration or (
@@ -153,7 +145,7 @@ def get_host_names(
         for dump_file_name in [
             _
             for _ in os.listdir(dump_dir)
-            if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+            if (not _.startswith(".") and _ not in config.skipped_dumps)
             and os.path.isfile(os.path.join(dump_dir, _))
         ]:
             try:
@@ -277,7 +269,7 @@ def process_check_output(
     output_dir: Path,
 ) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
-    if host_name in SkippedDumps.SKIPPED_DUMPS:
+    if host_name in config.skipped_dumps:
         pytest.skip(reason=f"{host_name} dumps currently skipped.")
 
     logger.info('> Processing agent host "%s"...', host_name)
@@ -295,7 +287,7 @@ def process_check_output(
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
     for check_id, results in check_results.items():
-        if check_id in SkippedChecks.SKIPPED_CHECKS:
+        if check_id in (config.skipped_checks or []):
             logger.info("Check %s currently skipped", check_id)
             passed = True
             continue

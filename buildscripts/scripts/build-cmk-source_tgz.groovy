@@ -59,7 +59,7 @@ def main() {
 
     minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
         smart_stage(name: "Provide agent binaries") {
-            package_helper.provide_agent_updaters(version, edition, disable_cache);
+            package_helper.provide_agent_binaries(version, edition, disable_cache);
         }
     }
 

@@ -42,8 +42,7 @@ def _forwarding_options_to_args(forward: ForwardingOptions) -> Iterable[str]:
         case "ec", (_, str(value)):
             yield f"--forward-method={value}"
         case "syslog", SyslogForwarding() as sf:
-            # This is what was done earlier. I don't see how this is supposed to work. TBD: Fix or remove.
-            yield f"--forward-method={(sf.protocol, sf.address, sf.port)!r}"
+            yield f"--forward-method={sf.protocol},{sf.address},{sf.port}"
 
     if forward.match_subject:
         yield f"--match-subject={forward.match_subject}"

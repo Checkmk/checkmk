@@ -196,9 +196,7 @@ HOST_CONFIG = HostConfig(name="myhost", ipv4_config=IPv4Config(address="0.0.0.1"
                 "--fetch-password-reference",
                 Secret(0),
                 "--forward-ec",
-                # I don't see how this is supposed to work.
-                # The active check will try to open a TCP (!) connection to "'localhost'" on port "'123)'" AFAICT.
-                "--forward-method=('udp', 'localhost', 123)",
+                "--forward-method=udp,localhost,123",
             ),
             id="syslog forwarding",
         ),

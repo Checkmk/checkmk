@@ -911,7 +911,7 @@ class TextInput(ValueSpec[str]):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -947,8 +947,8 @@ class TextInput(ValueSpec[str]):
         self._minlen = minlen
         self._maxlen = maxlen
         self._oninput = oninput
-        self._autocomplete = autocomplete
         self._placeholder = placeholder
+        self._autocomplete = autocomplete
 
     def allow_empty(self) -> bool:
         return self._allow_empty
@@ -968,7 +968,7 @@ class TextInput(ValueSpec[str]):
             read_only=self._read_only,
             cssclass=self._cssclass,
             type_="text",
-            autocomplete="off" if not self._autocomplete else None,
+            autocomplete=self._autocomplete,
             oninput=self._oninput if self._oninput else None,
             placeholder=self._placeholder,
         )
@@ -1069,7 +1069,7 @@ def ID(  # pylint: disable=redefined-builtin
     minlen: int | None = None,
     maxlen: int | None = None,
     oninput: str | None = None,
-    autocomplete: bool = True,
+    autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
@@ -1119,7 +1119,7 @@ def UserID(  # pylint: disable=redefined-builtin
     minlen: int | None = None,
     maxlen: int | None = None,
     oninput: str | None = None,
-    autocomplete: bool = True,
+    autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
@@ -1191,7 +1191,7 @@ class RegExp(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # From ValueSpec
         title: str | None = None,
@@ -1338,7 +1338,7 @@ class EmailAddress(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1572,7 +1572,7 @@ class HostAddress(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1724,7 +1724,7 @@ class Url(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -1899,7 +1899,7 @@ class TextAreaUnicode(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1993,7 +1993,7 @@ class Filename(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -6696,7 +6696,7 @@ class LDAPDistinguishedName(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -6779,7 +6779,7 @@ class Password(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = False,  # NOTE: Different!
+        autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -6848,7 +6848,7 @@ class Password(TextInput):
             varprefix,
             default_value=default_value,
             size=self._size,
-            autocomplete="new-password" if self._autocomplete is False else None,
+            autocomplete=self._autocomplete,
             placeholder="******" if value else "",
         )
         if self.password_meter:
@@ -6908,7 +6908,7 @@ class PasswordSpec(Password):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = False,  # NOTE: Different!
+        autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -8581,6 +8581,7 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
             "description",
             TextInput(
                 title=_("Description"),
+                autocomplete="one-time-code",
                 help=_(
                     "This field is intended for a brief description of the rule's purpose. "
                     "This description will be visible on the overview page of this rule set."
@@ -8649,6 +8650,7 @@ def DocumentationURL() -> TextInput:
 
     return TextInput(
         title=_("Documentation URL"),
+        autocomplete="one-time-code",
         help=HTML.without_escaping(
             _(
                 "In this field you can add a URL linking to a page with related, "

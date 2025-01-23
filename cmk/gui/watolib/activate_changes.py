@@ -1761,12 +1761,7 @@ class ActivateChangesManager(ActivateChanges):
     def _start_activation(self) -> None:
         self._log_activation()
         assert self._activation_id is not None
-        job = ActivateChangesSchedulerBackgroundJob(
-            self._activation_id,
-            self._site_snapshot_settings,
-            self._prevent_activate,
-            self._source,
-        )
+        job = ActivateChangesSchedulerBackgroundJob(self._activation_id)
         job.start(
             JobTarget(
                 callable=activate_changes_scheduler_job_entry_point,
@@ -2409,12 +2404,9 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
 def activate_changes_scheduler_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ActivateChangesSchedulerJobArgs
 ) -> None:
-    ActivateChangesSchedulerBackgroundJob(
-        args.activation_id,
-        args.site_snapshot_settings,
-        args.prevent_activate,
-        args.source,
-    ).schedule_sites(job_interface)
+    ActivateChangesSchedulerBackgroundJob(args.activation_id).schedule_sites(
+        job_interface, args.site_snapshot_settings, args.prevent_activate, args.source
+    )
 
 
 class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
@@ -2426,38 +2418,35 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     def gui_title(cls):
         return _("Activate Changes Scheduler")
 
-    def __init__(
+    def __init__(self, activation_id: str) -> None:
+        super().__init__(f"{self.job_prefix}-{activation_id}")
+        self._activation_id = activation_id
+
+    def schedule_sites(
         self,
-        activation_id: str,
+        job_interface: BackgroundProcessInterface,
         site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
         prevent_activate: bool,
         source: ActivationSource,
     ) -> None:
-        super().__init__(f"{self.job_prefix}-{activation_id}")
-        self._activation_id = activation_id
-        self._site_snapshot_settings = site_snapshot_settings
-        self._prevent_activate = prevent_activate
-        self._source = source
-
-    def schedule_sites(self, job_interface: BackgroundProcessInterface) -> None:
         with job_interface.gui_context():
             job_interface.send_progress_update(
                 _("Activate Changes Scheduler started"), with_timestamp=True
             )
 
             job_interface.send_progress_update(
-                _("Going to update %d sites") % len(self._site_snapshot_settings),
+                _("Going to update %d sites") % len(site_snapshot_settings),
                 with_timestamp=True,
             )
 
             sync_and_activate(
                 self._activation_id,
-                self._site_snapshot_settings,
+                site_snapshot_settings,
                 activation_features_registry[
                     str(version.edition(paths.omd_root))
                 ].sync_file_filter_func,
-                self._source,
-                self._prevent_activate,
+                source,
+                prevent_activate,
             )
             job_interface.send_result_message(_("Activate changes finished"))
 

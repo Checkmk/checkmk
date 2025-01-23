@@ -25,14 +25,13 @@ use mk_sql::ms_sql::instance::{create_odbc_client, obtain_properties};
 
 use mk_sql::setup::Env;
 
-use common::tools::{self, SqlDbEndpoint};
+use common::tools::{self, SqlDbEndpoint, TempDir};
 use mk_sql::config::{
     ms_sql::{Config, Endpoint},
     section::names,
     section::SectionBuilder,
     CheckConfig,
 };
-use tempfile::TempDir;
 
 fn expected_instances() -> HashSet<InstanceName> {
     const EXPECTED_INSTANCES: [&str; 3] = ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"];

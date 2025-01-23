@@ -11,8 +11,9 @@ use mk_sql::ms_sql::query;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Output;
+use tempfile::Builder;
 use tempfile::NamedTempFile;
-use tempfile::{Builder, TempDir};
+pub use tempfile::TempDir;
 use yaml_rust2::YamlLoader;
 
 pub fn run_bin() -> Command {

@@ -48,6 +48,7 @@ class JobExecutor(Protocol):
 
 
 class ThreadedJobExecutor(JobExecutor):
+    job_initializiation_lock = threading.Lock()
     running_jobs: dict[str, RunningJob] = {}
 
     def __init__(self, logger: logging.Logger) -> None:

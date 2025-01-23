@@ -57,23 +57,27 @@ repos:
             language: script
             entry: scripts/check-cmk-namespace
             types: [file, python]
+            require_serial: true
           - id: remove-stale-imports
             name: Remove stale imports
             language: script
             entry: scripts/run-autoflake
             types: [file, python]
+            require_serial: true
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high
             entry: scripts/run-uvenv bandit --config bandit.yaml -ll
             language: script
             types: [file, python]
+            require_serial: true
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules
             language: script
             files: omd/packages/python3?-modules
             types: [file]
+            require_serial: true
           - id: sphinx
             name: Sphinx Documentation
             entry: make -C doc/documentation html
@@ -81,38 +85,47 @@ repos:
             pass_filenames: false
             language: script
             types: [file]
+            require_serial: true
           - id: doctest
             name: Doctests
             entry: scripts/run-doctests
             language: script
             types: [file, python]
             verbose: true
+            require_serial: true
           - id: mypy
             name: Check types with mypy
             entry: scripts/run-mypy
             language: script
             types: [file, python]
+            require_serial: true
           - id: licence
             name: Check licence headers
             entry: scripts/check-licence
             language: script
             types: [file, python]
+            require_serial: true
           - id: absolute-imports
             name: Check absolute imports
             entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
+<<<<<<< HEAD   (4d979c Fix 'reset scheduling' during 'cmk-update-config')
           - id: flake8
             name: Check flake8
             entry: scripts/check-flake8
             language: script
             types: [file, python]
             verbose: true
+=======
+            require_serial: true
+>>>>>>> CHANGE (db0cd4 require_serial: true on pre-commit-hooks)
           - id: unittest
             name: unittests
             entry: scripts/run-unittests
             language: script
             types: [file, python]
+            require_serial: true
             verbose: true
           - id: buildifier_format
             name: Format bazel files
@@ -120,6 +133,7 @@ repos:
             language: script
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
+            require_serial: true
           - id: buildifier_lint
             name: Lint bazel files
             entry: scripts/run-buildifier
@@ -127,6 +141,7 @@ repos:
             language: script
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
+            require_serial: true
           - id: requirements-locking
             name: requirements locking
             entry: bazel test //:requirements_test
@@ -134,3 +149,4 @@ repos:
             language: system
             files: ^requirements.*\.txt$
             verbose: true
+            require_serial: true

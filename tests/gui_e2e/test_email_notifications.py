@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
-
-from tests.testlib.emails import create_notification_user, EmailManager
+from tests.testlib.emails import EmailManager
 from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.email import EmailPage
@@ -23,11 +20,6 @@ from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(name="notification_user", scope="function")
-def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
-    yield from create_notification_user(test_site)
 
 
 def test_filesystem_email_notifications(

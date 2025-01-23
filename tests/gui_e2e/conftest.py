@@ -26,6 +26,7 @@ from tests.testlib.playwright.plugin import (
 )
 from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.repo import repo_path
@@ -35,6 +36,10 @@ from tests.testlib.utils import run
 from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
+
+
+# loading pom fixtures
+setup_fixtures = [notification_user]
 
 
 @pytest.fixture(name="test_site", scope="session")

@@ -10,13 +10,23 @@ from urllib.parse import quote_plus
 from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.playwright.helpers import DropdownListNameToID
-from tests.testlib.playwright.pom.page import CmkPage
 from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
+from tests.testlib.playwright.pom.setup.quick_setup import QuickSetupPage
 
 logger = logging.getLogger(__name__)
 
 
-class BaseNotificationPage(CmkPage):
+STAGE_TRIGGERING_EVENTS = "Triggering Content"
+STAGE_FILTER_HOSTS_SERVICES = "Filter for hosts/services"
+STAGE_NOTIFICATION_METHOD = "Notification method (plug-in)"
+STAGE_RECIPIENT = "Recipient"
+STAGE_SENDING_CONDITIONS = "Sending conditions"
+STAGE_GENERAL_PROPERTIES = "General properties"
+
+HOST_FILTERS = "Host filters"
+
+
+class BaseNotificationPage(QuickSetupPage):
     """Base class for Notification Quick Setup pages."""
 
     page_title = ""
@@ -37,10 +47,6 @@ class BaseNotificationPage(CmkPage):
         return self.main_area.locator(
             f'table[class*="form-dictionary"] >> tr:has(span:text-is("{row_name}"))'
         )
-
-    @property
-    def overview_mode_button(self) -> Locator:
-        return self.main_area.locator().get_by_label("Toggle Overview mode")
 
     # stage 1
     @property
@@ -73,6 +79,18 @@ class BaseNotificationPage(CmkPage):
 
     # stage 2
     @property
+    def _host_filters_button(self) -> Locator:
+        return self.main_area.locator().get_by_role("button", name="Host filters")
+
+    @property
+    def hosts_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("checkbox", name="Hosts", exact=True)
+
+    @property
+    def hosts_textfield(self) -> Locator:
+        return self.main_area.locator().get_by_label("Hosts").locator("input")
+
+    @property
     def _service_filters_button(self) -> Locator:
         return self.main_area.locator().get_by_role("button", name="Service filters")
 
@@ -99,6 +117,9 @@ class BaseNotificationPage(CmkPage):
     def notification_method_option(self, option: str) -> Locator:
         return self.stage_three_locator.get_by_role("option", name=option)
 
+    def create_parameter_button(self) -> Locator:
+        return self.stage_three_locator.get_by_role("button", name="Create")
+
     # stage 4
     @property
     def _stage_four_locator(self) -> Locator:
@@ -112,19 +133,19 @@ class BaseNotificationPage(CmkPage):
     def _recipients_rows(self) -> Locator:
         return self._stage_four_locator.get_by_label("Select recipient").locator("table > tr")
 
-    def _delete_recipient_button(self, index: int = 0) -> Locator:
+    def delete_recipient_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button").nth(0)
 
-    def _select_recipient_dropdown(self, index: int = 0) -> Locator:
+    def select_recipient_dropdown(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("combobox").nth(0)
 
-    def _select_recipient_option(self, index: int, option: str) -> Locator:
+    def select_recipient_option(self, index: int, option: str) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("option", name=option)
 
-    def _add_new_entry_button(self, index: int = 0) -> Locator:
+    def add_new_entry_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button", name="Add new entry")
 
-    def _recipient_first_dropdown(self, index: int = 0) -> Locator:
+    def recipient_first_dropdown(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("combobox").nth(1)
 
     @property
@@ -161,6 +182,10 @@ class BaseNotificationPage(CmkPage):
             self._service_event_second_dropdown(index).click()
             self._service_event_row_dropdown_option(second_option, index).click()
 
+    def expand_host_filters(self) -> None:
+        if self.hosts_checkbox.is_hidden():
+            self._host_filters_button.click()
+
     def expand_service_filters(self) -> None:
         if self.services_checkbox.is_hidden():
             self._service_filters_button.click()
@@ -174,23 +199,28 @@ class BaseNotificationPage(CmkPage):
 
     def delete_all_recipients(self) -> None:
         for _ in self._recipients_rows.all():
-            self._delete_recipient_button(0).click()
+            self.delete_recipient_button(0).click()
+
+    def set_recipient(self, index: int, recipient_option_name: str) -> None:
+        self.select_recipient_dropdown(index).click()
+        self.select_recipient_option(index, recipient_option_name).click()
 
     def add_recipient(
         self, index: int, recipient_option_name: str, recipient_value: str | None = None
     ) -> None:
         self._add_recipient_button.click()
-        self._select_recipient_dropdown(index).click()
-        self._select_recipient_option(index, recipient_option_name).click()
+        self.select_recipient_dropdown(index).click()
+        self.select_recipient_option(index, recipient_option_name).click()
         if recipient_value:
-            self._add_new_entry_button(index).click()
-            self._recipient_first_dropdown(index).click()
-            self._select_recipient_option(index, recipient_value).click()
+            self.add_new_entry_button(index).click()
+            self.recipient_first_dropdown(index).click()
+            self.select_recipient_option(index, recipient_value).click()
 
     def check_disable_rule(self, disable: bool) -> None:
         if self._disable_rule_button.is_checked() != disable:
             self._disable_rule_button.click()
 
+    # This should be part of the test itself, not of the BaseNotificationPage
     def modify_notification_rule(self, user: str, service: str, description: str) -> None:
         """Modify the default notification rule.
 

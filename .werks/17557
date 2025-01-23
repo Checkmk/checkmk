@@ -1,0 +1,9 @@
+Title: apc_ats_output, apc_ats_status: Support APC AP4423A
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1737621011
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+

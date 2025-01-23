@@ -111,9 +111,9 @@ def test_host_dashboard(
     for dashlet_title in hosts_dashboard_page.chart_dashlets:
         if dashlet_title in not_empty_dashboards:
             hosts_dashboard_page.check_hexagon_chart_is_not_empty(dashlet_title)
-            assert (
-                int(hosts_dashboard_page.total_count(dashlet_title).inner_text()) > 0
-            ), f"Total count in dashlet '{dashlet_title}' is 0"
+            assert int(hosts_dashboard_page.total_count(dashlet_title).inner_text()) > 0, (
+                f"Total count in dashlet '{dashlet_title}' is 0"
+            )
 
 
 @pytest.mark.parametrize(

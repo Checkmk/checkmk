@@ -21,7 +21,7 @@ MAPPING = {
 
 def __parse_docker_api(data, docker_key_name):
     for entry in data[docker_key_name] or ():
-        yield f'{entry["major"]}:{entry["minor"]}', docker_key_name, entry["op"], entry["value"]
+        yield f"{entry['major']}:{entry['minor']}", docker_key_name, entry["op"], entry["value"]
 
 
 def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Section:

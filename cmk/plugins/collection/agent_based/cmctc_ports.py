@@ -115,7 +115,7 @@ def check_cmctc_ports(item: str, section: Section) -> CheckResult:
     }
 
     state = status_map.get(port["status"], State.UNKNOWN)
-    infotext = ("Status: %(status)s, " "Device type: %(type)s, " "Serial number: %(serial)s") % port
+    infotext = ("Status: %(status)s, Device type: %(type)s, Serial number: %(serial)s") % port
 
     yield Result(state=state, summary=infotext)
 

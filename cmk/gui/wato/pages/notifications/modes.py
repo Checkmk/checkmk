@@ -3470,7 +3470,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         notifications_url = self.breadcrumb()[-3].url
 
         def build_href(query: str) -> str:
-            return f"{notifications_url}&{urlencode({"search": query})}"
+            return f"{notifications_url}&{urlencode({'search': query})}"
 
         links_to_related_rules = HTML.with_escaping("").join(
             html.render_li(html.render_a(rule["description"], href=build_href(rule["description"])))

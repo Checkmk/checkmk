@@ -65,8 +65,7 @@ def check_redfish_physicaldrives(item: str, section: RedfishAPIData) -> CheckRes
     if data.get("MediaType") == "SSD":
         if data.get("PredictedMediaLifeLeftPercent"):
             disc_msg = (
-                f"{disc_msg}, Media Life Left: "
-                f"{int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
+                f"{disc_msg}, Media Life Left: {int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
             )
         elif data.get("SSDEnduranceUtilizationPercentage"):
             disc_msg = (

@@ -58,10 +58,7 @@ def check_norris(item: str, params: Mapping[str, object], section: Section) -> C
         state=State.UNKNOWN,
         summary="Check not implemented",
         details=(
-            "Check not implemented.\n"
-            f"item: {item!r}\n"
-            f"params: {params!r}\n"
-            f"section: {section!r}\n"
+            f"Check not implemented.\nitem: {item!r}\nparams: {params!r}\nsection: {section!r}\n"
         ),
     )
 

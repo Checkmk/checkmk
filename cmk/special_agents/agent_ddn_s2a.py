@@ -34,7 +34,7 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
-        description="A datasource program for Data Direct" "Networks Silicon Storage Appliances"
+        description="A datasource program for Data DirectNetworks Silicon Storage Appliances"
     )
 
     parser.add_argument("ip_address")

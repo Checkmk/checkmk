@@ -65,8 +65,7 @@ def test_agent_plugin_syntax_compatibility(
 
     if not plugin_path.endswith(".py2") and python_version in ["2.5", "2.6"]:
         pytest.skip(
-            "Do not test .py with Python 2 "
-            "(Plugins are needed for compatibilit with 2.5 and newer)"
+            "Do not test .py with Python 2 (Plugins are needed for compatibilit with 2.5 and newer)"
         )
 
     _exit_code, output = python_container.exec_run(

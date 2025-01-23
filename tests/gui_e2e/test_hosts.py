@@ -126,9 +126,9 @@ def test_filter_hosts_with_host_labels(
     host_search_page.check_label_filter_applied("is", expected_label)
 
     # TODO: add validation corresponding to CMK-18579, if required.
-    assert host_search_page.found_hosts.count() == len(
-        expected_hosts_list
-    ), "Unexpected number of hosts after applying label filter."
+    assert host_search_page.found_hosts.count() == len(expected_hosts_list), (
+        "Unexpected number of hosts after applying label filter."
+    )
     assert sorted(host_search_page.found_hosts.all_inner_texts()) == sorted(
         [host.name for host in expected_hosts_list]
     ), "Unexpected host names after applying label filter."

@@ -59,8 +59,7 @@ def _get_custom_query(
                 options.append("--%s-limit" % prefix)
                 options.append("0")
             case (
-                "average"
-                | "sum",
+                "average" | "sum",
                 {"field_name": field, "limit": limit},
             ):
                 options.append(values["result"][0])

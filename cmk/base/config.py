@@ -1752,9 +1752,9 @@ def make_hosts_config() -> Hosts:
     )
 
 
-def _make_clusters_nodes_maps() -> (
-    tuple[Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]]
-):
+def _make_clusters_nodes_maps() -> tuple[
+    Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]
+]:
     clusters_of_cache: dict[HostName, list[HostName]] = {}
     nodes_cache: dict[HostName, Sequence[HostName]] = {}
     for cluster, hosts in clusters.items():
@@ -2876,7 +2876,7 @@ class ConfigCache:
         # was the internal "site" tag that is created by HostAttributeSite.
         tags = {v for k, v in tag_groups.items() if k != TagGroupID("site")}
         tags.add(TagID(host_path))
-        tags.add(TagID(f'site:{tag_groups[TagGroupID("site")]}'))
+        tags.add(TagID(f"site:{tag_groups[TagGroupID('site')]}"))
         return tuple(tags)
 
     @staticmethod
@@ -3752,7 +3752,7 @@ class ConfigCache:
             if host_name in self.hosts_config.clusters:
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
-                attrs.setdefault("alias", f'cluster of {", ".join(parents_list)}')
+                attrs.setdefault("alias", f"cluster of {', '.join(parents_list)}")
                 attrs.update(
                     self.get_cluster_attributes(
                         host_name,

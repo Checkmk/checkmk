@@ -69,17 +69,15 @@ from cmk.graphing.v1 import translations as translations_api
 #   '----------------------------------------------------------------------'
 
 
-def _load_graphing_plugins() -> (
-    DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
-    ]
-):
+def _load_graphing_plugins() -> DiscoveredPlugins[
+    metrics_api.Metric
+    | perfometers_api.Perfometer
+    | perfometers_api.Bidirectional
+    | perfometers_api.Stacked
+    | graphs_api.Graph
+    | graphs_api.Bidirectional
+    | translations_api.Translation
+]:
     discovered_plugins: DiscoveredPlugins[
         metrics_api.Metric
         | perfometers_api.Perfometer

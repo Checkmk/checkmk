@@ -269,7 +269,7 @@ def export_rule_pack(rule_pack: ECRulePack, pretty_print: bool, path: Path) -> N
     output = f"""# Written by WATO
 # encoding: utf-8
 
-mkp_rule_packs['{rule_pack['id']}'] = \\
+mkp_rule_packs['{rule_pack["id"]}'] = \\
 {repr_}
 """
     path.mkdir(parents=True, exist_ok=True)

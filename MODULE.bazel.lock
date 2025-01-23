@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "3e058482c8e08af4642defbff3f9b93d90364a76b57a9a9483cf1467f13be715",
+  "moduleFileHash": "229dca338410a194bf66cdb47080847ab10dd26bfc1ff3e8b666df9de4a11a60",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -66,7 +66,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 99,
+                "line": 106,
                 "column": 25
               }
             },
@@ -100,7 +100,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 122,
+                "line": 129,
                 "column": 13
               }
             },
@@ -115,7 +115,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 148,
+                "line": 155,
                 "column": 10
               }
             },
@@ -134,7 +134,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 157,
+                "line": 164,
                 "column": 13
               }
             },
@@ -152,7 +152,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 174,
+                "line": 181,
                 "column": 10
               }
             },
@@ -169,7 +169,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 186,
+                "line": 193,
                 "column": 10
               }
             }
@@ -212,7 +212,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 70,
+            "line": 77,
             "column": 20
           },
           "imports": {
@@ -235,7 +235,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 71,
+                "line": 78,
                 "column": 10
               }
             }
@@ -249,7 +249,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 85,
+            "line": 92,
             "column": 22
           },
           "imports": {
@@ -267,7 +267,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 86,
+                "line": 93,
                 "column": 19
               }
             }
@@ -285,7 +285,7 @@
         "rules_uv": "rules_uv@0.44.0",
         "rules_mypy": "rules_mypy@_",
         "aspect_rules_py": "aspect_rules_py@_",
-        "aspect_rules_lint": "aspect_rules_lint@1.0.8",
+        "aspect_rules_lint": "aspect_rules_lint@_",
         "com_google_protobuf": "protobuf@28.3",
         "rules_proto_grpc": "rules_proto_grpc@5.0.1",
         "bazel_skylib": "bazel_skylib@1.7.1",
@@ -1094,10 +1094,10 @@
         "local_config_platform": "local_config_platform@_"
       }
     },
-    "aspect_rules_lint@1.0.8": {
+    "aspect_rules_lint@_": {
       "name": "aspect_rules_lint",
-      "version": "1.0.8",
-      "key": "aspect_rules_lint@1.0.8",
+      "version": "0.0.0",
+      "key": "aspect_rules_lint@_",
       "repoName": "aspect_rules_lint",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
@@ -1105,9 +1105,9 @@
         {
           "extensionBzlFile": "@rules_multitool//multitool:extension.bzl",
           "extensionName": "multitool",
-          "usingModule": "aspect_rules_lint@1.0.8",
+          "usingModule": "aspect_rules_lint@_",
           "location": {
-            "file": "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.8/MODULE.bazel",
+            "file": "@@aspect_rules_lint~//:MODULE.bazel",
             "line": 27,
             "column": 26
           },
@@ -1123,7 +1123,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.8/MODULE.bazel",
+                "file": "@@aspect_rules_lint~//:MODULE.bazel",
                 "line": 28,
                 "column": 14
               }
@@ -1135,7 +1135,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.8/MODULE.bazel",
+                "file": "@@aspect_rules_lint~//:MODULE.bazel",
                 "line": 29,
                 "column": 14
               }
@@ -1157,21 +1157,6 @@
         "toolchains_protoc": "toolchains_protoc@0.3.1",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/aspect-build/rules_lint/releases/download/v1.0.8/rules_lint-v1.0.8.tar.gz"
-          ],
-          "integrity": "sha256-k+1wOe60wdxMWh/k7w0LSJ6qRrqpVrDP7D9BeHjC1yo=",
-          "strip_prefix": "rules_lint-1.0.8",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.8/patches/module_dot_bazel_version.patch": "sha256-3ybIpx3PsRbSIuuXY3IJYg7Gqd4Q8GTztmSkMFyQEKs="
-          },
-          "remote_patch_strip": 1
-        }
       }
     },
     "protobuf@28.3": {
@@ -2165,7 +2150,7 @@
       ],
       "deps": {
         "aspect_bazel_lib": "aspect_bazel_lib@2.7.7",
-        "aspect_rules_lint": "aspect_rules_lint@1.0.8",
+        "aspect_rules_lint": "aspect_rules_lint@_",
         "bazel_features": "bazel_features@1.9.1",
         "bazel_skylib": "bazel_skylib@1.7.1",
         "rules_nodejs": "rules_nodejs@5.8.2",
@@ -6864,7 +6849,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "b2eba4091ef5c550fcb3443a24a4756897794fb549920b482e394051c7f52aa3",
+          "@@//requirements_all_lock.txt": "a8514164609222effd287d6f09a231c92a59241380f8f9576747cd0d28c751b1",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -10349,7 +10334,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "ruff==0.8.3     --hash=sha256:01b14b2f72a37390c1b13477c1c02d53184f728be2f3ffc3ace5b44e9e87b90d     --hash=sha256:19048f2f878f3ee4583fc6cb23fb636e48c2635e30fb2022b3a1cd293402f964     --hash=sha256:1ae441ce4cf925b7f363d33cd6570c51435972d697e3e58928973994e56e1452     --hash=sha256:53babd6e63e31f4e96ec95ea0d962298f9f0d9cc5990a1bbb023a6baf2503a82     --hash=sha256:5be450bb18f23f0edc5a4e5585c17a56ba88920d598f04a06bd9fd76d324cb20     --hash=sha256:5e7558304353b84279042fc584a4f4cb8a07ae79b2bf3da1a7551d960b5626d3     --hash=sha256:6567be9fb62fbd7a099209257fef4ad2c3153b60579818b31a23c886ed4147ea     --hash=sha256:75fb782f4db39501210ac093c79c3de581d306624575eddd7e4e13747e61ba18     --hash=sha256:7f26bc76a133ecb09a38b7868737eded6941b70a6d34ef53a4027e83913b6502     --hash=sha256:8d5d273ffffff0acd3db5bf626d4b131aa5a5ada1276126231c4174543ce20d6     --hash=sha256:8faeae3827eaa77f5721f09b9472a18c749139c891dbc17f45e72d8f2ca1f8fc     --hash=sha256:9c0a60a825e3e177116c84009d5ebaa90cf40dfab56e1358d1df4e29a9a14b13     --hash=sha256:c356e770811858bd20832af696ff6c7e884701115094f427b64b25093d6d932d     --hash=sha256:d7c65bc0cadce32255e93c57d57ecc2cca23149edd52714c0c5d6fa11ec328cd     --hash=sha256:db503486e1cf074b9808403991663e4277f5c664d3fe237ee0d994d1305bb060     --hash=sha256:e4d66a21de39f15c9757d00c50c8cdd20ac84f55684ca56def7891a025d7e939     --hash=sha256:f7df94f57d7418fa7c3ffb650757e0c2b96cf2501a0b192c18e4fb5571dfada9     --hash=sha256:fe2756edf68ea79707c8d68b78ca9a58ed9af22e430430491ee03e718b5e4936"
+              "requirement": "ruff==0.9.1     --hash=sha256:186c2313de946f2c22bdf5954b8dd083e124bcfb685732cfb0beae0c47233d9b     --hash=sha256:1cd76c7f9c679e6e8f2af8f778367dca82b95009bc7b1a85a47f1521ae524fa7     --hash=sha256:2f312c86fb40c5c02b44a29a750ee3b21002bd813b5233facdaf63a51d9a85e1     --hash=sha256:342a824b46ddbcdddd3abfbb332fa7fcaac5488bf18073e841236aadf4ad5c19     --hash=sha256:39d0174ccc45c439093971cc06ed3ac4dc545f5e8bdacf9f067adf879544d969     --hash=sha256:3cae39ba5d137054b0e5b472aee3b78a7c884e61591b100aeb544bcd1fc38d4f     --hash=sha256:3f94942a3bb767675d9a051867c036655fe9f6c8a491539156a6f7e6b5f31831     --hash=sha256:46ebf5cc106cf7e7378ca3c28ce4293b61b449cd121b98699be727d40b79ba72     --hash=sha256:50c647ff96f4ba288db0ad87048257753733763b409b2faf2ea78b45c8bb7fcb     --hash=sha256:5dc40a378a0e21b4cfe2b8a0f1812a6572fc7b230ef12cd9fac9161aa91d807f     --hash=sha256:69572926c0f0c9912288915214ca9b2809525ea263603370b9e00bed2ba56dbd     --hash=sha256:728d791b769cc28c05f12c280f99e8896932e9833fef1dd8756a6af2261fd1ab     --hash=sha256:84330dda7abcc270e6055551aca93fdde1b0685fc4fd358f26410f9349cf1743     --hash=sha256:937267afce0c9170d6d29f01fcd1f4378172dec6760a9f4dface48cdabf9610a     --hash=sha256:ae017c3a29bee341ba584f3823f805abbe5fe9cd97f87ed07ecbf533c4c88366     --hash=sha256:beb3298604540c884d8b282fe7625651378e1986c25df51dec5b2f60cafc31ce     --hash=sha256:f0c8b149e9c7353cace7d698e1656ffcf1e36e50f8ea3b5d5f7f87ff9986a7ca     --hash=sha256:fd2b25ecaf907d6458fa842675382c8597b3c746a2dde6717fe3415425df0c17"
             }
           },
           "cmk_requirements_312_azure_core": {

@@ -8,4 +8,4 @@ import sys
 from cmk.gui import config, main_modules
 
 main_modules.load_plugins()
-sys.stdout.write(f"{config.get_default_config()["x"]}\n")
+sys.stdout.write(f"{config.get_default_config()['x']}\n")

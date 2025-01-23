@@ -2017,17 +2017,14 @@ class _MockService(NamedTuple):
 
 
 def test_make_discovery_diff() -> None:
-    assert (
-        _make_diff(
-            (HostLabel("foo", "bar"),),
-            (HostLabel("gee", "boo"),),
-            (DiscoveredItem(previous=_MockService(CheckPluginName("norris"), "chuck"), new=None),),  # type: ignore[arg-type]
-            (DiscoveredItem(previous=_MockService(CheckPluginName("chan"), None), new=None),),  # type: ignore[arg-type]
-        )
-        == (
-            "Removed host label: 'foo:bar'.\n"
-            "Added host label: 'gee:boo'.\n"
-            "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
-            "Added service: Check plug-in 'chan'."
-        )
+    assert _make_diff(
+        (HostLabel("foo", "bar"),),
+        (HostLabel("gee", "boo"),),
+        (DiscoveredItem(previous=_MockService(CheckPluginName("norris"), "chuck"), new=None),),  # type: ignore[arg-type]
+        (DiscoveredItem(previous=_MockService(CheckPluginName("chan"), None), new=None),),  # type: ignore[arg-type]
+    ) == (
+        "Removed host label: 'foo:bar'.\n"
+        "Added host label: 'gee:boo'.\n"
+        "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
+        "Added service: Check plug-in 'chan'."
     )

@@ -100,8 +100,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
         return Checkbox(
             title=_("Start during system boot"),
             help=_(
-                "Whether or not this site should be started during startup of "
-                "the Checkmk server."
+                "Whether or not this site should be started during startup of the Checkmk server."
             ),
         )
 

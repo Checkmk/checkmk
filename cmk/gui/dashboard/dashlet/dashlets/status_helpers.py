@@ -46,7 +46,7 @@ def _table_query(
 ) -> tuple[list[ColumnName], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(infos, context)
 
-    query = f"GET {table}\n" "Columns: %(cols)s\n" "%(filter)s" % {
+    query = f"GET {table}\nColumns: %(cols)s\n%(filter)s" % {
         "cols": " ".join(columns),
         "filter": filter_headers,
     }

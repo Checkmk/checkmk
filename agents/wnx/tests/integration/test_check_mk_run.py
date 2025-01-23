@@ -77,9 +77,9 @@ def test_check_mk_base(
     assert sections[0] == "<<<check_mk>>>"
     assert sections[1] == "<<<cmk_agent_ctl_status:sep(0)>>>"
     assert sections.count("<<<>>>") == 2
-    assert _INTERNAL_SECTIONS.issubset(
-        set(sections)
-    ), f"Missing sections: {_INTERNAL_SECTIONS.difference(set(sections))}"
+    assert _INTERNAL_SECTIONS.issubset(set(sections)), (
+        f"Missing sections: {_INTERNAL_SECTIONS.difference(set(sections))}"
+    )
     assert sections[-1] == "<<<systemtime>>>"
     assert len(sections) == SECTION_COUNT
 

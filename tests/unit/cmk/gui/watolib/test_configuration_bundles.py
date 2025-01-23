@@ -158,9 +158,9 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     delete_config_bundle(bundle_id)
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
-    assert (
-        len(load_passwords()) == before_create_password_count
-    ), "Expected created passwords to be deleted"
+    assert len(load_passwords()) == before_create_password_count, (
+        "Expected created passwords to be deleted"
+    )
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")

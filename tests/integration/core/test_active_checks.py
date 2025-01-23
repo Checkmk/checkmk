@@ -140,9 +140,9 @@ def test_active_check_macros(site: Site) -> None:
                     splitted_output = plugin_output.split(" ")
                     plugin_output = splitted_output[0] + " " + " ".join(sorted(splitted_output[1:]))
 
-            assert (
-                expected_output == plugin_output
-            ), f"Macro {var} has wrong value ({plugin_output!r} instead of {expected_output!r})"
+            assert expected_output == plugin_output, (
+                f"Macro {var} has wrong value ({plugin_output!r} instead of {expected_output!r})"
+            )
 
     finally:
         for rule_id in rule_ids:

@@ -225,15 +225,15 @@ def _get_connector(context: PluginNotificationContext) -> Connector:
 def _get_alias(context: PluginNotificationContext) -> str:
     if context["WHAT"] == "HOST":
         return (
-            f'HOST_PROBLEM_ID: {context["LASTHOSTPROBLEMID"]}'
+            f"HOST_PROBLEM_ID: {context['LASTHOSTPROBLEMID']}"
             if context["HOSTPROBLEMID"] == "0"
-            else f'HOST_PROBLEM_ID: {context["HOSTPROBLEMID"]}'
+            else f"HOST_PROBLEM_ID: {context['HOSTPROBLEMID']}"
         )
 
     return (
-        f'SVC_PROBLEM_ID: {context["LASTSERVICEPROBLEMID"]}'
+        f"SVC_PROBLEM_ID: {context['LASTSERVICEPROBLEMID']}"
         if context["SERVICEPROBLEMID"] == "0"
-        else f'SVC_PROBLEM_ID: {context["SERVICEPROBLEMID"]}'
+        else f"SVC_PROBLEM_ID: {context['SERVICEPROBLEMID']}"
     )
 
 
@@ -454,7 +454,7 @@ def main() -> None:
                 tags=["Flapping"],
                 source=alert_source,
                 user=owner,
-                note=f"Flapping {"stopped" if nt == "FLAPPINGSTOP" else "disabled"}",
+                note=f"Flapping {'stopped' if nt == 'FLAPPINGSTOP' else 'disabled'}",
             )
         case "DOWNTIMESTART" as nt:
             _requires_integration_team(nt, integration_team)
@@ -474,7 +474,7 @@ def main() -> None:
                 tags=["Downtime"],
                 source=alert_source,
                 user=owner,
-                note=f"Downtime {"ended" if nt == "DOWNTIMEEND" else "cancelled"}",
+                note=f"Downtime {'ended' if nt == 'DOWNTIMEEND' else 'cancelled'}",
             )
         case nt if nt.startswith("ALERTHANDLER"):
             _handle_alert_handler(

@@ -56,6 +56,6 @@ def test_navigate_to_werks(werks_page: Werks) -> None:
     max_number_of_werks_displayed = 100
     number_of_werks_displayed = werks_page.get_link("#", exact=False).count()
     assert number_of_werks_displayed > 0, "Checkmk site does not display any werks!"
-    assert (
-        number_of_werks_displayed <= max_number_of_werks_displayed
-    ), f"Checkmk site displays a maximum of {max_number_of_werks_displayed} werks, by default!"
+    assert number_of_werks_displayed <= max_number_of_werks_displayed, (
+        f"Checkmk site displays a maximum of {max_number_of_werks_displayed} werks, by default!"
+    )

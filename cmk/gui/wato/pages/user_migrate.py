@@ -290,7 +290,7 @@ def _get_connector_choices() -> list[tuple[str, str, None]]:
 
     for connector_type in [ConnectorType.LDAP, ConnectorType.SAML2]:
         connector_choices += [
-            (connection["id"], f'{connector_type.upper()}: {connection["id"]}', None)
+            (connection["id"], f"{connector_type.upper()}: {connection['id']}", None)
             for connection in connections_by_type(connector_type)
         ]
     return connector_choices

@@ -99,7 +99,7 @@ def main() -> None:
     _source_registry, source_base_name, source_tags = split_source_name(source_name)
 
     name_in_registry = (
-        f"{REGISTRY}/{source_base_name}:" f"{'-'.join(source_tags + ['image-alias'] + git_info())}"
+        f"{REGISTRY}/{source_base_name}:{'-'.join(source_tags + ['image-alias'] + git_info())}"
     )
 
     LOG.info("tag image as %s", name_in_registry)

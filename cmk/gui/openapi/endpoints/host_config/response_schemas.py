@@ -42,7 +42,7 @@ class FolderExtensions(BaseSchema):
         "view",
         "outbound",
         description=(
-            "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
+            "The folder's attributes. Hosts placed in this folder will inherit these attributes."
         ),
     )
 

@@ -82,7 +82,7 @@ def _callback_pong(
         "===================================\n"
         "Received message:\n"
         f"  {received!r}\n"
-        f"Received after {(response.timestamp - received.timestamp)*1000:.3f} ms\n"
+        f"Received after {(response.timestamp - received.timestamp) * 1000:.3f} ms\n"
         "Responding with message:\n"
         f"  {response!r}\n"
     )
@@ -110,8 +110,8 @@ def _make_callback_ping(
         write(
             "Received message:\n"
             f"  {received!r}\n"
-            f"Received after {(now - received.timestamp)*1000:.3f} ms\n"
-            f"Roundtrip: {(now - sent.timestamp)*1000:.3f} ms\n"
+            f"Received after {(now - received.timestamp) * 1000:.3f} ms\n"
+            f"Roundtrip: {(now - sent.timestamp) * 1000:.3f} ms\n"
         )
         channel.acknowledge(delivery_tag)
 

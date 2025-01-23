@@ -73,9 +73,9 @@ def _wait_for_pb_host_deletion(site: Site, source_host_name: str, pb_host_name: 
         time.sleep(5)
         counter += 1
 
-    assert pb_host_name not in get_piggyback_hosts(
-        site, source_host_name
-    ), f"Host {pb_host_name} was not removed from the site."
+    assert pb_host_name not in get_piggyback_hosts(site, source_host_name), (
+        f"Host {pb_host_name} was not removed from the site."
+    )
 
 
 @pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
@@ -106,9 +106,9 @@ def test_plugin_piggyback(
         updated_dump = _rm_piggyback_host_from_dump(disk_dump, pb_host_to_rm)
         write_file(test_site_piggyback.path(dump_path_site / source_host_name), updated_dump)
 
-        assert pb_host_to_rm not in _read_piggyback_hosts_from_dump(
-            updated_dump
-        ), f"Host {pb_host_to_rm} was not removed from the agent dump."
+        assert pb_host_to_rm not in _read_piggyback_hosts_from_dump(updated_dump), (
+            f"Host {pb_host_to_rm} was not removed from the agent dump."
+        )
 
         _wait_for_pb_host_deletion(test_site_piggyback, source_host_name, pb_host_to_rm)
         wait_for_dcd_pend_changes(test_site_piggyback)

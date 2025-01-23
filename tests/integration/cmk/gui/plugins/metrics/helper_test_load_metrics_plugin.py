@@ -9,4 +9,4 @@ from cmk.gui import main_modules
 from cmk.gui.graphing._legacy import metric_info
 
 main_modules.load_plugins()
-sys.stdout.write(f"{"test" in metric_info}\n")
+sys.stdout.write(f"{'test' in metric_info}\n")

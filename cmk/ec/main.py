@@ -1030,11 +1030,11 @@ class EventServer(ECServerThread):
         if event_count:
             text = (
                 f"Expected message arrived only {event_count} out of {expect['count']}"
-                f' times since {time.strftime("%F %T", time.localtime(interval_start))}'
+                f" times since {time.strftime('%F %T', time.localtime(interval_start))}"
             )
 
         else:
-            text = f'Expected message did not arrive since {time.strftime("%F %T", time.localtime(interval_start))}'
+            text = f"Expected message did not arrive since {time.strftime('%F %T', time.localtime(interval_start))}"
 
         # If there is already an incidence about this absent message, we can merge and
         # not create a new event. There is a setting for this.
@@ -1525,7 +1525,7 @@ class EventServer(ECServerThread):
                             time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                             event["host"],
                             event["application"],
-                            f'[{event["pid"]}]' if event["pid"] else "",
+                            f"[{event['pid']}]" if event["pid"] else "",
                             event["text"],
                         )
                     ).encode()
@@ -2286,7 +2286,7 @@ class StatusServer(ECServerThread):
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
         with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
-            pipe.write(f'{";".join(arguments)}\n'.encode())
+            pipe.write(f"{';'.join(arguments)}\n".encode())
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
         event_ids, user, newstate = arguments
@@ -2910,8 +2910,7 @@ class EventStatus:
             if prev_group != cur_group:
                 if debug:
                     self._logger.info(
-                        "Do not cancel event %d: match group number "
-                        "%d does not match (%s != %s)",
+                        "Do not cancel event %d: match group number %d does not match (%s != %s)",
                         event["id"],
                         nr + 1,
                         prev_group,

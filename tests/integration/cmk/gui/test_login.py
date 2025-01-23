@@ -242,18 +242,18 @@ def test_failed_login_counter_human(site: Site) -> None:
             headers={"Authorization": f"Bearer {username} wrong_password"},
             expected_code=401,
         )
-        assert 1 == _get_failed_logins(
-            site, username
-        ), "failed attempts increased by login with bearer token"
+        assert 1 == _get_failed_logins(site, username), (
+            "failed attempts increased by login with bearer token"
+        )
 
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
             expected_code=401,
         )
-        assert 2 == _get_failed_logins(
-            site, username
-        ), "failed attempts increased by login with basic token"
+        assert 2 == _get_failed_logins(site, username), (
+            "failed attempts increased by login with basic token"
+        )
 
         session.post(
             "login.py",
@@ -265,9 +265,9 @@ def test_failed_login_counter_human(site: Site) -> None:
             allow_redirect_to_login=True,
         )
 
-        assert 3 == _get_failed_logins(
-            site, username
-        ), "failed attempts increased by login via login form"
+        assert 3 == _get_failed_logins(site, username), (
+            "failed attempts increased by login via login form"
+        )
 
 
 @skip_if_saas_edition

@@ -28,9 +28,9 @@ def _check_generic_crash_info(crash):
         "local_vars": str,
     }.items():
         assert key in crash.crash_info
-        assert isinstance(
-            crash.crash_info[key], ty
-        ), f"Key {key!r} has an invalid type {type(crash.crash_info[key])!r}"
+        assert isinstance(crash.crash_info[key], ty), (
+            f"Key {key!r} has an invalid type {type(crash.crash_info[key])!r}"
+        )
 
 
 def test_check_crash_report_from_exception(tmp_path: Path) -> None:

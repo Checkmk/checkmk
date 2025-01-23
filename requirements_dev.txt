@@ -48,7 +48,7 @@ pytest-opentelemetry # instrument pytest runs
 python-lsp-server  # Note: There are extras, but the default seems sensible.
 requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests
-ruff==0.8.3  # temporary pin
+ruff==0.9.1  # temporary pin
 schemathesis  # used for openapi tests
 semver
 sphinx  # used for the plugin API documentation

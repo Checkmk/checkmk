@@ -22,9 +22,7 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]
 
-_ALWAYS_SAFE = frozenset(
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZ" b"abcdefghijklmnopqrstuvwxyz" b"0123456789" b"_.-~" b" "
-)
+_ALWAYS_SAFE = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~ ")
 _ALWAYS_SAFE_BYTES = bytes(_ALWAYS_SAFE)
 _QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else f"%{b:02X}" for b in range(256)}
 

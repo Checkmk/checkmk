@@ -433,12 +433,12 @@ def test_sign_csr(
     )
 
     new_cert.verify_is_signed_by(signing_certificate.certificate)
-    assert (
-        new_cert.public_key == subject_key.public_key
-    ), "The public key in the certificate matches the private key in the CSR"
-    assert (
-        new_cert.issuer == signing_certificate.certificate.subject
-    ), "The issuer of the new certificate is the self_signed_cert"
+    assert new_cert.public_key == subject_key.public_key, (
+        "The public key in the certificate matches the private key in the CSR"
+    )
+    assert new_cert.issuer == signing_certificate.certificate.subject, (
+        "The issuer of the new certificate is the self_signed_cert"
+    )
 
 
 def test_may_sign_certificates() -> None:

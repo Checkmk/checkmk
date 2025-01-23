@@ -416,12 +416,12 @@ class CheckmkApp:
         logger.info('Installing Checkmk agent "%s"...', agent_path)
         assert copy_to_container(app, agent_path, "/")
         install_agent_rc, install_agent_output = app.exec_run(
-            f"{'rpm' if agent_type == "rpm" else 'dpkg'} --install '/{os.path.basename(agent_path)}'",
+            f"{'rpm' if agent_type == 'rpm' else 'dpkg'} --install '/{os.path.basename(agent_path)}'",
             user="root",
         )
-        assert (
-            install_agent_rc == 0
-        ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
+        assert install_agent_rc == 0, (
+            f"Error during agent installation: {install_agent_output.decode('utf-8')}"
+        )
 
     def register_agent(self, app: docker.models.containers.Container, hostname: str) -> None:
         """Register an agent in an application container with a site."""
@@ -445,9 +445,9 @@ class CheckmkApp:
             cmd,
             user="root",
         )
-        assert (
-            register_agent_rc == 0
-        ), f"Error registering agent: {register_agent_output.decode('utf-8')}"
+        assert register_agent_rc == 0, (
+            f"Error registering agent: {register_agent_output.decode('utf-8')}"
+        )
 
     @staticmethod
     def install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
@@ -462,9 +462,9 @@ class CheckmkApp:
             f"dnf install '{python_pkg_name}'",
             user="root",
         )
-        assert (
-            install_python_rc == 0
-        ), f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
+        assert install_python_rc == 0, (
+            f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
+        )
 
         logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
         assert copy_to_container(app, daemon_path, "/")

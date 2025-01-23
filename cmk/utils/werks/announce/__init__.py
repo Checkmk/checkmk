@@ -90,9 +90,9 @@ def main(args: argparse.Namespace) -> None:
 
     if version.release.release_type == ReleaseType.b:
         release_type = "beta"
-        assert (
-            version.base is not None
-        ), f"Expected version.base to be not None for release type beta: {version}"
+        assert version.base is not None, (
+            f"Expected version.base to be not None for release type beta: {version}"
+        )
         feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
     elif version.release.release_type == ReleaseType.p or version.release.is_unspecified():
         release_type = "stable"

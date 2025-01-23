@@ -14,4 +14,4 @@ from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # p
     dashlet_registry,
 )
 
-sys.stdout.write(f"{"test" in dashlet_registry}\n")
+sys.stdout.write(f"{'test' in dashlet_registry}\n")

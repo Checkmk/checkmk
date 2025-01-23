@@ -134,7 +134,7 @@ def _get_common_content(context: PluginNotificationContext) -> CommonContent:
     title_prefix = pretty_notification_type(context["NOTIFICATIONTYPE"])
     if context.get("WHAT", None) == "SERVICE":
         if context["NOTIFICATIONTYPE"] == "PROBLEM":
-            title_prefix += f" ({pretty_state(context["SERVICESTATE"])})"
+            title_prefix += f" ({pretty_state(context['SERVICESTATE'])})"
         return CommonContent(
             state=context["SERVICESTATE"],
             host_link=OptionalLink(url=host_url_from_context(context), text=context["HOSTNAME"]),
@@ -147,7 +147,7 @@ def _get_common_content(context: PluginNotificationContext) -> CommonContent:
         )
 
     if context["NOTIFICATIONTYPE"] == "PROBLEM":
-        title_prefix += f" ({pretty_state(context["HOSTSTATE"])})"
+        title_prefix += f" ({pretty_state(context['HOSTSTATE'])})"
     return CommonContent(
         state=context["HOSTSTATE"],
         host_link=OptionalLink(url=host_url_from_context(context), text=context["HOSTNAME"]),
@@ -238,7 +238,7 @@ def _mattermost_msg(context: PluginNotificationContext, common: CommonContent) -
     }
     if common.service_link:  # only set if it is a service notification
         attachment["title"] = f"{common.title_prefix}{common.service_link.text}"
-        attachment["text"] = f"Host: {common.host_link.markdown()}\n{attachment["text"]}"
+        attachment["text"] = f"Host: {common.host_link.markdown()}\n{attachment['text']}"
         if common.service_link.url:
             attachment["title_link"] = common.service_link.url
 

@@ -1773,9 +1773,9 @@ def ldap_attribute_plugins_elements(
     return elements
 
 
-def config_based_custom_user_attribute_sync_plugins() -> (
-    list[tuple[str, type[LDAPUserAttributePlugin]]]
-):
+def config_based_custom_user_attribute_sync_plugins() -> list[
+    tuple[str, type[LDAPUserAttributePlugin]]
+]:
     """Register sync plug-ins for all custom user attributes (assuming simple data types)"""
     return [
         (

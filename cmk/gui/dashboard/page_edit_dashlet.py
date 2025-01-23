@@ -161,9 +161,9 @@ class EditDashletPage(Page):
         if isinstance(vs_type, Dictionary):
             settings_elements = {el[0] for el in vs_general._get_elements()}
             properties_elements = {el[0] for el in vs_type._get_elements()}
-            assert settings_elements.isdisjoint(
-                properties_elements
-            ), "Dashboard element settings and properties have a shared option name"
+            assert settings_elements.isdisjoint(properties_elements), (
+                "Dashboard element settings and properties have a shared option name"
+            )
 
         if request.var("_save") and transactions.transaction_valid():
             try:

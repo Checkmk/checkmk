@@ -1935,8 +1935,7 @@ def _call_script(
 
 def main_help() -> None:
     sys.stdout.write(
-        "Manage multiple monitoring sites comfortably with OMD. "
-        "The Open Monitoring Distribution.\n"
+        "Manage multiple monitoring sites comfortably with OMD. The Open Monitoring Distribution.\n"
     )
 
     if is_root():
@@ -3306,8 +3305,7 @@ def main_backup(
 ) -> None:
     if len(args) == 0:
         bail_out(
-            "You need to provide either a path to the destination "
-            'file or "-" for backup to stdout.'
+            'You need to provide either a path to the destination file or "-" for backup to stdout.'
         )
 
     dest = args[0]
@@ -3338,7 +3336,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
     if not version_exists(version, versions_path):
         bail_out(
-            "You need to have version %s installed to be able to restore " "this backup." % version
+            "You need to have version %s installed to be able to restore this backup." % version
         )
 
     if is_root():
@@ -4401,7 +4399,7 @@ def handle_global_option(
     elif opt in ["v", "verbose"]:
         verbose = True
     else:
-        bail_out("Invalid global option %s.\n" "Call omd help for available options." % orig)
+        bail_out("Invalid global option %s.\nCall omd help for available options." % orig)
 
     new_global_opts = GlobalOptions(
         verbose=verbose,

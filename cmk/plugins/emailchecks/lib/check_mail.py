@@ -82,7 +82,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         type=int,
         metavar="SIZE",
         default=1000,
-        help=("Limit the number of characters of the body to forward " "(default=1000)"),
+        help=("Limit the number of characters of the body to forward (default=1000)"),
     )
     parser.add_argument(
         "--match-subject",

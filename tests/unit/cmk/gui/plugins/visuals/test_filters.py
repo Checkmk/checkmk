@@ -139,7 +139,7 @@ filter_tests = [
     FilterTest(
         ident="address_families",
         request_vars=[("address_families", "both")],
-        expected_filters=("Filter: tags = ip-v4 ip-v4\n" "Filter: tags = ip-v6 ip-v6\n" "Or: 2\n"),
+        expected_filters=("Filter: tags = ip-v4 ip-v4\nFilter: tags = ip-v6 ip-v6\nOr: 2\n"),
     ),
     FilterTest(
         ident="address_family",
@@ -173,7 +173,7 @@ filter_tests = [
             ("comment_entry_time_until_range", "abs"),
         ],
         expected_filters=(
-            "Filter: comment_entry_time >= 981158400\n" "Filter: comment_entry_time <= 1015200000\n"
+            "Filter: comment_entry_time >= 981158400\nFilter: comment_entry_time <= 1015200000\n"
         ),
     ),
     FilterTest(
@@ -185,14 +185,13 @@ filter_tests = [
             ("comment_entry_time_until_range", "3600"),
         ],
         expected_filters=(
-            "Filter: comment_entry_time >= 1523803800\n"
-            "Filter: comment_entry_time <= 1523800200\n"
+            "Filter: comment_entry_time >= 1523803800\nFilter: comment_entry_time <= 1523800200\n"
         ),
     ),
     FilterTest(
         ident="event_count",
         request_vars=[("event_count_from", "1"), ("event_count_until", "123")],
-        expected_filters=("Filter: event_count >= 1\n" "Filter: event_count <= 123\n"),
+        expected_filters=("Filter: event_count >= 1\nFilter: event_count <= 123\n"),
     ),
     # Testing base class EventFilterDropdown
     FilterTest(
@@ -226,9 +225,7 @@ filter_tests = [
     FilterTest(
         ident="event_phase",
         request_vars=[("event_phase_ack", "on"), ("event_phase_counting", "on")],
-        expected_filters=(
-            "Filter: event_phase = ack\n" "Filter: event_phase = counting\n" "Or: 2\n"
-        ),
+        expected_filters=("Filter: event_phase = ack\nFilter: event_phase = counting\nOr: 2\n"),
     ),
     # Testing base class FilterOption
     FilterTest(
@@ -339,8 +336,7 @@ filter_tests = [
             ("host_notif_number_until", "32"),
         ],
         expected_filters=(
-            "Filter: current_notification_number >= 10\n"
-            "Filter: current_notification_number <= 32\n"
+            "Filter: current_notification_number >= 10\nFilter: current_notification_number <= 32\n"
         ),
     ),
     # Testing base class FmilterStateType, FilterTriState
@@ -407,18 +403,14 @@ filter_tests = [
             ("hostgroups", "grp1|grp2"),
             ("neg_hostgroups", "on"),
         ],
-        expected_filters=(
-            "Filter: host_groups !>= grp1\n" "Filter: host_groups !>= grp2\n" "And: 2\n"
-        ),
+        expected_filters=("Filter: host_groups !>= grp1\nFilter: host_groups !>= grp2\nAnd: 2\n"),
     ),
     FilterTest(
         ident="hostgroups",
         request_vars=[
             ("hostgroups", "grp1|grp2"),
         ],
-        expected_filters=(
-            "Filter: host_groups >= grp1\n" "Filter: host_groups >= grp2\n" "Or: 2\n"
-        ),
+        expected_filters=("Filter: host_groups >= grp1\nFilter: host_groups >= grp2\nOr: 2\n"),
     ),
     FilterTest(
         ident="hostgroupvisibility",
@@ -437,7 +429,7 @@ filter_tests = [
         request_vars=[
             ("hostnameoralias", "abc"),
         ],
-        expected_filters=("Filter: host_name ~~ abc\n" "Filter: alias ~~ abc\n" "Or: 2\n"),
+        expected_filters=("Filter: host_name ~~ abc\nFilter: alias ~~ abc\nOr: 2\n"),
     ),
     FilterTest(
         ident="hosts_having_service_problems",
@@ -446,9 +438,7 @@ filter_tests = [
             ("hosts_having_services_pending", "on"),
         ],
         expected_filters=(
-            "Filter: host_num_services_crit > 0\n"
-            "Filter: host_num_services_pending > 0\n"
-            "Or: 2\n"
+            "Filter: host_num_services_crit > 0\nFilter: host_num_services_pending > 0\nOr: 2\n"
         ),
     ),
     FilterTest(
@@ -487,7 +477,7 @@ filter_tests = [
             ("logclass0", "on"),
             ("logclass2", "on"),
         ],
-        expected_filters=("Filter: class = 0\n" "Filter: class = 2\n" "Or: 2\n"),
+        expected_filters=("Filter: class = 0\nFilter: class = 2\nOr: 2\n"),
     ),
     FilterTest(
         ident="log_state",

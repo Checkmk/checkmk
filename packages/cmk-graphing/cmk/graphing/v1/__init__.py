@@ -9,20 +9,18 @@ from . import graphs, metrics, perfometers, translations
 from ._localize import Title
 
 
-def entry_point_prefixes() -> (
-    Mapping[
-        type[
-            metrics.Metric
-            | translations.Translation
-            | perfometers.Perfometer
-            | perfometers.Bidirectional
-            | perfometers.Stacked
-            | graphs.Graph
-            | graphs.Bidirectional
-        ],
-        str,
-    ]
-):
+def entry_point_prefixes() -> Mapping[
+    type[
+        metrics.Metric
+        | translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
+    ],
+    str,
+]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     These types can be used to create plug-ins that can be discovered by Checkmk.

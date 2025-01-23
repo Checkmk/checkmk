@@ -159,21 +159,21 @@ def assertPerfValuesEqual(actual, expected):
     assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
     assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
     assert expected.key == actual.key, f"expected {expected!r}, but key is {actual.key!r}"
-    assert expected.value == pytest.approx(
-        actual.value
-    ), f"expected {expected!r}, but value is {actual.value!r}"
-    assert (
-        pytest.approx(expected.warn, rel=0.1) == actual.warn
-    ), f"expected {expected!r}, but warn is {actual.warn!r}"
-    assert (
-        pytest.approx(expected.crit, rel=0.1) == actual.crit
-    ), f"expected {expected!r}, but crit is {actual.crit!r}"
-    assert (
-        expected.minimum == actual.minimum
-    ), f"expected {expected!r}, but minimum is {actual.minimum!r}"
-    assert (
-        expected.maximum == actual.maximum
-    ), f"expected {expected!r}, but maximum is {actual.maximum!r}"
+    assert expected.value == pytest.approx(actual.value), (
+        f"expected {expected!r}, but value is {actual.value!r}"
+    )
+    assert pytest.approx(expected.warn, rel=0.1) == actual.warn, (
+        f"expected {expected!r}, but warn is {actual.warn!r}"
+    )
+    assert pytest.approx(expected.crit, rel=0.1) == actual.crit, (
+        f"expected {expected!r}, but crit is {actual.crit!r}"
+    )
+    assert expected.minimum == actual.minimum, (
+        f"expected {expected!r}, but minimum is {actual.minimum!r}"
+    )
+    assert expected.maximum == actual.maximum, (
+        f"expected {expected!r}, but maximum is {actual.maximum!r}"
+    )
 
 
 class BasicCheckResult(Tuploid):
@@ -202,17 +202,17 @@ class BasicCheckResult(Tuploid):
             3,
         ], f"BasicCheckResult: status must be in (0, 1, 2, 3) - not {status!r}"
 
-        assert isinstance(
-            infotext, str
-        ), f"BasicCheckResult: infotext {infotext!r} must be of type str or unicode - not {type(infotext)!r}"
+        assert isinstance(infotext, str), (
+            f"BasicCheckResult: infotext {infotext!r} must be of type str or unicode - not {type(infotext)!r}"
+        )
         if "\n" in infotext:
             self.infotext, self.multiline = infotext.split("\n", 1)
 
         if perfdata is not None:
             tp = type(perfdata)
-            assert (
-                tp is list
-            ), f"BasicCheckResult: perfdata {perfdata!r} must be of type list - not {tp!r}"
+            assert tp is list, (
+                f"BasicCheckResult: perfdata {perfdata!r} must be of type list - not {tp!r}"
+            )
             for entry in perfdata:
                 te = type(entry)
                 assert te in [tuple, PerfValue], (
@@ -397,17 +397,17 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     """
     assert isinstance(actual, DiscoveryResult), "%r is not a DiscoveryResult instance" % actual
     assert isinstance(expected, DiscoveryResult), "%r is not a DiscoveryResult instance" % expected
-    assert len(actual.entries) == len(
-        expected.entries
-    ), f"DiscoveryResults entries are not of equal length: {actual!r} != {expected!r}"
+    assert len(actual.entries) == len(expected.entries), (
+        f"DiscoveryResults entries are not of equal length: {actual!r} != {expected!r}"
+    )
 
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
         item_e, default_params_e = ente
         assert item_a == item_e, f"items differ: {item_a!r} != {item_e!r}"
-        assert (
-            default_params_a == default_params_e
-        ), f"default parameters differ: {default_params_a!r} != {default_params_e!r}"
+        assert default_params_a == default_params_e, (
+            f"default parameters differ: {default_params_a!r} != {default_params_e!r}"
+        )
 
 
 class _MockValueStore:
@@ -492,9 +492,9 @@ def assertEqual(first, second, descr=""):
     if first == second:
         return
 
-    assert isinstance(
-        first, type(second)
-    ), f"{descr}differing type: {type(first)!r} != {type(second)!r} for values {first!r} and {second!r}"
+    assert isinstance(first, type(second)), (
+        f"{descr}differing type: {type(first)!r} != {type(second)!r} for values {first!r} and {second!r}"
+    )
 
     if isinstance(first, dict):
         remainder = set(second.keys())

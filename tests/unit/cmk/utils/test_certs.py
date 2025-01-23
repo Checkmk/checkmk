@@ -163,20 +163,20 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert ca.private_key.get_raw_rsa_key().key_size == 1024
     assert ca.certificate.common_name == "peter"
 
-    assert (
-        str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00"
-    ), "creation time is respected"
-    assert (
-        str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40+00:00"
-    ), "is valid for 10 years"
+    assert str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00", (
+        "creation time is respected"
+    )
+    assert str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40+00:00", (
+        "is valid for 10 years"
+    )
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
     assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.SubjectKeyIdentifier
-    ).value == x509.SubjectKeyIdentifier.from_public_key(
-        ca.certificate.public_key._key
-    ), "subject key identifier is set and corresponds to the cert's public key"
+    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (
+        "subject key identifier is set and corresponds to the cert's public key"
+    )
 
     assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.BasicConstraints
@@ -252,7 +252,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
-    assert daughter_cert.get_subject_alt_names() == [
-        "peters_daughter"
-    ], "subject alt name is the daughter"
+    assert daughter_cert.get_subject_alt_names() == ["peters_daughter"], (
+        "subject alt name is the daughter"
+    )
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"

@@ -34,9 +34,9 @@ def test_fetcher_memory_observer_before_steady() -> None:
     memory_used += ONE_KiB
     # expected NO reaction on overflow BEFORE steady achieved
     _change_state(observer)
-    assert (
-        initial_memory_usage == observer.memory_usage() == 0
-    ), "Memory usage is updated ONLY at steady state!"
+    assert initial_memory_usage == observer.memory_usage() == 0, (
+        "Memory usage is updated ONLY at steady state!"
+    )
     assert observer._num_check_cycles == 2
 
 
@@ -60,9 +60,9 @@ def test_fetcher_memory_observer_overflow() -> None:
     with pytest.raises(SystemExit) as exit_expected:
         observer.check_resources(None, False)
     assert observer._num_check_cycles == STEADY_CYCLE + 1
-    assert (
-        observer.memory_usage() == steady_state_memory_usage
-    ), "Memory usage is updated ONLY at steady state!"
+    assert observer.memory_usage() == steady_state_memory_usage, (
+        "Memory usage is updated ONLY at steady state!"
+    )
     assert exit_expected.value.code == 14
 
 
@@ -78,9 +78,9 @@ def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
     memory_used = (memory_used * factor) - delta
     # expected NO reaction
     _change_state(observer)
-    assert (
-        observer.memory_usage() == steady_state_memory_usage
-    ), "Memory usage is updated ONLY at steady state!"
+    assert observer.memory_usage() == steady_state_memory_usage, (
+        "Memory usage is updated ONLY at steady state!"
+    )
 
 
 def test_fetcher_memory_obeserver_vm_size():

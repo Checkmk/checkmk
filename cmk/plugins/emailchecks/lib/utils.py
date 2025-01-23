@@ -161,7 +161,7 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
     sys.stdout.write(text)
     if perfdata:
         sys.stdout.write(" | ")
-        sys.stdout.write(" ".join(f'{p[0]}={";".join(map(str, p[1:]))}' for p in perfdata))
+        sys.stdout.write(" ".join(f"{p[0]}={';'.join(map(str, p[1:]))}" for p in perfdata))
     sys.stdout.write("\n")
 
 

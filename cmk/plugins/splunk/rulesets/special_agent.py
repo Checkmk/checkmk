@@ -31,8 +31,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Splunk instance to query."),
                     help_text=Help(
-                        "Use this option to set which host should be checked "
-                        "by the special agent."
+                        "Use this option to set which host should be checked by the special agent."
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),

@@ -267,7 +267,7 @@ def check_filestats_single(item, params, parsed):
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
-        yield 0, f'Status: {single_stat.get("stat_status")}'
+        yield 0, f"Status: {single_stat.get('stat_status')}"
         return
 
     for key, hr_function in (("size", render.disksize), ("age", render.timespan)):

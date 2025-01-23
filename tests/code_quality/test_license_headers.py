@@ -137,6 +137,6 @@ def test_license_headers(python_files: Sequence[str]) -> None:
     violations = sorted(list(generator()))
     violations_formatted = "\n".join(f"{ident}: {path}" for (ident, path) in violations)
 
-    assert (
-        not violations
-    ), f"The following license header violations were detected:\n{violations_formatted}"
+    assert not violations, (
+        f"The following license header violations were detected:\n{violations_formatted}"
+    )

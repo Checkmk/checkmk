@@ -531,7 +531,7 @@ class Endpoint:
         # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
             raise RestAPIRequestContentTypeException(
-                detail=f"No content-type specified. Possible value is: {", ".join(self.accept)}",
+                detail=f"No content-type specified. Possible value is: {', '.join(self.accept)}",
                 title="Content type not valid for this endpoint.",
             )
 
@@ -934,7 +934,7 @@ class Endpoint:
             path = self.path.format(**replace)
         except KeyError:
             raise AttributeError(
-                f"Endpoint {self.path} has unspecified path parameters. " f"Specified: {replace}"
+                f"Endpoint {self.path} has unspecified path parameters. Specified: {replace}"
             )
         return path
 
@@ -1004,5 +1004,5 @@ def _verify_parameters(path: str, path_schema: type[Schema] | None) -> None:
 
     if missing_in_path:
         raise ValueError(
-            f"Params {missing_in_path!r} not used in path {path}. " f"Found params: {path_params!r}"
+            f"Params {missing_in_path!r} not used in path {path}. Found params: {path_params!r}"
         )

@@ -457,8 +457,7 @@ PermissionActionClearModifiedAttributes = Permission(
     name="clearmodattr",
     title=_l("Reset modified attributes"),
     description=_l(
-        "Reset all manually modified attributes of a host "
-        "or service (like disabled notifications)"
+        "Reset all manually modified attributes of a host or service (like disabled notifications)"
     ),
     defaults=[],
 )
@@ -1459,7 +1458,7 @@ class CommandScheduleDowntimesForm:
                 css_class += ["active"]
 
             duration_options += html.render_input(
-                name=(varname := f'_downrange__{time_range["end"]}'),
+                name=(varname := f"_downrange__{time_range['end']}"),
                 type_="button",
                 id_=varname,
                 class_=css_class,
@@ -2026,10 +2025,7 @@ def _ack_host_comments() -> set[str]:
     return {
         str(comment)
         for comment in sites.live().query_column(
-            "GET comments\n"
-            "Columns: comment_id\n"
-            "Filter: is_service = 0\n"
-            "Filter: entry_type = 4"
+            "GET comments\nColumns: comment_id\nFilter: is_service = 0\nFilter: entry_type = 4"
         )
     }
 
@@ -2039,10 +2035,7 @@ def _ack_service_comments() -> set[str]:
     return {
         str(comment)
         for comment in sites.live().query_column(
-            "GET comments\n"
-            "Columns: comment_id\n"
-            "Filter: is_service = 1\n"
-            "Filter: entry_type = 4"
+            "GET comments\nColumns: comment_id\nFilter: is_service = 1\nFilter: entry_type = 4"
         )
     }
 

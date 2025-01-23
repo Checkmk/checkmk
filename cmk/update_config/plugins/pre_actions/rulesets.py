@@ -179,10 +179,7 @@ def _make_additional_info(ruleset: Ruleset, rule_value: object) -> Sequence[str]
             f"The group {rule_value!r} may not be synchronized to this site because"
             " the customer setting of the group is not set to global."
         ),
-        (
-            "If you continue the invalid rule does not have any effect but should"
-            " be fixed anyway.\n"
-        ),
+        ("If you continue the invalid rule does not have any effect but should be fixed anyway.\n"),
     )
 
 

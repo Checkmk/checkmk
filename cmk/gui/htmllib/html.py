@@ -270,9 +270,9 @@ class HTMLGenerator(HTMLWriter):
         with (base / ".manifest.json").open() as fo:
             manifest = json.load(fo)
 
-        main = f'cmk-frontend-vue/{manifest["src/main.ts"]["file"]}'
+        main = f"cmk-frontend-vue/{manifest['src/main.ts']['file']}"
         main_stylesheets = manifest["src/main.ts"]["css"]
-        stage1 = f'cmk-frontend-vue/{manifest["src/stage1.ts"]["file"]}'
+        stage1 = f"cmk-frontend-vue/{manifest['src/stage1.ts']['file']}"
         return _Manifest(main, main_stylesheets, stage1)
 
     def _inject_vue_frontend(self):

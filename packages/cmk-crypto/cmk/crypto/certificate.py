@@ -338,9 +338,9 @@ class Certificate:
         Internal method to create a new certificate. It makes a lot of assumptions about how our
         certificates are used and is not suitable for general use.
         """
-        assert Certificate._is_timezone_aware(
-            start_date
-        ), "Certificate expiry must use timzone-aware datetimes"
+        assert Certificate._is_timezone_aware(start_date), (
+            "Certificate expiry must use timzone-aware datetimes"
+        )
 
         builder = (
             x509.CertificateBuilder()

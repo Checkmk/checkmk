@@ -2669,8 +2669,7 @@ class VSExplicitConditions(Transform):
         return DictHostTagCondition(
             title=_("Host tags"),
             help_txt=_(
-                "Rule only applies to hosts that meet all of the host tag "
-                "conditions listed here",
+                "Rule only applies to hosts that meet all of the host tag conditions listed here",
             ),
         )
 

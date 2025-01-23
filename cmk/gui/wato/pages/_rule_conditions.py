@@ -149,9 +149,9 @@ def _get_tag_group_choices() -> Sequence[tuple[TagID | TagGroupID, Tuple | Casca
 
 
 @request_memoize()
-def _get_cached_tag_group_choices() -> (
-    Sequence[tuple[TagID | TagGroupID, Tuple | CascadingDropdown]]
-):
+def _get_cached_tag_group_choices() -> Sequence[
+    tuple[TagID | TagGroupID, Tuple | CascadingDropdown]
+]:
     # In case one has configured a lot of tag groups / id recomputing this for
     # every DictHostTagCondition instance takes a lot of time
     return _get_tag_group_choices()

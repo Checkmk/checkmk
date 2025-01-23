@@ -98,9 +98,9 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
         pytest.skip("only testing enterprise packages")
 
     size = os.stat(package_path).st_size
-    assert (
-        min_size <= size <= max_size
-    ), f"Package {package_path} size {size} not between {min_size} and {max_size} bytes."
+    assert min_size <= size <= max_size, (
+        f"Package {package_path} size {size} not between {min_size} and {max_size} bytes."
+    )
 
 
 def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:

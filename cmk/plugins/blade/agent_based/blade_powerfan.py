@@ -82,12 +82,12 @@ def check_blade_powerfan(item: str, section: Section) -> CheckResult:
 
     yield Result(
         state=State.OK if fan.status == "1" else State.CRIT,
-        notice=f"Status: {'' if fan.status == "1" else 'not '} OK",
+        notice=f"Status: {'' if fan.status == '1' else 'not '} OK",
     )
 
     yield Result(
         state=State.OK if fan.ctrlstate == "1" else State.CRIT,
-        notice=f"Controller state: {'' if fan.ctrlstate == "1" else 'not '} OK",
+        notice=f"Controller state: {'' if fan.ctrlstate == '1' else 'not '} OK",
     )
 
 

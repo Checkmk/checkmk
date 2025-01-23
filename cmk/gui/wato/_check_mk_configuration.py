@@ -5233,8 +5233,7 @@ def _valuespec_extra_host_conf_icon_image() -> IconSelector:
     return IconSelector(
         title=_("Icon image for hosts in status GUI"),
         help=_(
-            "You can assign icons to hosts for the status GUI. "
-            "Put your images into <tt>%s</tt>. "
+            "You can assign icons to hosts for the status GUI. Put your images into <tt>%s</tt>. "
         )
         % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
         with_emblem=False,

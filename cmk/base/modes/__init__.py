@@ -193,7 +193,7 @@ class Modes:
                         num_found += 1
                 if num_found == 0:
                     raise MKBailOut(
-                        "Host name or tag specification '%s' does " "not match any host." % arg
+                        "Host name or tag specification '%s' does not match any host." % arg
                     )
         return hostlist
 

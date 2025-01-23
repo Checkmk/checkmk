@@ -50,8 +50,7 @@ def check_redfish_drives(item: str, section: RedfishAPIData) -> CheckResult:
     if data.get("MediaType") == "SSD":
         if data.get("PredictedMediaLifeLeftPercent"):
             disc_msg = (
-                f"{disc_msg}, Media Life Left: "
-                f"{int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
+                f"{disc_msg}, Media Life Left: {int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
             )
         else:
             disc_msg = f"{disc_msg}, no SSD Media information available"

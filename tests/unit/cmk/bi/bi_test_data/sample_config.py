@@ -761,7 +761,7 @@ bi_packs_config = {
                         {
                             "action": {
                                 "host_regex": "$HOSTNAME$",
-                                "service_regex": "Mount options " "of $FS$$",
+                                "service_regex": "Mount options of $FS$$",
                                 "type": "state_of_service",
                             },
                             "search": {"type": "empty"},
@@ -1094,7 +1094,7 @@ bi_packs_config = {
                         {
                             "action": {
                                 "host_regex": "$HOSTNAME$",
-                                "service_regex": "CPU|Memory|Vmalloc|Kernel|Number " "of threads",
+                                "service_regex": "CPU|Memory|Vmalloc|Kernel|Number of threads",
                                 "type": "state_of_service",
                             },
                             "search": {"type": "empty"},

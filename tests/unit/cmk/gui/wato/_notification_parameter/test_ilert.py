@@ -50,6 +50,6 @@ def test_migrate_to_password(
     monkeypatch.setattr(
         password_store,
         "ad_hoc_password_id",
-        lambda: f'uuid{uuid.UUID("a1111c1a-f86e-11da-bd1a-00112444be1e")}',
+        lambda: f"uuid{uuid.UUID('a1111c1a-f86e-11da-bd1a-00112444be1e')}",
     )
     assert _migrate_to_password(old_pwd) == new_pwd

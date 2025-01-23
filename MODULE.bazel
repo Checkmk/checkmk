@@ -65,7 +65,14 @@ git_override(
     remote = "https://github.com/TimotheusBachinger/rules_py",
 )
 
-bazel_dep(name = "aspect_rules_lint", version = "1.0.8")
+bazel_dep(name = "aspect_rules_lint", dev_dependency = True)
+
+# Pull in the current HEAD to make ruff 0.9.1 a known version
+git_override(
+    module_name = "aspect_rules_lint",
+    commit = "459adc1f6760a82f3c0a175497ece4ad39812130",
+    remote = "https://github.com/aspect-build/rules_lint.git",
+)
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

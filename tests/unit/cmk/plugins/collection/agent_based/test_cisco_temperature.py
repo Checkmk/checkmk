@@ -346,13 +346,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                 "14": {
                     "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Receive "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -361,13 +355,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Transmit "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -376,13 +364,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Receive "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -391,13 +373,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Transmit "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -408,7 +384,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                 "8": {
                     "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -417,7 +393,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Temperature Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -612,7 +588,7 @@ def test_parse_admin_state_mapping(
                 "14": {
                     "TenGigabitEthernet1/1/7 Transmit Power Sensor": {
                         "admin_state": None,
-                        "descr": "TenGigabitEthernet1/1/7 " "Transmit " "Power " "Sensor",
+                        "descr": "TenGigabitEthernet1/1/7 Transmit Power Sensor",
                         "dev_state": (3, "unavailable"),
                         "raw_dev_state": "2",
                     }

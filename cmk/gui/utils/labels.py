@@ -61,10 +61,7 @@ def parse_labels_value(value: str) -> Labels:
         if label_id in seen:
             raise MKUserError(
                 None,
-                _(
-                    "A label key can be used only once per object. "
-                    'The Label key "%s" is used twice.'
-                )
+                _('A label key can be used only once per object. The Label key "%s" is used twice.')
                 % label_id,
             )
         yield Label(label_id, label_value, False)

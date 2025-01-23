@@ -182,9 +182,9 @@ def test_create_rules(
             logger.info('Total rules for ruleset "%s": %s', ruleset_name, rule_count)
             created_rule_count = rule_count - existing_rules.get(ruleset_name, 0)
             logger.info('Created rules for ruleset "%s": %s', ruleset_name, created_rule_count)
-            assert (
-                created_rule_count == 1
-            ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
+            assert created_rule_count == 1, (
+                f'Rule creation for ruleset "{ruleset_name}" has failed!'
+            )
 
 
 @pytest.mark.xfail(reason="Flaky test, see CMK-20900")

@@ -325,7 +325,7 @@ def do_site_restore(
     except subprocess.CalledProcessError as exc:
         log(
             "Failed to start the site after restore.\n"
-            f'Details: {exc.output.decode(encoding="utf-8")}'
+            f"Details: {exc.output.decode(encoding='utf-8')}"
         )
 
 

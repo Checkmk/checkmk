@@ -201,9 +201,7 @@ def spawn_expect_process(
                         break
                     else:
                         logger.error(
-                            "Required message not found. "
-                            "The following has been found instead:\n"
-                            "%s",
+                            "Required message not found. The following has been found instead:\n%s",
                             p.before,
                         )
                         break
@@ -359,9 +357,9 @@ def daemon(
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
             stdout, _stderr = daemon_proc.communicate(timeout=5)
             logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
-            assert (
-                daemon_rc is None
-            ), f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+            assert daemon_rc is None, (
+                f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+            )
 
 
 def _terminate_daemon(
@@ -476,7 +474,7 @@ def restart_httpd() -> None:
 
     almalinux_9 = "almalinux-9"
     assert almalinux_9 in get_supported_distros(), (
-        f"{almalinux_9} is not supported anymore. " f"Please adapt the code below."
+        f"{almalinux_9} is not supported anymore. Please adapt the code below."
     )
 
     # When executed locally and un-dockerized, DISTRO may not be set

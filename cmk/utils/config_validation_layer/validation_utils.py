@@ -31,6 +31,6 @@ class ConfigValidationError(MKConfigError):
         )
 
         for error in self.pydantic_error.errors():
-            error_msg += f'{(pformat(error)).replace("\n", "\n\t")}\n\n\t'
+            error_msg += f"{(pformat(error)).replace('\n', '\n\t')}\n\n\t"
 
         return error_msg

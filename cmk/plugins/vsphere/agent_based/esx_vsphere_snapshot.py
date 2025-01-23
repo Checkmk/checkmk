@@ -82,7 +82,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
 
     powered_on = [_get_snapshot_name(s) for s in snapshots if s.state == "poweredOn"]
     yield Result(
-        state=State.OK, summary=f'Powered on: {", ".join(powered_on) if powered_on else "None"}'
+        state=State.OK, summary=f"Powered on: {', '.join(powered_on) if powered_on else 'None'}"
     )
 
     latest_snapshot = max(snapshots, key=lambda s: s.time)

@@ -70,9 +70,9 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     assert services_count == 1, "Unexpected number of services in the table"
     time_since_last_check = service_search_page.checked_column_cells(host_name).all_inner_texts()
     (number, unit) = time_since_last_check[0].split()
-    assert unit == "ms" or (
-        unit == "s" and float(number) < sleep_time
-    ), "Service was not rescheduled"
+    assert unit == "ms" or (unit == "s" and float(number) < sleep_time), (
+        "Service was not rescheduled"
+    )
 
 
 @pytest.mark.parametrize(

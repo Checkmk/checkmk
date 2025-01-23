@@ -396,7 +396,7 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
         except OverflowError:
             return (
                 3,
-                f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
+                f"Could not handle uptime value {parsed['uptime']['value']!r}. "
                 "Output of `varnishstats` seems to be faulty.",
             )
     return None

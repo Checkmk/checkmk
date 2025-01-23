@@ -175,7 +175,7 @@ def _activation_run_domain_object(
     status_descriptions={
         204: "The activation has been completed.",
         302: (
-            "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
+            "The activation is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
         404: "There is no running activation with this activation_id.",
     },

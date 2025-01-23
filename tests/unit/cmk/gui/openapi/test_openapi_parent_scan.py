@@ -48,9 +48,9 @@ def test_openapi_parent_scan_background(
         ]
     )
     assert resp.json["id"] == "parent_scan"
-    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
-        "is finished"
-    ), resp.json
+    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith("is finished"), (
+        resp.json
+    )
     assert "active" in resp.json["extensions"]
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]

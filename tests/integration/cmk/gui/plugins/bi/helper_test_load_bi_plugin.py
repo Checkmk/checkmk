@@ -9,4 +9,4 @@ from cmk.gui import main_modules
 from cmk.gui.plugins.bi.utils import bi_search_registry
 
 main_modules.load_plugins()
-sys.stdout.write(f"{"test" in bi_search_registry}\n")
+sys.stdout.write(f"{'test' in bi_search_registry}\n")

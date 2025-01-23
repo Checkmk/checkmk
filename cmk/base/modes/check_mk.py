@@ -241,7 +241,7 @@ def option_fake_dns(a: HostAddress) -> None:
 modes.register_general_option(
     Option(
         long_option="fake-dns",
-        short_help="Fake IP addresses of all hosts to be IP. This " "prevents DNS lookups.",
+        short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
         handler_function=option_fake_dns,
         argument=True,
         argument_descr="IP",

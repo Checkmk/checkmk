@@ -276,11 +276,11 @@ def livedump_state(args: Arguments) -> None:
 check_type=1
 check_options=0
 reschedule_check
-latency={row['latency']:.2f}
-start_time={row['now']:.1f}
-finish_time={row['now']:.1f}
-return_code={row['state']}
-output={row['plugin_output']}|{row['perf_data']}
+latency={row["latency"]:.2f}
+start_time={row["now"]:.1f}
+finish_time={row["now"]:.1f}
+return_code={row["state"]}
+output={row["plugin_output"]}|{row["perf_data"]}
 
 """
         )
@@ -298,15 +298,15 @@ output={row['plugin_output']}|{row['perf_data']}
         sys.stdout.write(f"host_name={args.prefix}{row['host_name']}")
         sys.stdout.write(
             f"""
-service_description={row['description']}
+service_description={row["description"]}
 check_type=1
 check_options=0
 reschedule_check
-latency={row['latency']:.2f}
-start_time={row['now']:.1f}
-finish_time={row['now']:.1f}
-return_code={row['state']}
-output={row['plugin_output']}|{row['perf_data']}
+latency={row["latency"]:.2f}
+start_time={row["now"]:.1f}
+finish_time={row["now"]:.1f}
+return_code={row["state"]}
+output={row["plugin_output"]}|{row["perf_data"]}
 
 """
         )

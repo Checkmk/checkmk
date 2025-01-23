@@ -139,10 +139,8 @@ def update_store(
     value_store[key] = (data_point.timestamp, data_point.value)
     match last_state:
         case (
-            float()
-            | int() as last_time,
-            float()
-            | int() as last_value,
+            float() | int() as last_time,
+            float() | int() as last_value,
         ):
             return DataPoint(float(last_time), float(last_value))
         case _other:

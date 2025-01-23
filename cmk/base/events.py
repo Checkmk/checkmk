@@ -620,7 +620,7 @@ def event_match_hosttags(
             if variable.startswith(context_str)
         }
         if not matches_host_tags(set(host_tags.items()), required_tags):
-            return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"
+            return f"The host's tags {host_tags} do not match the required tags {required_tags}"
     return None
 
 

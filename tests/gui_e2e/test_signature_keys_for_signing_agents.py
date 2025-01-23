@@ -119,7 +119,7 @@ def test_upload_signing_keys(
         + "\n"
         + self_signed_cert.certificate.dump_pem().str
     ).strip() + "\n"
-    fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
+    fingerprint = rf"{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(':')}"
 
     # passphrase is invalid
     upload_function(dashboard_page, "Some description", "password", pem_content)
@@ -213,9 +213,9 @@ def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     with dashboard_page.page.expect_download() as download_info:
         dashboard_page.main_area.get_suggestion("Download").click()
 
-    assert (
-        download_info.is_done()
-    ), "Signature key couldn't be downloaded, even after providing correct passphrase."
+    assert download_info.is_done(), (
+        "Signature key couldn't be downloaded, even after providing correct passphrase."
+    )
 
 
 def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str) -> None:

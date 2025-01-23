@@ -62,7 +62,7 @@ class CreateFolder(BaseSchema):
         "inbound",
         required=False,
         description=(
-            "Specific attributes to apply for all hosts in this folder " "(among other things)."
+            "Specific attributes to apply for all hosts in this folder (among other things)."
         ),
         example={"tag_criticality": "prod"},
     )

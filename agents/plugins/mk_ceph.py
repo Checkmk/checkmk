@@ -21,7 +21,7 @@ except ImportError:
         "Error: mk_ceph requires the library 'rados'."
         " Please install it on the monitored system (%s install rados)." % pip
     )
-    sys.stdout.write("<<<cephstatus:sep(0)>>>\n" "%s\n" % json.dumps({"deployment_error": error}))
+    sys.stdout.write("<<<cephstatus:sep(0)>>>\n%s\n" % json.dumps({"deployment_error": error}))
     sys.exit(0)
 
 

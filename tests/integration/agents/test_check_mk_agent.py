@@ -61,6 +61,6 @@ def test_cmk_agent_run_runas_executor(runas_user: str, tmp_path: Path) -> None:
     # assert that the script was run exactly once
     assert agent_output.count("WHOAMI:") == 1, "The local script was not executed exactly once!"
     # assert that the script was run as the correct user
-    assert (
-        f"WHOAMI: {runas_user_name}" in agent_output
-    ), "The local script was not executed in the correct user context!"
+    assert f"WHOAMI: {runas_user_name}" in agent_output, (
+        "The local script was not executed in the correct user context!"
+    )

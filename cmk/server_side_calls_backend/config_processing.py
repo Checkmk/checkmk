@@ -105,10 +105,7 @@ def _processed_config_value(
                     return _replace_password(*value)
                 case (
                     "cmk_postprocessed",
-                    "stored_proxy"
-                    | "environment_proxy"
-                    | "explicit_proxy"
-                    | "no_proxy",
+                    "stored_proxy" | "environment_proxy" | "explicit_proxy" | "no_proxy",
                     str(),
                 ):
                     if proxy_config is not None:

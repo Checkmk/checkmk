@@ -82,7 +82,7 @@ def get_datetime_from_obsolete_format(values: Sequence[str]) -> datetime:
     with suppress(ValueError):
         return datetime.strptime(" ".join(values), "%d.%m.%Y")
 
-    raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
+    raise ValueError(f"Time string {' '.join(values)} does not match any known pattern")
 
 
 def to_timestamp(values: Sequence[str]) -> float:

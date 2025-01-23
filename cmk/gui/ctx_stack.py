@@ -132,7 +132,7 @@ def session_attr(
 
         if not isinstance(rv, type_class):
             raise ValueError(
-                f"Object session[\"{'.'.join(attr_names)}\"] is not of type {type_class}"
+                f'Object session["{".".join(attr_names)}"] is not of type {type_class}'
             )
 
         return rv

@@ -131,18 +131,20 @@ def check_redfish_firmware(section: RedfishAPIData) -> CheckResult:
     cell_bracket = "<td>%s</td>"
     cell_seperator = ""
     headers = ("Component", "Status", "Version", "Updateable")
-    info_text = f'<table style="border-collapse: separate; border-spacing: 10px 0;">{(
-        "<tr><th>"
-        + "</th><th>".join(headers)
-        + "</th></tr>"
-        + "".join(
-            [
-                line_bracket
-                % cell_seperator.join([cell_bracket % value for value in info_entry])
-                for info_entry in info_list
-            ]
+    info_text = f'<table style="border-collapse: separate; border-spacing: 10px 0;">{
+        (
+            "<tr><th>"
+            + "</th><th>".join(headers)
+            + "</th></tr>"
+            + "".join(
+                [
+                    line_bracket
+                    % cell_seperator.join([cell_bracket % value for value in info_entry])
+                    for info_entry in info_list
+                ]
+            )
         )
-    )}</table>'
+    }</table>'
 
     yield Result(state=State(overall_state), summary=msg_text, details=info_text)
 

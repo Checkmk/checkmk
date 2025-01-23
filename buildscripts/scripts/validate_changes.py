@@ -186,7 +186,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
         else StageInfo(  #
             NAME=stage["NAME"],
             SKIPPED=(
-                f'Reason: {stage.get("TEXT_ON_SKIP") or "not provided"},'
+                f"Reason: {stage.get('TEXT_ON_SKIP') or 'not provided'},"
                 f" Condition: {condition_vars}"
             ),
         )

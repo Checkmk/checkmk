@@ -37,7 +37,7 @@ class ConcreteTimePeriodException(BaseSchema):
     date = fields.String(
         example="2020-01-01",
         format="date",
-        description="The date of the time period exception." "8601 profile",
+        description="The date of the time period exception.8601 profile",
     )
     time_ranges = fields.List(
         fields.Nested(ConcreteTimeRange),

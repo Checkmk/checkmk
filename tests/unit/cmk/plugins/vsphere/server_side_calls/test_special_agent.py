@@ -74,7 +74,7 @@ HOST_CONFIG = HostConfig(
                     "443",
                     "-u",
                     "username",
-                    f"-s={Secret(id=1, format="%s", pass_safely=False)}",
+                    f"-s={Secret(id=1, format='%s', pass_safely=False)}",
                     "-i",
                     "hostsystem,virtualmachine,datastore,counters",
                     "--direct",

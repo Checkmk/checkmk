@@ -108,7 +108,7 @@ class CloudPublisher(abc.ABC):
         """
         return (
             f"https://forum.checkmk.com/t/release-checkmk-stable-release-"
-            f"{version.replace('.','-')}/"
+            f"{version.replace('.', '-')}/"
         )
 
 
@@ -217,7 +217,7 @@ class AWSPublisher(CloudPublisher):
             ],
         )["Images"]
         assert len(images) == 1, (
-            "Cannot identify the correct image to publish, " f"received the following: {images}"
+            f"Cannot identify the correct image to publish, received the following: {images}"
         )
         return images[0]["ImageId"]
 

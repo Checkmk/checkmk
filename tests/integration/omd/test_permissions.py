@@ -70,9 +70,9 @@ def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]
 
         offenders.add(rel_path)
 
-    assert (
-        not offenders
-    ), f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(offenders)}"
+    assert not offenders, (
+        f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(offenders)}"
+    )
 
 
 def test_world_accessible_files_parents(site: Site) -> None:
@@ -98,9 +98,9 @@ def test_version_file_permissions(site: Site) -> None:
         for p in iter_dir(Path(site.version.version_path()))
         if has_permission(p, Mode.WORLD_WRITEABLE ^ Mode.GROUP_WRITEABLE)
     }
-    assert (
-        not writable_files
-    ), f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(writable_files)}"
+    assert not writable_files, (
+        f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(writable_files)}"
+    )
 
 
 def test_version_file_ownership(site: Site) -> None:

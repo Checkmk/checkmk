@@ -2895,10 +2895,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if "expect" in rule and "delay" in rule:
             raise MKUserError(
                 "rule_p_expect_USE",
-                _(
-                    "You cannot use expecting and delay "
-                    "at the same time in the same rule, sorry."
-                ),
+                _("You cannot use expecting and delay at the same time in the same rule, sorry."),
             )
 
         # Make sure that number of group replacements do not exceed number
@@ -3752,8 +3749,7 @@ ConfigureECRulesPermission = Permission(
     name="edit",
     title=_l("Configuration of event rules"),
     description=_l(
-        "This permission allows the creation, modification and "
-        "deletion of event correlation rules."
+        "This permission allows the creation, modification and deletion of event correlation rules."
     ),
     defaults=["admin"],
 )

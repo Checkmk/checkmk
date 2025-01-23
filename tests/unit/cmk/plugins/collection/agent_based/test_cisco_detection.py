@@ -85,6 +85,6 @@ def test_cisco_related_snmp_detection(
         assert evaluate_snmp_detection(
             detect_spec=section.detect_spec,
             oid_value_getter=oid_data.get,
-        ) == (
-            name in detected
-        ), f"make sure that {name} is{'' if name in detected else ' not'} detected"
+        ) == (name in detected), (
+            f"make sure that {name} is{'' if name in detected else ' not'} detected"
+        )

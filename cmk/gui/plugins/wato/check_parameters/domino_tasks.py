@@ -156,8 +156,7 @@ def _item_spec_domino_tasks():
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _.-]*$",
         regex_error=_(
-            "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot and hyphen for your service name"
+            "Please use only a-z, A-Z, 0-9, space, underscore, dot and hyphen for your service name"
         ),
     )
 

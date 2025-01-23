@@ -279,9 +279,9 @@ def test_asset_serialization(
 
 
 @pytest.fixture(name="asset_and_piggy_back_sections")
-def asset_and_piggy_back_sections_fixture() -> (
-    Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection]
-):
+def asset_and_piggy_back_sections_fixture() -> Sequence[
+    agent_gcp.PiggyBackSection | agent_gcp.AssetSection
+]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)

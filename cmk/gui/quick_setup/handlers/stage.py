@@ -276,7 +276,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         stage_index: int,
         job_uuid: str,
     ) -> str:
-        return f"{cls.job_prefix}-{quick_setup_id.replace(":", "_")}-stage_{stage_index}-{job_uuid}"
+        return f"{cls.job_prefix}-{quick_setup_id.replace(':', '_')}-stage_{stage_index}-{job_uuid}"
 
     def __init__(
         self,

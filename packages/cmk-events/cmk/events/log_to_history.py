@@ -111,7 +111,7 @@ def _format_notification_message(
         )
     )
     if comment is not None:
-        fields += f";{livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON))}"
+        fields += f";{livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(';', _SEMICOLON))}"
     return SanitizedLivestatusLogStr(f"{what}: {fields}")
 
 

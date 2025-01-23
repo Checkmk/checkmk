@@ -128,7 +128,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         return 60
 
     def on_resize(self):
-        return ("if (typeof %(instance)s != 'undefined') {" "%(instance)s.update_gui();" "}") % {
+        return ("if (typeof %(instance)s != 'undefined') {%(instance)s.update_gui();}") % {
             "instance": self.instance_name
         }
 

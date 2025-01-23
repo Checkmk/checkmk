@@ -46,9 +46,9 @@ def _test_rename_preserves_registration(
         assert central_site.openapi.hosts.get(new_hostname) is not None
         controller_status = controller_status_json(ctl_path)
         connection_details = controller_connection_json(controller_status, registration_site)
-        assert (
-            connection_details["remote"]["hostname"] == new_hostname
-        ), f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
+        assert connection_details["remote"]["hostname"] == new_hostname, (
+            f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
+        )
     finally:
         hostnames = set(central_site.openapi.hosts.get_all_names())
         for hostname_ in hostnames.intersection({hostname, new_hostname}):

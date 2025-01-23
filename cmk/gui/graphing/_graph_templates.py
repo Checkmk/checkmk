@@ -73,9 +73,9 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _collect_graph_plugins() -> (
-    Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
-):
+def _collect_graph_plugins() -> Iterator[
+    tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
+]:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     known_plugins: set[str] = set()
     for graph in graphs_from_api.values():
@@ -87,9 +87,9 @@ def _collect_graph_plugins() -> (
             yield template_id, template
 
 
-def _get_sorted_graph_plugins() -> (
-    Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
-):
+def _get_sorted_graph_plugins() -> Sequence[
+    tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
+]:
     def _by_index(graph_name: str) -> int:
         try:
             return GRAPHS_2_2.index(graph_name)

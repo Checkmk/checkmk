@@ -340,9 +340,9 @@ def test_update(client: docker.DockerClient) -> None:
     update_compatibility = versions_compatible(
         Version.from_str(old_version.version), Version.from_str(pkg_version.version)
     )
-    assert (
-        update_compatibility.is_compatible
-    ), f"Version {old_version} and {pkg_version} are incompatible, reason: {update_compatibility}"
+    assert update_compatibility.is_compatible, (
+        f"Version {old_version} and {pkg_version} are incompatible, reason: {update_compatibility}"
+    )
 
     # 1. create container with old version and add a file to mark the pre-update state
     with CheckmkApp(

@@ -88,8 +88,7 @@ def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Litera
         if debug.enabled():
             raise
         logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config" '
-            "BEFORE starting the site again."
+            'ERROR: Please repair this and run "cmk-update-config" BEFORE starting the site again.'
         )
         return 1
 

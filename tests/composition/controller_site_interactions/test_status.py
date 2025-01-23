@@ -54,13 +54,15 @@ def test_status_pull(
         host_attributes={"ipaddress": "127.0.0.1"},
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)
-        assert (
-            connection_details["remote"]["hostname"] == "pull-host"
-        ), f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
+        assert connection_details["remote"]["hostname"] == "pull-host", (
+            f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
+        )
         assert (
             HostAgentConnectionMode(connection_details["remote"]["connection_mode"])
             is HostAgentConnectionMode.PULL
-        ), f"Error in status output: Invalid connection mode returned!\nStatus:\n{controller_status}"
+        ), (
+            f"Error in status output: Invalid connection mode returned!\nStatus:\n{controller_status}"
+        )
 
 
 @skip_if_not_containerized
@@ -76,9 +78,9 @@ def test_status_push(
         host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)
-        assert (
-            connection_details["remote"]["hostname"] == "push-host"
-        ), f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
+        assert connection_details["remote"]["hostname"] == "push-host", (
+            f"Error in status output: Invalid host name returned!\nStatus:\n{controller_status}"
+        )
         assert (
             HostAgentConnectionMode(connection_details["remote"]["connection_mode"])
             is HostAgentConnectionMode.PUSH

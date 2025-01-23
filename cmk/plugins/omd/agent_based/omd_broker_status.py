@@ -85,11 +85,11 @@ def _check_shovels(item: str, section_omd_broker_shovels: SectionShovels) -> Che
 
     states = Counter(shovel.state for shovel in shovels)
 
-    yield Result(state=State.OK, summary=f"Shovels running: {states["running"]}")
+    yield Result(state=State.OK, summary=f"Shovels running: {states['running']}")
     if states["starting"]:
-        yield Result(state=State.OK, summary=f"Shovels starting: {states["starting"]}")
+        yield Result(state=State.OK, summary=f"Shovels starting: {states['starting']}")
     if states["terminated"]:
-        yield Result(state=State.WARN, summary=f"Shovels terminated: {states["terminated"]}")
+        yield Result(state=State.WARN, summary=f"Shovels terminated: {states['terminated']}")
 
 
 def _filter_intersite_queues(queues: Sequence[Queue]) -> Sequence[Queue]:

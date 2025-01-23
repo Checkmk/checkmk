@@ -9,4 +9,4 @@ from cmk.gui import main_modules
 from cmk.gui.visuals.filter import filter_registry
 
 main_modules.load_plugins()
-sys.stdout.write(f"{"test" in filter_registry}\n")
+sys.stdout.write(f"{'test' in filter_registry}\n")

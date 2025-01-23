@@ -95,7 +95,7 @@ def test_host_table_host_equal_filter(site: Site) -> None:
         "nagios": "GET hosts\n"
         "Columns: host_name\n"
         "Filter: host_name = livestatus-test-host.domain\n",
-        "cmc": "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host\n",
+        "cmc": "GET hosts\nColumns: host_name\nFilter: host_name = livestatus-test-host\n",
     }
     results = {
         "nagios": [

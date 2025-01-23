@@ -10,7 +10,7 @@ a string.
 """
 
 from cmk.agent_based.v1.render import (
-    bytes,
+    bytes,  # noqa: A004
     date,
     datetime,
     disksize,

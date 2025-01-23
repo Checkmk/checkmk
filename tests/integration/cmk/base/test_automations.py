@@ -500,9 +500,9 @@ def test_automation_update_dns_cache(site: Site) -> None:
         assert isinstance(result, results.UpdateDNSCacheResult)
 
         assert result.n_updated > 0
-        assert result.failed_hosts == [
-            unknown_host
-        ], f'Successfully resolved unknown host "{unknown_host}"!'
+        assert result.failed_hosts == [unknown_host], (
+            f'Successfully resolved unknown host "{unknown_host}"!'
+        )
 
         assert site.file_exists(cache_path)
 

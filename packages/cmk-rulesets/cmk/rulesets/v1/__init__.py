@@ -9,25 +9,23 @@ from . import form_specs, rule_specs
 from ._localize import Help, Label, Message, Title
 
 
-def entry_point_prefixes() -> (
-    Mapping[
-        type[
-            rule_specs.ActiveCheck
-            | rule_specs.AgentConfig
-            | rule_specs.AgentAccess
-            | rule_specs.EnforcedService
-            | rule_specs.CheckParameters
-            | rule_specs.Host
-            | rule_specs.InventoryParameters
-            | rule_specs.NotificationParameters
-            | rule_specs.DiscoveryParameters
-            | rule_specs.Service
-            | rule_specs.SNMP
-            | rule_specs.SpecialAgent
-        ],
-        str,
-    ]
-):
+def entry_point_prefixes() -> Mapping[
+    type[
+        rule_specs.ActiveCheck
+        | rule_specs.AgentConfig
+        | rule_specs.AgentAccess
+        | rule_specs.EnforcedService
+        | rule_specs.CheckParameters
+        | rule_specs.Host
+        | rule_specs.InventoryParameters
+        | rule_specs.NotificationParameters
+        | rule_specs.DiscoveryParameters
+        | rule_specs.Service
+        | rule_specs.SNMP
+        | rule_specs.SpecialAgent
+    ],
+    str,
+]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     These types can be used to create plug-ins that can be discovered by Checkmk.

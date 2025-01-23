@@ -358,9 +358,9 @@ def test_dependencies_are_used() -> None:
     )
 
     unused_dependencies -= known_unused_packages
-    assert (
-        unused_dependencies == set()
-    ), f"There are dependencies that are declared in the requirements files but not used: {unused_dependencies}"
+    assert unused_dependencies == set(), (
+        f"There are dependencies that are declared in the requirements files but not used: {unused_dependencies}"
+    )
 
 
 def test_dependencies_are_declared() -> None:

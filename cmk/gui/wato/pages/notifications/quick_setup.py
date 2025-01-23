@@ -1124,7 +1124,7 @@ def _validate_parameter_choice(script_config: tuple[str, object]) -> None:
 
 def _get_sorted_users() -> list[tuple[UserId, str]]:
     return sorted(
-        (name, f"{name} - {user.get("alias", name)}") for name, user in load_users().items()
+        (name, f"{name} - {user.get('alias', name)}") for name, user in load_users().items()
     )
 
 
@@ -1345,7 +1345,7 @@ def recipient() -> QuickSetupStage:
 
 
 def _get_time_periods() -> list[tuple[TimeperiodName, str]]:
-    return sorted((name, f"{name} - {spec["alias"]}") for name, spec in load_timeperiods().items())
+    return sorted((name, f"{name} - {spec['alias']}") for name, spec in load_timeperiods().items())
 
 
 def sending_conditions() -> QuickSetupStage:

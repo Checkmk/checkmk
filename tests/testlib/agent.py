@@ -83,9 +83,9 @@ def install_agent_package(package_path: Path) -> Path:
             agent_installation.stdout,
             agent_installation.stderr,
         )
-        assert (
-            installed_ctl_path.exists()
-        ), f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
+        assert installed_ctl_path.exists(), (
+            f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
+        )
         return installed_ctl_path
     except RuntimeError as e:
         process_table = run(["ps", "aux"]).stdout
@@ -239,9 +239,9 @@ def controller_connection_json(
 
     Assert that the connection is found and that the structure of the connection status is valid.
     """
-    assert (
-        "connections" in controller_status
-    ), f"No connections returned as part of controller status!\nStatus:\n{controller_status}"
+    assert "connections" in controller_status, (
+        f"No connections returned as part of controller status!\nStatus:\n{controller_status}"
+    )
     # iterate over the connections and return the first match
     # return an empty response if no match was found (or the list is empty)
     controller_connection: Mapping[str, Any] = next(
@@ -252,16 +252,16 @@ def controller_connection_json(
         ),
         {},
     )
-    assert (
-        controller_connection
-    ), f'No controller connection found for site "{site.id}"!\nStatus:\n{controller_status}'
+    assert controller_connection, (
+        f'No controller connection found for site "{site.id}"!\nStatus:\n{controller_status}'
+    )
     assert "remote" in controller_connection, (
         "No remote endpoint details returned as part of controller connection details!"
         f"\nStatus:\n{controller_status}"
     )
-    assert (
-        "error" not in controller_connection["remote"]
-    ), f"Error in status output: {controller_connection['remote']['error']}"
+    assert "error" not in controller_connection["remote"], (
+        f"Error in status output: {controller_connection['remote']['error']}"
+    )
     assert "hostname" in controller_connection["remote"], (
         "No remote endpoint hostname returned as part of controller connection details!"
         f"\nStatus:\n{controller_status}"
@@ -310,9 +310,9 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
             "running",
             "finished",
         ), f"Unexpected baking state: {baking_status}"
-        assert (
-            baking_status.started >= expected_start_time
-        ), f"No baking job started after expected starting time: {expected_start_time}"
+        assert baking_status.started >= expected_start_time, (
+            f"No baking job started after expected starting time: {expected_start_time}"
+        )
         if baking_status.state == "finished":
             return
     raise AssertionError(
@@ -331,9 +331,9 @@ def _remove_omd_status_cache() -> None:
 
 def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:
     omd_status_cache_content = site.read_file(OMD_STATUS_CACHE)
-    assert (
-        f"[{site.id}]" in omd_status_cache_content
-    ), f'Site "{site.id}" not found in "{OMD_STATUS_CACHE}"!'
+    assert f"[{site.id}]" in omd_status_cache_content, (
+        f'Site "{site.id}" not found in "{OMD_STATUS_CACHE}"!'
+    )
     assert "OVERALL" in omd_status_cache_content
 
     # extract text between '[<site.id>]' and 'OVERALL'

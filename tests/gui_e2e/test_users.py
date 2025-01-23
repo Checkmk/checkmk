@@ -34,9 +34,9 @@ def create_new_role_by_cloning(
     the 'new_user' fixture.
     """
     role_data = request.param
-    assert isinstance(
-        role_data, RoleData
-    ), f"Unexpected role data type: {type(role_data)}, expected type: RoleData"
+    assert isinstance(role_data, RoleData), (
+        f"Unexpected role data type: {type(role_data)}, expected type: RoleData"
+    )
     cloned_role_id = role_data.copy_from_role_id + "x"
     roles_and_permissions_page = RolesAndPermissions(dashboard_page.page)
     logger.info(
@@ -65,9 +65,9 @@ def create_new_user(
     This fixture uses indirect pytest parametrization to define user details.
     """
     user_data = request.param
-    assert isinstance(
-        user_data, UserData
-    ), f"Unexpected user data type: {type(user_data)}, expected type: UserData"
+    assert isinstance(user_data, UserData), (
+        f"Unexpected user data type: {type(user_data)}, expected type: UserData"
+    )
     add_user_page = AddUser(dashboard_page.page)
     logger.info("Create new user '%s'", user_data.user_id)
     add_user_page.fill_users_data(user_data)

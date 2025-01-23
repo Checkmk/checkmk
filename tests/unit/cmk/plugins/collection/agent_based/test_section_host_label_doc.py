@@ -94,9 +94,9 @@ def test_all_sections_have_host_labels_documented(
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
     ):
-        assert (
-            section.host_label_function.__doc__
-        ), f"Missing doc-string for host label function of {section.name}"
+        assert section.host_label_function.__doc__, (
+            f"Missing doc-string for host label function of {section.name}"
+        )
 
         short_description, body = section.host_label_function.__doc__.split("\n", 1)
         text_sections = _TextSection(
@@ -105,9 +105,9 @@ def test_all_sections_have_host_labels_documented(
         ).subsections()
 
         label_paragraphs = [p for p in text_sections if p.header == "Labels"]
-        assert (
-            len(label_paragraphs) == 1
-        ), f"Missing 'Labels:' section in doc-string for host label function of {section.name}"
+        assert len(label_paragraphs) == 1, (
+            f"Missing 'Labels:' section in doc-string for host label function of {section.name}"
+        )
 
         if str(section.name) in KNOWN_NON_BUILTIN_LABEL_PRODUCERS:
             continue

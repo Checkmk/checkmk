@@ -212,9 +212,9 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
     for category, entries in catalog.items():
         has_entries = bool(entries)
         has_categories = bool(man_pages._manpage_catalog_subtree_names(catalog, category))
-        assert (
-            has_entries != has_categories
-        ), "A category must only have entries or categories, not both"
+        assert has_entries != has_categories, (
+            "A category must only have entries or categories, not both"
+        )
 
 
 def test_print_man_page_nowiki_content() -> None:

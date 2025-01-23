@@ -124,8 +124,7 @@ class BackupTask:
         if errors and dump_erroneous_logs:
             with (LogCacheFilePath / (f"erroneous-{task['upid']}.log")).open("w") as file:
                 LOGGER.error(
-                    "Parsing the log for UPID=%r resulted in a error(s) - "
-                    "write log content to %r",
+                    "Parsing the log for UPID=%r resulted in a error(s) - write log content to %r",
                     task["upid"],
                     file.name,
                 )

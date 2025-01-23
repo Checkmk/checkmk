@@ -10,4 +10,4 @@ from cmk.post_rename_site.registry import rename_action_registry
 
 load_plugins()
 
-sys.stdout.write(f"{"test" in rename_action_registry}\n")
+sys.stdout.write(f"{'test' in rename_action_registry}\n")

@@ -133,15 +133,13 @@ def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
     return sum(tsp_clean) / len(tsp_clean)
 
 
-def time_series_operators() -> (
-    dict[
-        Operators,
-        tuple[
-            str,
-            Callable[[TimeSeries | TimeSeriesValues], float | None],
-        ],
-    ]
-):
+def time_series_operators() -> dict[
+    Operators,
+    tuple[
+        str,
+        Callable[[TimeSeries | TimeSeriesValues], float | None],
+    ],
+]:
     return {
         "+": (_("Sum"), _time_series_operator_sum),
         "*": (_("Product"), _time_series_operator_product),

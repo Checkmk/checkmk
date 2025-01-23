@@ -235,9 +235,9 @@ class OracleDatabase:
 
         logger.info("Copying environment files to container...")
         for name in self.sql_files:
-            assert copy_to_container(
-                self.container, self.ORAENV / name, self.ROOT
-            ), "Failed to copy environment files!"
+            assert copy_to_container(self.container, self.ORAENV / name, self.ROOT), (
+                "Failed to copy environment files!"
+            )
 
         logger.info("Setup TNS listener")
         listener_ora_text = (
@@ -274,9 +274,9 @@ class OracleDatabase:
             f"""bash -c 'sqlplus -s "{login}" < "{self.ROOT}/show_user.sql"'""",
             user="oracle",
         )
-        assert (
-            f"{self.cmk_username}" in output.decode("UTF-8").lower()
-        ), f"Error while checking user: {output.decode('UTF-8')}"
+        assert f"{self.cmk_username}" in output.decode("UTF-8").lower(), (
+            f"Error while checking user: {output.decode('UTF-8')}"
+        )
 
         self._install_oracle_plugin()
         self._create_oracle_wallet()
@@ -421,9 +421,9 @@ class OracleDatabase:
         logger.info("Enabling credential-based authentication...")
         with open(path := self.ORAENV / "sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
             oraenv_file.write("NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)")
-        assert copy_to_container(
-            self.container, path, self.tns_admin_dir
-        ), f'Failed to copy "{path}"!'
+        assert copy_to_container(self.container, path, self.tns_admin_dir), (
+            f'Failed to copy "{path}"!'
+        )
         rc, output = self.container.exec_run(
             rf'cp "{self.cmk_credentials_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"', user="root"
         )
@@ -445,9 +445,9 @@ class OracleDatabase:
                     ]
                 )
             )
-        assert copy_to_container(
-            self.container, path, self.tns_admin_dir
-        ), f'Failed to copy "{path}"!'
+        assert copy_to_container(self.container, path, self.tns_admin_dir), (
+            f'Failed to copy "{path}"!'
+        )
         rc, output = self.container.exec_run(
             rf'cp "{self.cmk_wallet_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"', user="root"
         )
@@ -490,7 +490,7 @@ def test_docker_oracle(
         f"""bash -c '{oracle.cmk_plugin.as_posix()}'""", user="root"
     )
     agent_plugin_output = output.decode("utf-8")
-    assert rc == 0, f"Oracle plugin failed!\n" f"{agent_plugin_output}"
+    assert rc == 0, f"Oracle plugin failed!\n{agent_plugin_output}"
 
     raw_sections = [f"<<<{_.strip()}" for _ in agent_plugin_output.split("\n<<<")]
     section_headers = [_.split("\n", 1)[0].strip() for _ in raw_sections]
@@ -530,9 +530,9 @@ def test_docker_oracle(
     missing_non_empty_sections = [
         _ for _ in expected_non_empty_sections if _ not in actual_non_empty_sections
     ]
-    assert (
-        len(missing_non_empty_sections) == 0
-    ), f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
+    assert len(missing_non_empty_sections) == 0, (
+        f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
+    )
 
     if checkmk is None:
         return
@@ -601,7 +601,7 @@ def test_docker_oracle(
     assert len(unexpected_services) == 0, f"Unexpected services: {unexpected_services}"
 
     invalid_services = [
-        f'{service.get("description")} ({expected_state=}; {actual_state=})'
+        f"{service.get('description')} ({expected_state=}; {actual_state=})"
         for service in actual_services
         if (actual_state := service.get("state"))
         != (

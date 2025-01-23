@@ -86,7 +86,7 @@ def pytest_exception_interact(
         node.session.shouldstop = True
     elif excinfo.type in (TimeoutError, PWTimeoutError):
         try:
-            top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
+            top_output = f"\n{run(['top', '-b', '-n', '1'], check=False).stdout}"
             print(top_output)
         except Exception:
             # silence any exception when running top since

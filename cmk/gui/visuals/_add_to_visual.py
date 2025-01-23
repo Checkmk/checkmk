@@ -223,7 +223,7 @@ def get_visual_choices(visual_type: str, value: str) -> Choices:
     matching_visuals = []
     for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
         if match_pattern.search(content["title"]) is not None:
-            matching_visuals.append((name, f'{content["title"]} ({name})'))
+            matching_visuals.append((name, f"{content['title']} ({name})"))
     return matching_visuals
 
 
@@ -246,7 +246,7 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_typ
             f'"{add_to_type}",'
             f'"{request.var("view_name")}",'
             f'"{source_type}",'
-            f'{g.get("page_context", {})}'
+            f"{g.get('page_context', {})}"
             f")",
             cssclass="hot",
         )

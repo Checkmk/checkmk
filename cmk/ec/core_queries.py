@@ -60,7 +60,7 @@ def query_hosts_infos() -> Sequence[HostInfo]:
 
 def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
     return LocalConnection().query_value(
-        "GET hosts\nColumns: scheduled_downtime_depth\n" f"Filter: host_name = {host_name}"
+        f"GET hosts\nColumns: scheduled_downtime_depth\nFilter: host_name = {host_name}"
     )
 
 

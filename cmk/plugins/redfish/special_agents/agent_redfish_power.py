@@ -283,7 +283,7 @@ def get_information(redfishobj):
         "cmk/os_type": "redfish",
         **({"cmk/os_version": fw_version} if fw_version else {}),
     }
-    sys.stdout.write("<<<labels:sep(0)>>>\n" f"{json.dumps(labels)}\n")
+    sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(labels)}\n")
 
     # fetch systems
     systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])

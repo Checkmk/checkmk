@@ -248,7 +248,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
             parts = line.split()
             if len(parts) < 8:
                 sys.stdout.write(
-                    "**ERROR** Bug parsing host/hop, " "line has less than 8 parts: %s\n" % line
+                    "**ERROR** Bug parsing host/hop, line has less than 8 parts: %s\n" % line
                 )
                 continue
             status[host]["hops"][hopcount] = {

@@ -108,7 +108,7 @@ def test_diagnostics_element_general() -> None:
     assert diagnostics_element.ident == "general"
     assert diagnostics_element.title == "General"
     assert diagnostics_element.description == (
-        "OS, Checkmk version and edition, Time, Core, " "Python version and paths, Architecture"
+        "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
     )
 
 

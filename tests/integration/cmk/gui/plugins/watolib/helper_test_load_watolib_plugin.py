@@ -10,4 +10,4 @@ from cmk.gui.watolib.config_domain_name import config_domain_registry
 
 main_modules.load_plugins()
 
-sys.stdout.write(f"{"test" in config_domain_registry}\n")
+sys.stdout.write(f"{'test' in config_domain_registry}\n")

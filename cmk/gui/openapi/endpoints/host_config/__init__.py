@@ -773,8 +773,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     status_descriptions={
         204: "The renaming job has been completed.",
         302: (
-            "The renaming job is still running. Redirecting to the "
-            "'Wait for completion' endpoint."
+            "The renaming job is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
         404: "There is no running renaming job",
     },

@@ -256,7 +256,7 @@ def check_netapp_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary=f"read-only is {str(read_only if read_only is not None else "unknown").lower()} (expected: {expected})",
+            summary=f"read-only is {str(read_only if read_only is not None else 'unknown').lower()} (expected: {expected})",
         )
 
     if params.get("ignore_levels"):

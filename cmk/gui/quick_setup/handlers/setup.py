@@ -306,7 +306,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         quick_setup_id: str,
         job_uuid: str,
     ) -> str:
-        return f"{cls.job_prefix}-{quick_setup_id.replace(":", "_")}-{job_uuid}"
+        return f"{cls.job_prefix}-{quick_setup_id.replace(':', '_')}-{job_uuid}"
 
     def __init__(
         self,

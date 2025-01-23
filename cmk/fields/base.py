@@ -247,7 +247,7 @@ class UniqueFields:
     default_error_messages = {
         "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
         "duplicate_vary": (
-            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
+            "Duplicate entry found at entry #{idx}: {entry!r} (optional fields {optional!r})"
         ),
     }
 

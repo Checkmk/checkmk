@@ -395,9 +395,9 @@ def test_ec_global_settings(
     assert len(queried_event_messages) == 1
 
     pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
-    assert re.compile(pattern).search(
-        queried_event_messages[0]
-    ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+    assert re.compile(pattern).search(queried_event_messages[0]), (
+        f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+    )
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")

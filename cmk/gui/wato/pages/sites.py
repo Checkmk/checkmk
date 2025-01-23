@@ -336,8 +336,7 @@ class ModeEditSite(WatoMode):
                 size=60,
                 allow_empty=False,
                 help=_(
-                    "The site ID must be identical (case sensitive) with "
-                    "the instance's exact name."
+                    "The site ID must be identical (case sensitive) with the instance's exact name."
                 ),
                 validate=self._validate_site_id,
             )
@@ -1770,10 +1769,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         )
         if cast(NetworkSocketDetails, self._site["socket"][1])["tls"][1]["verify"] is False:
             html.show_warning(
-                _(
-                    "Encrypted connections to this site are made without "
-                    "certificate verification."
-                )
+                _("Encrypted connections to this site are made without certificate verification.")
             )
 
         try:

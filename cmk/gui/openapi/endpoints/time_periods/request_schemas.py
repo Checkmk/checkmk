@@ -154,7 +154,7 @@ class TimeRange(BaseSchema):
 
         if _day_timestamp(data["start"]) > _day_timestamp(data["end"]):
             raise marshmallow.ValidationError(
-                f"Start time ({data['start']}) must be before end " f"time ({data['end']})."
+                f"Start time ({data['start']}) must be before end time ({data['end']})."
             )
 
     @staticmethod
@@ -193,7 +193,7 @@ class TimePeriodException(BaseSchema):
         required=True,
         example="2020-01-01",
         format="date",
-        description="The date of the time period exception." "8601 profile",
+        description="The date of the time period exception.8601 profile",
     )
     time_ranges = fields.List(
         fields.Nested(TimeRange),

@@ -285,9 +285,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                 unit_symbol="graphs",
                 prefill=DefaultValue(5),
                 help_text=Help(
-                    "Sets a limit for the number of "
-                    "graphs that are displayed in "
-                    "a notification."
+                    "Sets a limit for the number of graphs that are displayed in a notification."
                 ),
             ),
         ),

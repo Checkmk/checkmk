@@ -123,9 +123,7 @@ notification_bulkdir = cmk.utils.paths.var_dir + "/notify/bulk"
 notification_log = cmk.utils.paths.log_dir + "/notify.log"
 
 notification_log_template = (
-    "$CONTACTNAME$ - $NOTIFICATIONTYPE$ - "
-    "$HOSTNAME$ $HOSTSTATE$ - "
-    "$SERVICEDESC$ $SERVICESTATE$ "
+    "$CONTACTNAME$ - $NOTIFICATIONTYPE$ - $HOSTNAME$ $HOSTSTATE$ - $SERVICEDESC$ $SERVICESTATE$ "
 )
 
 notification_host_subject = "Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"

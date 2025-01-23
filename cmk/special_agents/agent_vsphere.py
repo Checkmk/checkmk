@@ -1266,8 +1266,7 @@ def fetch_counters_syntax(
     response_text = connection.query_server("perfcountersyntax", counters="".join(counters_list))
 
     elements = get_pattern(
-        "<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?"
-        "<key>(.*?)</key>.*?<key>(.*?)</key>.*?",
+        "<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?<key>(.*?)</key>.*?<key>(.*?)</key>.*?",
         response_text,
     )
 

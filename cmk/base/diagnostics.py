@@ -783,8 +783,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Output of `mkp list --json`. "
-            "See the corresponding commandline help for more details."
+            "Output of `mkp list --json`. See the corresponding commandline help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:

@@ -175,9 +175,7 @@ check_plugin_test_check_2 = CheckPlugin(
     )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":
-            assert entry.item == (
-                "[Parameters({'levels': (1, 2)})," " Parameters({'default': 42})]"
-            )
+            assert entry.item == ("[Parameters({'levels': (1, 2)}), Parameters({'default': 42})]")
             break
     else:
         raise AssertionError('"test_check_2" not discovered')

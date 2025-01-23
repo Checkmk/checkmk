@@ -59,7 +59,7 @@ def replace_passwords(
             secret_value = passwords[secret_name]
         except KeyError:
             config_warnings.warn(
-                f'The stored password "{secret_name}" used by host "{host_name}"' " does not exist."
+                f'The stored password "{secret_name}" used by host "{host_name}" does not exist.'
             )
             secret_value = "%%%"
         formatted.append(shlex.quote(secret.format % secret_value))

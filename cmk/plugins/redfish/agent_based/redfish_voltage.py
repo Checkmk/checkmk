@@ -53,7 +53,7 @@ def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
     perfdata = process_redfish_perfdata(voltage)
 
     volt_msg = (
-        f"Location: {voltage.get('PhysicalContext')}, " f"SensorNr: {voltage.get('SensorNumber')}"
+        f"Location: {voltage.get('PhysicalContext')}, SensorNr: {voltage.get('SensorNumber')}"
     )
     yield Result(state=State(0), summary=volt_msg)
 

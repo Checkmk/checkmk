@@ -92,15 +92,15 @@ def graph_url_from_context(context: PluginNotificationContext) -> str:
     view_url = base + "/check_mk/view.py?"
     if context["WHAT"] == "HOST":
         return (
-            view_url + f'siteopt={context["OMD_SITE"]}&'
-            f'view_name=host_graphs&'
-            f'host={context["HOSTNAME"]}'
+            view_url + f"siteopt={context['OMD_SITE']}&"
+            f"view_name=host_graphs&"
+            f"host={context['HOSTNAME']}"
         )
     return (
-        view_url + f'siteopt={context["OMD_SITE"]}&'
-        f'view_name=service_graphs&'
-        f'host={context["HOSTNAME"]}&'
-        f'service={context["SERVICEDESC"]}'
+        view_url + f"siteopt={context['OMD_SITE']}&"
+        f"view_name=service_graphs&"
+        f"host={context['HOSTNAME']}&"
+        f"service={context['SERVICEDESC']}"
     )
 
 

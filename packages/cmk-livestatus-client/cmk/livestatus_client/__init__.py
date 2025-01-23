@@ -538,7 +538,7 @@ def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, i
             return address_family, (host, port)
 
     raise MKLivestatusConfigError(
-        "Invalid livestatus URL '%s'. " "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url
+        "Invalid livestatus URL '%s'. Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url
     )
 
 

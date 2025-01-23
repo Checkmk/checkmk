@@ -551,7 +551,7 @@ def test_services_split(
                 "├─4075632 /bin/bash /usr/bin/check_mk_agent",
                 "├─4075634 cat",
                 "├─4075658 systemctl status --all --type service --type socket --no-pager --lines 0",
-                "└─4075659 tr -s " "",
+                "└─4075659 tr -s ",
                 "● check-mk-agent.socket - Local Checkmk agent socket",
                 "Loaded: loaded (/lib/systemd/system/check-mk-agent.socket; enabled; vendor preset: enabled)",
                 "Active: active (listening) since Tue 2024-11-12 15:58:09 CET; 1 day 15h ago",

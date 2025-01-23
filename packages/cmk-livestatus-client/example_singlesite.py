@@ -38,11 +38,7 @@ try:
     sys.stdout.write("\nHosts up: %d\n" % num_up)
 
     stats = conn.query_row(
-        "GET services\n"
-        "Stats: state = 0\n"
-        "Stats: state = 1\n"
-        "Stats: state = 2\n"
-        "Stats: state = 3\n"
+        "GET services\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\n"
     )
     sys.stdout.write("Service stats: %d/%d/%d/%d\n" % tuple(stats))
 

@@ -264,8 +264,5 @@ class ModeBulkDiscovery(WatoMode):
 
     def _find_hosts_with_failed_agent(self) -> list[HostName]:
         return sites.live().query_column(
-            "GET services\n"
-            "Filter: description = Check_MK\n"
-            "Filter: state >= 2\n"
-            "Columns: host_name"
+            "GET services\nFilter: description = Check_MK\nFilter: state >= 2\nColumns: host_name"
         )

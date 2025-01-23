@@ -463,7 +463,7 @@ def next_werk_id() -> WerkId:
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk.content.metadata["description"] += f"""
-{time.strftime('%F %T')}: {title}
+{time.strftime("%F %T")}: {title}
 {comment}"""
 
 

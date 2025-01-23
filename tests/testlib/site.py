@@ -495,9 +495,9 @@ class Site:
             )
         if expected_state is None:
             return
-        assert (
-            state == expected_state
-        ), f"Expected {expected_state} state, got {state} state, output {plugin_output}"
+        assert state == expected_state, (
+            f"Expected {expected_state} state, got {state} state, output {plugin_output}"
+        )
 
     def _last_host_check(self, hostname: str) -> float:
         last_check: int = self.live.query_value(
@@ -1038,9 +1038,9 @@ class Site:
         else:
             logger.info("Site is already running")
 
-        assert (
-            self.path("tmp").is_mount()
-        ), "The site does not have a tmpfs mounted! We require this for good performing tests"
+        assert self.path("tmp").is_mount(), (
+            "The site does not have a tmpfs mounted! We require this for good performing tests"
+        )
 
     @tracer.instrument("Site.stop")
     def stop(self) -> None:
@@ -1596,9 +1596,9 @@ class SiteFactory:
         site = self._site_obj(name)
 
         if not reuse:
-            assert (
-                not site.exists()
-            ), f"Site {name} already existing. Please remove it before restoring it from a backup."
+            assert not site.exists(), (
+                f"Site {name} already existing. Please remove it before restoring it from a backup."
+            )
 
         site.install_cmk()
         logger.info("Creating %s site from backup...", name)
@@ -1713,7 +1713,7 @@ class SiteFactory:
             assert rc == 0, (
                 f"Failed to interactively update the test-site!\n"
                 "Logfile content:\n"
-                f"{pprint.pformat(site.read_file("var/log/update.log"), indent=4)}"
+                f"{pprint.pformat(site.read_file('var/log/update.log'), indent=4)}"
             )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
@@ -1739,9 +1739,9 @@ class SiteFactory:
         restart_httpd()
 
         assert site.version.version == target_version.version, "Version mismatch during update!"
-        assert (
-            site.version.edition.short == target_version.edition.short
-        ), "Edition mismatch during update!"
+        assert site.version.edition.short == target_version.edition.short, (
+            "Edition mismatch during update!"
+        )
         return site
 
     def update_as_site_user(
@@ -1804,9 +1804,9 @@ class SiteFactory:
         restart_httpd()
 
         assert site.version.version == target_version.version, "Version mismatch during update!"
-        assert (
-            site.version.edition.short == target_version.edition.short
-        ), "Edition mismatch during update!"
+        assert site.version.edition.short == target_version.edition.short, (
+            "Edition mismatch during update!"
+        )
 
         site.openapi.changes.activate_and_wait_for_completion()
 

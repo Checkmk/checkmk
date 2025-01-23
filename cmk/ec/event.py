@@ -103,7 +103,7 @@ def create_event_from_syslog_message(
         width = max(len(k) for k in event) + 1
         logger.info(
             "parsed message: %s",
-            "".join(f'\n {k + ":":{width}} {v}' for k, v in sorted(event.items())),
+            "".join(f"\n {k + ':':{width}} {v}" for k, v in sorted(event.items())),
         )
     return event
 
@@ -410,7 +410,7 @@ def fix_broken_sophos_timestamp(timestamp: str) -> str:
     # Step 3: Add explicit offset for local time
     offset = current_utcoffset_seconds()
     hours, minutes = divmod(abs(offset) // 60, 60)
-    return timestamp + f'{"-" if offset < 0 else "+"}{hours:02}{minutes:02}'
+    return timestamp + f"{'-' if offset < 0 else '+'}{hours:02}{minutes:02}"
 
 
 def current_utcoffset_seconds() -> int:

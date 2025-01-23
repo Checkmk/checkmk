@@ -77,9 +77,9 @@ class HostSearch(CmkPage):
         # example of returned result - ['is', 'test_label:foo', 'and', '(Select label)']
         labels_text = self._labels_table.get_by_role("textbox").all_inner_texts()
 
-        assert (
-            labels_text[expected_position * 2] == logical_operator
-        ), "Logical operator used to filter hosts using labels is incorrect."
-        assert (
-            labels_text[expected_position * 2 + 1] == label
-        ), "Label used to filter hosts is incorrect."
+        assert labels_text[expected_position * 2] == logical_operator, (
+            "Logical operator used to filter hosts using labels is incorrect."
+        )
+        assert labels_text[expected_position * 2 + 1] == label, (
+            "Label used to filter hosts is incorrect."
+        )

@@ -85,7 +85,7 @@ def check(item: str, section: SectionQueues) -> CheckResult:
     for queue in queues:
         yield Result(
             state=State.OK,
-            summary=f"Messages in queue '{queue.name.split(".")[-1]}': {queue.messages}",
+            summary=f"Messages in queue '{queue.name.split('.')[-1]}': {queue.messages}",
         )
 
 

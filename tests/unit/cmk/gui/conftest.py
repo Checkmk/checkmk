@@ -443,9 +443,9 @@ class WebTestAppForCMK(FlaskClient):
             )
 
         if status:
-            assert (
-                resp.status_code == status
-            ), f"Expected response code: {status}!\nResponse:\n{resp.text}"
+            assert resp.status_code == status, (
+                f"Expected response code: {status}!\nResponse:\n{resp.text}"
+            )
 
         if not expect_errors:
             assert (errors := resp.request.environ.get("wsgi.errors", [])), (

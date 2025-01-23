@@ -33,7 +33,7 @@ def create_local_check(
     Creates a local check on the passed site and host, using the datasource_programs ruleset.
     """
 
-    bash_command = f"cmk-piggyback create-sections 'Local service piggybacked from $HOSTNAME$' {" ".join(hostnames_piggybacked)}"
+    bash_command = f"cmk-piggyback create-sections 'Local service piggybacked from $HOSTNAME$' {' '.join(hostnames_piggybacked)}"
     rule_id = site.openapi.rules.create(
         ruleset_name="datasource_programs",
         value=bash_command,
@@ -158,7 +158,7 @@ def _write_sitespecific_config_file(central_site: Site) -> Iterator[None]:
         settings: dict[str, Any] = {"sites": {}}
         exec(settings_text, {}, settings)
         settings["sites"]["comp_remote"]["globals"] = {"piggyback_hub_enabled": False}
-        new_site_settings = f"sites.update({repr(settings["sites"])})"
+        new_site_settings = f"sites.update({repr(settings['sites'])})"
         central_site.write_text_file(global_settings_file, new_site_settings)
         yield
     finally:

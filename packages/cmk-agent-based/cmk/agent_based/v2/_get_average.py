@@ -55,12 +55,9 @@ def get_average(
     """
     match value_store.get(key, ()):
         case (
-            float()
-            | int() as start_time,
-            float()
-            | int() as last_time,
-            float()
-            | int() as last_average,
+            float() | int() as start_time,
+            float() | int() as last_time,
+            float() | int() as last_average,
         ):
             pass
         case _other:

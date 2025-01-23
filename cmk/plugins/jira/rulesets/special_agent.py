@@ -190,8 +190,7 @@ def _parameter_form() -> Dictionary:
                                 parameter_form=String(
                                     title=Title("Service name: "),
                                     help_text=Help(
-                                        "The resulting service will get this entry as "
-                                        "service name"
+                                        "The resulting service will get this entry as service name"
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
                                 ),
@@ -227,8 +226,7 @@ def _parameter_form() -> Dictionary:
                                         CascadingSingleChoiceElement(
                                             name="sum",
                                             title=Title(
-                                                "Summed up values of "
-                                                "the following numeric field:"
+                                                "Summed up values of the following numeric field:"
                                             ),
                                             parameter_form=Dictionary(
                                                 elements={

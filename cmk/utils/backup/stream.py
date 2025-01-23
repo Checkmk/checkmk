@@ -59,9 +59,9 @@ class MKBackupStream:
             )
             yield chunk
 
-        assert (
-            not self._cipher or self._cipher.finalize() == b""
-        ), "Cipher didn't finish processing all input"
+        assert not self._cipher or self._cipher.finalize() == b"", (
+            "Cipher didn't finish processing all input"
+        )
 
     def _init_processing(self) -> bytes | None:
         raise NotImplementedError()

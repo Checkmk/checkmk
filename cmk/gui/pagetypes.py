@@ -1689,7 +1689,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
                 target_page = target_page.page_url()
 
         response.set_content_type("text/plain")
-        response.set_data(f"{target_page or ""}\n{"true" if need_sidebar_reload else "false"}")
+        response.set_data(f"{target_page or ''}\n{'true' if need_sidebar_reload else 'false'}")
 
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod

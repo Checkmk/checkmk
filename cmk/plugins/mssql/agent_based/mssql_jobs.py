@@ -164,7 +164,7 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
         # The user is only interested in the upcoming "next_run_time".
         section.setdefault(
             (
-                f"{job["job_name"]} - {current_instance}"
+                f"{job['job_name']} - {current_instance}"
                 # should always be set but we anyway guard against it
                 if current_instance
                 else job["job_name"]

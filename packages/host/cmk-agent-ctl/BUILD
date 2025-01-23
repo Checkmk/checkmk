@@ -1,5 +1,5 @@
 load("@cargo_deps_host//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 
 rust_library(
     name = "cmk-agent-ctl-lib",
@@ -47,6 +47,46 @@ rust_test(
     crate = ":cmk-agent-ctl-lib",
     deps = all_crate_deps() + [
         ":cmk-agent-ctl-lib",
+        "@cargo_deps_host//:assert_cmd",
+        "@cargo_deps_host//:lazy_static",
+        "@cargo_deps_host//:predicates",
+        "@cargo_deps_host//:tempfile",
+    ],
+)
+
+rust_library(
+    name = "cmk-agent-ctl-tests-common",
+    testonly = 1,
+    srcs = [
+        "tests/common/agent/linux.rs",
+        "tests/common/agent/mod.rs",
+        "tests/common/agent/win.rs",
+        "tests/common/certs.rs",
+        "tests/common/mod.rs",
+    ],
+    crate_features = ["build_system_bazel"],
+    crate_name = "common",
+    crate_root = "tests/common/mod.rs",
+    deps = all_crate_deps() + [
+        ":cmk-agent-ctl-lib",
+        "@cargo_deps_host//:assert_cmd",
+        "@cargo_deps_host//:lazy_static",
+        "@cargo_deps_host//:predicates",
+        "@cargo_deps_host//:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "cmk-agent-ctl-lib-external",
+    srcs = [
+        "tests/test_cli.rs",
+        "tests/test_pull.rs",
+        "tests/test_status.rs",
+    ],
+    crate_features = ["build_system_bazel"],
+    deps = all_crate_deps() + [
+        ":cmk-agent-ctl-lib",
+        ":cmk-agent-ctl-tests-common",
         "@cargo_deps_host//:assert_cmd",
         "@cargo_deps_host//:lazy_static",
         "@cargo_deps_host//:predicates",

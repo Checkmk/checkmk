@@ -65,7 +65,7 @@ git_override(
     remote = "https://github.com/TimotheusBachinger/rules_py",
 )
 
-bazel_dep(name = "aspect_rules_lint", version = "1.0.2")
+bazel_dep(name = "aspect_rules_lint", version = "1.0.8")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

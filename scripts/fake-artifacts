@@ -8,19 +8,32 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 agents_windows="agents/windows"
 
 touch_and_executable=(
+    ### Agent Updater ###
+    # created by `build-linux-agent-updater.groovy`
     "${REPO_PATH}/non-free/cmk-update-agent/cmk-update-agent"
     "${REPO_PATH}/non-free/cmk-update-agent/cmk-update-agent-32"
+
+    # Windows Agent
+    # created by `package_helper.groovy::provide_agent_updaters` - WTF
     "${REPO_PATH}/${agents_windows}/check_mk_agent.msi"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_unsigned.msi"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy-64.exe"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.exe"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.msi"
     "${REPO_PATH}/${agents_windows}/OpenHardwareMonitorCLI.exe"
+
+    # RobotMK
+    # created by `robotmk.make` but we dont need a windows node for it (we get the prebuilt artifacts from github)
     "${REPO_PATH}/${agents_windows}/robotmk_ext.exe"
+
+    # mk-sql
+    # created by `package_helper.groovy::provide_agent_updaters` - WTF
     "${REPO_PATH}/${agents_windows}/mk-sql.exe"
 )
 
 touch_only=(
+    # Windows Agent
+    # created by `package_helper.groovy::provide_agent_updaters`
     "${REPO_PATH}/agents/windows/check_mk.example.ini"
     "${REPO_PATH}/agents/windows/check_mk.user.yml"
     "${REPO_PATH}/agents/windows/python-3.cab"

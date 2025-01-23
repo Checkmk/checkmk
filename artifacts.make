@@ -35,11 +35,13 @@ endif
 SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
-SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe 
-SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe 
+SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
+SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.cab \
+	$(REPO_PATH)/agents/windows/windows_files_hashes.txt \
+	$(REPO_PATH)/agents/windows/check_mk.user.yml \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
 SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
@@ -58,3 +60,8 @@ else
 PROTO_PYTHON_OUT :=
 CMC_PROTO_MODULES :=
 endif
+SOURCE_BUILT_ARTIFACTS := \
+	$(SOURCE_BUILT_AGENTS) \
+	$(SOURCE_BUILT_AGENT_UPDATER)
+print-artifacts-%:
+	@echo '$($*)'

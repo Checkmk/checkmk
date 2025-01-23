@@ -100,3 +100,18 @@ class NotificationConfiguration(CmkPage):
     def delete_notification_rule(self, rule_id: int | str) -> None:
         self.notification_rule_delete_button(rule_id).click()
         self.delete_rule_confirmation_button.click()
+
+    def _get_notification_stat_count(self, title: str) -> Locator:
+        return (
+            self.main_area.locator("div[class='section']")
+            .filter(has=self.main_area.page.get_by_role("heading", name=title))
+            .get_by_role("paragraph")
+        )
+
+    def check_total_sent_notifications_is_not_zero(self) -> None:
+        locator = self._get_notification_stat_count("Total sent notifications")
+        expect(locator).not_to_have_text(re.compile(r"^0$"))  # "0" isn't valid
+
+    def check_failed_notifications_is_zero(self) -> None:
+        locator = self._get_notification_stat_count("Failed notifications")
+        expect(locator).to_have_text(re.compile(r"^\s0$"))  # " 0" is valid

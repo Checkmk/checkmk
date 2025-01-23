@@ -5,7 +5,6 @@
 """Managing the available automation calls"""
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
@@ -13,10 +12,8 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
-T = TypeVar("T")
 
-
-class AutomationCommand(ABC, Generic[T]):
+class AutomationCommand[T](ABC):
     """Abstract base class for all automation commands"""
 
     @abstractmethod

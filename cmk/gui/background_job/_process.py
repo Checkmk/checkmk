@@ -34,7 +34,6 @@ from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
-from cmk.gui.utils import get_failed_plugins
 
 from cmk.trace import (
     get_tracer,
@@ -149,8 +148,6 @@ def run_process(job_parameters: JobParameters) -> None:
 def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[None]]:
     @contextmanager
     def gui_job_context() -> Iterator[None]:
-        _load_ui()
-
         try:
             features = features_registry[str(edition(paths.omd_root))]
         except KeyError:
@@ -163,17 +160,6 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
             yield None
 
     return gui_job_context
-
-
-def _load_ui() -> None:
-    """This triggers loading all modules of the UI, internal ones and plugins"""
-    # Import locally to only have it executed in the background job process and not in the launching
-    # process. Moving it to the module level will significantly slow down the launching process.
-    from cmk.gui import main_modules
-
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
 
 
 def _initialize_environment(

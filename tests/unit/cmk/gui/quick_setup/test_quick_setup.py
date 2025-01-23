@@ -5,6 +5,7 @@
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 
 from cmk.gui.quick_setup.handlers.stage import recap_stage
+from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
@@ -63,6 +64,7 @@ def test_form_spec_recap() -> None:
             RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}})
         ],
         quick_setup_formspec_map=form_spec_map,
+        progress_logger=InfoLogger(),
     )
 
     assert len(stage_recap) == 1

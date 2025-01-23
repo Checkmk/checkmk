@@ -25,6 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    ProgressLogger,
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
@@ -242,6 +243,7 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("aws"),
@@ -286,7 +288,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, parsed_data: _save_and_activate_recap(
+                    lambda __, ___, parsed_data, ____: _save_and_activate_recap(
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],

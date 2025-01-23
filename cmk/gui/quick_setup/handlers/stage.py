@@ -35,6 +35,8 @@ from cmk.gui.quick_setup.handlers.utils import (
     Button,
     form_spec_parse,
     get_stage_components_from_widget,
+    InfoLogger,
+    JobBasedProgressLogger,
     LOAD_WAIT_LABEL,
     NEXT_BUTTON_ARIA_LABEL,
     NEXT_BUTTON_LABEL,
@@ -51,6 +53,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
     FormspecMap,
+    ProgressLogger,
     QuickSetup,
     QuickSetupStage,
     QuickSetupStageAction,
@@ -119,6 +122,7 @@ def verify_stage_custom_validators(
     stage_action_id: ActionId,
     stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
+    progress_logger: ProgressLogger,
 ) -> ValidationErrors | None:
     """Verify that the custom validators pass of a Quick setup stage.
 
@@ -141,6 +145,9 @@ def verify_stage_custom_validators(
         quick_setup_formspec_map:
             The form spec map of the quick setup across all stages. This map is based on the stages
             definition
+
+        progress_logger:
+            The logger to log progress messages to.
     """
     errors = ValidationErrors(stage_index=stage_index)
     custom_validators = matching_stage_action(
@@ -148,7 +155,11 @@ def verify_stage_custom_validators(
     ).custom_validators
     errors.stage_errors.extend(
         validate_custom_validators(
-            quick_setup.id, custom_validators, stages_raw_formspecs, quick_setup_formspec_map
+            quick_setup_id=quick_setup.id,
+            custom_validators=custom_validators,
+            stages_raw_formspecs=stages_raw_formspecs,
+            quick_setup_formspec_map=quick_setup_formspec_map,
+            progress_logger=progress_logger,
         ).stage_errors
     )
     return errors if errors.exist() else None
@@ -182,6 +193,7 @@ def recap_stage(
     stage_action_id: ActionId,
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     parsed_formspec = form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
     recap_widgets: list[Widget] = []
@@ -191,6 +203,7 @@ def recap_stage(
                 quick_setup_id,
                 stage_index,
                 parsed_formspec,
+                progress_logger,
             )
         )
     return recap_widgets
@@ -234,7 +247,11 @@ def verify_custom_validators_and_recap_stage(
     input_stages: Sequence[dict],
     form_spec_map: FormspecMap,
     built_stages: Sequence[QuickSetupStage],
+    progress_logger: ProgressLogger | None = None,
 ) -> StageActionResult:
+    if progress_logger is None:
+        progress_logger = InfoLogger()
+
     response = StageActionResult()
     if (
         errors := verify_stage_custom_validators(
@@ -244,6 +261,7 @@ def verify_custom_validators_and_recap_stage(
             stage_action_id=stage_action_id,
             stages=built_stages,
             quick_setup_formspec_map=form_spec_map,
+            progress_logger=progress_logger,
         )
     ) is not None:
         response.validation_errors = errors
@@ -256,6 +274,7 @@ def verify_custom_validators_and_recap_stage(
         stage_action_id=stage_action_id,
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,
+        progress_logger=progress_logger,
     )
     return response
 
@@ -326,6 +345,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
             input_stages=self._user_input_stages,
             form_spec_map=form_spec_map,
             built_stages=built_stages_up_to_index,
+            progress_logger=JobBasedProgressLogger(job_interface),
         )
 
         job_interface.send_progress_update(_("Saving the result..."))

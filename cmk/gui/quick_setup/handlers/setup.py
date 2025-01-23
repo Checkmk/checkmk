@@ -34,6 +34,8 @@ from cmk.gui.quick_setup.handlers.utils import (
     Button,
     form_spec_parse,
     get_stage_components_from_widget,
+    InfoLogger,
+    JobBasedProgressLogger,
     LOAD_WAIT_LABEL,
     NEXT_BUTTON_ARIA_LABEL,
     NEXT_BUTTON_LABEL,
@@ -50,6 +52,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
     FormspecMap,
+    ProgressLogger,
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
@@ -267,7 +270,11 @@ def verify_custom_validators_and_complete_quick_setup(
     input_stages: Sequence[dict],
     form_spec_map: FormspecMap,
     object_id: str | None,
+    progress_logger: ProgressLogger | None = None,
 ) -> CompleteActionResult:
+    if progress_logger is None:
+        progress_logger = InfoLogger()
+
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")
@@ -277,6 +284,7 @@ def verify_custom_validators_and_complete_quick_setup(
         custom_validators=action.custom_validators,
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
+        progress_logger=progress_logger,
     )
     if errors.exist():
         return CompleteActionResult(all_stage_errors=[errors])
@@ -355,6 +363,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
             input_stages=self._user_input_stages,
             form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
             object_id=self._object_id,
+            progress_logger=JobBasedProgressLogger(job_interface),
         )
 
         job_interface.send_progress_update(_("Saving the result..."))

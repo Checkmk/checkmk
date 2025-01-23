@@ -111,6 +111,12 @@ def test_filesystem_email_notifications(
         expected_content["Event"] = "OK–›WARN"
         expected_content["Summary"] = service_summary
 
+        notification_configuration_page.navigate()
+        # The notifications stats need to be read -> open overview
+        notification_configuration_page.collapse_notification_overview(False)
+        notification_configuration_page.check_total_sent_notifications_is_not_zero()
+        notification_configuration_page.check_failed_notifications_is_zero()
+
         with manage_new_page_from_browser_context(service_search_page.page.context) as new_page:
             email_page = EmailPage(new_page, html_file_path)
             email_page.check_table_content(expected_content)
@@ -118,6 +124,8 @@ def test_filesystem_email_notifications(
     finally:
         logger.info("Delete the created rule")
         notification_configuration_page.navigate()
+        # The scrollbar interrupts the interaction with rule delete button -> collapse overview
+        notification_configuration_page.collapse_notification_overview(True)
         notification_configuration_page.delete_notification_rule(notification_description)
 
         logger.info("Enable the default notification rule")

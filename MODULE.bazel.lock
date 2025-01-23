@@ -6849,7 +6849,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "a8514164609222effd287d6f09a231c92a59241380f8f9576747cd0d28c751b1",
+          "@@//requirements_all_lock.txt": "534f82994e09fc6983f1b7a31c2f9b6948aacba9626870fea0a15ea253ab2e5a",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -10993,7 +10993,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "marshmallow==3.23.1     --hash=sha256:3a8dfda6edd8dcdbf216c0ede1d1e78d230a6dc9c5a088f58c4083b974a0d468     --hash=sha256:fece2eb2c941180ea1b7fcbd4a83c51bfdd50093fdd3ad2585ee5e1df2508491"
+              "requirement": "marshmallow==3.23.3     --hash=sha256:20c0f8c613f68bcb45b2a0d3282e2f172575560170bf220d67aafb42717910e4     --hash=sha256:d586c8685ebdb80bf754e1f96e3f305aaf30951f1fc69175b977453633467e76"
             }
           },
           "cmk_requirements_312_azure_mgmt_resource": {
@@ -12800,7 +12800,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "faker==34.0.2     --hash=sha256:3457789911e97ce53505c8bf1ca7d4cde2bc72f8d1812c9bb5d021f6d13f13f1     --hash=sha256:57267f9b62fdf0c64b6433150e216709a9a239ec9651de0515f73c9ea2fa14e6"
+              "requirement": "faker==35.0.0     --hash=sha256:42f2da8cf561e38c72b25e9891168b1e25fec42b6b0b5b0b6cd6041da54af885     --hash=sha256:926d2301787220e0554c2e39afc4dc535ce4b0a8d0a089657137999f66334ef4"
             }
           },
           "cmk_requirements_312_py_import_cycles": {

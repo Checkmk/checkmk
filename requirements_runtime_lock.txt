@@ -1088,9 +1088,9 @@ markupsafe==3.0.2 \
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.23.1 \
-    --hash=sha256:3a8dfda6edd8dcdbf216c0ede1d1e78d230a6dc9c5a088f58c4083b974a0d468 \
-    --hash=sha256:fece2eb2c941180ea1b7fcbd4a83c51bfdd50093fdd3ad2585ee5e1df2508491
+marshmallow==3.23.3 \
+    --hash=sha256:20c0f8c613f68bcb45b2a0d3282e2f172575560170bf220d67aafb42717910e4 \
+    --hash=sha256:d586c8685ebdb80bf754e1f96e3f305aaf30951f1fc69175b977453633467e76
     # via
     #   -r _requirements_runtime.txt
     #   apispec-oneofschema

@@ -39,7 +39,7 @@ pymssql==2.3.1 # needed by check_sql active check
 pymysql~=1.1.1 # needed by check_sql active check
 psycopg2-binary==2.9.6 # needed by check_sql active check
 apispec
-marshmallow==3.23.1  # temporary pin
+marshmallow==3.23.3  # temporary pin
 marshmallow-oneofschema
 apispec-oneofschema
 pydantic~=2.7

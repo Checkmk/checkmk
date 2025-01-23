@@ -88,7 +88,7 @@ class BaseSchema(Schema):
     @classmethod
     def from_dict(
         cls,
-        fields: dict[str, ma_fields.Field | type[ma_fields.Field]],
+        fields: dict[str, ma_fields.Field],
         *,
         name: str = "GeneratedSchema",
     ) -> type[Self]:

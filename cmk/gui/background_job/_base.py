@@ -8,7 +8,6 @@ import os
 import shutil
 import time
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.resulttype as result
@@ -58,7 +57,6 @@ class BackgroundJob:
         self.validate_job_id(job_id)
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
-        self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
 
         self._logger = logger if logger else log.logger.getChild("background-job")
 
@@ -213,10 +211,7 @@ class BackgroundJob:
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None = None,
     ) -> result.Result[None, AlreadyRunningError | StartupError]:
-        with (
-            tracer.start_as_current_span(f"start_background_job[{self._job_id}]") as span,
-            store.locked(self._job_initializiation_lock),
-        ):
+        with tracer.start_as_current_span(f"start_background_job[{self._job_id}]") as span:
             if (
                 start_result := self._start(
                     target,

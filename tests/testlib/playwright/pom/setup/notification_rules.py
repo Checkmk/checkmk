@@ -292,3 +292,43 @@ class AddNotificationRule(BaseNotificationPage):
             url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
         )
         self._validate_page()
+
+    @property
+    def si_description(self) -> Locator:
+        return self.editor_slide_in.locator("td.value").first.locator("input")
+
+    @property
+    def si_custom_sender_checkbox(self) -> Locator:
+        return self.editor_slide_in.get_by_role("checkbox", name='Custom sender ("From")')
+
+    @property
+    def si_displayname_checkbox(self) -> Locator:
+        return self.editor_slide_in.get_by_role("checkbox", name="Display name")
+
+    @property
+    def si_displayname_input(self) -> Locator:
+        return self.editor_slide_in.get_by_label("Display name").locator("input")
+
+    @property
+    def si_service_subject_checkbox(self) -> Locator:
+        return self.editor_slide_in.get_by_role(
+            "checkbox", name="Subject line for service notifications"
+        )
+
+    @property
+    def si_service_subject_input(self) -> Locator:
+        return self.editor_slide_in.get_by_label("Subject line for service notifications").locator(
+            "input"
+        )
+
+    @property
+    def si_host_subject_checkbox(self) -> Locator:
+        return self.editor_slide_in.get_by_role(
+            "checkbox", name="Subject line for host notifications"
+        )
+
+    @property
+    def si_host_subject_input(self) -> Locator:
+        return self.editor_slide_in.get_by_label("Subject line for host notifications").locator(
+            "input"
+        )

@@ -9,6 +9,7 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import functools
 import json
 import os
 import re
@@ -29,6 +30,7 @@ from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import get_omd_config
 
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
@@ -115,7 +117,9 @@ def check_mk_local_automation_serialized(
 
         executor: AutomationExecutor = (
             automation_subprocess.SubprocessExecutor()
-            if force_cli_interface or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            if force_cli_interface
+            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            or not _automation_helper_enabled_in_omd_config()
             else automation_helper.HelperExecutor()
         )
 
@@ -893,3 +897,8 @@ class LastKnownCentralSiteVersionStore(store.PydanticStore):
     @staticmethod
     def get_path() -> Path:
         return Path(paths.var_dir) / "last_known_site_version.json"
+
+
+@functools.cache
+def _automation_helper_enabled_in_omd_config() -> bool:
+    return get_omd_config(paths.omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"

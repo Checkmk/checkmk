@@ -36,6 +36,7 @@ SKIPPED_CHECKS = [
     "Postfix Queue",
     "Power 1",
     "MSSQL Job: syspolicy_purge_history",
+    "MSSQL job syspolicy_purge_history",
 ]
 
 

@@ -37,6 +37,7 @@ def test_hooks(site: Site) -> None:
         "RABBITMQ_ONLY_FROM",
         "RABBITMQ_MANAGEMENT_PORT",
         "RABBITMQ_DIST_PORT",
+        "AUTOMATION_HELPER",
     ]
 
     if not site.version.is_raw_edition():

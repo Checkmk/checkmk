@@ -5,6 +5,12 @@
 
 unset LANG
 
+. "${OMD_ROOT}/etc/omd/site.conf"
+if [ "${CONFIG_AUTOMATION_HELPER}" != "on" ]; then
+    printf "disabled\n"
+    exit 5
+fi
+
 PIDFILE=$OMD_ROOT/tmp/run/automation-helper.pid
 DAEMON=$OMD_ROOT/bin/cmk-automation-helper
 THE_PID=$(cat "$PIDFILE" 2>/dev/null)

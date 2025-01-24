@@ -16,6 +16,7 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_APACHE_MODE": "own",
         "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
         "CONFIG_APACHE_TCP_PORT": "5002",
+        "CONFIG_AUTOMATION_HELPER": "on",
         "CONFIG_AUTOSTART": "off",
         "CONFIG_CORE": "cmc",
         "CONFIG_LIVEPROXYD": "on",

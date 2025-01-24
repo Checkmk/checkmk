@@ -24,7 +24,6 @@ from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 
 from cmk.checkengine.checking import ConfiguredService
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.submitters import (
     FormattedSubmittee,
@@ -131,12 +130,7 @@ def get_discovered_services(agent_data_filename: str) -> Sequence[ConfiguredServ
             check_plugin_name=CheckPluginName(service["plugin_name"]),
             item=service["item"],
             description=service["description"],
-            parameters=TimespecificParameters(
-                [
-                    TimespecificParameterSet(parameter["default"], parameter["time_period_values"])
-                    for parameter in list(service["parameters"])
-                ]
-            ),
+            parameters=service["parameters"],
             discovered_parameters=service["discovered_parameters"],
             labels=service["labels"],
             discovered_labels=service["discovered_labels"],

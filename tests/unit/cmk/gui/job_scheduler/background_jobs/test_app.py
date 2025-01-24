@@ -49,6 +49,11 @@ class DummyExecutor(JobExecutor):
     def is_alive(self, job_id: str) -> bool:
         return True
 
+    def all_running_jobs(self) -> dict[str, int]:
+        return {
+            "job_id": 42,
+        }
+
 
 def _get_test_client(loaded_at: int) -> TestClient:
     return TestClient(get_application(loaded_at=loaded_at, executor=DummyExecutor(logger)))
@@ -111,4 +116,6 @@ def test_health_check() -> None:
         resp = client.get("/health")
 
     assert resp.status_code == 200
-    assert HealthResponse.model_validate(resp.json()).loaded_at == loaded_at
+    response = HealthResponse.model_validate(resp.json())
+    assert response.loaded_at == loaded_at
+    assert response.background_jobs.running_jobs == {"job_id": 42}

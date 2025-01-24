@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from cmk.gui.background_job import (
+    BackgroundJobsHealth,
     HealthResponse,
     IsAliveRequest,
     IsAliveResponse,
@@ -64,6 +65,9 @@ def get_application(loaded_at: int, executor: JobExecutor) -> FastAPI:
 
     @app.get("/health")
     async def check_health(request: Request) -> HealthResponse:
-        return HealthResponse(loaded_at=request.app.state.loaded_at)
+        return HealthResponse(
+            loaded_at=request.app.state.loaded_at,
+            background_jobs=BackgroundJobsHealth(running_jobs=executor.all_running_jobs()),
+        )
 
     return app

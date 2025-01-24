@@ -186,8 +186,6 @@ def main() {
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
                 )
-
-                bazel_logs.try_plot_cache_hits("${deliverables_dir}/${bazel_log_prefix}", [distro]);
             }
         }]
     }
@@ -196,6 +194,8 @@ def main() {
 
     smart_stage(name: "Archive artifacts") {
         dir("${deliverables_dir}") {
+            bazel_logs.try_plot_cache_hits("${bazel_log_prefix}", selected_distros);
+
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
                     artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*, **/*.json",

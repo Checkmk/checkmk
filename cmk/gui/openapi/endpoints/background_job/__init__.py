@@ -67,9 +67,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
             extensions={
                 # TODO: add the snapshot fields
                 "active": snapshot.is_active,
-                "status": {
-                    "state": status.state,
-                },
+                "status": {"state": status.state, "log_info": status.loginfo},
             },
             deletable=False,
             editable=False,

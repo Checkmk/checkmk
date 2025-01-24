@@ -20,7 +20,7 @@ from cmk.utils import paths
 
 from ._executor import JobExecutor
 from ._interface import JobTarget, SpanContextModel
-from ._models import HealthResponse
+from ._models import HealthResponse, IsAliveRequest, IsAliveResponse, StartRequest, TerminateRequest
 
 JOB_SCHEDULER_HOST: Final = "localhost"
 JOB_SCHEDULER_BASE_URL: Final = "http://local-ui-job-scheduler"
@@ -43,13 +43,41 @@ class JobSchedulerExecutor(JobExecutor):
         lock_wato: bool,
         is_stoppable: bool,
         override_job_log_level: int | None,
-        origin_span: SpanContextModel,
-    ) -> None: ...
+        origin_span_context: SpanContextModel,
+    ) -> None:
+        response = self._session.post(
+            JOB_SCHEDULER_BASE_URL + "/start",
+            json=StartRequest(
+                job_id=job_id,
+                work_dir=work_dir,
+                span_id=span_id,
+                target=JobTarget(
+                    callable=target.callable,
+                    args=target.args.model_dump(mode="json"),
+                ),
+                lock_wato=lock_wato,
+                is_stoppable=is_stoppable,
+                override_job_log_level=override_job_log_level,
+                origin_span_context=origin_span_context,
+            ).model_dump(mode="json"),
+        )
+        response.raise_for_status()
 
-    def terminate(self, job_id: str) -> None: ...
+    def terminate(self, job_id: str) -> None:
+        response = self._session.post(
+            JOB_SCHEDULER_BASE_URL + "/terminate",
+            json=TerminateRequest(job_id=job_id).model_dump(mode="json"),
+        )
+        response.raise_for_status()
 
     def is_alive(self, job_id: str) -> bool:
-        return True
+        response = self._session.post(
+            JOB_SCHEDULER_BASE_URL + "/is_alive",
+            json=IsAliveRequest(job_id=job_id).model_dump(mode="json"),
+        )
+        response.raise_for_status()
+        response_data = response.json()
+        return IsAliveResponse.model_validate(response_data).is_alive
 
     def health(self) -> HealthResponse:
         response = self._session.get(JOB_SCHEDULER_BASE_URL + "/health")

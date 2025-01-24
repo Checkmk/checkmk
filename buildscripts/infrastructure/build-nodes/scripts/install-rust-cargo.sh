@@ -20,8 +20,8 @@ DEFAULT_TOOLCHAIN_VERSION="1.78"
 # List the versions separated by space, e.g. "1 2 3", and add a reason below.
 #
 # Reasons for added toolchains:
-# - 1.75: Currently used by all packages
-ADDITIONAL_TOOLCHAIN_VERSIONS="1.75"
+# - 1.84: Currently used by all packages
+ADDITIONAL_TOOLCHAIN_VERSIONS="1.84"
 
 DEFAULT_TARGET="x86_64-unknown-linux-gnu"
 # List additional targets here, separated by space.

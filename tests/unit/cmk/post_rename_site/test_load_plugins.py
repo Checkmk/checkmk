@@ -17,6 +17,7 @@ from cmk.post_rename_site.registry import rename_action_registry
 def fixture_expected_plugins() -> list[str]:
     expected = [
         "sites",
+        "messaging",
         "hosts_and_folders",
         "update_core_config",
         "warn_remote_site",

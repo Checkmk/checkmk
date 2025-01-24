@@ -184,14 +184,15 @@ def sync_remote_broker_certs(
     )
 
 
-def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
+def clean_remote_sites_certs(*, kept_sites: Container[SiteId]) -> None:
     """
-    Remove broker certificates for sites that no longer exist.
+    Remove broker certificates of remote sites.
     """
 
     for cert in all_cert_files(omd_root=paths.omd_root):
-        if SiteId(cert.name.removesuffix("_cert.pem")) not in alive_sites:
-            cert.unlink(missing_ok=True)
+        if SiteId(cert.name.removesuffix("_cert.pem")) in kept_sites:
+            continue
+        cert.unlink(missing_ok=True)
 
 
 def trigger_remote_certs_creation(

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import CollapsibleTitle from '@/quick-setup/components/CollapsibleTitle.vue'
 import CompositeWidget from './CompositeWidget.vue'
 import { type CollapsibleWidgetProps } from './widget_types'
@@ -24,7 +24,10 @@ watch(props, (newProps) => {
   }
 })
 
-const updateData = (id: string, value: object) => {
+const updateData = (id: string, value: Ref) => {
+  if (Object.keys(value.value || {}).length > 0) {
+    isOpen.value = true
+  }
   emits('update', id, value)
 }
 </script>

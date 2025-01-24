@@ -20,9 +20,9 @@ def run(
     config: ReloaderConfig,
     cache: Cache,
     reload_callback: Callable[[], None],
+    shutdown_flag: Event,
 ) -> Generator[None]:
     LOGGER.info("[reloader] Initializing")
-    shutdown_flag = Event()
     with ThreadPoolExecutor(max_workers=1) as executor:
         executor.submit(_run, config, cache, reload_callback, shutdown_flag)
         try:

@@ -8,6 +8,7 @@
 import os
 import signal
 from contextlib import nullcontext
+from threading import Event
 
 from setproctitle import setproctitle
 
@@ -70,6 +71,7 @@ def main() -> int:
                     config.reloader_config,
                     cache,
                     lambda: os.kill(current_pid, signal.SIGHUP),
+                    Event(),
                 )
                 if config.reloader_config.active
                 else nullcontext()

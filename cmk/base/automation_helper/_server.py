@@ -27,6 +27,7 @@ class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[mis
         super().__init__()
 
     def load_config(self) -> None:
+        self.cfg.set("proc_name", "automation-helper")
         self.cfg.set("umask", 0o077)
         self.cfg.set("bind", f"unix:{self._config.unix_socket}")
         self.cfg.set("workers", self._config.num_workers)

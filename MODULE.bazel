@@ -47,14 +47,7 @@ python.toolchain(
     python_version = PYTHON_VERSION,
 )
 
-bazel_dep(name = "rules_mypy", version = "0.17.0")
-
-# Remove the override when upgrading to 0.18.
-git_override(
-    module_name = "rules_mypy",
-    commit = "c477d2a124ce4a0ee60a9e5df6be0dd92acba6d8",
-    remote = "https://github.com/theoremlp/rules_mypy",
-)
+bazel_dep(name = "rules_mypy", version = "0.23.0")
 
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
 

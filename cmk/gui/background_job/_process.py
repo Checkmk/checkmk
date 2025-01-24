@@ -13,7 +13,7 @@ import logging
 import threading
 import time
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
 from typing import ContextManager, IO
@@ -73,19 +73,27 @@ def run_process(job_parameters: JobParameters) -> None:
     final_status_update: JobStatusSpecUpdate = {}
     try:
         job_status = jobstatus_store.read()
-        progress_update = _initialize_environment(
-            logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
-        )
+        # TODO: Influences the whole process. Set level on our log handler, to have it job specific?
+        _set_log_levels(override_job_log_level)
 
-        with tracer.start_as_current_span(
-            f"run_process[{span_id}]",
-            context=set_span_in_context(INVALID_SPAN),
-            attributes={
-                "cmk.job_id": job_id,
-                "cmk.target.callable": str(target.callable),
-            },
-            links=[Link(origin_span_context.to_span_context())],
+        with (
+            _open_progress_update(Path(work_dir)) as progress_update,
+            tracer.start_as_current_span(
+                f"run_process[{span_id}]",
+                context=set_span_in_context(INVALID_SPAN),
+                attributes={
+                    "cmk.job_id": job_id,
+                    "cmk.target.callable": str(target.callable),
+                },
+                links=[Link(origin_span_context.to_span_context())],
+            ),
+            (
+                store.lock_checkmk_configuration(paths.configuration_lockfile)
+                if lock_wato
+                else nullcontext()
+            ),
         ):
+            _enable_logging_to_progress_update(progress_update)
             logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
             jobstatus_store.update({"state": JobStatusStates.RUNNING})
 
@@ -162,23 +170,6 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
     return gui_job_context
 
 
-def _initialize_environment(
-    logger: Logger,
-    job_id: str,
-    work_dir: Path,
-    lock_wato: bool,
-    is_stoppable: bool,
-    override_job_log_level: int | None,
-) -> IO[str]:
-    """Setup environment (Logging, Livestatus handles, etc.)"""
-    progress_update = _open_progress_update(work_dir)
-    # TODO: Influences the whole process. Set level on our log handler, to have it job specific?
-    _set_log_levels(override_job_log_level)
-    _enable_logging_to_progress_update(progress_update)
-    _lock_configuration(lock_wato)
-    return progress_update
-
-
 def _set_log_levels(override_job_log_level: int | None) -> None:
     log.set_log_levels(
         {
@@ -231,9 +222,3 @@ class ThreadLogFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         return record.threadName == self.thread_name
-
-
-def _lock_configuration(lock_wato: bool) -> None:
-    if lock_wato:
-        store.release_all_locks()
-        store.lock_exclusive(paths.configuration_lockfile)

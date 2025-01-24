@@ -60,6 +60,7 @@ def test_plugin_update(
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
     test_site_update = site_factory_update.update_as_site_user(test_site_update)
+    test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data = {}
     target_data_status_0 = {}
@@ -92,6 +93,7 @@ def test_plugin_update(
     test_site_update.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
         get_host_names(test_site_update)
     )
+    test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data_sd = {}
     target_data_sd_status_0 = {}

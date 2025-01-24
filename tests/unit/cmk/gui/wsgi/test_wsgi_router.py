@@ -6,7 +6,7 @@ import importlib.util
 import os
 import os.path
 import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import-not-found]
+from importlib._bootstrap_external import SourceFileLoader
 
 import flask
 import pytest

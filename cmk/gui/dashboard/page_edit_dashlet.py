@@ -188,7 +188,7 @@ class EditDashletPage(Page):
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
                     # We have to trust from_html_vars and validate_value for now
-                    new_dashlet_spec.update(type_properties)  # type: ignore[typeddict-item]
+                    new_dashlet_spec.update(type_properties)
 
                 elif handle_input_func:
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added

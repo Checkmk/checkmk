@@ -224,9 +224,7 @@ def _do_create_snapshot(data: SnapshotData, secret: bytes) -> None:
 
             for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
-                # key is basically Literal["comment", "created_by", "type"] but
-                # the assignment from the tuple confuses mypy
-                encoded_value = data[key].encode("utf-8")  # type: ignore[literal-required]
+                encoded_value = data[key].encode("utf-8")
                 tarinfo.size = len(encoded_value)
                 tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
@@ -320,8 +318,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
                     def handler(x: str | IO[bytes], entry: str = entry) -> str:
                         return _get_file_content(x, entry).decode("utf-8")
 
-                    # entry is assigned from a tuple, mypy does not get that this is Literal...
-                    status[entry] = access_snapshot(handler)  # type: ignore[literal-required]
+                    status[entry] = access_snapshot(handler)
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 

@@ -25,7 +25,7 @@ jsonschema
 libcst # concrete syntax trees for plugin migration helpers
 msrest
 multipart  # redfixh server mocker for integration tests
-mypy==1.13.0  # temporary pin # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
+mypy # used by test/Makefile's test-mypy target
 mypy-protobuf # for mypy
 networkx # needed for py-import-cycles
 pexpect # used for update testing

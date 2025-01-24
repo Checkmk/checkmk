@@ -7,10 +7,11 @@ import email
 import logging
 import time
 from collections.abc import Iterator
+from email.message import Message
 from email.policy import default
 from getpass import getuser
 from pathlib import Path
-from typing import Final
+from typing import Final, IO
 
 from faker import Faker
 
@@ -19,6 +20,13 @@ from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
+
+
+def message_from_file(f: IO[str]) -> Message[str, str]:
+    # The typing of the email package is... "interesting". Here we have a mismatch between the
+    # expected "Message[str, str]" and the actual "EmailMessage". Even the example on
+    # https://docs.python.domainunion.de/3/library/email.examples.html has this typing problem. :-}
+    return email.message_from_file(f, policy=default)  # type: ignore[arg-type]
 
 
 class EmailManager:
@@ -64,7 +72,7 @@ class EmailManager:
         for file_name in self.unread_folder.iterdir():
             file_path = self.unread_folder / file_name
             with open(file_path) as file:
-                msg = email.message_from_file(file, policy=default)
+                msg = message_from_file(file)
                 logger.info("Email received, subject: '%s'", msg.get("Subject"))
                 if email_subject is None or msg.get("Subject") == email_subject:
                     return file_path
@@ -99,7 +107,7 @@ class EmailManager:
     ) -> None:
         """Check that the email has expected fields and text content."""
         with open(file_path) as file:
-            msg = email.message_from_file(file, policy=default)
+            msg = message_from_file(file)
             logger.info("Check that email fields have expected values")
             for field, expected_value in expected_fields.items():
                 assert msg.get(field) == expected_value, f"Field '{field}' has unexpected value"
@@ -120,7 +128,7 @@ class EmailManager:
     def copy_html_content_into_file(self, file_path: Path) -> Path:
         """Copy the html content of the email into a file and return the file path."""
         with open(file_path) as file:
-            msg = email.message_from_file(file, policy=default)
+            msg = message_from_file(file)
             for part in msg.walk():
                 if part.get_content_type() == "text/html":
                     payload = part.get_payload(decode=True)

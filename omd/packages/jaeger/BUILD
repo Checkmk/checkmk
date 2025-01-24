@@ -1,7 +1,5 @@
 JAEGER_VERSION = "2.0.0"
 
-exports_files(["skel.permissions"])
-
 genrule(
     name = "fetch_package",
     srcs = ["@jaeger//file"],

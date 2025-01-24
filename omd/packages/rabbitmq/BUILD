@@ -3,8 +3,6 @@ filegroup(
     srcs = glob(["**"]),
 )
 
-exports_files(["skel.permissions"])
-
 genrule(
     name = "build",
     srcs = [

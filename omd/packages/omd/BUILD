@@ -1,4 +1,1 @@
-exports_files([
-    "skel.permissions",
-    "use_system_openssl",
-])
+exports_files(["use_system_openssl"])

@@ -1,0 +1,12 @@
+Title: Handle role deletion during user migration
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1737713782
+Edition: cee
+Level: 1
+Version: 2.2.0p39
+
+When removing the roles of a user in the migration process from one
+to another connection it came to an error when activating changes.
+This problem is fixed now.

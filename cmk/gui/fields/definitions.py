@@ -615,7 +615,11 @@ class HostField(base.String):
         host = Host.host(value)
         self._confirm_user_has_permission(host)
 
-        if self._skip_validation_on_view and self.context.get("object_context") == "view":
+        if (
+            self._skip_validation_on_view
+            and self.context is not None
+            and self.context.get("object_context") == "view"
+        ):
             return
 
         # Regex gets checked through the `pattern` of the String instance
@@ -1039,7 +1043,11 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
+        if (
+            self.presence == "might_not_exist_on_view"
+            and self.context is not None
+            and self.context["object_context"] == "view"
+        ):
             return
 
         if self.presence in ["should_exist", "might_not_exist_on_view"]:

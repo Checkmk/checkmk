@@ -25,7 +25,6 @@ from marshmallow import (
 from marshmallow import (
     fields as ma_fields,
 )
-from marshmallow.base import SchemaABC
 from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, pre_dump, PRE_LOAD
 from marshmallow.error_store import ErrorStore
 
@@ -181,7 +180,7 @@ class ValueTypedDictSchema(BaseSchema):
         if isinstance(self.value_type, FieldWrapper):
             result = self._serialize_field(data, field=self.value_type.field)
         elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, SchemaABC)
+            isinstance(self.value_type, type) and issubclass(self.value_type, Schema)
         ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(data, schema_func=schema.load)
@@ -209,7 +208,7 @@ class ValueTypedDictSchema(BaseSchema):
         if isinstance(self.value_type, FieldWrapper):
             result = self._deserialize_field(obj, field=self.value_type.field)
         elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, SchemaABC)
+            isinstance(self.value_type, type) and issubclass(self.value_type, Schema)
         ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(obj, schema_func=schema.dump)

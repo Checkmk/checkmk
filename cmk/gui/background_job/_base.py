@@ -68,11 +68,10 @@ class BackgroundJob:
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
-        use_job_scheduler = False
         self._executor: JobExecutor = (
-            JobSchedulerExecutor(self._logger)
-            if use_job_scheduler
-            else ThreadedJobExecutor(self._logger)
+            ThreadedJobExecutor(self._logger)
+            if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
+            else JobSchedulerExecutor(self._logger)
         )
 
     @staticmethod

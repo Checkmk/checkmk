@@ -96,6 +96,11 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+
+
+@pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:

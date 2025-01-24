@@ -5,6 +5,33 @@
 
 from pydantic import BaseModel
 
+from ._interface import JobTarget, SpanContextModel
+
+
+class StartRequest(BaseModel, frozen=True):
+    job_id: str
+    work_dir: str
+    span_id: str
+    # Args will be parsed specifically per job
+    # (See cmk.gui.job_scheduler._background_jobs._app.get_application.start)
+    target: JobTarget[dict]
+    lock_wato: bool
+    is_stoppable: bool
+    override_job_log_level: int | None
+    origin_span_context: SpanContextModel
+
+
+class TerminateRequest(BaseModel, frozen=True):
+    job_id: str
+
+
+class IsAliveRequest(BaseModel, frozen=True):
+    job_id: str
+
+
+class IsAliveResponse(BaseModel, frozen=True):
+    is_alive: bool
+
 
 class HealthResponse(BaseModel, frozen=True):
     loaded_at: int

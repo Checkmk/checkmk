@@ -23,6 +23,12 @@ await_process_stop() {
     return 1
 }
 
+# shellcheck source=/dev/null
+. "$OMD_ROOT/etc/omd/site.conf"
+if [ "$CONFIG_TRACE_RECEIVE" != on ]; then
+    exit 5
+fi
+
 case "$1" in
     start)
         echo -n 'Starting jaeger...'

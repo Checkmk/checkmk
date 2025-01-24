@@ -734,6 +734,15 @@ class ModeEditBrokerConnection(WatoMode):
             render="form",
             form_narrow=True,
             optional_keys=[],
+            help=_(
+                "You can define pairs of sites here that will be able to directly "
+                "communicate, without routing the messages via the central site. "
+                "Messages themselves will be sent in both directions: from the "
+                "connecter to the connectee and vice versa. "
+                "Note that order in which you choose the sites here still might matter, "
+                "depending on your network restrictions: "
+                "The connecter must be able to establish a TCP connection to the connectee."
+            ),
         )
 
     def _basic_elements(self):
@@ -767,6 +776,7 @@ class ModeEditBrokerConnection(WatoMode):
                     title=_("Connecter:"),
                     choices=replicated_sites_choices,
                     sorted=True,
+                    help=_("Select the site that is establishing the TCP connection."),
                 ),
             ),
             (
@@ -775,6 +785,7 @@ class ModeEditBrokerConnection(WatoMode):
                     title=_("Connectee:"),
                     choices=replicated_sites_choices,
                     sorted=True,
+                    help=_("Select the site that is accepting the TCP connection."),
                 ),
             ),
         ]

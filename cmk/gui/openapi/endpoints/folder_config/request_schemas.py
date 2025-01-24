@@ -116,9 +116,9 @@ class UpdateFolder(BaseSchema):
         "update",
         "inbound",
         description=(
-            "Only set the attributes which are given in this field. Already set "
-            "attributes will not be touched. Can't be used together with attributes "
-            "or remove_attributes fields."
+            "Just update the folder attributes with these attributes. The previously set "
+            "attributes will be overwritten. Can't be used together with attributes or "
+            "remove_attributes fields."
         ),
         example={"tag_criticality": "prod"},
         required=False,

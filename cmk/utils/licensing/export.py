@@ -17,7 +17,7 @@ from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicensingProtocolVersion: Final = "3.1"
+LicensingProtocolVersion: Final = "3.0"
 
 
 class RawLicenseUsageReport(TypedDict):
@@ -140,8 +140,6 @@ class RawLicenseUsageSample(TypedDict):
     num_services_excluded: int
     num_synthetic_tests: int
     num_synthetic_tests_excluded: int
-    num_synthetic_kpis: int
-    num_synthetic_kpis_excluded: int
     extension_ntop: bool
 
 
@@ -165,8 +163,6 @@ class LicenseUsageSample:
     num_services_excluded: int
     num_synthetic_tests: int
     num_synthetic_tests_excluded: int
-    num_synthetic_kpis: int
-    num_synthetic_kpis_excluded: int
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
@@ -189,8 +185,6 @@ class LicenseUsageSample:
             num_services_excluded=self.num_services_excluded,
             num_synthetic_tests=self.num_synthetic_tests,
             num_synthetic_tests_excluded=self.num_synthetic_tests_excluded,
-            num_synthetic_kpis=self.num_synthetic_kpis,
-            num_synthetic_kpis_excluded=self.num_synthetic_kpis_excluded,
             extension_ntop=self.extension_ntop,
         )
 
@@ -325,8 +319,6 @@ def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_services_excluded=raw["num_services_excluded"],
         num_synthetic_tests=0,
         num_synthetic_tests_excluded=0,
-        num_synthetic_kpis=0,
-        num_synthetic_kpis_excluded=0,
         extension_ntop=_parse_extensions(raw).ntop,
     )
 
@@ -357,8 +349,6 @@ def _parse_sample_v2_0(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_services_excluded=raw["num_services_excluded"],
         num_synthetic_tests=0,
         num_synthetic_tests_excluded=0,
-        num_synthetic_kpis=0,
-        num_synthetic_kpis_excluded=0,
         extension_ntop=_parse_extensions(raw).ntop,
     )
 
@@ -403,8 +393,6 @@ class ParserV1_0(Parser):
             num_services_excluded=0,
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -469,8 +457,6 @@ class ParserV1_4(Parser):
             num_services_excluded=raw["num_services_excluded"],
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -507,8 +493,6 @@ class ParserV1_5(Parser):
             num_services_excluded=raw["num_services_excluded"],
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -566,55 +550,13 @@ class ParserV3_0(Parser):
             num_services_excluded=raw["num_services_excluded"],
             num_synthetic_tests=raw["num_synthetic_tests"],
             num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
-            extension_ntop=extensions.ntop,
-        )
-
-
-class ParserV3_1(Parser):
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        parsing_version = 3.1
-        if not isinstance(raw, dict):
-            raise TypeError(f"Parse sample {parsing_version}: Wrong sample type: %r" % type(raw))
-        if not (raw_instance_id := raw.get("instance_id")):
-            raise ValueError(f"Parse sample {parsing_version}: No such instance ID")
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError(f"Parse sample {parsing_version}: No such site hash")
-        extensions = _parse_extensions(raw)
-        return LicenseUsageSample(
-            instance_id=UUID(raw_instance_id),
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=raw["num_hosts_cloud"],
-            num_hosts_shadow=raw["num_hosts_shadow"],
-            num_hosts_excluded=raw["num_hosts_excluded"],
-            num_services=raw["num_services"],
-            num_services_cloud=raw["num_services_cloud"],
-            num_services_shadow=raw["num_services_shadow"],
-            num_services_excluded=raw["num_services_excluded"],
-            num_synthetic_tests=raw["num_synthetic_tests"],
-            num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-            num_synthetic_kpis=raw["num_synthetic_kpis"],
-            num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
             extension_ntop=extensions.ntop,
         )
 
 
 def parse_protocol_version(
     raw: object,
-) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1"]:
+) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]:
     if not isinstance(raw, dict):
         raise TypeError(raw)
     if not isinstance(raw_protocol_version := raw.get("VERSION"), str):
@@ -638,13 +580,11 @@ def parse_protocol_version(
             return "2.1"
         case "3.0":
             return "3.0"
-        case "3.1":
-            return "3.1"
     raise ValueError(f"Unknown protocol version: {raw_protocol_version!r}")
 
 
 def make_parser(
-    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1"],
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
 ) -> Parser:
     match protocol_version:
         case "1.0":
@@ -665,8 +605,6 @@ def make_parser(
             return ParserV2_1()
         case "3.0":
             return ParserV3_0()
-        case "3.1":
-            return ParserV3_1()
 
 
 # .

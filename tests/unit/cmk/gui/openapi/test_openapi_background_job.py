@@ -26,3 +26,8 @@ class TestBackgroundJobSnapshot:
         resp = clients.BackgroundJob.get(job_id=job_id)
 
         assert resp.json["id"] == BulkDiscoveryBackgroundJob.job_prefix
+        assert set(resp.json["extensions"]["status"]["log_info"].keys()) == {
+            "JobProgressUpdate",
+            "JobResult",
+            "JobException",
+        }

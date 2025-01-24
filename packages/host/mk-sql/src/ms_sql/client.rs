@@ -84,7 +84,7 @@ pub struct ClientBuilder<'a> {
     trust_server_certificate: bool,
 }
 
-impl<'a> Default for ClientBuilder<'a> {
+impl Default for ClientBuilder<'_> {
     fn default() -> Self {
         Self {
             client_connection: None,

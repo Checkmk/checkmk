@@ -76,7 +76,7 @@ pub trait Column<'a> {
     fn get_all(self, sep: char) -> String;
 }
 
-impl<'a> Column<'a> for Row {
+impl Column<'_> for Row {
     fn get_bigint_by_idx(&self, idx: usize) -> i64 {
         self.try_get::<i64, usize>(idx)
             .unwrap_or_default()

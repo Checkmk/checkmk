@@ -1103,7 +1103,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "tinkerforge_humidity",
         "tinkerforge_motion",
         "tplink_cpu",
-        "tplink_mem",
         "tplink_poe_summary",
         "tsm_drives",
         "tsm_paths",

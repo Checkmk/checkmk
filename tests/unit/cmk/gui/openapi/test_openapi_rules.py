@@ -149,7 +149,7 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
-    value_raw = "{'levels': (10.0, 5.0)}"
+    value_raw = "{'levels': ('fixed', (10.0, 5.0))}"
     resp = clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
         value_raw=value_raw,

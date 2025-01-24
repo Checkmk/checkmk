@@ -104,6 +104,7 @@ def run_scheduled_jobs(
                             trace.Link(span.get_span_context()),
                             crash_report_callback,
                         ),
+                        name=f"scheduled-{job.name}",
                     )
                     thread.start()
                     logger.debug("Started [%s]", job.name)

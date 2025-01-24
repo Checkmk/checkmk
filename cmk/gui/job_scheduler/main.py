@@ -19,7 +19,7 @@ from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_conf
 
 from cmk.utils import paths
 
-from cmk.gui.log import init_logging, logger
+from cmk.gui.log import logger
 from cmk.gui.utils import get_failed_plugins
 
 from cmk import trace
@@ -56,6 +56,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         os.unsetenv("LANG")
 
         omd_root = Path(os.environ.get("OMD_ROOT", ""))
+        log_path = omd_root / "var" / "log" / "ui-job-scheduler"
+
+        log_path.mkdir(exist_ok=True, parents=True)
 
         _setup_console_logging()
         init_span_processor(
@@ -80,7 +83,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
 
         with pid_file_lock(_pid_file(omd_root)):
-            init_logging()
+            _setup_file_logging(log_path / "ui-job-scheduler.log")
             run_scheduler(crash_report_callback)
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
@@ -93,3 +96,13 @@ def _setup_console_logging() -> None:
     handler = logging.StreamHandler(stream=sys.stderr)
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
     logger.addHandler(handler)
+
+
+def _setup_file_logging(log_file: Path) -> None:
+    handler = logging.FileHandler(log_file, encoding="UTF-8")
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s")
+    )
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)

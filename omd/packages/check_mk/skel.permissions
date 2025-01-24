@@ -14,6 +14,8 @@ etc/init.d/automation-helper 0770
 etc/logrotate.d/audit 0640
 etc/logrotate.d/license-usage 0640
 etc/logrotate.d/security 0640
+etc/logrotate.d/security 0640
+etc/logrotate.d/ui-job-scheduler 0640
 tmp/run 0751
 var/check_mk/backup 0770
 var/check_mk/crashes 0770

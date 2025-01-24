@@ -115,9 +115,7 @@ def check_mk_local_automation_serialized(
 
         executor: AutomationExecutor = (
             automation_subprocess.SubprocessExecutor()
-            if force_cli_interface
-            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
-            or not active_config.automation_helper_active
+            if force_cli_interface or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
             else automation_helper.HelperExecutor()
         )
 

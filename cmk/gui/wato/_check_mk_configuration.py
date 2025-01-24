@@ -149,7 +149,6 @@ def register(
     config_variable_registry.register(ConfigVariableExperimentalFeatures)
     config_variable_registry.register(ConfigVariableInjectJsProfiling)
     config_variable_registry.register(ConfigVariableLoadFrontendVue)
-    config_variable_registry.register(ConfigVariableAutomationHelper)
     config_variable_registry.register(ConfigVariableTableRowLimit)
     config_variable_registry.register(ConfigVariableStartURL)
     config_variable_registry.register(ConfigVariablePageHeading)
@@ -907,23 +906,6 @@ class ConfigVariableLoadFrontendVue(ConfigVariable):
                 ("static_files", "Load JavaScript from shipped, static files"),
                 ("inject", "Inject vite client to enable auto hot reloading"),
             ],
-        )
-
-
-class ConfigVariableAutomationHelper(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "automation_helper_active"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Activate automation helper"),
-            default_value=True,
         )
 
 

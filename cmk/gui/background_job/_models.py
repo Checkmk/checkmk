@@ -21,6 +21,12 @@ class StartRequest(BaseModel, frozen=True):
     origin_span_context: SpanContextModel
 
 
+class StartResponse(BaseModel, frozen=True):
+    success: bool
+    error_type: str
+    error_message: str
+
+
 class TerminateRequest(BaseModel, frozen=True):
     job_id: str
 

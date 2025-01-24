@@ -1078,6 +1078,10 @@ def ID(  # pylint: disable=redefined-builtin
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
+    regex_requirement_message = _(
+        "An identifier must only consist of letters, digits, dash and "
+        "underscore and it must start with a letter or underscore."
+    )
     return TextInput(
         label=label,
         size=size,
@@ -1089,17 +1093,14 @@ def ID(  # pylint: disable=redefined-builtin
         read_only=read_only,
         forbidden_chars=forbidden_chars,
         regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII),
-        regex_error=_(
-            "An identifier must only consist of letters, digits, dash and "
-            "underscore and it must start with a letter or underscore."
-        ),
+        regex_error=regex_requirement_message,
         minlen=minlen,
         maxlen=maxlen,
         oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
-        help=help,
+        help=help or regex_requirement_message,
         default_value=default_value,
         validate=validate,
     )

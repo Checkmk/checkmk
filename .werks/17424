@@ -1,0 +1,12 @@
+Title: Folder: update to the REST-API documentation
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1737706331
+Edition: cre
+Level: 1
+Version: 2.2.0p39
+
+The description for the "update_attributes" on the update folder
+endpoint has been reworded to make sure that it's clear what
+this field is for.

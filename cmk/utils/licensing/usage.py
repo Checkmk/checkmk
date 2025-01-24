@@ -281,32 +281,24 @@ class HostsOrServicesSyntheticCounter(NamedTuple):
 
 
 def _get_synthetic_monitoring_counter() -> HostsOrServicesSyntheticCounter:
-    shadow_entity_type = "2"
-    num_synthetic_tests_query = [
-        f"\nStats: host_check_type != {shadow_entity_type}",
-        f"\nStats: check_type != {shadow_entity_type}",
-        f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
-        f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
-        f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}",
-        "\nStatsAnd: 5",
-    ]
-    num_synthetic_tests_excluded_query = [
-        f"\nStats: host_check_type != {shadow_entity_type}",
-        f"\nStats: check_type != {shadow_entity_type}",
-        f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
-        f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
-        "\nStatsOr: 2",
-        f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}",
-        "\nStatsAnd: 4",
-    ]
-
-    livestatus_query = (
-        "GET services"
-        + "".join(num_synthetic_tests_query)
-        + "".join(num_synthetic_tests_excluded_query)
+    return HostsOrServicesSyntheticCounter.make(
+        _get_from_livestatus(
+            "GET services"
+            "\nStats: host_check_type != 2"
+            "\nStats: check_type != 2"
+            f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
+            "\nStatsAnd: 5"
+            f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            "\nStatsOr: 2"
+            "\nStats: host_check_type != 2"
+            "\nStats: check_type != 2"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
+            "\nStatsAnd: 4"
+        )
     )
-
-    return HostsOrServicesSyntheticCounter.make(_get_from_livestatus(livestatus_query))
 
 
 def _get_next_run_ts(file_path: Path) -> int:

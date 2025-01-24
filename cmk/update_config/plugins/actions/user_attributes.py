@@ -32,6 +32,13 @@ def _add_alias(user_id: UserId, user_spec: UserSpec) -> None:
     user_spec.setdefault("alias", user_id)
 
 
+def _add_roles(user_spec: UserSpec) -> None:
+    """
+    Until 2.4 the "roles" attribute could be missing for users.
+    """
+    user_spec.setdefault("roles", [])
+
+
 def _migrate_automation_user(user_id: UserId) -> None:
     """
     Starting in 2.4 automation users no longer rely on the automation.secret file. Instead they have
@@ -45,6 +52,7 @@ def _update_user_attributes(logger: Logger, users: Users) -> Users:
     for user_id, user_spec in users.items():
         _add_alias(user_id, user_spec)
         _migrate_automation_user(user_id)
+        _add_roles(user_spec)
     return users
 
 

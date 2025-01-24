@@ -110,7 +110,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.broker_certificates import (
     broker_certificate_sync_registry,
     BrokerCertificateSync,
-    clean_dead_sites_certs,
+    clean_remote_sites_certs,
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
@@ -2161,7 +2161,7 @@ def sync_and_activate(
             task_pool,
             broker_certificate_sync_registry["broker_certificate_sync"],
         )
-        clean_dead_sites_certs(list(get_all_replicated_sites()))
+        clean_remote_sites_certs(kept_sites=list(get_all_replicated_sites()))
 
         active_tasks = ActiveTasks(
             fetch_sync_state={},

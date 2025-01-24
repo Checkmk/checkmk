@@ -21,6 +21,17 @@ see:
 
 ## Usage
 
+Perform these steps inside the testing container or use a small rescue venv for it.
+The rescue venv trick is especially helpfull if the image to register or update is the testing image.
+
+```bash
+scripts/run-in-docker.sh bash
+make .venv
+# or way faster
+python3 -m venv .venvRescure
+pip install docker pyyaml
+```
+
 ### Register a new docker image alias
 
 Just switch to `buildscripts/docker_image_aliases` and run `register.py` providing the name of
@@ -58,7 +69,7 @@ buildscripts/docker_image_aliases/resolve.py IMAGE_CMK_BASE
 In order to update a specific or all aliases to their respective upstreams, run `update.sh`:
 
 ```bash
-update.sh [IMAGE_CMK_BASE ..]
+./update.sh [all, IMAGE_CMK_BASE, IMAGE_TESTING, IMAGE_UBUNTU_20_04, ...]
 ```
 
 This script basically validates your input and updates all provided aliases by removing and

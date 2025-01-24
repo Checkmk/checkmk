@@ -6,6 +6,7 @@
 import importlib
 import logging
 import threading
+import time
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -23,6 +24,7 @@ class StartupError(Exception): ...
 
 @dataclass
 class RunningJob:
+    started_at: int
     thread: threading.Thread
     stop_event: threading.Event
 
@@ -45,6 +47,8 @@ class JobExecutor(Protocol):
     def terminate(self, job_id: str) -> None: ...
 
     def is_alive(self, job_id: str) -> bool: ...
+
+    def all_running_jobs(self) -> dict[str, int]: ...
 
 
 class ThreadedJobExecutor(JobExecutor):
@@ -89,7 +93,11 @@ class ThreadedJobExecutor(JobExecutor):
             ),
             name=f"bg-{job_id}",
         )
-        ThreadedJobExecutor.running_jobs[job_id] = RunningJob(thread=p, stop_event=stop_event)
+        ThreadedJobExecutor.running_jobs[job_id] = RunningJob(
+            thread=p,
+            stop_event=stop_event,
+            started_at=int(time.time()),
+        )
         p.start()
         return result.OK(None)
 
@@ -108,3 +116,13 @@ class ThreadedJobExecutor(JobExecutor):
             return bool(ThreadedJobExecutor.running_jobs[job_id].thread.is_alive())
         except KeyError:
             return False
+
+    def all_running_jobs(self) -> dict[str, int]:
+        ThreadedJobExecutor.clean_up_finished_jobs()
+        return {job_id: job.started_at for job_id, job in ThreadedJobExecutor.running_jobs.items()}
+
+    @classmethod
+    def clean_up_finished_jobs(cls) -> None:
+        for job_id, job in list(cls.running_jobs.items()):
+            if not job.thread.is_alive():
+                del cls.running_jobs[job_id]

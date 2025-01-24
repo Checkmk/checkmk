@@ -104,6 +104,9 @@ class JobSchedulerExecutor(JobExecutor):
         response_data = r.ok.json()
         return HealthResponse.model_validate(response_data)
 
+    def all_running_jobs(self) -> dict[str, int]:
+        return self.health().background_jobs.running_jobs
+
     def _get(self, url: str) -> result.Result[requests.Response, StartupError]:
         try:
             response = self._session.get(url, timeout=30)

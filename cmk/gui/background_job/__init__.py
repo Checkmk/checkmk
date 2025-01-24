@@ -15,6 +15,7 @@ from ._interface import NoArgs as NoArgs
 from ._interface import simple_job_target as simple_job_target
 from ._interface import SpanContextModel as SpanContextModel
 from ._manager import BackgroundJobManager as BackgroundJobManager
+from ._models import BackgroundJobsHealth as BackgroundJobsHealth
 from ._models import HealthResponse as HealthResponse
 from ._models import IsAliveRequest as IsAliveRequest
 from ._models import IsAliveResponse as IsAliveResponse

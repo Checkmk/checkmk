@@ -6,6 +6,8 @@
 import logging
 import os
 import sys
+import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -26,7 +28,8 @@ from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 
-from ._scheduler import run_scheduler
+from ._background_jobs import default_config, get_application, run_server
+from ._scheduler import run_scheduler_threaded
 
 """Runs and observes regular jobs in the cmk.gui context"""
 
@@ -58,8 +61,10 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         os.unsetenv("LANG")
 
         omd_root = Path(os.environ.get("OMD_ROOT", ""))
+        run_path = omd_root / "tmp" / "run"
         log_path = omd_root / "var" / "log" / "ui-job-scheduler"
 
+        run_path.mkdir(exist_ok=True, parents=True)
         log_path.mkdir(exist_ok=True, parents=True)
 
         _setup_console_logging()
@@ -76,6 +81,8 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         daemonize()
 
+        loaded_at = int(time.time())
+
         # The import and load_pugins take a few seconds and we don't want to delay the
         # pre-daemonize phase with this, because it also slows down "omd start" significantly.
         from cmk.gui import main_modules
@@ -86,7 +93,15 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         with pid_file_lock(_pid_file(omd_root)):
             _setup_file_logging(log_path / "ui-job-scheduler.log")
-            run_scheduler(crash_report_callback)
+            scheduler_thread = run_scheduler_threaded(
+                crash_report_callback, (stop_event := threading.Event())
+            )
+
+            try:
+                run_server(default_config(omd_root, run_path, log_path), get_application(loaded_at))
+            finally:
+                stop_event.set()
+                scheduler_thread.join()
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
         logger.error("Unhandled exception (Crash ID: %s)", crash_msg, exc_info=True)

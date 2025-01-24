@@ -78,6 +78,7 @@ def run_process(job_parameters: JobParameters) -> None:
 
         with (
             _open_progress_update(Path(work_dir)) as progress_update,
+            _progress_update_logging(progress_update),
             tracer.start_as_current_span(
                 f"run_process[{span_id}]",
                 context=set_span_in_context(INVALID_SPAN),
@@ -93,7 +94,6 @@ def run_process(job_parameters: JobParameters) -> None:
                 else nullcontext()
             ),
         ):
-            _enable_logging_to_progress_update(progress_update)
             logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
             jobstatus_store.update({"state": JobStatusStates.RUNNING})
 
@@ -170,19 +170,6 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
     return gui_job_context
 
 
-def _set_log_levels(override_job_log_level: int | None) -> None:
-    log.set_log_levels(
-        {
-            **load_gui_log_levels(),
-            **(
-                {"cmk.web.background-job": override_job_log_level}
-                if override_job_log_level is not None
-                else {}
-            ),
-        }
-    )
-
-
 def _execute_function(
     logger: Logger,
     target: JobTarget,
@@ -204,13 +191,35 @@ def _open_progress_update(work_dir: Path) -> IO[str]:
     return (work_dir / BackgroundJobDefines.progress_update_filename).open("w", buffering=1)
 
 
-def _enable_logging_to_progress_update(progress_update: IO[str]) -> None:
+@contextmanager
+def _progress_update_logging(progress_update: IO[str]) -> Iterator[None]:
+    log.logger.addHandler(progress_update_handler := _progress_update_handler(progress_update))
+    try:
+        yield
+    finally:
+        log.logger.removeHandler(progress_update_handler)
+
+
+def _progress_update_handler(progress_update: IO[str]) -> StreamHandler:
     """In addition to the web.log we also want to see the job specific logs
     in stdout (which results in job progress info)"""
     handler = StreamHandler(stream=progress_update)
     handler.addFilter(ThreadLogFilter(threading.current_thread().name))
     handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
-    log.logger.addHandler(handler)
+    return handler
+
+
+def _set_log_levels(override_job_log_level: int | None) -> None:
+    log.set_log_levels(
+        {
+            **load_gui_log_levels(),
+            **(
+                {"cmk.web.background-job": override_job_log_level}
+                if override_job_log_level is not None
+                else {}
+            ),
+        }
+    )
 
 
 class ThreadLogFilter(logging.Filter):

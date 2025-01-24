@@ -127,9 +127,6 @@ def _navigate_to_upload_key(page: LoginPage) -> None:
     ```             > Upload key
     """
     go_to_signature_page(page)
-    # TODO: move to test teardown.
-    delete_key(page)
-
     logger.info("Navigate to 'Upload key' page.")
     page.main_area.get_suggestion("Upload key").click()
     page.page.wait_for_url(re.compile(quote_plus("wato.py?mode=upload_signature_key")))
@@ -152,80 +149,76 @@ def test_upload_signing_keys(
     self_signed_cert: CertificateWithPrivateKey,
     upload_function: Callable[[LoginPage, str, str, str], None],
 ) -> None:
-    """Send a few payloads to the `Signature keys for signing agents` page and check the
-    responses."""
+    """Send a few payloads to the `Signature keys for signing agents` page.
 
-    # pem is invalid
-    upload_function(logged_in_page, "Some description", "password", "invalid")
-    logged_in_page.main_area.check_error("The file does not look like a valid key file.")
+    Also, check the responses.
+    """
+    try:
+        # pem is invalid
+        upload_function(logged_in_page, "invalid-1", "password", "invalid")
+        logged_in_page.main_area.check_error("The file does not look like a valid key file.")
 
-    # This is very delicate...
-    # But will be fixed soon
-    pem_content = (
-        self_signed_cert.private_key.dump_pem(Password("SecureP4ssword")).str
-        + "\n"
-        + self_signed_cert.certificate.dump_pem().str
-    ).strip() + "\n"
-    fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
+        # This is very delicate...
+        # But will be fixed soon
+        pem_content = (
+            self_signed_cert.private_key.dump_pem(Password("SecureP4ssword")).str
+            + "\n"
+            + self_signed_cert.certificate.dump_pem().str
+        ).strip() + "\n"
+        fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
 
-    # passphrase is invalid
-    upload_function(logged_in_page, "Some description", "password", pem_content)
-    # There is a weird bug that is not reproducible and a wrong password can be
-    # mistreated as an invalid file. This happens so rarely and we don't think
-    # users are too confused by that so we leave it as is, but we should except
-    # both cases...
-    # See also: tests/unit/cmk/utils/crypto/test_certificate.py
-    logged_in_page.main_area.check_error(
-        re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
-    )
+        # passphrase is invalid
+        upload_function(logged_in_page, "invalid-2", "password", pem_content)
+        # There is a weird bug that is not reproducible and a wrong password can be
+        # mistreated as an invalid file. This happens so rarely and we don't think
+        # users are too confused by that so we leave it as is, but we should except
+        # both cases...
+        # See also: tests/unit/cmk/utils/crypto/test_certificate.py
+        logged_in_page.main_area.check_error(
+            re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
+        )
 
-    # all ok
-    upload_function(logged_in_page, "Some description", "SecureP4ssword", pem_content)
-    expect(
-        logged_in_page.main_area.get_text(fingerprint.upper()),
-        f"Previously uploaded signature key '{fingerprint.upper()[:10]}...' not found.",
-    ).to_be_visible()
+        # all ok
+        upload_function(logged_in_page, "valid", "SecureP4ssword", pem_content)
+        expect(
+            logged_in_page.main_area.get_text(fingerprint.upper()),
+            f"Previously uploaded signature key '{fingerprint.upper()[:10]}...' not found.",
+        ).to_be_visible()
 
-    delete_key(logged_in_page, fingerprint)
+    finally:
+        go_to_signature_page(logged_in_page)
+        delete_key(logged_in_page)
 
 
 def test_generate_key(logged_in_page: LoginPage) -> None:
     """Add a key, aka let Checkmk generate it."""
-    key_name = "e2e-test"
+    invalid_key = "Won't work"
+    valid_key = "e2e-test"
     go_to_signature_page(logged_in_page)
-
-    # TODO: move to test teardown.
-    delete_key(logged_in_page)
-    expect(
-        logged_in_page.main_area.get_text("e2e-test"),
-        "Cleanup of key 'e2e-test' failed.",
-    ).not_to_be_visible()
 
     logged_in_page.click_and_wait(
         logged_in_page.main_area.get_suggestion("Generate key"), navigate=True
     )
     logged_in_page.main_area.check_page_title("Add agent signature key")
 
-    # Use a too short password
-    logged_in_page.main_area.get_input("key_p_alias").fill("Won't work")
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("short")
-    logged_in_page.main_area.get_suggestion("Create").click()
-    logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
+    try:
+        # Invalid key: Use a too short password
+        logged_in_page.main_area.get_input("key_p_alias").fill(invalid_key)
+        logged_in_page.main_area.get_input("key_p_passphrase").fill("short")
+        logged_in_page.main_area.get_suggestion("Create").click()
+        logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
 
-    logged_in_page.main_area.get_input("key_p_alias").fill(key_name)
-    logged_in_page.main_area.get_input("key_p_passphrase").fill("123456789012")
-    logged_in_page.main_area.get_suggestion("Create").click()
-    expect(
-        logged_in_page.main_area.get_text("e2e-test"),
-        "Unable to find the key 'e2e-test' in the list of keys (the main area).",
-    ).to_be_visible()
-
-    # now remove the key again (and ensure it was actually deleted)
-    delete_key(logged_in_page, key_name)
-    expect(
-        logged_in_page.main_area.get_text("e2e-test"),
-        "Cleanup of key 'e2e-test' failed.",
-    ).not_to_be_visible()
+        # Valid key
+        logged_in_page.main_area.get_input("key_p_alias").fill(valid_key)
+        logged_in_page.main_area.get_input("key_p_passphrase").fill("123456789012")
+        logged_in_page.main_area.get_suggestion("Create").click()
+        expect(
+            logged_in_page.main_area.get_text(valid_key),
+            f"Unable to find the key '{valid_key}' in the list of keys (the main area).",
+        ).to_be_visible()
+    finally:
+        go_to_signature_page(logged_in_page)
+        delete_key(logged_in_page)
 
 
 @pytest.fixture(name="with_key")
@@ -239,23 +232,24 @@ def with_key_fixture(
         self_signed_cert.private_key.dump_pem(password).str
         + self_signed_cert.certificate.dump_pem().str
     )
-    send_pem_file(logged_in_page, key_name, password.raw, combined_file)
-    expect(
-        logged_in_page.main_area.get_text(key_name),
-        f"Creation of signature key '{key_name}' failed.",
-    ).to_be_visible()
-
-    yield key_name
-
-    go_to_signature_page(logged_in_page)
-    delete_key(logged_in_page, key_name)
+    try:
+        send_pem_file(logged_in_page, key_name, password.raw, combined_file)
+        expect(
+            logged_in_page.main_area.get_text(key_name),
+            f"Creation of signature key '{key_name}' failed.",
+        ).to_be_visible()
+        yield key_name
+    finally:
+        go_to_signature_page(logged_in_page)
+        delete_key(logged_in_page, key_name)
 
 
 def test_download_key(logged_in_page: LoginPage, with_key: str) -> None:
     """Test downloading a key.
 
-    First a wrong password is provided, checking the error message; then the key should be
-    downloaded successfully using the correct password."""
+    First a wrong password is provided, checking the error message;
+    then the key should be downloaded successfully using the correct password.
+    """
     go_to_signature_page(logged_in_page)
 
     logged_in_page.get_link("Download this key").click()

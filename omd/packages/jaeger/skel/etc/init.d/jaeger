@@ -49,7 +49,7 @@ case "$1" in
             echo OK
             exit 0
         else
-            echo Failed
+            echo failed
             exit 1
         fi
         ;;

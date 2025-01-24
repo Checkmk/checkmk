@@ -163,7 +163,7 @@ do_start() {
         return 0
     else
         __init_hook $0 $1 post 1
-        echo 'ERROR'
+        echo 'failed'
         return 1
     fi
 }
@@ -176,7 +176,7 @@ do_stop() {
         return 0
     else
         __init_hook $0 $1 post 1
-        echo 'ERROR'
+        echo 'failed'
         return 1
     fi
 }

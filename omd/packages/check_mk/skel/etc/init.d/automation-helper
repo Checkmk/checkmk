@@ -55,7 +55,7 @@ case "$1" in
         if "$DAEMON"; then
             exit_successfully 'OK'
         else
-            exit_failure 'Failed'
+            exit_failure 'failed'
         fi
         ;;
     stop)
@@ -95,7 +95,7 @@ case "$1" in
     reload)
         echo -n 'Reloading automation-helper...'
         if [ -z "$THE_PID" ]; then
-            echo 'Not running.'
+            echo 'not running.'
             exit 1
         else
             echo "killing $THE_PID with SIGUSR1..."

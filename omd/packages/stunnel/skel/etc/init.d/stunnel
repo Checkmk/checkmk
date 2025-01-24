@@ -69,7 +69,7 @@ case "$1" in
             done
             echo "OK"
         else
-            echo "Failed"
+            echo "failed"
         fi
         ;;
     restart | reload)

@@ -487,6 +487,8 @@ Keys 'optional1', 'required1' occur more than once.
         merged: bool = False,
         **kwargs: typing.Any,
     ):
+        super().__init__(default=default, **kwargs)
+
         if unknown is not None:
             raise ValueError("unknown is not supported for MultiNested")
 
@@ -496,16 +498,14 @@ Keys 'optional1', 'required1' occur more than once.
         if mode != "anyOf":
             raise NotImplementedError("allOf is not yet implemented.")
 
-        metadata = kwargs.pop("metadata", {})
-
         self._context = getattr(self.parent, "context", {})
-        self._context.update(metadata.get("context", {}))
+        self._context.update(self.metadata.get("context", {}))
 
         self._nested_args = nested
 
         # We must not evaluate self._nested now, but can only hand over a list like object to
         # marshmallow. So we use a small helper to do the late evaluation for us.
-        metadata["anyOf"] = LazySequence(lambda: self._nested)
+        self.metadata["anyOf"] = LazySequence(lambda: self._nested)
 
         self.mode = mode
         self.only = only
@@ -515,7 +515,6 @@ Keys 'optional1', 'required1' occur more than once.
         # When we are merging, we don't want to have errors due to cross-schema validation.
         # When we operate in standard mode, we really want to know these errors.
         self.unknown = EXCLUDE if self.merged else RAISE
-        super().__init__(default=default, metadata=metadata, **kwargs)
 
     @cached_property
     def _nested(self) -> list[Schema]:

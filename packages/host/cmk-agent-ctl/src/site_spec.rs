@@ -100,7 +100,7 @@ struct AgentRecvPortDiscoverer<'a> {
     client_config: &'a ClientConfig,
 }
 
-impl<'a> AgentRecvPortDiscoverer<'a> {
+impl AgentRecvPortDiscoverer<'_> {
     fn url(&self, protocol: &str) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
             "{}://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",

@@ -193,7 +193,7 @@ fn find_sql_files(dir: &Path, section_name: &str) -> Result<Vec<(u32, PathBuf)>>
         .filter_map(|path| {
             if path
                 .extension()
-                .map_or(false, |ext| ext == constants::SQL_QUERY_EXTENSION)
+                .is_some_and(|ext| ext == constants::SQL_QUERY_EXTENSION)
             {
                 Some(path)
             } else {

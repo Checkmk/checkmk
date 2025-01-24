@@ -271,13 +271,14 @@ span.checkbox {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  align-items: start;
 
   > span.checkbox {
     display: inline-block;
     flex-shrink: 0;
     width: 180px;
     margin: 0;
-    padding-top: 3px;
+    padding-top: 0;
     font-weight: bold;
     word-wrap: break-word;
     white-space: normal;
@@ -288,6 +289,7 @@ span.checkbox {
     margin: 0;
     padding-left: 0;
     border-left: none;
+    padding-top: 1px;
   }
 }
 .group-with-more-items {

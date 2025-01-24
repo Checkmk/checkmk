@@ -9,7 +9,16 @@ import threading
 from dataclasses import dataclass
 from typing import Protocol
 
+import cmk.utils.resulttype as result
+
+from cmk.trace import get_current_span, get_tracer
+
 from ._interface import JobParameters, JobTarget, SpanContextModel
+
+tracer = get_tracer()
+
+
+class StartupError(Exception): ...
 
 
 @dataclass
@@ -31,7 +40,7 @@ class JobExecutor(Protocol):
         is_stoppable: bool,
         override_job_log_level: int | None,
         origin_span_context: SpanContextModel,
-    ) -> None: ...
+    ) -> result.Result[None, StartupError]: ...
 
     def terminate(self, job_id: str) -> None: ...
 
@@ -44,6 +53,7 @@ class ThreadedJobExecutor(JobExecutor):
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
 
+    @tracer.instrument()
     def start(
         self,
         job_id: str,
@@ -54,7 +64,8 @@ class ThreadedJobExecutor(JobExecutor):
         is_stoppable: bool,
         override_job_log_level: int | None,
         origin_span_context: SpanContextModel,
-    ) -> None:
+    ) -> result.Result[None, StartupError]:
+        get_current_span().set_attribute("cmk.job_id", job_id)
         p = threading.Thread(
             # The import hack here is done to avoid circular imports. Actually run_process is
             # only needed in the background job. A better way to approach this, could be to
@@ -79,6 +90,7 @@ class ThreadedJobExecutor(JobExecutor):
         )
         ThreadedJobExecutor.running_jobs[job_id] = RunningJob(thread=p, stop_event=stop_event)
         p.start()
+        return result.OK(None)
 
     def terminate(self, job_id: str) -> None:
         try:

@@ -24,7 +24,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 
 from ._defines import BackgroundJobDefines
-from ._executor import JobExecutor, ThreadedJobExecutor
+from ._executor import JobExecutor, StartupError, ThreadedJobExecutor
 from ._interface import JobTarget, SpanContextModel
 from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
@@ -34,9 +34,6 @@ tracer = get_tracer()
 
 
 class AlreadyRunningError(Exception): ...
-
-
-class StartupError(Exception): ...
 
 
 class BackgroundJob:
@@ -274,7 +271,7 @@ class BackgroundJob:
         )
         self._jobstatus_store.write(initial_status)
 
-        self._executor.start(
+        return self._executor.start(
             self._job_id,
             self._work_dir,
             self.job_prefix,
@@ -284,8 +281,6 @@ class BackgroundJob:
             override_job_log_level,
             origin_span_context=SpanContextModel.from_span_context(origin_span_context),
         )
-
-        return result.OK(None)
 
     def _prepare_work_dir(self) -> None:
         self._delete_work_dir()

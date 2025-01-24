@@ -15,6 +15,7 @@ from cmk.gui.background_job import (
     JobExecutor,
     JobTarget,
     StartRequest,
+    StartResponse,
     TerminateRequest,
 )
 
@@ -26,24 +27,32 @@ def get_application(loaded_at: int, executor: JobExecutor) -> FastAPI:
     FastAPIInstrumentor.instrument_app(app)
 
     @app.post("/start")
-    async def start(request: Request, payload: StartRequest) -> None:
-        executor.start(
-            payload.job_id,
-            payload.work_dir,
-            payload.span_id,
-            # The generic endpoint can not know and parse the job specific args. Therefore, we need
-            # to dynamically get the expected model and parse the args.
-            JobTarget(
-                callable=payload.target.callable,
-                args=get_type_hints(payload.target.callable)["args"].model_validate(
-                    payload.target.args
+    async def start(request: Request, payload: StartRequest) -> StartResponse:
+        if not (
+            result := executor.start(
+                payload.job_id,
+                payload.work_dir,
+                payload.span_id,
+                # The generic endpoint can not know and parse the job specific args. Therefore, we need
+                # to dynamically get the expected model and parse the args.
+                JobTarget(
+                    callable=payload.target.callable,
+                    args=get_type_hints(payload.target.callable)["args"].model_validate(
+                        payload.target.args
+                    ),
                 ),
-            ),
-            payload.lock_wato,
-            payload.is_stoppable,
-            payload.override_job_log_level,
-            payload.origin_span_context,
-        )
+                payload.lock_wato,
+                payload.is_stoppable,
+                payload.override_job_log_level,
+                payload.origin_span_context,
+            )
+        ).is_ok():
+            return StartResponse(
+                success=False,
+                error_type=result.error.__class__.__name__,
+                error_message=str(result.error),
+            )
+        return StartResponse(success=True, error_type="", error_message="")
 
     @app.post("/terminate")
     async def terminate(request: Request, payload: TerminateRequest) -> None:

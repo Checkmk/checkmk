@@ -7,6 +7,8 @@ import logging
 
 from fastapi.testclient import TestClient
 
+import cmk.utils.resulttype as result
+
 from cmk.gui.background_job import (
     BackgroundProcessInterface,
     HealthResponse,
@@ -17,6 +19,8 @@ from cmk.gui.background_job import (
     NoArgs,
     SpanContextModel,
     StartRequest,
+    StartResponse,
+    StartupError,
     TerminateRequest,
 )
 from cmk.gui.job_scheduler._background_jobs._app import get_application
@@ -37,7 +41,8 @@ class DummyExecutor(JobExecutor):
         is_stoppable: bool,
         override_job_log_level: int | None,
         origin_span: SpanContextModel,
-    ) -> None: ...
+    ) -> result.Result[None, StartupError]:
+        return result.OK(None)
 
     def terminate(self, job_id: str) -> None: ...
 
@@ -80,7 +85,7 @@ def test_start() -> None:
         )
 
     assert resp.status_code == 200
-    assert resp.text == "null"
+    assert StartResponse.model_validate(resp.json()).success is True
 
 
 def test_terminate() -> None:

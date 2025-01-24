@@ -5,7 +5,7 @@ Component: multisite
 Date: 1736849369
 Edition: cme
 Level: 1
-Version: 2.2.0p38
+Version: 2.2.0p39
 
 In the Customer Overview monitor, the "Sort by Customer" link in the table header was lost after sorting by customer in descending order.
 

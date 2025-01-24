@@ -5,7 +5,7 @@ Component: multisite
 Date: 1736851356
 Edition: cre
 Level: 1
-Version: 2.2.0p38
+Version: 2.2.0p39
 
 Sorting by clicking the table column header did not sort entries in the Custom Host Attribute view, and applied filters were reset.
 

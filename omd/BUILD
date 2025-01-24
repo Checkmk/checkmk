@@ -4,6 +4,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//:bazel_variables.bzl", "edition_deps")
 
 exports_files([
     "requirements.txt",
@@ -54,8 +55,7 @@ create_venv(
         "//packages/cmk-server-side-calls:pkg_tar",
         "//packages/cmk-trace:pkg_tar",
         "//packages/cmk-werks:pkg_tar",
-        "//non-free/packages:non-free_" + edition,
-    ],
+    ] + edition_deps[edition],
 ) for edition in [
     "cre",
     "cce",

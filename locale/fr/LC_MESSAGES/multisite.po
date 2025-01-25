@@ -9280,14 +9280,6 @@ msgstr ""
 "individuel. Le meilleur résultat déterminera l'état général du service en "
 "cluster."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Série"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Voir tous les hôtes et services"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -15349,6 +15341,10 @@ msgid "Cosmic"
 msgstr "Cosmique"
 
 #, fuzzy
+msgid "Cost per month"
+msgstr "Verrous MSSQL par lot"
+
+#, fuzzy
 msgid "Costs"
 msgstr "Hôtes"
 
@@ -16916,6 +16912,9 @@ msgstr "Statut DCD"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Match"
+
+msgid "DCD Connection is still absent, consider activating changes"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -21294,12 +21293,6 @@ msgstr ""
 "(RRD) et les archives d'inventaire HW/SW ne sont jamais supprimées lors de "
 "la suppression d'un hôte. Elles ne sont supprimées automatiquement que "
 "lorsque vous activez cette option et après la période configurée."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "Pendant cette période, aucune donnée de surveillance n'est disponible"
@@ -28321,17 +28314,6 @@ msgstr ""
 "de configuration <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</tt>. En omettant "
 "ce vide, on retombe sur <tt>/etc/check_mk</tt>."
 
-#, fuzzy
-msgid ""
-"Here you can specify an alternative user that the agent should be run as. "
-"Please note that only root has enough privileges for all commands and plug-"
-"ins. When run as another user then some information will be missing."
-msgstr ""
-"Vous pouvez ici spécifier un autre utilisateur sous lequel l'agent doit être "
-"exécuté. Veuillez noter que seul l'utilisateur root dispose de suffisamment "
-"de privilèges pour toutes les commandes et tous les plugins. Si l'agent est "
-"exécuté sous un autre utilisateur, certaines informations seront manquantes."
-
 msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr ""
 "Vous pouvez spécifier ici les options de débogage des aides à la "
@@ -34345,7 +34327,8 @@ msgstr ""
 msgid "Installation"
 msgstr "Installation"
 
-msgid "Installation paths for agent files (Linux, UNIX)"
+#, fuzzy
+msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "Chemins d'installation des fichiers d'agent (Linux, UNIX)"
 
 msgid "Installed Agent"
@@ -35647,9 +35630,6 @@ msgstr "Durée de l'emploi"
 
 msgid "Job ID"
 msgstr "Numéro d'emploi"
-
-msgid "Job Name"
-msgstr "Nom de l'emploi"
 
 msgid "Job State"
 msgstr "État du travail"
@@ -39829,9 +39809,6 @@ msgstr "L'appariement est inversé dans cette règle"
 #, fuzzy
 msgid "Matching nodes"
 msgstr "Correspond à tous les nœuds"
-
-msgid "Matching: "
-msgstr "Correspondant : "
 
 msgid "Matrix"
 msgstr "Matrice"
@@ -54607,7 +54584,8 @@ msgstr "Installation rapide"
 msgid "Run Quick Setup Stage Action"
 msgstr ""
 
-msgid "Run agent as non-root user (Linux)"
+#, fuzzy
+msgid "Run agent as non-root user (Linux) (deprecated)"
 msgstr "Exécuter l'agent en tant qu'utilisateur non root (Linux)"
 
 #, fuzzy
@@ -58579,10 +58557,6 @@ msgid ""
 msgstr ""
 "Signer des paquets d'agents de cuisson pour Linux, Windows et d'autres "
 "systèmes d'exploitation"
-
-#, fuzzy
-msgid "Sign up"
-msgstr "Signe"
 
 msgid "Signal quality of Wireless device"
 msgstr "Qualité du signal du dispositif sans fil"
@@ -68233,10 +68207,11 @@ msgstr ""
 msgid "There are no time periods defined yet."
 msgstr "Il n'y a pas encore de période définie."
 
+#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes in their own."
+"activation or ask you colleagues to activate these changes on their own."
 msgstr ""
 "Des changements ont été effectués par vos collègues et vous n'avez pas "
 "confirmé l'activation de ces changements. Pour continuer, vous devrez "
@@ -72074,6 +72049,29 @@ msgstr ""
 "Ce jeu de règles vous aide à configurer le plugin classique de Nagios "
 "<tt>check_disk_smb</tt> qui vérifie l'accès aux partages de systèmes de "
 "fichiers qui sont exportés via SMB/CIFS."
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Instead of configuring each directory separately, please use the new agent "
+"ruleset \"Customize agent package\", where you can configure one "
+"installation directory which will contain all agent files underneath.<br> "
+"When configuring a \"Customize agent package\" rule, configured directories "
+"from this ruleset will be ignored.<br> <b>Note</b>: When updating an agent "
+"to the new directory structure, please keep this ruleset activated until the "
+"update is done, since the agent package will use the old installation paths "
+"for migrating your runtime files to the new directory structure."
+msgstr ""
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Please use the new agent ruleset \"Customize agent package\" instead. This "
+"has the advantage that a non-root user specified there will come with a non-"
+"root agent installation, that cares for the needed environment on the target "
+"system.<br> (Vice versa, a user from this ruleset will only be applied as "
+"the user running the agent, without caring for necessary permissions on the "
+"target system.)<br> When configuring a \"Customize agent package\" with non-"
+"root user, the configured user from this ruleset will be ignored."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76717,9 +76715,6 @@ msgstr ""
 msgid "Trial phase: too many services."
 msgstr "Voir tous les hôtes et services"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -77706,9 +77701,6 @@ msgstr "Jusqu'à la fin du mois"
 
 msgid "Until end of year"
 msgstr "Jusqu'à la fin de l'année"
-
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr ""
 
 msgid "Untitled setting"
 msgstr "Cadre sans titre"
@@ -81622,9 +81614,6 @@ msgstr "Attente"
 msgid "Waitlocks"
 msgstr "Blocs d'attente"
 
-msgid "Want to be notified about the public release? "
-msgstr ""
-
 #, fuzzy
 msgid "Wanted Host State"
 msgstr "État hôte"
@@ -84690,10 +84679,12 @@ msgstr ""
 "Vous pouvez définir des bases de données explicites auxquelles vous voulez "
 "appliquer des criticités de l'état de miroir."
 
+#, fuzzy, python-brace-format
 msgid ""
-"You can set explicit jobs by defining their job names. The job names can be "
-"found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
-"database."
+"You can set explicit jobs by defining their IDs. The job ID is a combination "
+"of the job name and the name of the instance the job runs on: `{job_name} - "
+"{instance_name}`. The job names can be found in the column \"name\" in the "
+"table \"dbo.sysjobs\" on the MSDB database."
 msgstr ""
 "Vous pouvez définir des tâches explicites en définissant leur nom. Les noms "
 "des tâches se trouvent dans la colonne \"name\" de la table \"dbo.sysjobs\" "
@@ -88399,6 +88390,36 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 
+#, fuzzy
+#~ msgid ""
+#~ "Here you can specify an alternative user that the agent should be run as. "
+#~ "Please note that only root has enough privileges for all commands and "
+#~ "plug-ins. When run as another user then some information will be missing."
+#~ msgstr ""
+#~ "Vous pouvez ici spécifier un autre utilisateur sous lequel l'agent doit "
+#~ "être exécuté. Veuillez noter que seul l'utilisateur root dispose de "
+#~ "suffisamment de privilèges pour toutes les commandes et tous les plugins. "
+#~ "Si l'agent est exécuté sous un autre utilisateur, certaines informations "
+#~ "seront manquantes."
+
+#~ msgid "Job Name"
+#~ msgstr "Nom de l'emploi"
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Série"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Voir tous les hôtes et services"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Signe"
+
+#~ msgid "Matching: "
+#~ msgstr "Correspondant : "
+
 #~ msgid "Requests data from a RabbitMQ instance."
 #~ msgstr "Demande des données à une instance RabbitMQ."
 
@@ -89067,10 +89088,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Installation Syslog des événements transférés affichés dans la console "
 #~ "d'événements."
-
-#, fuzzy
-#~ msgid "hosts per batch"
-#~ msgstr "Verrous MSSQL par lot"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

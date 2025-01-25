@@ -9224,14 +9224,6 @@ msgstr ""
 "nod în parte. Cel mai bun rezultat va determina starea generală a "
 "serviciului grupat."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Serial"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Vezi toate gazdele și serviciile"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -15256,6 +15248,10 @@ msgid "Cosmic"
 msgstr "Cosmic"
 
 #, fuzzy
+msgid "Cost per month"
+msgstr "Blocaje MSSQL pe lot"
+
+#, fuzzy
 msgid "Costs"
 msgstr "Gazde"
 
@@ -16810,6 +16806,9 @@ msgstr "Starea DCD"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Potriviri"
+
+msgid "DCD Connection is still absent, consider activating changes"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -21169,12 +21168,6 @@ msgstr ""
 "configurație.<br>Datele de performanță (RRD) și arhiva de inventar HW/SW nu "
 "sunt niciodată șterse în timpul ștergerii gazdei. Ele sunt șterse automat "
 "doar atunci când activați această opțiune și după perioada configurată."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "În această perioadă de timp nu sunt disponibile date de monitorizare"
@@ -28127,17 +28120,6 @@ msgstr ""
 "configurare <tt>sqlnet.ora</tt> și <tt>tnsnames.ora</tt>. Omiterea acestui "
 "gol va reveni la <tt>/etc/check_mk</tt>."
 
-#, fuzzy
-msgid ""
-"Here you can specify an alternative user that the agent should be run as. "
-"Please note that only root has enough privileges for all commands and plug-"
-"ins. When run as another user then some information will be missing."
-msgstr ""
-"Aici puteți specifica un utilizator alternativ cu care agentul trebuie să "
-"fie rulat. Rețineți că numai root are suficiente privilegii pentru toate "
-"comenzile și pluginurile. Atunci când este rulat ca alt utilizator, unele "
-"informații vor lipsi."
-
 msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr ""
 "Aici puteți specifica opțiunile de depanare ale ajutoarelor de verificare "
@@ -34144,7 +34126,8 @@ msgstr ""
 msgid "Installation"
 msgstr "Instalare"
 
-msgid "Installation paths for agent files (Linux, UNIX)"
+#, fuzzy
+msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "Căi de instalare pentru fișierele agent (Linux, UNIX)"
 
 msgid "Installed Agent"
@@ -35438,9 +35421,6 @@ msgstr "Durata postului"
 
 msgid "Job ID"
 msgstr "ID-ul postului"
-
-msgid "Job Name"
-msgstr "Numele postului"
 
 msgid "Job State"
 msgstr "Statul de muncă"
@@ -39573,9 +39553,6 @@ msgstr "Potrivirea este inversată în această regulă"
 
 msgid "Matching nodes"
 msgstr "Noduri de potrivire"
-
-msgid "Matching: "
-msgstr "Potrivire: "
 
 msgid "Matrix"
 msgstr "Matrice"
@@ -54218,7 +54195,8 @@ msgstr "Configurare rapidă"
 msgid "Run Quick Setup Stage Action"
 msgstr ""
 
-msgid "Run agent as non-root user (Linux)"
+#, fuzzy
+msgid "Run agent as non-root user (Linux) (deprecated)"
 msgstr "Rulați agentul ca utilizator non-root (Linux)"
 
 #, fuzzy
@@ -58209,10 +58187,6 @@ msgid ""
 msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
-
-#, fuzzy
-msgid "Sign up"
-msgstr "Semnează"
 
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
@@ -67823,10 +67797,11 @@ msgstr ""
 msgid "There are no time periods defined yet."
 msgstr "Nu există încă perioade de timp definite."
 
+#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes in their own."
+"activation or ask you colleagues to activate these changes on their own."
 msgstr ""
 "Există unele modificări efectuate de colegii dumneavoastră și nu ați "
 "confirmat activarea acestor modificări. Pentru a continua, va trebui să "
@@ -71665,6 +71640,29 @@ msgstr ""
 "Acest set de reguli vă ajută să configurați pluginul clasic Nagios "
 "<tt>check_disk_smb</tt> care verifică accesul la partajările sistemului de "
 "fișiere care sunt exportate prin SMB/CIFS."
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Instead of configuring each directory separately, please use the new agent "
+"ruleset \"Customize agent package\", where you can configure one "
+"installation directory which will contain all agent files underneath.<br> "
+"When configuring a \"Customize agent package\" rule, configured directories "
+"from this ruleset will be ignored.<br> <b>Note</b>: When updating an agent "
+"to the new directory structure, please keep this ruleset activated until the "
+"update is done, since the agent package will use the old installation paths "
+"for migrating your runtime files to the new directory structure."
+msgstr ""
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Please use the new agent ruleset \"Customize agent package\" instead. This "
+"has the advantage that a non-root user specified there will come with a non-"
+"root agent installation, that cares for the needed environment on the target "
+"system.<br> (Vice versa, a user from this ruleset will only be applied as "
+"the user running the agent, without caring for necessary permissions on the "
+"target system.)<br> When configuring a \"Customize agent package\" with non-"
+"root user, the configured user from this ruleset will be ignored."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76215,9 +76213,6 @@ msgstr "Perioada de probă s-a încheiat: Reduceți numărul de servicii"
 msgid "Trial phase: too many services."
 msgstr "Vezi toate gazdele și serviciile"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -77193,10 +77188,6 @@ msgstr "Până la sfârșitul acestei luni"
 
 msgid "Until end of year"
 msgstr "Până la sfârșitul anului"
-
-#, fuzzy
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
 
 msgid "Untitled setting"
 msgstr "Untitled setting"
@@ -81058,9 +81049,6 @@ msgstr "Așteptare"
 msgid "Waitlocks"
 msgstr "Blocuri de așteptare"
 
-msgid "Want to be notified about the public release? "
-msgstr ""
-
 msgid "Wanted Host State"
 msgstr "Căutat Statul gazdă"
 
@@ -84074,10 +84062,12 @@ msgstr ""
 "Puteți seta baze de date explicite cărora doriți să le aplicați critici ale "
 "stării de oglindire."
 
+#, fuzzy, python-brace-format
 msgid ""
-"You can set explicit jobs by defining their job names. The job names can be "
-"found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
-"database."
+"You can set explicit jobs by defining their IDs. The job ID is a combination "
+"of the job name and the name of the instance the job runs on: `{job_name} - "
+"{instance_name}`. The job names can be found in the column \"name\" in the "
+"table \"dbo.sysjobs\" on the MSDB database."
 msgstr ""
 "Puteți stabili sarcini explicite prin definirea numelor acestora. Numele "
 "posturilor de lucru pot fi găsite în coloana \"name\" din tabelul \"dbo."
@@ -87762,6 +87752,40 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy
+#~ msgid ""
+#~ "Here you can specify an alternative user that the agent should be run as. "
+#~ "Please note that only root has enough privileges for all commands and "
+#~ "plug-ins. When run as another user then some information will be missing."
+#~ msgstr ""
+#~ "Aici puteți specifica un utilizator alternativ cu care agentul trebuie să "
+#~ "fie rulat. Rețineți că numai root are suficiente privilegii pentru toate "
+#~ "comenzile și pluginurile. Atunci când este rulat ca alt utilizator, unele "
+#~ "informații vor lipsi."
+
+#~ msgid "Job Name"
+#~ msgstr "Numele postului"
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Serial"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Vezi toate gazdele și serviciile"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Semnează"
+
+#, fuzzy
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
+
+#~ msgid "Matching: "
+#~ msgstr "Potrivire: "
+
 #~ msgid "Requests data from a RabbitMQ instance."
 #~ msgstr "Solicită date de la o instanță RabbitMQ."
 
@@ -88454,10 +88478,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr ""
 #~ "Facilitatea Syslog a evenimentelor redirecționate afișate în Consola de "
 #~ "evenimente."
-
-#, fuzzy
-#~ msgid "hosts per batch"
-#~ msgstr "Blocaje MSSQL pe lot"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

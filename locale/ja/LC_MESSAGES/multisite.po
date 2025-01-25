@@ -8851,12 +8851,6 @@ msgstr ""
 "ベスト：プラグインのチェック機能は個々のノードに適用される。最良の結果がクラ"
 "スタ化されたサービス全体の状態を決定します。"
 
-msgid "Beta Trial"
-msgstr "Betaトライアル"
-
-msgid "Beta phase: too many services"
-msgstr "Betaフェーズ：サービスが多すぎる"
-
 msgid "BigQuery table ID"
 msgstr "BigQueryテーブルID"
 
@@ -14581,6 +14575,10 @@ msgstr "スプール内の破損したファイル"
 msgid "Cosmic"
 msgstr "コズミック"
 
+#, fuzzy
+msgid "Cost per month"
+msgstr "バッチごとのMSSQLロック"
+
 msgid "Costs"
 msgstr "コスト"
 
@@ -16090,6 +16088,9 @@ msgstr "DCDステータス"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "一致"
+
+msgid "DCD Connection is still absent, consider activating changes"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -20192,14 +20193,6 @@ msgstr ""
 "フォーマンスデータ(RRD)とHW/SWインベントリアーカイブは、ホストの削除中に削除"
 "されることはありません。これらは、このオプションを有効にした場合、および構成"
 "された期間が経過した後にのみ自動的に削除されます。"
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
-"ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
-"と、%sのサービスを利用できるようになります。"
 
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
@@ -27030,16 +27023,6 @@ msgstr ""
 "るための<tt>TNS_ADMIN</tt>を指定することができ ます。この空白を省略すると、 "
 "<tt>/etc/check_mk</tt>にフォールバックします。"
 
-#, fuzzy
-msgid ""
-"Here you can specify an alternative user that the agent should be run as. "
-"Please note that only root has enough privileges for all commands and plug-"
-"ins. When run as another user then some information will be missing."
-msgstr ""
-"ここでは、エージェントを実行する代替ユーザを指定できます。すべてのコマンドと"
-"プラグインに対して、rootのみが十分な権限を持っていることに注意してください。"
-"他のユーザで実行すると、いくつかの情報が欠落します。"
-
 msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr "ここでは、Checkmkチェックヘルパーのデバッグオプションを指定できます。"
 
@@ -32902,7 +32885,8 @@ msgstr ""
 msgid "Installation"
 msgstr "インストール"
 
-msgid "Installation paths for agent files (Linux, UNIX)"
+#, fuzzy
+msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "エージェントファイルのインストールパス(Linux、UNIX)"
 
 msgid "Installed Agent"
@@ -34168,9 +34152,6 @@ msgstr "ジョブの期間"
 
 msgid "Job ID"
 msgstr "ジョブID"
-
-msgid "Job Name"
-msgstr "ジョブ名"
 
 msgid "Job State"
 msgstr "ジョブの状態"
@@ -38253,9 +38234,6 @@ msgstr "このルールではマッチングが逆になります"
 #, fuzzy
 msgid "Matching nodes"
 msgstr "すべてのノードに一致"
-
-msgid "Matching: "
-msgstr "マッチング: "
 
 msgid "Matrix"
 msgstr "マトリックス"
@@ -52737,7 +52715,8 @@ msgstr "クイックセットアップ"
 msgid "Run Quick Setup Stage Action"
 msgstr ""
 
-msgid "Run agent as non-root user (Linux)"
+#, fuzzy
+msgid "Run agent as non-root user (Linux) (deprecated)"
 msgstr "root以外のユーザーとしてエージェントを実行する(Linux)"
 
 #, fuzzy
@@ -56631,10 +56610,6 @@ msgid ""
 msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
-
-#, fuzzy
-msgid "Sign up"
-msgstr "登録はこちら"
 
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
@@ -65924,10 +65899,11 @@ msgstr "検索に一致するルールセットやルールはありません。
 msgid "There are no time periods defined yet."
 msgstr "まだ定義されている期間はありません。"
 
+#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes in their own."
+"activation or ask you colleagues to activate these changes on their own."
 msgstr ""
 "同僚によって行われたいくつかの変更があり、これらの変更をアクティブ化すること"
 "を確認していません。続行するには、アクティブ化を確認するか、同僚にこれらの変"
@@ -69549,6 +69525,29 @@ msgstr ""
 "このルールセットは、SMB/CIFSを介してエクスポートされるファイルシステム共有へ"
 "のアクセスをチェックする従来のNagiosプラグイン<tt> check_disk_smb </tt>を構成"
 "するのに役立ちます。"
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Instead of configuring each directory separately, please use the new agent "
+"ruleset \"Customize agent package\", where you can configure one "
+"installation directory which will contain all agent files underneath.<br> "
+"When configuring a \"Customize agent package\" rule, configured directories "
+"from this ruleset will be ignored.<br> <b>Note</b>: When updating an agent "
+"to the new directory structure, please keep this ruleset activated until the "
+"update is done, since the agent package will use the old installation paths "
+"for migrating your runtime files to the new directory structure."
+msgstr ""
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Please use the new agent ruleset \"Customize agent package\" instead. This "
+"has the advantage that a non-root user specified there will come with a non-"
+"root agent installation, that cares for the needed environment on the target "
+"system.<br> (Vice versa, a user from this ruleset will only be applied as "
+"the user running the agent, without caring for necessary permissions on the "
+"target system.)<br> When configuring a \"Customize agent package\" with non-"
+"root user, the configured user from this ruleset will be ignored."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74105,9 +74104,6 @@ msgstr "試用期間終了： サービスの数を減らしてください"
 msgid "Trial phase: too many services."
 msgstr "Betaフェーズ：サービスが多すぎる"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr "ベータ期間中の試用時間は未定"
-
 #, fuzzy
 msgid "Trial time left is visible in the user admin panel"
 msgstr "ベータ期間中の試用時間は未定"
@@ -75077,9 +75073,6 @@ msgstr "今月末まで"
 
 msgid "Until end of year"
 msgstr "年末まで"
-
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "サービス数を減らすまで、『変更を有効にする』はブロックされます。"
 
 msgid "Untitled setting"
 msgstr "無題の設定"
@@ -78853,10 +78846,6 @@ msgstr "待っています"
 msgid "Waitlocks"
 msgstr "ウェイトロック"
 
-#, fuzzy
-msgid "Want to be notified about the public release? "
-msgstr " 公開リリースに関する通知を希望しますか？ "
-
 msgid "Wanted Host State"
 msgstr "ホストの状態取得"
 
@@ -81744,10 +81733,12 @@ msgstr ""
 "ミラーリング状態のクリティカリティを適用するデータベースを明示的に設定するこ"
 "とができます。"
 
+#, fuzzy, python-brace-format
 msgid ""
-"You can set explicit jobs by defining their job names. The job names can be "
-"found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
-"database."
+"You can set explicit jobs by defining their IDs. The job ID is a combination "
+"of the job name and the name of the instance the job runs on: `{job_name} - "
+"{instance_name}`. The job names can be found in the column \"name\" in the "
+"table \"dbo.sysjobs\" on the MSDB database."
 msgstr ""
 "ジョブ名を定義することにより、明示的なジョブを設定できます。ジョブ名は、MSDB"
 "データベースのテーブル\"dbo.sysjobs\"の\"name\"列にあります。"
@@ -85382,6 +85373,51 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#, fuzzy
+#~ msgid ""
+#~ "Here you can specify an alternative user that the agent should be run as. "
+#~ "Please note that only root has enough privileges for all commands and "
+#~ "plug-ins. When run as another user then some information will be missing."
+#~ msgstr ""
+#~ "ここでは、エージェントを実行する代替ユーザを指定できます。すべてのコマンド"
+#~ "とプラグインに対して、rootのみが十分な権限を持っていることに注意してくださ"
+#~ "い。他のユーザで実行すると、いくつかの情報が欠落します。"
+
+#~ msgid "Job Name"
+#~ msgstr "ジョブ名"
+
+#~ msgid "Beta Trial"
+#~ msgstr "Betaトライアル"
+
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Betaフェーズ：サービスが多すぎる"
+
+#, python-format
+#~ msgid ""
+#~ "During the beta phase, the number of services is limited to %s but you "
+#~ "would have %s services after activating your changes."
+#~ msgstr ""
+#~ "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
+#~ "と、%sのサービスを利用できるようになります。"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "登録はこちら"
+
+#~ msgid "Trial time is undefined during the beta phase"
+#~ msgstr "ベータ期間中の試用時間は未定"
+
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "サービス数を減らすまで、『変更を有効にする』はブロックされます。"
+
+#, fuzzy
+#~ msgid "Want to be notified about the public release? "
+#~ msgstr " 公開リリースに関する通知を希望しますか？ "
+
+#~ msgid "Matching: "
+#~ msgstr "マッチング: "
+
 #~ msgid "Requests data from a RabbitMQ instance."
 #~ msgstr "RabbitMQインスタンスからデータを要求します。"
 
@@ -86060,10 +86096,6 @@ msgstr ""
 
 #~ msgid "Syslog facility of forwarded events shown in Event Console."
 #~ msgstr "イベントコンソールに表示される、転送されたメッセージのSyslog機能。"
-
-#, fuzzy
-#~ msgid "hosts per batch"
-#~ msgstr "バッチごとのMSSQLロック"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

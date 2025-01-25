@@ -9230,14 +9230,6 @@ msgstr ""
 "individuele node. De beste uitkomst zal de algemene toestand van de "
 "geclusterde dienst bepalen."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Serie"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Bekijk alle hosts en diensten"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -15255,6 +15247,10 @@ msgid "Cosmic"
 msgstr "Kosmisch"
 
 #, fuzzy
+msgid "Cost per month"
+msgstr "MSSQL Sloten per Batch"
+
+#, fuzzy
 msgid "Costs"
 msgstr "Hosts"
 
@@ -16798,6 +16794,9 @@ msgstr "DCD-status"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Wedstrijd"
+
+msgid "DCD Connection is still absent, consider activating changes"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -21138,12 +21137,6 @@ msgstr ""
 "inventaris archief worden nooit verwijderd tijdens het verwijderen van een "
 "host. Ze worden alleen automatisch verwijderd wanneer u deze optie "
 "inschakelt en na de geconfigureerde periode."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "Gedurende deze periode zijn geen monitoringgegevens beschikbaar"
@@ -28091,17 +28084,6 @@ msgstr ""
 "configuratiebestanden <tt>sqlnet.ora</tt> en <tt>tnsnames.ora</tt>. Als u "
 "dit leeg laat, valt u terug op <tt>/etc/check_mk</tt>."
 
-#, fuzzy
-msgid ""
-"Here you can specify an alternative user that the agent should be run as. "
-"Please note that only root has enough privileges for all commands and plug-"
-"ins. When run as another user then some information will be missing."
-msgstr ""
-"Hier kunt u een alternatieve gebruiker opgeven waarmee de agent moet worden "
-"uitgevoerd. Merk op dat alleen root voldoende privileges heeft voor alle "
-"commando's en plugins. Als de agent als een andere gebruiker wordt "
-"uitgevoerd, zal sommige informatie ontbreken."
-
 msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr "Hier kunt u debug-opties opgeven van de Checkmk check helpers."
 
@@ -34062,7 +34044,8 @@ msgstr ""
 msgid "Installation"
 msgstr "Installatie"
 
-msgid "Installation paths for agent files (Linux, UNIX)"
+#, fuzzy
+msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "Installatiepaden voor agentbestanden (Linux, UNIX)"
 
 msgid "Installed Agent"
@@ -35354,9 +35337,6 @@ msgstr "Baan Duur"
 
 msgid "Job ID"
 msgstr "Job ID"
-
-msgid "Job Name"
-msgstr "Functie Naam"
 
 msgid "Job State"
 msgstr "Job Staat"
@@ -39514,10 +39494,6 @@ msgstr "Matching is omgekeerd in deze regel"
 #, fuzzy
 msgid "Matching nodes"
 msgstr "Alle knooppunten komen overeen"
-
-#, fuzzy
-msgid "Matching: "
-msgstr "Passend bij"
 
 msgid "Matrix"
 msgstr "Matrix"
@@ -54144,7 +54120,8 @@ msgstr "Snelle installatie"
 msgid "Run Quick Setup Stage Action"
 msgstr ""
 
-msgid "Run agent as non-root user (Linux)"
+#, fuzzy
+msgid "Run agent as non-root user (Linux) (deprecated)"
 msgstr "Agent uitvoeren als niet-root gebruiker (Linux)"
 
 #, fuzzy
@@ -58076,10 +58053,6 @@ msgid ""
 "Sign baked agent packages for Linux, Windows and other operating systems"
 msgstr ""
 "Getekende agent-pakketten voor Linux, Windows en andere besturingssystemen"
-
-#, fuzzy
-msgid "Sign up"
-msgstr "Teken"
 
 msgid "Signal quality of Wireless device"
 msgstr "Signaalkwaliteit van draadloze apparatuur"
@@ -67643,10 +67616,11 @@ msgstr "Er zijn geen regelsets of regels die overeenkomen met uw zoekopdracht."
 msgid "There are no time periods defined yet."
 msgstr "Er zijn nog geen termijnen vastgesteld."
 
+#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes in their own."
+"activation or ask you colleagues to activate these changes on their own."
 msgstr ""
 "Er zijn enkele wijzigingen doorgevoerd door uw collega's en u heeft niet "
 "bevestigd om deze wijzigingen te activeren. Om verder te gaan, zult u de "
@@ -71419,6 +71393,29 @@ msgstr ""
 "Deze regelset helpt u bij het configureren van de klassieke Nagios plugin "
 "<tt>check_disk_smb</tt> die de toegang controleert tot bestandssysteem "
 "shares die worden geëxporteerd via SMB/CIFS."
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Instead of configuring each directory separately, please use the new agent "
+"ruleset \"Customize agent package\", where you can configure one "
+"installation directory which will contain all agent files underneath.<br> "
+"When configuring a \"Customize agent package\" rule, configured directories "
+"from this ruleset will be ignored.<br> <b>Note</b>: When updating an agent "
+"to the new directory structure, please keep this ruleset activated until the "
+"update is done, since the agent package will use the old installation paths "
+"for migrating your runtime files to the new directory structure."
+msgstr ""
+
+msgid ""
+"This ruleset is deprecated and will be removed in a future Checkmk release. "
+"Please use the new agent ruleset \"Customize agent package\" instead. This "
+"has the advantage that a non-root user specified there will come with a non-"
+"root agent installation, that cares for the needed environment on the target "
+"system.<br> (Vice versa, a user from this ruleset will only be applied as "
+"the user running the agent, without caring for necessary permissions on the "
+"target system.)<br> When configuring a \"Customize agent package\" with non-"
+"root user, the configured user from this ruleset will be ignored."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76039,9 +76036,6 @@ msgstr ""
 msgid "Trial phase: too many services."
 msgstr "Bekijk alle hosts en diensten"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -77022,10 +77016,6 @@ msgstr "Tot het einde van deze maand"
 
 msgid "Until end of year"
 msgstr "Tot het einde van het jaar"
-
-#, fuzzy
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "De licentie is verlopen: 'Wijzigingen activeren' is geblokkeerd"
 
 msgid "Untitled setting"
 msgstr "Instelling zonder titel"
@@ -80876,9 +80866,6 @@ msgstr "Waiting"
 msgid "Waitlocks"
 msgstr "Wachtsloten"
 
-msgid "Want to be notified about the public release? "
-msgstr ""
-
 #, fuzzy
 msgid "Wanted Host State"
 msgstr "Gastland"
@@ -83899,10 +83886,12 @@ msgstr ""
 "U kunt expliciet databases instellen waarop u kriticiteiten van de "
 "spiegelingstoestand wilt toepassen."
 
+#, fuzzy, python-brace-format
 msgid ""
-"You can set explicit jobs by defining their job names. The job names can be "
-"found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
-"database."
+"You can set explicit jobs by defining their IDs. The job ID is a combination "
+"of the job name and the name of the instance the job runs on: `{job_name} - "
+"{instance_name}`. The job names can be found in the column \"name\" in the "
+"table \"dbo.sysjobs\" on the MSDB database."
 msgstr ""
 "U kunt expliciete taken instellen door hun taaknamen te definiëren. De "
 "taaknamen staan in de kolom \"name\" in de tabel \"dbo.sysjobs\" in de MSDB "
@@ -87583,6 +87572,41 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#, fuzzy
+#~ msgid ""
+#~ "Here you can specify an alternative user that the agent should be run as. "
+#~ "Please note that only root has enough privileges for all commands and "
+#~ "plug-ins. When run as another user then some information will be missing."
+#~ msgstr ""
+#~ "Hier kunt u een alternatieve gebruiker opgeven waarmee de agent moet "
+#~ "worden uitgevoerd. Merk op dat alleen root voldoende privileges heeft "
+#~ "voor alle commando's en plugins. Als de agent als een andere gebruiker "
+#~ "wordt uitgevoerd, zal sommige informatie ontbreken."
+
+#~ msgid "Job Name"
+#~ msgstr "Functie Naam"
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Serie"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Bekijk alle hosts en diensten"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Teken"
+
+#, fuzzy
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "De licentie is verlopen: 'Wijzigingen activeren' is geblokkeerd"
+
+#, fuzzy
+#~ msgid "Matching: "
+#~ msgstr "Passend bij"
+
 #~ msgid "Requests data from a RabbitMQ instance."
 #~ msgstr "Vraagt gegevens op van een RabbitMQ instantie."
 
@@ -88253,10 +88277,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgstr ""
 #~ "Syslog faciliteit van doorgestuurde gebeurtenissen getoond in Event "
 #~ "Console."
-
-#, fuzzy
-#~ msgid "hosts per batch"
-#~ msgstr "MSSQL Sloten per Batch"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

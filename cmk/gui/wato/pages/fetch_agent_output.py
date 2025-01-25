@@ -356,7 +356,10 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         job_interface.send_result_message(
             _("%s Click on the icon to download the agent output.")
             % HTMLGenerator.render_icon_button(
-                url=download_url, title=_("Download"), icon="agent_output", theme=make_theme()
+                url=download_url,
+                title=_("Download"),
+                icon="agent_output",
+                theme=make_theme(validate_choices=False),
             )
         )
 

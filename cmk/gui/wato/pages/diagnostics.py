@@ -781,7 +781,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                     url=download_url,
                     title=_("Download"),
                     icon="diagnostics_dump_file",
-                    theme=make_theme(),
+                    theme=make_theme(validate_choices=False),
                 )
             )
 

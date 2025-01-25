@@ -21,7 +21,7 @@ from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_conf
 
 from cmk.utils import paths
 
-from cmk.gui.background_job import ThreadedJobExecutor
+from cmk.gui.background_job import job_registry, ThreadedJobExecutor
 from cmk.gui.log import logger
 from cmk.gui.utils import get_failed_plugins
 
@@ -101,7 +101,12 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             try:
                 run_server(
                     default_config(omd_root, run_path, log_path),
-                    get_application(loaded_at, ThreadedJobExecutor(logger)),
+                    get_application(
+                        logger=logger,
+                        loaded_at=loaded_at,
+                        registered_jobs=dict(job_registry.items()),
+                        executor=ThreadedJobExecutor(logger),
+                    ),
                 )
             finally:
                 stop_event.set()

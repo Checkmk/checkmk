@@ -3,12 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import AsyncIterator, Mapping
+from contextlib import asynccontextmanager
+from logging import Logger
 from typing import get_type_hints
 
 from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundJobsHealth,
     HealthResponse,
     IsAliveRequest,
@@ -21,8 +25,22 @@ from cmk.gui.background_job import (
 )
 
 
-def get_application(loaded_at: int, executor: JobExecutor) -> FastAPI:
-    app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+def get_application(
+    logger: Logger,
+    loaded_at: int,
+    registered_jobs: Mapping[str, type[BackgroundJob]],
+    executor: JobExecutor,
+) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        # The code before `yield` is executed on startup, after `yield` on shutdown
+        logger.info("Starting background jobs on_scheduler_start hooks")
+        for job_cls in registered_jobs.values():
+            job_cls.on_scheduler_start(executor)
+        logger.info("Finished on_scheduler_start hooks")
+        yield
+
+    app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.loaded_at = loaded_at
 
     FastAPIInstrumentor.instrument_app(app)

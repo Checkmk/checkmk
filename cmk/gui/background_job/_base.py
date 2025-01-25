@@ -48,10 +48,18 @@ class BackgroundJob:
         # instantiated in various places.
         raise NotImplementedError()
 
+    @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        """Called when the job scheduler starts
+
+        Can be used to implement initialization tasks that should be triggered once
+        the job scheduler is ready to start background jobs"""
+
     def __init__(
         self,
         job_id: str,
         logger: logging.Logger | None = None,
+        executor: JobExecutor | None = None,
     ) -> None:
         super().__init__()
         self.validate_job_id(job_id)
@@ -64,9 +72,13 @@ class BackgroundJob:
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
         self._executor: JobExecutor = (
-            ThreadedJobExecutor(self._logger)
-            if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
-            else JobSchedulerExecutor(self._logger)
+            executor
+            if executor
+            else (
+                ThreadedJobExecutor(self._logger)
+                if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
+                else JobSchedulerExecutor(self._logger)
+            )
         )
 
     @staticmethod

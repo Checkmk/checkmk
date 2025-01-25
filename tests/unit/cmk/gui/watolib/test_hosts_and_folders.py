@@ -69,19 +69,6 @@ def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     os.makedirs(tree.root_folder().filesystem_path())
 
 
-@pytest.fixture(autouse=True)
-def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
-    try:
-        import cmk.gui.cee.agent_bakery.bake_agents as agent_bakery
-    except ImportError:
-        return  # Don't do anything in case the bakery is not available
-
-    def _fake_start_bake_agents(host_names, signing_credentials):
-        pass
-
-    monkeypatch.setattr(agent_bakery, "start_bake_agents", _fake_start_bake_agents)
-
-
 @pytest.mark.parametrize(
     "attributes,expected_tags",
     [

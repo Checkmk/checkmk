@@ -9,6 +9,11 @@ import subprocess
 from tests.testlib.site import Site
 
 
+def test_initial_api_spec_computation_was_done(site: Site) -> None:
+    assert site.file_exists("var/check_mk/rest_api/spec/doc.spec")
+    assert site.file_exists("var/check_mk/rest_api/spec/swagger-ui.spec")
+
+
 def test_compute_api_spec(site: Site) -> None:
     site.delete_file("var/check_mk/rest_api/spec/doc.spec")
     site.delete_file("var/check_mk/rest_api/spec/swagger-ui.spec")

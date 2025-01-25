@@ -157,7 +157,6 @@ do_start() {
     if apache_wait_start; then
         __init_hook $0 $1 post 0
         echo 'OK'
-        cmk-trigger-api-spec-job
         return 0
     else
         __init_hook $0 $1 post 1
@@ -195,7 +194,6 @@ case $1 in
         echo "Reloading apache"
         $(apache_bin) -f "$CONFIG_FILE" -k graceful
         __init_hook $0 $1 post $?
-        cmk-trigger-api-spec-job
         ;;
     status)
         PID=$(pidof_apache) || true

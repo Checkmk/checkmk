@@ -11,6 +11,7 @@ from cmk.gui.background_job import (
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobExecutor,
     NoArgs,
     simple_job_target,
 )
@@ -46,11 +47,24 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
     job_prefix = "spec_generator"
 
     @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        """Generate the REST API specification on ui-job-scheduler startup"""
+        SpecGeneratorBackgroundJob(executor=executor).start(
+            simple_job_target(_generate_spec_in_background_job),
+            InitialStatusArgs(
+                title=SpecGeneratorBackgroundJob.gui_title(),
+                stoppable=False,
+                lock_wato=False,
+                user=None,
+            ),
+        )
+
+    @classmethod
     def gui_title(cls) -> str:
         return _("Generate REST API specification")
 
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
+    def __init__(self, executor: JobExecutor | None = None) -> None:
+        super().__init__(self.job_prefix, executor=executor)
 
 
 def _generate_spec_in_background_job(

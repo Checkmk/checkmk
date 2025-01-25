@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 import cmk.utils.resulttype as result
 
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundProcessInterface,
     HealthResponse,
     IsAliveRequest,
@@ -55,8 +56,28 @@ class DummyExecutor(JobExecutor):
         }
 
 
+class HelloJob(BackgroundJob):
+    job_prefix = "hello"
+    on_scheduler_start_called = False
+
+    @classmethod
+    def gui_title(cls) -> str:
+        return "Hello Job"
+
+    @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        HelloJob.on_scheduler_start_called = True
+
+
 def _get_test_client(loaded_at: int) -> TestClient:
-    return TestClient(get_application(loaded_at=loaded_at, executor=DummyExecutor(logger)))
+    return TestClient(
+        get_application(
+            logger,
+            loaded_at=loaded_at,
+            registered_jobs={"hello_job": HelloJob},
+            executor=DummyExecutor(logger),
+        )
+    )
 
 
 def job_test_target(job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
@@ -119,3 +140,9 @@ def test_health_check() -> None:
     response = HealthResponse.model_validate(resp.json())
     assert response.loaded_at == loaded_at
     assert response.background_jobs.running_jobs == {"job_id": 42}
+
+
+def test_on_scheduler_start_executed() -> None:
+    HelloJob.on_scheduler_start_called = False
+    with _get_test_client(loaded_at=1337):
+        assert HelloJob.on_scheduler_start_called is True

@@ -69,7 +69,7 @@ def fixture_local_theme(patch_local_web_dir: Path) -> None:
 
 @pytest.fixture(name="th")
 def fixture_th() -> Theme:
-    th = Theme()
+    th = Theme(validate_choices=True)
     th.from_config("modern-dark")
     assert th.get() == "modern-dark"
     return th

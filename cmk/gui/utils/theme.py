@@ -7,8 +7,6 @@ import json
 import os
 from pathlib import Path
 
-from flask import current_app
-
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
@@ -20,15 +18,15 @@ from cmk.gui.i18n import _
 
 
 class Theme:
-    def __init__(self) -> None:
+    def __init__(self, validate_choices: bool) -> None:
         self._default_theme = "facelift"
         self._theme = "facelift"
         self.theme_choices: list[tuple[str, str]] = theme_choices()
 
-        if not self.theme_choices and current_app.debug:
+        if not self.theme_choices and validate_choices:
             raise MKInternalError(_("No valid theme directories found."))
 
-        if self._default_theme not in dict(self.theme_choices) and current_app.debug:
+        if self._default_theme not in dict(self.theme_choices) and validate_choices:
             raise MKInternalError(
                 _('The default theme "%s" is not given among the found theme choices: %s.')
                 % (self._default_theme, self.theme_choices)

@@ -36,7 +36,7 @@ def set_global_vars() -> None:
     response.mimetype = get_mime_type_from_output_format(output_format)
 
     # The oder within this block is irrelevant.
-    theme = Theme()
+    theme = Theme(validate_choices=current_app.debug)
     theme.from_config(active_config.ui_theme)
     set_global_var("theme", theme)
 

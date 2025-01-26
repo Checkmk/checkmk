@@ -37,7 +37,7 @@ def fixture_expected_plugins() -> list[str]:
 
     if is_cloud_repo():
         # The CCE plug-ins are loaded when the CCE plug-ins are available
-        expected.append("agent_controller_connections")
+        expected.extend(["agent_controller_connections", "otel"])
 
     return expected
 

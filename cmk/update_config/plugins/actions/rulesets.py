@@ -381,7 +381,7 @@ def _validate_rule_values(
                     ruleset.name,
                     ruleset.title(),
                     folder.path(),
-                    index + 1,
+                    index,
                     excpt,
                 )
 

@@ -5,12 +5,12 @@
 
 import re
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-from cmk.base.legacy_checks.storcli_pdisks import parse_storcli_pdisks
-
 from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.collection.agent_based.storcli_pdisks import (
+    check_storcli_pdisks,
+    parse_storcli_pdisks,
+    StorcliPDisk,
+)
 from cmk.plugins.lib import megaraid
 
 # agent_output/CMK-7584-storcli_pdisks
@@ -109,41 +109,39 @@ def _to_string_table(raw: str) -> StringTable:
 
 def test_parse_v1():
     assert parse_storcli_pdisks(_to_string_table(SECTION_V1)) == {
-        "C0.8:0-15": {"size": (953.343, "GB"), "state": "Online"},
-        "C0.8:1-23": {"size": (953.343, "GB"), "state": "Online"},
-        "C0.8:2-18": {"size": (953.343, "GB"), "state": "Online"},
-        "C0.8:3-21": {"size": (5.457, "TB"), "state": "Online"},
-        "C0.8:4-10": {"size": (5.457, "TB"), "state": "Online"},
-        "C0.8:5-14": {"size": (5.457, "TB"), "state": "Online"},
-        "C0.8:6-17": {"size": (5.457, "TB"), "state": "Online"},
-        "C0.8:7-20": {"size": (5.457, "TB"), "state": "Online"},
-        "C0.8:8-9": {"size": (5.457, "TB"), "state": "Online"},
+        "C0.8:0-15": StorcliPDisk(size=(953.343, "GB"), state="Online"),
+        "C0.8:1-23": StorcliPDisk(size=(953.343, "GB"), state="Online"),
+        "C0.8:2-18": StorcliPDisk(size=(953.343, "GB"), state="Online"),
+        "C0.8:3-21": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:4-10": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:5-14": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:6-17": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:7-20": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:8-9": StorcliPDisk(size=(5.457, "TB"), state="Online"),
     }
 
 
 def test_parse_v2():
     assert parse_storcli_pdisks(_to_string_table(SECTION_V2)) == {
         # TODO: this is a bug, this needs to be fixed
-        "C0.308:0-283": {"size": (0.0, "223.062"), "state": "Conf"},
-        "C0.308:12-292": {"size": (1.0, "6.985"), "state": "Conf"},
-        "C0.308:16-293": {"size": (1.0, "6.985"), "state": "Conf"},
-        "C0.308:20-294": {"size": (1.0, "6.985"), "state": "Conf"},
-        "C0.308:4-287": {"size": (0.0, "223.062"), "state": "Conf"},
-        "C0.308:8-291": {"size": (1.0, "6.985"), "state": "Conf"},
-        "C1.283-0/-": {"size": (223.062, "GiB"), "state": "0"},
-        "C1.287-0/-": {"size": (223.062, "GiB"), "state": "0"},
-        "C1.291-0/1": {"size": (6.985, "TiB"), "state": "0"},
-        "C1.292-0/1": {"size": (6.985, "TiB"), "state": "0"},
-        "C1.293-0/1": {"size": (6.985, "TiB"), "state": "0"},
-        "C1.294-0/1": {"size": (6.985, "TiB"), "state": "0"},
+        "C0.308:0-283": StorcliPDisk(size=(0.0, "223.062"), state="Conf"),
+        "C0.308:12-292": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
+        "C0.308:16-293": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
+        "C0.308:20-294": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
+        "C0.308:4-287": StorcliPDisk(size=(0.0, "223.062"), state="Conf"),
+        "C0.308:8-291": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
+        "C1.283-0/-": StorcliPDisk(size=(223.062, "GiB"), state="0"),
+        "C1.287-0/-": StorcliPDisk(size=(223.062, "GiB"), state="0"),
+        "C1.291-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
+        "C1.292-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
+        "C1.293-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
+        "C1.294-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
     }
 
 
-def test_check_simple(agent_based_plugins: AgentBasedPlugins) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("storcli_pdisks")]
-    assert check_plugin
+def test_check_simple() -> None:
     result = list(
-        check_plugin.check_function(
+        check_storcli_pdisks(
             item="C0.8:2-18",
             params=megaraid.PDISKS_DEFAULTS,
             section=parse_storcli_pdisks(
@@ -152,5 +150,5 @@ def test_check_simple(agent_based_plugins: AgentBasedPlugins) -> None:
         )
     )
     assert result == [
-        Result(state=State.OK, summary="Size: 953.343000 GB, Disk State: Online"),
+        Result(state=State.OK, summary="Size: 953.343 GB, Disk State: Online"),
     ]

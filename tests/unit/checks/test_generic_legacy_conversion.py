@@ -1068,7 +1068,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "steelhead_connections",
         "steelhead_peers",
         "steelhead_status",
-        "storcli_pdisks",
         "storeonce4x_alerts",
         "storeonce4x_d2d_services",
         "stormshield_cluster",
@@ -1218,6 +1217,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
     vanished_legacy_checks = expected_legacy_checks - current_legacy_checks
     assert not vanished_legacy_checks, (
         "The following legacy checks have vanished: %s. Please "
-        "remove them from 'allowed_legacy_checks' in this unit "
+        "remove them from 'expected_legacy_checks' in this unit "
         "test." % ", ".join(sorted(vanished_legacy_checks))
     )

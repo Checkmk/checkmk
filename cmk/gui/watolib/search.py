@@ -539,8 +539,8 @@ class _SearchResultWithPermissionsCheck:
 def _index_building_in_background_job(
     job_interface: BackgroundProcessInterface, args: NoArgs
 ) -> None:
-    with job_interface.gui_context():
-        _build_index(job_interface, get_redis_client())
+    with job_interface.gui_context(), get_redis_client() as redis_client:
+        _build_index(job_interface, redis_client)
 
 
 def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis[str]) -> None:
@@ -569,8 +569,7 @@ def launch_requests_processing_background() -> None:
 def _process_update_requests_background(
     job_interface: BackgroundProcessInterface, args: NoArgs
 ) -> None:
-    with job_interface.gui_context():
-        redis_client = get_redis_client()
+    with job_interface.gui_context(), get_redis_client() as redis_client:
         if not redis_server_reachable(redis_client):
             job_interface.send_progress_update(_("Redis is not reachable, terminating"))
             return

@@ -24,7 +24,9 @@ def migrate_to_float_simple_levels_ignoring_predictive(
     value: object,
 ) -> SimpleLevelsConfigModel[float]:
     match value:
-        case ("cmk_postprocessed", "predictive_levels", value):
+        case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if isinstance(
+            val_dict, dict
+        ):
             return ("no_levels", None)
         case _:
             return migrate_to_float_simple_levels(value)

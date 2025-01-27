@@ -64,26 +64,26 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         daemonize()
 
-        init_span_processor(
-            trace.init_tracing(
-                service_namespace="",
-                service_name="cmk-ui-job-scheduler",
-                service_instance_id=omd_site(),
-                extra_resource_attributes=resource_attributes_from_config(omd_root),
-            ),
-            exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
-        )
-        add_span_log_handler()
-
-        # The import and load_pugins take a few seconds and we don't want to delay the
-        # pre-daemonize phase with this, because it also slows down "omd start" significantly.
-        from cmk.gui import main_modules
-
-        main_modules.load_plugins()
-        if errors := get_failed_plugins():
-            raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
-
         with pid_file_lock(_pid_file(omd_root)):
+            init_span_processor(
+                trace.init_tracing(
+                    service_namespace="",
+                    service_name="cmk-ui-job-scheduler",
+                    service_instance_id=omd_site(),
+                    extra_resource_attributes=resource_attributes_from_config(omd_root),
+                ),
+                exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
+            )
+            add_span_log_handler()
+
+            # The import and load_pugins take a few seconds and we don't want to delay the
+            # pre-daemonize phase with this, because it also slows down "omd start" significantly.
+            from cmk.gui import main_modules
+
+            main_modules.load_plugins()
+            if errors := get_failed_plugins():
+                raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
+
             _setup_file_logging(log_path / "ui-job-scheduler.log")
             run_scheduler(crash_report_callback)
     except Exception as exc:

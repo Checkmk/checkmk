@@ -273,11 +273,13 @@ def make_html_object_explode(mocker: MagicMock) -> None:
 
 @pytest.fixture()
 def inline_background_jobs(mocker: MagicMock) -> None:
-    """Prevent multiprocess.Process to spin off a new process
+    """Prevent threading.Thread to spin off a new thread
 
     This will run the code (non-concurrently, blocking) in the main execution path.
     """
-    # Process.start spins of the new process. We tell it to just run the job instead.
+    # Thread.start spins of the new thread. We tell it to just run the job instead.
+    mocker.patch("threading.Thread.start", new=lambda self: self.run())
+    ####
     mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
     mocker.patch("multiprocessing.context.SpawnProcess.start", new=lambda self: self.run())
     # We stub out everything preventing smooth execution.
@@ -288,10 +290,7 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("multiprocessing.Process.exitcode", 0)
     mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
     mocker.patch("sys.exit")
-    mocker.patch("cmk.gui.background_job._process._detach_from_parent")
-    mocker.patch("cmk.gui.background_job._process._open_stdout_and_stderr")
-    mocker.patch("cmk.gui.background_job._process._register_signal_handlers")
-    mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
+    mocker.patch("threading.Thread.start", new=lambda self: self.run())
     mocker.patch("cmk.ccc.daemon.daemonize")
     mocker.patch("cmk.ccc.daemon.closefrom")
 

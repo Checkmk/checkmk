@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import ast
 import enum
-import errno
 import hashlib
 import io
 import logging
@@ -1520,6 +1519,13 @@ class ActivateChangesManager(ActivateChanges):
         return self._activate_until
 
     def is_running(self) -> bool:
+        if self._activation_id is None:
+            # activation not initialized in ActivateChangesManager yet, not running
+            return False
+
+        if not ActivateChangesSchedulerBackgroundJob(self._activation_id).is_active():
+            return False
+
         return bool(self.running_sites())
 
     def _activation_running(self, site_id: SiteId) -> bool:
@@ -1537,25 +1543,10 @@ class ActivateChangesManager(ActivateChanges):
             # started and could not lock the site stat file yet.
             return True
 
-        # Check whether or not the process is still there
-        # The pid refers to
-        # - the site scheduler PID as long as the site is in queue
-        # - the site activate changes PID
-        # - None, if the site was locked by another process
-        if site_state["_pid"] is None:
+        if site_state["_phase"] in PHASE_DONE:
             return False
 
-        try:
-            os.kill(site_state["_pid"], 0)
-            return True
-        except OSError as e:
-            # ESRCH: no such process
-            # EPERM: operation not permitted (another process reused this)
-            # -> Both cases mean it is not running anymore
-            if e.errno in [errno.EPERM, errno.ESRCH]:
-                return False
-
-            raise
+        return True
 
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)

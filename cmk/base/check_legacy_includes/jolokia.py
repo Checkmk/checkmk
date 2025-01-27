@@ -144,7 +144,7 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
 #   '----------------------------------------------------------------------'
 
 
-def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
+def get_inventory_jolokia_metrics_apps(
     what: str,
     *,
     needed_keys: set[str],

@@ -97,12 +97,12 @@ class TestCheckmkAutomationBackgroundJob:
             )
             job = automations.CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
-            job._execute_automation(  # pylint: disable=protected-access
+            job._execute_automation(
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
-                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                    lambda: nullcontext(),
                 ),
                 api_request,
             )
@@ -129,12 +129,12 @@ class TestCheckmkAutomationBackgroundJob:
             )
             job = automations.CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
-            job._execute_automation(  # pylint: disable=protected-access
+            job._execute_automation(
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
-                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                    lambda: nullcontext(),
                 ),
                 api_request,
             )

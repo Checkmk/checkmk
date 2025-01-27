@@ -127,7 +127,7 @@ def inventory_fc_port(info):
         yield item, {}
 
 
-def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
+def check_fc_port(item, params, info):
     value_store = get_value_store()
 
     # Accept item, even if port name has changed

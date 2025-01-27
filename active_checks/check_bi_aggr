@@ -151,7 +151,7 @@ def _make_credentials(args: argparse.Namespace) -> tuple[str, str]:
 
 
 # returning int requires more refactoring atm
-def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
+def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv=argv)
 
     username, secret = _make_credentials(args=args)

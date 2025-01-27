@@ -7,7 +7,7 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, Literal, TypeVar
 
-from flask import g as g  # pylint: disable=unused-import
+from flask import g as g
 from flask import request, session
 from werkzeug.local import LocalProxy
 

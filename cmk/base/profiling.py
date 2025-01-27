@@ -15,7 +15,7 @@ _profile_path = Path("profile.out")
 
 def enable() -> None:
     global _profile
-    import cProfile  # pylint: disable=import-outside-toplevel
+    import cProfile
 
     _profile = cProfile.Profile()
     _profile.enable()

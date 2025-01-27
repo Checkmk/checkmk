@@ -18,7 +18,7 @@ FILER_DISKS_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
+def check_filer_disks(disks, params):
     state: dict = {}
     state["prefailed"] = []
     state["failed"] = []

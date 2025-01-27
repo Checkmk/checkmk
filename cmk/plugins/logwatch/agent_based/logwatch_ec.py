@@ -286,7 +286,7 @@ def _filter_accumulated_lines(
     )
 
 
-def check_logwatch_ec_common(  # pylint: disable=too-many-branches
+def check_logwatch_ec_common(
     item: str | None,
     params: logwatch.ParameterLogwatchEc,
     parsed: logwatch.ClusterSection,

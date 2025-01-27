@@ -115,7 +115,7 @@ def check_filestats_extremes(files, params, show_files=False):
         if not files_with_metric:
             continue
 
-        files_with_metric.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
+        files_with_metric.sort(key=lambda f: f.get(key))
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
             levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
                 f"min{key}_{label}", (None, None)

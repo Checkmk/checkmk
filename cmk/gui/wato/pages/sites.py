@@ -163,8 +163,7 @@ class ModeEditSite(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, site: str) -> str: ...
 
     @overload
     @classmethod
@@ -609,8 +608,7 @@ class ModeEditBrokerConnection(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, site: str) -> str: ...
 
     @overload
     @classmethod
@@ -1491,8 +1489,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, site: str) -> str: ...
 
     @overload
     @classmethod

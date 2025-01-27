@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -124,7 +123,7 @@ class CollectedHostAttributes(HostAttributes):
 class WATOFolderInfo(TypedDict, total=False):
     """The dictionary that is saved in the folder's .wato file"""
 
-    __id: str  # pylint: disable=unused-private-member
+    __id: str
     title: str
     attributes: HostAttributes
     num_hosts: int
@@ -1321,7 +1320,7 @@ class Folder(FolderProtocol):
 
         call_hook_hosts_changed(self)
 
-    def _save_hosts_file(self) -> None:  # pylint: disable=too-many-branches
+    def _save_hosts_file(self) -> None:
         store.makedirs(self.filesystem_path())
         exposed_folder_attributes_for_base = self._folder_attributes_for_base_config()
         if not self.has_hosts() and not exposed_folder_attributes_for_base:
@@ -2761,7 +2760,7 @@ class FolderLookupCache:
         # Touch the file. The cronjob interval might be faster than the file creation
         # Note: If this takes longer than the RequestTimeout -> Problem
         #       On very big configurations, e.g. 300MB this might take 30-50 seconds
-        cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.touch()
         self.build()
 

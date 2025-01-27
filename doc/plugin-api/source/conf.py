@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.abspath("../../../packages/cmk-server-side-calls"))
 # -- Project information -----------------------------------------------------
 
 project = "Checkmk's Plug-in APIs"
-copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin # noqa: A001
+copyright = "2023, Checkmk GmbH"  # noqa: A001
 author = "Checkmk GmbH"
 
 # -- General configuration ---------------------------------------------------

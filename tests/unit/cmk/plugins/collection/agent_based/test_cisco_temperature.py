@@ -747,9 +747,7 @@ def test_defect_sensor() -> None:
 
     assert list(ct.discover_cisco_temperature(section))
 
-    (defect_result,) = ct._check_cisco_temperature(  # pylint: disable=protected-access
-        {}, "Chassis 1", {}, section
-    )
+    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
 
@@ -1065,9 +1063,5 @@ def test_ensure_invalid_data_is_ignored(as_path: Callable[[str], Path]) -> None:
     parsed_section = get_parsed_snmp_section(ct.snmp_section_cisco_temperature, snmp_walk)
     assert parsed_section is not None
     value_store: dict = {}
-    _ = list(
-        ct._check_cisco_temperature(  # pylint: disable=protected-access
-            value_store, "38487", {}, parsed_section
-        )
-    )
+    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))
     assert not value_store

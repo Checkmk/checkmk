@@ -259,7 +259,6 @@ def _check_metric(
         rate,
         levels_upper=levels_rate,
         metric_name=f"{metric_name}_rate",
-        # pylint: disable=cell-var-from-loop
         render_func=lambda v: f"{render_func(v)}/minute",
         label=f"{label} rate",
     )

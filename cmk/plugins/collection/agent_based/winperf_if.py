@@ -226,7 +226,7 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     raw_nic_names: Sequence[str] = []
     agent_section: dict[str, Line] = {}
 
-    for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
+    for line in (lines := iter(string_table_filtered)):
         if _is_first_line(line):
             agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
                 line,

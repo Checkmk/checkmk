@@ -20,7 +20,7 @@ from cmk.gui.valuespec import (
 from .store import load_users
 
 
-def UserSelection(  # pylint: disable=redefined-builtin
+def UserSelection(
     only_contacts: bool = False,
     only_automation: bool = False,
     none: str | None = None,
@@ -46,7 +46,7 @@ def UserSelection(  # pylint: disable=redefined-builtin
 class _UserSelection(DropdownChoice[UserId]):
     """Dropdown for choosing a multisite user"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         only_contacts: bool = False,
         only_automation: bool = False,

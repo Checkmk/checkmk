@@ -99,7 +99,7 @@ def run_subprocess(cmd):
         return p.returncode, stdout, stderr
 
 
-def run_agent(cmd):  # pylint: disable=consider-using-with
+def run_agent(cmd):
     return subprocess.Popen([cmd, "exec"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 

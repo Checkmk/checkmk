@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=no-else-return
-
 import time
 from collections.abc import Callable
 
@@ -52,7 +50,7 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # pylint: disable=too-many-branches
+def size_trend(
     check: str,
     item: str,
     resource: str,
@@ -60,7 +58,7 @@ def size_trend(  # pylint: disable=too-many-branches
     used_mb: float,
     size_mb: float,
     timestamp: float | None = None,
-) -> tuple[int, str, list]:  # pylint: disable=function-redefined
+) -> tuple[int, str, list]:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.

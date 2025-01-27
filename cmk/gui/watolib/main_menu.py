@@ -158,7 +158,7 @@ class ABCMainModule(MenuItem, abc.ABC):
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
-        yield  # pylint: disable=unreachable
+        yield
 
     @classmethod
     def megamenu_search_terms(cls) -> Sequence[str]:

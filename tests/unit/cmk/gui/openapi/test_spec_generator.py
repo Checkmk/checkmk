@@ -15,6 +15,6 @@ def test_redoc_spec_tag_group_completness() -> None:
 
     The implementation is not ideal. If you find a better way please delete this test
     """
-    spec = spec_generator._redoc_spec()  # pylint: disable= protected-access
+    spec = spec_generator._redoc_spec()
     spec_tag_groups = {el["name"] for el in spec["x-tagGroups"]}
     assert spec_tag_groups == set(get_args(TagGroup))

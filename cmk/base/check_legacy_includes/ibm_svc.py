@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# pylint: disable=no-else-continue
-
-
 def parse_ibm_svc_with_header(info, dflt_header):
     parsed: dict = {}
     header = dflt_header

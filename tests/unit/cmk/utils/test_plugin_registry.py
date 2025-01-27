@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+
 import pytest
 
 import cmk.ccc.plugin_registry
@@ -62,7 +62,7 @@ def test_delitem(basic_registry: PluginRegistry) -> None:
         basic_registry.unregister("bla")
 
     @basic_registry.register
-    class DelPlugin(Plugin):  # pylint: disable=unused-variable
+    class DelPlugin(Plugin):
         pass
 
     basic_registry.unregister("DelPlugin")

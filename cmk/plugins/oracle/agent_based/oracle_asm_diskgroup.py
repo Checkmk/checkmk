@@ -100,7 +100,7 @@ def _try_parse_int(value: Any) -> int | None:
         return None
 
 
-def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
+def parse_oracle_asm_diskgroup(
     string_table: StringTable,
 ) -> Section:
     tmp_section: dict[str, Diskgroup] = {}
@@ -263,7 +263,7 @@ def discovery_oracle_asm_diskgroup(section: Section) -> DiscoveryResult:
             yield Service(item=asm_diskgroup_name)
 
 
-def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
+def check_oracle_asm_diskgroup(
     item: str,
     params: Mapping[str, Any],
     section: Section,

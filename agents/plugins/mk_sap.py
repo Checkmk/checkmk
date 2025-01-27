@@ -47,7 +47,7 @@ except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):
-    RecursionError = RuntimeError  # pylint: disable=redefined-builtin # noqa: A001
+    RecursionError = RuntimeError  # noqa: A001
 
 # #############################################################################
 
@@ -358,7 +358,7 @@ def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):
     return logs
 
 
-def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
+def check(pyrfc, cfg_entry):
     conn = pyrfc.Connection(
         ashost=cfg_entry["ashost"],
         sysnr=cfg_entry["sysnr"],
@@ -473,7 +473,7 @@ def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
     conn.close()
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     global state_file_changed
 
     try:

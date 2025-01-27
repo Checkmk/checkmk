@@ -205,8 +205,7 @@ class ModeCheckPluginTopic(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, topic: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, topic: str) -> str: ...
 
     @overload
     @classmethod

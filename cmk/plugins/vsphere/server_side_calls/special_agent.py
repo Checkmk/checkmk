@@ -37,9 +37,7 @@ class Params(BaseModel):
     spaces: str
 
 
-def commands_function(  # pylint: disable=too-many-branches
-    params: Params, host_config: HostConfig
-) -> Iterable[SpecialAgentCommand]:
+def commands_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = []
     if params.tcp_port is not None:
         command_arguments += ["-p", "%d" % params.tcp_port]

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 
 import sys
 
@@ -15,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 if sys.version_info[0] == 2:
     from mock import Mock
 
-    import agents.plugins.apache_status_2 as apache_status  # pylint: disable=syntax-error
+    import agents.plugins.apache_status_2 as apache_status
 else:
     from unittest.mock import Mock
 

@@ -32,12 +32,8 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 @dataclass(frozen=True)
 class _RelatedLegacyHints:
-    for_node: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    for_table: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
+    for_node: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
+    for_table: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
     by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 

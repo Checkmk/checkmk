@@ -526,7 +526,7 @@ def _get_ds_type(
 
 
 def mode_list_checks() -> None:
-    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages
 
     plugins = agent_based_register.get_previously_loaded_plugins()
     section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
@@ -1224,7 +1224,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
+def mode_flush(hosts: list[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
@@ -1342,7 +1342,7 @@ modes.register(
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.utils.config_path import VersionedConfigPath
 
-    from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_nagios import create_config
 
     hostnames = args if args else None
 
@@ -1423,7 +1423,7 @@ modes.register(
 
 
 def mode_update() -> None:
-    from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_config import do_create_config
 
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
@@ -1585,7 +1585,7 @@ modes.register(
 
 
 def mode_man(options: Mapping[str, str], args: list[str]) -> None:
-    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()),
@@ -1656,7 +1656,7 @@ modes.register(
 
 
 def mode_browse_man() -> None:
-    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
@@ -1689,7 +1689,7 @@ modes.register(
 
 
 def mode_automation(args: list[str]) -> None:
-    from cmk.base import automations  # pylint: disable=import-outside-toplevel
+    from cmk.base import automations
 
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")

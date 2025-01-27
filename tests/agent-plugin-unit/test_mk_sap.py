@@ -10,7 +10,7 @@ from collections import namedtuple
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_sap_2 as mk_sap  # pylint: disable=syntax-error
+    import agents.plugins.mk_sap_2 as mk_sap
 else:
     from agents.plugins import mk_sap
 

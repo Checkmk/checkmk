@@ -49,7 +49,7 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
+    elif isinstance(s, unicode):  # noqa: F821
         return s.encode("utf-8")
     return s
 
@@ -177,7 +177,7 @@ def check_mtr_pid(pid):
         return False  # any error
 
 
-def parse_report(host, status):  # pylint: disable=too-many-branches
+def parse_report(host, status):
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if host not in status.keys():
@@ -293,7 +293,7 @@ def output_report(host, status):
     sys.stdout.write("%s\n" % hoststring)
 
 
-def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-branches
+def start_mtr(host, mtr_binary, config, status):
     options = [mtr_binary, "--report", "--report-wide"]
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")
@@ -377,9 +377,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     with open(reportfile, "a+") as report:
         report.write(str(int(time.time())) + "\n")
         report.flush()
-        process = subprocess.Popen(  # pylint: disable=consider-using-with
-            options, stdout=report, stderr=report
-        )
+        process = subprocess.Popen(options, stdout=report, stderr=report)
     # Write pid to report.pid
     with open(reportfile + ".pid", "w") as pidfile:
         pidfile.write("%d\n" % process.pid)

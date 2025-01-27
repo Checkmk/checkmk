@@ -256,7 +256,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore[import-untyped] # pylint: disable=import-outside-toplevel
+            import vcr  # type: ignore[import-untyped]
 
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))

@@ -677,8 +677,7 @@ class ModeBIRules(ABCBIMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, pack: str) -> str: ...
 
     @overload
     @classmethod
@@ -1615,7 +1614,7 @@ def _finalize_preview_response(response: list[dict]) -> list[dict]:
 
 
 class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         *,
         type: str | None = "hierarchy",
@@ -2037,8 +2036,7 @@ class BIModeAggregations(ABCBIMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, pack: str) -> str: ...
 
     @overload
     @classmethod

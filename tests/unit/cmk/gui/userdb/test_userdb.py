@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -643,7 +643,7 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -
 def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
     now = datetime.now()
-    from cmk.gui.cme import managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme import managed
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL

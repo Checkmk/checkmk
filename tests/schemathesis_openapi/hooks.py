@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @schemathesis.hooks.register("before_load_schema")
-def hook_before_load_schema(  # pylint: disable=too-many-branches
+def hook_before_load_schema(
     context: schemathesis.hooks.HookContext, raw_schema: dict[str, Any]
 ) -> None:
     """Modify the raw schema before loading it.
@@ -241,7 +241,7 @@ def hook_before_call(
 
 
 @schemathesis.hooks.register("after_call")
-def hook_after_call(  # pylint: disable=too-many-branches
+def hook_after_call(
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
     response: schemathesis.GenericResponse,

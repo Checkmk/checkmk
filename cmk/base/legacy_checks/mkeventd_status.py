@@ -47,7 +47,7 @@ def inventory_mkeventd_status(parsed):
     return [(site, {}) for (site, status) in parsed.items() if status is not None]
 
 
-def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-branches
+def check_mkeventd_status(item, params, parsed):
     if item not in parsed:
         return
 

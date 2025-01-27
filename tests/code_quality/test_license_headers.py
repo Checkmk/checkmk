@@ -100,7 +100,7 @@ def get_file_header(path: str, length: int = 30) -> str:
         return "".join(head)
 
 
-def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=too-many-branches
+def check_for_license_header_violation(rel_path, abs_path):
     if rel_path.startswith("non-free/cmk-update-agent/"):
         if not ENTERPRISE_HEADER_CODING.match(get_file_header(abs_path, length=5)):
             yield "enterprise header with coding not matching", rel_path

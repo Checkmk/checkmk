@@ -29,7 +29,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check  # type: ignore[import-untyped]
 
-from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+from tests.testlib.cse.utils import (
     create_cse_initial_config,
     cse_openid_oauth_provider,
 )
@@ -534,7 +534,7 @@ class Site:
         capture_output: bool = True,
         check: bool = True,
         encoding: str | None = "utf-8",
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> subprocess.CompletedProcess:
@@ -555,7 +555,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: str = "utf-8",
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> str: ...
@@ -565,7 +565,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: None,
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> bytes: ...
@@ -574,7 +574,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: str | None = "utf-8",
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> str | bytes:
@@ -2000,7 +2000,7 @@ class PythonHelper:
 
     def check_output(
         self,
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input: str | None = None,
         encoding: str = "utf-8",
     ) -> str:
         with self.copy_helper():

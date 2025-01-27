@@ -271,7 +271,7 @@ def clear_caches_per_function():
 @pytest.fixture(scope="session")
 def agent_based_plugins() -> AgentBasedPlugins:
     # Local import to have faster pytest initialization
-    from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+    from cmk.base import (  # pylint: disable=cmk-module-layer-violation
         config,
     )
 

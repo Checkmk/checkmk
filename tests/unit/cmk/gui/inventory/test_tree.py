@@ -320,7 +320,7 @@ def test_load_filtered_and_merged_tree(
     request_context: None,
 ) -> None:
     monkeypatch.setattr(
-        cmk.gui.inventory._tree,  # pylint: disable=protected-access
+        cmk.gui.inventory._tree,
         "_load_tree_from_file",
         (
             lambda *args, **kw: (

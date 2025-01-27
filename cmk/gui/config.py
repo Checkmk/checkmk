@@ -31,7 +31,7 @@ from cmk.gui.type_defs import Key, RoleName
 from cmk import trace
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=cmk-module-layer-violation
         CEEConfig,
     )
 else:
@@ -41,7 +41,7 @@ else:
 
 
 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
-    from cmk.gui.cme.config import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    from cmk.gui.cme.config import (  # pylint: disable=cmk-module-layer-violation
         CMEConfig,
     )
 else:

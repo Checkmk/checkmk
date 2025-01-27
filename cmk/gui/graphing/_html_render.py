@@ -426,9 +426,7 @@ def _get_scalars(
     return scalars
 
 
-def _show_graph_legend(  # pylint: disable=too-many-branches
-    graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig
-) -> None:
+def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
     """Render legend that describe the metrics"""
     graph_width = graph_render_config.size[0] * html_size_per_ex
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
@@ -589,7 +587,7 @@ class AjaxGraph(cmk.gui.pages.Page):
     def ident(cls) -> str:
         return "ajax_graph"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
         try:
@@ -981,7 +979,7 @@ class AjaxGraphHover(cmk.gui.pages.Page):
     def ident(cls) -> str:
         return "ajax_graph_hover"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")
         try:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # This file initializes the pytest environment
-# pylint: disable=redefined-outer-name,wrong-import-order
+
 
 import logging
 import os
@@ -274,7 +274,7 @@ def cleanup_cmk():
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def _fake_version_and_paths() -> None:
-    from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
+    from pytest import MonkeyPatch
 
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
@@ -302,7 +302,7 @@ def _fake_version_and_paths() -> None:
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
     logger.info("Patching `cmk.utils.paths`.")
-    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    import cmk.utils.paths
 
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
@@ -327,7 +327,7 @@ def _fake_version_and_paths() -> None:
 
     # patch `cmk.ccc.versions`
     logger.info("Patching `cmk.ccc.versions`.")
-    import cmk.ccc.version as cmk_version  # pylint: disable=import-outside-toplevel
+    import cmk.ccc.version as cmk_version
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(

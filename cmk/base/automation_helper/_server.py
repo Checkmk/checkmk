@@ -16,7 +16,7 @@ def run(
     _ApplicationServer(app, config).run()
 
 
-class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
+class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc]
     def __init__(
         self,
         app: FastAPI,

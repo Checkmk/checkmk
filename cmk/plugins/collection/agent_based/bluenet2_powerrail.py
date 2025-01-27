@@ -126,7 +126,7 @@ from cmk.plugins.lib.temperature import check_temperature, TempParamType
 #   '----------------------------------------------------------------------'
 
 
-def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
+def parse_bluenet2_powerrail(
     string_table: Sequence[StringTable],
 ) -> dict:
     map_status = {

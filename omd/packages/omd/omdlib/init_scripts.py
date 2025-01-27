@@ -64,7 +64,7 @@ def call_init_scripts(
     return 0 if success else 2
 
 
-def check_status(  # pylint: disable=too-many-branches
+def check_status(
     site_dir: str, display: bool = True, daemon: str | None = None, bare: bool = False
 ) -> int:
     num_running = 0

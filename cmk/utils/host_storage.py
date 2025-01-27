@@ -186,7 +186,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
     def __init__(self) -> None:
         super().__init__(StorageFormat.STANDARD)
 
-    def _write(  # pylint: disable=too-many-branches
+    def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         out = io.StringIO()

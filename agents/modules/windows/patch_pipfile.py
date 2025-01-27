@@ -8,7 +8,7 @@
 
 import sys
 
-from colorama import (  # type: ignore[import-untyped]  # pylint: disable=import-error
+from colorama import (  # type: ignore[import-untyped]
     Fore,
     init,
     Style,

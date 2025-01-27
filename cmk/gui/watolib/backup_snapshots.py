@@ -251,7 +251,7 @@ def _do_snapshot_maintenance(max_snapshots: int, debug: bool) -> None:
 
 
 # Returns status information for snapshots or snapshots in progress
-def get_snapshot_status(  # pylint: disable=too-many-branches
+def get_snapshot_status(
     snapshot: str,
     debug: bool,
     validate_checksums: bool = False,
@@ -505,7 +505,7 @@ def snapshot_secret() -> bytes:
         return s
 
 
-def extract_snapshot(  # pylint: disable=too-many-branches
+def extract_snapshot(
     tar: tarfile.TarFile,
     domains: dict[str, DomainSpec],
 ) -> None:

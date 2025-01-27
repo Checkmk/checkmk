@@ -135,9 +135,7 @@ def parse_cbl_airlaser(string_table: Sequence[StringTable]) -> Section | None:
 
 
 # TODO: use check_levels!
-def check_cbl_airlaser_hw(  # pylint: disable=too-many-branches
-    params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_cbl_airlaser_hw(params: Mapping[str, Any], section: Section) -> CheckResult:
     _selftest, sensors_data = section
 
     state = State.OK

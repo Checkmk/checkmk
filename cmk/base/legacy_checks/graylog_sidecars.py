@@ -65,7 +65,7 @@ def parse_graylog_sidecars(string_table):
     return parsed
 
 
-def check_graylog_sidecars(item, params, parsed):  # pylint: disable=too-many-branches
+def check_graylog_sidecars(item, params, parsed):
     if not (item_data := parsed.get(item)):
         return
 

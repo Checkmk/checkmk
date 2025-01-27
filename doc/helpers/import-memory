@@ -282,7 +282,6 @@ def _get_mem(pid: int) -> Memory:
         _name, amount, unit = _line.split()
         val = int(amount)
 
-        # pylint: disable=raising-format-tuple
         if unit == "kB":
             val *= KiB
         elif unit == "MB":
@@ -483,10 +482,10 @@ def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
     # Close stdout and stderr so we won't have an ugly terminal.
-    subprocess.Popen(  # pylint: disable=consider-using-with
+    subprocess.Popen(
         args,
-        stdout=open("/dev/null", "w"),  # pylint: disable=consider-using-with
-        stderr=open("/dev/null", "w"),  # pylint: disable=consider-using-with
+        stdout=open("/dev/null", "w"),
+        stderr=open("/dev/null", "w"),
         start_new_session=True,
     )
 

@@ -663,7 +663,7 @@ def paint_aggr_hosts(
     row: Row,
     link_to_view: str,
     *,
-    request: Request,  # pylint: disable=redefined-outer-name
+    request: Request,
 ) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
@@ -1015,7 +1015,7 @@ class PainterAggrTreestateBoxed(Painter):
         return render_tree_json(row, user=self.user, request=self.request)
 
 
-def render_tree_json(  # pylint: disable=redefined-outer-name
+def render_tree_json(
     row: typing.Mapping[str, typing.Any],
     *,
     user: LoggedInUser,

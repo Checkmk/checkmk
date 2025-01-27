@@ -20,7 +20,7 @@ def inventory_oracle_locks(info):
     return [(line[0], {}) for line in info if len(line) >= 10]
 
 
-def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
+def check_oracle_locks(item, params, info):
     lockcount = 0
     state = -1
     infotext = ""

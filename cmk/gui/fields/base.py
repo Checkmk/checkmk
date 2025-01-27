@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 import collections
 import typing
 from collections.abc import Mapping, Sequence
@@ -657,7 +656,7 @@ Keys 'optional1', 'required1' occur more than once.
             type=value.__class__.__name__,
         )
 
-    def _load_schemas(  # pylint: disable=too-many-branches
+    def _load_schemas(
         self, scalar: Result, partial: bool | typing.Sequence[str] | set[str] | None = None
     ) -> Result:
         rv = {}
@@ -734,7 +733,7 @@ Keys 'optional1', 'required1' occur more than once.
         data: typing.Mapping[str, typing.Any] | None,
         **kwargs: typing.Any,
     ) -> Result | list[Result]:
-        if isinstance(value, list):  # pylint: disable=no-else-return
+        if isinstance(value, list):
             if self.many:
                 result = []
                 for collection_entry in value:

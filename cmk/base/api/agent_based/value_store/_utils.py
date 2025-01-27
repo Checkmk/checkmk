@@ -127,7 +127,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
                 raise MKGeneralException from exc
 
 
-class DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors
+class DiskSyncedMapping(MutableMapping[_TKey, _TValue]):
     """Implements the overlay logic between dynamic and static value store"""
 
     @classmethod

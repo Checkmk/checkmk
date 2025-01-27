@@ -7,7 +7,7 @@ import logging
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
-from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-imports
+from tests.plugins_integration.checks import (
     get_host_names,
     setup_host,
 )

@@ -1036,7 +1036,7 @@ class ActivateChanges:
         pending_changes: dict[str, ChangeSpec] = {}
 
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        # pylint: disable=not-an-iterable
+
         for site_id in activation_sites():
             site_changes = SiteChanges(site_id).read()
             self._changes_by_site[site_id] = site_changes
@@ -1084,7 +1084,7 @@ class ActivateChanges:
     def _get_number_of_pending_changes() -> int:
         changes_counter = 0
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        # pylint: disable=not-an-iterable
+
         for site_id in activation_sites():
             changes = SiteChanges(site_id).read()
             changes_counter += len(
@@ -1573,7 +1573,7 @@ class ActivateChangesManager(ActivateChanges):
     def _get_sites(self, sites: list[SiteId]) -> list[SiteId]:
         for site_id in sites:
             # suppression needed because of pylint bug, see https://github.com/PyCQA/pylint/issues/2296
-            if site_id not in activation_sites():  # pylint: disable=unsupported-membership-test
+            if site_id not in activation_sites():
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
 
         return sites
@@ -2275,7 +2275,7 @@ def _create_broker_certificates_for_remote_sites(
     central_ca = broker_sync.load_central_ca()
     map_args = []
     for customer, sites in required_sites.items():
-        customer_ca = broker_sync.load_or_create_customer_ca(customer)  # pylint: disable=assignment-from-none
+        customer_ca = broker_sync.load_or_create_customer_ca(customer)
         for site_id, settings in sites:
             map_args.append(
                 (

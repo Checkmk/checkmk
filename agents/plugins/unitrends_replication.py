@@ -24,7 +24,7 @@ url = (
     % (start, end, dpu)
 )
 
-xml = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
+xml = urlopen(url)  # nosec B310 # BNS:28af27
 
 
 def _get_text(node: NodeList[minidom.Element]) -> str:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Names are made available dynamically
-from cmk.gui.plugins.sidebar.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+from cmk.gui.plugins.sidebar.utils import (  # type: ignore[attr-defined]
     SidebarSnapin,
     snapin_registry,
 )

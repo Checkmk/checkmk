@@ -182,7 +182,7 @@ class GroupedBoxesLayout(Layout):
         html.close_tr()
         html.close_table()
 
-    def _render_group(  # pylint: disable=too-many-branches
+    def _render_group(
         self,
         rows_with_ids: list[tuple[str, Row]],
         view: ViewSpec,
@@ -482,7 +482,7 @@ class LayoutTiled(Layout):
     def can_display_checkboxes(self) -> bool:
         return True
 
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,
@@ -623,7 +623,7 @@ class LayoutTable(Layout):
     def can_display_checkboxes(self) -> bool:
         return True
 
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,
@@ -875,7 +875,7 @@ class LayoutMatrix(Layout):
                                 html.write_text_permissive(",")
                             html.write_text_permissive(content)
 
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,

@@ -492,7 +492,7 @@ def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
     return Vendor(name="Generic")
 
 
-def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=too-many-branches
+def get_information(redfishobj: RedfishData) -> Literal[0]:
     """get a the information from the Redfish management interface"""
     load_section_data(redfishobj)
     redfishobj.base_data = fetch_data(redfishobj.redfish_connection, "/redfish/v1", "Base")

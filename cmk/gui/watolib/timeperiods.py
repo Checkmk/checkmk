@@ -141,7 +141,7 @@ class TimeperiodSelection(DropdownChoice[str]):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
     ) -> None:
         super().__init__(
             choices=self._get_choices,

@@ -92,7 +92,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def parse_security_master(string_table):  # pylint: disable=too-many-branches
+def parse_security_master(string_table):
     supported_sensors = {
         50: "temp",
         60: "humidity",

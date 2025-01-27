@@ -275,7 +275,7 @@ def automation_discovery(
     return results[host_name]
 
 
-def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
+def _get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: _ServiceFilters,

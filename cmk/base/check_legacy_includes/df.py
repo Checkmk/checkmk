@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=chained-comparison,unused-import
-
 from typing import Literal
 
 from cmk.agent_based.v2 import Metric, render, Result, State
@@ -118,7 +116,7 @@ def df_check_filesystem_list_coroutine(
 # RESIDING IN
 # cmk.plugins.lib/df.py
 # ==================================================================================================
-def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
+def df_check_filesystem_single_coroutine(
     mountpoint,
     size_mb,
     avail_mb,

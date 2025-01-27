@@ -166,7 +166,7 @@ def _parse_last_updated(line: Sequence[str]) -> int:
     )
 
 
-def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
+def heartbeat_crm_parse_resources(
     resources_section: Iterable[Sequence[str]],
 ) -> Mapping[str, Sequence[Sequence[str]]]:
     resources: dict[str, list[Sequence[str]]] = {}

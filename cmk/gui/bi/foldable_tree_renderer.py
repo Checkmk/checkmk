@@ -320,7 +320,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.close_li()
 
     @contextmanager
-    def _show_node(  # pylint: disable=too-many-branches
+    def _show_node(
         self,
         tree,
         show_host,

@@ -166,7 +166,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self) -> None:  # pylint: disable=too-many-branches
+    def _do_login(self) -> None:
         """handle the login form"""
         if not request.var("_login"):
             return

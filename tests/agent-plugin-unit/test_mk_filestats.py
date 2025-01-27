@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import ast
 import collections
@@ -16,7 +15,7 @@ from typing import Mapping, Optional, Sequence, Tuple
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
+    import agents.plugins.mk_filestats_2 as mk_filestats
 else:
     from agents.plugins import mk_filestats
 
@@ -159,7 +158,7 @@ def test_output_aggregator_single_file_servicename(group_name: str, expected: st
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):  # type: ignore[override]  # pylint: disable=arguments-differ
+    def read(self, cfg_file):  # type: ignore[override]
         pass
 
 

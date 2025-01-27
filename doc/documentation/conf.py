@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 year = datetime.now().year
 project = "CheckMK"
 author = "Checkmk GmbH"
-copyright = f"{year}, {author}"  # pylint: disable=redefined-builtin # noqa: A001
+copyright = f"{year}, {author}"  # noqa: A001
 
 
 # -- General configuration ---------------------------------------------------

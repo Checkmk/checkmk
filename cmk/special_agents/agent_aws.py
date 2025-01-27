@@ -6726,7 +6726,7 @@ def _create_route53_sections(
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(  # pylint: disable=too-many-branches
+    def init_sections(
         self,
         services: Sequence[str],
         region: str,
@@ -7591,7 +7591,7 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     return account_id
 
 
-def agent_aws_main(args: Args) -> int:  # pylint: disable=too-many-branches
+def agent_aws_main(args: Args) -> int:
     _setup_logging(args.debug, args.verbose)
 
     proxy_config = _get_proxy(args)

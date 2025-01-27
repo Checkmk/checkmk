@@ -10,7 +10,7 @@ from cmk.gui import main_modules
 main_modules.load_plugins()
 
 # Names are made available dynamically
-from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module # noqa: E402
+from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # noqa: E402
     Dashlet,
     dashlet_registry,
 )

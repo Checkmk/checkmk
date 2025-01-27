@@ -377,7 +377,7 @@ def _get_speed_msg_and_value(
     return "Assumed speed: %g Gbit/s", params["assumed_speed"]
 
 
-def check_brocade_fcport(  # pylint: disable=too-many-branches
+def check_brocade_fcport(
     item: str,
     params: Mapping[str, Any],
     section: Section,
@@ -388,7 +388,7 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
     yield from _check_brocade_fcport(item, params, section, time.time(), get_value_store())
 
 
-def _check_brocade_fcport(  # pylint: disable=too-many-branches
+def _check_brocade_fcport(
     item: str,
     params: Mapping[str, Any],
     section: Section,

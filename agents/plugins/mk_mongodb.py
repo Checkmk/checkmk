@@ -794,7 +794,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
         else:
             with open(filename, "r") as cfg:
                 if sys.version_info[0] == 2:
-                    self.readfp(cfg)  # pylint: disable=deprecated-method
+                    self.readfp(cfg)
                 else:
                     self.read_file(cfg)
             LOGGER.info("read configuration file %r", filename)

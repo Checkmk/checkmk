@@ -73,7 +73,7 @@ class HTTPSAuthHandler(HTTPSHandler):
         super().__init__()
         self.__ca_file = ca_file
 
-    def https_open(self, req: Request) -> HTTPResponse:  # pylint: disable=arguments-differ
+    def https_open(self, req: Request) -> HTTPResponse:
         # TODO: Slightly interesting things in the typeshed here, investigate...
         return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
 

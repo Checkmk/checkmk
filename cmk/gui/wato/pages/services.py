@@ -1280,7 +1280,7 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(  # pylint: disable=too-many-branches
+    def _show_actions(
         self,
         table: Table,
         discovery_result: DiscoveryResult,

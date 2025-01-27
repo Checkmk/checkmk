@@ -412,7 +412,7 @@ def _is_allowed_for_diskspace(
 def _is_allowed_for_plugins(
     *,
     imported: ModuleName,
-    component: Component,  # pylint: disable=unused-argument
+    component: Component,
 ) -> bool:
     return any(
         (

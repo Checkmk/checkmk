@@ -492,4 +492,4 @@ def test_compare() -> None:
     assert CompareBase(MergeKey("a", "")) < CompareBase(MergeKey("b", ""))
     assert CompareBase(MergeKey("a", "")) == CompareBase(MergeKey("a", ""))
     result = sorted([CompareBase(MergeKey("b", "zwei")), CompareBase(MergeKey("a", "eins"))])
-    assert result[0]._element.name == "eins"  # pylint: disable=protected-access
+    assert result[0]._element.name == "eins"

@@ -335,8 +335,7 @@ class ModeEditHost(ABCHostMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, host: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, host: str) -> str: ...
 
     @overload
     @classmethod

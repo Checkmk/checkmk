@@ -124,7 +124,7 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
     return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
 
 
-def unmount_tmpfs_without_save(  # pylint: disable=too-many-branches
+def unmount_tmpfs_without_save(
     site_name: str,
     tmp_dir: str,
     output: bool,

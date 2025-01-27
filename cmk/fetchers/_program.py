@@ -88,7 +88,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359 # pylint: disable=consider-using-with
+            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
                 self.cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,

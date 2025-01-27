@@ -127,7 +127,7 @@ def test_rename_host(
     # This also caused the bug in the first place: The cluster renaming
     # created its hosts/folders from Hosts.all() which was not affected by
     # the cache invalidation of _rename_host_in_folder as expected.
-    folder._hosts = None  # pylint: disable=protected-access
+    folder._hosts = None
     hosts = folder.hosts()
     assert set(hosts) == expected_hosts
     for cluster, expected_nodes in expected_clusters.items():

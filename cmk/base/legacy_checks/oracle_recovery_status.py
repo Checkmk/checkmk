@@ -33,7 +33,7 @@ def inventory_oracle_recovery_status(info):
     return [(line[0], {}) for line in info]
 
 
-def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-many-branches
+def check_oracle_recovery_status(item, params, info):
     state = 0
     offlinecount = 0
     filemissingcount = 0
@@ -139,7 +139,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                 # There is no CRIT for older checkoint age as this is mostly not a
                 # serios issue.
                 # otherwise the standby will produca a warning or crit as well
-                if oldest_checkpoint_age >= warn:  # pylint: disable=used-before-assignment
+                if oldest_checkpoint_age >= warn:
                     infotext += "(!)"
                     state = max(1, state)
 
@@ -150,7 +150,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                         "checkpoint_age",
                         oldest_checkpoint_age,
                         warn,
-                        crit,  # pylint: disable=used-before-assignment
+                        crit,
                     )
                 )
 

@@ -247,7 +247,7 @@ def check_mk_remote_automation_serialized(
 def call_hook_pre_activate_changes() -> None:
     if hooks.registered("pre-activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
@@ -264,7 +264,7 @@ def call_hook_pre_activate_changes() -> None:
 def call_hook_activate_changes() -> None:
     if hooks.registered("activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 

@@ -67,7 +67,7 @@ def create_ipmi_parameters() -> form_specs.Dictionary:
     )
 
 
-def SNMPCredentials(  # pylint: disable=redefined-builtin
+def SNMPCredentials(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     only_v3: bool = False,

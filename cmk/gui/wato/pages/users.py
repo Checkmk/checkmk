@@ -400,9 +400,7 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(  # pylint: disable=too-many-branches
-        self, users: dict[UserId, UserSpec]
-    ) -> None:
+    def _show_user_list(self, users: dict[UserId, UserSpec]) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
         ]
@@ -647,8 +645,7 @@ class ModeEditUser(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, edit: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, edit: str) -> str: ...
 
     @overload
     @classmethod
@@ -777,7 +774,7 @@ class ModeEditUser(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -993,7 +990,7 @@ class ModeEditUser(WatoMode):
         with html.form_context("user", method="POST"):
             self._show_form()
 
-    def _show_form(self) -> None:  # pylint: disable=too-many-branches
+    def _show_form(self) -> None:
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
         is_automation_user = self._user.get("is_automation_user", False)
@@ -1194,7 +1191,7 @@ class ModeEditUser(WatoMode):
                     )
                 )
 
-    def _render_security(  # pylint: disable=too-many-branches
+    def _render_security(
         self,
         options_to_render: set[
             Literal[

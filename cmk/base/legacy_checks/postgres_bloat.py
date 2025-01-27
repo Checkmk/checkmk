@@ -37,7 +37,7 @@ def inventory_postgres_bloat(parsed):
     return [(entry, {}) for entry, values in parsed.items() if values]
 
 
-def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-branches
+def check_postgres_bloat(item, params, parsed):
     database = parsed.get(item)
     if not database:
         # In case of missing information we assume that the login into

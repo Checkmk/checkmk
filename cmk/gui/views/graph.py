@@ -160,7 +160,7 @@ _GRAPH_VIEWS = {
 }
 
 
-def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
+def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     *,
@@ -513,9 +513,7 @@ class PainterHostPnpgraph(Painter):
         raise JSONExportError()
 
 
-def cmk_graph_url(  # pylint: disable=redefined-outer-name
-    row: Row, what: str, *, request: Request
-) -> str:
+def cmk_graph_url(row: Row, what: str, *, request: Request) -> str:
     site_id = row["site"]
 
     urivars = [

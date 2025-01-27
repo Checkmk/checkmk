@@ -94,9 +94,7 @@ def _check_bonding_mode(current_mode: str, config: BondingModeConfig) -> CheckRe
     yield Result(state=state, summary=summary)
 
 
-def check_bonding(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, Any], section: bonding.Section
-) -> CheckResult:
+def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section) -> CheckResult:
     """
     >>> for result in check_bonding(
     ...     "bond0", {

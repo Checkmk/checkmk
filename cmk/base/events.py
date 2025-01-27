@@ -56,7 +56,6 @@ def event_keepalive(
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
 ) -> None:
-    # pylint: disable=too-many-branches
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -291,7 +290,6 @@ def complete_raw_context(
     with_dump: bool,
     contacts_needed: bool,
 ) -> EnrichedEventContext:
-    # pylint: disable=too-many-branches
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -655,7 +653,6 @@ def _event_match_servicegroups(
     *,
     is_regex: bool,
 ) -> str | None:
-    # pylint: disable=too-many-branches
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:

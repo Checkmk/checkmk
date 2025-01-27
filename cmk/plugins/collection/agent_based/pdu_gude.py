@@ -167,7 +167,7 @@ def check_pdu_gude(
             levels_upper=levels_upper,
             levels_lower=levels_lower,
             metric_name=pdu_property.unit,
-            render_func=lambda v: f"{v:.2f} {pdu_property.unit}",  # pylint: disable=cell-var-from-loop
+            render_func=lambda v: f"{v:.2f} {pdu_property.unit}",
             label=pdu_property.label,
         )
 

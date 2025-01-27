@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import io
 import logging
@@ -256,7 +255,7 @@ def test_get_replication_components(
 ) -> None:
     partial_site_config = SiteConfiguration({})
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-    # pylint: disable=unsupported-assignment-operation
+
     if replicate_ec is not None:
         partial_site_config["replicate_ec"] = replicate_ec
     if replicate_mkps is not None:

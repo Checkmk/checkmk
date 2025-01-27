@@ -322,9 +322,7 @@ def _get_observed_data(
     return response.values
 
 
-def _compute_vertical_scala(  # pylint: disable=too-many-branches
-    low: float, high: float
-) -> Sequence[tuple[float, str]]:
+def _compute_vertical_scala(low: float, high: float) -> Sequence[tuple[float, str]]:
     letter, factor = _get_oom(low, high)
 
     steps = (max(0, high) - min(0, low)) / factor

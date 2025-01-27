@@ -534,7 +534,7 @@ class PageBackup:
         show_key_download_warning(self.key_store.load())
         self._show_job_list()
 
-    def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
+    def _show_job_list(self) -> None:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):

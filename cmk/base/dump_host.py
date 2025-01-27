@@ -52,7 +52,7 @@ from cmk.base.config import (
 from cmk.base.sources import SNMPFetcherConfig, Source
 
 
-def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
+def dump_source(source: Source) -> str:
     fetcher = source.fetcher()
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
@@ -132,7 +132,6 @@ def dump_host(
     *,
     simulation_mode: bool,
 ) -> None:
-    # pylint: disable=too-many-branches
     print_("\n")
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:

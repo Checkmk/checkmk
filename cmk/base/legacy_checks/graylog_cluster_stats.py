@@ -97,7 +97,7 @@ def inventory_graylog_cluster_stats_elastic(parsed):
     return []
 
 
-def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
+def check_graylog_cluster_stats_elastic(
     _no_item,
     params,
     parsed,

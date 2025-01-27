@@ -181,7 +181,7 @@ def _show_availability_options_controls() -> None:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def show_availability_page(  # pylint: disable=too-many-branches
+def show_availability_page(
     view: View,
     filterheaders: FilterHeader,
 ) -> None:
@@ -788,7 +788,7 @@ def render_timeline_bar(
 # get the list of BI aggregates from the statehist table but use the views
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
-def show_bi_availability(  # pylint: disable=too-many-branches
+def show_bi_availability(
     view: View,
     aggr_rows: Rows,
 ) -> None:

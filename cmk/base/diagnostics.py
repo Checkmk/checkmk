@@ -70,7 +70,7 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CSE,
 ]:
     from cmk.base.cee.diagnostics import (
-        cmc_specific_attrs,  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
+        cmc_specific_attrs,  # type: ignore[import,unused-ignore]
     )
 else:
 

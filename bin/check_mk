@@ -21,7 +21,7 @@ from typing import Self
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user. Alas, this screws up our import ordering
 # a bit, so we have to tell pylint about that.
-# pylint: disable=wrong-import-position
+
 if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Check_MK can be used only as site user.\n")
     sys.exit(1)

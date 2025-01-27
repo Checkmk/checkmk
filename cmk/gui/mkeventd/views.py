@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
@@ -908,7 +907,7 @@ class PainterEventPhase(Painter):
         return ("", phase_names.get(row["event_phase"], ""))
 
 
-def paint_event_icons(  # pylint: disable=redefined-outer-name
+def paint_event_icons(
     row: Row,
     history: bool = False,
     *,

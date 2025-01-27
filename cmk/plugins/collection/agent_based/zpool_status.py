@@ -44,7 +44,7 @@ state_mappings = {
 }
 
 
-def parse_zpool_status(  # pylint: disable=too-many-branches
+def parse_zpool_status(
     string_table: StringTable,
 ) -> Section | None:
     if not string_table:

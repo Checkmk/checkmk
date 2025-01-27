@@ -380,7 +380,7 @@ class ABCNotificationsMode(ABCEventsMode):
             )
         ]
 
-    def _render_notification_rules(  # pylint: disable=too-many-branches
+    def _render_notification_rules(
         self,
         rules,
         userid="",
@@ -2275,7 +2275,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
 def _get_notification_sync_sites() -> list[SiteId]:
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-    # pylint: disable=not-an-iterable
+
     return sorted(
         site_id for site_id in wato_slave_sites() if not site_is_local(active_config, site_id)
     )
@@ -2297,8 +2297,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, user: str) -> str:  # pylint: disable=arguments-differ,redefined-outer-name
-        ...
+    def mode_url(cls, *, user: str) -> str: ...
 
     @overload
     @classmethod

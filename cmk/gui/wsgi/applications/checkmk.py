@@ -169,7 +169,7 @@ class CheckmkApp(AbstractWSGIApp):
             return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(  # pylint: disable=too-many-branches
+def _process_request(
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,

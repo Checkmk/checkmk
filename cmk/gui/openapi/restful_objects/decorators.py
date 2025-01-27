@@ -271,7 +271,7 @@ class Endpoint:
 
     """
 
-    def __init__(  # pylint: disable=too-many-branches
+    def __init__(
         self,
         path: str,
         link_relation: LinkRelation,
@@ -676,7 +676,7 @@ class Endpoint:
                         detail=exc.args[0],
                     )
 
-    def _validate_response(  # pylint: disable=too-many-branches
+    def _validate_response(
         self, response_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> cmk_http.Response:
         with tracer.span("endpoint-body-call"):

@@ -31,7 +31,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
 
 
-def render_link_to_view(  # pylint: disable=redefined-outer-name
+def render_link_to_view(
     content: str | HTML, row: Row, link_spec: VisualLinkSpec, *, request: Request
 ) -> str | HTML:
     if display_options.disabled(display_options.I):
@@ -43,9 +43,7 @@ def render_link_to_view(  # pylint: disable=redefined-outer-name
     return content
 
 
-def url_to_visual(  # pylint: disable=redefined-outer-name
-    row: Row, link_spec: VisualLinkSpec, *, request: Request
-) -> str | None:
+def url_to_visual(row: Row, link_spec: VisualLinkSpec, *, request: Request) -> str | None:
     if display_options.disabled(display_options.I):
         return None
 

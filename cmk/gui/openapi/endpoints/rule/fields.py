@@ -582,7 +582,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         else:
             raise ValidationError(f"Unknown type: {data['match_on']!r}.")
 
-        if data["operator"] == "one_of":  # pylint: disable=no-else-return
+        if data["operator"] == "one_of":
             return match_on
         elif data["operator"] == "none_of":
             return {"$nor": match_on}
@@ -1094,7 +1094,7 @@ def _scalar_value(
     if not isinstance(value, str):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "is":  # pylint: disable=no-else-return
+    if operator == "is":
         return value
     elif operator == "is_not":
         return {"$ne": TagID(value)}
@@ -1132,7 +1132,7 @@ def _collection_value(
     if not isinstance(value, list):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "one_of":  # pylint: disable=no-else-return
+    if operator == "one_of":
         return {"$or": [TagID(v) for v in value]}
     elif operator == "none_of":
         return {"$nor": [TagID(v) for v in value]}
@@ -1177,7 +1177,7 @@ def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
         _key = next(iter(v.keys()))
         # Thank you pylint, but these things need to be returned like this,
         # because otherwise mypy won't recognize the Literal values.
-        if _key == "$ne":  # pylint: disable=no-else-return
+        if _key == "$ne":
             return "is_not"
         elif _key == "$or":
             return "one_of"

@@ -397,7 +397,7 @@ class SiteManagement:
         return connection.connectee.site_id, connection.connecter.site_id
 
     @classmethod
-    def validate_configuration(  # pylint: disable=too-many-branches
+    def validate_configuration(
         cls,
         site_id,
         site_configuration,
@@ -590,7 +590,7 @@ class LivestatusViaTCP(Dictionary):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
         tcp_port: int = 6557,
     ) -> None:
         elements: list[tuple[str, ValueSpec]] = [

@@ -1135,7 +1135,7 @@ def _groups_from_params(
     return groups
 
 
-def discover_interfaces(  # pylint: disable=too-many-branches
+def discover_interfaces(
     params: Sequence[Mapping[str, Any]],
     section: Section[TInterfaceType],
 ) -> DiscoveryResult:
@@ -1772,7 +1772,7 @@ def check_single_interface(
         )
 
 
-def _interface_name(  # pylint: disable=too-many-branches
+def _interface_name(
     *,
     group_name: str | None,
     item: str,
@@ -1971,7 +1971,7 @@ def _output_group_members(
     )
 
 
-def _output_bandwidth_rates(  # pylint: disable=too-many-branches
+def _output_bandwidth_rates(
     *,
     rates: RatesWithAverages,
     speed_b_in: float | None,
@@ -2017,7 +2017,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
         )
 
 
-def _check_single_bandwidth(  # pylint: disable=too-many-branches
+def _check_single_bandwidth(
     *,
     direction: str,
     traffic: RateWithAverage,

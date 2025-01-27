@@ -183,7 +183,7 @@ def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
     )
 
 
-def parse_mknotifyd(  # pylint: disable=too-many-branches
+def parse_mknotifyd(
     string_table: StringTable,
 ) -> MkNotifySection:
     timestamp, data = float(string_table[0][0]), string_table[1:]

@@ -8,7 +8,7 @@
 # This script extracts data of the hardware inventory to csv files
 
 # TODO: Fix the horrible mix between local/global naming.
-# pylint: disable=redefined-outer-name
+
 
 import hashlib
 import os

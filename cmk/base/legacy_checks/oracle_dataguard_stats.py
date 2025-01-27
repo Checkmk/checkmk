@@ -38,7 +38,7 @@ def _get_seconds(timestamp: str) -> int | None:
     return sec + 60 * min_ + 3600 * h + 86400 * days
 
 
-def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-many-branches
+def check_oracle_dataguard_stats(item, params, parsed):
     try:
         dgdata = parsed[item]
     except KeyError:

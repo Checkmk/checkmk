@@ -129,7 +129,7 @@ def check_livestatus_status(
     )
 
 
-def _generate_livestatus_results(  # pylint: disable=too-many-branches
+def _generate_livestatus_results(
     item: str,
     params: Mapping[str, Any],
     section_livestatus_status: LivestatusSection | None,

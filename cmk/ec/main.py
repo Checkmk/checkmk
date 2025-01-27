@@ -656,7 +656,7 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def serve(self) -> None:  # pylint: disable=too-many-branches
+    def serve(self) -> None:
         pipe = self.open_pipe()
         listen_list = [
             f
@@ -822,7 +822,7 @@ class EventServer(ECServerThread):
             )
             self._event_status.remove_event(event, "AUTODELETE")
 
-    def hk_handle_event_timeouts(self) -> None:  # pylint: disable=too-many-branches
+    def hk_handle_event_timeouts(self) -> None:
         """
         1. Automatically delete all events that are in state "counting"
            and have not reached the required number of hits and whose
@@ -1250,7 +1250,7 @@ class EventServer(ECServerThread):
                 (100.0 * count / float(total_count)),
             )
 
-    def process_potential_event(self, event: Event) -> None:  # pylint: disable=too-many-branches
+    def process_potential_event(self, event: Event) -> None:
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled
@@ -1458,7 +1458,7 @@ class EventServer(ECServerThread):
         with self._lock_configuration:
             return self._rule_matcher.event_rule_matches(rule, event)
 
-    def rewrite_event(  # pylint: disable=too-many-branches
+    def rewrite_event(
         self, rule: Rule, event: Event, match_groups: MatchGroups, set_first: bool = True
     ) -> None:
         """Rewrite texts and compute other fields in the event."""
@@ -2088,7 +2088,7 @@ class StatusServer(ECServerThread):
         self._table_history = StatusTableHistory(self._logger, self._history)
         self._reopen_sockets = True
 
-    def serve(self) -> None:  # pylint: disable=too-many-branches
+    def serve(self) -> None:
         while not self._terminate_event.is_set():
             try:
                 client_socket = None
@@ -2208,9 +2208,7 @@ class StatusServer(ECServerThread):
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
-    def handle_command_request(  # pylint: disable=too-many-branches
-        self, commandline: str, allow_commands: bool
-    ) -> None:
+    def handle_command_request(self, commandline: str, allow_commands: bool) -> None:
         if not allow_commands:
             raise MKClientError("Sorry. Commands are disallowed via TCP")
         self._logger.info("Executing command: %s", commandline)
@@ -2419,7 +2417,7 @@ class StatusServer(ECServerThread):
 #   '----------------------------------------------------------------------'
 
 
-def run_eventd(  # pylint: disable=too-many-branches
+def run_eventd(
     terminate_main_event: threading.Event,
     settings: Settings,
     config: Config,
@@ -2841,7 +2839,7 @@ class EventStatus:
             for e in to_delete:
                 self.remove_event(e, "CANCELLED")
 
-    def cancelling_match(  # pylint: disable=too-many-branches
+    def cancelling_match(
         self, match_groups: MatchGroups, new_event: Event, event: Event, rule: Rule
     ) -> bool:
         debug = self._config["debug_rules"]
@@ -3082,7 +3080,7 @@ def replication_send(
         return response
 
 
-def replication_pull(  # pylint: disable=too-many-branches
+def replication_pull(
     settings: Settings,
     config: Config,
     lock_configuration: ECLock,

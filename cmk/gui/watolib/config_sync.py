@@ -343,7 +343,7 @@ class SnapshotCreationBase:
 
         # Simply compute the checksum of the sitespecific.mk
         source_path = os.path.join(snapshot_work_dir, custom_components[0].site_path)
-        return hashlib.md5(  # pylint: disable=unexpected-keyword-arg
+        return hashlib.md5(
             open(source_path, "rb").read(),
             usedforsecurity=False,
         ).hexdigest()

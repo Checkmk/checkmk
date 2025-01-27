@@ -728,7 +728,6 @@ automations.register(AutomationAutodiscovery())
 def _execute_autodiscovery(
     called_from_automation_helper: bool,
 ) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
-    # pylint: disable=too-many-branches
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
@@ -1200,7 +1199,7 @@ class AutomationRenameHosts(Automation):
             == 0
         )
 
-    def _rename_host_files(  # pylint: disable=too-many-branches
+    def _rename_host_files(
         self,
         oldname: HistoryFile,
         newname: HistoryFile,
@@ -1274,7 +1273,7 @@ class AutomationRenameHosts(Automation):
         return 0
 
     # This functions could be moved out of Checkmk.
-    def _omd_rename_host(  # pylint: disable=too-many-branches
+    def _omd_rename_host(
         self,
         oldname: str,
         newname: str,
@@ -2267,7 +2266,7 @@ class AutomationDiagHost(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(  # pylint: disable=too-many-branches
+    def execute(
         self,
         args: list[str],
         called_from_automation_helper: bool,
@@ -2555,7 +2554,7 @@ class AutomationDiagHost(Automation):
             return 1, "Cannot find binary <tt>traceroute</tt>."
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(  # pylint: disable=too-many-branches
+    def _execute_snmp(
         self,
         test: str,
         snmp_config: SNMPHostConfig,

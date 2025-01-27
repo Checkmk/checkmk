@@ -193,7 +193,7 @@ class ModePatternEditor(WatoMode):
     def _vs_host(self):
         return ConfigHostname()
 
-    def _show_patterns(self):  # pylint: disable=too-many-branches
+    def _show_patterns(self):
         from cmk.gui import logwatch
 
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively("logwatch_rules").get(

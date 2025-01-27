@@ -22,7 +22,7 @@ def inventory_f5_bigip_conns(info):
     return []
 
 
-def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branches
+def check_f5_bigip_conns(item, params, info):
     # Connection rate
     now = time.time()
     value_store = get_value_store()

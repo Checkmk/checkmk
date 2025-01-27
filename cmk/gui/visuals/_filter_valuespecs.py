@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import json
 import sys
@@ -41,9 +40,7 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 
 
-def FilterChoices(  # pylint: disable=redefined-builtin
-    infos: SingleInfos, title: str, help: str
-) -> DualListChoice:
+def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos):
@@ -66,7 +63,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
     for persistance.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         *,
         name: str,

@@ -563,7 +563,7 @@ class RulesetOptimizer:
 
         return negate, regex(combine_patterns(pattern_parts))
 
-    def _all_matching_hosts(  # pylint: disable=too-many-branches
+    def _all_matching_hosts(
         self, condition: RuleConditionsSpec, with_foreign_hosts: bool
     ) -> set[HostName]:
         """Returns a set containing the names of hosts that match the given

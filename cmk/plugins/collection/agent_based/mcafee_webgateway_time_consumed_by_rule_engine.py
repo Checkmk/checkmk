@@ -10,8 +10,6 @@ The old plug-in names, value_store dict keys, and ruleset names have been kept f
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
-
-# pylint: disable=protected-access
 from cmk.plugins.lib import mcafee_gateway
 
 

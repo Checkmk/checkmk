@@ -23,7 +23,7 @@ except ImportError:
 
 try:
     # TODO: We should probably ship this package.
-    import pyinotify  # type: ignore[import-not-found] # pylint: disable=import-error
+    import pyinotify  # type: ignore[import-not-found]
 except ImportError:
     sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
     sys.exit(1)
@@ -281,7 +281,7 @@ def update_watched_folders():
                 attributes["watch_descriptor"] = new_wd
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     # Read config
 
     for section in config.sections():

@@ -138,7 +138,7 @@ def discover_win_dhcp_pools(params: Mapping[str, Any], section: Section) -> Disc
 
         if len(pool_stats) == 3:
             in_block = False
-            used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
+            used, free, pending = pool_stats
             size = used + free + pending
             if size > 0 or params["empty_pools"]:
                 yield Service(item=last_pool)

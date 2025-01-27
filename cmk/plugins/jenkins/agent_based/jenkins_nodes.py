@@ -91,7 +91,7 @@ def _get_optional_value(
     return None
 
 
-def check_jenkins_nodes(  # pylint: disable=too-many-branches
+def check_jenkins_nodes(
     item: str,
     params: Mapping[str, Any],
     section: Section,

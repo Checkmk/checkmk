@@ -52,7 +52,7 @@ class SectionSidOracleRman(TypedDict):
 SectionOracleRman = dict[str, SectionSidOracleRman]
 
 
-def parse_oracle_rman(  # pylint: disable=too-many-branches
+def parse_oracle_rman(
     string_table: StringTable,
 ) -> SectionOracleRman:
     section: SectionOracleRman = {}

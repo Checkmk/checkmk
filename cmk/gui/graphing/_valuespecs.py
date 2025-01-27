@@ -261,7 +261,7 @@ class ValueWithUnitElement(TypedDict):
 
 
 class ValuesWithUnits(CascadingDropdown):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         vs_name: str,
         metric_vs_name: str,

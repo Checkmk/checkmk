@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """
 # Introduction
 
@@ -721,7 +721,7 @@ DEFAULT_STATUS_CODE_SCHEMAS = {
 }
 
 
-def _to_operation_dict(  # pylint: disable=too-many-branches
+def _to_operation_dict(
     spec: APISpec,
     endpoint: Endpoint,
     werk_id: int | None = None,
@@ -1089,9 +1089,7 @@ def _permission_descriptions(
     def _count_perms(_perms):
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
-    def _add_desc(  # pylint: disable=too-many-branches
-        permission: permissions.BasePerm, indent: int, desc_list: list[str]
-    ) -> None:
+    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         if isinstance(permission, permissions.Undocumented):
             # Don't render
             return

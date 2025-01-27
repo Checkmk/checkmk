@@ -51,7 +51,7 @@ _FIXED_STATES = {
 }
 
 
-def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
+def parse_megaraid_pdisks(
     string_table: StringTable,
 ) -> megaraid.SectionPDisks:
     parsed = {}

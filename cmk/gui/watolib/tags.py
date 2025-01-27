@@ -420,7 +420,7 @@ def _change_host_tags_in_host_or_folder(
     return affected
 
 
-def _change_host_tags_in_rule(  # pylint: disable=too-many-branches
+def _change_host_tags_in_rule(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
     mode: TagCleanupMode,
     ruleset: Ruleset,

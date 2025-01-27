@@ -58,7 +58,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if size_bytes is None or size_bytes == 0 or avail_bytes is None:
         return
 
-    yield df_check_filesystem_single(  # pylint: disable=undefined-variable
+    yield df_check_filesystem_single(
         item, size_bytes / mib, avail_bytes / mib, 0, None, None, params
     )  # fixed: true-division
 

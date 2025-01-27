@@ -254,7 +254,7 @@ def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     return int(start_time), int(end_time)
 
 
-def paint_age_or_never(  # pylint: disable=redefined-outer-name
+def paint_age_or_never(
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
@@ -281,7 +281,7 @@ def paint_age_or_never(  # pylint: disable=redefined-outer-name
     )
 
 
-def paint_age(  # pylint: disable=redefined-outer-name
+def paint_age(
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,

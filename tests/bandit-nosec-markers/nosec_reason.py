@@ -11,8 +11,6 @@ It also helps throwing the dice for new Bandit nosec IDs to use in said doc.
 Call with --help for usage.
 """
 
-# pylint: disable=redefined-outer-name  # for argparse set_defaults(run=...)
-
 from __future__ import annotations
 
 import argparse
@@ -213,7 +211,7 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
     files = _format_output(
         subprocess.run(run_find_files, cwd=src_root, check=False, capture_output=True).stdout
     )
-    logging.info(  # pylint: disable=logging-not-lazy
+    logging.info(
         f"Checking {len(files)} python files in '{src_root}'"
         + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")
     )

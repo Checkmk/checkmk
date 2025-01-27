@@ -1844,7 +1844,7 @@ class CustomPluginAdapter:
         return self.plugin_name, self.plugin_options
 
 
-def get_plugin_from_mk_file(  # pylint: disable=too-many-branches
+def get_plugin_from_mk_file(
     notify_plugin: PluginNameWithParameters,
 ) -> PluginAdapter | CustomPluginAdapter:
     # TODO use match case once mypy has support for it

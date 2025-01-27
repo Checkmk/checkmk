@@ -32,7 +32,7 @@ def do_compress_history(args: list[str]) -> None:
             raise MKBailOut("%s" % e)
 
 
-def compress_history_file(  # pylint: disable=too-many-branches
+def compress_history_file(
     input_path: str,
     output_path: str,
 ) -> None:

@@ -144,7 +144,7 @@ class StateInfo:
     info: str
 
 
-def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
+def check_esx_vsphere_hostsystem_multipath(
     item,
     params,
     parsed,

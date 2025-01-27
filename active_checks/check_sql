@@ -231,7 +231,7 @@ def _default_execute(
 
 
 def postgres_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import psycopg2  # type: ignore[import-untyped] # pylint: disable=import-outside-toplevel
+    import psycopg2  # type: ignore[import-untyped]
 
     return psycopg2.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
@@ -243,7 +243,7 @@ def postgres_execute(
 
 
 def mysql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import pymysql  # pylint: disable=import-outside-toplevel
+    import pymysql
 
     return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)
 
@@ -255,7 +255,7 @@ def mysql_execute(
 
 
 def mssql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import pymssql  # type: ignore[import-untyped] # pylint: disable=import-outside-toplevel
+    import pymssql  # type: ignore[import-untyped]
 
     return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
@@ -279,7 +279,7 @@ def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> A
         f"/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     )
     try:
-        import oracledb  # type: ignore[import-not-found] # pylint: disable=import-error,import-outside-toplevel
+        import oracledb  # type: ignore[import-not-found]
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
 
@@ -304,7 +304,7 @@ def oracle_execute(
     cursor: Any, cmd: str, inpt: Sequence[str], procedure: bool
 ) -> list[tuple[Any, ...]]:
     try:
-        import oracledb  # pylint: disable=import-error,import-outside-toplevel
+        import oracledb
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
 
@@ -315,7 +315,7 @@ def oracle_execute(
         # In an earlier version, this code-branch
         # had been executed regardles of the dbms.
         # clearly this is oracle specific.
-        outvar = cursor.var(oracledb.STRING)  # pylint: disable=undefined-variable
+        outvar = cursor.var(oracledb.STRING)
         # However, I have not been able to test it.
         parameters = [*inpt, outvar]
         cursor.callproc(cmd, parameters)
@@ -341,8 +341,8 @@ def oracle_execute(
 def db2_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     # IBM data server driver
     try:
-        import ibm_db  # type: ignore[import-not-found] # pylint: disable=import-error,import-outside-toplevel
-        import ibm_db_dbi  # type: ignore[import-not-found] # pylint: disable=import-error,import-outside-toplevel
+        import ibm_db  # type: ignore[import-not-found]
+        import ibm_db_dbi  # type: ignore[import-not-found]
     except ImportError as exc:
         bail_out(3, "%s. Please install it via pip." % exc)
 
@@ -362,7 +362,7 @@ def db2_execute(
 
 def sqlanywhere_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     try:
-        import sqlanydb  # type: ignore[import-not-found] # pylint: disable=import-error,import-outside-toplevel
+        import sqlanydb  # type: ignore[import-not-found]
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install sqlanydb'." % exc)
     return sqlanydb.connect(uid=user, pwd=pwd, dbn=db_name, host=f"{host}:{port}")

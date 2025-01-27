@@ -42,7 +42,7 @@ def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branches
+def check_ibm_svc_host(item, params, parsed):
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary

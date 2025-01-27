@@ -118,7 +118,7 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 check_info = {}
 
 
-def parse_md(string_table):  # pylint: disable=too-many-branches
+def parse_md(string_table):
     parsed = {}
     instance = {}
     for line in (l for l in string_table if l):
@@ -179,7 +179,7 @@ def inventory_md(parsed):
             yield device, None
 
 
-def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
+def check_md(item, _no_params, parsed):
     data = parsed.get(item)
     if data is None:
         return

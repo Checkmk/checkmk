@@ -135,7 +135,7 @@ def load_users(lock: bool = False) -> Users:
     return _load_users(lock)
 
 
-def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
+def _load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -405,7 +405,7 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
 
 # Write user specific files
-def _save_user_profiles(  # pylint: disable=too-many-branches
+def _save_user_profiles(
     updated_profiles: Users,
     now: datetime,
 ) -> None:

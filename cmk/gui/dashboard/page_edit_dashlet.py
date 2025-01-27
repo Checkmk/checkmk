@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 
@@ -61,7 +60,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return,too-many-branches
+    def page(self) -> PageResult:
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"

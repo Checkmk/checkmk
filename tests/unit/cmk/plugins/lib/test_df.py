@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
@@ -308,7 +306,7 @@ def test_df_check_filesystem_single(
             ["fake1", "fake2"],
         ),
         (
-            {  # pylint: disable= duplicate-key
+            {
                 "fake_same_name": {
                     "size_mb": None,
                     "avail_mb": None,

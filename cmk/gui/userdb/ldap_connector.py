@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
@@ -198,7 +197,7 @@ LDAPUserSpec = dict[str, list[str]]
 
 
 def _get_ad_locator():
-    import activedirectory  # type: ignore[import-untyped] # pylint: disable=import-error
+    import activedirectory  # type: ignore[import-untyped]
     from activedirectory.protocol import netlogon  # type: ignore[import-untyped]
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc]
@@ -671,7 +670,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 break
         return results
 
-    def _ldap_search(  # pylint: disable=too-many-branches
+    def _ldap_search(
         self,
         base: DistinguishedName,
         filt: str = "(objectclass=*)",
@@ -1051,7 +1050,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def _get_nested_group_memberships(  # pylint: disable=too-many-branches
+    def _get_nested_group_memberships(
         self,
         filters: Sequence[str],
         filt_attr: str,
@@ -1375,7 +1374,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
         return changes
 
-    def do_sync(  # pylint: disable=too-many-branches
+    def do_sync(
         self,
         *,
         add_to_changelog: bool,  # unused

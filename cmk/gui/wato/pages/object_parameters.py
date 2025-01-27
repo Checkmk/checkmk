@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
@@ -495,7 +495,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
+    def _output_analysed_ruleset(
         self,
         all_rulesets: AllRulesets,
         rulespec: Rulespec,

@@ -115,7 +115,7 @@ class PageAjaxBackupJobState(AjaxPage):
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
             page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()

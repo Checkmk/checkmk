@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping
 from typing import Any
@@ -76,7 +75,7 @@ def load_plugins() -> None:
     declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
 
 
-def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
+def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.

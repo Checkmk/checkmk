@@ -144,7 +144,7 @@ def subject_and_received_timestamp_from_msg(
     return assert_never(msg)
 
 
-def check_mails(  # pylint: disable=too-many-branches
+def check_mails(
     warning: int,
     critical: int,
     expected_mails: MailDict,

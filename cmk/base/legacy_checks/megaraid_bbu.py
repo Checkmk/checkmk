@@ -58,7 +58,7 @@ def megaraid_bbu_parse(string_table):
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
             # TODO: Fix the code and remove the pragma below!
-            current_hba[name] = data  # pylint: disable=unsupported-assignment-operation
+            current_hba[name] = data
     return controllers
 
 

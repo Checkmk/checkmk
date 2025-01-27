@@ -38,7 +38,7 @@ def inventory_veeam_client(parsed):
         yield job, {}
 
 
-def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branches
+def check_veeam_client(item, params, parsed):
     # Fallback for old None item version
     # FIXME Can be remvoed in CMK 2.0
     if item is None and len(parsed) > 0:

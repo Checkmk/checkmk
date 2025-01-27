@@ -132,7 +132,7 @@ def _parse_unspecified_thresholds(
             return None, None
 
 
-def parse_cisco_temperature(  # pylint: disable=too-many-branches
+def parse_cisco_temperature(
     string_table: Sequence[StringTable],
 ) -> Section:
     # CISCO-ENTITY-SENSOR-MIB entSensorType

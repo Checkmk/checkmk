@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import dataclasses
 import logging
@@ -225,7 +224,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
             log=logger.debug,
         )
 
-    assert type(excinfo.value) is not SNMPContextTimeout  # pylint: disable=unidiomatic-typecheck
+    assert type(excinfo.value) is not SNMPContextTimeout
 
 
 def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None:
@@ -261,4 +260,4 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
             log=logger.debug,
         )
 
-    assert type(excinfo.value) is SNMPContextTimeout  # pylint: disable=unidiomatic-typecheck
+    assert type(excinfo.value) is SNMPContextTimeout

@@ -91,7 +91,7 @@ def _merge_interface_counters(
     return interface
 
 
-def _merge_if_counters_sections(  # pylint: disable=too-many-branches
+def _merge_if_counters_sections(
     section_netapp_ontap_if: InterfacesSection,
     section_netapp_ontap_ports: PortsSection,
     section_netapp_ontap_if_counters: InterfacesCountersSection | None,

@@ -125,7 +125,7 @@ class AboutCheckmkPage(Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,
@@ -182,7 +182,7 @@ class ChangeLogPage(Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         werk_table_options = _werk_table_options_from_request()
@@ -795,7 +795,7 @@ def render_werk_title(werk: Werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_nowiki_werk_description(  # pylint: disable=too-many-branches
+def render_nowiki_werk_description(
     description_raw: list[str],
 ) -> HTML:
     with output_funnel.plugged():

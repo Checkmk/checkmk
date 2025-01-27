@@ -166,7 +166,7 @@ def bail_out(message: str) -> NoReturn:
 class Log(io.StringIO):
     def __init__(self, fd: int, logfile: str) -> None:
         super().__init__()
-        self.log = open(logfile, "a", encoding="utf-8")  # pylint: disable=consider-using-with
+        self.log = open(logfile, "a", encoding="utf-8")
         self.fd = fd
 
         if self.fd == 1:
@@ -464,7 +464,7 @@ def _is_unpatchable_file(path: str) -> bool:
     return path.endswith(".png") or path.endswith(".pdf")
 
 
-def _patch_template_file(  # pylint: disable=too-many-branches
+def _patch_template_file(
     conflict_mode: str,
     src: str,
     dst: str,
@@ -606,7 +606,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
 
 # Try to merge changes from old->new version and
 # old->user version
-def merge_update_file(  # pylint: disable=too-many-branches
+def merge_update_file(
     site: SiteContext,
     conflict_mode: str,
     relpath: str,
@@ -906,7 +906,7 @@ def _execute_update_file(
                     todo = True  # Try again
 
 
-def update_file(  # pylint: disable=too-many-branches
+def update_file(
     relpath: str,
     site: SiteContext,
     conflict_mode: str,
@@ -2419,7 +2419,7 @@ def _get_conflict_mode(options: CommandOptions) -> str:
     return conflict_mode
 
 
-def main_mv_or_cp(  # pylint: disable=too-many-branches
+def main_mv_or_cp(
     version_info: VersionInfo,
     old_site: SiteContext,
     global_opts: GlobalOptions,
@@ -2693,7 +2693,7 @@ def print_diff(
         print_status(StateMarkers.warn, fn, "p", "Changed permissions")
 
 
-def main_update(  # pylint: disable=too-many-branches
+def main_update(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
@@ -3065,7 +3065,7 @@ def main_umount(
     sys.exit(exit_status)
 
 
-def main_init_action(  # pylint: disable=too-many-branches
+def main_init_action(
     version_info: VersionInfo,
     site: SiteContext | RootContext,
     global_opts: GlobalOptions,
@@ -3146,7 +3146,7 @@ def main_init_action(  # pylint: disable=too-many-branches
         stdout: int | IO[str] = sys.stdout if not parallel else subprocess.PIPE
         stderr: int | IO[str] = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
-        p = subprocess.Popen(  # pylint: disable=consider-using-with
+        p = subprocess.Popen(
             [sys.argv[0], command] + bare_arg + [site.name] + args,
             stdin=subprocess.DEVNULL,
             stdout=stdout,
@@ -3222,13 +3222,13 @@ def main_init_action(  # pylint: disable=too-many-branches
 
 
 def _update_license_usage(site: SiteContext) -> None:
-    subprocess.Popen(  # pylint: disable=consider-using-with
+    subprocess.Popen(
         [f"/omd/sites/{site.name}/bin/cmk-update-license-usage"],
         start_new_session=True,
     )
 
 
-def main_config(  # pylint: disable=too-many-branches
+def main_config(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
@@ -3319,7 +3319,7 @@ def main_backup(
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
-def _restore_backup_from_tar(  # pylint: disable=too-many-branches
+def _restore_backup_from_tar(
     *,
     tar: tarfile.TarFile,
     options: CommandOptions,
@@ -4419,7 +4419,7 @@ def _opt_arg(main_args: Arguments, opt: str) -> tuple[str, Arguments]:
     return arg, main_args
 
 
-def _parse_command_options(  # pylint: disable=too-many-branches
+def _parse_command_options(
     args: Arguments, options: list[Option]
 ) -> tuple[Arguments, CommandOptions]:
     # Give a short overview over the command specific options
@@ -4668,7 +4668,7 @@ def _run_command(
 # the options before the command here only.
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
-def main() -> None:  # pylint: disable=too-many-branches
+def main() -> None:
     ensure_mkbackup_lock_dir_rights()
 
     main_args = sys.argv[1:]

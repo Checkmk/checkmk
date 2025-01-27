@@ -410,7 +410,7 @@ def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = 
     return key, ""
 
 
-def _paint_future_time(  # pylint: disable=redefined-outer-name
+def _paint_future_time(
     timestamp: int,
     *,
     request: Request,
@@ -1043,7 +1043,7 @@ class PainterSvcStateAge(Painter):
         )
 
 
-def _paint_checked(  # pylint: disable=redefined-outer-name
+def _paint_checked(
     what: str, row: Row, *, config: Config, request: Request, painter_options: PainterOptions
 ) -> CellSpec:
     age = row[what + "_last_check"]
@@ -4772,7 +4772,7 @@ class PainterLogIcon(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:  # pylint: disable=too-many-branches
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         img = None
         log_type = row["log_type"]
         log_state = row["log_state"]

@@ -12,8 +12,6 @@ import re
 import shlex
 import subprocess
 import textwrap
-
-# pylint: disable=redefined-outer-name
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -226,7 +224,7 @@ def run(
     capture_output: bool = True,
     check: bool = True,
     encoding: str | None = "utf-8",
-    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    input: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -263,7 +261,7 @@ def execute(
     kwargs["encoding"] = encoding
 
     with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
-        return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
+        return subprocess.Popen(cmd_, **kwargs)
 
 
 def _add_trace_context(
@@ -386,7 +384,7 @@ def _terminate_daemon(
 def check_output(
     cmd: list[str],
     encoding: str = "utf-8",
-    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    input: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -398,7 +396,7 @@ def check_output(
 def check_output(
     cmd: list[str],
     encoding: None,
-    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    input: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -409,7 +407,7 @@ def check_output(
 def check_output(
     cmd: list[str],
     encoding: str | None = "utf-8",
-    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    input: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,

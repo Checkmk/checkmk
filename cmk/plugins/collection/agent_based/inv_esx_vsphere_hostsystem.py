@@ -97,7 +97,7 @@ def inv_esx_vsphere_hostsystem(section: Section) -> InventoryResult:
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
                 # Found after update to 2.9.0. Seems to be a false positive
-                data[inv_key] = transform(section[section_key])  # pylint: disable=not-callable
+                data[inv_key] = transform(section[section_key])
 
         # Handle some corner cases for hw and sys
         if name == "hw":

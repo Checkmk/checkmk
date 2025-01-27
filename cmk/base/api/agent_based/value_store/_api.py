@@ -29,7 +29,7 @@ _ValueStoreKey = tuple[HostName, _PluginName, _Item, _UserKey]
 _ServiceID = tuple[object, _Item]
 
 
-class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-ancestors
+class _ValueStore(MutableMapping[_UserKey, Any]):
     """Implements the mutable mapping that is exposed to the plugins
 
     This class ensures that every service has its own name space in the

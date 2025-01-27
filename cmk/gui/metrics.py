@@ -301,7 +301,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     def ident(cls) -> str:
         return "host_service_graph_popup"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         host_service_graph_popup_cmk(
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
             request.get_validated_type_input_mandatory(HostName, "host_name"),

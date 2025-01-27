@@ -63,7 +63,7 @@ def inventory_ibm_mq_managers(parsed):
         yield item, {}
 
 
-def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-branches
+def check_ibm_mq_managers(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 

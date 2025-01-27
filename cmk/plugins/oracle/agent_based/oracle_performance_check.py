@@ -82,7 +82,7 @@ def discover_oracle_performance(
     yield from (Service(item=item, parameters=discovered_params.copy()) for item in section)
 
 
-def check_oracle_performance(  # pylint: disable=too-many-branches
+def check_oracle_performance(
     item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     data = _get_item_data(item, section)

@@ -10,8 +10,6 @@ from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
 import cmk.plugins.azure.rulesets.azure as azure_ruleset
 
-# pylint: disable=protected-access
-
 AZURE_VS_RULESET_VALUE: Final = {
     "authority": "global",
     "tenant": "my_tenant",

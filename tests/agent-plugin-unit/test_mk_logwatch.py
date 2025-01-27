@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# pylint: disable=protected-access,redefined-outer-name
+
 from __future__ import print_function
 
 import locale
@@ -18,7 +18,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_logwatch_2 as lw  # pylint: disable=syntax-error
+    import agents.plugins.mk_logwatch_2 as lw
 else:
     import agents.plugins.mk_logwatch as lw
 
@@ -669,7 +669,7 @@ def _path_to_testfile(filename):
     return _linux_dataset_path(filename)
 
 
-class MockStdout(object):  # pylint: disable=useless-object-inheritance
+class MockStdout(object):
     def isatty(self):
         return False
 

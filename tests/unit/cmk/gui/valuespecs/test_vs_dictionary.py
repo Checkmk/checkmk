@@ -99,7 +99,7 @@ class TestValueSpecDictionary:
         with pytest.raises(TypeError, match="got an unexpected keyword argument 'default_value'"):
             # default_value was intentionally removed from
             # Dictionary, because it does not have any effect.
-            d = vs.Dictionary(  # type: ignore[call-arg] # pylint: disable=unexpected-keyword-arg
+            d = vs.Dictionary(  # type: ignore[call-arg]
                 elements=_test_elements(), default_value=None
             )
             _ = d.default_value() == {}

@@ -80,7 +80,7 @@ class AuxTag:
         tag_id: TagID,
         title: str,
         topic: str | None,
-        help: str | None,  # pylint: disable=redefined-builtin
+        help: str | None,
     ) -> None:
         self.id = tag_id
         self.title = title
@@ -237,7 +237,7 @@ class TagGroup:
         group_id: TagGroupID,
         title: str,
         topic: str | None,
-        help: str | None,  # pylint: disable=redefined-builtin
+        help: str | None,
         tags: list[GroupedTag],
     ) -> None:
         self.id = group_id
@@ -474,7 +474,7 @@ class TagConfig:
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
-    def _validate_group(self, tag_group: TagGroup) -> None:  # pylint: disable=too-many-branches
+    def _validate_group(self, tag_group: TagGroup) -> None:
         if not tag_group.id:
             raise MKGeneralException(_("Please specify an ID for your tag group."))
         _validate_tag_id(tag_group.id)

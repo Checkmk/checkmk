@@ -55,7 +55,7 @@ def genua_carpstate(st):
     return names.get(st, st)
 
 
-def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branches
+def check_genua_carp(item, _no_params, info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
 

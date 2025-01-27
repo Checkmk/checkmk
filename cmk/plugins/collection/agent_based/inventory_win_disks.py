@@ -44,7 +44,7 @@ from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, S
 Section = Sequence[Mapping[str, Any]]
 
 
-def parse_win_disks(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
+def parse_win_disks(string_table: StringTable) -> Section:
     disks: list[Mapping[str, Any]] = []
     array: dict[str, Any] = {}
     first_varname = None

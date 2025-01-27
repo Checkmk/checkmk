@@ -16,7 +16,7 @@ def inventory_ibm_imm_fan(info):
             yield descr, {}
 
 
-def check_ibm_imm_fan(item, params, info):  # pylint: disable=too-many-branches
+def check_ibm_imm_fan(item, params, info):
     for descr, speed_text in info:
         if descr == item:
             if speed_text.lower() in ["offline", "unavailable"]:

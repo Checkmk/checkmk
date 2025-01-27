@@ -144,7 +144,7 @@ def test_locked_user(
 
     logger.info("As locked user '%s': reload the page and try to login", user_data.user_id)
     problem_dashboard_page.page.reload()
-    login_page._validate_page()  # pylint: disable=protected-access
+    login_page._validate_page()
     login_page.login(new_user_credentials)
     login_page.check_error("User is locked")
 
@@ -155,4 +155,4 @@ def test_locked_user(
 
     logger.info("As unlocked user '%s': login", user_data.user_id)
     login_page.login(new_user_credentials)
-    problem_dashboard_page._validate_page()  # pylint: disable=protected-access
+    problem_dashboard_page._validate_page()

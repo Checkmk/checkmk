@@ -314,8 +314,6 @@ class Request(
     max_form_memory_size = 20 * 1024 * 1024
     meta: dict[str, Any]
 
-    # pylint: disable=too-many-ancestors
-
     def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
         # Modify the environment to fix double URLs in some apache configurations, only once.
         if "apache.version" in environ and environ.get("SCRIPT_NAME"):

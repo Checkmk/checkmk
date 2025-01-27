@@ -437,7 +437,7 @@ def ActionList(vs: ValueSpec, **kwargs: Any) -> ListOf:
 
 
 class RuleState(CascadingDropdown):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         title: str,
         help: str,
@@ -1813,7 +1813,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -1929,7 +1929,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         _save_mkeventd_rules(rule_packs)
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         self._verify_ec_enabled()
         rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -2222,8 +2222,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, rule_pack: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, rule_pack: str) -> str: ...
 
     @overload
     @classmethod
@@ -2306,7 +2305,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -2422,7 +2421,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         else:
             self._show_table(event, found_rules, rules)
 
-    def _show_table(  # pylint: disable=too-many-branches
+    def _show_table(
         self, event: ec.Event | None, found_rules: list[ec.Rule], rules: Collection[ec.Rule]
     ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
@@ -2850,7 +2849,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 

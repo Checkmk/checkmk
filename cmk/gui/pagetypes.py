@@ -1169,7 +1169,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
     def __init__(self, pagetype: type[_T]) -> None:
         self._type = pagetype
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 

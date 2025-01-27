@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -1356,7 +1355,7 @@ class Rule:
                 case None:
                     return bool_(matcher.service_extra_conf(hostname, None, ruleset))
 
-    def matches_search(  # pylint: disable=too-many-branches
+    def matches_search(
         self,
         search_options: SearchOptions,
     ) -> bool:

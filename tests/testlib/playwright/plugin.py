@@ -188,7 +188,7 @@ def manage_new_page_from_browser_context(
         NOTE: requires access to pytest fixture: `request`.
     """
     pages: t.List[Page] = []
-    context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
+    context.on("page", lambda page: pages.append(page))
     page = context.new_page()
     try:
         yield page

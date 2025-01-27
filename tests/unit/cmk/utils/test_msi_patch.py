@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
 import os
 import shutil
 from pathlib import Path

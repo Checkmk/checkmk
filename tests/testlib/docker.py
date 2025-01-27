@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 import io
 import logging
 import os
@@ -300,7 +300,7 @@ class CheckmkApp:
             ) from e
 
         if self.version.is_saas_edition():
-            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+            from tests.testlib.cse.utils import (
                 create_cse_initial_config,
             )
 

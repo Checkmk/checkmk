@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import query_filters
-from cmk.gui.plugins.visuals import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+from cmk.gui.plugins.visuals import (  # type: ignore[attr-defined]
     filter_registry,
 )
-from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]
     InputTextFilter,
 )
 

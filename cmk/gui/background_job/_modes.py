@@ -94,7 +94,7 @@ class ModeBackgroundJobsOverview(WatoMode):
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
     # Mypy requires the explicit return, pylint does not like it.
-    def action(self) -> ActionResult:  # pylint: disable=useless-return
+    def action(self) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         return None

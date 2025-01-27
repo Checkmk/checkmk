@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=redefined-outer-name
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
@@ -290,7 +287,7 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
 
 def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
     class CloudWatchLogsClientStub(CloudWatchLogsClient):
-        def __init__(self):  # pylint: disable=super-init-not-called
+        def __init__(self):
             pass
 
         def get_query_results(

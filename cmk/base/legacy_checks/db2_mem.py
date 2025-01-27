@@ -14,7 +14,7 @@ def inventory_db2_mem(info):
     return [(x[1], {}) for x in info if x[0] == "Instance"]
 
 
-def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
+def check_db2_mem(item, params, info):
     if not info:
         raise IgnoreResultsError("Login into database failed")
 

@@ -25,7 +25,7 @@ class TestValueSpecTuple:
     def test_init(self) -> None:
         with pytest.raises(TypeError, match=" got an unexpected keyword argument 'default_value'"):
             # default_value was intentional removed
-            vs.Tuple(  # pylint: disable=unexpected-keyword-arg
+            vs.Tuple(
                 elements=[
                     vs.TextInput(),
                     vs.Integer(),

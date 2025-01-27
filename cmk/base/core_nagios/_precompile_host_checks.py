@@ -154,7 +154,7 @@ def precompile_hostchecks(
             sys.exit(5)
 
 
-def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
+def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,

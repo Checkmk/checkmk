@@ -1087,7 +1087,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 
 class IPMICredentials(Alternative):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         match: Callable[[AlternativeModel], int] | None = None,
         show_alternative_title: bool = False,

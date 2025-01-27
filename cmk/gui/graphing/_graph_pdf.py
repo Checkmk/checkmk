@@ -18,7 +18,7 @@ from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import GraphDataRange
 
 
-def render_graph_pdf(  # pylint: disable=too-many-branches
+def render_graph_pdf(
     pdf_document: Document,
     graph_artwork: GraphArtwork,
     graph_render_config: GraphRenderConfigImage,

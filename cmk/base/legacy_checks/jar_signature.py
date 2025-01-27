@@ -42,7 +42,7 @@ def inventory_jar_signature(info):
     return inventory
 
 
-def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-branches
+def check_jar_signature(item, _no_params, info):
     in_block = False
     details = []
     in_cert = False

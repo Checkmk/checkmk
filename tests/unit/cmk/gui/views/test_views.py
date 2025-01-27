@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from typing import Any, Literal
 
@@ -350,7 +349,7 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
     dummy_ident: str = "einszwo"
     for painter, cell in painters_and_cells:
-        cell._painter_params = {"ident": dummy_ident}  # pylint: disable=protected-access
+        cell._painter_params = {"ident": dummy_ident}
         expected_title: str = painter.ident
         if painter.ident in ["host_custom_variable", "service_custom_variable"]:
             expected_title += "_%s" % dummy_ident

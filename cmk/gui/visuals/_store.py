@@ -470,7 +470,7 @@ def available(
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
-def available_by_owner(  # pylint: disable=too-many-branches
+def available_by_owner(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, dict[UserId, TVisual]]:

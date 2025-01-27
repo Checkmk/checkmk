@@ -53,7 +53,7 @@ class _RawGroup(TypedDict):
     alias: str | None
 
 
-def parse_multipath(  # pylint: disable=too-many-branches
+def parse_multipath(
     string_table: StringTable,
 ) -> multipath.Section:
     uuid: str | None = None
@@ -181,7 +181,7 @@ def _get_item_data(item: str, section: multipath.Section) -> multipath.Group | N
     return None
 
 
-def check_multipath(  # pylint: disable=too-many-branches
+def check_multipath(
     item: str, params: Mapping[str, Any], section: multipath.Section
 ) -> CheckResult:
     if (mmap := _get_item_data(item, section)) is None:

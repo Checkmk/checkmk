@@ -52,7 +52,7 @@ def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
 @pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_request_memoize() -> None:
     @hooks.request_memoize()
-    def blah(a=[]):  # pylint: disable=dangerous-default-value
+    def blah(a=[]):
         a.append(1)
         return a
 
@@ -75,7 +75,7 @@ def test_request_memoize_request_integration(
         return mock()
 
     @page_registry.register_page("my_page")
-    class PageClass(Page):  # pylint: disable=unused-variable
+    class PageClass(Page):
         def page(self) -> None:
             mock.return_value = 1
             assert memoized() == 1
@@ -107,7 +107,7 @@ def test_request_memoize_unregister() -> None:
     # unregistered hooks used by memoize.
 
     @hooks.request_memoize()
-    def blah(a: list[int] = []) -> list[int]:  # pylint: disable=dangerous-default-value
+    def blah(a: list[int] = []) -> list[int]:
         a.append(1)
         return a
 

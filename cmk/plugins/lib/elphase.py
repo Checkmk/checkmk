@@ -22,7 +22,7 @@ Section = Mapping[str, Sensor]
 #        "current" : 12.0,                                # without device state
 #     }
 # }
-def check_elphase(  # pylint: disable=too-many-branches
+def check_elphase(
     item: str,
     params: CheckParams,
     section: Section,

@@ -14,7 +14,7 @@ from cmk.ec.update_config import history_files_to_sqlite
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-class UpdateECHistory(UpdateAction):  # pylint: disable=too-few-public-methods
+class UpdateECHistory(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         self.history_files_to_sqlite(cmk.utils.paths.omd_root, logger)
 

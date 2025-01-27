@@ -820,7 +820,7 @@ def piggyback_formatter_with_cluster_name(
             )
 
 
-def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-branches
+def main(args: list[str] | None = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]

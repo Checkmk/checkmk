@@ -223,7 +223,6 @@ def do_notify(
     keepalive: bool,
     all_timeperiods: TimeperiodSpecs,
 ) -> int | None:
-    # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
@@ -918,7 +917,6 @@ def _process_notifications(
     analyse: bool,
     dispatch: str = "",
 ) -> list[NotifyPluginInfo]:
-    # pylint: disable=too-many-branches
     plugin_info: list[NotifyPluginInfo] = []
 
     if not notifications:
@@ -1414,7 +1412,6 @@ def rbn_rule_contacts(
     fallback_email: str,
     config_contacts: ConfigContacts,
 ) -> ContactNames:
-    # pylint: disable=too-many-branches
     the_contacts = set()
     if rule.get("contact_object"):
         the_contacts.update(
@@ -1996,7 +1993,7 @@ def handle_spoolfile(
 #   '----------------------------------------------------------------------'
 
 
-def do_bulk_notify(  # pylint: disable=too-many-branches
+def do_bulk_notify(
     plugin_name: NotificationPluginNameStr,
     params: NotifyPluginParamsDict,
     plugin_context: NotificationContext,
@@ -2188,7 +2185,6 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
 
 
 def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
-    # pylint: disable=too-many-branches
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -2301,7 +2297,6 @@ def notify_bulk(
     *,
     plugin_timeout: int,
 ) -> None:
-    # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
     plugin_name = cast(NotificationPluginNameStr, parts[-2])

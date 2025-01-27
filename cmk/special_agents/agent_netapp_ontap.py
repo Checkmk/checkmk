@@ -184,7 +184,7 @@ def fetch_volumes_counters(
             id=volume_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(volumes_counters_field_query)},
         ):
             element_serialized = element.to_dict()
@@ -394,7 +394,7 @@ def fetch_interfaces_counters(
             id=interface_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(interfaces_counters_field_query)},
         ):
             element_data = element.to_dict()
@@ -536,7 +536,7 @@ def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.Aler
     response = requests.get(
         url=f"{connection.origin}/api/private/support/alerts",
         headers=connection.headers,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        verify=False if args.no_cert_check else True,
         auth=(connection.username, connection.password),
         timeout=args.timeout,
     )
@@ -598,7 +598,7 @@ def fetch_vs_traffic_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -638,7 +638,7 @@ def fetch_fc_interfaces_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -885,7 +885,7 @@ def agent_netapp_main(args: Args) -> int:
         args.hostname,
         args.username,
         args.password,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        verify=False if args.no_cert_check else True,
         headers={"User-Agent": USER_AGENT},
     ) as connection:
         if isinstance(args.cert_server_name, str):

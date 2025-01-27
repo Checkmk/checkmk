@@ -14,7 +14,7 @@ class GuiTimingsPage(Page):
     def _title(self) -> str:
         return "GUI timings"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,

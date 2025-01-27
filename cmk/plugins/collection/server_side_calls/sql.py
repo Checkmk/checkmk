@@ -39,7 +39,7 @@ class SQLParams(BaseModel):
 def generate_sql_command(
     params: SQLParams,
     host_config: HostConfig,
-) -> Iterator[ActiveCheckCommand]:  # pylint: disable=too-many-branches
+) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = [
         (
             f"--hostname={replace_macros(params.host, host_config.macros)}"

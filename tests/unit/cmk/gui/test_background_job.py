@@ -395,7 +395,6 @@ def test_wait_for_background_jobs_while_one_running_but_finishes(
 
 @contextmanager
 def _reset_global_fixture_provider() -> Iterator[None]:
-    # pylint: disable=protected-access
     provider_orig = otel_trace._TRACER_PROVIDER
     try:
         otel_trace._TRACER_PROVIDER_SET_ONCE._done = False

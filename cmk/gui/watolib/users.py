@@ -216,7 +216,7 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(  # pylint: disable=too-many-branches
+def _validate_user_attributes(
     all_users: Users,
     user_id: UserId,
     user_attrs: UserSpec,

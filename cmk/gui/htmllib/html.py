@@ -963,7 +963,7 @@ class HTMLGenerator(HTMLWriter):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(  # pylint: disable=too-many-branches
+    def dropdown(
         self,
         varname: str,
         choices: Iterable[Choice] | Iterable[ChoiceGroup],
@@ -1193,7 +1193,7 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(  # pylint: disable=redefined-outer-name
+    def render_icon(
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
@@ -1260,7 +1260,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_icon_button(  # pylint: disable=redefined-outer-name
+    def render_icon_button(
         url: None | str,
         title: str,
         icon: Icon,
@@ -1295,7 +1295,7 @@ class HTMLGenerator(HTMLWriter):
             onclick=onclick,
         )
 
-    def icon_button(  # pylint: disable=redefined-outer-name
+    def icon_button(
         self,
         url: str | None,
         title: str,
@@ -1501,7 +1501,7 @@ def _path(path_or_str: str) -> Path: ...
 
 
 def _path(path_or_str: Path | str) -> Path:
-    if isinstance(path_or_str, str):  # pylint: disable=no-else-return
+    if isinstance(path_or_str, str):
         return Path(path_or_str)
     else:
         return path_or_str

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from base64 import b64encode
@@ -136,7 +136,7 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 
@@ -145,7 +145,7 @@ def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.F
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Basic {token}"}
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 
@@ -155,7 +155,7 @@ def test_login_with_webserver(with_user: tuple[UserId, str], flask_app: flask.Fl
         method="GET",
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 

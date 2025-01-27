@@ -169,13 +169,13 @@ def _merge_data(
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a
 
         mergefuncs.append(mergefunc)
 

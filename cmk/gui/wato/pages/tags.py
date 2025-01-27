@@ -276,7 +276,7 @@ class ModeTags(ABCTagMode):
         return redirect(mode_url("tags"))
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
+    def _move_tag_group(self) -> ActionResult:
         move_nr = request.get_integer_input_mandatory("_move")
         move_to = request.get_integer_input_mandatory("_index")
 

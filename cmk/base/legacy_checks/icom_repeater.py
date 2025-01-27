@@ -25,7 +25,7 @@ check_info = {}
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(string_table):  # pylint: disable=too-many-branches
+def parse_icom_repeater(string_table):
     parsed: dict[str, int | dict | float] = {}
     for line in string_table:
         if line[1] == "Temperature":

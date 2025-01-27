@@ -254,7 +254,7 @@ def _expect_regex_arguments(expect_regex: RegexMode) -> list[str | Secret]:
     return args
 
 
-def _url_arguments(  # pylint: disable=too-many-branches
+def _url_arguments(
     settings: HttpModeUrlParams,
     proxy_used: bool,
     host_config: HostConfig,

@@ -103,7 +103,7 @@ class GUIViewRenderer(ABCViewRenderer):
         self._show_buttons = show_buttons
         self._page_menu_dropdowns_callback = page_menu_dropdowns_callback
 
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         show_checkboxes: bool,

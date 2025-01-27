@@ -49,7 +49,7 @@ def inventory_oracle_jobs(info):
             yield f"{line[0]}.{line[1]}.{line[2]}.{line[3]}", {}
 
 
-def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
+def check_oracle_jobs(item, params, info):
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
 

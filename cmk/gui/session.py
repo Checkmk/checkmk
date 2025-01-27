@@ -368,7 +368,7 @@ class FileBasedSession(SessionInterface):
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
     @tracer.instrument("FileBasedSession.save_session")
-    def save_session(  # type: ignore[override]  # pylint: disable=redefined-outer-name
+    def save_session(  # type: ignore[override]
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response
     ) -> None:
         # NOTE

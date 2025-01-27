@@ -699,7 +699,7 @@ def ajax_snapin():
 
 
 class AjaxFoldSnapin(AjaxPage):
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(user, active_config.sidebar)

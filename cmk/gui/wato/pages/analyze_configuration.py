@@ -168,7 +168,7 @@ class ModeAnalyzeConfig(WatoMode):
                 for test_id, row_data in sorted(results_by_test.items(), key=lambda x: x[1].title):
                     self._show_test_row(table, test_id, row_data, site_ids)
 
-    def _show_test_row(  # pylint: disable=too-many-branches
+    def _show_test_row(
         self,
         table: Table,
         test_id: str,

@@ -5250,7 +5250,7 @@ ExtraServiceConfIconImage = ServiceRulespec(
 )
 
 
-def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
+def UserIconOrAction(title: str, help: str) -> DropdownChoice:
     empty_text = (
         _(
             "In order to be able to choose actions here, you need to "

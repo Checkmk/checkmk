@@ -129,7 +129,7 @@ def inventory_apc_symmetra(parsed):
         yield None, {}
 
 
-def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-branches
+def check_apc_symmetra(_no_item, params, parsed):
     data = parsed.get("status")
     if data is None:
         return

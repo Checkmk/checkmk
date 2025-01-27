@@ -153,7 +153,7 @@ def verify_backup_file(info: SiteBackupInfo, archive_path: Path) -> None:
 
 
 def file_checksum(path: Path) -> str:
-    hash_md5 = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+    hash_md5 = md5(usedforsecurity=False)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
@@ -202,7 +202,7 @@ class State:
 class InfoCalculator:
     def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.hash = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+        self.hash = md5(usedforsecurity=False)
         self.size = 0
 
     @staticmethod

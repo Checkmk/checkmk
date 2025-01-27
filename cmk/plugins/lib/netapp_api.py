@@ -276,7 +276,7 @@ def check_netapp_luns(
         )
 
 
-def merge_if_sections(  # pylint: disable=too-many-branches
+def merge_if_sections(
     interfaces_section: SectionSingleInstance,
     if_mac_list: MutableMapping[str, MACList],
     virtual_interfaces: Sequence[str],
@@ -373,7 +373,7 @@ def merge_if_sections(  # pylint: disable=too-many-branches
     return nics, extra_info
 
 
-def check_netapp_interfaces(  # pylint: disable=too-many-branches
+def check_netapp_interfaces(
     item: str,
     params: Mapping[str, Any],
     section: IfSection,

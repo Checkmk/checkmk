@@ -63,7 +63,7 @@ from ._filter_valuespecs import VisualFilterList
 from ._store import available, delete_local_file, move_visual_to_local, save, TVisual
 
 
-def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+def page_edit_visual(  # type: ignore[no-untyped-def]
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
     custom_field_handler=None,

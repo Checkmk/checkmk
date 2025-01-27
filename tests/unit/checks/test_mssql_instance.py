@@ -19,7 +19,7 @@ def check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
 
 
 def test_check_mssql_instance_vanished(
-    check_plugin: CheckPlugin,  # pylint: disable=redefined-outer-name
+    check_plugin: CheckPlugin,
 ) -> None:
     assert list(check_plugin.check_function(item="MSSQL instance", params={}, section={})) == [
         Result(

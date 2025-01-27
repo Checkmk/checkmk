@@ -57,7 +57,6 @@ def scan_parents_of(
     *,
     lookup_ip_address: _IpAddressLookup,
 ) -> Sequence[GatewayResult]:
-    # pylint: disable=too-many-branches
     if settings is None:
         settings = {}
 
@@ -106,7 +105,7 @@ def scan_parents_of(
                 (
                     host,
                     ip,
-                    subprocess.Popen(  # pylint: disable=consider-using-with
+                    subprocess.Popen(
                         command,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,

@@ -302,7 +302,7 @@ def main():
         except HTTPError as exc:
             sys.stderr.write("HTTP-Error (%s%s): %s %s\n" % (address, portspec, exc.code, exc))
 
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             sys.stderr.write("Exception (%s%s): %s\n" % (address, portspec, exc))
 
     return 0

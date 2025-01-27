@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=redefined-outer-name
 
 import errno
 import socket
@@ -20,7 +17,7 @@ from pytest import MonkeyPatch
 import livestatus
 
 # FIXME: Somehow tools disagree about the order...
-from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
+from omdlib.certs import CertificateAuthority
 
 from cmk.utils.certs import root_cert_path, RootCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection

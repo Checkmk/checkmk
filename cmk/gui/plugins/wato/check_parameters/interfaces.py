@@ -585,7 +585,7 @@ PERC_DISCARD_LEVELS = (10.0, 20.0)
 PERC_PKG_LEVELS = (10.0, 20.0)
 
 
-def _vs_alternative_levels(  # pylint: disable=redefined-builtin
+def _vs_alternative_levels(
     title: str,
     help: str,
     percent_levels: tuple[float, float] = (0.0, 0.0),

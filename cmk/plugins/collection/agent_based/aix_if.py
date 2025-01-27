@@ -7,7 +7,7 @@ from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
 
 
-def parse_aix_if(  # pylint: disable=too-many-branches
+def parse_aix_if(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     ifaces = {}

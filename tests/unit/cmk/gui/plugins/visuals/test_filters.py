@@ -1125,7 +1125,7 @@ def test_filters_filter_table(
         }[host_name]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        import cmk.gui.cee.agent_bakery._filters as bakery_filters  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
+        import cmk.gui.cee.agent_bakery._filters as bakery_filters
 
         monkeypatch.setattr(bakery_filters, "get_cached_deployment_status", deployment_states)
 

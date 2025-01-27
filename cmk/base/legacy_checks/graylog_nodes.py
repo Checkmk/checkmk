@@ -56,7 +56,7 @@ def inventory_graylog_nodes(parsed):
         yield node, {}
 
 
-def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branches
+def check_graylog_nodes(item, params, parsed):
     if parsed is None:
         return
 

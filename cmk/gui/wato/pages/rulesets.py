@@ -276,7 +276,7 @@ class ABCRulesetMode(WatoMode):
     def title(self) -> str:
         return self._title
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         if self._help:
             html.help(self._help)
 
@@ -592,9 +592,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(  # pylint: disable=arguments-differ
-        cls, *, group: str, host: str, item: str, service: str
-    ) -> str: ...
+    def mode_url(cls, *, group: str, host: str, item: str, service: str) -> str: ...
 
     @overload
     @classmethod
@@ -810,8 +808,7 @@ class ModeEditRuleset(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, varname: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, varname: str) -> str: ...
 
     @overload
     @classmethod
@@ -833,7 +830,7 @@ class ModeEditRuleset(WatoMode):
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
-    def _from_vars(self) -> None:  # pylint: disable=too-many-branches
+    def _from_vars(self) -> None:
         self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
         self._name = request.get_ascii_input_mandatory("varname")
@@ -2901,7 +2898,7 @@ class RuleConditionRenderer:
         if condition_txt:
             yield condition_txt
 
-    def _render_host_condition_text(  # pylint: disable=too-many-branches
+    def _render_host_condition_text(
         self,
         conditions: HostOrServiceConditions,
     ) -> HTML:
@@ -2985,7 +2982,7 @@ class RuleConditionRenderer:
 
         return HTML.without_escaping(" ").join(condition)
 
-    def _service_conditions(  # pylint: disable=too-many-branches
+    def _service_conditions(
         self,
         item_type: str | None,
         item_name: str | None,

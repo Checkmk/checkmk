@@ -6,7 +6,6 @@
 from collections.abc import Mapping, Sequence
 from types import ModuleType
 
-# pylint: disable=protected-access
 import pytest
 
 from tests.unit.testlib.utils import import_module_hack

@@ -21,7 +21,7 @@ def inventory_appdynamics_memory(info):
         yield " ".join(line[0:2]), {}
 
 
-def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-branches
+def check_appdynamics_memory(item, params, info):
     for line in info:
         if item == " ".join(line[0:2]):
             mb = 1024 * 1024.0

@@ -95,7 +95,7 @@ subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
-def register() -> None:  # pylint: disable=too-many-branches
+def register() -> None:
     """Register pre 2.1 "plugin API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.

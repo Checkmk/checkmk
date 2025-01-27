@@ -39,7 +39,7 @@
 import os
 import sys
 import time
-from optparse import OptionParser  # pylint: disable=deprecated-module
+from optparse import OptionParser
 from pathlib import Path
 
 DEFAULT_SETTINGS = {
@@ -72,7 +72,7 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_ambient_light import (  # type: ignore[import-not-found]
         BrickletAmbientLight,
     )
 
@@ -81,7 +81,7 @@ def print_ambient_light(conn, settings, uid):
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_ambient_light_v2 import (  # type: ignore[import-not-found]
         BrickletAmbientLightV2,
     )
 
@@ -90,7 +90,7 @@ def print_ambient_light_v2(conn, settings, uid):
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_temperature import (  # type: ignore[import-not-found]
         BrickletTemperature,
     )
 
@@ -101,7 +101,7 @@ def print_temperature(conn, settings, uid):
 
 
 def print_temperature_ext(conn, settings, uid):
-    from tinkerforge.bricklet_ptc import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_ptc import (  # type: ignore[import-not-found]
         BrickletPTC,
     )
 
@@ -117,7 +117,7 @@ def print_temperature_ext(conn, settings, uid):
 
 
 def print_humidity(conn, settings, uid):
-    from tinkerforge.bricklet_humidity import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_humidity import (  # type: ignore[import-not-found]
         BrickletHumidity,
     )
 
@@ -126,7 +126,7 @@ def print_humidity(conn, settings, uid):
 
 
 def print_master(conn, settings, uid):
-    from tinkerforge.brick_master import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.brick_master import (  # type: ignore[import-not-found]
         BrickMaster,
     )
 
@@ -144,7 +144,7 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_motion_detector import (  # type: ignore[import-not-found]
         BrickletMotionDetector,
     )
 
@@ -181,7 +181,7 @@ def display_on_segment(conn, settings, text):
         "\N{DEGREE SIGN}": 0x63,
     }
 
-    from tinkerforge.bricklet_segment_display_4x7 import (  # type: ignore[import-not-found] # pylint: disable=import-error
+    from tinkerforge.bricklet_segment_display_4x7 import (  # type: ignore[import-not-found]
         BrickletSegmentDisplay4x7,
     )
 
@@ -298,7 +298,7 @@ def main():
     }
 
     try:
-        from tinkerforge.ip_connection import (  # type: ignore[import-not-found] # pylint: disable=import-error
+        from tinkerforge.ip_connection import (  # type: ignore[import-not-found]
             IPConnection,
         )
     except ImportError:

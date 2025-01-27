@@ -116,7 +116,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
                 )
             )
 
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:
         if args.debug:
             raise
         # In the non-debug case the first (and only) line on stderr should tell what happended

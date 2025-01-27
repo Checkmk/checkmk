@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -89,7 +88,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,
     css: str | None = None,
     isopen: bool = True,
 ) -> Iterator[Table]:
@@ -152,7 +151,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
         css: str | None = None,
         isopen: bool = True,
     ):
@@ -311,7 +310,7 @@ class Table:
         """
         self.next_header = title
 
-    def _end(self) -> None:  # pylint: disable=too-many-branches
+    def _end(self) -> None:
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -444,7 +443,7 @@ class Table:
     def _get_sort_column(self, table_opts: dict[str, Any]) -> str | None:
         return request.get_ascii_input("_%s_sort" % self.id, table_opts.get("sort"))
 
-    def _write_table(  # pylint: disable=too-many-branches
+    def _write_table(
         self,
         rows: TableRows,
         num_rows_unlimited: int,
@@ -590,7 +589,7 @@ class Table:
 
         response.set_data("".join(resp))
 
-    def _render_headers(  # pylint: disable=too-many-branches
+    def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]
     ) -> None:
         if self.options["omit_headers"]:

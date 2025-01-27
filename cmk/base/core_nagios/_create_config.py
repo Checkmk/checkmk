@@ -259,7 +259,7 @@ def _create_nagios_config_host(
     )
 
 
-def create_nagios_host_spec(  # pylint: disable=too-many-branches
+def create_nagios_host_spec(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,
@@ -385,7 +385,7 @@ def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServ
     return f"{service_data.command_name}!{escaped_args}"
 
 
-def create_nagios_servicedefs(  # pylint: disable=too-many-branches
+def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,

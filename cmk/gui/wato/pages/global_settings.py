@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """Editor for global settings in main.mk and modes for these global
 settings"""
 
@@ -186,7 +186,7 @@ class ABCGlobalSettingsMode(WatoMode):
             for group in sorted(self._groups(), key=lambda g: g.sort_index())
         )
 
-    def _show_configuration_variables(self) -> None:  # pylint: disable=too-many-branches
+    def _show_configuration_variables(self) -> None:
         search = self._search
 
         at_least_one_painted = False

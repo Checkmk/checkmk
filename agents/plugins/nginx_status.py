@@ -32,7 +32,7 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    import urllib2  # pylint: disable=import-error
+    import urllib2
 
     urllib2.getproxies = lambda: {}
 else:
@@ -47,7 +47,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
+    text_type = unicode  # noqa: F821
     binary_type = str
 
 
@@ -120,7 +120,7 @@ def try_detect_servers(ssl_ports):
     return results
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
@@ -165,9 +165,7 @@ def main():  # pylint: disable=too-many-branches
                     # HACK: workaround misconfigurations where port 443 is used for
                     # serving non ssl secured http
                     url = "http://%s:%s/%s" % (address, port, page)
-                    fd = urlopen(  # pylint: disable=consider-using-with
-                        url
-                    )  # nosec B310 # BNS:6b61d9
+                    fd = urlopen(url)  # nosec B310 # BNS:6b61d9
                 else:
                     raise
 

@@ -108,9 +108,7 @@ def create_event_from_syslog_message(
     return event
 
 
-def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
-    line: str, ipaddress: str
-) -> Event:
+def parse_syslog_message_into_event(line: str, ipaddress: str) -> Event:
     """
     Variant 1: plain syslog message without priority/facility:
     May 26 13:45:01 Klapprechner CRON[8046]:  message....

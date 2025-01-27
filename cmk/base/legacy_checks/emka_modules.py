@@ -16,7 +16,7 @@ check_info = {}
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
+def parse_emka_modules(string_table):
     if not any(string_table):
         return None
 

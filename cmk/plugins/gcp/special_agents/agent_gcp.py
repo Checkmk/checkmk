@@ -78,15 +78,15 @@ class Client:
     project: str
     date: datetime.date
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def monitoring(self) -> monitoring_v3.MetricServiceClient:
         return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def asset(self) -> asset_v1.AssetServiceClient:
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def bigquery(self) -> Resource:
         credentials = service_account.Credentials.from_service_account_info(self.account_info)
         scopes = ["https://www.googleapis.com/auth/bigquery.readonly"]

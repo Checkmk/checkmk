@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=unused-import
-
 import time
 from collections.abc import Generator, Sequence
 from typing import AnyStr, NotRequired, TypedDict
@@ -87,7 +85,7 @@ def _normalize_level(entry):
     return entry
 
 
-def check_temperature_determine_levels(  # pylint: disable=too-many-branches
+def check_temperature_determine_levels(
     dlh,
     usr_warn,
     usr_crit,
@@ -157,7 +155,7 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
 
 
 # determine temperature trends. This is a private function, not to be called by checks
-def check_temperature_trend(  # pylint: disable=too-many-branches
+def check_temperature_trend(
     temp,
     params,
     output_unit,
@@ -263,7 +261,7 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
 
-def check_temperature(  # pylint: disable=too-many-branches
+def check_temperature(
     reading: Number,
     params: TempParamType,
     unique_name: AnyStr | None,

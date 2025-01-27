@@ -444,7 +444,7 @@ def _transform_agent_config_rule_spec_match_type(
     # rule spec.
     return Transform(
         valuespec=Transform(
-            inner_transform._valuespec,  # pylint: disable=protected-access
+            inner_transform._valuespec,
             to_valuespec=_remove_agent_config_match_type_key,
             from_valuespec=_add_agent_config_match_type_key,
         ),
@@ -477,7 +477,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
     )
 
 
-def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-branches
+def _get_builtin_legacy_sub_group_with_main_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     topic_to_convert: ruleset_api_v1.rule_specs.Topic,
     localizer: Callable[[str], str],

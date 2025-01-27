@@ -92,7 +92,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
+    text_type = unicode  # noqa: F821
     binary_type = str
 
 
@@ -197,7 +197,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser:  # pylint: disable=too-few-public-methods
+class ArgsParser:
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -621,7 +621,7 @@ def should_log_line_with_level(level, nocontext):
     return not (nocontext and level == ".")
 
 
-def process_logfile(section, filestate, debug):  # pylint: disable=too-many-branches
+def process_logfile(section, filestate, debug):
     # type: (LogfileSection, dict[str, Any], object) -> tuple[text_type, list[text_type]]
     """
     Returns tuple of (
@@ -1254,7 +1254,7 @@ def process_batches(current_batch, current_batch_id, remote, retention_period, n
             pass
 
 
-def main(argv=None):  # pylint: disable=too-many-branches
+def main(argv=None):
     if argv is None:
         argv = sys.argv
 

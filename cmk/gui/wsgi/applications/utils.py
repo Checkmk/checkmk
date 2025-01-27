@@ -198,7 +198,7 @@ def _handle_not_authenticated() -> Response:
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        from cmk.gui.cse.userdb.cognito.pages import (  # pylint: disable=no-name-in-module
+        from cmk.gui.cse.userdb.cognito.pages import (
             SingleSignOn,
         )
 

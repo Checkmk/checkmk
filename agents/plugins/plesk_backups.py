@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 try:
-    import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
+    import MySQLdb  # type: ignore[import-untyped]
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e
@@ -128,7 +128,6 @@ for domain, p in domains.items():
 
             size = 0
             if not l or l[0] == "d":
-                # pylint: disable=cell-var-from-loop
                 subdir = "/" + l.split()[-1] if l else ""
                 dir_files = []  # type: list[str]
                 ftp_conn.retrlines("LIST %s%s" % (base_dir, subdir), callback=dir_files.append)

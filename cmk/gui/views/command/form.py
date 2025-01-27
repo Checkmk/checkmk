@@ -120,7 +120,7 @@ def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Com
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
-def do_actions(  # pylint: disable=too-many-branches
+def do_actions(
     view: ViewSpec,
     what: InfoName,
     action_rows: Rows,

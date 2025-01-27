@@ -8,11 +8,11 @@ import math
 import os
 import platform
 import re
-import winreg  # pylint: disable=import-error
+import winreg
 from itertools import chain, repeat
 
 import pytest
-import win32evtlog  # type: ignore[import-not-found]  # pylint: disable=import-error
+import win32evtlog  # type: ignore[import-not-found]
 
 from .local import assert_subprocess, host, local_test, user_dir
 
@@ -56,18 +56,18 @@ logs = list(l for l in generate_logs() if l not in ["Security", "System"])
 
 @contextlib.contextmanager
 def eventlog(logtype):
-    handle = win32evtlog.OpenEventLog(host, logtype)  # pylint: disable=c-extension-no-member
+    handle = win32evtlog.OpenEventLog(host, logtype)
     try:
         yield handle
     finally:
-        win32evtlog.CloseEventLog(handle)  # pylint: disable=c-extension-no-member
+        win32evtlog.CloseEventLog(handle)
 
 
 def get_last_record(logtype):
     try:
         with eventlog(logtype) as log_handle:
-            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)  # pylint: disable=c-extension-no-member
-            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)  # pylint: disable=c-extension-no-member
+            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)
+            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)
             result = oldest + total - 1
             return result if result >= 0 else 0
     except Exception:

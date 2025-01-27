@@ -10,7 +10,7 @@ from cmk.gui import main_modules
 # Needs to come before the following import (adds some compatibility names)
 main_modules.load_plugins()
 
-from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module # noqa: E402
+from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # noqa: E402
     dashlet_registry,
 )
 

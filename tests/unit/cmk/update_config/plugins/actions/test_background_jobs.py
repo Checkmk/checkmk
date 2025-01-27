@@ -41,7 +41,7 @@ from cmk.update_config.plugins.actions.background_jobs import UpdateBackgroundJo
 def test_background_jobs(
     host_name_list: list[str],
     host_hash_list: list[str],
-    job_base_dir: Path,  # pylint: disable=redefined-outer-name  # noqa: F811
+    job_base_dir: Path,  # noqa: F811
 ) -> None:
     job_name = "service_discovery"
     for host in host_name_list:

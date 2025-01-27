@@ -76,7 +76,7 @@ _FILES_OPTS = [
 ]
 
 
-def serialize_wato_parameters(  # pylint: disable=too-many-branches
+def serialize_wato_parameters(
     wato_parameters: DiagnosticsParameters,
 ) -> list[DiagnosticsCLParameters]:
     # TODO: reduce the number of branches and do the whole procedure in a more generic/elegant way

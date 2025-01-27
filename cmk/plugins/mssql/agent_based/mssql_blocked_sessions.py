@@ -76,7 +76,7 @@ def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DB
 
 def check_mssql_blocked_sessions(
     item: str, params: Params, section: dict[str, list[DBInstance]]
-) -> CheckResult:  # pylint: disable=too-many-branches
+) -> CheckResult:
     if item == "":
         yield Result(
             state=State.UNKNOWN,

@@ -34,7 +34,7 @@ class Backup(NamedTuple):
     message: str | None = None
 
     def is_empty(self) -> bool:
-        return all(value is None for value in self)  # pylint: disable=not-an-iterable
+        return all(value is None for value in self)
 
 
 Section = Mapping[str, Backup]

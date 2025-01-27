@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 
-def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+def IndividualOrStoredPassword(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     allow_empty: bool = True,
@@ -61,7 +61,7 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 PasswordFromStore = IndividualOrStoredPassword  # CMK-12228
 
 
-def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+def MigrateNotUpdatedToIndividualOrStoredPassword(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     allow_empty: bool = True,
@@ -78,7 +78,7 @@ def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-
     )
 
 
-def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+def MigrateToIndividualOrStoredPassword(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     allow_empty: bool = True,

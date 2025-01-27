@@ -287,7 +287,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
     return attrs
 
 
-def _internal_to_api_format(  # pylint: disable=too-many-branches
+def _internal_to_api_format(
     internal_attrs: UserSpec,
 ) -> dict[str, Any]:
     api_attrs: dict[str, Any] = {}

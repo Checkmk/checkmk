@@ -444,7 +444,7 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Im
     return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
 
 
-def _deserialize_legacy_tree(  # pylint: disable=too-many-branches
+def _deserialize_legacy_tree(
     path: SDPath,
     raw_tree: Mapping[str, object],
     raw_rows: Sequence[Mapping] | None = None,
@@ -799,7 +799,7 @@ class _MutableTable:
         for row in rows:
             self._add_row(_make_row_ident(self.key_columns, row), row)
 
-    def update(  # pylint: disable=too-many-branches
+    def update(
         self,
         now: int,
         previous: ImmutableTable,
@@ -906,12 +906,8 @@ class _MutableTable:
 @dataclass(frozen=True, kw_only=True)
 class MutableTree:
     path: SDPath = ()
-    attributes: _MutableAttributes = field(
-        default_factory=lambda: _MutableAttributes()  # pylint: disable=unnecessary-lambda
-    )
-    table: _MutableTable = field(
-        default_factory=lambda: _MutableTable()  # pylint: disable=unnecessary-lambda
-    )
+    attributes: _MutableAttributes = field(default_factory=lambda: _MutableAttributes())
+    table: _MutableTable = field(default_factory=lambda: _MutableTable())
     nodes_by_name: dict[SDNodeName, MutableTree] = field(default_factory=dict)
 
     def __len__(self) -> int:

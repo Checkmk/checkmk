@@ -127,7 +127,7 @@ class RenderLink:
         request: http.Request,
         response: http.Response,
         display_options: DisplayOptions,
-    ):  # pylint: disable=redefined-outer-name
+    ):
         self.request = request
         self.response = response
         self.display_options = display_options

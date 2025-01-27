@@ -106,7 +106,7 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
+    elif isinstance(s, unicode):  # noqa: F821
         return s.encode("utf-8")
     return s
 
@@ -229,7 +229,7 @@ def _sanitize_path(raw_file_path):
     #   str_with_surrogates.encode('utf-8', 'surrogateescape')
     if sys.version_info[0] >= 3:
         return raw_file_path.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
-    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined] # noqa: F821 pylint: disable=undefined-variable
+    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined] # noqa: F821
         return raw_file_path
     return raw_file_path.decode("utf-8", "replace")
 
@@ -268,12 +268,12 @@ class PatternIterator:
                 if os.path.isdir(item):
                     # equivalent to `find -type f`
                     for currentpath, _folders, file_names in os.walk(item):
-                        for file_stat in self._file_stats(  # pylint: disable=use-yield-from
+                        for file_stat in self._file_stats(
                             [os.path.join(currentpath, fn) for fn in file_names]
                         ):
                             yield file_stat
                 else:
-                    for file_stat in self._file_stats([item]):  # pylint: disable=use-yield-from
+                    for file_stat in self._file_stats([item]):
                         yield file_stat
 
 

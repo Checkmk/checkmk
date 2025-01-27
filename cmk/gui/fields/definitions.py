@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 
 import ast
@@ -265,7 +264,7 @@ class NotExprSchema(BaseSchema):
 
     op = base.String(description="The operator. In this case `not`.")
     expr = base.Nested(
-        lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+        lambda: ExprSchema(),
         description="The query expression to negate.",
     )
 
@@ -277,7 +276,7 @@ class LogicalExprSchema(BaseSchema):
     # many=True does not work here for some reason.
     expr = base.List(
         base.Nested(
-            lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
+            lambda *a, **kw: ExprSchema(*a, **kw),
             description="A list of query expressions to combine.",
         )
     )
@@ -861,7 +860,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
         # If an attribute gets deleted AFTER it has already been set to a host or a folder,
         # then this would break here. We therefore can't validate outbound data as thoroughly
         # because our own data can be inherently inconsistent.
-        if self.context["direction"] == "outbound":  # pylint: disable=no-else-return
+        if self.context["direction"] == "outbound":
             return validate_custom_host_attributes(data, "warn")
         else:
             return validate_custom_host_attributes(data, "raise")

@@ -59,7 +59,7 @@ import io
 import logging
 
 # optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
-import optparse  # pylint: disable=W0402
+import optparse
 import os
 import platform
 import re
@@ -138,7 +138,7 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
+    elif isinstance(s, unicode):  # noqa: F821
         return s.encode("utf-8")
     return s
 
@@ -486,7 +486,7 @@ class PostgresWin(PostgresBase):
                 self.db_user,
                 sql_cmd,
             )
-        proc = subprocess.Popen(  # pylint: disable=consider-using-with
+        proc = subprocess.Popen(
             cmd_str,
             env=self.my_env,
             stdout=subprocess.PIPE,
@@ -517,9 +517,7 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=use-yield-from # for python2.7
-            cls._call_wmic_logicaldisk()
-        ):
+        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
             yield drive
 
     def get_psql_binary_path(self):
@@ -808,9 +806,7 @@ class PostgresLinux(PostgresBase):
             field_sep,
             sql_file_path,
         )
-        proc = subprocess.Popen(  # pylint: disable=consider-using-with
-            base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
-        )
+        proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
         return _sanitize_sql_query(proc.communicate()[0])
 
     def run_sql_as_db_user(
@@ -854,9 +850,7 @@ class PostgresLinux(PostgresBase):
 
     def _default_psql_binary_path(self):
         # type: () -> str
-        proc = subprocess.Popen(  # pylint: disable=consider-using-with
-            ["which", self.psql_binary_name], stdout=subprocess.PIPE
-        )
+        proc = subprocess.Popen(["which", self.psql_binary_name], stdout=subprocess.PIPE)
         out = ensure_str(proc.communicate()[0])
 
         if proc.returncode != 0:
@@ -1182,7 +1176,7 @@ class LinuxHelpers(Helpers):
     def get_default_postgres_user():
         for user_id in ("pgsql", "postgres"):
             try:
-                proc = subprocess.Popen(  # pylint: disable=consider-using-with
+                proc = subprocess.Popen(
                     ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
                 proc.communicate()

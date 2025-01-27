@@ -394,7 +394,7 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
-    def _page_menu_entries_selected_hosts(  # pylint: disable=too-many-branches
+    def _page_menu_entries_selected_hosts(
         self,
     ) -> Iterator[PageMenuEntry]:
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
@@ -583,7 +583,7 @@ class ModeFolder(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         check_csrf_token()
 
         if request.var("_search"):  # just commit to search form
@@ -1453,7 +1453,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 
 class PageAjaxSetFoldertree(AjaxPage):
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

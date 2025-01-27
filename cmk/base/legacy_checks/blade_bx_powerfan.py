@@ -28,7 +28,7 @@ def inventory_blade_bx_powerfan(info):
             yield descr, {}
 
 
-def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-branches
+def check_blade_bx_powerfan(item, params, info):
     if isinstance(params, dict):
         warn_perc_lower, crit_perc_lower = params["levels_lower"]
         warn_perc, crit_perc = params["levels"]

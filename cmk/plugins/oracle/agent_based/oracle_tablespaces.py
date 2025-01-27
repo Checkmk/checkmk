@@ -176,7 +176,7 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
             )
 
 
-def check_oracle_tablespaces(  # pylint: disable=too-many-branches
+def check_oracle_tablespaces(
     item: str,
     params: Mapping[str, Any],
     section: oracle.SectionTableSpaces,

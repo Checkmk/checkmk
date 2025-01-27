@@ -46,7 +46,7 @@ class BackupData(TypedDict, total=False):
 Section = Mapping[str, BackupData]
 
 
-def parse_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
+def parse_proxmox_ve_vm_backup_status(
     string_table: StringTable,
 ) -> Section:
     result = BackupData()
@@ -91,7 +91,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
+def check_proxmox_ve_vm_backup_status(
     now: datetime,
     params: Mapping[str, Any],
     section: Section,

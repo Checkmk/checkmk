@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 from typing import Any
@@ -23,9 +22,9 @@ from cmk.base.api.agent_based.register.utils import (
 from cmk.discover_plugins import PluginLocation
 
 
-def dummy_generator(section):  # pylint: disable=unused-argument
+def dummy_generator(section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
 MINIMAL_CREATION_KWARGS: dict[str, Any] = {
@@ -37,29 +36,29 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
 }
 
 
-def dummy_function(section):  # pylint: disable=unused-argument
+def dummy_function(section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_i(item, section):  # pylint: disable=unused-argument
+def dummy_function_i(item, section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_ip(item, params, quark):  # pylint: disable=unused-argument
+def dummy_function_ip(item, params, quark):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_ips(item, params, section):  # pylint: disable=unused-argument
+def dummy_function_ips(item, params, section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argument
+def dummy_function_jj(section_jim, section_jill):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
 @pytest.mark.parametrize(

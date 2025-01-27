@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
-
-# pylint: disable=redefined-outer-name
 from dataclasses import dataclass
 from unittest.mock import patch
 
@@ -914,7 +912,7 @@ def test_rules_grouped_by_folder() -> None:
 
     # Also test renamed folder
     folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
-    folder4._title = "abc"  # pylint: disable=protected-access
+    folder4._title = "abc"
     rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
 
     sorted_rules = sorted(

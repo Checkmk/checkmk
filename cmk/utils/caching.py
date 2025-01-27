@@ -28,7 +28,7 @@ def instance_method_lru_cache(
         def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
             self, *rest = args
             cache_orig = lru_cache(maxsize, typed)(f)
-            instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined] # pylint: disable=unnecessary-dunder-call
+            instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined]
             setattr(self, f.__name__, instance_cache)
             value: R = instance_cache(*rest, **kwargs)
             return value

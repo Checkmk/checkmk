@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -78,7 +77,7 @@ class Painter(abc.ABC):
     service state. It uses the columns "service_state" and "has_been_checked".
     """
 
-    def __init__(  # pylint: disable=redefined-outer-name
+    def __init__(
         self,
         *,
         user: LoggedInUser,
@@ -743,7 +742,7 @@ class PainterAdapter(Painter):
 
     """
 
-    def __init__(  # pylint: disable=redefined-outer-name
+    def __init__(
         self,
         painter: V1Painter,
         *,

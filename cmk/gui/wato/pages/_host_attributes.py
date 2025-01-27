@@ -47,7 +47,7 @@ def _get_single_host(hosts: Mapping[str, object]) -> Host | None:
 
 
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(  # pylint: disable=too-many-branches
+def configure_attributes(
     new: bool,
     hosts: Mapping[str, Host | Folder | None],
     for_what: DialogIdent,

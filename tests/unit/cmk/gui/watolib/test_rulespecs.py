@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Sequence
 
@@ -660,16 +658,16 @@ def test_match_item_generator_rules() -> None:
         HostRulespec(
             name="some_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
         )
     )
     rulespec_reg.register(
         HostRulespec(
             name="some_deprecated_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
             is_deprecated=True,
         )
     )

@@ -187,9 +187,7 @@ def test_user_specific_unit_celsius_to_fahrenheit(
 ) -> None:
     user = LoggedInUser(None)
     if user_temperature_unit:
-        user._set_attribute(  # pylint: disable=protected-access
-            "temperature_unit", user_temperature_unit.value
-        )
+        user._set_attribute("temperature_unit", user_temperature_unit.value)
     config = Config(default_temperature_unit=default_temperature_unit.value)
 
     unit = user_specific_unit(

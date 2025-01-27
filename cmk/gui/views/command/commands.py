@@ -975,7 +975,7 @@ def _expiration_date_and_time(time_until_exp: int) -> tuple[str, str]:
     return time.strftime("%Y-%m-%d", exp_time), time.strftime("%H:%M", exp_time)
 
 
-def command_acknowledge_action(  # pylint: disable=too-many-branches
+def command_acknowledge_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
@@ -1381,7 +1381,7 @@ class CommandScheduleDowntimesForm:
             )
         html.close_div()
 
-    def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
+    def _render_date_and_time(self) -> None:
         html.open_div(class_="group")
         html.heading(_("Date and time"))
 
@@ -1592,7 +1592,7 @@ class CommandScheduleDowntimesForm:
             ],
         )
 
-    def action(  # pylint: disable=too-many-arguments
+    def action(
         self,
         command: Command,
         cmdtag: Literal["HOST", "SVC"],
@@ -1939,7 +1939,7 @@ def command_remove_downtime_render(what: str) -> None:
     html.button("_remove_downtimes", _("Remove"))
 
 
-def command_remove_downtime_action(  # pylint: disable=too-many-arguments
+def command_remove_downtime_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
     spec: str,

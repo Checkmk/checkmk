@@ -291,7 +291,7 @@ def check_temperature(
 ) -> TemperatureResult: ...
 
 
-def check_temperature(  # pylint: disable=too-many-branches
+def check_temperature(
     reading: float,
     params: TempParamType,
     *,

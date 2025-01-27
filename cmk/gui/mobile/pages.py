@@ -237,7 +237,7 @@ class PageMobileIndex(Page):
     def ident(cls) -> str:
         return "mobile"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         _page_index()
         return None
 
@@ -301,7 +301,7 @@ class PageMobileView(Page):
     def ident(cls) -> str:
         return "mobile_view"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         _page_view()
         return None
 
@@ -347,7 +347,7 @@ def _page_view() -> None:
 
 
 class MobileViewRenderer(ABCViewRenderer):
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         show_checkboxes: bool,

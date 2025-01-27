@@ -329,10 +329,10 @@ def multipart_mail(
     )
 
 
-def send_mail_smtp(  # pylint: disable=too-many-branches
+def send_mail_smtp(
     message: Message, target: MailString, from_address: MailString, context: dict[str, str]
 ) -> int:
-    import smtplib  # pylint: disable=import-outside-toplevel
+    import smtplib
 
     host_index = 1
 
@@ -415,8 +415,8 @@ def send_mail_smtp_impl(
     from_address: MailString,
     context: dict[str, str],
 ) -> None:
-    import smtplib  # pylint: disable=import-outside-toplevel
-    import types  # pylint: disable=import-outside-toplevel
+    import smtplib
+    import types
 
     def getreply_wrapper(self: smtplib.SMTP) -> tuple[int, bytes]:
         # We introduce those attributes...

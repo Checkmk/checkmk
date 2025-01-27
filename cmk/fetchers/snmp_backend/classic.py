@@ -204,7 +204,6 @@ class ClassicSNMPBackend(SNMPBackend):
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
     def _snmp_base_command(self, cmd: CommandType, context: SNMPContext) -> list[str]:
-        # pylint: disable=too-many-branches
         options: list[str] = [self._snmp_version_spec()]
 
         match cmd:

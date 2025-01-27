@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 """The rulespecs are the ruleset specifications registered to Setup."""
 
 import abc
@@ -265,7 +264,7 @@ def get_rulegroup(group_name):
         group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
         rulespec_group_registry.register(group_class)
     # Pylint does not detect the subclassing in LegacyRulespecSubGroup correctly. Disable the check here :(
-    return group_class()  # pylint: disable=abstract-class-instantiated
+    return group_class()
 
 
 def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
@@ -529,7 +528,7 @@ class HostRulespec(Rulespec):
     """Base class for all rulespecs managing host rule sets with values"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[Any],
@@ -572,7 +571,7 @@ class ServiceRulespec(Rulespec):
     """Base class for all rulespecs managing service rule sets with values"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         name: str,
@@ -618,7 +617,7 @@ class ServiceRulespec(Rulespec):
 
 class BinaryHostRulespec(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[RulespecBaseGroup],
@@ -671,7 +670,7 @@ class BinaryHostRulespec(HostRulespec):
 
 class BinaryServiceRulespec(ServiceRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[RulespecBaseGroup],
@@ -797,7 +796,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     checks."""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         check_group_name: str,
@@ -879,7 +878,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     checks."""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         check_group_name: str,
@@ -975,7 +974,7 @@ class ManualCheckParameterRulespec(HostRulespec):
     These have to be named static_checks:<name-of-checkgroup>"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         group: type[RulespecBaseGroup],
         check_group_name: str,
@@ -1138,7 +1137,7 @@ def register_rule(
     varname,
     valuespec=None,
     title=None,
-    help=None,  # pylint: disable=redefined-builtin
+    help=None,
     itemspec=None,
     itemtype=None,
     itemname=None,
@@ -1308,7 +1307,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
 
 
 class CheckTypeGroupSelection(ElementSelection):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         checkgroup: str,
         # ElementSelection

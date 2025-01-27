@@ -666,7 +666,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     #
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
-    def _from_omd_config(self, omd_config):  # pylint: disable=too-many-branches
+    def _from_omd_config(self, omd_config):
         settings: dict[str, Any] = {}
 
         for key, value in omd_config.items():
@@ -747,7 +747,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     # Bring the Setup internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
-    def _to_omd_config(self, settings):  # pylint: disable=too-many-branches
+    def _to_omd_config(self, settings):
         # Convert to OMD key
         settings = {key.upper()[5:]: val for key, val in settings.items()}
 

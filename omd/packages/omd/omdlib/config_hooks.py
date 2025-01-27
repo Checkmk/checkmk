@@ -164,7 +164,7 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(  # pylint: disable=too-many-branches
+def _config_load_hook(
     site: "SiteContext",
     hook_name: str,
 ) -> ConfigHook:

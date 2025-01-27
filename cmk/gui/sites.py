@@ -369,7 +369,7 @@ def _get_enabled_and_disabled_sites(
     for site_id, site_spec in user.authorized_sites().items():
         site_spec = _site_config_for_livestatus(site_id, site_spec)
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        # pylint: disable=unsupported-assignment-operation
+
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec
         else:

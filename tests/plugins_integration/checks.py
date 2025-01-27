@@ -274,7 +274,7 @@ def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
     return disk_dump, read_cmk_dump(host_name, site, dump_type)
 
 
-def process_check_output(  # pylint: disable=too-many-branches
+def process_check_output(
     site: Site,
     host_name: str,
     output_dir: Path,

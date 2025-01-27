@@ -20,7 +20,6 @@
 #                                                                                       #
 #########################################################################################
 
-# pylint: disable=unused-import
 
 # NOTE: we have no idea what exactly is in use.
 # Just import everything that is not explicitly marked private.

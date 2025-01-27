@@ -100,7 +100,7 @@ def _bind_to_rule_pack_proxies(
 
 
 # Used by ourselves *and* the GUI!
-def _load_config(  # pylint: disable=too-many-branches
+def _load_config(
     config_files: Iterable[Path],
 ) -> ConfigFromWATO:
     """Load event console configuration."""

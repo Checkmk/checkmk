@@ -10,8 +10,6 @@ import pytest
 from cmk.plugins.emailchecks.lib import check_mail_loop
 from cmk.plugins.emailchecks.lib.utils import _active_check_main_core
 
-# pylint: disable=protected-access
-
 
 def test_ac_check_mail_main_loop_failed_to_send_mail() -> None:
     state, info, perf = _active_check_main_core(

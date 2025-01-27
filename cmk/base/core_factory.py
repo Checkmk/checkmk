@@ -14,7 +14,7 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
     if edition(paths.omd_root) is Edition.CRE:
         from cmk.utils.licensing.registry import get_available_licensing_handler_type
     else:
-        from cmk.utils.cee.licensing.registry import (  # type: ignore[import,unused-ignore,no-redef]  # pylint: disable=no-name-in-module,import-error
+        from cmk.utils.cee.licensing.registry import (  # type: ignore[import,unused-ignore,no-redef]
             get_available_licensing_handler_type,
         )
     return get_available_licensing_handler_type()
@@ -22,13 +22,12 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
 
 def create_core(core_name: str) -> MonitoringCore:
     if core_name == "cmc":
-        # pylint: disable=no-name-in-module,import-outside-toplevel
         from cmk.base.cee.microcore_config import CmcPb
 
         return CmcPb(get_licensing_handler_type())
 
     if core_name == "nagios":
-        from cmk.base.core_nagios import NagiosCore  # pylint: disable=import-outside-toplevel
+        from cmk.base.core_nagios import NagiosCore
 
         return NagiosCore(get_licensing_handler_type())
 

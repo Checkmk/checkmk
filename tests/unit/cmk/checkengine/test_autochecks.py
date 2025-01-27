@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -20,8 +19,6 @@ from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes,
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery._utils import DiscoveredItem
-
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(autouse=True)

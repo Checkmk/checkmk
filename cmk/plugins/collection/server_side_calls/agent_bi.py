@@ -130,7 +130,7 @@ def _agent_bi_arguments(
     _hostconfig: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     cli_args: list[Secret | str] = ["--secrets"]
-    configs: list[str] = ["--congfigs"]
+    configs: list[str] = ["--configs"]
 
     for secret, config in params:
         cli_args.append("nosecret" if secret is None else secret)

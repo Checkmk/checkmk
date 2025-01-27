@@ -258,8 +258,7 @@ relock_venv:
 	if ! bazel test //:requirements_test > /dev/null; then \
 		if [ "${CI}" == "true" ]; then \
 			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
-			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \
-			echo "bazel run //:requirements.update"; \
+			echo "It seems you forgot to commit the new lock file. Regenerate with: make relock_venv"; \
 			exit 1; \
 		fi; \
 		# TODO: We currently need to first have an updated runtime lock file as this is the input for the all_lock file. \

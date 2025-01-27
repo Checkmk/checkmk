@@ -6850,7 +6850,7 @@
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "60ca34f25899558b749d4d7cd3ac09c8d9627e2e11c8263873cbc039aaec6d84",
+          "@@//requirements_all_lock.txt": "d0937c1332b8957179b3d7f4013f9b617cfb927b14bf6a17533e0c915ac1d407",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -7346,6 +7346,23 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "beautifulsoup4==4.12.3     --hash=sha256:74e3d1928edc070d21748185c46e3fb33490f22f52a3addee9aee0f4f7781051     --hash=sha256:b80878c9f40111313e55da8ba20bdba06d8fa3969fc68304167741bbf9e082ed"
+            }
+          },
+          "cmk_requirements_312_requirements_parser": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "requirements-parser==0.11.0     --hash=sha256:35f36dc969d14830bf459803da84f314dc3d17c802592e9e970f63d0359e5920     --hash=sha256:50379eb50311834386c2568263ae5225d7b9d0867fb55cf4ecc93959de2c2684"
             }
           },
           "cmk_requirements_312_imagesize": {
@@ -9680,6 +9697,7 @@
                 "pylint_plugin_utils": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pylint_plugin_utils\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pytest_random_order": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pytest_random_order\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "requests_unixsocket": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_requests_unixsocket\",\"target_platforms\":null,\"version\":\"3.12\"}]",
+                "requirements_parser": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_requirements_parser\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "google_auth_httplib2": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_google_auth_httplib2\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pytest_opentelemetry": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pytest_opentelemetry\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "sphinxcontrib_jquery": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_sphinxcontrib_jquery\",\"target_platforms\":null,\"version\":\"3.12\"}]",

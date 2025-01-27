@@ -756,14 +756,14 @@ class ModeEditBrokerConnection(WatoMode):
                     "unique_id",
                     FixedValue(
                         value=self._edit_id,
-                        title=_("Unique ID:"),
+                        title=_("Unique ID"),
                     ),
                 )
                 if self._edit_id
                 else (
                     "unique_id",
                     ID(
-                        title=_("Unique ID:"),
+                        title=_("Unique ID"),
                         size=60,
                         allow_empty=False,
                         validate=self._validate_connection_id,
@@ -773,7 +773,7 @@ class ModeEditBrokerConnection(WatoMode):
             (
                 "connecter",
                 DropdownChoice(
-                    title=_("Connecter:"),
+                    title=_("Connecter"),
                     choices=replicated_sites_choices,
                     sorted=True,
                     help=_("Select the site that is establishing the TCP connection."),
@@ -782,7 +782,7 @@ class ModeEditBrokerConnection(WatoMode):
             (
                 "connectee",
                 DropdownChoice(
-                    title=_("Connectee:"),
+                    title=_("Connectee"),
                     choices=replicated_sites_choices,
                     sorted=True,
                     help=_("Select the site that is accepting the TCP connection."),

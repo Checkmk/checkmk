@@ -1595,14 +1595,28 @@ class Folder(FolderProtocol):
         return "/wato/%s/" % self.path()
 
     def path_for_rule_matching(self) -> PathWithSlash:
-        path = self.path()
-        return "/wato/%s/" % path if path else "/wato/"
+        return self.make_path_for_rule_matching_from_path(self.path())
+
+    # I'm adding these two static methods in self-defense.
+    # Ít seems we have three ways to refer to a folder; all typed as strings.
+    # What could possibly go wrong?
+    @staticmethod
+    def make_path_for_rule_matching_from_path(path: str) -> str:
+        if path.startswith("/wato/"):
+            raise ValueError(path)
+        return f"/wato/{path}/" if path else "/wato/"
 
     @staticmethod
-    def from_path_for_rule_matching(path_for_rule_matching: str) -> Folder:
+    def make_path_from_path_for_rule_matching(path_for_rule_matching: str) -> str:
         if not path_for_rule_matching.startswith("/wato/"):
             raise ValueError(path_for_rule_matching)
-        return folder_tree().folder(path_for_rule_matching[len("/wato/") :].rstrip("/"))
+        return path_for_rule_matching[len("/wato/") :].rstrip("/")
+
+    @classmethod
+    def from_path_for_rule_matching(cls, path_for_rule_matching: str) -> Folder:
+        return folder_tree().folder(
+            cls.make_path_from_path_for_rule_matching(path_for_rule_matching)
+        )
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())

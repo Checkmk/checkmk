@@ -257,5 +257,4 @@ def test_automation_active_check_invalid_args(
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(active_check_args, False)
 
-    out, _ = capsys.readouterr()
-    assert out == error_message
+    assert error_message == capsys.readouterr().err

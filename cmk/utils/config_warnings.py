@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from collections.abc import Sequence
 from typing import Final
 
@@ -21,7 +22,10 @@ def initialize() -> None:
 
 def warn(text: str) -> None:
     g_configuration_warnings.append(text)
-    console.warning(tty.format_warning(f"\n{text}"))
+    console.warning(
+        tty.format_warning(f"\n{text}"),
+        file=sys.stderr,
+    )
 
 
 def get_configuration(

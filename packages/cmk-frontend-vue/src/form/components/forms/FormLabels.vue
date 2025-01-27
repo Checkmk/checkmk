@@ -150,7 +150,7 @@ const deleteItem = (item: string) => {
           }
         }
       "
-      @select="addItem"
+      @update:model-value="addItem"
     />
   </div>
   <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>

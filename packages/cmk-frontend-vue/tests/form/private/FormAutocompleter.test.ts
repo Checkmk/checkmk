@@ -46,14 +46,18 @@ describe('FormAutocompleter', () => {
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    const component = render(FormAutocompleter, {
+    let selectedValue: string | null = ''
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
         autocompleter: null,
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
-        id: 'test'
+        id: 'test',
+        'onUpdate:modelValue': (option: string | null) => {
+          selectedValue = option
+        }
       }
     })
 
@@ -66,9 +70,7 @@ describe('FormAutocompleter', () => {
 
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(component.emitted('select')).toHaveLength(1)
-    const selected = component.emitted('select')[0] as string[]
-    expect(selected[0]).toBe('os:windows')
+    expect(selectedValue).toBe('os:windows')
   })
 
   test('on input should open dropdown list with items', async () => {
@@ -114,14 +116,18 @@ describe('FormAutocompleter', () => {
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
-    const component = render(FormAutocompleter, {
+    let selectedValue: string | null = ''
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
-        id: 'test'
+        id: 'test',
+        'onUpdate:modelValue': (option: string | null) => {
+          selectedValue = option
+        }
       }
     })
 
@@ -133,20 +139,22 @@ describe('FormAutocompleter', () => {
     })
     await fireEvent.click(screen.getByText('OS Windows'))
 
-    expect(component.emitted('select')).toHaveLength(1)
-    const selected = component.emitted('select')[0] as string[]
-    expect(selected[0]).toBe('os:windows')
+    expect(selectedValue).toBe('os:windows')
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    const component = render(FormAutocompleter, {
+    let selectedValue: string | null = ''
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
-        id: 'test'
+        id: 'test',
+        'onUpdate:modelValue': (option: string | null) => {
+          selectedValue = option
+        }
       }
     })
 
@@ -160,8 +168,6 @@ describe('FormAutocompleter', () => {
 
     await userEvent.keyboard('[ArrowDown][Enter]')
 
-    expect(component.emitted('select')).toHaveLength(1)
-    const selected = component.emitted('select')[0] as string[]
-    expect(selected[0]).toBe('os:linux')
+    expect(selectedValue).toBe('os:linux')
   })
 })

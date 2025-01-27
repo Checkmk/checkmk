@@ -10,13 +10,13 @@ use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
 use std::ffi;
+use std::fmt;
 use std::fs;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use string_enum::StringEnum;
 
 pub trait JSONLoader: DeserializeOwned {
     fn load(path: &Path) -> AnyhowResult<Self> {
@@ -611,7 +611,7 @@ impl LegacyPullMarker {
     }
 }
 
-#[derive(StringEnum, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ConnectionMode {
     /// `push-agent`
     #[serde(rename = "push-agent")]
@@ -619,6 +619,15 @@ pub enum ConnectionMode {
     /// `pull-agent`
     #[serde(rename = "pull-agent")]
     Pull,
+}
+
+impl fmt::Display for ConnectionMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self {
+            Self::Push => write!(f, "push-agent"),
+            Self::Pull => write!(f, "pull-agent"),
+        }
+    }
 }
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
@@ -1330,5 +1339,11 @@ mod test_registry {
             serde_json::from_str::<ConnectionMode>("\"pull-agent\"").unwrap(),
             ConnectionMode::Pull
         );
+    }
+
+    #[test]
+    fn test_connection_mode_display() {
+        assert_eq!("pull-agent", format!("{}", ConnectionMode::Pull));
+        assert_eq!("push-agent", format!("{}", ConnectionMode::Push));
     }
 }

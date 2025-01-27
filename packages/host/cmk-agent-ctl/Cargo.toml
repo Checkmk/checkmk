@@ -50,7 +50,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 serde_with = { version = "3.11" }
 socket2 = { version = "0.5" }
-string_enum = { version = "1.0.0" } # used to display and serialize ConnectionMode
 tokio = { version = "1.42", features = ["full"] }
 # explicitly avoid aws_lc_rs for now since it needs eg. cmake, which we currently don't have on the Windows build nodes
 tokio-rustls = { version = "0.26", default-features = false, features = [

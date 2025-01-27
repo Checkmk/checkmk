@@ -1,5 +1,5 @@
 {
-  "checksum": "1469ac4788a6e700f97f44acb2cb1a6d79cbc64f28f646517e98276583c1c5d1",
+  "checksum": "596ea65f722d0c2065cf4610a0ea77b76d2b03ebb55efb134f95f4c0b7a50582",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4227,10 +4227,6 @@
             {
               "id": "async-trait 0.1.83",
               "target": "async_trait"
-            },
-            {
-              "id": "string_enum 1.0.0",
-              "target": "string_enum"
             }
           ],
           "selects": {}
@@ -20043,65 +20039,6 @@
       ],
       "license_file": "LICENSE"
     },
-    "string_enum 1.0.0": {
-      "name": "string_enum",
-      "version": "1.0.0",
-      "package_url": "https://github.com/swc-project/swc.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/string_enum/1.0.0/download",
-          "sha256": "c9fe66b8ee349846ce2f9557a26b8f1e74843c4a13fb381f9a3d73617a5f956a"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "string_enum",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "string_enum",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.92",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.37",
-              "target": "quote"
-            },
-            {
-              "id": "swc_macros_common 1.0.0",
-              "target": "swc_macros_common"
-            },
-            {
-              "id": "syn 2.0.90",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.0.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": null
-    },
     "strsim 0.11.1": {
       "name": "strsim",
       "version": "0.11.1",
@@ -20177,61 +20114,6 @@
         "BSD-3-Clause"
       ],
       "license_file": "LICENSE"
-    },
-    "swc_macros_common 1.0.0": {
-      "name": "swc_macros_common",
-      "version": "1.0.0",
-      "package_url": "https://github.com/swc-project/swc.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/swc_macros_common/1.0.0/download",
-          "sha256": "a509f56fca05b39ba6c15f3e58636c3924c78347d63853632ed2ffcb6f5a0ac7"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "swc_macros_common",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "swc_macros_common",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.92",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.37",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.90",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.0.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": null
     },
     "syn 2.0.90": {
       "name": "syn",
@@ -28148,7 +28030,6 @@
     "serde_json 1.0.128",
     "serde_with 3.11.0",
     "socket2 0.5.8",
-    "string_enum 1.0.0",
     "tiberius 0.12.3",
     "tokio 1.42.0",
     "tokio-rustls 0.26.0",

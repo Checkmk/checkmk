@@ -2584,7 +2584,7 @@ def _need_to_update_config_after_sync() -> bool:
 
 def _execute_cmk_update_config() -> None:
     completed_process = subprocess.run(
-        ["cmk-update-config", "--site-may-run"],
+        ["cmk-update-config", "--site-may-run", "--conflict", "abort"],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

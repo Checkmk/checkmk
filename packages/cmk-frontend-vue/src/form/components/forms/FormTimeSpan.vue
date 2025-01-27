@@ -61,7 +61,7 @@ watch(
     value.value = joinToSeconds(newValue)
     localValidation.value = []
     for (const [_magnitude, value] of Object.entries(newValue)) {
-      if (value <= 0 && localValidation.value.length === 0) {
+      if (value < 0 && localValidation.value.length === 0) {
         localValidation.value = [props.spec.i18n.validation_negative_number]
       }
     }

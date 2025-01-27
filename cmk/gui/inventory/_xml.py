@@ -4,19 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-import xml.dom.minidom
 from collections.abc import Collection, Mapping
 from numbers import Number
 from typing import Any, Final
+from xml.dom.minidom import Document, parseString
+from xml.parsers.expat import ExpatError
 
 _ROOT_TAG_NAME: Final = "root"
 _LIST_ITEM_NAME: Final = "item"
 _FALLBACK_TAG_NAME: Final = "key"
 
 
-def dict_to_document(data: Mapping[str, Any]) -> xml.dom.minidom.Document:
-    rendered_xml = _render(_ROOT_TAG_NAME, data)
-    return xml.dom.minidom.parseString(rendered_xml)
+def dict_to_document(data: Mapping[str, Any]) -> Document:
+    return parseString(_render(_ROOT_TAG_NAME, data))
 
 
 def _render(tag: str, value: Any, attrs: str = "") -> str:
@@ -87,8 +87,8 @@ def _get_xml_type(value: Any) -> str:
 
 def _is_valid_tag(tag: str) -> bool:
     try:
-        xml.dom.minidom.parseString(f"<{tag}></{tag}>")
-    except xml.parsers.expat.ExpatError:
+        parseString(f"<{tag}></{tag}>")
+    except ExpatError:
         return False
 
     return True

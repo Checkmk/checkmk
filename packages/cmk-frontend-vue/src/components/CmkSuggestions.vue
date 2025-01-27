@@ -104,8 +104,13 @@ function focus(): void {
   }
 }
 
+function advance(): void {
+  moveSuggestion(1)
+}
+
 defineExpose({
-  focus
+  focus,
+  advance
 })
 </script>
 

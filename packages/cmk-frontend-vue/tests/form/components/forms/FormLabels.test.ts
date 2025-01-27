@@ -8,12 +8,26 @@ import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import { ref, watch } from 'vue'
+import userEvent from '@testing-library/user-event'
 
-vitest.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: () => ({
-    input: ref(''),
-    focus: ref(false),
-    output: ref({ choices: [['os:windows'], ['os:linux']] })
+vi.mock('@/form/components/utils/autocompleter', () => ({
+  setupAutocompleter: vi.fn(() => {
+    const input = ref('')
+    const output = ref()
+
+    watch(input, async (newVal) => {
+      if (newVal) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        output.value = {
+          choices: [
+            [newVal, newVal],
+            ['key1:value1', 'key1:value1']
+          ]
+        }
+      }
+    })
+
+    return { input, output }
   })
 }))
 
@@ -43,6 +57,7 @@ const spec: FormSpec.Labels = {
   },
   label_source: null
 }
+
 describe('FormLabels', () => {
   test('should be rendered with provided items and entry input', async () => {
     render(FormLabel, {
@@ -71,9 +86,12 @@ describe('FormLabels', () => {
       backendValidation: []
     })
 
-    const labelInput = await screen.findByPlaceholderText('Add some labels')
-    await fireEvent.update(labelInput, 'key3:value3')
-    await fireEvent.keyDown(labelInput, { key: 'Enter' })
+    const labelInput = screen.getByPlaceholderText('Add some labels')
+    await userEvent.type(labelInput, 'key3:value3')
+
+    await screen.findByText('key3:value3')
+
+    await userEvent.keyboard('[Enter]')
 
     expect(getCurrentData()).toBe('{"key1":"value1","key2":"value2","key3":"value3"}')
   })
@@ -98,19 +116,32 @@ describe('FormLabels', () => {
     expect(getCurrentData()).toBe('{"key2":"value2"}')
   })
 
-  test('should not add label if it is already in the list and show a duplication error', async () => {
-    const { getCurrentData } = renderFormWithData({
+  test('should not suggest existing labels', async () => {
+    renderFormWithData({
       spec,
-      data: { key1: 'value1', key2: 'value2' },
+      data: { key2: 'value2' },
       backendValidation: []
     })
 
     const labelInput = screen.getByPlaceholderText('Add some labels')
 
-    await fireEvent.update(labelInput, 'key1:value1')
-    await fireEvent.keyDown(labelInput, { key: 'Enter' })
+    await fireEvent.update(labelInput, 'key')
+    await screen.findByText('key1:value1')
 
-    expect(getCurrentData()).toBe('{"key1":"value1","key2":"value2"}')
+    expect(screen.queryByText('key2:value2')).toBeNull()
+  })
+
+  test('should warn about duplicates', async () => {
+    renderFormWithData({
+      spec,
+      data: { key2: 'value2' },
+      backendValidation: []
+    })
+
+    const labelInput = screen.getByPlaceholderText('Add some labels')
+
+    await fireEvent.update(labelInput, 'key2:value2')
+    await fireEvent.keyDown(labelInput, { key: 'Enter' })
 
     screen.getByText('Labels need to be unique.')
   })

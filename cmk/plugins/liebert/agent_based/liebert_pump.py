@@ -43,6 +43,7 @@ def check_liebert_pump(item: str, section: Section[float]) -> CheckResult:
         return
 
     # TODO: this should be done in the parse function, per OID end.
+    crit = None
     for key, (c_value, _unit) in section.items():
         if "Threshold" in key and key.replace(" Threshold", "") == item:
             crit = c_value

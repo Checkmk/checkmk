@@ -24,10 +24,6 @@ type Suggestion = [string, string]
 const inputValue = defineModel<string>()
 const visibleInputValue = ref<string>('')
 
-const emit = defineEmits<{
-  (e: 'select', value: string): void
-}>()
-
 type AutocompleterResponse = Record<'choices', Suggestion[]>
 const { input: autocompleterInput, output: autocompleterOutput } =
   setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
@@ -50,14 +46,12 @@ const selectSuggestion = (suggestion: Suggestion) => {
   if (props.resestInputOnAdd) {
     resetVisibleInput()
   }
-  emit('select', suggestion[0])
   showSuggestions.value = false
 }
 
 const deleteSelection = () => {
   inputValue.value = ''
   resetVisibleInput()
-  emit('select', '')
 }
 
 const resetVisibleInput = () => {

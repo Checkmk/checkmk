@@ -112,9 +112,9 @@ asgiref==3.8.1 \
     --hash=sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47 \
     --hash=sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590
     # via opentelemetry-instrumentation-asgi
-attrs==24.3.0 \
-    --hash=sha256:8f5c07333d543103541ba7be0e2ce16eeee8130cb0b3f9238ab904ce1e85baff \
-    --hash=sha256:ac96cd038792094f438ad1f6ff80837353805ac950cd2aa0e0625ef19850c308
+attrs==25.1.0 \
+    --hash=sha256:1c97078a80c814273a76b2a298a932eb681c87415c11dee0a6921de7f1b02c3e \
+    --hash=sha256:c75a69e28a550a7e93789579c22aa26b0f5b83b75dc4e08fe092980051e1090a
     # via
     #   aiohttp
     #   jsonschema
@@ -166,13 +166,13 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.36.5 \
-    --hash=sha256:58a6b7c3d5145b3ac04d4b6caa76223b8ef88004b4237444e553041e29581a11 \
-    --hash=sha256:a404ad5ec94ff40c176215a991bf62f0db5514a93a3dd361b7b2ab9660f811f4
+boto3==1.36.6 \
+    --hash=sha256:6d473f0f340d02b4e9ad5b8e68786a09728101a8b950231b89ebdaf72b6dca21 \
+    --hash=sha256:b36feae061dc0793cf311468956a0a9e99215ce38bc99a1a4e55a5b105f16297
     # via -r _requirements_runtime.txt
-botocore==1.36.5 \
-    --hash=sha256:234ed3d29a8954c37a551c933453bf14c6ae44a69a4f273ffef377a2612ca6a6 \
-    --hash=sha256:6d9f70afa9bf9d21407089dc22b8cc8ec6fa44866d4660858c062c74fc8555eb
+botocore==1.36.6 \
+    --hash=sha256:4864c53d638da191a34daf3ede3ff1371a3719d952cc0c6bd24ce2836a38dd77 \
+    --hash=sha256:f77bbbb03fb420e260174650fb5c0cc142ec20a96967734eed2b0ef24334ef34
     # via
     #   -r _requirements_runtime.txt
     #   boto3
@@ -493,9 +493,9 @@ defusedxml==0.7.1 \
     #   exchangelib
     #   jira
     #   pysaml2
-deprecated==1.2.16 \
-    --hash=sha256:4c8e429ada6573698ba723f9c4ea53006e990042a45db938e412f1f9d4b9ffd9 \
-    --hash=sha256:6ec624c168290715d56c6af7c1c1066ea5c732bd56427b1651db75ede923aa38
+deprecated==1.2.18 \
+    --hash=sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d \
+    --hash=sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec
     # via
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -1590,18 +1590,18 @@ proto-plus==1.25.0 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-protobuf==5.28.3 \
-    --hash=sha256:0c4eec6f987338617072592b97943fdbe30d019c56126493111cf24344c1cc24 \
-    --hash=sha256:135658402f71bbd49500322c0f736145731b16fc79dc8f367ab544a17eab4535 \
-    --hash=sha256:27b246b3723692bf1068d5734ddaf2fccc2cdd6e0c9b47fe099244d80200593b \
-    --hash=sha256:3e6101d095dfd119513cde7259aa703d16c6bbdfae2554dfe5cfdbe94e32d548 \
-    --hash=sha256:3fa2de6b8b29d12c61911505d893afe7320ce7ccba4df913e2971461fa36d584 \
-    --hash=sha256:64badbc49180a5e401f373f9ce7ab1d18b63f7dd4a9cdc43c92b9f0b481cef7b \
-    --hash=sha256:70585a70fc2dd4818c51287ceef5bdba6387f88a578c86d47bb34669b5552c36 \
-    --hash=sha256:712319fbdddb46f21abb66cd33cb9e491a5763b2febd8f228251add221981135 \
-    --hash=sha256:91fba8f445723fcf400fdbe9ca796b19d3b1242cd873907979b9ed71e4afe868 \
-    --hash=sha256:a3f6857551e53ce35e60b403b8a27b0295f7d6eb63d10484f12bc6879c715687 \
-    --hash=sha256:cee1757663fa32a1ee673434fcf3bf24dd54763c79690201208bafec62f19eed
+protobuf==5.29.3 \
+    --hash=sha256:0a18ed4a24198528f2333802eb075e59dea9d679ab7a6c5efb017a59004d849f \
+    --hash=sha256:0eb32bfa5219fc8d4111803e9a690658aa2e6366384fd0851064b963b6d1f2a7 \
+    --hash=sha256:3ea51771449e1035f26069c4c7fd51fba990d07bc55ba80701c78f886bf9c888 \
+    --hash=sha256:5da0f41edaf117bde316404bad1a486cb4ededf8e4a54891296f648e8e076620 \
+    --hash=sha256:6ce8cc3389a20693bfde6c6562e03474c40851b44975c9b2bf6df7d8c4f864da \
+    --hash=sha256:84a57163a0ccef3f96e4b6a20516cedcf5bb3a95a657131c5c3ac62200d23252 \
+    --hash=sha256:a4fa6f80816a9a0678429e84973f2f98cbc218cca434abe8db2ad0bffc98503a \
+    --hash=sha256:a8434404bbf139aa9e1300dbf989667a83d42ddda9153d8ab76e0d5dcaca484e \
+    --hash=sha256:b89c115d877892a512f79a8114564fb435943b59067615894c3b13cd3e1fa107 \
+    --hash=sha256:c027e08a08be10b67c06bf2370b99c811c466398c357e615ca88c91c07f0910f \
+    --hash=sha256:daaf63f70f25e8689c072cfad4334ca0ac1d1e05a92fc15c54eb9cf23c3efd84
     # via
     #   -r _requirements_runtime.txt
     #   google-api-core
@@ -1957,9 +1957,9 @@ pyparsing==3.2.1 \
     # via
     #   -r _requirements_runtime.txt
     #   httplib2
-pypdf==5.1.0 \
-    --hash=sha256:3bd4f503f4ebc58bae40d81e81a9176c400cbbac2ba2d877367595fb524dfdfc \
-    --hash=sha256:425a129abb1614183fd1aca6982f650b47f8026867c0ce7c4b9f281c443d2740
+pypdf==5.2.0 \
+    --hash=sha256:7c38e68420f038f2c4998fd9d6717b6db4f6cef1642e9cf384d519c9cf094663 \
+    --hash=sha256:d107962ec45e65e3bd10c1d9242bdbbedaa38193c9e3a6617bd6d996e5747b19
     # via -r _requirements_runtime.txt
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
@@ -2151,17 +2151,17 @@ recurring-ical-events==2.0.2 \
     --hash=sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339 \
     --hash=sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11
     # via -r _requirements_runtime.txt
-redfish==3.2.7 \
-    --hash=sha256:da4079ab8b0b146139892ceea066e23cdbfd78b79dcb840baaf19026cfb7ceb7 \
-    --hash=sha256:f8e535b4c0bb7e1d5f44548bf6bf5a832ea0a7b5503c8b439d28b23373bd9807
+redfish==3.2.8 \
+    --hash=sha256:7846e075dd27c4973f49d9f84e97c9efe8f3da2c1cdf22a172d56f8a041ec69d \
+    --hash=sha256:e5786a7c91d7fd44b8936b0e74384cccd23ac687efe600975c042d9f03bc1e8c
     # via -r _requirements_runtime.txt
 redis==4.5.4 \
     --hash=sha256:2c19e6767c474f2e85167909061d525ed65bea9301c0770bb151e041b7ac89a2 \
     --hash=sha256:73ec35da4da267d6847e47f68730fdd5f62e2ca69e3ef5885c6a78a9374c3893
     # via -r _requirements_runtime.txt
-referencing==0.36.1 \
-    --hash=sha256:363d9c65f080d0d70bc41c721dce3c7f3e77fc09f269cd5c8813da18069a6794 \
-    --hash=sha256:ca2e6492769e3602957e9b831b94211599d2aade9477f5d44110d2530cf9aade
+referencing==0.36.2 \
+    --hash=sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa \
+    --hash=sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0
     # via
     #   jsonschema
     #   jsonschema-path

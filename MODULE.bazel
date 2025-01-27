@@ -20,7 +20,7 @@ git_override(
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
 
-bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_cc", version = "0.0.17")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "0.37.0")
 bazel_dep(name = "rules_uv", version = "0.44.0")
@@ -85,7 +85,7 @@ types.requirements(
 use_repo(types, "cmk_types")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
-bazel_dep(name = "protobuf", version = "28.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 
 fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")

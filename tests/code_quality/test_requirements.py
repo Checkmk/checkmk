@@ -7,7 +7,6 @@
 
 import ast
 import csv
-import json
 import logging
 import re
 import warnings
@@ -20,11 +19,9 @@ from typing import NamedTuple, NewType
 
 import isort
 import pytest
-from pipfile import Pipfile  # type: ignore[import-untyped]
+import requirements
 
 from tests.testlib.repo import (
-    branch_from_env,
-    current_base_branch_name,
     is_enterprise_repo,
     repo_path,
 )
@@ -41,29 +38,20 @@ IGNORED_LIBS = {
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
-BUILD_DIRS = {
-    # This directory needs to be ignored for a few days (until all workspaces were cleared)
-    repo_path() / "agent-receiver/build",
-    repo_path() / "external",
-    repo_path() / "omd/build",
-    repo_path() / "packages/cmc/build",
-    repo_path() / "packages/cmc/test",
-    repo_path() / "packages/cmk-agent-based/build",
-    repo_path() / "packages/cmk-agent-receiver/build",
-    repo_path() / "packages/cmk-graphing/build",
-    repo_path() / "packages/cmk-server-side-calls/build",
-    repo_path() / "packages/cmk-rulesets/build",
-    repo_path() / "packages/cmk-shared-typing/build",
-    repo_path() / "packages/cmk-messaging/build",
-    repo_path() / "packages/cmk-mkp-tool/build",
-    repo_path() / "packages/cmk-werks/build",
-    repo_path() / "packages/cmk-trace/build",
-    repo_path() / "packages/cmk-livestatus-client/build",
-    repo_path() / "packages/livestatus/build",
-    repo_path() / "packages/neb/build",
+# currently runtime requirements are stored in multiple files
+DEV_REQ_FILES_LIST = [repo_path() / "requirements_dev.txt"]
+RUNTIME_REQ_FILES_LIST = [
+    repo_path() / "requirements_runtime.txt",
+    repo_path() / "cmk/requirements.txt",
+] + list((repo_path() / "non-free" / "packages").glob("*/requirements.txt"))
+
+REQUIREMENTS_FILES = {
+    "dev": DEV_REQ_FILES_LIST,
+    "runtime": RUNTIME_REQ_FILES_LIST,
+    "all": DEV_REQ_FILES_LIST + RUNTIME_REQ_FILES_LIST,
 }
 
-PackageName = NewType("PackageName", str)  # Name in Pip(file)
+PackageName = NewType("PackageName", str)  # Name in requirements file
 ImportName = NewType("ImportName", str)  # Name in Source (import ...)
 
 
@@ -90,51 +78,45 @@ class Import(NamedTuple):
         return NormalizedPackageName(self.name)
 
 
-@pytest.fixture(name="loaded_pipfile")
-def load_pipfile() -> Pipfile:
-    return Pipfile.load(filename=str(repo_path() / "Pipfile"))
+def parse_requirements_file(file_path: Path) -> dict[str, str]:
+    """Parse a requirements file and return a dictionary of package names and their versions."""
+    requirements_dict: dict[str, str] = {}
+    with open(file_path, "r") as fd:
+        req = requirements.parse(fd)
+        for r in req:
+            if len(r.specs) != 0:
+                # r.spec is a list of tuples (operator, version)
+                version = r.specs[0][1]
+            else:
+                version = ""
+            if r.name is not None:
+                requirements_dict[r.name] = version
+    return requirements_dict
 
 
-@pytest.mark.skipif(
-    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
-    reason="pinning is only enforced in release branches",
-)
-def test_all_packages_pinned(loaded_pipfile: Pipfile) -> None:
+def load_requirements(requirements_type: str) -> dict[str, str]:
+    """Load requirements of the given type (dev, runtime, all) and return
+    a dictionary of package names and their versions."""
+    requirements_dict = {}
+    file_path_list = REQUIREMENTS_FILES[requirements_type]
+    for requirements_file_path in file_path_list:
+        requirements_dict.update(parse_requirements_file(requirements_file_path))
+    return requirements_dict
+
+
+@pytest.fixture(name="loaded_requirements")
+def loaded_requirements():
+    return load_requirements("all")
+
+
+def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
     # Test implements process as decribed in:
     # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies
-    unpinned_packages = [
-        f"'{n}'"
-        for p_type in ("default", "develop")
-        for n, v in loaded_pipfile.data[p_type].items()
-        if v == "*"
-    ]
+    unpinned_packages = [req for req in loaded_requirements.keys() if not loaded_requirements[req]]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
         "For the sake of reproducibility, all packages must be pinned to a version!"
     ) % " ,".join(unpinned_packages)
-
-
-def test_pipfile_syntax(loaded_pipfile: Pipfile) -> None:
-    # pipenv is currently (e.g. in version 2022.1.8) accepting false Pipfile syntax like:
-    # pysmb = "1.2"
-    # So it will not throw an error or warning if the comparision operator is missing.
-    # Remove this test as soon pipenv is getting smarter..
-    packages_with_faulty_syntax = []
-
-    for type_ in ("default", "develop"):
-        packages_with_faulty_syntax.extend(
-            [
-                (n, s)
-                for n, s in loaded_pipfile.data[type_].items()
-                if isinstance(s, str) and s[0].isnumeric()
-            ]
-        )
-    assert not any(packages_with_faulty_syntax), (
-        "The following packages seem to have a faulty Pipfile syntax: %s. "
-        "Assuming you forgot to add a comparision operator, like '<', '==' etc. '"
-        "Have a look at: https://github.com/pypa/pipfile"
-        % ",".join([f"Package {n} with Version: {v}" for n, v in packages_with_faulty_syntax])
-    )
 
 
 def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
@@ -143,12 +125,16 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
     this could have been a easy glob, but we do not care for hidden files here:
     https://bugs.python.org/issue26096"""
     for sub_path in basepath.iterdir():
-        if sub_path in BUILD_DIRS:
-            # Ignore build directories: those may not be aligned with the actual status in git
-            # and for python sources they would enforce testing the same file twice...
+        # TODO: remove after CMK-20852 is finished
+        if sub_path == repo_path() / "packages/cmk-shared-typing":
+            continue
+        # the following paths may contain python files and should not be scanned
+        if sub_path.name == "container_shadow_workspace_local":
             continue
         # TODO: We need to find a better way for the bazel-* folders created by bazel
         if "bazel-" in sub_path.name:
+            continue
+        if sub_path.name == "node_modules":
             continue
         if sub_path.name.startswith("."):
             continue
@@ -166,19 +152,19 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "agents",  # There are so many optional imports...
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
-        basepath / "packages",  # ignore all packages
         basepath / "tests",
         # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
         # exclude all treasures.
         basepath / "doc/treasures/migration_helpers",
-        # the following paths may contain python files and should not be scanned
-        basepath / "container_shadow_workspace_local",
     )
+    exclusions_from_exclusions = (basepath / "agents/plugins/mk_jolokia.py",)
 
     for source_file_path in iter_sourcefiles(basepath):
-        if any(source_file_path.resolve().is_relative_to(e.resolve()) for e in exclusions):
+        if (
+            any(source_file_path.resolve().is_relative_to(e.resolve()) for e in exclusions)
+            and source_file_path not in exclusions_from_exclusions
+        ):
             continue
-
         yield source_file_path
 
 
@@ -277,8 +263,12 @@ def packagenames_to_libnames(
                         ".dist-info"
                     ):
                         continue
-                    if first_part.endswith(".py"):
-                        names.add(NormalizedPackageName(first_part.removesuffix(".py")))
+                    if first_part.endswith(".py") or first_part.endswith(".so"):
+                        names.add(
+                            NormalizedPackageName(
+                                first_part.removesuffix(".py").removesuffix(".so")
+                            )
+                        )
                     else:
                         names.add(NormalizedPackageName(first_part))
             return list(names)
@@ -293,45 +283,41 @@ def packagenames_to_libnames(
 
 
 @cache
-def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[NormalizedPackageName]]:
-    """Collect info from Pipfile with additions from site-packages
+def get_requirements_libs(repopath: Path) -> dict[PackageName, list[NormalizedPackageName]]:
+    """Collect info from requirement files with additions from site-packages
 
-    The dict has as key the Pipfile package name and as value a list with all import names
+    The dict has as key the requirement file package name and as value a list with all import names
     from top_level.txt
 
     packagenames may differ from the import names,
     also the site-package folder can be different."""
     site_packages = packagenames_to_libnames(repopath)
-    pipfile_to_libs: dict[PackageName, list[NormalizedPackageName]] = {}
+    requirements_to_libs: dict[PackageName, list[NormalizedPackageName]] = {}
 
-    parsed_pipfile = Pipfile.load(filename=repopath / "Pipfile")
-    for name, details in parsed_pipfile.data["default"].items():
-        if "path" in details:
-            # Ignoring some of our own sub-packages e.g. agent-receiver
+    parsed_req = load_requirements("runtime")
+    for req in parsed_req.keys():
+        if (normalized_name := NormalizedPackageName(req)) in site_packages:
+            requirements_to_libs[PackageName(req)] = site_packages[normalized_name]
             continue
 
-        if (normalized_name := NormalizedPackageName(name)) in site_packages:
-            pipfile_to_libs[name] = site_packages[normalized_name]
-            continue
-
-        raise NotImplementedError("Could not find package %s in site_packages" % name)
-    return pipfile_to_libs
+        raise NotImplementedError("Could not find package %s in site_packages" % req)
+    return requirements_to_libs
 
 
 def get_unused_dependencies() -> Iterable[PackageName]:
     """Iterate over declared dependencies which are not imported"""
     imported_libs = {d.normalized_name for d in get_imported_libs(repo_path())}
-    pipfile_libs = get_pipfile_libs(repo_path())
-    for packagename, import_names in pipfile_libs.items():
+    requirements_libs = get_requirements_libs(repo_path())
+    for packagename, import_names in requirements_libs.items():
         if set(import_names).isdisjoint(imported_libs):
             yield packagename
 
 
 def get_undeclared_dependencies() -> Iterable[Import]:
-    """Iterate over imported dependencies which could not be found in the Pipfile"""
+    """Iterate over imported dependencies which could not be found in the requirement files"""
     imported_libs = get_imported_libs(repo_path())
-    pipfile_libs = get_pipfile_libs(repo_path())
-    declared_libs = set(chain.from_iterable(pipfile_libs.values()))
+    requirements_libs = get_requirements_libs(repo_path())
+    declared_libs = set(chain.from_iterable(requirements_libs.values()))
 
     yield from (
         imported_lib
@@ -346,9 +332,13 @@ CEE_UNUSED_PACKAGES = [
     "psycopg2-binary",
     "pymssql",
     "pymysql",
-    "redfish",  # used by optional MKP
     "setuptools-scm",
     "snmpsim-lextudio",
+    "python-multipart",  # needed by fastapi
+    # stub packages
+    "types-python-dateutil",
+    "types-markdown",
+    "types-pika-ts",
 ]
 
 
@@ -369,11 +359,11 @@ def test_dependencies_are_used() -> None:
     unused_dependencies -= known_unused_packages
     assert (
         unused_dependencies == set()
-    ), f"There are dependencies that are declared in the Pipfile but not used: {unused_dependencies}"
+    ), f"There are dependencies that are declared in the requirements files but not used: {unused_dependencies}"
 
 
 def test_dependencies_are_declared() -> None:
-    """Test for unknown imports which could not be mapped to the Pipfile
+    """Test for unknown imports which could not be mapped to the requirements files
 
     mostly optional imports and OMD-only shiped packages."""
     undeclared_dependencies = list(get_undeclared_dependencies())
@@ -382,33 +372,21 @@ def test_dependencies_are_declared() -> None:
         "buildscripts",  # used in build helper scripts in buildscripts/scripts
         "netsnmp",  # We ship it with omd/packages
         "pymongo",  # Optional except ImportError...
-        "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
         "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
-        "pipfile",  # used in tests and in helper script pin_dependencies.py
+        "simplejson",  # used in "agents/plugins/mk_jolokia.py", remove after adding to requirements
     }
+
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (
         "The exceptionlist is outdated, these are the 'offenders':"
         + str(known_undeclared_dependencies - undeclared_dependencies_str)
     )
     undeclared_dependencies_str -= known_undeclared_dependencies
     assert undeclared_dependencies_str == set(), (
-        "There are imports that are not declared in the Pipfile:\n    "
+        "There are imports that are not declared in the requirements files:\n    "
         + "\n    ".join(
             str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
         )
     )
-
-
-def _get_lockfile_hash(lockfile_path: Path) -> str:
-    lockfile = json.loads(lockfile_path.read_text())
-    if "_meta" in lockfile and hasattr(lockfile, "keys"):
-        return lockfile["_meta"].get("hash", {}).get("sha256")
-    return ""
-
-
-def test_pipfile_lock_up_to_date(loaded_pipfile: Pipfile) -> None:
-    lockfile_hash = _get_lockfile_hash(repo_path() / "Pipfile.lock")
-    assert loaded_pipfile.hash == lockfile_hash

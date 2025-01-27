@@ -5,6 +5,7 @@
 
 import logging
 import os
+import signal
 import sys
 import threading
 import time
@@ -69,6 +70,8 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         log_path.mkdir(exist_ok=True, parents=True)
 
         _setup_console_logging()
+
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
         daemonize()
 

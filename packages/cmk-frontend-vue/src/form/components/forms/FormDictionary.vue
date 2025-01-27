@@ -149,10 +149,13 @@ function toggleElement(key: string) {
   }
 }
 
-function indentRequired(element: FormSpec.DictionaryElement): boolean {
+function indentRequired(
+  element: FormSpec.DictionaryElement,
+  layout: FormSpec.DictionaryGroupLayout
+): boolean {
   return (
     labelRequired(element) &&
-    !(element.group && variant === 'one_column') &&
+    !(element.group && variant === 'one_column' && layout === 'horizontal') &&
     !(
       element.parameter_form.type === 'fixed_value' &&
       !(element.parameter_form as FormSpec.FixedValue).label &&
@@ -221,8 +224,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
               <div
                 :aria-label="dict_element.dict_config.parameter_form.title"
                 :class="{
-                  indent: indentRequired(dict_element.dict_config),
-                  dictelement: indentRequired(dict_element.dict_config),
+                  indent: indentRequired(dict_element.dict_config, group.layout),
+                  dictelement: indentRequired(dict_element.dict_config, group.layout),
                   'group-with-more-items': group.elems.length > 1
                 }"
               >

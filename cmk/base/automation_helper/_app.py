@@ -36,6 +36,7 @@ class AutomationPayload(BaseModel, frozen=True):
 class AutomationResponse(BaseModel, frozen=True):
     exit_code: int
     output: str
+    error: str
 
 
 class HealthCheckResponse(BaseModel, frozen=True):
@@ -104,6 +105,8 @@ def get_application(
             reload_config()
             LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
+        buffer_stdout = io.StringIO()
+        buffer_stderr = io.StringIO()
         with (
             TRACER.span(
                 f"automation[{payload.name}]",
@@ -112,8 +115,8 @@ def get_application(
                     "cmk.automation.args": payload.args,
                 },
             ),
-            redirect_stdout(output_buffer := io.StringIO()),
-            redirect_stderr(output_buffer),
+            redirect_stdout(buffer_stdout),
+            redirect_stderr(buffer_stderr),
             redirect_stdin(io.StringIO(payload.stdin)),
             temporary_log_level(LOGGER, payload.log_level),
         ):
@@ -134,7 +137,11 @@ def get_application(
             else:
                 LOGGER.info("[automation] %s with args: %s processed.", payload.name, payload.args)
 
-            return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
+            return AutomationResponse(
+                exit_code=exit_code,
+                output=buffer_stdout.getvalue(),
+                error=buffer_stderr.getvalue(),
+            )
 
     @app.get("/health")
     async def check_health(request: Request) -> HealthCheckResponse:

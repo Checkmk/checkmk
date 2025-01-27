@@ -53,6 +53,7 @@ class HelperExecutor(AutomationExecutor):
             exit_code=response_data["exit_code"],
             output=response_data["output"],
             command_description=self.command_description(command, args, logger, timeout),
+            error=response_data["error"],
         )
 
     def command_description(

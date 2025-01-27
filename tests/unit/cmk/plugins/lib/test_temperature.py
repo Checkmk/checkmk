@@ -332,6 +332,66 @@ def test_check_trend_time_period_zero_lower_bound() -> None:
     ]
 
 
+def test_check_trend_time_levels_above_crit() -> None:
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
+        results = list(
+            temperature._check_trend(
+                {"temp.my_test.delta": (0, 10.0)},
+                67.0,
+                {
+                    "period": 1,
+                    "trend_levels": (3, 5),
+                    "trend_levels_lower": (10, 15),
+                    "trend_timeleft": (120, 60),
+                },
+                "c",
+                60.0,
+                0.0,
+                "my_test",
+            )
+        )
+    assert results == [
+        Result(
+            state=State.CRIT,
+            summary="Temperature trend: +57.0 °C per 1 min (warn/crit at +3 °C per 1 min/+5 °C per 1 min)",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Time until temperature limit reached: 0 seconds (warn/crit below 2 hours 0 minutes/1 hour 0 minutes)",
+        ),
+    ]
+
+
+def test_check_trend_time_levels_below_lower_crit() -> None:
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
+        results = list(
+            temperature._check_trend(
+                {"temp.my_test.delta": (0, 27.0)},
+                25.0,
+                {
+                    "period": 1,
+                    "trend_levels": (3, 5),
+                    "trend_levels_lower": (10, 15),
+                    "trend_timeleft": (120, 60),
+                },
+                "c",
+                60.0,
+                30.0,
+                "my_test",
+            )
+        )
+    assert results == [
+        Result(
+            state=State.OK,
+            summary="Temperature trend: -2.0 °C per 1 min",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Time until temperature limit reached: 0 seconds (warn/crit below 2 hours 0 minutes/1 hour 0 minutes)",
+        ),
+    ]
+
+
 def test_check_temperature_simple() -> None:
     results = list(
         temperature.check_temperature(

@@ -740,7 +740,7 @@ class ModeEditBrokerConnection(WatoMode):
                 "communicate, without routing the messages via the central site. "
                 "Messages themselves will be sent in both directions: from the "
                 "connecter to the connectee and vice versa. "
-                "Note that order in which you choose the sites here still might matter, "
+                "Note that the order in which you choose the sites here still might matter, "
                 "depending on your network restrictions: "
                 "The connecter must be able to establish a TCP connection to the connectee."
             ),

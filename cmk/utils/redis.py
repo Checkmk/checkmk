@@ -22,6 +22,10 @@ QueryData = TypeVar("QueryData")
 
 
 def get_redis_client() -> Redis[str]:
+    """Builds a ready-to-use Redis client instance
+
+    Note: Use the returing object as context manager to ensure proper cleanup.
+    """
     if not redis_enabled():
         raise RuntimeError("Redis currently explicitly disabled")
     return Redis.from_url(

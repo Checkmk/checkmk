@@ -1057,7 +1057,12 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                     SerializedResult(self._preview_store.read_obj(default=""))
                 ),
             )
-        except (FileNotFoundError, ValueError):
+        except (
+            FileNotFoundError,
+            ValueError,
+            # A leftover file from 2.3 will result in a KeyError.
+            KeyError,
+        ):
             return None
         finally:
             self._preview_store.path.unlink(missing_ok=True)

@@ -10,6 +10,10 @@ import { renderFormWithData } from '../cmk-form-helper'
 import { ref, watch } from 'vue'
 import userEvent from '@testing-library/user-event'
 
+const EXISTING_LABEL_KEY = 'existing_key'
+const EXISTING_LABEL_VALUE = 'existing_value'
+const EXISTING_LABEL_CONCAT = `${EXISTING_LABEL_KEY}:${EXISTING_LABEL_VALUE}`
+
 vi.mock('@/form/components/utils/autocompleter', () => ({
   setupAutocompleter: vi.fn(() => {
     const input = ref('')
@@ -21,7 +25,7 @@ vi.mock('@/form/components/utils/autocompleter', () => ({
         output.value = {
           choices: [
             [newVal, newVal],
-            ['key1:value1', 'key1:value1']
+            [EXISTING_LABEL_CONCAT, EXISTING_LABEL_CONCAT]
           ]
         }
       }
@@ -116,31 +120,44 @@ describe('FormLabels', () => {
     expect(getCurrentData()).toBe('{"key2":"value2"}')
   })
 
-  test('should not suggest existing labels', async () => {
+  test('should suggest existing labels', async () => {
     renderFormWithData({
       spec,
-      data: { key2: 'value2' },
+      data: {},
       backendValidation: []
     })
 
     const labelInput = screen.getByPlaceholderText('Add some labels')
 
-    await fireEvent.update(labelInput, 'key')
-    await screen.findByText('key1:value1')
+    await fireEvent.update(labelInput, `${EXISTING_LABEL_KEY}:`)
+    await screen.findByText(EXISTING_LABEL_CONCAT)
+  })
 
-    expect(screen.queryByText('key2:value2')).toBeNull()
+  test('should not suggest used existing labels', async () => {
+    renderFormWithData({
+      spec,
+      data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
+      backendValidation: []
+    })
+
+    const labelInput = screen.getByPlaceholderText('Add some labels')
+
+    await fireEvent.update(labelInput, `${EXISTING_LABEL_KEY}:`)
+    await screen.findByText(`${EXISTING_LABEL_KEY}:`)
+
+    expect(screen.queryByText(EXISTING_LABEL_CONCAT)).toBeNull()
   })
 
   test('should warn about duplicates', async () => {
     renderFormWithData({
       spec,
-      data: { key2: 'value2' },
+      data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
       backendValidation: []
     })
 
     const labelInput = screen.getByPlaceholderText('Add some labels')
 
-    await fireEvent.update(labelInput, 'key2:value2')
+    await fireEvent.update(labelInput, EXISTING_LABEL_CONCAT)
     await fireEvent.keyDown(labelInput, { key: 'Enter' })
 
     screen.getByText('Labels need to be unique.')

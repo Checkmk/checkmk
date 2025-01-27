@@ -41,3 +41,12 @@ def test_check() -> None:
             summary="3423.00 hr (warn/crit at 32.00 hr/32.00 hr)",
         ),
     ]
+
+
+def test_check_no_threshold() -> None:
+    assert list(check_plugin_liebert_pump.check_function("Pump Hours 2", _section())) == [
+        Result(
+            state=State.OK,
+            summary="1.00 hr",
+        ),
+    ]

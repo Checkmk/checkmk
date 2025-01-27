@@ -43,13 +43,14 @@ def check_liebert_pump(item: str, section: Section[float]) -> CheckResult:
         return
 
     # TODO: this should be done in the parse function, per OID end.
-    for key, (c_value, _unit) in section.items():
+    threshold = None
+    for key, (t_value, _unit) in section.items():
         if "Threshold" in key and key.replace(" Threshold", "") == item:
-            crit = c_value
+            threshold = t_value
 
     yield from check_levels_v1(
         value,
-        levels_upper=(crit, crit),
+        levels_upper=None if threshold is None else (threshold, threshold),
         render_func=lambda x: f"{x:.2f} {unit}",
     )
 

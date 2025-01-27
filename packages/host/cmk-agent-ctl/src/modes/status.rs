@@ -375,6 +375,7 @@ pub fn status(
 #[cfg(test)]
 mod test_status {
     use super::*;
+    use crate::agent_receiver_api::RegistrationStatusV2ResponseRegistered;
     use crate::cli;
     use anyhow::anyhow;
     use std::str::FromStr;
@@ -759,5 +760,51 @@ mod test_status {
                 }
             )
         );
+    }
+
+    #[test]
+    fn test_remote_lines_success_readable_not_registered() {
+        assert_eq!(
+            "Not registered (!!)",
+            ConnectionStatus::remote_lines_success_readable(
+                &agent_receiver_api::RegistrationStatusV2Response::NotRegistered,
+                &config::ConnectionMode::Push
+            )
+            .join("\n")
+        );
+        assert_eq!(
+            "Not registered (!!)",
+            ConnectionStatus::remote_lines_success_readable(
+                &agent_receiver_api::RegistrationStatusV2Response::NotRegistered,
+                &config::ConnectionMode::Pull
+            )
+            .join("\n")
+        );
+    }
+
+    // macro to allow testing combinations of input for ConnectionStatus::remote_lines_success_readable.
+    macro_rules! remote_lines_success_readable_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let (hostname, connection_mode_registered, connection_mode_local, expected) = $value;
+                let registered = RegistrationStatusV2ResponseRegistered {
+                    hostname: hostname.to_string(),
+                    connection_mode: connection_mode_registered,
+                };
+                let registration_status_v2_response = agent_receiver_api::RegistrationStatusV2Response::Registered(registered);
+                assert_eq!(expected, ConnectionStatus::remote_lines_success_readable(&registration_status_v2_response, &connection_mode_local).join("\n"));
+                }
+        )*
+        }
+    }
+
+    remote_lines_success_readable_tests! {
+        test_remote_lines_success_readable_push_push: ("host_01",config::ConnectionMode::Push, config::ConnectionMode::Push, "Connection mode: push-agent\nHostname: host_01"),
+        test_remote_lines_success_readable_pull_pull: ("host_02",config::ConnectionMode::Pull, config::ConnectionMode::Pull, "Connection mode: pull-agent\nHostname: host_02"),
+        test_remote_lines_success_readable_pull_push: ("host_03",config::ConnectionMode::Pull, config::ConnectionMode::Push, "Connection mode: pull-agent (!!)\nHostname: host_03"),
+        test_remote_lines_success_readable_push_pull: ("host_04",config::ConnectionMode::Push, config::ConnectionMode::Pull, "Connection mode: push-agent (!!)\nHostname: host_04"),
+
     }
 }

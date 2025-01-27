@@ -428,7 +428,7 @@ def rabbitmqctl_process(cmd: tuple[str, ...], /, *, wait: bool) -> subprocess.Po
 
 def _format_process(p: subprocess.Popen[str]) -> str:
     return (
-        f"{'FAILED' if p.returncode else 'OK'}: {p.args!r}\n"  # type: ignore[misc]  # contains Any
+        f"{'FAILED' if p.returncode else 'OK'}: {p.args!r}\n"
         f"{' '.join(p.stdout or ())}\n"
         f"{' '.join(p.stderr or ())}"
     )

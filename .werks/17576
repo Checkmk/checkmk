@@ -1,0 +1,16 @@
+Title: reports: error when selecting multiple graphs as added content
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1737988673
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+When creating a report and selecting 'Multiple Graphs' as added
+content, graphs were not being rendered, and instead there was
+the error message
+
+"Cannot render graph: host, service description or regex not found in context."
+
+This werk now fixes this issue.

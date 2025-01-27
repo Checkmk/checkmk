@@ -392,9 +392,17 @@ def check_remote_connection(
         msg = repr(exc).lower()
         if "hostname mismatch" in msg:
             return ConnectionFailed(
-                "Hostname mismatch. You are probably connecting to the wrong site."
+                "Hostname mismatch."
+                " You are probably connecting to the wrong site."
+                f" I tried port {port}."
             )
-        elif "certificate verify failed" in msg:
+        if "self-signed" in msg:
+            return ConnectionFailed(
+                "Target broker uses self-signed certificate."
+                " You might be connecting to the wrong site."
+                f" I tried port {port}."
+            )
+        if "certificate verify failed" in msg:
             return ConnectionFailed("Certificate verify failed")
 
         return ConnectionFailed(str(exc))

@@ -165,12 +165,13 @@ def test_create_rules(
             logger.info('Existing rules for ruleset "%s": %s', ruleset_name, rule_count)
 
         logger.info("Create all rules...")
-        created_rules = _create_rules(dashboard_page)
-        for page, rule_names in created_rules.items():
-            logger.info('Rules created for page "%s": %s', page, rule_names)
-
-        logger.info("Activate all changes...")
-        test_site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+        try:
+            created_rules = _create_rules(dashboard_page)
+            for page, rule_names in created_rules.items():
+                logger.info('Rules created for page "%s": %s', page, rule_names)
+        finally:
+            logger.info("Activate all changes...")
+            test_site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
         logger.info("Verify all rules...")
         total_rules = {
@@ -185,6 +186,8 @@ def test_create_rules(
             assert (
                 created_rule_count == 1
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
+
+        # TODO: missing teardown.
 
 
 @pytest.mark.xfail(reason="Flaky test, see CMK-20900")

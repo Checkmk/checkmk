@@ -129,6 +129,9 @@ RUN /opt/install-valgrind.sh
 COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
+COPY install-openssl.sh /opt/
+RUN /opt/install-openssl.sh
+
 COPY install-python.sh /opt/
 RUN /opt/install-python.sh
 

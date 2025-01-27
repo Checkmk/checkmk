@@ -140,6 +140,7 @@ impl Section {
             if let Ok(versioned_files) = find_sql_files(&dir, &self.name) {
                 for (min_version, sql_file) in versioned_files {
                     if instance_version >= min_version {
+                        #[allow(clippy::all)]
                         return read_to_string(&sql_file)
                             .map_err(|e| {
                                 log::error!("Can't read file {:?} {}", &sql_file, &e);

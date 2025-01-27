@@ -554,7 +554,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("_test_host_notifications", 1),
                 ],
@@ -572,7 +572,7 @@ def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterat
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("service_name", serivce_name),
                     ("_test_service_notifications", 1),

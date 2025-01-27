@@ -123,19 +123,12 @@ def test_parse_v1():
 
 def test_parse_v2():
     assert parse_storcli_pdisks(_to_string_table(SECTION_V2)) == {
-        # TODO: this is a bug, this needs to be fixed
-        "C0.308:0-283": StorcliPDisk(size=(0.0, "223.062"), state="Conf"),
-        "C0.308:12-292": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
-        "C0.308:16-293": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
-        "C0.308:20-294": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
-        "C0.308:4-287": StorcliPDisk(size=(0.0, "223.062"), state="Conf"),
-        "C0.308:8-291": StorcliPDisk(size=(1.0, "6.985"), state="Conf"),
-        "C1.283-0/-": StorcliPDisk(size=(223.062, "GiB"), state="0"),
-        "C1.287-0/-": StorcliPDisk(size=(223.062, "GiB"), state="0"),
-        "C1.291-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
-        "C1.292-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
-        "C1.293-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
-        "C1.294-0/1": StorcliPDisk(size=(6.985, "TiB"), state="0"),
+        "C0.308:0-283": StorcliPDisk(state="Conf", size=(223.062, "GiB")),
+        "C0.308:4-287": StorcliPDisk(state="Conf", size=(223.062, "GiB")),
+        "C0.308:8-291": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
+        "C0.308:12-292": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
+        "C0.308:16-293": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
+        "C0.308:20-294": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
     }
 
 

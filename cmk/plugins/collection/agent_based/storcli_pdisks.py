@@ -64,7 +64,7 @@ def parse_table(lines: Iterator[list[str]], name: str) -> Table:
     return Table(name, table_header, table_body)
 
 
-def parse_storcli_pdisks(string_table: StringTable) -> Section:
+def parse_tables(string_table: StringTable) -> list[Table]:
     tables = []
     current_section = None
 
@@ -77,15 +77,34 @@ def parse_storcli_pdisks(string_table: StringTable) -> Section:
             tables.append(parse_table(lines, current_section))
         prev_line = line
 
+    return tables
+
+
+def parse_storcli_pdisks(string_table: StringTable) -> Section:
+    tables = parse_tables(string_table)
+
     controller_num = 0
     section = {}
     for table in tables:
-        for line in table.body:
-            eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
-            section["C%i.%s-%s" % (controller_num, eid_and_slot, device)] = StorcliPDisk(
-                state=megaraid.expand_abbreviation(state),
-                size=(float(size), size_unit),
-            )
+        if table.name != "Drive Information":
+            continue
+        if table.header[:6] == ["EID:Slt", "PID", "State", "Status", "DG", "Size"]:
+            for line in table.body:
+                # size is split into two elements:
+                eid_and_slot, device_id, state, _status, _driver_group, size, size_unit = line[:7]
+                item_name = "C%i.%s-%s" % (controller_num, eid_and_slot, device_id)
+                section[item_name] = StorcliPDisk(
+                    state=megaraid.expand_abbreviation(state),
+                    size=(float(size), size_unit),
+                )
+        else:
+            for line in table.body:
+                eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
+                item_name = "C%i.%s-%s" % (controller_num, eid_and_slot, device)
+                section[item_name] = StorcliPDisk(
+                    state=megaraid.expand_abbreviation(state),
+                    size=(float(size), size_unit),
+                )
         controller_num += 1
     return section
 

@@ -147,7 +147,7 @@ commands inside the build container
 ```sh
 cd omd
 
-../scripts/run-bazel.sh build @nrpe//:nrpe
+bazel build @nrpe//:nrpe
 # or
 make nrpe-build
 

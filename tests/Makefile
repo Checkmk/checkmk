@@ -15,9 +15,10 @@ PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
-SHELLCHECK := $(SCRIPTS)/run-bazel.sh run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := $(SCRIPTS)/run-bazel.sh run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
-TAPLO := $(SCRIPTS)/run-bazel.sh run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
+BAZEL_CMD ?= $(realpath $(SCRIPTS)/run-bazel.sh)
+SHELLCHECK := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
+SHFMT := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+TAPLO := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -469,9 +470,9 @@ test-unit-omdlib:
 
 test-unit:
 	cd .. && \
-	    ./scripts/run-bazel.sh test //cmk:doctest
+	    $(BAZEL_CMD) test //cmk:doctest
 	cd .. && \
-	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
 	    --test_arg="--numprocesses=4"
@@ -485,7 +486,7 @@ test-unit-docker:
 
 test-unit-all:
 	cd .. && \
-	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 

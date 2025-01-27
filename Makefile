@@ -6,6 +6,7 @@
 include defines.make
 include artifacts.make
 
+BAZEL_CMD          ?= $(REPO_PATH)/scripts/run-bazel.sh
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
@@ -260,4 +261,4 @@ relock_venv:
 		bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
 		bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
 	fi; \
-	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv
+	CC="gcc" $(BAZEL_CMD) run //:create_venv

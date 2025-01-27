@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
@@ -137,5 +137,7 @@ test('FormString with autocompleter loads value', async () => {
   })
 
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'ut_label' })
-  expect(element.value).toBe('some value')
+  await waitFor(() => {
+    expect(element.value).toBe('some value')
+  })
 })

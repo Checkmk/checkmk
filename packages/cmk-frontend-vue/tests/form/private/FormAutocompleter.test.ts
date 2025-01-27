@@ -19,8 +19,8 @@ vi.mock('@/form/components/utils/autocompleter', () => ({
         await new Promise((resolve) => setTimeout(resolve, 100))
         output.value = {
           choices: [
-            ['os:windows', 'os:windows'],
-            ['os:linux', 'os:linux']
+            ['os:windows', 'OS Windows'],
+            ['os:linux', 'OS Linux']
           ].filter((item) => item[0]?.includes(newVal))
         }
       }
@@ -61,7 +61,7 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os:windows')
 
     await waitFor(() => {
-      expect(screen.getByText('os:windows', { exact: false })).toBeInTheDocument()
+      expect(screen.getByText('OS Windows', { exact: false })).toBeInTheDocument()
     })
 
     await fireEvent.keyDown(input, { key: 'Enter' })
@@ -87,8 +87,8 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
-      expect(screen.getByText('os:windows')).toBeInTheDocument()
-      expect(screen.getByText('os:linux')).toBeInTheDocument()
+      expect(screen.getByText('OS Windows')).toBeInTheDocument()
+      expect(screen.getByText('OS Linux')).toBeInTheDocument()
     })
   })
 
@@ -108,8 +108,8 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os:w')
 
     await waitFor(() => {
-      expect(screen.getByText('os:windows')).toBeInTheDocument()
-      expect(screen.queryByText('os:linux')).not.toBeInTheDocument()
+      expect(screen.getByText('OS Windows')).toBeInTheDocument()
+      expect(screen.queryByText('OS Linux')).not.toBeInTheDocument()
     })
   })
 
@@ -129,9 +129,9 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
-      expect(screen.getByText('os:windows')).toBeInTheDocument()
+      expect(screen.getByText('OS Windows')).toBeInTheDocument()
     })
-    await fireEvent.click(screen.getByText('os:windows'))
+    await fireEvent.click(screen.getByText('OS Windows'))
 
     expect(component.emitted('select')).toHaveLength(1)
     const selected = component.emitted('select')[0] as string[]
@@ -154,8 +154,8 @@ describe('FormAutocompleter', () => {
     await userEvent.type(input, 'os')
 
     await waitFor(() => {
-      expect(screen.getByText('os:windows')).toBeInTheDocument()
-      expect(screen.getByText('os:linux')).toBeInTheDocument()
+      expect(screen.getByText('OS Windows')).toBeInTheDocument()
+      expect(screen.getByText('OS Linux')).toBeInTheDocument()
     })
 
     await userEvent.keyboard('[ArrowDown][Enter]')

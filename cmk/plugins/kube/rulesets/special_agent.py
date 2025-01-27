@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.ccc.version import Edition, edition
+from cmk.ccc import version
+from cmk.ccc.version import Edition
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress
@@ -67,12 +68,12 @@ def _tcp_timeouts() -> Dictionary:
     )
 
 
-def _usage_endpoint() -> CascadingSingleChoice:
+def _usage_endpoint(edition: Edition) -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Enrich with usage data"),
         migrate=_migrate_usage_endpoint,
         elements=[_cluster_collector(), _openshift()]
-        if edition(paths.omd_root) in OPENSHIFT_EDITIONS
+        if edition in OPENSHIFT_EDITIONS
         else [_cluster_collector()],
         prefill=DefaultValue("cluster_collector"),
     )
@@ -90,17 +91,15 @@ def _is_cre_spec(k: str, vs: object) -> bool:
     return isinstance(vs, tuple) and vs[0] == "cluster_collector"
 
 
-def _transform_openshift_endpoint(p: dict[str, object]) -> dict[str, object]:
+def _transform_openshift_endpoint(p: dict[str, object], edition: Edition) -> dict[str, object]:
     return (
-        p
-        if edition(paths.omd_root) in OPENSHIFT_EDITIONS
-        else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+        p if edition in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
     )
 
 
-def _migrate_and_transform(p: object) -> dict[str, object]:
+def _migrate_and_transform(p: object, edition: Edition) -> dict[str, object]:
     p = _migrate_form_specs(p)
-    return _transform_openshift_endpoint(p)
+    return _transform_openshift_endpoint(p, edition)
 
 
 def _openshift() -> CascadingSingleChoiceElement:
@@ -285,7 +284,7 @@ def _migrate_import_annotations(p: object) -> tuple[str, object]:
 
 def _valuespec_special_agents_kube() -> Dictionary:
     return Dictionary(
-        migrate=_migrate_and_transform,
+        migrate=lambda v: _migrate_and_transform(v, version.edition(paths.omd_root)),
         title=Title("Kubernetes"),
         elements={
             "cluster_name": DictElement(
@@ -317,7 +316,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
             ),
             "usage_endpoint": DictElement(
                 required=False,
-                parameter_form=_usage_endpoint(),
+                parameter_form=_usage_endpoint(version.edition(paths.omd_root)),
             ),
             "monitored_objects": DictElement(
                 required=True,

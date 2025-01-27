@@ -5,6 +5,7 @@
 
 import logging
 import os
+import threading
 from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -102,7 +103,9 @@ class TestCheckmkAutomationBackgroundJob:
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
+                    threading.Event(),
                     lambda: nullcontext(),
+                    open(os.devnull, "w"),
                 ),
                 api_request,
             )
@@ -134,7 +137,9 @@ class TestCheckmkAutomationBackgroundJob:
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
+                    threading.Event(),
                     lambda: nullcontext(),
+                    open(os.devnull, "w"),
                 ),
                 api_request,
             )

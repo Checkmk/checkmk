@@ -5,6 +5,7 @@
 import logging
 import os
 import shutil
+import threading
 from collections.abc import Iterator
 
 import pytest
@@ -105,7 +106,9 @@ def test_rename_host(
     expected_clusters: dict[str, set[str]],
 ) -> None:
     # GIVEN
-    job_interface = BackgroundProcessInterface("", "", logging.getLogger(), gui_context)
+    job_interface = BackgroundProcessInterface(
+        "", "", logging.getLogger(), threading.Event(), gui_context, open("/dev/null", "w")
+    )
     if use_subfolder:
         folder = (
             folder_tree().root_folder().create_subfolder("some_subfolder", "Some Subfolder", {})

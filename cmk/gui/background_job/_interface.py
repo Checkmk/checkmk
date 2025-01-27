@@ -6,19 +6,18 @@
 from __future__ import annotations
 
 import importlib
-import sys
+import threading
 import time
 from collections.abc import Callable, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import ContextManager, NamedTuple
+from typing import ContextManager, IO, NamedTuple
 
 from pydantic import BaseModel, field_serializer, field_validator
 
 from cmk.utils import render
 
-from cmk.trace import SpanContext, TraceFlags, TracerProvider, TraceState
-from cmk.trace.export import SpanExporter
+from cmk.trace import SpanContext, TraceFlags, TraceState
 
 from ._defines import BackgroundJobDefines
 
@@ -29,12 +28,16 @@ class BackgroundProcessInterface:
         work_dir: str,
         job_id: str,
         logger: Logger,
+        stop_event: threading.Event,
         gui_context: Callable[[], ContextManager[None]],
+        progress_update: IO[str],
     ) -> None:
         self._work_dir = work_dir
         self._job_id = job_id
         self._logger = logger
+        self.stop_event = stop_event
         self.gui_context = gui_context
+        self._progress_update = progress_update
 
     def get_work_dir(self) -> str:
         return self._work_dir
@@ -50,7 +53,7 @@ class BackgroundProcessInterface:
         message = info
         if with_timestamp:
             message = f"{render.time_of_day(time.time())} {message}"
-        sys.stdout.write(message + "\n")
+        self._progress_update.write(message + "\n")
 
     def send_result_message(self, info: str) -> None:
         """The result message is written to a distinct file to separate this info from the rest of
@@ -70,7 +73,7 @@ class BackgroundProcessInterface:
         """
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
         encoded_info = "%s\n" % info
-        sys.stdout.write(encoded_info)
+        self._progress_update.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
             f.write(encoded_info.encode())
 
@@ -136,6 +139,7 @@ class SpanContextModel(BaseModel, frozen=True):
 class JobParameters(NamedTuple):
     """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
 
+    stop_event: threading.Event
     work_dir: str
     job_id: str
     target: JobTarget
@@ -143,5 +147,4 @@ class JobParameters(NamedTuple):
     is_stoppable: bool
     override_job_log_level: int | None
     span_id: str
-    init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None]
     origin_span_context: SpanContextModel

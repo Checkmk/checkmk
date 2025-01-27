@@ -232,7 +232,7 @@ def run(
 ) -> subprocess.CompletedProcess:
     """Run a process and return a `subprocess.CompletedProcess` object."""
     preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
-    args_ = _extend_command(args, substitute_user, sudo, preserve_env, kwargs)
+    args_ = _extend_command(args, substitute_user, None, sudo, preserve_env, kwargs)
 
     kwargs["capture_output"] = capture_output
     kwargs["encoding"] = encoding
@@ -247,6 +247,7 @@ def execute(
     encoding: str | None = "utf-8",
     preserve_env: list[str] | None = None,
     substitute_user: str | None = None,
+    substitute_shell: str | None = None,
     sudo: bool = False,
     **kwargs: Any,
 ) -> subprocess.Popen:
@@ -256,7 +257,14 @@ def execute(
     NOTE: use it as a contextmanager; `with execute(...) as process: ...`
     """
     preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
-    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
+    cmd_ = _extend_command(
+        cmd,
+        substitute_user,
+        substitute_shell,
+        sudo,
+        preserve_env,
+        kwargs,
+    )
 
     kwargs["encoding"] = encoding
 
@@ -280,6 +288,7 @@ def _add_trace_context(
 def _extend_command(
     cmd: list[str],
     substitute_user: str | None,
+    substitute_shell: str | None,
     sudo: bool,
     preserve_env: list[str] | None,
     kwargs: dict,  # subprocess.<method> kwargs
@@ -298,9 +307,19 @@ def _extend_command(
             f"'preserve_env' requires usage of 'sudo' or 'substitute_user' in {methods}!"
         )
 
+    if substitute_shell and not substitute_user:
+        raise TypeError(f"'substitute_shell' requires usage of 'substitute_user' in {methods}!")
+
     sudo_cmd = _cmd_as_sudo(preserve_env) if sudo else []
     user_cmd = (
-        (_cmd_as_user(substitute_user, preserve_env) + [shlex.join(cmd)])
+        (
+            _cmd_as_user(
+                substitute_user,
+                shell=substitute_shell,
+                preserve_env=preserve_env,
+            )
+            + [shlex.join(cmd)]
+        )
         if substitute_user
         else cmd
     )
@@ -316,9 +335,15 @@ def _cmd_as_sudo(preserve_env: list[str] | None = None) -> list[str]:
     return base_cmd
 
 
-def _cmd_as_user(username: str, preserve_env: list[str] | None = None) -> list[str]:
+def _cmd_as_user(
+    username: str,
+    shell: str | None = None,
+    preserve_env: list[str] | None = None,
+) -> list[str]:
     """Extend commandline by adopting rol oe desired user."""
     base_cmd = ["su", "-l", username]
+    if shell:
+        base_cmd += ["--shell", shell]
     if preserve_env:
         base_cmd += ["--whitelist-environment", ",".join(preserve_env)]
     base_cmd += ["-c"]
@@ -418,7 +443,7 @@ def check_output(
     Returns the stdout of the process.
     """
     preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
-    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
+    cmd_ = _extend_command(cmd, substitute_user, None, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
     kwargs["input"] = input

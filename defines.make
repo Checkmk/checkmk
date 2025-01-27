@@ -33,7 +33,7 @@ else
 CLOUD              := no
 endif
 
-VERSION            := 2.2.0p39
+VERSION            := 2.2.0p40
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)

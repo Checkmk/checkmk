@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.2.0p39"
+CMK_VERSION="2.2.0p40"
 
 # Check Ceph storage
 # Config file must contain:

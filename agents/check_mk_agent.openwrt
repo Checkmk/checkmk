@@ -270,7 +270,7 @@ section_cpu() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.2.0p39"
+    echo "Version: 2.2.0p40"
     echo "AgentOS: openwrt"
     echo "Hostname: $(cat /proc/sys/kernel/hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"

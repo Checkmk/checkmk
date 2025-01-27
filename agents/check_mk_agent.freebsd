@@ -236,7 +236,7 @@ unset_locale() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.2.0p39"
+    echo "Version: 2.2.0p40"
     echo "AgentOS: freebsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"

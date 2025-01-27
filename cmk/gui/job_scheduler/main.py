@@ -5,6 +5,7 @@
 
 import logging
 import os
+import signal
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -61,6 +62,8 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         log_path.mkdir(exist_ok=True, parents=True)
 
         _setup_console_logging()
+
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
         daemonize()
 

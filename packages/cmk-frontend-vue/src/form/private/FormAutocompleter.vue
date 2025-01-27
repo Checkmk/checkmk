@@ -4,16 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import CmkSuggestions from '@/components/CmkSuggestions.vue'
+import useClickOutside from '@/lib/useClickOutside'
 
 const props = defineProps<{
   id?: string
   placeholder: string
-  show: boolean
   autocompleter?: Autocompleter | null
   filterOn: string[]
   size: number
@@ -26,66 +26,19 @@ const emit = defineEmits<{
   (e: 'select', value: string): void
 }>()
 
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value === filteredSuggestions.value.length - 1) {
-      selectedSuggestionIndex.value = 0
-    } else if (selectedSuggestionIndex.value < filteredSuggestions.value.length - 1) {
-      selectedSuggestionIndex.value++
-    }
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value === 0) {
-      selectedSuggestionIndex.value = filteredSuggestions.value.length - 1
-    } else if (selectedSuggestionIndex.value > 0) {
-      selectedSuggestionIndex.value--
-    }
-  } else if (e.key === 'ArrowRight') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value >= 0) {
-      const suggestion = filteredSuggestions.value[selectedSuggestionIndex.value]
-      if (suggestion) {
-        inputValue.value = suggestion
-        selectedSuggestionIndex.value = -1
-      }
-    }
-  } else if (e.key === 'Enter') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value >= 0) {
-      const suggestion = filteredSuggestions.value[selectedSuggestionIndex.value]
-      if (suggestion) {
-        handleCloseList(suggestion)
-      }
+const selectFirstSuggestion = () => {
+  if (filteredSuggestions.value.length > 0) {
+    const suggestion = filteredSuggestions.value[0]
+    if (suggestion) {
+      selectSuggestion(suggestion)
     }
   }
 }
 
-const handleAddItem = (e: KeyboardEvent) => {
-  if (selectedSuggestionIndex.value >= 0) {
-    inputReset()
-    return
-  }
-  const value = (e.target as HTMLInputElement).value
-  if (value) {
-    emit('select', value)
-  }
+const selectSuggestion = (suggestion: Suggestion) => {
+  inputValue.value = suggestion[0]
   inputReset()
-
-  if (!props.resestInputOnAdd) {
-    setBlur(false)
-  }
-}
-
-const handleCloseList = (item: string) => {
-  selectedSuggestionIndex.value = -1
-  inputValue.value = item
-  inputReset()
-  setBlur(false)
-  emit('select', item)
-}
-
-const handleListBlur = () => {
+  emit('select', suggestion[0])
   showSuggestions.value = false
 }
 
@@ -95,27 +48,16 @@ const inputReset = () => {
   }
 }
 
-const setBlur = (isSet: boolean) => {
-  autocompleteFocus.value = isSet
-  setTimeout(() => {
-    showSuggestions.value = isSet
-  }, 200)
-}
+type Suggestion = [string, string]
+type AutocompleterResponse = Record<'choices', Suggestion[]>
+const { input: autocompleterInput, output: autocompleterOutput } =
+  setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
 
-type AutocompleterResponse = Record<'choices', [string, string][]>
-const {
-  input: autocompleterInput,
-  focus: autocompleteFocus,
-  output: autocompleterOutput
-} = setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
-
-const filteredSuggestions = ref<string[]>([])
-const inputField = useTemplateRef<HTMLInputElement>('inputField')
+const filteredSuggestions = ref<Suggestion[]>([])
+const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const showSuggestions = ref<boolean>(false)
-const selectedSuggestionIndex = ref<number>(-1)
 
 watch(inputValue, (newValue) => {
-  showSuggestions.value = inputValue.value ? true : false
   autocompleterInput.value = newValue || ''
 })
 
@@ -124,28 +66,33 @@ watch(autocompleterOutput, (newValue) => {
     return
   }
   filteredSuggestions.value = newValue.choices
-    .map((element: [string, string]) => element[0])
-    .filter((element: string) => element.length > 0)
-    .filter((element: string) => !props.filterOn.includes(element))
+    .filter((element: Suggestion) => element[0].length > 0 && element[1].length > 0)
+    .filter((element: Suggestion) => !props.filterOn.includes(element[0]))
 })
+
+const vClickOutside = useClickOutside()
 </script>
 
 <template>
-  <div class="autocomplete">
+  <div v-click-outside="() => (showSuggestions = false)" class="autocomplete">
     <span style="display: flex; align-items: center">
       <input
         :id="props.id ?? 'autocomplete'"
-        ref="inputField"
         v-model="inputValue"
         class="item new-item"
         type="text"
         autocomplete="on"
         :size="props.size"
         :placeholder="props.placeholder"
-        @keydown.enter="handleAddItem"
-        @focus="() => setBlur(true)"
-        @blur="() => setBlur(false)"
-        @keydown="handleKeyDown"
+        @keydown.enter.prevent="selectFirstSuggestion"
+        @focus="() => (showSuggestions = true)"
+        @input="() => (showSuggestions = true)"
+        @keydown.down.prevent="
+          () => {
+            suggestionsRef?.focus()
+            suggestionsRef?.advance()
+          }
+        "
       />
       <X
         :style="{ opacity: !!inputValue ? 1 : 0, cursor: !!inputValue ? 'pointer' : 'unset' }"
@@ -153,23 +100,15 @@ watch(autocompleterOutput, (newValue) => {
         @click="() => (inputValue = '')"
       />
     </span>
-
-    <CmkScrollContainer>
-      <ul
-        v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
-        class="suggestions"
-        @blur="handleListBlur"
-      >
-        <li
-          v-for="(option, index) in filteredSuggestions"
-          :key="option"
-          :class="{ selected: index === selectedSuggestionIndex }"
-          @click="() => handleCloseList(option)"
-        >
-          {{ option }}
-        </li>
-      </ul>
-    </CmkScrollContainer>
+    <CmkSuggestions
+      v-if="filteredSuggestions.length > 0 && !!showSuggestions"
+      ref="suggestionsRef"
+      :suggestions="
+        filteredSuggestions.map((suggestion) => ({ name: suggestion[0], title: suggestion[1] }))
+      "
+      :on-select="(suggestion) => selectSuggestion([suggestion.name, suggestion.title])"
+      :show-filter="false"
+    />
   </div>
 </template>
 

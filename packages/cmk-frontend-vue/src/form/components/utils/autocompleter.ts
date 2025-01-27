@@ -67,15 +67,13 @@ export async function fetchData<OutputType>(
 
 export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompleter | null): {
   input: Ref<string>
-  focus: Ref<boolean>
   output: Ref<OutputType | undefined>
 } {
   const input = ref<string>('')
   const output = ref<OutputType>()
-  const focus = ref(false)
 
-  watch([input, focus, getAutocompleter], async ([_, focusValue, autocompleter]) => {
-    if (autocompleter === null || !focusValue) {
+  watch([input, getAutocompleter], async ([_, autocompleter]) => {
+    if (autocompleter === null) {
       return
     }
     if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
@@ -85,5 +83,5 @@ export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompl
     }
   })
 
-  return { input, focus, output }
+  return { input, output }
 }

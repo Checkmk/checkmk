@@ -58,7 +58,6 @@ const componentId = useId()
     :resest-input-on-add="false"
     :autocompleter="spec.autocompleter"
     :placeholder="spec.input_hint ?? ''"
-    :show="true"
     :filter-on="[]"
     :show-icon="true"
   />

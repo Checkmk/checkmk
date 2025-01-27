@@ -142,6 +142,14 @@ const deleteItem = (item: string) => {
       :show="!error"
       :filter-on="keyValuePairs"
       :resest-input-on-add="true"
+      @keydown.enter="
+        (e: KeyboardEvent) => {
+          const v = (e.target as HTMLInputElement).value
+          if (v.length > 0) {
+            validate(v)
+          }
+        }
+      "
       @select="addItem"
     />
   </div>

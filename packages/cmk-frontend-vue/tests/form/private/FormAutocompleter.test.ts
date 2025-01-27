@@ -7,11 +7,11 @@
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { ref, watch } from 'vue'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
 
 vi.mock('@/form/components/utils/autocompleter', () => ({
   setupAutocompleter: vi.fn(() => {
     const input = ref('')
-    const focus = ref(false)
     const output = ref()
 
     watch(input, async (newVal) => {
@@ -26,7 +26,7 @@ vi.mock('@/form/components/utils/autocompleter', () => ({
       }
     })
 
-    return { input, focus, output }
+    return { input, output }
   })
 }))
 
@@ -35,7 +35,6 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        show: false,
         autocompleter: null,
         filterOn: [],
         resestInputOnAdd: false,
@@ -47,28 +46,35 @@ describe('FormAutocompleter', () => {
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    render(FormAutocompleter, {
+    const component = render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        show: false,
         autocompleter: null,
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
         id: 'test'
       }
-    }).emitted('select')
+    })
 
     const input = screen.getByPlaceholderText('Search...')
     await fireEvent.update(input, 'os:windows')
+
+    await waitFor(() => {
+      expect(screen.getByText('os:windows', { exact: false })).toBeInTheDocument()
+    })
+
     await fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(component.emitted('select')).toHaveLength(1)
+    const selected = component.emitted('select')[0] as string[]
+    expect(selected[0]).toBe('os:windows')
   })
 
   test('on input should open dropdown list with items', async () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        show: true,
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
@@ -84,19 +90,12 @@ describe('FormAutocompleter', () => {
       expect(screen.getByText('os:windows')).toBeInTheDocument()
       expect(screen.getByText('os:linux')).toBeInTheDocument()
     })
-
-    const suggestions = screen.getAllByRole('listitem')
-    expect(suggestions).toHaveLength(2)
-
-    expect(suggestions[0]).toHaveTextContent('os:windows')
-    expect(suggestions[1]).toHaveTextContent('os:linux')
   })
 
   test('on input should filter list', async () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        show: true,
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
@@ -112,18 +111,12 @@ describe('FormAutocompleter', () => {
       expect(screen.getByText('os:windows')).toBeInTheDocument()
       expect(screen.queryByText('os:linux')).not.toBeInTheDocument()
     })
-
-    const suggestions = screen.getAllByRole('listitem')
-    expect(suggestions).toHaveLength(1)
-
-    expect(suggestions[0]).toHaveTextContent('os:windows')
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
     const component = render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        show: true,
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
@@ -137,54 +130,38 @@ describe('FormAutocompleter', () => {
 
     await waitFor(() => {
       expect(screen.getByText('os:windows')).toBeInTheDocument()
-      expect(screen.getByText('os:linux')).toBeInTheDocument()
     })
-
-    const suggestions = screen.getAllByRole('listitem')
-
-    expect(suggestions).not.toHaveLength(0)
-    if (suggestions[0]) {
-      await fireEvent.click(suggestions[0])
-    } else {
-      throw new Error('No suggestions found')
-    }
+    await fireEvent.click(screen.getByText('os:windows'))
 
     expect(component.emitted('select')).toHaveLength(1)
+    const selected = component.emitted('select')[0] as string[]
+    expect(selected[0]).toBe('os:windows')
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    render(FormAutocompleter, {
+    const component = render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        show: true,
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
         id: 'test'
       }
-    }).emitted('select')
+    })
 
     const input = screen.getByPlaceholderText('Add some labels')
-    await fireEvent.update(input, 'os')
+    await userEvent.type(input, 'os')
 
     await waitFor(() => {
       expect(screen.getByText('os:windows')).toBeInTheDocument()
       expect(screen.getByText('os:linux')).toBeInTheDocument()
     })
-    const suggestions = screen.getAllByRole('listitem')
-    expect(suggestions).not.toHaveLength(0)
-    if (suggestions[0]) {
-      await fireEvent.keyDown(input, { key: 'ArrowDown' })
-      expect(suggestions[0].classList).toContain('selected')
-      await fireEvent.keyDown(input, { key: 'Enter' })
-    } else {
-      throw new Error('No suggestions found')
-    }
 
-    await waitFor(() => {
-      expect(screen.queryByText('os:windows')).not.toBeInTheDocument()
-      expect(screen.queryByText('os:linux')).not.toBeInTheDocument()
-    })
+    await userEvent.keyboard('[ArrowDown][Enter]')
+
+    expect(component.emitted('select')).toHaveLength(1)
+    const selected = component.emitted('select')[0] as string[]
+    expect(selected[0]).toBe('os:linux')
   })
 })

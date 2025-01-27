@@ -69,6 +69,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         log_path.mkdir(exist_ok=True, parents=True)
 
         _setup_console_logging()
+
+        daemonize()
+
         init_span_processor(
             trace.init_tracing(
                 service_namespace="",
@@ -79,8 +82,6 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
         )
         add_span_log_handler()
-
-        daemonize()
 
         loaded_at = int(time.time())
 

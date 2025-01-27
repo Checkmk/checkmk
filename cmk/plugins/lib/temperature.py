@@ -235,7 +235,7 @@ def _check_trend(
     diff_to_limit = limit - temp
     if rate_avg != 0 and not math.isinf(seconds_left := float(diff_to_limit / rate_avg)):
         yield from check_levels_v1(
-            value=seconds_left,
+            value=max(seconds_left, 0),
             levels_lower=levels_timeleft_sec,
             render_func=timespan,
             label="Time until temperature limit reached",

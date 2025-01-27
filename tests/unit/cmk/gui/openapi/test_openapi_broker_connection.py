@@ -5,7 +5,7 @@
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.rest_api_client import (
+from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
 )
 

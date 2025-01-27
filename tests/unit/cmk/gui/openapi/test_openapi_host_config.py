@@ -14,7 +14,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

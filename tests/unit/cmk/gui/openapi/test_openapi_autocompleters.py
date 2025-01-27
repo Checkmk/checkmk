@@ -6,7 +6,7 @@
 import pytest
 
 from tests.testlib.repo import is_enterprise_repo
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

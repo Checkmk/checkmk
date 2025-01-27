@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty

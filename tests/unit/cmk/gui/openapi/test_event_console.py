@@ -7,7 +7,7 @@
 from time import time
 from typing import Any
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

@@ -9,7 +9,7 @@ from unittest import mock
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from cmk.ccc import version
 

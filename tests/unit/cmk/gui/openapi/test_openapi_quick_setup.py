@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from cmk.gui.fields.definitions import FOLDER_PATTERN
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry

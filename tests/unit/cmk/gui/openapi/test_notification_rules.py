@@ -9,7 +9,7 @@ from typing import Any, get_args, Literal
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from cmk.ccc import version
 

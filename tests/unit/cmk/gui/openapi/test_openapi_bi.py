@@ -6,7 +6,7 @@
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig
 

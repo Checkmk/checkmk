@@ -122,13 +122,23 @@ export const runQuickSetupAction = async (
   quickSetupId: string,
   actionId: string,
   stages: QuickSetupStageRequest[]
-): Promise<QuickSetupCompleteResponse | BackgroundJobSpawnResponse> => {
+): Promise<
+  | QuickSetupCompleteResponse
+  | BackgroundJobSpawnResponse
+  | QuickSetupCompleteActionValidationResponse
+> => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-action/invoke`
 
   try {
     const { data } = await axios.post(url, { button_id: actionId, stages })
     return data
   } catch (error) {
+    if (axios.isAxiosError(error) && error.status === 400) {
+      const payload = error.response?.data || {}
+      if ('all_stage_errors' in payload || 'background_job_exception' in payload) {
+        return new QuickSetupCompleteActionValidationResponse(payload)
+      }
+    }
     throw argumentError(error as Error)
   }
 }

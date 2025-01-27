@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
@@ -27,24 +27,66 @@ class StorcliPDisk(NamedTuple):
 Section = Mapping[str, StorcliPDisk]
 
 
+class Table(NamedTuple):
+    name: str
+    header: list[str]
+    body: StringTable
+
+
+def is_table_marker(line: list[str]) -> bool:
+    return _is_marker("-", line)
+
+
+def is_section_marker(line: list[str]) -> bool:
+    return _is_marker("=", line)
+
+
+def _is_marker(marker: str, line: list[str]) -> bool:
+    if len(line) == 1 and (string := line[0]):
+        return string.count(marker) == len(string)
+    return False
+
+
+def parse_table(lines: Iterator[list[str]], name: str) -> Table:
+    table_marker = next(lines)
+    assert is_table_marker(table_marker)
+
+    table_header = next(lines)
+
+    table_marker = next(lines)
+    assert is_table_marker(table_marker)
+
+    table_body = []
+    for line in lines:
+        if is_table_marker(line):
+            break
+        table_body.append(line)
+    return Table(name, table_header, table_body)
+
+
 def parse_storcli_pdisks(string_table: StringTable) -> Section:
-    section = {}
+    tables = []
+    current_section = None
+
+    lines = iter(string_table)
+    prev_line = [""]
+
+    for line in lines:
+        if is_section_marker(line):
+            current_section = " ".join(prev_line).rstrip(": ")
+            tables.append(parse_table(lines, current_section))
+        prev_line = line
+
     controller_num = 0
-    separator_count = 0
-    for line in string_table:
-        if line[0].startswith("-----"):
-            separator_count += 1
-        elif separator_count == 2:
+    section = {}
+    for table in tables:
+        for line in table.body:
             eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
             section["C%i.%s-%s" % (controller_num, eid_and_slot, device)] = StorcliPDisk(
                 state=megaraid.expand_abbreviation(state),
                 size=(float(size), size_unit),
             )
-        if separator_count == 3:
-            # each controller has 3 separators, reset count and continue
-            separator_count = 0
-            controller_num += 1
-
+        controller_num += 1
     return section
 
 

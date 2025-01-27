@@ -5,9 +5,13 @@
 
 import re
 
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.legacy_checks.storcli_pdisks import parse_storcli_pdisks
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.lib import megaraid
 
 # agent_output/CMK-7584-storcli_pdisks
 SECTION_V1 = """CLI Version = 007.1017.0000.0000 May 10, 2019
@@ -133,3 +137,20 @@ def test_parse_v2():
         "C1.293-0/1": {"size": (6.985, "TiB"), "state": "0"},
         "C1.294-0/1": {"size": (6.985, "TiB"), "state": "0"},
     }
+
+
+def test_check_simple(agent_based_plugins: AgentBasedPlugins) -> None:
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("storcli_pdisks")]
+    assert check_plugin
+    result = list(
+        check_plugin.check_function(
+            item="C0.8:2-18",
+            params=megaraid.PDISKS_DEFAULTS,
+            section=parse_storcli_pdisks(
+                _to_string_table(SECTION_V1),
+            ),
+        )
+    )
+    assert result == [
+        Result(state=State.OK, summary="Size: 953.343000 GB, Disk State: Online"),
+    ]

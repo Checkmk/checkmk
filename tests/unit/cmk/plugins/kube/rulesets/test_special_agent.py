@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
 from cmk.ccc.version import Edition
 
 from cmk.plugins.kube.rulesets.special_agent import _migrate_and_transform
 
 
-@pytest.mark.xfail(strict=True)
 def test_migrate_raw() -> None:
     # Assemble
     value = {

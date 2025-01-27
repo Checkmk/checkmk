@@ -78,6 +78,7 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
         exit_code=AutomationExitCode.SUCCESS,
         output="",
+        error="",
     )
     mock_reload_config.assert_called_once()  # only at application startup
     mock_clear_caches_before_each_call.assert_called_once()
@@ -98,6 +99,7 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
         exit_code=1,
         output="",
+        error="",
     )
     mock_reload_config.assert_called_once()  # only at application startup
     mock_clear_caches_before_each_call.assert_called_once()

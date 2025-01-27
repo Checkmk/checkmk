@@ -36,5 +36,5 @@ def test_checks() -> None:
         check_plugin_liebert_reheating.check_function({"levels": (80, 90)}, _section())
     ) == [
         Result(state=State.WARN, summary="81.30 % (warn/crit at 80.00 %/90.00 %)"),
-        Metric("filehandler_perc", 81.3, levels=(80, 90)),
+        Metric("fan_perc", 81.3, levels=(80, 90)),
     ]

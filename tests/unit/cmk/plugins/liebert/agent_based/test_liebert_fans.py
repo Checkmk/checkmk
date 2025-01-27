@@ -34,5 +34,5 @@ def test_check() -> None:
             state=State.WARN,
             summary="1.30 % (warn/crit below 2.00 %/1.00 %)",
         ),
-        Metric("filehandler_perc", 1.3, levels=(80, 90)),
+        Metric("fan_perc", 1.3, levels=(80, 90)),
     ]

@@ -565,4 +565,4 @@ def test_get_active_service_data_warnings(
     assert services == expected_result
 
     captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert captured.err == expected_warning

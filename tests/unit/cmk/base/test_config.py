@@ -3219,6 +3219,6 @@ def test_get_active_service_data_crash(
 
     captured = capsys.readouterr()
     assert (
-        captured.out
+        captured.err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
     )

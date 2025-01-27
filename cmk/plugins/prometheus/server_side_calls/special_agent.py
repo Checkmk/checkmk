@@ -107,7 +107,7 @@ def _commands_function(
                 exclude_unset=True,
             )
             | {
-                "host_address": host_config.primary_ip_config.address,
+                "host_address": _primary_ip_address_from_host_config_if_configured(host_config),
                 "host_name": host_config.name,
             }
         ),
@@ -141,3 +141,11 @@ special_agent_prometheus = SpecialAgentConfig(
     parameter_parser=Params.model_validate,
     commands_function=_commands_function,
 )
+
+
+def _primary_ip_address_from_host_config_if_configured(host_config: HostConfig) -> str | None:
+    try:
+        primary_ip_config = host_config.primary_ip_config
+    except ValueError:
+        return None
+    return primary_ip_config.address

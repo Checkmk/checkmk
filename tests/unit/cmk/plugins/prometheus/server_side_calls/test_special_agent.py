@@ -53,10 +53,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     }
                 ],
             },
-            HostConfig(
-                name="host",
-                ipv4_config=IPv4Config(address="1.2.3.4"),
-            ),
+            HostConfig(name="host"),
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
@@ -66,7 +63,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "'promql_checks': [{'service_description': "
                     "'my-service', 'metric_components': "
                     "[{'metric_label': 'my-metric', 'promql_query': "
-                    "'my-query'}]}], 'host_address': '1.2.3.4', "
+                    "'my-query'}]}], 'host_address': None, "
                     "'host_name': 'host'}",
                     "--cert-server-name",
                     "host",

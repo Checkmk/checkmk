@@ -88,7 +88,7 @@ def _migrate_usage_endpoint(p: object) -> tuple[str, object]:
 def _is_cre_spec(k: str, vs: object) -> bool:
     if k != "usage_endpoint":
         return True
-    return isinstance(vs, tuple) and vs[0] == "cluster_collector"
+    return isinstance(vs, tuple) and vs[0] in ("cluster_collector", "cluster-collector")
 
 
 def _transform_openshift_endpoint(p: dict[str, object], edition: Edition) -> dict[str, object]:

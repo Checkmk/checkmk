@@ -303,7 +303,7 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
 
     if os.stat(msi_file_path).st_size == 0:
         pytest.skip(
-            f"The file {msi_file_path} was most likely faked by fake-windows-artifacts, "
+            f"The file {msi_file_path} was most likely faked by fake-artifacts, "
             f"so there is no reason to check it with msiinfo"
         )
     properties = {

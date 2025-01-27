@@ -37,7 +37,7 @@ When these files are not existing previous to the packaging of Checkmk,
 the build will fail.
 
 For the moment there is an internal helper script
-`scripts/fake-windows-artifacts` that creates empty stub files at the required
+`scripts/fake-artifacts` that creates empty stub files at the required
 locations to prevent the packaging issues. Obviously the Windows agent and
 related features in your built package will not be usable when building with
 these faked artifacts.
@@ -71,12 +71,12 @@ the master branch.
 Clone from the Checkmk Git, then execute the following commands:
 
 ```bash
-# Run everything in our pre-built docker images. 
+# Run everything in our pre-built docker images.
 # This may take a while as it's pulling the image from the registry
 scripts/run-in-docker.sh bash
 
 # Fake the windows artifacts - they need to be built on a windows node
-scripts/fake-windows-artifacts
+scripts/fake-artifacts
 
 # Enable using the omd build cache
 NEXUS_BUILD_CACHE_URL=https://artifacts.lan.tribe29.com/repository/omd-build-cache \
@@ -235,7 +235,7 @@ Step by step:
 a package to be added.
 2. Create a corresponding directory with name of the package in the
 `omd/packages` subdir, i.e. `omd/packages/[name]`.
-3. Create in the directory from p.2 the file having name of the package and 
+3. Create in the directory from p.2 the file having name of the package and
 extension make, i.e. `omd/packages/[name]/[name].make`
 4. Add `omd/packages/[name]/[name].make` to the rule include in the file
 `omd/packages/package.make`

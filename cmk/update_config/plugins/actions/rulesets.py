@@ -75,7 +75,7 @@ def validate_rule_values(
 def _make_rule_reference(ruleset: Ruleset, folder: Folder, index: int, excpt: Exception) -> str:
     return (
         f"Ruleset: {ruleset.name}, Title: {ruleset.title()}, Folder: {folder.path()},\n"
-        f"Rule nr: {index + 1}, Exception: {excpt}"
+        f"Rule nr: {index}, Exception: {excpt}"
     )
 
 

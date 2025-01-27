@@ -331,7 +331,6 @@ def start_mtr(host, mtr_binary, config, status):
         return
 
     os.chdir("/")
-    os.umask(0)
     os.setsid()
 
     # Close all fd except stdin,out,err

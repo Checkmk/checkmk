@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
@@ -20,11 +20,20 @@ const props = defineProps<{
   resestInputOnAdd: boolean
 }>()
 
+type Suggestion = [string, string]
 const inputValue = defineModel<string>()
+const visibleInputValue = ref<string>('')
 
 const emit = defineEmits<{
   (e: 'select', value: string): void
 }>()
+
+type AutocompleterResponse = Record<'choices', Suggestion[]>
+const { input: autocompleterInput, output: autocompleterOutput } =
+  setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
+const filteredSuggestions = ref<Suggestion[]>([])
+const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
+const showSuggestions = ref<boolean>(false)
 
 const selectFirstSuggestion = () => {
   if (filteredSuggestions.value.length > 0) {
@@ -37,28 +46,29 @@ const selectFirstSuggestion = () => {
 
 const selectSuggestion = (suggestion: Suggestion) => {
   inputValue.value = suggestion[0]
-  inputReset()
+  visibleInputValue.value = suggestion[1]
+  if (props.resestInputOnAdd) {
+    resetVisibleInput()
+  }
   emit('select', suggestion[0])
   showSuggestions.value = false
 }
 
-const inputReset = () => {
-  if (props.resestInputOnAdd) {
-    inputValue.value = ''
-  }
+const deleteSelection = () => {
+  inputValue.value = ''
+  resetVisibleInput()
+  emit('select', '')
 }
 
-type Suggestion = [string, string]
-type AutocompleterResponse = Record<'choices', Suggestion[]>
-const { input: autocompleterInput, output: autocompleterOutput } =
-  setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
+const resetVisibleInput = () => {
+  visibleInputValue.value = ''
+  autocompleterInput.value = ''
+}
 
-const filteredSuggestions = ref<Suggestion[]>([])
-const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
-const showSuggestions = ref<boolean>(false)
-
-watch(inputValue, (newValue) => {
-  autocompleterInput.value = newValue || ''
+onMounted(() => {
+  if (inputValue.value) {
+    visibleInputValue.value = inputValue.value
+  }
 })
 
 watch(autocompleterOutput, (newValue) => {
@@ -78,7 +88,7 @@ const vClickOutside = useClickOutside()
     <span style="display: flex; align-items: center">
       <input
         :id="props.id ?? 'autocomplete'"
-        v-model="inputValue"
+        v-model="visibleInputValue"
         class="item new-item"
         type="text"
         autocomplete="on"
@@ -86,7 +96,12 @@ const vClickOutside = useClickOutside()
         :placeholder="props.placeholder"
         @keydown.enter.prevent="selectFirstSuggestion"
         @focus="() => (showSuggestions = true)"
-        @input="() => (showSuggestions = true)"
+        @input="
+          (ev: Event) => {
+            autocompleterInput = (ev.target as HTMLInputElement).value
+            showSuggestions = true
+          }
+        "
         @keydown.down.prevent="
           () => {
             suggestionsRef?.focus()
@@ -95,9 +110,12 @@ const vClickOutside = useClickOutside()
         "
       />
       <X
-        :style="{ opacity: !!inputValue ? 1 : 0, cursor: !!inputValue ? 'pointer' : 'unset' }"
+        :style="{
+          opacity: !!visibleInputValue ? 1 : 0,
+          cursor: !!visibleInputValue ? 'pointer' : 'unset'
+        }"
         class="item-delete-btn"
-        @click="() => (inputValue = '')"
+        @click="deleteSelection"
       />
     </span>
     <CmkSuggestions

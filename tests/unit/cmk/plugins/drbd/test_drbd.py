@@ -88,6 +88,25 @@ class TestGeneralCheckType:
         value = list(drbd.check_drbd_general("drbd0", params, SECTION))
         expected = [
             Result(state=State.WARN, summary="Connection State: SyncSource"),
+            Result(
+                state=State.UNKNOWN,
+                summary="Roles: Primary/Secondary (Check requires a new service discovery)",
+            ),
+            Result(state=State.OK, summary="Diskstates: UpToDate/Inconsistent"),
+        ]
+        assert value == expected
+
+    def test_check_drbd_with_roles_inventory_params(self) -> None:
+        params = {
+            "diskstates_inventory": None,
+            "roles_inventory": [
+                "Primary",
+                "Secondary",
+            ],
+        }
+        value = list(drbd.check_drbd_general("drbd0", params, SECTION))
+        expected = [
+            Result(state=State.WARN, summary="Connection State: SyncSource"),
             Result(state=State.OK, summary="Roles: Primary/Secondary"),
             Result(state=State.OK, summary="Diskstates: UpToDate/Inconsistent"),
         ]

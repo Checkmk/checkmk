@@ -25,7 +25,6 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
-REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded
 # variable assignment to get a new time zone on every access.
@@ -407,11 +406,7 @@ test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files
-	cd .. && $(UVENV) mypy \
-	    $(MYPY_ADDOPTS) \
-	    $(ADDITIONAL_MYPY_ARGS) \
-	    --config-file="$(REPO_PATH)/pyproject.toml" \
-	    -- $$($(FIND_PYTHON_FILES))
+	cd .. ; $(UVENV) mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

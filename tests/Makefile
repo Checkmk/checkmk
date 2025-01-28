@@ -43,7 +43,6 @@ SYSTEM_TESTS := \
     test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \
-    test-plugins-siteless \
     test-gui-crawl \
     test-xss-crawl \
     test-gui-e2e \
@@ -361,9 +360,12 @@ test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
 	plugins_integration/test_plugin_piggyback.py
 
-test-plugins-siteless: prepare-protobuf-files
-	$(PYTEST) -T plugins_siteless $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_siteless) \
+test-plugins-siteless:
+	$(PYTEST) -T plugins_siteless --log-cli-level=INFO $(realpath plugins_siteless) \
 	plugins_siteless/test_plugins.py
+
+test-plugins-siteless-docker:
+	../scripts/run-in-docker.sh 'make -C .. protobuf-files; make test-plugins-siteless'
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

@@ -80,6 +80,7 @@ RUN rm /etc/cron.daily/apt-compat
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
+# - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
 FROM base as builder
@@ -112,6 +113,9 @@ RUN /opt/install-gnu-toolchain.sh
 
 COPY install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
+
+COPY install-cmake.sh /opt/
+RUN /opt/install-cmake.sh
 
 COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
@@ -154,6 +158,7 @@ ENV \
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
 RUN /opt/install-valgrind.sh link-only
+RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-bazel.sh link-only

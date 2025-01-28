@@ -3,17 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# {
-#     'tcp_port': 443,
-#     'secret': 'wef',
-#     'infos': ['hostsystem', 'virtualmachine'],
-#     'user': 'wefwef'
-# }
-
-
-# mypy: disable-error-code="list-item"
-
 from collections.abc import Iterable, Sequence
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -26,7 +17,11 @@ class Params(BaseModel):
     secret: Secret
     direct: str
     tcp_port: int | None = None
-    ssl: bool | str
+    ssl: (
+        tuple[Literal["deactivated"], None]
+        | tuple[Literal["hostname"], None]
+        | tuple[Literal["custom_hostname"], str]
+    )
     timeout: int | None = None
     infos: Sequence[str]
     skip_placeholder_vms: bool
@@ -58,7 +53,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         command_arguments += ["--spaces", params.spaces]
 
     if params.timeout:
-        command_arguments += ["--timeout", params.timeout]
+        command_arguments += ["--timeout", str(params.timeout)]
 
     if params.vm_pwr_display:
         command_arguments += ["--vm_pwr_display", params.vm_pwr_display]
@@ -72,13 +67,12 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
     if params.snapshots_on_host:
         command_arguments += ["--snapshots-on-host"]
 
-    cert_verify = params.ssl
-    if cert_verify is False:
+    if params.ssl[0] == "deactivated":
         command_arguments += ["--no-cert-check"]
-    elif cert_verify is True:
+    elif params.ssl[0] == "hostname":
         command_arguments += ["--cert-server-name", host_config.name]
     else:
-        command_arguments += ["--cert-server-name", cert_verify]
+        command_arguments += ["--cert-server-name", params.ssl[1]]
 
     command_arguments.append(host_config.primary_ip_config.address)
 

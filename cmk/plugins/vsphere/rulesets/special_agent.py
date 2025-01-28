@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -82,12 +83,12 @@ def parameter_form() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="deactivated",
                             title=Title("Deactivated"),
-                            parameter_form=FixedValue(value=False),
+                            parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="hostname",
                             title=Title("Use host name"),
-                            parameter_form=FixedValue(value=True),
+                            parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="custom_hostname",
@@ -101,6 +102,7 @@ def parameter_form() -> Dictionary:
                         ),
                     ],
                     prefill=DefaultValue("hostname"),
+                    migrate=_migrate_ssl,
                 ),
                 required=True,
             ),
@@ -232,6 +234,26 @@ def _migrate_direct(value: object) -> str:
     if value is True:
         return "host_system"
     return "vcenter"
+
+
+def _migrate_ssl(
+    value: object,
+) -> (
+    tuple[Literal["deactivated"], None]
+    | tuple[Literal["hostname"], None]
+    | tuple[Literal["custom_hostname"], str]
+):
+    match value:
+        case tuple():
+            return value
+        case False:
+            return ("deactivated", None)
+        case True:
+            return ("hostname", None)
+        case str():
+            return ("custom_hostname", value)
+        case _:
+            raise TypeError(value)
 
 
 def _migrate_pwr_display(value: object) -> str:

@@ -198,14 +198,12 @@ pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
 }
 
 #[allow(dead_code)]
-
 pub struct LogMe {
     temp_dir: TempDir,
     name: String,
 }
 
 #[allow(dead_code)]
-
 impl LogMe {
     pub fn new(name: &str) -> Self {
         let dir = create_temp_process_dir();

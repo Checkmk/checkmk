@@ -167,9 +167,9 @@ CMK_PACKAGES = [
 })
 
 CMC_PROTO_DEPS = [
-    "//non-free/packages/cmc-protocols:config_proto_pb2",
-    "//non-free/packages/cmc-protocols:cycletime_proto_pb2",
-    "//non-free/packages/cmc-protocols:state_proto_pb2",
+    "//non-free/packages/cmc-protocols:py_config_proto",
+    "//non-free/packages/cmc-protocols:py_cycletime_proto",
+    "//non-free/packages/cmc-protocols:py_state_proto",
 ]
 
 py_library(

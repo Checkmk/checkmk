@@ -41,6 +41,7 @@ const style = computed(() => {
         v-model="value"
         :style="style"
         :placeholder="spec.input_hint || ''"
+        :aria-label="spec.label || spec.title"
         rows="20"
         cols="60"
         type="text"

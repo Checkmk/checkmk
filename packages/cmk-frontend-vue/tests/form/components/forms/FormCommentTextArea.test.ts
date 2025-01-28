@@ -41,7 +41,7 @@ test('FormCommentTextArea renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLTextAreaElement>('textbox')
+  const element = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'fooLabel' })
 
   expect(element.value).toBe('fooData')
 })
@@ -53,7 +53,7 @@ test('FormCommentTextArea updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, 'some_other_value')
 
   expect(getCurrentData()).toBe('"some_other_value"')
@@ -68,7 +68,7 @@ test('FormCommentTextArea checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, '')
   screen.getByText('String length must be between 1 and 20')
 })
@@ -99,7 +99,7 @@ test('FormCommentTextArea on button click, adds username to the text', async () 
   const button = screen.getByRole<HTMLImageElement>('img')
   await fireEvent.click(button)
 
-  const text = screen.getByRole<HTMLTextAreaElement>('textbox')
+  const text = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'fooLabel' })
 
   expect(text.value).toContain('fooUserName')
 })

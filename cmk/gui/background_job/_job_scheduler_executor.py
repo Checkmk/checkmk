@@ -111,18 +111,11 @@ class JobSchedulerExecutor(JobExecutor):
         try:
             response = self._session.get(url, timeout=30)
         except requests.ConnectionError as e:
-            return result.Error(
-                StartupError(
-                    f"Failed to start background job, could not connect to ui-job-scheduler: {e}"
-                )
-            )
+            return result.Error(StartupError(f"Could not connect to ui-job-scheduler: {e}"))
 
         if response.status_code != 200:
             return result.Error(
-                StartupError(
-                    "Failed to start background job, got response: "
-                    "HTTP {response.status_code}: {response.text}"
-                )
+                StartupError(f"Got response: HTTP {response.status_code}: {response.text}")
             )
 
         return result.OK(response)
@@ -133,18 +126,11 @@ class JobSchedulerExecutor(JobExecutor):
         try:
             response = self._session.post(url, json=json, timeout=30)
         except requests.ConnectionError as e:
-            return result.Error(
-                StartupError(
-                    f"Failed to start background job, could not connect to ui-job-scheduler: {e}"
-                )
-            )
+            return result.Error(StartupError(f"Could not connect to ui-job-scheduler: {e}"))
 
         if response.status_code != 200:
             return result.Error(
-                StartupError(
-                    "Failed to start background job, got response: "
-                    "HTTP {response.status_code}: {response.text}"
-                )
+                StartupError(f"Got response: HTTP {response.status_code}: {response.text}")
             )
 
         return result.OK(response)

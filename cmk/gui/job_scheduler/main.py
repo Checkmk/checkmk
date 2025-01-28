@@ -30,7 +30,7 @@ from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 
-from ._background_jobs import default_config, get_application, run_server
+from ._background_jobs import default_config, get_application, make_process_health, run_server
 from ._scheduler import run_scheduler_threaded
 
 """Runs and observes regular jobs in the cmk.gui context"""
@@ -106,6 +106,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                     get_application(
                         logger=logger,
                         loaded_at=loaded_at,
+                        process_health=make_process_health,
                         registered_jobs=dict(job_registry.items()),
                         executor=ThreadedJobExecutor(logger),
                     ),

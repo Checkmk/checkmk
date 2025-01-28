@@ -39,10 +39,19 @@ class IsAliveResponse(BaseModel, frozen=True):
     is_alive: bool
 
 
+class ProcessHealth(BaseModel, frozen=True):
+    pid: int
+    ppid: int
+    num_fds: int
+    vm_bytes: int
+    rss_bytes: int
+
+
 class BackgroundJobsHealth(BaseModel, frozen=True):
     running_jobs: dict[str, int]
 
 
 class HealthResponse(BaseModel, frozen=True):
     loaded_at: int
+    process: ProcessHealth
     background_jobs: BackgroundJobsHealth

@@ -6,6 +6,9 @@ edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
+
 [dependencies]
 tiberius = { version = "0.12.3", features = [
   "winauth",

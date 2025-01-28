@@ -360,7 +360,7 @@ test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
 	plugins_integration/test_plugin_piggyback.py
 
-test-plugins-siteless:
+test-plugins-siteless: prepare-protobuf-files
 	$(PYTEST) -T plugins_siteless $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_siteless) \
 	plugins_siteless/test_plugins.py
 

@@ -158,10 +158,10 @@ def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str,
         section_facts.append({"title": "Affected host groups", "value": groups})
 
     if author := context.get("NOTIFICATIONAUTHOR"):
-        section_facts += [
-            {"title": "Author", "value": author},
-            {"title": "Comment", "value": context.get("NOTIFICATIONCOMMENT", "")},
-        ]
+        section_facts.append({"title": "Author", "value": author})
+
+    if comment := context.get("NOTIFICATIONCOMMENT"):
+        section_facts.append({"title": "Comment", "value": comment})
 
     if section_facts:
         yield {

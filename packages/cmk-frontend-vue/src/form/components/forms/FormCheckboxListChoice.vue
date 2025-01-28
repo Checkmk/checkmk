@@ -34,9 +34,10 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 </script>
 
 <template>
-  <div>
+  <div role="listbox" :aria-label="spec.title">
     <div v-for="element in props.spec.elements" :key="element.name" class="container">
       <CmkCheckbox
+        role="option"
         :label="element.title"
         :model-value="value.includes(element.name)"
         @update:model-value="(newValue) => change(element, newValue)"

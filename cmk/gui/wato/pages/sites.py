@@ -1326,19 +1326,18 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         if not is_replication_enabled(site):
             return ""
 
-        icon, message = self._get_connection_status_icon_message(site, local_site)
+        icon, message = self._get_connection_status_icon_message(site_id, site, local_site)
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
     def _get_connection_status_icon_message(
-        self, site: SiteConfiguration, local_site: SiteConfiguration
+        self, remote_site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
     ) -> tuple[Literal["checkmark", "cross", "alert"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", "Offline: No valid multisite URL configured"
 
         remote_port = site["message_broker_port"]
-        remote_site_id = site["id"]  # FIXME: not always present.
         try:
             connection_status = check_remote_connection(
                 omd_root, remote_host, remote_port, remote_site_id

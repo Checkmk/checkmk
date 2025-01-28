@@ -149,6 +149,11 @@ def main() {
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,
                 );
+                build(
+                    job: "${edition_base_folder}/test-gui-e2e-fips",
+                    parameters: job_parameters_common + job_parameters_fips,
+                    wait: false,
+                );
             }
         },
     ]);

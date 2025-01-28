@@ -1712,6 +1712,22 @@ class SiteFactory:
 
         return site
 
+    def copy_site(self, site: Site, copy_name: str) -> Site:
+        self._base_ident = ""
+        site_copy = self._site_obj(copy_name)
+
+        assert (
+            not site_copy.exists()
+        ), f"Site '{copy_name}' already existing. Please remove it before performing a copy."
+
+        site.stop()
+        logger.info("Copying site '%s' to site '%s'...", site.id, site_copy.id)
+        run(["omd", "cp", site.id, copy_name], sudo=True)
+        site_copy = self.get_existing_site(copy_name)
+        site_copy.start()
+
+        return site_copy
+
     def interactive_update(
         self,
         test_site: Site,

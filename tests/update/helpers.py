@@ -113,6 +113,17 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
     return target_site
 
 
+def create_password(site: Site) -> None:
+    site.openapi.passwords.create(
+        ident="mydummypass",
+        title="Dummypass",
+        comment="",
+        password="dummy",
+        owner="admin",
+    )
+    site.openapi.changes.activate_and_wait_for_completion()
+
+
 def inject_rules(site: Site) -> None:
     try:
         with open(RULES_DIR / "ignore.txt", encoding="UTF-8") as ignore_list_file:

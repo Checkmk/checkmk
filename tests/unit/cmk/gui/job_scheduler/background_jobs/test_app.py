@@ -35,6 +35,7 @@ class DummyExecutor(JobExecutor):
 
     def start(
         self,
+        type_id: str,
         job_id: str,
         work_dir: str,
         span_id: str,
@@ -54,6 +55,12 @@ class DummyExecutor(JobExecutor):
     def all_running_jobs(self) -> dict[str, int]:
         return {
             "job_id": 42,
+        }
+
+    def job_executions(self) -> dict[str, int]:
+        return {
+            "job_1": 1,
+            "job_2": 2,
         }
 
 
@@ -101,6 +108,7 @@ def test_start() -> None:
         resp = client.post(
             "/start",
             json=StartRequest(
+                type_id="HelloJob",
                 job_id="hi",
                 work_dir="/tmp",
                 span_id="no_span",
@@ -155,6 +163,7 @@ def test_health_check() -> None:
         rss_bytes=1234,
     )
     assert response.background_jobs.running_jobs == {"job_id": 42}
+    assert response.background_jobs.job_executions == {"job_1": 1, "job_2": 2}
 
 
 def test_on_scheduler_start_executed() -> None:

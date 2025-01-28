@@ -9,6 +9,7 @@ from ._interface import JobTarget, SpanContextModel
 
 
 class StartRequest(BaseModel, frozen=True):
+    type_id: str
     job_id: str
     work_dir: str
     span_id: str
@@ -49,6 +50,7 @@ class ProcessHealth(BaseModel, frozen=True):
 
 class BackgroundJobsHealth(BaseModel, frozen=True):
     running_jobs: dict[str, int]
+    job_executions: dict[str, int]
 
 
 class HealthResponse(BaseModel, frozen=True):

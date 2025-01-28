@@ -166,6 +166,12 @@ CMK_PACKAGES = [
     ],
 })
 
+CMC_PROTO_DEPS = [
+    "//non-free/packages/cmc-protocols:config_proto_pb2",
+    "//non-free/packages/cmc-protocols:cycletime_proto_pb2",
+    "//non-free/packages/cmc-protocols:state_proto_pb2",
+]
+
 py_library(
     name = "lib_cmk",
     srcs = glob(
@@ -201,9 +207,7 @@ py_library(
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
-    deps = [
-        # TODO: Shouldn't we add "cycletime_" and "state_" here?
-        "//non-free/packages/cmc-protocols:config_proto_pb2",
+    deps = CMC_PROTO_DEPS + [
         "lib_cmk",
     ] + edition_deps[edition],
 ) for edition, srcs in [
@@ -225,11 +229,7 @@ py_library(
         "@rrdtool_native//:rrdtool_python_lib",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
-            "//non-free/packages/cmc-protocols:config_proto_pb2",
-            "//non-free/packages/cmc-protocols:cycletime_proto_pb2",
-            "//non-free/packages/cmc-protocols:state_proto_pb2",
-        ],
+        "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 
@@ -253,10 +253,9 @@ py_wheel(
     # TODO(ml): cmk_version vs. PEP 440?
     version = "1+" + edition,
     visibility = ["//visibility:public"],
-    deps = [
+    deps = CMC_PROTO_DEPS + [
         "lib_cmk",
         "lib_cmk_" + edition,
-        "//non-free/packages/cmc-protocols:config_proto_pb2",
     ],
 ) for edition in [
     "cce",

@@ -90,7 +90,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
             + (args.ulimit_nofile ? ["--ulimit nofile=${args.ulimit_nofile}:${args.ulimit_nofile}"] : [])
             + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
             + ["-v \"${container_shadow_workspace}/home:${env.HOME}\""]
-            + "--tmpfs ${env.HOME}/.cache/bazel:exec,size=10g,mode=777"
+            + "--tmpfs ${env.HOME}/.cache/bazel:exec,size=15g,mode=777" // use different size locally vs in CI, 15GB locally is to much, but 10GB not enough on CI
             + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
             + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
             + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])

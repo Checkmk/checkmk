@@ -89,6 +89,7 @@ DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/home_ca
 # use "--tmpfs" instead
 # see https://docs.docker.com/engine/storage/tmpfs/#options-for---tmpfs
 # mount the bazel cache as tmpfs to save minimum 6GB of diskspace
+# use different size locally vs in CI, 15GB locally is to much, but 10GB not enough on CI
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} --tmpfs ${HOME}/.cache/bazel:exec,size=10g,mode=777"
 # other folders in HOME/.cache are not touched to ensure a fast venv creation
 

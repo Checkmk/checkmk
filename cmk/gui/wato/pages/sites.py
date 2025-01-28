@@ -12,7 +12,7 @@ import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, assert_never, cast, NamedTuple, overload
+from typing import Any, assert_never, cast, Literal, NamedTuple, overload
 from urllib.parse import urlparse
 
 from livestatus import (
@@ -134,7 +134,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionUnknown
+from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -1330,40 +1330,28 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
     def _get_connection_status_icon_message(
         self, site: SiteConfiguration, local_site: SiteConfiguration
-    ) -> tuple[str, str]:
+    ) -> tuple[Literal["checkmark", "cross", "alert"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", "Offline: No valid multisite URL configured"
 
-        connection_status: ConnectionOK | ConnectionUnknown | ConnectionFailed
+        remote_port = site["message_broker_port"]
+        remote_site_id = site["id"]  # FIXME: not always present.
         try:
-            if (remote_port := site.get("message_broker_port", 5672)) == local_site.get(
-                "message_broker_port", 5672
-            ) and remote_host == urlparse(local_site["multisiteurl"]).hostname:
-                connection_status = ConnectionUnknown(
-                    "The configuration checks against the local site"
-                )
-            else:
-                connection_status = check_remote_connection(
-                    omd_root, remote_host, remote_port, site["id"]
-                )
+            connection_status = check_remote_connection(
+                omd_root, remote_host, remote_port, remote_site_id
+            )
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
-            connection_status = ConnectionFailed(str(e))
+            return "alert", f"Unkown: {e}"
 
         match connection_status:
             case ConnectionOK():
-                icon = "checkmark"
-                message = "Online"
+                return "checkmark", "Online"
             case ConnectionFailed(error):
-                icon = "cross"
-                message = f"Offline: {error}"
-            case ConnectionUnknown(error):
-                icon = "alert"
-                message = f"Unknown: {error}"
+                return "cross", f"Offline: {error}"
             case _:
                 assert_never(_)
-        return icon, message
 
 
 class PingResult(NamedTuple):

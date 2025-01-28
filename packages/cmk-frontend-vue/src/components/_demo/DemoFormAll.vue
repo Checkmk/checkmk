@@ -5,13 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type {
-  Components,
   BooleanChoice,
   CascadingSingleChoice,
   CheckboxListChoice,
   CommentTextArea,
+  Components,
   ConditionChoices,
   DataSize,
   Dictionary,
@@ -37,8 +38,7 @@ import type {
   TimeSpecific,
   Tuple
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
-import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import { computed, ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -124,11 +124,19 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
     elements: [
       {
         name: 'one_element',
+        required: true,
+        render_only: false,
+        group: null,
+        default_value: 'default value required',
+        parameter_form: getString('required_string_in_dict')
+      },
+      {
+        name: 'two_element',
         required: false,
         render_only: false,
         group: null,
-        default_value: 'default value',
-        parameter_form: getString('some_string_in_dict')
+        default_value: 'default value optional',
+        parameter_form: getString('optional_string_in_dict')
       }
     ],
     groups: [],
@@ -138,6 +146,13 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
     i18n_base: { required: 'i18n required' },
     ...options
   }
+}
+
+function getDictionaryTwoColumns(
+  name: string,
+  options?: Partial<Omit<Dictionary, 'type'>>
+): Dictionary {
+  return getDictionary(name, { ...options, layout: 'two_columns' })
 }
 
 function getList(name: string, options?: Partial<Omit<List, 'type'>>): List {
@@ -569,6 +584,7 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
   ],
   ['DataSize', getDataSize, ['one', 'two']],
   ['Dictionary', getDictionary, {}],
+  ['Dictionary--TwoColumns', getDictionaryTwoColumns, {}],
   ['DualListChoice', getDualListChoice, []],
   [
     'FileUpload',

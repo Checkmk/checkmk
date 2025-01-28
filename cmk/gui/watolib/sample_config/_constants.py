@@ -100,7 +100,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "aa86dbc4-c390-48f7-b0ed-44231aa79b7c",
             "piggyback hub",
-            "~python3 /omd/sites/[^/]+/bin/cmk-piggyback-hub$",
+            "~python3 /omd/sites/[^/]+/bin/cmk-piggyback-hub",
         ),
         (
             "65a3dca4-8d71-45d8-8887-53ef0c63d06f",

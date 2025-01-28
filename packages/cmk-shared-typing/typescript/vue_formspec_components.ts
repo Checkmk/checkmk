@@ -160,6 +160,7 @@ export type DataSize = FormSpec & {
   label: string | null;
   displayed_magnitudes: string[];
   input_hint: string | null;
+  i18n: DataSizeI18N;
 };
 export type Catalog = FormSpec & {
   type: "catalog";
@@ -350,6 +351,11 @@ export interface I18NPassword {
   password_store: string;
   no_password_store_choices: string;
   password_choice_invalid: string;
+  choose_password_from_store: string;
+  choose_password_type: string;
+}
+export interface DataSizeI18N {
+  choose_unit: string;
 }
 export interface Topic {
   name: string;
@@ -427,6 +433,8 @@ export interface Condition {
   title: string;
 }
 export interface ConditionChoicesI18N {
+  choose_operator: string;
+  choose_condition: string;
   add_condition_label: string;
   select_condition_group_to_add: string;
   no_more_condition_groups_to_add: string;

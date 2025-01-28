@@ -9,6 +9,8 @@ type KeysOfUnion<T> = T extends T ? keyof T : never
 export type Operator = KeysOfUnion<ConditionChoicesValue['value']>
 
 export type OperatorI18n = {
+  choose_operator: string
+  choose_condition: string
   eq_operator: string
   ne_operator: string
   or_operator: string

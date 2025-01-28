@@ -32,6 +32,8 @@ const spec: FormSpec.ConditionChoices = {
     }
   },
   i18n: {
+    choose_condition: 'i18n choose_condition',
+    choose_operator: 'i18n choose_operator',
     add_condition_label: 'add condition',
     select_condition_group_to_add: 'select group',
     no_more_condition_groups_to_add: 'no more groups',
@@ -96,6 +98,8 @@ test('FormConditionChoices does not show required without validator', async () =
       }
     },
     i18n: {
+      choose_condition: 'i18n choose_condition',
+      choose_operator: 'i18n choose_operator',
       add_condition_label: 'add condition',
       select_condition_group_to_add: 'select group',
       no_more_condition_groups_to_add: 'no more groups',

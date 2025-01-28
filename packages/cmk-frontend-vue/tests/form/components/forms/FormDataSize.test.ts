@@ -14,7 +14,10 @@ const spec: FormSpec.DataSize = {
   displayed_magnitudes: ['mag_foo', 'mag_bar'],
   validators: [],
   label: 'fooLabel',
-  input_hint: 'fooInputHint'
+  input_hint: 'fooInputHint',
+  i18n: {
+    choose_unit: 'i18n choose_unit'
+  }
 }
 
 test('FormDataSize renders value', () => {
@@ -30,5 +33,5 @@ test('FormDataSize renders value', () => {
   const selectElement = screen.getByRole<HTMLInputElement>('combobox')
 
   expect(inputElement.value).toBe('42')
-  expect(selectElement).toHaveAccessibleName('mag_bar')
+  expect(selectElement).toHaveAccessibleName('i18n choose_unit')
 })

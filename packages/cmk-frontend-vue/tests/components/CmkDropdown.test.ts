@@ -18,11 +18,12 @@ test('dropdown shows options', async () => {
       ],
       selectedOption: null,
       inputHint: 'Select an option',
-      showFilter: true
+      showFilter: true,
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
 
   await fireEvent.click(dropdown)
 
@@ -41,11 +42,12 @@ test('dropdown updates selecedOption', async () => {
     showFilter: true,
     'onUpdate:selectedOption': (option: string | null) => {
       selectedOption = option
-    }
+    },
+    label: 'some aria label'
   }
   const { rerender } = render(CmkDropdown, { props })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
   const option1 = screen.getByText('Option 1')
@@ -67,11 +69,12 @@ test('dropdown shows and hides options', async () => {
       ],
       showFilter: true,
       selectedOption: null,
-      inputHint: 'Select an option'
+      inputHint: 'Select an option',
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
   // Dropdown is open and options are visible
@@ -97,10 +100,11 @@ test.each([{ showFilter: true }, { showFilter: false }])(
         inputHint: 'Select an option',
         'onUpdate:selectedOption': (option: string | null) => {
           selectedOption = option
-        }
+        },
+        label: 'some aria label'
       }
     })
-    await fireEvent.click(screen.getByRole('combobox', { name: 'Select an option' }))
+    await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
     await userEvent.keyboard('[ArrowDown][Enter]')
 
@@ -121,10 +125,11 @@ test('dropdown option selection via keyboard wraps', async () => {
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
         selectedOption = option
-      }
+      },
+      label: 'some aria label'
     }
   })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'Select an option' }))
+  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
   await userEvent.keyboard('[ArrowUp][Enter]')
 
@@ -144,11 +149,12 @@ test('dropdown option immediate focus and filtering', async () => {
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
         selectedOption = option
-      }
+      },
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
   await userEvent.keyboard('2[Enter]')
@@ -169,11 +175,12 @@ test('dropdown shows required if requiredText is passed', async () => {
       showFilter: true,
       selectedOption: null,
       inputHint: 'Select an option',
-      requiredText: 'required'
+      requiredText: 'required',
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   expect(dropdown.textContent).toBe('Select an option (required)')
 })
 
@@ -186,11 +193,12 @@ test('dropdown does not show required if requiredText is not passed', async () =
       ],
       showFilter: true,
       selectedOption: null,
-      inputHint: 'Select an option'
+      inputHint: 'Select an option',
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   expect(dropdown.textContent).toBe('Select an option')
 })
 
@@ -199,11 +207,12 @@ test('dropdown still clickable if only option is already selected', async () => 
     props: {
       options: [{ title: 'Option 1', name: 'option1' }],
       showFilter: true,
-      selectedOption: 'option1'
+      selectedOption: 'option1',
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Option 1' })
+  const dropdown = screen.getByText('Option 1')
   await fireEvent.click(dropdown)
 
   // show it twice: once as current value and second time as the only value to choose.
@@ -216,11 +225,12 @@ test('dropdown clickable if only one option is available', async () => {
       options: [{ title: 'Option 1', name: 'option1' }],
       showFilter: true,
       selectedOption: null,
-      inputHint: 'Select an option'
+      inputHint: 'Select an option',
+      label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
   screen.getByText('Option 1')
@@ -242,6 +252,7 @@ test('dropdown doesnt interfere with tab order', async () => {
             { title: 'Option 2', name: 'option2' }
           ]"
           :show-filter="true"
+          label="some aria label in template"
           input-hint="Select an option"
           @update:selected-option="$emit('update:selectedOption', $event)"
         />
@@ -253,7 +264,7 @@ test('dropdown doesnt interfere with tab order', async () => {
   const { emitted } = render(testComponent)
 
   const nextInput = screen.getByTestId('next-input')
-  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label in template' })
   dropdown.focus()
 
   // Open, select option2 by arrow keys and submit

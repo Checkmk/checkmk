@@ -306,6 +306,8 @@ function getPassword(name: string, options?: Partial<Omit<Password, 'type'>>): P
     ],
     i18n_base: { required: 'i18n required' },
     i18n: {
+      choose_password_type: 'i18n choose_password_type',
+      choose_password_from_store: 'i18n choose_password_from_store',
       explicit_password: 'i18n explicit_password',
       password_store: 'i18n password_store',
       no_password_store_choices: 'i18n no_password_store_choices',
@@ -323,6 +325,9 @@ function getDataSize(name: string, options?: Partial<Omit<DataSize, 'type'>>): D
     input_hint: getInputHint(name),
     displayed_magnitudes: ['one', 'two'],
     validators: [],
+    i18n: {
+      choose_unit: 'i18n choose_unit'
+    },
     ...options
   }
 }
@@ -512,6 +517,8 @@ function getConditionChoices(
       }
     }, // TODO?
     i18n: {
+      choose_operator: 'i18n choose_operator',
+      choose_condition: 'i18n choose_condition',
       add_condition_label: 'i18n add_condition_label',
       select_condition_group_to_add: 'i18n select_condition_group_to_add',
       no_more_condition_groups_to_add: 'i18n no_more_condition_groups_to_add',

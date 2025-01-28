@@ -165,6 +165,8 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fro
                 condition_groups=conditions,
                 validators=build_vue_validators(self.form_spec.custom_validate or []),
                 i18n=shared_type_defs.ConditionChoicesI18n(
+                    choose_condition=_("Choose condition"),
+                    choose_operator=_("Choose operator"),
                     add_condition_label=localize(self.form_spec.add_condition_group_label),
                     select_condition_group_to_add=localize(
                         self.form_spec.select_condition_group_to_add

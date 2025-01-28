@@ -52,6 +52,7 @@ const magnitudeOptions = computed(() => {
     v-model:selected-option="value[1]"
     :options="magnitudeOptions"
     :show-filter="false"
+    :label="spec.i18n.choose_unit"
   />
   <FormValidation :validation="validation"></FormValidation>
 </template>

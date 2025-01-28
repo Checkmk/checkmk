@@ -125,6 +125,7 @@ watch(selectedOperator, (operator) => {
     v-model:selected-option="selectedOperator"
     :options="operatorChoices"
     :show-filter="false"
+    :label="props.i18n.choose_operator"
   />
   <CmkSpace :size="'small'" />
   <template v-if="allValueChoices.length === 1">
@@ -157,6 +158,7 @@ watch(selectedOperator, (operator) => {
             }))
           ]"
           :show-filter="remainingConditions.length > FILTER_SHOW_THRESHOLD - 1"
+          :label="props.i18n.choose_condition"
           @update:selected-option="(value) => updateMultiValue(index, value!)"
         />
       </template>
@@ -167,6 +169,7 @@ watch(selectedOperator, (operator) => {
       :selected-option="selectedSingleValue"
       :options="allValueChoices"
       :show-filter="allValueChoices.length > FILTER_SHOW_THRESHOLD"
+      :label="props.i18n.choose_condition"
       @update:selected-option="(value) => updateValue(selectedOperator, value)"
     />
   </template>

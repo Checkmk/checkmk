@@ -279,6 +279,7 @@ class BackgroundJob:
         self._jobstatus_store.write(initial_status)
 
         return self._executor.start(
+            self.__class__.__name__,
             self._job_id,
             self._work_dir,
             self.job_prefix,

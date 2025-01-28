@@ -58,6 +58,7 @@ def get_application(
     async def start(request: Request, payload: StartRequest) -> StartResponse:
         if not (
             result := executor.start(
+                payload.type_id,
                 payload.job_id,
                 payload.work_dir,
                 payload.span_id,
@@ -95,7 +96,10 @@ def get_application(
         return HealthResponse(
             loaded_at=request.app.state.loaded_at,
             process=process_health(),
-            background_jobs=BackgroundJobsHealth(running_jobs=executor.all_running_jobs()),
+            background_jobs=BackgroundJobsHealth(
+                running_jobs=executor.all_running_jobs(),
+                job_executions=executor.job_executions(),
+            ),
         )
 
     return app

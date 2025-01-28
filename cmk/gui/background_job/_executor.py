@@ -7,6 +7,7 @@ import importlib
 import logging
 import threading
 import time
+from collections import Counter
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -34,6 +35,7 @@ class JobExecutor(Protocol):
 
     def start(
         self,
+        type_id: str,
         job_id: str,
         work_dir: str,
         span_id: str,
@@ -50,10 +52,13 @@ class JobExecutor(Protocol):
 
     def all_running_jobs(self) -> dict[str, int]: ...
 
+    def job_executions(self) -> dict[str, int]: ...
+
 
 class ThreadedJobExecutor(JobExecutor):
     job_initializiation_lock = threading.Lock()
     running_jobs: dict[str, RunningJob] = {}
+    _job_executions: Counter[str] = Counter()
 
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
@@ -61,6 +66,7 @@ class ThreadedJobExecutor(JobExecutor):
     @tracer.instrument()
     def start(
         self,
+        type_id: str,
         job_id: str,
         work_dir: str,
         span_id: str,
@@ -93,6 +99,7 @@ class ThreadedJobExecutor(JobExecutor):
             ),
             name=f"bg-{job_id}",
         )
+        ThreadedJobExecutor._job_executions[type_id] += 1
         ThreadedJobExecutor.running_jobs[job_id] = RunningJob(
             thread=p,
             stop_event=stop_event,
@@ -126,3 +133,6 @@ class ThreadedJobExecutor(JobExecutor):
         for job_id, job in list(cls.running_jobs.items()):
             if not job.thread.is_alive():
                 del cls.running_jobs[job_id]
+
+    def job_executions(self) -> dict[str, int]:
+        return dict(ThreadedJobExecutor._job_executions)

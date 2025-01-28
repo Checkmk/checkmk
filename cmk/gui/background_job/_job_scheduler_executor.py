@@ -44,6 +44,7 @@ class JobSchedulerExecutor(JobExecutor):
 
     def start(
         self,
+        type_id: str,
         job_id: str,
         work_dir: str,
         span_id: str,
@@ -56,6 +57,7 @@ class JobSchedulerExecutor(JobExecutor):
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/start",
             json=StartRequest(
+                type_id=type_id,
                 job_id=job_id,
                 work_dir=work_dir,
                 span_id=span_id,
@@ -106,6 +108,9 @@ class JobSchedulerExecutor(JobExecutor):
 
     def all_running_jobs(self) -> dict[str, int]:
         return self.health().background_jobs.running_jobs
+
+    def job_executions(self) -> dict[str, int]:
+        return self.health().background_jobs.job_executions
 
     def _get(self, url: str) -> result.Result[requests.Response, StartupError]:
         try:

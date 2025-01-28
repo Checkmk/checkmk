@@ -141,3 +141,10 @@ repos:
             files: ^requirements.*\.txt$
             verbose: true
             require_serial: true
+          - id: taplo
+            name: format pyproject.toml
+            entry: bazel run //bazel/tools:taplo_bin -- format pyproject.toml
+            pass_filenames: false
+            language: system
+            verbose: true
+            require_serial: true

@@ -616,6 +616,7 @@ const showValidation = ref<boolean>(false)
 const showHelp = ref<boolean>(true)
 const showLabel = ref<boolean>(true)
 const showInputHint = ref<boolean>(true)
+const requiredDictionaryKeys = ref<boolean>(true)
 
 const spec = computed(() => {
   return getDictionary('main', {
@@ -625,7 +626,7 @@ const spec = computed(() => {
       }
       return {
         name: name,
-        required: true,
+        required: requiredDictionaryKeys.value,
         group: null,
         render_only: false,
         default_value: defaultValue,
@@ -639,6 +640,9 @@ const data = ref<Record<string, string>>({})
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="requiredDictionaryKeys" label="required dictionary keys" />
+  </div>
   <div>
     <CmkCheckbox v-model="showValidation" label="show validation" />
   </div>

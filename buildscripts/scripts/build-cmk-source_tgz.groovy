@@ -48,14 +48,22 @@ def main() {
             dir("${checkout_dir}") {
                 sh("make buildclean");
                 versioning.configure_checkout_folder(edition, cmk_version);
-                sh("make .venv");
             }
         }
+    }
 
+    def image_name = "minimal-alpine-checkmk-ci-${safe_branch_name}:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
+    minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
         smart_stage(name: "Provide agent binaries") {
             package_helper.provide_agent_updaters(version, edition, disable_cache);
         }
+    }
 
+    inside_container(ulimit_nofile: 2048) {
         def source_package_name = {
             dir("${checkout_dir}") {
                 stage("Create source package") {

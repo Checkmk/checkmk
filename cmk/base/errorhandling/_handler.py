@@ -91,13 +91,13 @@ def _handle_failure(
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc
-        return exit_spec.get("timeout", 2), "Timed out\n"
+        return exit_spec.get("timeout", 2), "Timed out"
 
     if isinstance(exc, (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError)):
-        return exit_spec.get("connection", 2), f"{exc}\n"
+        return exit_spec.get("connection", 2), str(exc)
 
     if isinstance(exc, MKGeneralException):
-        return exit_spec.get("exception", 3), f"{exc}\n"
+        return exit_spec.get("exception", 3), str(exc)
 
     if cmk.ccc.debug.enabled():
         raise exc

@@ -10,6 +10,7 @@ select = [
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes
+  "I",      # isort
   "PL",     # pylint
   "RUF100", # ruff: unused noqa
   "SLF",    # flake8: self

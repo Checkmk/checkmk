@@ -483,6 +483,7 @@ def _add_infos_from_monitoring_host(
             "HOSTTAGS": config.custom_variables.get("TAGS", ""),
             "CONTACTS": ",".join(config.contacts),
             "SERVICECONTACTGROUPNAMES": ",".join(config.contact_groups),
+            "HOSTGROUPNAMES": ",".join(config.host_groups),
         }
     )
 

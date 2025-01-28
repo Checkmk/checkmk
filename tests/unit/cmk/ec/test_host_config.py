@@ -33,6 +33,7 @@ def _heute_config() -> dict[str, object]:
         },
         "contacts": [],
         "contact_groups": ["all"],
+        "groups": ["custom-group"],
     }
 
 
@@ -50,6 +51,7 @@ def _example_com_config() -> dict[str, object]:
         },
         "contacts": [],
         "contact_groups": ["all"],
+        "groups": [],
     }
 
 
@@ -87,6 +89,7 @@ def fixture_livestatus(
                 },
                 contacts=set(),
                 contact_groups={"all"},
+                host_groups={"custom-group"},
             ),
         ),
         ("HEUTE", None),
@@ -105,7 +108,7 @@ def test_host_config(
         live.expect_query(
             [
                 "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups",
+                "Columns: name alias address custom_variables contacts contact_groups groups",
                 "ColumnHeaders: on",
             ]
         )
@@ -138,7 +141,7 @@ def test_host_config_get_canonical_name(
         live.expect_query(
             [
                 "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups",
+                "Columns: name alias address custom_variables contacts contact_groups groups",
                 "ColumnHeaders: on",
             ]
         )
@@ -156,7 +159,7 @@ def test_host_config_get_canonical_name_is_cached_updated(
         live.expect_query(
             [
                 "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups",
+                "Columns: name alias address custom_variables contacts contact_groups groups",
                 "ColumnHeaders: on",
             ]
         )
@@ -173,7 +176,7 @@ def test_host_config_get_canonical_name_is_cached_updated(
         live.expect_query(
             [
                 "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups",
+                "Columns: name alias address custom_variables contacts contact_groups groups",
                 "ColumnHeaders: on",
             ]
         )

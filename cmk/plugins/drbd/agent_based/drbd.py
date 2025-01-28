@@ -293,11 +293,10 @@ def get_roles_result(roles: tuple[str, str], params: Mapping[str, Any]) -> Resul
             found_role_match = True
 
     if not found_role_match:
-        if "roles_inventory" in params:
-            roles_inventory = params.get("roles_inventory")
-            if roles_inventory and roles != roles_inventory:
+        if (roles_inventory := params.get("roles_inventory")) is not None:
+            if roles != tuple(roles_inventory):
                 state = max(2, state)
-                output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))  # type: ignore[arg-type]
+                output += " (Expected: %s/%s)" % tuple(roles_inventory)
         else:
             state = max(3, state)
             output += " (Check requires a new service discovery)"

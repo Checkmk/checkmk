@@ -37,7 +37,7 @@ test('FormMultilineText renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLTextAreaElement>('textbox')
+  const element = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'fooLabel' })
 
   expect(element.value).toBe('fooData')
 })
@@ -49,7 +49,7 @@ test('FormMultilineText updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, 'some_other_value')
 
   expect(getCurrentData()).toBe('"some_other_value"')
@@ -64,7 +64,7 @@ test('FormMultilineText checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')

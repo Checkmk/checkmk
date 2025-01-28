@@ -85,7 +85,7 @@ provide(formDataKey, readonly(formData))
 //
 const nextStage = async (actionId: string) => {
   loading.value = true
-  globalError.value = null
+  clearErrors()
 
   const thisStageNumber = quickSetupHook.stage.value
   const nextStageNumber = quickSetupHook.stage.value + 1
@@ -168,7 +168,7 @@ const nextStage = async (actionId: string) => {
 }
 
 const prevStage = () => {
-  globalError.value = null
+  clearErrors()
   quickSetupHook.prev()
 }
 
@@ -296,16 +296,13 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
 
 const save = async (buttonId: string) => {
   loading.value = true
-  globalError.value = null
+  clearErrors()
 
   const userInput: StageData[] = []
 
   for (let i = 0; i < regularStages.value.length; i++) {
     const formData = (stages.value[i]!.user_input || {}) as StageData
     userInput.push(formData)
-
-    stages.value[i]!.form_spec_errors = {}
-    stages.value[i]!.errors = []
   }
 
   try {
@@ -343,6 +340,14 @@ const update = (index: number, value: StageData) => {
   preventLeaving.value = true
 }
 
+const clearErrors = () => {
+  globalError.value = null
+  for (const stage of stages.value) {
+    stage.errors = []
+    stage.form_spec_errors = {}
+  }
+}
+
 //
 //
 // Computed properties to split regular stages from save stage
@@ -355,7 +360,10 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
       title: stg.title,
       sub_title: stg.sub_title || null,
       recapContent: renderRecap(stg.recap || []),
-      goToThisStage: () => quickSetupHook.goto(index),
+      goToThisStage: () => {
+        clearErrors()
+        quickSetupHook.goto(index)
+      },
       content: renderContent(
         stg.components || [],
         (value) => update(index, value),

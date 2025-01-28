@@ -43,7 +43,6 @@ def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: boo
     assert "Unknown site" in repr(resp.json), resp.json
 
 
-@pytest.mark.usefixtures("allow_background_jobs")
 def test_activate_changes(
     mocker: MockerFixture,
     clients: ClientRegistry,
@@ -51,8 +50,13 @@ def test_activate_changes(
     monkeypatch: pytest.MonkeyPatch,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    # NOTE: this test (or any other) must not leave behind a running background job! (even in case of failure)
+
     # Create a host
     clients.HostConfig.create(host_name="foobar", folder="/")
+
+    # do not start the activation/background job, this doesn't test the "wait-for-completion" endpoint
+    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSchedulerBackgroundJob.start")
 
     restart_rabbitmq_when_changed = mocker.patch(
         "cmk.gui.watolib.activate_changes.rabbitmq.update_and_activate_rabbitmq_definitions",

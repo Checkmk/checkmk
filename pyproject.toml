@@ -4,7 +4,18 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["A", "ARG", "E", "F", "W", "C90", "PL", "RUF100", "UP", "SLF"]
+select = [
+  "A",      # flake8: builtins
+  "ARG",    # flake8: unused args
+  "C90",    # mccabe
+  "E",      # pycodestyle (error)
+  "F",      # pyflakes
+  "PL",     # pylint
+  "RUF100", # ruff: unused noqa
+  "SLF",    # flake8: self
+  "UP",     # pyugrade
+  "W",      # pycodestyle (warning)
+]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long

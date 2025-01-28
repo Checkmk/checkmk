@@ -19,6 +19,7 @@ from ._models import BackgroundJobsHealth as BackgroundJobsHealth
 from ._models import HealthResponse as HealthResponse
 from ._models import IsAliveRequest as IsAliveRequest
 from ._models import IsAliveResponse as IsAliveResponse
+from ._models import ProcessHealth as ProcessHealth
 from ._models import StartRequest as StartRequest
 from ._models import StartResponse as StartResponse
 from ._models import TerminateRequest as TerminateRequest

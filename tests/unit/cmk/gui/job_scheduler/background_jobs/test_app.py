@@ -18,6 +18,7 @@ from cmk.gui.background_job import (
     JobExecutor,
     JobTarget,
     NoArgs,
+    ProcessHealth,
     SpanContextModel,
     StartRequest,
     StartResponse,
@@ -74,6 +75,13 @@ def _get_test_client(loaded_at: int) -> TestClient:
         get_application(
             logger,
             loaded_at=loaded_at,
+            process_health=lambda: ProcessHealth(
+                pid=1337,
+                ppid=1338,
+                num_fds=42,
+                vm_bytes=1000,
+                rss_bytes=1234,
+            ),
             registered_jobs={"hello_job": HelloJob},
             executor=DummyExecutor(logger),
         )
@@ -139,6 +147,13 @@ def test_health_check() -> None:
     assert resp.status_code == 200
     response = HealthResponse.model_validate(resp.json())
     assert response.loaded_at == loaded_at
+    assert response.process == ProcessHealth(
+        pid=1337,
+        ppid=1338,
+        num_fds=42,
+        vm_bytes=1000,
+        rss_bytes=1234,
+    )
     assert response.background_jobs.running_jobs == {"job_id": 42}
 
 

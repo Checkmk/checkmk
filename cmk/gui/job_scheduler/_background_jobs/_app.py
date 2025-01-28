@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import AsyncIterator, Mapping
+import os
+from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
 from logging import Formatter, getLogger, Logger
+from pathlib import Path
 from typing import get_type_hints
 
 from fastapi import FastAPI, Request
@@ -19,6 +21,7 @@ from cmk.gui.background_job import (
     IsAliveResponse,
     JobExecutor,
     JobTarget,
+    ProcessHealth,
     StartRequest,
     StartResponse,
     TerminateRequest,
@@ -30,6 +33,7 @@ def get_application(
     loaded_at: int,
     registered_jobs: Mapping[str, type[BackgroundJob]],
     executor: JobExecutor,
+    process_health: Callable[[], ProcessHealth],
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -90,7 +94,20 @@ def get_application(
     async def check_health(request: Request) -> HealthResponse:
         return HealthResponse(
             loaded_at=request.app.state.loaded_at,
+            process=process_health(),
             background_jobs=BackgroundJobsHealth(running_jobs=executor.all_running_jobs()),
         )
 
     return app
+
+
+def make_process_health() -> ProcessHealth:
+    # see: man proc(5).
+    statm_parts = Path("/proc/self/statm").read_text().split()
+    return ProcessHealth(
+        pid=os.getpid(),
+        ppid=os.getppid(),
+        num_fds=len(list(Path("/proc/self/fd").iterdir())),
+        vm_bytes=int(statm_parts[0]) * 4096,
+        rss_bytes=int(statm_parts[1]) * 4096,
+    )

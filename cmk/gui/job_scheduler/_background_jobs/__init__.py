@@ -4,5 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._app import get_application as get_application
+from ._app import make_process_health as make_process_health
 from ._config import default_config as default_config
 from ._server import run_server as run_server

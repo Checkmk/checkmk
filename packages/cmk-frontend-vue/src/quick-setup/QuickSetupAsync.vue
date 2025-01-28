@@ -335,8 +335,10 @@ const update = (index: number, value: StageData) => {
     return
   }
 
-  stages.value[index]!.user_input = value
-  formData.value[index] = value
+  const clonedValue = structuredClone(value)
+
+  stages.value[index]!.user_input = clonedValue
+  formData.value[index] = clonedValue
   preventLeaving.value = true
 }
 

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, findByRole, findAllByRole } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 
@@ -42,15 +42,27 @@ test('CmkFormCheckboxListChoice renders value', async () => {
     }
   })
 
-  const choice1Checkbox = await screen.findByRole('checkbox', { name: 'Choice 1' })
+  // check that aria attributes are set up correctly:
+  const listbox = await screen.findByRole('listbox', { name: 'fooTitle' })
+
+  const choice1Checkbox = await findByRole(
+    // each checkbox should be in an option:
+    // we check this for the first choice which is expected in the first option
+    (await findAllByRole(listbox, 'option'))[0]!,
+    'checkbox',
+    {
+      name: 'Choice 1'
+    }
+  )
   expect(choice1Checkbox).toBeChecked()
-  const choice2Checkbox = await screen.findByRole('checkbox', { name: 'Choice 2' })
+
+  const choice2Checkbox = await findByRole(listbox, 'checkbox', { name: 'Choice 2' })
   expect(choice2Checkbox).not.toBeChecked()
 
-  const choice3Checkbox = await screen.findByRole('checkbox', { name: 'Choice 3' })
+  const choice3Checkbox = await findByRole(listbox, 'checkbox', { name: 'Choice 3' })
   expect(choice3Checkbox).toBeChecked()
 
-  const choice4Checkbox = await screen.findByRole('checkbox', { name: 'Choice 4' })
+  const choice4Checkbox = await findByRole(listbox, 'checkbox', { name: 'Choice 4' })
   expect(choice4Checkbox).toBeChecked()
 
   await fireEvent.click(choice2Checkbox)

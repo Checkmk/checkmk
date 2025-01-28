@@ -80,7 +80,7 @@ class Import(NamedTuple):
 def parse_requirements_file(file_path: Path) -> dict[str, str]:
     """Parse a requirements file and return a dictionary of package names and their versions."""
     requirements_dict: dict[str, str] = {}
-    with open(file_path, "r") as fd:
+    with open(file_path) as fd:
         req = requirements.parse(fd)
         for r in req:
             if len(r.specs) != 0:

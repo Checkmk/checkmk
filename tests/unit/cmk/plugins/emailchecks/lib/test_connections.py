@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
 
 import pytest
 
@@ -44,7 +43,7 @@ from cmk.plugins.emailchecks.lib.connections import verified_result
 )
 def test_verified_result(
     data: object,
-    result: list[str | bytes] | Type[TypeError] | Type[RuntimeError] | Type[AssertionError],
+    result: list[str | bytes] | type[TypeError] | type[RuntimeError] | type[AssertionError],
 ) -> None:
     if isinstance(result, list):
         assert result == verified_result(data)

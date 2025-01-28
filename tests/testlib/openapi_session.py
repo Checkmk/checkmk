@@ -259,7 +259,7 @@ class ChangesAPI(BaseAPI):
             * True if changes are activated
             * False if there are no changes to be activated
         """
-        pending_changes_ids_before = set(_.get("id") for _ in self.get_pending())
+        pending_changes_ids_before = {_.get("id") for _ in self.get_pending()}
 
         logger.info("Activate changes and wait %ds for completion...", timeout)
         with self.session.wait_for_completion(timeout, "get", "activate_changes"):
@@ -274,9 +274,9 @@ class ChangesAPI(BaseAPI):
                 f"There are pending changes after activation: {pending_changes_after}"
             )
         else:
-            pending_changes_intersection_ids = set(
+            pending_changes_intersection_ids = {
                 _.get("id") for _ in pending_changes_after
-            ).intersection(pending_changes_ids_before)
+            }.intersection(pending_changes_ids_before)
             assert not pending_changes_intersection_ids, (
                 f"There are pending changes that were not activated: "
                 f"{

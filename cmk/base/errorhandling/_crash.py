@@ -5,8 +5,9 @@
 """Check_MK base specific code of the crash reporting"""
 
 import traceback
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, Sequence, TypedDict
+from typing import Any, Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version

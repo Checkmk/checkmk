@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from threading import Event
-from typing import Callable
 
 from ._cache import Cache, CacheError
 from ._config import ReloaderConfig

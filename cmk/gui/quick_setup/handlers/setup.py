@@ -5,9 +5,9 @@
 import os
 import traceback
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 from pydantic import BaseModel, ValidationError
 

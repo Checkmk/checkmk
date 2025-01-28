@@ -157,7 +157,7 @@ def main():
             story.append(heading(headline, h1))
             story.append(Paragraph(text_content, normal))
         else:
-            print('No license text file found for ID "%s" and path %s' % (used_license, file_path))
+            print(f'No license text file found for ID "{used_license}" and path {file_path}')
 
     doc = MyDocTemplate(str(path_pdf))
     doc.multiBuild(story, onLaterPages=add_page_number)

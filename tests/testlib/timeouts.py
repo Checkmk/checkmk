@@ -7,8 +7,9 @@ import multiprocessing
 import os
 import signal
 import time
+from collections.abc import Callable
 from types import FrameType, TracebackType
-from typing import Callable, Self
+from typing import Self
 
 from psutil import Process
 

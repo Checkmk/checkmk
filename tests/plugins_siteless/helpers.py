@@ -10,9 +10,8 @@ import os
 import pickle
 import pprint
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Iterable, Mapping
 
 from tests.testlib.repo import qa_test_data_path
 

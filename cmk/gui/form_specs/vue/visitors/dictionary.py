@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from collections.abc import Mapping
-from typing import cast, Sequence
+from collections.abc import Mapping, Sequence
+from typing import cast
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.form_specs.vue.validators import build_vue_validators

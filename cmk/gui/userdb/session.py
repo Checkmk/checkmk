@@ -50,7 +50,7 @@ def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
     return (
         AuthenticationSecret()
-        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode("utf-8"))
+        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode())
         .hex()
     )
 

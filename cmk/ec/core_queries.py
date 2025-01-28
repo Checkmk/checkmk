@@ -13,6 +13,7 @@ from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.user import UserId
 
 _ContactgroupName = str
+_HostGroupName = str
 
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
@@ -36,6 +37,7 @@ class HostInfo(NamedTuple):
     custom_variables: Mapping[str, str]
     contacts: set[UserId]
     contact_groups: set[_ContactgroupName]
+    host_groups: set[_HostGroupName]
 
 
 def _create_host_info(row: Mapping[str, Any]) -> HostInfo:
@@ -46,6 +48,7 @@ def _create_host_info(row: Mapping[str, Any]) -> HostInfo:
         custom_variables=row["custom_variables"],
         contacts={UserId(c) for c in row["contacts"]},
         contact_groups=set(row["contact_groups"]),
+        host_groups=set(row["groups"]),
     )
 
 
@@ -53,7 +56,7 @@ def query_hosts_infos() -> Sequence[HostInfo]:
     return [
         _create_host_info(row)
         for row in LocalConnection().query_table_assoc(
-            "GET hosts\nColumns: name alias address custom_variables contacts contact_groups"
+            "GET hosts\nColumns: name alias address custom_variables contacts contact_groups groups"
         )
     ]
 

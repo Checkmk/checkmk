@@ -254,7 +254,7 @@ class UnitStatus:
         for line in entry[3:]:
             match line[0]:
                 case "CPU:":
-                    cpu = CpuTimeSeconds.parse_raw(line[1])
+                    cpu = CpuTimeSeconds.parse_raw(" ".join(line[1:]))
                 case "Memory:":
                     memory = Memory.from_raw(line[1])
                 case "Tasks:":

@@ -523,7 +523,7 @@ def test_services_split(
                         description="The WAS Server blablu",
                         enabled_status="enabled",
                         time_since_change=timedelta(days=13),
-                        cpu_seconds=CpuTimeSeconds(value=180.0),
+                        cpu_seconds=CpuTimeSeconds(value=180.0 + 17.03),
                     )
                 },
                 sockets={},
@@ -640,6 +640,60 @@ def test_services_split(
 )
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:
     string_table = [el.split() for el in pre_string_table]
+    assert parse(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "raw_string, expected_seconds",
+    [
+        pytest.param(
+            "3min",
+            180.0,
+            id="CPU time parsing: Single unit",
+        ),
+        pytest.param(
+            "3min 12s",
+            192.0,
+            id="CPU time parsing: Two units",
+        ),
+        pytest.param(
+            "3d 3min 3s",
+            3 * 24 * 3600 + 180 + 3.0,
+            id="CPU time parsing: Three units",
+        ),
+    ],
+)
+def test_parse_cpu_time(raw_string: str, expected_seconds: float) -> None:
+    pre_string_table = [
+        "[list-unit-files]",
+        "[status]",
+        "● apache2.service - LSB: Apache2 web server",
+        "Loaded: loaded (/etc/init.d/apache2)",
+        "Active: active (running) since Sat 2024-11-16 02:00:04 CET; 2 days ago",
+        f"CPU: {raw_string}",
+        "[all]",
+        "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+        "apache2.service loaded active running LSB: Apache2 web server",
+    ]
+    string_table = [el.split() for el in pre_string_table]
+
+    section = Section(
+        services={
+            "apache2": UnitEntry(
+                name="apache2",
+                loaded_status="loaded",
+                active_status="active",
+                current_state="running",
+                description="LSB: Apache2 web server",
+                enabled_status=None,
+                time_since_change=timedelta(days=2),
+                cpu_seconds=CpuTimeSeconds(value=expected_seconds),
+                memory=None,
+                number_of_tasks=None,
+            )
+        },
+        sockets={},
+    )
     assert parse(string_table) == section
 
 
@@ -1392,3 +1446,16 @@ systemd-user-sessions.service loaded active exited Permit User Sessions
     parsed = parse(string_table)
     assert parsed is not None
     assert parsed.services["testing"].time_since_change == timedelta(seconds=53)
+
+
+@pytest.mark.parametrize(
+    "raw_string, expected",
+    [
+        pytest.param("0", 0.0, id="0"),
+        pytest.param("8ms", 8e-3, id="8ms"),
+        pytest.param("1min 13s", 73.0, id="1min 13s"),
+        pytest.param("3d 1s", 259_201.0, id="3d 1s"),
+    ],
+)
+def test_cputimeseconds_parse(raw_string: str, expected: float) -> None:
+    assert CpuTimeSeconds.parse_raw(raw=raw_string).value == expected

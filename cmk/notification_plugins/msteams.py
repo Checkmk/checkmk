@@ -154,8 +154,8 @@ def _get_details(context: PluginNotificationContext, details: str) -> Iterable[d
 
 def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str, object]]:
     section_facts = []
-    if "PARAMETER_AFFECTED_HOST_GROUPS" in context:
-        section_facts += [{"title": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]
+    if "PARAMETER_AFFECTED_HOST_GROUPS" in context and (groups := context.get("HOSTGROUPNAMES")):
+        section_facts.append({"title": "Affected host groups", "value": groups})
 
     if author := context.get("NOTIFICATIONAUTHOR"):
         section_facts += [

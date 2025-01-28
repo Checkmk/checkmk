@@ -1218,7 +1218,7 @@ section_omd() {
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
             for script in "${sitedir}"/bin/cmk-monitor-*; do
-                [ -e "{$script}" ] && su - "${site}" -c "${script}"
+                [ -e "${script}" ] && su - "${site}" -c "${script}"
             done
         done
 

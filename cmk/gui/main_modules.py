@@ -28,22 +28,22 @@ from cmk import trace
 
 match edition := cmk_version.edition(paths.omd_root):
     case Edition.CEE:
-        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cee.registration  # type: ignore[import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.cee.registration.register(edition)
 
     case Edition.CME:
-        import cmk.gui.cme.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cme.registration  # type: ignore[import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.cme.registration.register(edition)
 
     case Edition.CCE:
-        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cce.registration  # type: ignore[import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.cce.registration.register(edition)
 
     case Edition.CSE:
-        import cmk.gui.cse.registration
+        import cmk.gui.cse.registration  # type: ignore[import-untyped, unused-ignore]
 
         cmk.gui.cse.registration.register(edition)
 

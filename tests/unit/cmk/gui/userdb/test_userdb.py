@@ -643,7 +643,7 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -
 def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
     now = datetime.now()
-    from cmk.gui.cme import managed
+    from cmk.gui.cme import managed  # type: ignore[import-untyped, unused-ignore]
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL

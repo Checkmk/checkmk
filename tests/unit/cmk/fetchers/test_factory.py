@@ -23,7 +23,7 @@ if is_enterprise_repo():
         InlineSNMPBackend,
     )
 else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
 
 
 @pytest.fixture(name="snmp_config")

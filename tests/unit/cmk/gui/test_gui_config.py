@@ -232,7 +232,7 @@ def local_config_plugin():
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin(request_context: None) -> None:
     cmk.gui.config.load_config()
-    assert active_config.ding == "dong"  # type: ignore[attr-defined]
+    assert active_config.ding == "dong"  # type: ignore[attr-defined, unused-ignore]
 
 
 @pytest.mark.usefixtures("local_config_plugin")
@@ -240,7 +240,7 @@ def test_load_config_allows_local_plugin_setting(request_context: None) -> None:
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
-    assert active_config.ding == "ding"  # type: ignore[attr-defined]
+    assert active_config.ding == "ding"  # type: ignore[attr-defined, unused-ignore]
 
 
 @pytest.mark.usefixtures("load_config")

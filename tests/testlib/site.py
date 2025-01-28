@@ -29,7 +29,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check  # type: ignore[import-untyped]
 
-from tests.testlib.cse.utils import (
+from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
     create_cse_initial_config,
     cse_openid_oauth_provider,
 )

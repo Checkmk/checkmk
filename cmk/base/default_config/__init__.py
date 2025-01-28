@@ -9,11 +9,11 @@ from .base import *  # noqa: F403
 from .notify import *  # noqa: F403
 
 try:
-    from .cee import *  # noqa: F403
+    from .cee import *  # type: ignore[import-untyped, unused-ignore]  # noqa: F403
 except ImportError:
     pass  # It's OK in non CEE editions
 
 try:
-    from .cme import *  # noqa: F403
+    from .cme import *  # type: ignore[import-untyped, unused-ignore]  # noqa: F403
 except ImportError:
     pass  # It's OK in non CME editions

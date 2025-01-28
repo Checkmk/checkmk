@@ -9,10 +9,12 @@
 import sys
 
 try:
-    from cmk.cee.notification_plugins import servicenow
+    from cmk.cee.notification_plugins import (  # type: ignore[import-untyped, unused-ignore]
+        servicenow,
+    )
 except ImportError:
     sys.stderr.write("ServiceNow notification script is only available with CEE / CME\n")
     sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(servicenow.main())  # type: ignore[no-untyped-call]
+    sys.exit(servicenow.main())  # type: ignore[no-untyped-call, unused-ignore]

@@ -28,7 +28,7 @@ if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
         InlineSNMPBackend,
     )
 else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
 
 cmk.ccc.debug.enable()
 

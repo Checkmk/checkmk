@@ -58,7 +58,7 @@ RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
 
 try:
-    from cmk.gui.cee.agent_bakery import (  # type: ignore[no-redef, unused-ignore]  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.cee.agent_bakery import (  # type: ignore[no-redef, import-untyped, unused-ignore]  # pylint: disable=cmk-module-layer-violation
         RulespecGroupMonitoringAgentsAgentPlugins,
         RulespecGroupMonitoringAgentsLinuxUnixAgent,
         RulespecGroupMonitoringAgentsWindowsAgent,

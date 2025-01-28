@@ -26,11 +26,11 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
 )
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import, unused-ignore] # pylint: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
 
 cmk.ccc.debug.enable()
 

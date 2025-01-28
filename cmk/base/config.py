@@ -169,7 +169,7 @@ except ModuleNotFoundError:
     cme_labels = None
 
 try:
-    from cmk.base.cee.rrd import RRDObjectConfig
+    from cmk.base.cee.rrd import RRDObjectConfig  # type: ignore[import-untyped, unused-ignore]
 except ModuleNotFoundError:
     # Non-existing edition layering...
     RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]

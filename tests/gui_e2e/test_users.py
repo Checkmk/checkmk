@@ -9,13 +9,14 @@ from collections.abc import Iterator
 import pytest
 from playwright.sync_api import BrowserContext, Page
 
-from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import Dashboard, ProblemDashboard
-from tests.testlib.playwright.pom.login import LoginPage
-from tests.testlib.playwright.pom.setup.edit_role import EditRole, RoleData
-from tests.testlib.playwright.pom.setup.roles_and_permissions import RolesAndPermissions
-from tests.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
-from tests.testlib.playwright.pom.setup.users import Users
+from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, ProblemDashboard
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.setup.edit_role import EditRole, RoleData
+from tests.gui_e2e.testlib.playwright.pom.setup.roles_and_permissions import RolesAndPermissions
+from tests.gui_e2e.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
+from tests.gui_e2e.testlib.playwright.pom.setup.users import Users
+
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

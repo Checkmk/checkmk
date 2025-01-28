@@ -5,18 +5,21 @@
 import logging
 from pathlib import Path
 
-from tests.testlib.emails import EmailManager
-from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.email import EmailPage
-from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
-from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
-from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
-from tests.testlib.playwright.pom.setup.notification_rules import (
+from tests.gui_e2e.testlib.playwright.plugin import manage_new_page_from_browser_context
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.email import EmailPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
+from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
+    NotificationConfiguration,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import (
     AddNotificationRule,
     EditNotificationRule,
 )
-from tests.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+
+from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

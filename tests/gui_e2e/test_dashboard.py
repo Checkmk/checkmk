@@ -8,12 +8,12 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.monitor.edit_element_top_list import (
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
     EditElementTopList,
 )
-from tests.testlib.playwright.pom.monitor.hosts_dashboard import (
+from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
 )

@@ -13,10 +13,11 @@ See:
 
 from playwright.sync_api import BrowserContext, Page
 
-from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.change_password import ChangePassword
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
+from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+
 from tests.testlib.site import Site
 
 

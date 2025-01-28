@@ -5,8 +5,8 @@
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import DashboardMobile
-from tests.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.dashboard import DashboardMobile
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 
 _header_selector = "div.ui-header.ui-bar-inherit.ui-header-fixed.slidedown"
 _listview_selector = "ul.ui-listview.ui-listview-inset.ui-corner-all.ui-shadow"

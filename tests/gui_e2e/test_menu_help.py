@@ -9,8 +9,9 @@ from dataclasses import dataclass
 import pytest
 from playwright.sync_api import Page, Request, Route
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.timeouts import handle_playwright_timeouterror
+
 from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
 
 

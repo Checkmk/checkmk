@@ -16,11 +16,11 @@ from tests.gui_e2e.testlib.host_details import (
     AgentAndApiIntegration,
     HostDetails,
 )
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
+from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.monitor.host_search import HostSearch
-from tests.testlib.playwright.pom.monitor.host_status import HostStatus
-from tests.testlib.playwright.pom.setup.hosts import HostProperties
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

@@ -13,13 +13,15 @@ from faker import Faker
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.host_details import HostDetails
-
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
     AddRulePeriodicServiceDiscovery,
 )
-from tests.testlib.playwright.pom.setup.host_effective_parameters import HostEffectiveParameters
-from tests.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.pom.setup.host_effective_parameters import (
+    HostEffectiveParameters,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import makedirs

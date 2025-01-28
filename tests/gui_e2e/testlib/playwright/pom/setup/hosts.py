@@ -10,9 +10,8 @@ from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.host_details import HostDetails
-
-from tests.testlib.playwright.helpers import DropdownListNameToID
-from tests.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 

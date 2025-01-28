@@ -8,9 +8,9 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
-from tests.testlib.playwright.helpers import DropdownListNameToID
-from tests.testlib.playwright.pom.page import CmkPage
-from tests.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 
 logger = logging.getLogger(__name__)
 

@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.emails import EmailManager
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
-from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
-from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
-from tests.testlib.playwright.pom.setup.notification_rules import (
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
+from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
+    NotificationConfiguration,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import (
     AddNotificationRule,
     EditNotificationRule,
     STAGE_FILTER_HOSTS_SERVICES,
@@ -22,7 +23,9 @@ from tests.testlib.playwright.pom.setup.notification_rules import (
     STAGE_SENDING_CONDITIONS,
     STAGE_TRIGGERING_EVENTS,
 )
-from tests.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+
+from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

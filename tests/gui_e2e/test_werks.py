@@ -12,8 +12,8 @@ import pytest
 from playwright.sync_api import expect
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.werks import Werks
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.werks import Werks
 
 logger = logging.getLogger(__name__)
 

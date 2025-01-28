@@ -107,8 +107,6 @@ def pytest_internalerror(excinfo: pytest.ExceptionInfo) -> None:
         raise excinfo.value
 
 
-pytest_plugins = ("tests.testlib.playwright.plugin",)
-
 collect_ignore: list[str] = []
 
 # Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test

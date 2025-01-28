@@ -12,8 +12,9 @@ from urllib.parse import quote_plus
 import pytest
 from playwright.sync_api import expect, FilePayload, Locator
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 

@@ -16,7 +16,7 @@ from typing import NamedTuple
 from playwright.sync_api import Error, expect, Frame, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
 
 
 class LocatorHelper(ABC):

@@ -6,8 +6,8 @@ import logging
 
 from playwright.sync_api import expect, Locator
 
-from tests.testlib.playwright.helpers import DropdownListNameToID
-from tests.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class ElementTopList(CmkPage):
         return DropdownListNameToID()
 
     @property
-    def save_button(self):
+    def save_button(self) -> Locator:
         return self.main_area.get_suggestion("Save")
 
     def _section(self, section_name: str) -> Locator:
@@ -65,15 +65,15 @@ class ElementTopList(CmkPage):
         return self.main_area.locator("#context_host_add")
 
     @property
-    def select_item_field(self):
+    def select_item_field(self) -> Locator:
         return self.main_area.locator().get_by_text("(Select item)")
 
     @property
-    def select_label_field(self):
+    def select_label_field(self) -> Locator:
         return self.main_area.locator().get_by_text("(Select label)")
 
     @property
-    def select_metric_field(self):
+    def select_metric_field(self) -> Locator:
         return self.main_area.locator().get_by_text("(Select metric)")
 
     @property

@@ -9,9 +9,11 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
-from tests.testlib.playwright.helpers import DropdownListNameToID
-from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
-from tests.testlib.playwright.pom.setup.quick_setup import QuickSetupPage
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
+    NotificationConfiguration,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.quick_setup import QuickSetupPage
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +97,7 @@ class BaseNotificationPage(QuickSetupPage):
         return self.main_area.locator().get_by_role("button", name="Service filters")
 
     @property
-    def _exclude_services_checkbox(self):
+    def _exclude_services_checkbox(self) -> Locator:
         return self.main_area.locator().get_by_role("checkbox", name="Exclude services")
 
     @property
@@ -107,11 +109,11 @@ class BaseNotificationPage(QuickSetupPage):
 
     # stage 3
     @property
-    def stage_three_locator(self):
+    def stage_three_locator(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Notification method (plug-in)")
 
     @property
-    def select_email_parameter_dropdown(self):
+    def select_email_parameter_dropdown(self) -> Locator:
         return self.stage_three_locator.get_by_role("combobox").nth(1)
 
     def notification_method_option(self, option: str) -> Locator:

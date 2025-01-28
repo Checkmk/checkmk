@@ -11,14 +11,15 @@ import pytest
 from playwright.sync_api import expect
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.setup.cloud_quick_setups import (
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
     AWSAddNewConfiguration,
     AWSConfigurationList,
     QuickSetupMultiChoice,
 )
-from tests.testlib.playwright.pom.setup.hosts import SetupHost
-from tests.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import SetupHost
+from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 

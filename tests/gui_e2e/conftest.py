@@ -18,17 +18,17 @@ from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.host_details import HostDetails
-
-from tests.testlib.emails import EmailManager
-from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.plugin import (
+from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
+from tests.gui_e2e.testlib.playwright.plugin import (
     manage_new_browser_context,
     manage_new_page_from_browser_context,
 )
-from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
-from tests.testlib.playwright.pom.login import LoginPage
-from tests.testlib.playwright.pom.setup.fixtures import notification_user
-from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
+
+from tests.testlib.emails import EmailManager
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.repo import repo_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
@@ -38,6 +38,7 @@ from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
 
+pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
 
 # loading pom fixtures
 setup_fixtures = [notification_user]

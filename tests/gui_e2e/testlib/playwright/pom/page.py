@@ -11,8 +11,8 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
-from tests.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
-from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -448,7 +448,7 @@ class FilterSidebar(LocatorHelper):
         return self.locator("#select2-host_regex-container")
 
     @property
-    def last_service_state_change_filter(self):
+    def last_service_state_change_filter(self) -> Locator:
         return self.locator("span:text-is('Last service state change')")
 
     @property

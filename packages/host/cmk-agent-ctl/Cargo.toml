@@ -10,6 +10,10 @@ edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
+
+
 [dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
 async-std = { version = "1.13" }

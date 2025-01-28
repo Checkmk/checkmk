@@ -23,9 +23,23 @@ from cmk import trace
 tracer = trace.get_tracer()
 
 
-def run_scheduler(crash_report_callback: Callable[[Exception], str]) -> None:
+def run_scheduler_threaded(
+    crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
+) -> threading.Thread:
+    t = threading.Thread(
+        target=_run_scheduler,
+        args=(crash_report_callback, stop_event),
+        name="scheduler",
+    )
+    t.start()
+    return t
+
+
+def _run_scheduler(
+    crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
+) -> None:
     job_threads: dict[str, threading.Thread] = {}
-    while True:
+    while not stop_event.is_set():
         try:
             cycle_start = time.time()
             _collect_finished_threads(job_threads)
@@ -39,7 +53,7 @@ def run_scheduler(crash_report_callback: Callable[[Exception], str]) -> None:
                 logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
 
             if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
-                time.sleep(sleep_time)
+                stop_event.wait(sleep_time)
         finally:
             # The UI code does not clean up locks properly in all cases, so we need to do it here
             # in case there were some locks left over

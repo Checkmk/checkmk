@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper for pika connection classes"""
 
+import enum
 import socket
 import ssl
 from collections.abc import Callable, Mapping, Sequence
@@ -77,9 +78,15 @@ class CMKConnectionError(RuntimeError):
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
-@dataclass(frozen=True)
 class ConnectionOK:
     """The connection is OK"""
+
+
+class ConnectionRefused(enum.Enum):
+    CLOSED = enum.auto()
+    WRONG_SITE = enum.auto()
+    SELF_SIGNED = enum.auto()
+    CERTIFICATE_VERIFY_FAILED = enum.auto()
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,9 @@ class ConnectionFailed:
     """The connection is not OK"""
 
     message: str
+
+
+ConnectionDiagnose = ConnectionOK | ConnectionRefused | ConnectionFailed
 
 
 class ChannelP(Protocol):
@@ -357,7 +367,7 @@ class Connection:
 
 def check_remote_connection(
     omd_root: Path, server: str, port: int, omd_site: str
-) -> ConnectionOK | ConnectionFailed:
+) -> ConnectionDiagnose:
     """
     Check if a connection to a remote message broker can be established
 
@@ -377,26 +387,18 @@ def check_remote_connection(
             return ConnectionOK()
     except AMQPConnectionError as exc:
         return (
-            ConnectionFailed("Connection refused")
+            ConnectionRefused.CLOSED
             if "connection refused" in repr(exc).lower()
             else ConnectionFailed(str(exc))
         )
     except ssl.SSLError as exc:
         msg = repr(exc).lower()
         if "hostname mismatch" in msg:
-            return ConnectionFailed(
-                "Hostname mismatch."
-                " You are probably connecting to the wrong site."
-                f" I tried port {port}."
-            )
+            return ConnectionRefused.WRONG_SITE
         if "self-signed" in msg:
-            return ConnectionFailed(
-                "Target broker uses self-signed certificate."
-                " You might be connecting to the wrong site."
-                f" I tried port {port}."
-            )
+            return ConnectionRefused.SELF_SIGNED
         if "certificate verify failed" in msg:
-            return ConnectionFailed("Certificate verify failed")
+            return ConnectionRefused.CERTIFICATE_VERIFY_FAILED
 
         return ConnectionFailed(str(exc))
 

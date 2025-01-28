@@ -8,7 +8,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.unit.testlib.utils import import_module_hack
+from tests.testlib.unit.utils import import_module_hack
 
 
 @pytest.fixture(name="check_uniserv", scope="module")

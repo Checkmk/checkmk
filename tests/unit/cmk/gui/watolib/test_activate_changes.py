@@ -17,8 +17,7 @@ from werkzeug import datastructures as werkzeug_datastructures
 
 from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 from tests.testlib.unit.rabbitmq import get_expected_definition
-
-from tests.unit.testlib.utils import reset_registries
+from tests.testlib.unit.utils import reset_registries
 
 from livestatus import SiteConfiguration, SiteId
 

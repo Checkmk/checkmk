@@ -9,10 +9,6 @@ import type { ValidationMessages } from '@/form/components/utils/validation'
 import FormHelp from '@/form/components/FormHelp.vue'
 import { getComponent } from '@/form/private/dispatch'
 
-defineOptions({
-  inheritAttrs: false
-})
-
 defineProps<{
   spec: FormSpec
   backendValidation: ValidationMessages
@@ -29,7 +25,6 @@ const data = defineModel<unknown>('data', { required: true })
       v-model:data="data"
       :backend-validation="backendValidation"
       :spec="spec"
-      v-bind="$attrs"
     />
   </span>
 </template>

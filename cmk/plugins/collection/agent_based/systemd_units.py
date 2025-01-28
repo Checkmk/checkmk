@@ -158,7 +158,7 @@ class Memory:
 
 
 CPU_PATTERN = re.compile(
-    r"(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
+    r"(?:(\d+)w)?\s*(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
 )
 
 
@@ -189,14 +189,17 @@ class CpuTimeSeconds:
         if not (match := CPU_PATTERN.match(raw)):
             raise ValueError(f"Cannot parse from raw: {raw}")
 
-        days, hours, minutes, seconds, milliseconds, microseconds = match.groups()
-        if all(v is None for v in (days, hours, minutes, seconds, milliseconds, microseconds)):
+        weeks, days, hours, minutes, seconds, milliseconds, microseconds = match.groups()
+        if all(
+            v is None for v in (weeks, days, hours, minutes, seconds, milliseconds, microseconds)
+        ):
             raise ValueError(f"Raw does not contain any known value/unit pair: {raw}")
 
         return cls(
             value=sum(
                 float(v) * f
                 for (v, f) in (
+                    (weeks, 7 * 24 * 60 * 60),
                     (days, 24 * 60 * 60),
                     (hours, 60 * 60),
                     (minutes, 60),

@@ -5,6 +5,7 @@
 
 from logging import Logger
 
+from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
@@ -52,6 +53,8 @@ def validate_rule_values(
                     ),
                     exc_info=True,
                 )
+                identity = create_gui_crash_report().ident_to_text()
+                logger.warning(f"A crash report was generated with ID: {identity}")
 
     if n_invalid:
         logger.warning(
@@ -65,8 +68,10 @@ def validate_rule_values(
     if n_broken:
         logger.warning(
             format_warning(
-                "Detected %s issue(s) in loaded rulesets. This is a problem with the plug-in implementation.\n"
-                "To correct these issues, fix either the `migrate` or `custom_validate` attribute."
+                "Detected %s issue(s) in loaded rulesets. This is a problem with the plug-in "
+                "implementation. It needs to be addressed by the maintainers. Please review the "
+                "crashes in the crash reports page to help fix the issues. "
+                "Until all issues are resolved, we recommend disabling the affected rules."
             ),
             n_broken,
         )

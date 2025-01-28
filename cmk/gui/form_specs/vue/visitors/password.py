@@ -112,6 +112,8 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
                     if pw_id is not None
                 ],
                 i18n=VueComponents.I18nPassword(
+                    choose_password_type=_("Choose password type"),
+                    choose_password_from_store=_("Choose password from store"),
                     explicit_password=_("Explicit"),
                     password_store=_("From password store"),
                     no_password_store_choices=_(

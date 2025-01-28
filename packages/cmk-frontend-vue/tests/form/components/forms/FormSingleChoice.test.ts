@@ -35,7 +35,8 @@ test('FormSingleChoice renders value', () => {
 
   const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
-  expect(element).toHaveAccessibleName('Choice 1')
+  expect(element).toHaveAccessibleName('fooLabel')
+  expect(element).toHaveTextContent('Choice 1')
 })
 
 test('FormSingleChoice renders something when noting is selected', () => {
@@ -49,7 +50,8 @@ test('FormSingleChoice renders something when noting is selected', () => {
 
   const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
-  expect(element).toHaveAccessibleName('some input hint')
+  expect(element).toHaveAccessibleName('fooLabel')
+  expect(element).toHaveTextContent('some input hint (required)')
 })
 
 test('FormSingleChoice updates data', async () => {

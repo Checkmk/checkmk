@@ -77,6 +77,8 @@ class I18nPassword:
     password_store: str
     no_password_store_choices: str
     password_choice_invalid: str
+    choose_password_from_store: str
+    choose_password_type: str
 
 
 class DictionaryGroupLayout(str, Enum):
@@ -146,6 +148,11 @@ class MetricI18n:
     host_filter: str
     service_input_hint: str
     service_filter: str
+
+
+@dataclass(kw_only=True)
+class DataSizeI18n:
+    choose_unit: str
 
 
 @dataclass(kw_only=True)
@@ -236,6 +243,8 @@ class ConditionGroup:
 
 @dataclass(kw_only=True)
 class ConditionChoicesI18n:
+    choose_operator: str
+    choose_condition: str
     add_condition_label: str
     select_condition_group_to_add: str
     no_more_condition_groups_to_add: str
@@ -478,6 +487,7 @@ class DataSize(FormSpec):
     label: Optional[str]
     displayed_magnitudes: list[str]
     input_hint: Optional[str]
+    i18n: DataSizeI18n
     type: str = "data_size"
 
 

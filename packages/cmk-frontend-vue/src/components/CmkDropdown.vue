@@ -24,7 +24,8 @@ const {
   noElementsText = '',
   requiredText = '',
   options,
-  showFilter
+  showFilter,
+  label
 } = defineProps<{
   options: DropdownOption[]
   showFilter: boolean
@@ -34,6 +35,7 @@ const {
   componentId?: string | null
   noElementsText?: string
   requiredText?: string
+  label: string
 }>()
 
 const vClickOutside = useClickOutside()
@@ -113,7 +115,7 @@ function selectOption(option: DropdownOption): void {
       :id="componentId"
       ref="comboboxButtonRef"
       role="combobox"
-      :aria-label="selectedOptionTitle"
+      :aria-label="label"
       :aria-expanded="suggestionsShown"
       class="cmk-dropdown__button"
       :class="{

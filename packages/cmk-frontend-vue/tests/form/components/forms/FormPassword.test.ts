@@ -33,6 +33,8 @@ const spec: FormSpec.Password = {
     }
   ],
   i18n: {
+    choose_password_type: 'i18n choose_password_type',
+    choose_password_from_store: 'i18n choose_password_from_store',
     explicit_password: 'explicit_password_i18n',
     password_store: 'password_store_i18n',
     no_password_store_choices: 'no_password_store_choices_i18n',
@@ -100,7 +102,7 @@ test('FormPassword selected first password store choice if present', async () =>
   })
 
   const element = screen.getByRole<HTMLSelectElement>('combobox', {
-    name: 'explicit_password_i18n'
+    name: 'i18n choose_password_type'
   })
   await fireEvent.click(element)
   await fireEvent.click(screen.getByText('password_store_i18n'))

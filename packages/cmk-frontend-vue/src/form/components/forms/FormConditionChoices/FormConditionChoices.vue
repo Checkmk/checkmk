@@ -91,7 +91,9 @@ const elementRequired = computed(() => {
           ne_operator: props.spec.i18n.ne_operator,
           or_operator: props.spec.i18n.or_operator,
           nor_operator: props.spec.i18n.nor_operator,
-          add_condition_label: props.spec.i18n.add_condition_label
+          add_condition_label: props.spec.i18n.add_condition_label,
+          choose_condition: props.spec.i18n.choose_condition,
+          choose_operator: props.spec.i18n.choose_operator
         }"
         @update="(new_value: typing.ConditionChoicesValue) => updateElementData(new_value, index)"
       />
@@ -104,6 +106,7 @@ const elementRequired = computed(() => {
     :show-filter="remainingGroups.length > FILTER_SHOW_THRESHOLD"
     :required-text="elementRequired ? spec.i18n_base.required : ''"
     :no-elements-text="spec.i18n.no_more_condition_groups_to_add"
+    :label="spec.i18n.select_condition_group_to_add"
     @update:selected-option="addElement"
   />
   <FormValidation :validation="validation"></FormValidation>

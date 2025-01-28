@@ -74,7 +74,7 @@ test('FormCascadingSingleChoice displays data', async () => {
   })
 
   screen.getByRole<HTMLInputElement>('combobox', {
-    name: 'stringChoiceTitle'
+    name: 'fooLabel'
   })
 
   const stringElement = screen.getByRole<HTMLInputElement>('textbox', { name: 'nestedStringLabel' })
@@ -103,7 +103,7 @@ test('FormCascadingSingleChoice sets default on switch', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'stringChoiceTitle' })
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.click(element)
   await fireEvent.click(screen.getByText('integerChoiceTitle'))
 
@@ -132,7 +132,7 @@ test('FormCascadingSingleChoice keeps previously inserted data', async () => {
   expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
 
   // switch to integer input
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'stringChoiceTitle' })
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.click(element)
   await fireEvent.click(screen.getByText('integerChoiceTitle'))
   // make sure the default value is propagated

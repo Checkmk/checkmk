@@ -93,6 +93,7 @@ const passwordStoreOptions = computed(() => {
     v-model:selected-option="passwordType"
     :options="passwordTypeOptions"
     :show-filter="false"
+    :label="props.spec.i18n.choose_password_type"
   />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
@@ -113,6 +114,7 @@ const passwordStoreOptions = computed(() => {
       :options="passwordStoreOptions"
       :show-filter="false"
       :required-text="props.spec.i18n_base.required"
+      :label="props.spec.i18n.choose_password_from_store"
     />
   </template>
   <FormValidation :validation="validation"></FormValidation>

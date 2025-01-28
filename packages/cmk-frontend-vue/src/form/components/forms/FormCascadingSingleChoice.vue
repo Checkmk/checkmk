@@ -145,6 +145,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
         :required-text="props.spec.i18n_base.required"
         :input-hint="props.spec.input_hint || ''"
+        :label="props.spec.label || props.spec.title || ''"
       />
     </template>
     <template v-else>

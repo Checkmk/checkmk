@@ -221,9 +221,17 @@
                                 },
                                 "password_choice_invalid": {
                                     "type": "string"
+                                },
+                                "choose_password_from_store": {
+                                    "type": "string"
+                                },
+                                "choose_password_type": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
+                                "choose_password_type",
+                                "choose_password_from_store",
                                 "explicit_password",
                                 "password_store",
                                 "no_password_store_choices",
@@ -927,9 +935,20 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "data_size_i18n",
+                            "properties": {
+                                "choose_unit": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["choose_unit"]
                         }
                     },
                     "required": [
+                        "i18n",
                         "type",
                         "label",
                         "displayed_magnitudes",
@@ -1452,6 +1471,12 @@
                             "type": "object",
                             "title": "condition_choices_i18n",
                             "properties": {
+                                "choose_operator": {
+                                    "type": "string"
+                                },
+                                "choose_condition": {
+                                    "type": "string"
+                                },
                                 "add_condition_label": {
                                     "type": "string"
                                 },
@@ -1475,6 +1500,8 @@
                                 }
                             },
                             "required": [
+                                "choose_operator",
+                                "choose_condition",
                                 "add_condition_label",
                                 "select_condition_group_to_add",
                                 "no_more_condition_groups_to_add",

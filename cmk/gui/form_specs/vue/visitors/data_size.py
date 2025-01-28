@@ -122,6 +122,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel
         input_hint = str(compute_input_hint(self.form_spec.prefill))
         return (
             shared_type_defs.DataSize(
+                i18n=shared_type_defs.DataSizeI18n(choose_unit=_("Choose unit")),
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),

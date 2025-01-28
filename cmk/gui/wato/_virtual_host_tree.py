@@ -7,7 +7,7 @@ from collections.abc import Collection, Sequence
 from contextlib import nullcontext
 from typing import ContextManager, TypedDict
 
-from cmk.utils.tags import TagGroup, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -335,7 +335,18 @@ function virtual_host_tree_enter(path)
         self,
         tree_spec: Sequence[str],
         tree: Tree,
-        host_row: tuple[str, str, str, int, int, int, int, int, dict[str, str]],
+        host_row: tuple[
+            str,
+            str,
+            str,
+            int,
+            int,
+            int,
+            int,
+            int,
+            dict[str, str],
+            dict[TagGroupID, TagID],
+        ],
         tag_groups: dict[str, TagGroup],
         topics: dict[str | None, list[TagGroup]],
     ) -> None:
@@ -349,6 +360,7 @@ function virtual_host_tree_enter(path)
             num_crit,
             num_unknown,
             custom_variables,
+            tags_for_host,
         ) = host_row
 
         if wato_folder.startswith("/wato/"):
@@ -433,7 +445,9 @@ function virtual_host_tree_enter(path)
                     if level_spec not in tag_groups:
                         continue  # silently skip not existant tag groups
 
-                    tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
+                    tag_value, tag_title = self._get_tag_group_value(
+                        tag_groups[level_spec], tags, tags_for_host
+                    )
 
                     if (
                         self._trees[self._current_tree_id].get("exclude_empty_tag_choices", False)
@@ -477,17 +491,23 @@ function virtual_host_tree_enter(path)
 
         return tag_groups, topics
 
-    def _get_all_hosts(self) -> list[tuple[str, str, str, int, int, int, int, int, dict[str, str]]]:
+    def _get_all_hosts(
+        self,
+    ) -> list[
+        tuple[str, str, str, int, int, int, int, int, dict[str, str], dict[TagGroupID, TagID]]
+    ]:
         try:
             sites.live().set_prepend_site(True)
             query = (
                 "GET hosts\n"
                 "Columns: host_name filename state num_services_ok num_services_warn "
-                "num_services_crit num_services_unknown custom_variables"
+                "num_services_crit num_services_unknown custom_variables tags"
             )
-            hosts: list[tuple[str, str, str, int, int, int, int, int, dict[str, str]]] = (
-                sites.live().query(query)  # type: ignore[assignment]
-            )
+            hosts: list[
+                tuple[
+                    str, str, str, int, int, int, int, int, dict[str, str], dict[TagGroupID, TagID]
+                ]
+            ] = sites.live().query(query)  # type: ignore[assignment]
         finally:
             sites.live().set_prepend_site(False)
 
@@ -518,10 +538,13 @@ function virtual_host_tree_enter(path)
         return state, have_svc_problems
 
     def _get_tag_group_value(
-        self, tag_group: TagGroup, tags: Collection[str]
+        self,
+        tag_group: TagGroup,
+        tags: Collection[str],
+        tags_for_host: dict[TagGroupID, TagID],
     ) -> tuple[TagID | None, str]:
         for grouped_tag in tag_group.tags:
-            if grouped_tag.id in tags:
+            if grouped_tag.id in tags and tags_for_host[tag_group.id] == grouped_tag.id:
                 return grouped_tag.id, grouped_tag.title
 
         # Not found -> try empty entry

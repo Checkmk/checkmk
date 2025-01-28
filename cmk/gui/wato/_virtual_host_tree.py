@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from contextlib import nullcontext
-from typing import Any, ContextManager
+from typing import Any, ContextManager, TypedDict
+
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -20,6 +22,13 @@ from cmk.gui.sidebar import SidebarSnapin
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
+
+
+class Tree(TypedDict, total=False):
+    _children: dict[tuple[str, str | None], "Tree"]
+    _num_hosts: int
+    _state: int
+    _svc_problems: bool
 
 
 class VirtualHostTree(SidebarSnapin):
@@ -313,19 +322,30 @@ function virtual_host_tree_enter(path)
 
     def _compute_tag_tree(self, tree_spec):
         tag_groups, topics = self._get_tag_config()
-        tree: dict[Any, Any] = {}
+        tree = Tree({})
         for host_row in self._get_all_hosts():
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
 
     def _add_host_to_tree(  # pylint: disable=too-many-branches
         self,
-        tree_spec,
-        tree,
-        host_row,
-        tag_groups,
-        topics,
-    ):
+        tree_spec: Sequence[str],
+        tree: Tree,
+        host_row: tuple[
+            str,
+            str,
+            str,
+            int,
+            int,
+            int,
+            int,
+            int,
+            dict[str, str],
+            dict[TagGroupID, TagID],
+        ],
+        tag_groups: dict[str, TagGroup],
+        topics: dict[str | None, list[TagGroup]],
+    ) -> None:
         (
             _site,
             _host_name,
@@ -336,6 +356,7 @@ function virtual_host_tree_enter(path)
             num_crit,
             num_unknown,
             custom_variables,
+            tags_for_host,
         ) = host_row
 
         if wato_folder.startswith("/wato/"):
@@ -426,7 +447,9 @@ function virtual_host_tree_enter(path)
                     if level_spec not in tag_groups:
                         continue  # silently skip not existant tag groups
 
-                    tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
+                    tag_value, tag_title = self._get_tag_group_value(
+                        tag_groups[level_spec], tags, tags_for_host
+                    )
 
                     if (
                         self._trees[self._current_tree_id].get("exclude_empty_tag_choices", False)
@@ -468,15 +491,23 @@ function virtual_host_tree_enter(path)
 
         return tag_groups, topics
 
-    def _get_all_hosts(self):
+    def _get_all_hosts(
+        self,
+    ) -> list[
+        tuple[str, str, str, int, int, int, int, int, dict[str, str], dict[TagGroupID, TagID]]
+    ]:
         try:
             sites.live().set_prepend_site(True)
             query = (
                 "GET hosts\n"
                 "Columns: host_name filename state num_services_ok num_services_warn "
-                "num_services_crit num_services_unknown custom_variables"
+                "num_services_crit num_services_unknown custom_variables tags"
             )
-            hosts = sites.live().query(query)
+            hosts: list[
+                tuple[
+                    str, str, str, int, int, int, int, int, dict[str, str], dict[TagGroupID, TagID]
+                ]
+            ] = sites.live().query(query)  # type: ignore[assignment]
         finally:
             sites.live().set_prepend_site(False)
 
@@ -504,9 +535,14 @@ function virtual_host_tree_enter(path)
 
         return state, have_svc_problems
 
-    def _get_tag_group_value(self, tag_group, tags):
+    def _get_tag_group_value(
+        self,
+        tag_group: TagGroup,
+        tags: Collection[str],
+        tags_for_host: dict[TagGroupID, TagID],
+    ) -> tuple[TagID | None, str]:
         for grouped_tag in tag_group.tags:
-            if grouped_tag.id in tags:
+            if grouped_tag.id in tags and tags_for_host[tag_group.id] == grouped_tag.id:
                 return grouped_tag.id, grouped_tag.title
 
         # Not found -> try empty entry

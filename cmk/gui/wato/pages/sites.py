@@ -134,7 +134,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
+from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -1335,7 +1335,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         self, remote_site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
     ) -> tuple[Literal["checkmark", "cross", "alert"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
-            return "cross", "Offline: No valid multisite URL configured"
+            return "cross", _("Offline: No valid multisite URL configured")
 
         remote_port = site["message_broker_port"]
         try:
@@ -1345,13 +1345,25 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
-            return "alert", f"Unkown: {e}"
+            return "alert", _("Unkown error: %s") % (e,)
 
         match connection_status:
             case ConnectionOK():
-                return "checkmark", "Online"
+                return "checkmark", _("Online")
             case ConnectionFailed(error):
-                return "cross", f"Offline: {error}"
+                return "cross", _("Failed to establish connection: %s") % (error,)
+            case ConnectionRefused.CLOSED:
+                return "cross", _("Connection to port %s refused") % (remote_port,)
+            case ConnectionRefused.WRONG_SITE:
+                return "cross", _(
+                    "Connection to port %s refused. You are probably connecting to the wrong site."
+                ) % (remote_port,)
+            case ConnectionRefused.SELF_SIGNED:
+                return "cross", _(
+                    "Connection to port %s refused. The site is using a self-signed certificate. Are you logged in?"
+                ) % (remote_port,)
+            case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
+                return "cross", _("Connection to port %s refused: Invalid certificate")
             case _:
                 assert_never(_)
 

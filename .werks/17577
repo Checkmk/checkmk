@@ -1,0 +1,14 @@
+Title: virtual_host_trees: match on tag group and tag group tag id
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1738079595
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+Previously when a Virtual host tree was configured, the
+tree would be built matching on the tag id.  However,
+tag ids can be the same across tag groups which was not
+taken into account. With this werk, we now match on
+tag group and the tag group tag id.

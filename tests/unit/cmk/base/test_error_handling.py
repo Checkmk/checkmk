@@ -35,10 +35,10 @@ def test_no_error_keeps_status_from_callee() -> None:
 
     with _handler() as handler:
         check_result = ActiveCheckResult(
-            0,
-            "summary",
-            ("details", "lots of"),
-            ("metrics", "x"),
+            state=0,
+            summary="summary",
+            details=("details", "lots of"),
+            metrics=("metrics", "x"),
         )
 
     assert check_result is not None

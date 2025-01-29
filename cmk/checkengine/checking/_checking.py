@@ -172,8 +172,8 @@ def check_plugins_missing_data(
 
     if not any(r.data_received for r in service_results):
         yield ActiveCheckResult(
-            missing_status,
-            "Missing monitoring data for all plugins",
+            state=missing_status,
+            summary="Missing monitoring data for all plugins",
         )
         return
 
@@ -181,16 +181,16 @@ def check_plugins_missing_data(
         r.service.check_plugin_name for r in service_results if not r.data_received
     }
 
-    yield ActiveCheckResult(0, "Missing monitoring data for plugins")
+    yield ActiveCheckResult(state=0, summary="Missing monitoring data for plugins")
 
     for check_plugin_name in sorted(plugins_missing_data):
         for pattern, status in specific_plugins_missing_data_spec:
             reg = regex(pattern)
             if reg.match(str(check_plugin_name)):
-                yield ActiveCheckResult(status, str(check_plugin_name))
+                yield ActiveCheckResult(state=status, summary=str(check_plugin_name))
                 break
         else:  # no break
-            yield ActiveCheckResult(missing_status, str(check_plugin_name))
+            yield ActiveCheckResult(state=missing_status, summary=str(check_plugin_name))
 
 
 def check_host_services(

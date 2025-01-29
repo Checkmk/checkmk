@@ -294,7 +294,7 @@ def _check_service_lists(
         for ignored_service, _found_on_nodes in services_by_transition.get("ignored", [])
     )
     if not any(s.summary for s in subresults):
-        subresults.insert(0, ActiveCheckResult(0, "Services: all up to date"))
+        subresults.insert(0, ActiveCheckResult(state=0, summary="Services: all up to date"))
     return subresults, need_rediscovery
 
 
@@ -309,16 +309,16 @@ def _transition_result(
     else:
         summary = f"Services {transition.title}: {count} ({info})"
 
-    return ActiveCheckResult(severity, summary)
+    return ActiveCheckResult(state=severity, summary=summary)
 
 
 def _make_service_result(
     transition_str: str, check_plugin_name: CheckPluginName, *, service_description: str
 ) -> ActiveCheckResult:
     return ActiveCheckResult(
-        0,
-        "",
-        [f"Service {transition_str}: {check_plugin_name}: {service_description}"],
+        state=0,
+        summary="",
+        details=[f"Service {transition_str}: {check_plugin_name}: {service_description}"],
     )
 
 
@@ -365,7 +365,7 @@ def _check_host_labels(
         )
         if subresults
         else (
-            [ActiveCheckResult(0, "Host labels: all up to date")],
+            [ActiveCheckResult(state=0, summary="Host labels: all up to date")],
             False,
         )
     )
@@ -377,9 +377,9 @@ def _make_labels_result(
     plugin_count = Counter(l.plugin_name for l in labels)
     info = ", ".join(f"{key}: {count}" for key, count in plugin_count.items())
     return ActiveCheckResult(
-        severity,
-        f"{qualifier.capitalize()} host labels: {len(labels)} ({info})",
-        [
+        state=severity,
+        summary=f"{qualifier.capitalize()} host labels: {len(labels)} ({info})",
+        details=[
             f"{qualifier.capitalize()} host label: {l.plugin_name}: {l.name}:{l.value}"
             for l in labels
         ],
@@ -402,7 +402,7 @@ def _schedule_rediscovery(
             "Automatic rediscovery currently not possible due to failing data source(s)."
             " Please run service discovery manually"
         )
-        return ActiveCheckResult(1, error_message)
+        return ActiveCheckResult(state=1, summary=error_message)
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
     if is_cluster:
@@ -411,4 +411,4 @@ def _schedule_rediscovery(
     else:
         autodiscovery_queue.add(host_name)
 
-    return ActiveCheckResult(0, "Rediscovery scheduled")
+    return ActiveCheckResult(state=0, summary="Rediscovery scheduled")

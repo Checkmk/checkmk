@@ -62,18 +62,17 @@ class CheckResultErrorHandler:
         if type_ is None:
             return True
         assert value is not None
-        self._result = ActiveCheckResult(
-            *_handle_failure(
-                value,
-                self.exit_spec,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                plugin_name=self.plugin_name,
-                is_cluster=self.is_cluster,
-                snmp_backend=self.snmp_backend,
-                keepalive=self.keepalive,
-            )
+        state, summary = _handle_failure(
+            value,
+            self.exit_spec,
+            host_name=self.host_name,
+            service_name=self.service_name,
+            plugin_name=self.plugin_name,
+            is_cluster=self.is_cluster,
+            snmp_backend=self.snmp_backend,
+            keepalive=self.keepalive,
         )
+        self._result = ActiveCheckResult(state=state, summary=summary)
         return True
 
 

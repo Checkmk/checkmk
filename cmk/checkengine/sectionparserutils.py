@@ -80,7 +80,10 @@ def check_parsing_errors(
     *,
     error_state: ServiceState = 1,
 ) -> Sequence[ActiveCheckResult]:
-    return [ActiveCheckResult(error_state, msg.split(" - ")[0], (msg,)) for msg in errors]
+    return [
+        ActiveCheckResult(state=error_state, summary=msg.split(" - ")[0], details=(msg,))
+        for msg in errors
+    ]
 
 
 _CacheInfo = tuple[int, int]

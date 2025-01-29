@@ -582,7 +582,7 @@ def _check_fetched_data_or_trees(
     processing_failed: bool,
 ) -> Iterator[ActiveCheckResult]:
     if no_data_or_files:
-        yield ActiveCheckResult(0, "No data yet, please be patient")
+        yield ActiveCheckResult(state=0, summary="No data yet, please be patient")
         return
 
     if processing_failed:
@@ -596,11 +596,11 @@ def _check_fetched_data_or_trees(
             ),
             bool,
         ):
-            yield ActiveCheckResult(0, "No further data for tree update")
+            yield ActiveCheckResult(state=0, summary="No further data for tree update")
         else:
             yield ActiveCheckResult(
-                parameters.fail_status,
-                "Did not update the tree due to at least one error",
+                state=parameters.fail_status,
+                summary="Did not update the tree due to at least one error",
             )
 
     yield from _check_trees(
@@ -619,22 +619,24 @@ def _check_trees(
     previous_tree: ImmutableTree,
 ) -> Iterator[ActiveCheckResult]:
     if not (inventory_tree or status_data_tree):
-        yield ActiveCheckResult(0, "Found no data")
+        yield ActiveCheckResult(state=0, summary="Found no data")
         return
 
-    yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
+    yield ActiveCheckResult(state=0, summary=f"Found {len(inventory_tree)} inventory entries")
 
     if parameters.sw_missing and not inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
-        yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
+        yield ActiveCheckResult(
+            state=parameters.sw_missing, summary="software packages information is missing"
+        )
 
     if previous_tree.get_tree(_SDPATH_SOFTWARE) != inventory_tree.get_tree(_SDPATH_SOFTWARE):
-        yield ActiveCheckResult(parameters.sw_changes, "software changes")
+        yield ActiveCheckResult(state=parameters.sw_changes, summary="software changes")
 
     if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
-        yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
+        yield ActiveCheckResult(state=parameters.hw_changes, summary="hardware changes")
 
     if previous_tree.get_tree(_SDPATH_NETWORKING) != inventory_tree.get_tree(_SDPATH_NETWORKING):
-        yield ActiveCheckResult(parameters.nw_changes, "networking changes")
+        yield ActiveCheckResult(state=parameters.nw_changes, summary="networking changes")
 
     if status_data_tree:
-        yield ActiveCheckResult(0, f"Found {len(status_data_tree)} status entries")
+        yield ActiveCheckResult(state=0, summary=f"Found {len(status_data_tree)} status entries")

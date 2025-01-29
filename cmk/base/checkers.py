@@ -249,14 +249,14 @@ def _summarize_host_sections(
     return ActiveCheckResult.from_subresults(
         *(
             ActiveCheckResult(
-                (
+                state=(
                     s.state
                     if (s.state == 0 or override_non_ok_state is None)
                     else override_non_ok_state
                 ),
-                f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
-                s.details,
-                s.metrics,
+                summary=f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
+                details=s.details,
+                metrics=s.metrics,
             )
             for idx, s in enumerate(
                 summarize(

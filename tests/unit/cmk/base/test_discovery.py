@@ -1022,35 +1022,35 @@ def test__check_service_table(
 
     assert results == [
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service unmonitored: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service unmonitored: check_plugin_name: Test Description New Item 2",
             ],
         ),
-        ActiveCheckResult(1, "Services unmonitored: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(state=1, summary="Services unmonitored: 2 (check_plugin_name: 2)"),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service vanished: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service vanished: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
-        ActiveCheckResult(0, "Services vanished: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(state=0, summary="Services vanished: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
 
@@ -1077,7 +1077,7 @@ def test__check_host_labels_up_to_date() -> None:
             update_changed_service_labels=False,
             update_changed_service_parameters=False,
         ),
-    ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
+    ) == ([ActiveCheckResult(state=0, summary="Host labels: all up to date")], False)
 
 
 def test__check_host_labels_changed() -> None:
@@ -1105,17 +1105,17 @@ def test__check_host_labels_changed() -> None:
     ) == (
         [
             ActiveCheckResult(
-                1,
-                "New host labels: 2 (my_section: 1, labels: 1)",
-                [
+                state=1,
+                summary="New host labels: 2 (my_section: 1, labels: 1)",
+                details=[
                     "New host label: my_section: that:yay-new-value",
                     "New host label: labels: yetanotherone:isnew",
                 ],
             ),
             ActiveCheckResult(
-                0,
-                "Vanished host labels: 2 (my_section: 2)",
-                [
+                state=0,
+                summary="Vanished host labels: 2 (my_section: 2)",
+                details=[
                     "Vanished host label: my_section: that:changes",
                     "Vanished host label: my_section: anotherone:vanishes",
                 ],

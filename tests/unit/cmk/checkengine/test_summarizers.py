@@ -23,16 +23,16 @@ from cmk.piggyback.backend import PiggybackMetaData
 
 class TestAgentSummarizer:
     def test_summarize_success(self) -> None:
-        assert summarize_success(ExitSpec()) == [ActiveCheckResult(0, "Success")]
+        assert summarize_success(ExitSpec()) == [ActiveCheckResult(state=0, summary="Success")]
 
     def test_summarize_base_exception(self) -> None:
-        assert summarize_failure(ExitSpec(), Exception()) == [ActiveCheckResult(3)]
+        assert summarize_failure(ExitSpec(), Exception()) == [ActiveCheckResult(state=3)]
 
     def test_summarize_MKAgentError_exception(self) -> None:
-        assert summarize_failure(ExitSpec(), MKAgentError()) == [ActiveCheckResult(2)]
+        assert summarize_failure(ExitSpec(), MKAgentError()) == [ActiveCheckResult(state=2)]
 
     def test_summarize_MKTimeout_exception(self) -> None:
-        assert summarize_failure(ExitSpec(), MKTimeout()) == [ActiveCheckResult(2)]
+        assert summarize_failure(ExitSpec(), MKTimeout()) == [ActiveCheckResult(state=2)]
 
     def test_summarize_multiline_exception(self) -> None:
         assert summarize_failure(
@@ -55,7 +55,7 @@ class TestPiggybackSummarizer:
             ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
             expect_data=False,
-        ) == [ActiveCheckResult(0, "Success (but no data found for this host)")]
+        ) == [ActiveCheckResult(state=0, summary="Success (but no data found for this host)")]
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
@@ -64,7 +64,7 @@ class TestPiggybackSummarizer:
             ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
             expect_data=True,
-        ) == [ActiveCheckResult(1, "Missing data")]
+        ) == [ActiveCheckResult(state=1, summary="Missing data")]
 
     @pytest.mark.parametrize("expect_data", [True, False])
     def test_summarize_outdated_data_regardless_of_is_piggyback_option(
@@ -91,7 +91,11 @@ class TestPiggybackSummarizer:
             time_settings=[(None, "max_cache_age", 10)],
             expect_data=expect_data,
             now=now,
-        ) == [ActiveCheckResult(0, "Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)")]
+        ) == [
+            ActiveCheckResult(
+                state=0, summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)"
+            )
+        ]
 
     @pytest.mark.parametrize("expect_data", [True, False])
     def test_summarize_abandoned_data_without_tolerance_regardless_of_is_piggyback_option(
@@ -118,7 +122,7 @@ class TestPiggybackSummarizer:
             time_settings=[(None, "max_cache_age", 10)],
             expect_data=expect_data,
             now=now,
-        ) == [ActiveCheckResult(0, "Piggyback data not updated by source 'source'")]
+        ) == [ActiveCheckResult(state=0, summary="Piggyback data not updated by source 'source'")]
 
     @pytest.mark.parametrize("expect_data", [True, False])
     def test_summarize_abandoned_data_with_tolerance_regardless_of_is_piggyback_option(
@@ -151,7 +155,7 @@ class TestPiggybackSummarizer:
             now=now,
         ) == [
             ActiveCheckResult(
-                2,
-                "Piggyback data not updated by source 'source' (still valid, 0:00:28 left)",
+                state=2,
+                summary="Piggyback data not updated by source 'source' (still valid, 0:00:28 left)",
             ),
         ]

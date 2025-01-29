@@ -7,7 +7,6 @@ unset LANG
 
 . "${OMD_ROOT}/etc/omd/site.conf"
 if [ "${CONFIG_AUTOMATION_HELPER}" != "on" ]; then
-    printf "disabled\n"
     exit 5
 fi
 

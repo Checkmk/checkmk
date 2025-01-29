@@ -58,6 +58,27 @@ def main() {
     def minimal_image = docker.build(image_name, docker_build_args);
 
     minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+        stage("Build BOM") {
+            upstream_build(
+                relative_job_name: "${package_helper.branch_base_folder(with_testing_prefix=false)}/builders/build-cmk-bom",
+                build_params: [
+                    /// currently CUSTOM_GIT_REF must match, but in the future
+                    /// we should define dependency paths for build-cmk-distro-package
+                    CUSTOM_GIT_REF: effective_git_ref,
+                    VERSION: version,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    DISABLE_CACHE: disable_cache,
+                ],
+                build_params_no_check: [
+                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                ],
+                no_remove_others: true, // do not delete other files in the dest dir
+                no_venv: true,          // run ci-artifacts call without venv
+                omit_build_venv: true,  // do not check or build a venv first
+                dest: "/checkmk/",
+            );
+        }
+
         smart_stage(name: "Provide agent binaries") {
             package_helper.provide_agent_binaries(version, edition, disable_cache);
         }

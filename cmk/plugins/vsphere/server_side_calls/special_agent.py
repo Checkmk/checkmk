@@ -76,7 +76,10 @@ def commands_function(  # pylint: disable=too-many-branches
     else:
         command_arguments += ["--cert-server-name", params.ssl[1]]
 
-    command_arguments.append(host_config.primary_ip_config.address)
+    try:
+        command_arguments.append(host_config.primary_ip_config.address)
+    except ValueError:
+        command_arguments.append(host_config.name)
 
     yield SpecialAgentCommand(command_arguments=command_arguments)
 

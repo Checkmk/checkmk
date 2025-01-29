@@ -11,14 +11,9 @@ import pytest
 from cmk.plugins.vsphere.server_side_calls.special_agent import special_agent_vsphere
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
-HOST_CONFIG = HostConfig(
-    name="host",
-    ipv4_config=IPv4Config(address="1.2.3.4"),
-)
-
 
 @pytest.mark.parametrize(
-    ["raw_params", "expected_args"],
+    ["raw_params", "host_config", "expected_args"],
     [
         pytest.param(
             {
@@ -32,6 +27,10 @@ HOST_CONFIG = HostConfig(
                 "snapshots_on_host": False,
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
             },
+            HostConfig(
+                name="host",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+            ),
             SpecialAgentCommand(
                 command_arguments=[
                     "-p",
@@ -68,6 +67,7 @@ HOST_CONFIG = HostConfig(
                 "snapshots_on_host": False,
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
             },
+            HostConfig(name="host"),
             SpecialAgentCommand(
                 command_arguments=[
                     "-p",
@@ -87,7 +87,7 @@ HOST_CONFIG = HostConfig(
                     "alias",
                     "--cert-server-name",
                     "host",
-                    "1.2.3.4",
+                    "host",
                 ],
             ),
             id="with store password",
@@ -96,7 +96,8 @@ HOST_CONFIG = HostConfig(
 )
 def test_vsphere_argument_parsing(
     raw_params: Mapping[str, object],
+    host_config: HostConfig,
     expected_args: SpecialAgentCommand,
 ) -> None:
     """Tests if all required arguments are present."""
-    assert list(special_agent_vsphere(raw_params, HOST_CONFIG)) == [expected_args]
+    assert list(special_agent_vsphere(raw_params, host_config)) == [expected_args]

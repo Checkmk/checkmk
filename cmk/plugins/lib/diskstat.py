@@ -28,7 +28,6 @@ Section = Mapping[str, Disk]
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 DISKSTAT_DEFAULT_PARAMS = {
     "summary": True,
-    "physical": {},
     "lvm": False,
     "vxvm": False,
     "diskless": False,
@@ -51,13 +50,13 @@ def discovery_diskstat_generic(
 
     for name in item_candidates:
         if (
-            (physical := modes["physical"])
+            (physical := modes.get("physical"))
             and " " not in name
             and not DISKSTAT_DISKLESS_PATTERN.match(name)
         ):
             if ":" in name:
                 device, wwn = name.split(":")
-                item = wwn if physical["service_description"] == "wwn" else device
+                item = wwn if physical == "wwn" else device
                 yield Service(item=item)
             else:
                 yield Service(item=name)

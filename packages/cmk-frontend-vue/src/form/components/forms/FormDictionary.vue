@@ -20,6 +20,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
+import FormIndent from '@/form/private/FormIndent.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -155,7 +156,8 @@ function indentRequired(
 ): boolean {
   return (
     labelRequired(element) &&
-    !(element.group && variant === 'one_column' && layout === 'horizontal') &&
+    variant === 'one_column' &&
+    !(element.group && layout === 'horizontal') &&
     !(
       element.parameter_form.type === 'fixed_value' &&
       !(element.parameter_form as FormSpec.FixedValue).label &&
@@ -221,11 +223,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   <HelpText :help="dict_element.dict_config.parameter_form.help" />
                 </span>
               </template>
-              <div
+              <FormIndent
+                :indent="indentRequired(dict_element.dict_config, group.layout)"
                 :aria-label="dict_element.dict_config.parameter_form.title"
                 :class="{
-                  indent: indentRequired(dict_element.dict_config, group.layout),
-                  dictelement: indentRequired(dict_element.dict_config, group.layout),
                   'group-with-more-items': group.elems.length > 1
                 }"
               >
@@ -243,7 +244,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                     :spec="dict_element.dict_config.parameter_form"
                   ></FormReadonly>
                 </template>
-              </div>
+              </FormIndent>
             </div>
           </div>
         </td>
@@ -286,15 +287,8 @@ span.checkbox {
     word-wrap: break-word;
     white-space: normal;
   }
-
-  > .dictelement.indent {
-    display: inline-block;
-    margin: 0;
-    padding-left: 0;
-    border-left: none;
-    padding-top: 1px;
-  }
 }
+
 .group-with-more-items {
   border: none;
   margin-left: 0;

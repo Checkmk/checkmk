@@ -1606,7 +1606,11 @@ def get_rrd_data(
     except MKLivestatusNotFoundError:
         return None
 
-    if response is None:  # It is not obvious to me if this can be the case or not.
+    if not response:
+        # Appending nonsense to the column will give you None.
+        # It seems that querying in case we haven't got enough records (yet)
+        # will give you an empty response as of Checkmk 2.4.
+        # Not sure what that means for the comment below.
         return None
 
     raw_start, raw_end, raw_step, *values = response

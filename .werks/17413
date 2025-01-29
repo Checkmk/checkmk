@@ -1,0 +1,12 @@
+Title: check_mail: resolve Forwarding Syslog Method parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1737631103
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+Prior to this werk, the parsing of the Forwarding Method 'Send events to remote
+syslog host' did not work because the individual components were not parsed
+correctly, which caused the check to crash. This werk resolves the issue.

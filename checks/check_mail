@@ -39,8 +39,20 @@ def check_mail_arguments(params):
         forward = params["forward"]
         args.append("--forward-ec")
 
-        if forward.get("method"):
-            args.append(f"--forward-method={forward['method']}")
+        if method := forward.get("method"):
+            forward_method = method
+            if isinstance(method, tuple) and len(method) == 3:
+                protocol, address, port = tuple(method)  # pylint asking for explicit tuple
+                # if statement instead pattern matching due to specific protocol string values which
+                # mypy doesn't like
+                if (
+                    protocol in ("udp", "tcp")
+                    and isinstance(address, str)
+                    and isinstance(port, int)
+                ):
+                    forward_method = f"{protocol},{address},{port}"
+
+            args.append(f"--forward-method={forward_method}")
 
         if forward.get("match_subject"):
             args.append(f"--match-subject={forward['match_subject']}")

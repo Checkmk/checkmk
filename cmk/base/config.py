@@ -33,7 +33,6 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
-    TypeAlias,
     TypeVar,
 )
 
@@ -147,6 +146,7 @@ from cmk.base.sources import SNMPFetcherConfig
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.piggyback import backend as piggyback_backend
+from cmk.rrd.rrd import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
@@ -168,11 +168,6 @@ try:
 except ModuleNotFoundError:
     cme_labels = None
 
-try:
-    from cmk.base.cee.rrd import RRDObjectConfig  # type: ignore[import-untyped, unused-ignore]
-except ModuleNotFoundError:
-    # Non-existing edition layering...
-    RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
 
 tracer = trace.get_tracer()
 

@@ -75,6 +75,8 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         daemonize()
 
+        _setup_file_logging(log_path / "ui-job-scheduler.log")
+
         with pid_file_lock(_pid_file(omd_root)):
             init_span_processor(
                 trace.init_tracing(
@@ -97,7 +99,6 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             if errors := get_failed_plugins():
                 raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
 
-            _setup_file_logging(log_path / "ui-job-scheduler.log")
             scheduler_thread = run_scheduler_threaded(
                 crash_report_callback, (stop_event := threading.Event())
             )

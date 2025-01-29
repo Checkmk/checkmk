@@ -93,16 +93,8 @@ def main() {
                     stage("Archive / process test reports") {
                         dir("${WORKSPACE}") {
                             show_duration("archiveArtifacts") {
-                                archiveArtifacts("test-results/**");
+                                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
                             }
-                            xunit([Custom(
-                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: "**/junit.xml",
-                                skipNoTestFiles: false,
-                                stopProcessingIfError: true
-                            )]);
                         }
                     }
                 }

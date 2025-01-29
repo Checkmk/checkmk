@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
-import FormHelp from '@/form/components/FormHelp.vue'
+import FormHelp from '@/form/private/FormHelp.vue'
 import { getComponent } from '@/form/private/dispatch'
 
 defineProps<{

@@ -8228,14 +8228,6 @@ msgstr ""
 "nod în parte. Cel mai bun rezultat va determina starea generală a "
 "serviciului grupat."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Serial"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Vezi toate gazdele și serviciile"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -19464,12 +19456,6 @@ msgstr ""
 "configurație.<br>Datele de performanță (RRD) și arhiva de inventar HW/SW nu "
 "sunt niciodată șterse în timpul ștergerii gazdei. Ele sunt șterse automat "
 "doar atunci când activați această opțiune și după perioada configurată."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "În această perioadă de timp nu sunt disponibile date de monitorizare"
@@ -52063,10 +52049,6 @@ msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
 
-#, fuzzy
-msgid "Sign up"
-msgstr "Semnează"
-
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
 
@@ -55040,7 +55022,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Opriți procesarea SNMP la expirarea timpului de așteptare"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Opriți-vă și nu creați gazde."
 
 msgid "Stop background jobs"
@@ -60934,6 +60917,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "Utilizatorul %s utilizat de scanarea în rețea a dosarului %s nu există."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Acest ID există deja."
 
 msgid "The user interface"
 msgstr "Interfața cu utilizatorul"
@@ -69374,9 +69361,6 @@ msgstr "Perioada de probă s-a încheiat: Reduceți numărul de servicii"
 msgid "Trial phase: too many services."
 msgstr "Vezi toate gazdele și serviciile"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -70327,10 +70311,6 @@ msgstr "Până la sfârșitul acestei luni"
 
 msgid "Until end of year"
 msgstr "Până la sfârșitul anului"
-
-#, fuzzy
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
 
 msgid "Untitled setting"
 msgstr "Untitled setting"
@@ -73488,9 +73468,6 @@ msgstr "Așteptare pentru începerea replicării"
 
 msgid "Waitlocks"
 msgstr "Blocuri de așteptare"
-
-msgid "Want to be notified about the public release? "
-msgstr ""
 
 msgid "Wanted Host State"
 msgstr "Căutat Statul gazdă"
@@ -80037,6 +80014,23 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Serial"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Vezi toate gazdele și serviciile"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Semnează"
+
+#, fuzzy
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
 
 #~ msgid "Schedule downtime on service"
 #~ msgstr "Programarea timpului de oprire a serviciului"

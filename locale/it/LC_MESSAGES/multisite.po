@@ -8168,14 +8168,6 @@ msgstr ""
 "nodo. Il risultato migliore determinerà lo stato complessivo del servizio in "
 "cluster."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Seriale"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Vedi tutti gli host e i servizi"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -19260,12 +19252,6 @@ msgstr ""
 "SW non vengono mai eliminati durante l'eliminazione dell'host. Vengono "
 "cancellati automaticamente solo quando si attiva questa opzione e dopo il "
 "periodo configurato."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr ""
@@ -51463,10 +51449,6 @@ msgstr ""
 "Firmare i pacchetti dell'agente baked per Linux, Windows e altri sistemi "
 "operativi"
 
-#, fuzzy
-msgid "Sign up"
-msgstr "Firma"
-
 msgid "Signal quality of Wireless device"
 msgstr "Qualità del segnale del dispositivo wireless"
 
@@ -54394,7 +54376,8 @@ msgstr "Fermare"
 msgid "Stop SNMP processing on timeout"
 msgstr "Interrompere l'elaborazione SNMP al timeout"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Interrompere e non creare host."
 
 msgid "Stop background jobs"
@@ -60216,6 +60199,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "L'utente %s usato dalla scansione di rete della cartella %s non esiste."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Questo ID esiste già."
 
 msgid "The user interface"
 msgstr "L'interfaccia utente"
@@ -68551,9 +68538,6 @@ msgstr ""
 msgid "Trial phase: too many services."
 msgstr "Vedi tutti gli host e i servizi"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -69510,9 +69494,6 @@ msgstr "Fino alla fine di questo mese"
 
 msgid "Until end of year"
 msgstr "Fino alla fine dell'anno"
-
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr ""
 
 msgid "Untitled setting"
 msgstr "Impostazione senza titolo"
@@ -72631,9 +72612,6 @@ msgstr "In attesa dell'avvio della replica"
 
 msgid "Waitlocks"
 msgstr "Camicie"
-
-msgid "Want to be notified about the public release? "
-msgstr ""
 
 msgid "Wanted Host State"
 msgstr "Stato ospite ricercato"
@@ -79113,6 +79091,18 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Seriale"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Vedi tutti gli host e i servizi"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Firma"
 
 #~ msgid "Schedule downtime on service"
 #~ msgstr "Programmare i tempi di inattività del servizio"

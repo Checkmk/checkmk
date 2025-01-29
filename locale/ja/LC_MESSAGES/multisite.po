@@ -7861,12 +7861,6 @@ msgstr ""
 "ベスト：プラグインのチェック機能は個々のノードに適用される。最良の結果がクラ"
 "スタ化されたサービス全体の状態を決定します。"
 
-msgid "Beta Trial"
-msgstr "Betaトライアル"
-
-msgid "Beta phase: too many services"
-msgstr "Betaフェーズ：サービスが多すぎる"
-
 msgid "BigQuery table ID"
 msgstr "BigQueryテーブルID"
 
@@ -18484,14 +18478,6 @@ msgstr ""
 "フォーマンスデータ(RRD)とHW/SWインベントリアーカイブは、ホストの削除中に削除"
 "されることはありません。これらは、このオプションを有効にした場合、および構成"
 "された期間が経過した後にのみ自動的に削除されます。"
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
-"ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
-"と、%sのサービスを利用できるようになります。"
 
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
@@ -50500,10 +50486,6 @@ msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
 
-#, fuzzy
-msgid "Sign up"
-msgstr "登録はこちら"
-
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
 
@@ -53383,7 +53365,8 @@ msgstr "やめる"
 msgid "Stop SNMP processing on timeout"
 msgstr "イベント処理時間"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "停止し、ホストを作成しないでください。"
 
 msgid "Stop background jobs"
@@ -59060,6 +59043,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "フォルダ %s のネットワークスキャンで使ったユーザー %s は、存在しません。"
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "このIDはすでに存在します。"
 
 msgid "The user interface"
 msgstr "ユーザーインターフェース"
@@ -67276,9 +67263,6 @@ msgstr "試用期間終了： サービスの数を減らしてください"
 msgid "Trial phase: too many services."
 msgstr "Betaフェーズ：サービスが多すぎる"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr "ベータ期間中の試用時間は未定"
-
 #, fuzzy
 msgid "Trial time left is visible in the user admin panel"
 msgstr "ベータ期間中の試用時間は未定"
@@ -68223,9 +68207,6 @@ msgstr "今月末まで"
 
 msgid "Until end of year"
 msgstr "年末まで"
-
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "サービス数を減らすまで、『変更を有効にする』はブロックされます。"
 
 msgid "Untitled setting"
 msgstr "無題の設定"
@@ -71299,10 +71280,6 @@ msgstr "レプリケーションの開始を待機しています"
 
 msgid "Waitlocks"
 msgstr "ウェイトロック"
-
-#, fuzzy
-msgid "Want to be notified about the public release? "
-msgstr " 公開リリースに関する通知を希望しますか？ "
 
 msgid "Wanted Host State"
 msgstr "ホストの状態取得"
@@ -77667,6 +77644,35 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Beta Trial"
+#~ msgstr "Betaトライアル"
+
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Betaフェーズ：サービスが多すぎる"
+
+#, python-format
+#~ msgid ""
+#~ "During the beta phase, the number of services is limited to %s but you "
+#~ "would have %s services after activating your changes."
+#~ msgstr ""
+#~ "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
+#~ "と、%sのサービスを利用できるようになります。"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "登録はこちら"
+
+#~ msgid "Trial time is undefined during the beta phase"
+#~ msgstr "ベータ期間中の試用時間は未定"
+
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "サービス数を減らすまで、『変更を有効にする』はブロックされます。"
+
+#, fuzzy
+#~ msgid "Want to be notified about the public release? "
+#~ msgstr " 公開リリースに関する通知を希望しますか？ "
 
 #, fuzzy
 #~ msgid "Schedule downtime on service"

@@ -8242,14 +8242,6 @@ msgstr ""
 "individuele node. De beste uitkomst zal de algemene toestand van de "
 "geclusterde dienst bepalen."
 
-#, fuzzy
-msgid "Beta Trial"
-msgstr "Serie"
-
-#, fuzzy
-msgid "Beta phase: too many services"
-msgstr "Bekijk alle hosts en diensten"
-
 msgid "BigQuery table ID"
 msgstr ""
 
@@ -19448,12 +19440,6 @@ msgstr ""
 "inventaris archief worden nooit verwijderd tijdens het verwijderen van een "
 "host. Ze worden alleen automatisch verwijderd wanneer u deze optie "
 "inschakelt en na de geconfigureerde periode."
-
-#, python-format
-msgid ""
-"During the beta phase, the number of services is limited to %s but you would "
-"have %s services after activating your changes."
-msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "Gedurende deze periode zijn geen monitoringgegevens beschikbaar"
@@ -51967,10 +51953,6 @@ msgid ""
 msgstr ""
 "Getekende agent-pakketten voor Linux, Windows en andere besturingssystemen"
 
-#, fuzzy
-msgid "Sign up"
-msgstr "Teken"
-
 msgid "Signal quality of Wireless device"
 msgstr "Signaalkwaliteit van draadloze apparatuur"
 
@@ -54912,7 +54894,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Verwerkingstijd van gebeurtenissen"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Stop en maak geen hosts."
 
 msgid "Stop background jobs"
@@ -60786,6 +60769,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "De gebruiker %s gebruikt door de netwerkscan van de map %s bestaat niet."
+
+#, fuzzy, python-format
+msgid "The user id '%s' already exists"
+msgstr "Deze ID bestaat al."
 
 msgid "The user interface"
 msgstr "De gebruikersinterface"
@@ -69240,9 +69227,6 @@ msgstr ""
 msgid "Trial phase: too many services."
 msgstr "Bekijk alle hosts en diensten"
 
-msgid "Trial time is undefined during the beta phase"
-msgstr ""
-
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
@@ -70199,10 +70183,6 @@ msgstr "Tot het einde van deze maand"
 
 msgid "Until end of year"
 msgstr "Tot het einde van het jaar"
-
-#, fuzzy
-msgid "Until you reduce the number of services, 'Activate changes' is blocked."
-msgstr "De licentie is verlopen: 'Wijzigingen activeren' is geblokkeerd"
 
 msgid "Untitled setting"
 msgstr "Instelling zonder titel"
@@ -73347,9 +73327,6 @@ msgstr "Wachten op replicatie om te beginnen"
 
 msgid "Waitlocks"
 msgstr "Wachtsloten"
-
-msgid "Want to be notified about the public release? "
-msgstr ""
 
 #, fuzzy
 msgid "Wanted Host State"
@@ -79902,6 +79879,23 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Serie"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Bekijk alle hosts en diensten"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Teken"
+
+#, fuzzy
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "De licentie is verlopen: 'Wijzigingen activeren' is geblokkeerd"
 
 #, fuzzy
 #~ msgid "Schedule downtime on service"

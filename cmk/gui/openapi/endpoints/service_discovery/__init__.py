@@ -575,7 +575,12 @@ class BulkDiscovery(BaseSchema):
         BulkDiscoveryOptions,
         description="The discovery options for the bulk discovery",
         required=True,
-        example={"monitor_undecided": True, "remove_vanished": True, "update_service_labels": True},
+        example={
+            "monitor_undecided_services": True,
+            "remove_vanished_services": True,
+            "update_service_labels": True,
+            "update_host_labels": True,
+        },
     )
     do_full_scan = fields.Boolean(
         required=False,

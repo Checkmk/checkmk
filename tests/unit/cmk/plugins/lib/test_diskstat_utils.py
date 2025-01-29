@@ -31,7 +31,6 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": {},
                     "lvm": False,
                     "vxvm": False,
                     "diskless": False,
@@ -45,7 +44,7 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": {"service_description": "name"},
+                    "physical": "name",
                     "lvm": False,
                     "vxvm": False,
                     "diskless": False,
@@ -61,7 +60,7 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": {"service_description": "wwn"},
+                    "physical": "wwn",
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,

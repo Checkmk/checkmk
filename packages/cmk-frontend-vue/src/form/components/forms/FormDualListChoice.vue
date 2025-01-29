@@ -16,7 +16,6 @@ import type {
 
 import { useId } from '@/form/utils'
 import { fetchData } from '../utils/autocompleter'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   spec: DualListChoice
@@ -226,24 +225,22 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
         <tr>
           <td>
             <div v-if="items.inactive.length > 0">
-              <CmkScrollContainer>
-                <select
-                  :id="`${componentId}_available`"
-                  v-model="availableSelected"
-                  aria-label="available"
-                  multiple
-                  :style="selectStyle"
+              <select
+                :id="`${componentId}_available`"
+                v-model="availableSelected"
+                aria-label="available"
+                multiple
+                :style="selectStyle"
+              >
+                <option
+                  v-for="element in items.inactive"
+                  :key="JSON.stringify(element.name)"
+                  :value="element.name"
+                  @dblclick="() => handleDoubleClickToAddItem(element.name)"
                 >
-                  <option
-                    v-for="element in items.inactive"
-                    :key="JSON.stringify(element.name)"
-                    :value="element.name"
-                    @dblclick="() => handleDoubleClickToAddItem(element.name)"
-                  >
-                    {{ element.title }}
-                  </option>
-                </select>
-              </CmkScrollContainer>
+                  {{ element.title }}
+                </option>
+              </select>
             </div>
 
             <div v-else :style="selectStyle" class="no-element-in-select">

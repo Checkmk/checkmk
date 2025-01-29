@@ -8,7 +8,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 const scrollContainerVariants = cva('', {
   variants: {
     type: {
-      inner: 'scroll-container--inner',
+      inner: '', // Inner style is default and defined in global css via cmk-vue-app class
       outer: 'scroll-container--outer'
     }
   },
@@ -48,25 +48,6 @@ const { type, maxHeight = '100%' } = defineProps<ScrollContainerProps>()
 .scroll-container--outer::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-color);
   border-radius: 16px;
-}
-
-.scroll-container--inner::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scroll-container--inner::-webkit-scrollbar-track {
-  background: var(--ux-theme-6);
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-.scroll-container--inner::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-color);
-  border-radius: 16px;
-  border: 3px solid var(--ux-theme-6);
-}
-
-.scroll-container--inner::-webkit-scrollbar-corner {
-  background-color: var(--ux-theme-6);
+  border: 0;
 }
 </style>

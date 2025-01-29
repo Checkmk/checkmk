@@ -32,8 +32,9 @@ const emit = defineEmits(['close'])
   <DialogRoot :open="open">
     <DialogPortal>
       <DialogOverlay class="slide-in__overlay" />
+      <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <DialogContent
-        class="slide-in__content"
+        class="cmk-vue-app slide-in__content"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
       >

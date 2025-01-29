@@ -65,6 +65,7 @@ py_test(
         ":__test__",
         ":cmk-werks",
         requirement("pytest"),
+        requirement("gitpython"),
     ],
 )
 

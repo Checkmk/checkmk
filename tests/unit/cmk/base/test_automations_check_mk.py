@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib.base_configuration_scenario import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
 

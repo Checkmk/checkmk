@@ -15,7 +15,7 @@ from typing import Any, Final, Literal, NoReturn
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base_configuration_scenario import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version

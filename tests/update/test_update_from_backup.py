@@ -171,7 +171,6 @@ def test_update_from_backup_demo(
         update_conflict_mode="keepold",
         enforce_english_gui=False,
     )
-
     base_site.stop()
     target_site = site_factory_demo.get_site(  # perform update via CLI
         base_site.id, init_livestatus=False, activate_changes=False
@@ -181,7 +180,8 @@ def test_update_from_backup_demo(
     assert target_site.is_running()
     assert target_site.version.version == target_version.version, "Version mismatch during update!"
 
-    target_hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
+    target_hostnames = [_.get("id") for _ in target_site.openapi.get_hosts()]
+    assert set(base_hostnames).issubset(set(target_hostnames))
 
     target_services = {}
     current_lost_services = {}
@@ -190,7 +190,7 @@ def test_update_from_backup_demo(
     with open(lost_services_path, "r") as json_file:
         known_lost_services = json.load(json_file)
 
-    for hostname in target_hostnames:
+    for hostname in base_hostnames:
         target_services[hostname] = target_site.get_host_services(hostname)
 
         current_lost_services[hostname] = [

@@ -54,7 +54,6 @@ rust_test_suite(
     ],
     deps = [
         ":check-cert-lib",
-        "@cargo_deps_site//:assert_cmd",
         "@cargo_deps_site//:assertor",
         "@cargo_deps_site//:openssl",
         "@cargo_deps_site//:tempfile",

@@ -19,6 +19,5 @@ typed-builder = "0.18.0"
 x509-parser = "0.15.1"
 
 [dev-dependencies]
-assert_cmd = "2.0.12"
 assertor = "*"
 tempfile = "*"

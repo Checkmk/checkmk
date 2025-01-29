@@ -122,6 +122,7 @@ const componentId = useId()
     <CmkSuggestions
       v-if="filteredSuggestions.length > 0 && !!showSuggestions"
       ref="suggestionsRef"
+      role="suggestion"
       :suggestions="
         filteredSuggestions.map((suggestion) => ({ name: suggestion[0], title: suggestion[1] }))
       "

@@ -16,11 +16,13 @@ const {
   noResultsHint = '',
   onSelect,
   suggestions,
-  showFilter
+  showFilter,
+  role
 } = defineProps<{
   suggestions: Suggestion[]
   onSelect: (suggestion: Suggestion) => void
   showFilter: boolean
+  role: 'suggestion' | 'option'
   noResultsHint?: string
 }>()
 
@@ -130,7 +132,7 @@ defineExpose({
           v-show="filteredSuggestions.includes(index)"
           :ref="(el) => (suggestionRefs[index] = el as HTMLLIElement)"
           tabindex="-1"
-          role="suggestion"
+          :role="role"
           :class="{ selected: index === selectedSuggestionIndex, selectable: true }"
           @click.prevent="() => selectSuggestion(index)"
         >

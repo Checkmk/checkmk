@@ -1,21 +1,21 @@
-setuptools <=70.3.0  # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
+setuptools==70.3.0 # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
 setuptools-scm==4.1.2  # needed by various setup.py
 python-dateutil~=2.9.0  # direct dependency
 pyyaml==6.0.1  # needed by vcrpy
 vcrpy==6.0.1  # used by various unit tests to mock HTTP transactions in some special agents (only)
-cryptography
-paramiko
+cryptography==43.0.3
+paramiko==3.5.0
 pyasn1<0.6.1  # 0.6.1 removed pyasn1.compat.octets, but this is used by pysnmp <6.2.6. But updating that leads to API incompatibilities and integration test failures at the moment. :-/
 ply==3.11  # needed by pysmi, python-active-directory
 pysmi-lextudio==1.4.3  # needed by pysnmp
 pysnmp-lextudio==6.1.2  # needed by Event Console
 snmpsim-lextudio==1.1.0  # needed by pysnmp integration tests
-urllib3  # needed by requests
-pyopenssl
+urllib3==2.2.3 # needed by requests
+pyopenssl==24.3.0
 pyghmi==1.5.60  # needed by base for IPMI
-requests
-jinja2  # needed by flask
-werkzeug  # direct dependency and needed by flask
+requests==2.32.3
+jinja2==3.1.4 # needed by flask
+werkzeug==3.1.3 # direct dependency and needed by flask
 flask==3.0.3  # direct dependency
 openapi-spec-validator==0.7.1  # direct dependency
 psutil==5.9.8  # needed for omdlib
@@ -23,25 +23,25 @@ oauthlib==3.2.2
 requests-oauthlib==1.3.1
 jira==3.8.0 # needed by jira
 msal==1.26.0 # needed by agent_azure
-pillow  # needed by reporting & CME logo image processing
+pillow==11.0.0 # needed by reporting & CME logo image processing
 python-ldap==3.4.3 # needed by GUI (User sync), python-active-directory
 cython==3.0.11 # needed by numpy & pymssql
 numpy==1.26.4 # needed by GUI (metrics)
 reportlab==4.1.0 # needed by GUI (reporting)
-pypdf  # needed by GUI (reporting)
+pypdf==5.1.0 # needed by GUI (reporting)
 roman==4.0 # needed by GUI (reporting)
-google-auth  # needed by kubernetes
+google-auth==2.37.0 # needed by kubernetes
 kubernetes==21.7.0 # needed by kubernetes
-botocore  # needed by boto3 (aws), keep version in sync with botocore-stubs
-boto3  # needed by boto3 (aws), keep version in sync with boto3-stubs
+botocore==1.35.80 # needed by boto3 (aws), keep version in sync with botocore-stubs
+boto3==1.35.80 # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7==1.3 # needed by Siemens PLC special agent
 pymssql==2.3.1 # needed by check_sql active check
 pymysql~=1.1.1 # needed by check_sql active check
 psycopg2-binary==2.9.6 # needed by check_sql active check
-apispec
-marshmallow
-marshmallow-oneofschema
-apispec-oneofschema
+apispec==6.8.0
+marshmallow==3.23.1
+marshmallow-oneofschema==3.1.1
+apispec-oneofschema==3.0.1
 pydantic~=2.7
 pydantic_core~=2.18 # used by pydantic and by us
 paho-mqtt==1.6.1 # needed for MQTT special agent
@@ -49,39 +49,39 @@ python-active-directory==2.0.1
 rrdtool==0.1.16 # Actually we ship the binding which comes with rrdtool itself...
 docstring-parser==0.16 # direct dependency
 pyprof2calltree==1.4.5 # used for GUI/API profiling
-pyparsing
+pyparsing==3.2.0
 redis==4.5.4 # needed by GUI (caching)
-fido2  # used for GUI 2fa webauthn
+fido2==1.2.0 # used for GUI 2fa webauthn
 opsgenie-sdk==2.1.5 # needed by opsgenie_issues
-tenacity  # used by opsgenie-sdk
-protobuf #  pinning is done in bazel in order to get the matching protobuf version from @com_google_protobuf
+tenacity==9.0.0 # used by opsgenie-sdk
+protobuf==5.28.3 # pinning is done in bazel in order to get the matching protobuf version from @com_google_protobuf
 pysmb==1.2.9.1 # used by SMB share special agent
-google-cloud-monitoring  # used by the gcp special agent
-google-cloud-asset  # used by the gcp special agent
+google-cloud-monitoring==2.24.0 # used by the gcp special agent
+google-cloud-asset==3.28.0 # used by the gcp special agent
 exchangelib==5.4.0 # used by active checks for mail
 lxml==4.9.3 # used via beautifulsoup4 as a parser and in the agent_netapp special agent
-google-api-python-client  # use rest api to query big query for gcp cost monitoring
+google-api-python-client==2.155.0 # use rest api to query big query for gcp cost monitoring
 setproctitle==1.3.3 # used by mkbench/dcd/liveproxyd
 meraki==1.41.0 # used by special agent Cisco Meraki
-feedparser  # used by special agent Microsoft Azure Status
+feedparser==6.0.11 # used by special agent Microsoft Azure Status
 pysaml2~=7.4 # used by SSO via SAML2.0
 azure-storage-blob~=12.20.0 # used for backups to Azure Blob Storage
 azure-identity~=1.17.0 # used for backups to Azure Blob Storage
-pyjwt[crypto]  # used for SSO via OAUTH2
+pyjwt[crypto]==2.10.1 # used for SSO via OAUTH2
 GitPython~=3.1 # used for werk collecting
 icalendar==5.0.7 # used for importing .ical files
 recurring_ical_events==2.0.2 # used for parsing recurring events in icalendar objects
 netapp-ontap==9.14.1.0 # used by netapp special agent
 redfish~= 3.2.2 # used for management board monitoring via Redfish, used by optional MKP
 robotframework~=7.0 # used for parsing robotmk agent data
-opentelemetry-api # used for distributed tracing of Checkmk
-opentelemetry-sdk # used for distributed tracing of Checkmk
-opentelemetry-exporter-otlp # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-wsgi # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-requests # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-redis # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-fastapi # used for distributed tracing of Checkmk
-opentelemetry-semantic-conventions # used for distributed tracing of Checkmk
-fastapi  # automation helper and needed to run fake idp for cse tests
-gunicorn  # automation helper
-watchdog  # automation helper
+opentelemetry-api==1.29.0 # used for distributed tracing of Checkmk
+opentelemetry-sdk==1.29.0 # used for distributed tracing of Checkmk
+opentelemetry-exporter-otlp==1.29.0 # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-wsgi==0.50b0 # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-requests==0.50b0 # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-redis==0.50b0 # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-fastapi==0.50b0 # used for distributed tracing of Checkmk
+opentelemetry-semantic-conventions==0.50b0 # used for distributed tracing of Checkmk
+fastapi==0.115.6 # automation helper and needed to run fake idp for cse tests
+gunicorn==23.0.0 # automation helper
+watchdog==6.0.0 # automation helper

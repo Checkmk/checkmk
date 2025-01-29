@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.lib.oracle_instance import Instance
+from cmk.plugins.oracle.agent_based.libinstance import Instance
 
 
 def test_insance_model_accepts_empty_strings_as_none():

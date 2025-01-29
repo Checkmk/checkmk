@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.oracle_constants import (
+from cmk.plugins.oracle.constants import (
     ORACLE_IO_FILES,
     ORACLE_IO_SIZES,
     ORACLE_IO_TYPES,
@@ -11,7 +11,6 @@ from cmk.utils.oracle_constants import (
     ORACLE_SGA_FIELDS,
     ORACLE_WAITCLASSES,
 )
-
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

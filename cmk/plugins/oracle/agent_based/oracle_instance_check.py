@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
+from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData, Section
 
 
 class _Params(TypedDict, total=True):

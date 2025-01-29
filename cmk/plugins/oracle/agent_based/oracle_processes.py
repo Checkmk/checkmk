@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib.oracle import OraErrors
+from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 

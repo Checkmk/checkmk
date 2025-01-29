@@ -15,7 +15,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.lib.oracle import OraErrors
+from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 from cmk.plugins.oracle.agent_based.oracle_processes import OracleProcess, SectionOracleProcesses
 
 

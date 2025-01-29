@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import InventoryPlugin, InventoryResult, TableRow
-from cmk.plugins.lib.oracle_instance import GeneralError, InvalidData, Section
+from cmk.plugins.oracle.agent_based.libinstance import GeneralError, InvalidData, Section
 
 
 def _parse_raw_db_creation_time(raw_str: str | None) -> str | None:

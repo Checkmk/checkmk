@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import oracle
+from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 
 # actual format
 # <<<oracle_rman>>>
@@ -60,7 +60,7 @@ def parse_oracle_rman(
 
     for line in string_table:
         # Check for query errors
-        check_ora = oracle.OraErrors(line)
+        check_ora = OraErrors(line)
         if check_ora.ignore:
             continue  # ignore ancient agent outputs
         if check_ora.has_error:

@@ -6,7 +6,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib.oracle import SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 
 
 def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:

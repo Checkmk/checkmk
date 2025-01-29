@@ -7,8 +7,6 @@ import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from cmk.utils import oracle_constants  # pylint: disable=cmk-module-layer-violation
-
 from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
@@ -23,7 +21,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.oracle import InstancePerformance, SectionPerformance
+from cmk.plugins.oracle import constants
+from cmk.plugins.oracle.agent_based.liboracle import InstancePerformance, SectionPerformance
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -99,7 +98,7 @@ def check_oracle_performance(
         # old agents deliver not the needed data...
         sga_info = data.get("SGA_info")
         if sga_info:
-            for sga_field in oracle_constants.ORACLE_SGA_FIELDS:
+            for sga_field in constants.ORACLE_SGA_FIELDS:
                 if sga_field.name not in sga_info:
                     continue
                 value = sga_info[sga_field.name]
@@ -288,7 +287,7 @@ def _check_oracle_memory_info(
     data: Mapping[str, Any],
     params: Mapping[str, Any],
     sticky_fields: Sequence[str],
-    fields: Sequence[oracle_constants.OracleSGA] | Sequence[oracle_constants.OraclePGA],
+    fields: Sequence[constants.OracleSGA] | Sequence[constants.OraclePGA],
 ) -> CheckResult:
     for ga_field in fields:
         value = data.get(ga_field.name)
@@ -313,12 +312,12 @@ def check_oracle_performance_memory(
     sga_info = data.get("SGA_info", {})
 
     yield from _check_oracle_memory_info(
-        sga_info, params, ["Maximum SGA Size"], oracle_constants.ORACLE_SGA_FIELDS
+        sga_info, params, ["Maximum SGA Size"], constants.ORACLE_SGA_FIELDS
     )
 
     pga_info = {field: value[0] for field, value in data.get("PGA_info", {}).items()}
     yield from _check_oracle_memory_info(
-        pga_info, params, ["total PGA allocated"], oracle_constants.ORACLE_PGA_FIELDS
+        pga_info, params, ["total PGA allocated"], constants.ORACLE_PGA_FIELDS
     )
 
 
@@ -352,7 +351,7 @@ def _check_oracle_performance_iostat_file(
     totals = [0.0] * len(io_fields)
 
     iostat_info = data.get("iostat_file", {})
-    for iofile in oracle_constants.ORACLE_IO_FILES:
+    for iofile in constants.ORACLE_IO_FILES:
         waitdata = iostat_info.get(iofile.name)
         if not waitdata:
             continue
@@ -480,7 +479,7 @@ def check_oracle_performance_waitclasses(
 
     # sys_wait_class -> wait_class
     waitclass_info = data.get("sys_wait_class", {})
-    for waitclass in oracle_constants.ORACLE_WAITCLASSES:
+    for waitclass in constants.ORACLE_WAITCLASSES:
         waitdata = waitclass_info.get(waitclass.name)
         if not waitdata:
             continue

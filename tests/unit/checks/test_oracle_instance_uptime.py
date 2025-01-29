@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 
 

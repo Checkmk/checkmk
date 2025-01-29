@@ -13,8 +13,8 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
-from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based import oracle_instance_check
+from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
 from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventory_oracle_instance
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 

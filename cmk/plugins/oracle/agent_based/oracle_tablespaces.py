@@ -23,7 +23,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib import db, oracle
+from cmk.plugins.lib import db
+from cmk.plugins.oracle.agent_based import liboracle as oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces

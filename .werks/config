@@ -60,3 +60,5 @@ compatible = [
 ]
 
 online_url = "https://checkmk.com/werk/%d"
+
+project = "cmk"

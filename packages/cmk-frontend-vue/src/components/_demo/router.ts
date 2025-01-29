@@ -37,6 +37,7 @@ import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
 import DemoFormTuple from './DemoFormTuple.vue'
 import DemoFormLabels from './DemoFormLabels.vue'
 import type { Component } from 'vue'
+import DemoHelp from './DemoHelp.vue'
 
 interface Route {
   path: string
@@ -55,6 +56,11 @@ const routes: Route[] = [
     path: '/alertbox',
     name: 'CmkAlertBox',
     component: DemoCmkAlertBox
+  },
+  {
+    path: '/help',
+    name: 'HelpText',
+    component: DemoHelp
   },
   {
     path: '/slidein',

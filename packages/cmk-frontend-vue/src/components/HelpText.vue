@@ -51,18 +51,19 @@ const closeHelp = () => {
           class="help-text__icon"
           data-testid="help-icon"
       /></TooltipTrigger>
-      <CmkScrollContainer>
-        <TooltipContent
-          side="top"
-          align="start"
-          class="help-text__content"
-          as-child
-          @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
-          @escape-key-down="closeHelp"
-        >
-          <div><CmkHtml :html="props.help" /></div>
-        </TooltipContent>
-      </CmkScrollContainer>
+      <TooltipContent
+        side="top"
+        align="start"
+        as-child
+        @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
+        @escape-key-down="closeHelp"
+      >
+        <CmkScrollContainer :max-height="'160px'">
+          <div class="help-text__content">
+            <CmkHtml :html="props.help" />
+          </div>
+        </CmkScrollContainer>
+      </TooltipContent>
     </Tooltip>
   </TooltipProvider>
 </template>
@@ -89,16 +90,11 @@ body.show_help .help-text__icon {
 }
 
 .help-text__content {
-  max-height: 160px;
-  overflow-y: auto;
-  text-wrap: wrap;
-
   background-color: var(--default-tooltip-background-color);
   border-radius: var(--border-radius);
 
   min-width: 200px;
   max-width: 600px;
-  width: 100%;
 
   color: var(--default-tooltip-text-color);
   box-shadow:

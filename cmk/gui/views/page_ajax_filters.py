@@ -35,6 +35,9 @@ class ABCAjaxInitialFilters(AjaxPage):
 
 
 class AjaxInitialViewFilters(ABCAjaxInitialFilters):
+    def get_context(self, page_name: str) -> VisualContext:
+        return self._get_context(page_name)
+
     def _get_context(self, page_name: str) -> VisualContext:
         # Obtain the visual filters and the view context
         view_name = page_name

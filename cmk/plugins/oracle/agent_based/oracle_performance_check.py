@@ -99,7 +99,7 @@ def check_oracle_performance(
         # old agents deliver not the needed data...
         sga_info = data.get("SGA_info")
         if sga_info:
-            for sga_field in oracle_constants.oracle_sga_fields:
+            for sga_field in oracle_constants.ORACLE_SGA_FIELDS:
                 if sga_field.name not in sga_info:
                     continue
                 value = sga_info[sga_field.name]
@@ -315,12 +315,12 @@ def check_oracle_performance_memory(
     sga_info = data.get("SGA_info", {})
 
     yield from _check_oracle_memory_info(
-        sga_info, params, ["Maximum SGA Size"], oracle_constants.oracle_sga_fields
+        sga_info, params, ["Maximum SGA Size"], oracle_constants.ORACLE_SGA_FIELDS
     )
 
     pga_info = {field: value[0] for field, value in data.get("PGA_info", {}).items()}
     yield from _check_oracle_memory_info(
-        pga_info, params, ["total PGA allocated"], oracle_constants.oracle_pga_fields
+        pga_info, params, ["total PGA allocated"], oracle_constants.ORACLE_PGA_FIELDS
     )
 
 
@@ -354,7 +354,7 @@ def _check_oracle_performance_iostat_file(
     totals = [0.0] * len(io_fields)
 
     iostat_info = data.get("iostat_file", {})
-    for iofile in oracle_constants.oracle_iofiles:
+    for iofile in oracle_constants.ORACLE_IO_FILES:
         waitdata = iostat_info.get(iofile.name)
         if not waitdata:
             continue
@@ -483,7 +483,7 @@ def check_oracle_performance_waitclasses(
 
     # sys_wait_class -> wait_class
     waitclass_info = data.get("sys_wait_class", {})
-    for waitclass in oracle_constants.oracle_waitclasses:
+    for waitclass in oracle_constants.ORACLE_WAITCLASSES:
         waitdata = waitclass_info.get(waitclass.name)
         if not waitdata:
             continue

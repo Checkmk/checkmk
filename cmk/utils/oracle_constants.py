@@ -3,154 +3,125 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Final, NamedTuple
+from dataclasses import dataclass
+from typing import Final
 
 
-def _convert_to_identifier(value: str) -> str:
-    characters: Final = ((" ", "_"), ("/", ""), ("-", "_"))
-    for char, repl in characters:
+def _to_id(value: str) -> str:
+    for char, repl in ((" ", "_"), ("/", ""), ("-", "_")):
         value = value.replace(char, repl)
     return value.lower()
 
 
-#
-# IO Files
-#
-class OracleIOFile(NamedTuple):
+@dataclass(frozen=True)
+class OracleIOFile:
     name: str
-    id: str
+
+    @property
+    def id(self) -> str:
+        return _to_id(self.name)
 
 
-def make_oracle_io_file_list(name_list: Sequence[str]) -> list[OracleIOFile]:
-    return [OracleIOFile(name, _convert_to_identifier(name)) for name in name_list]
-
-
-oracle_iofiles: Final = make_oracle_io_file_list(
-    [
-        "Archive Log",
-        "Archive Log Backup",
-        "Control File",
-        "Data File",
-        "Data File Backup",
-        "Data File Copy",
-        "Data File Incremental Backup",
-        "Data Pump Dump File",
-        "External Table",
-        "Flashback Log",
-        "Log File",
-        "Other",
-        "Temp File",
-    ]
+ORACLE_IO_FILES: Final = (
+    OracleIOFile("Archive Log"),
+    OracleIOFile("Archive Log Backup"),
+    OracleIOFile("Control File"),
+    OracleIOFile("Data File"),
+    OracleIOFile("Data File Backup"),
+    OracleIOFile("Data File Copy"),
+    OracleIOFile("Data File Incremental Backup"),
+    OracleIOFile("Data Pump Dump File"),
+    OracleIOFile("External Table"),
+    OracleIOFile("Flashback Log"),
+    OracleIOFile("Log File"),
+    OracleIOFile("Other"),
+    OracleIOFile("Temp File"),
 )
 
-oracle_io_sizes: Final = [
+
+ORACLE_IO_SIZES: Final = (
     ("s", "Small"),
     ("l", "Large"),
-]
+)
 
-oracle_io_types: Final = [
+ORACLE_IO_TYPES: Final = (
     ("r", "Reads", "1/s"),
     ("w", "Writes", "1/s"),
     ("rb", "Read Bytes", "bytes/s"),
     ("wb", "Write Bytes", "bytes/s"),
-]
-
-
-#
-# Waitclasses
-#
-class OracleWaitclass(NamedTuple):
-    name: str
-    id: str
-    metric: str
-    metric_fg: str
-
-
-def make_oracle_waitclass(name: str) -> OracleWaitclass:
-    ident = _convert_to_identifier(name)
-    metric = f"oracle_wait_class_{ident}_waited"
-    metric_fg = f"{metric}_fg"
-    return OracleWaitclass(name, ident, metric, metric_fg)
-
-
-def make_oracle_waitclass_list(name_list: Sequence[str]) -> list[OracleWaitclass]:
-    return [make_oracle_waitclass(name) for name in name_list]
-
-
-oracle_waitclasses: Final = make_oracle_waitclass_list(
-    [
-        "Administrative",
-        "Application",
-        "Cluster",
-        "Commit",
-        "Concurrency",
-        "Configuration",
-        "Idle",
-        "Network",
-        "Other",
-        "Scheduler",
-        "System I/O",
-        "User I/O",
-    ]
 )
 
 
-#
-# SGAs
-#
-class OracleSGA(NamedTuple):
+@dataclass(frozen=True)
+class OracleWaitclass:
     name: str
-    id: str
-    metric: str
+
+    @property
+    def id(self) -> str:
+        return _to_id(self.name)
+
+    @property
+    def metric(self) -> str:
+        return f"oracle_wait_class_{self.id}_waited"
+
+    @property
+    def metric_fg(self) -> str:
+        return f"{self.metric}_fg"
 
 
-def make_oracle_sga(name: str, metric: str) -> OracleSGA:
-    ident = _convert_to_identifier(name)
-    return OracleSGA(name, ident, metric)
-
-
-def make_oracle_sga_list(input_list: Sequence[tuple[str, str]]) -> list[OracleSGA]:
-    return [make_oracle_sga(name, metric) for name, metric in input_list]
-
-
-oracle_sga_fields: Final = make_oracle_sga_list(
-    [
-        ("Maximum SGA Size", "oracle_sga_size"),
-        ("Buffer Cache Size", "oracle_sga_buffer_cache"),
-        ("Shared Pool Size", "oracle_sga_shared_pool"),
-        ("Redo Buffers", "oracle_sga_redo_buffer"),
-        ("Java Pool Size", "oracle_sga_java_pool"),
-        ("Large Pool Size", "oracle_sga_large_pool"),
-        ("Streams Pool Size", "oracle_sga_streams_pool"),
-        ("Shared IO Pool Size", "oracle_sga_shared_io_pool"),
-    ]
+ORACLE_WAITCLASSES: Final = (
+    OracleWaitclass("Administrative"),
+    OracleWaitclass("Application"),
+    OracleWaitclass("Cluster"),
+    OracleWaitclass("Commit"),
+    OracleWaitclass("Concurrency"),
+    OracleWaitclass("Configuration"),
+    OracleWaitclass("Idle"),
+    OracleWaitclass("Network"),
+    OracleWaitclass("Other"),
+    OracleWaitclass("Scheduler"),
+    OracleWaitclass("System I/O"),
+    OracleWaitclass("User I/O"),
 )
 
 
-#
-# PGAs
-#
-class OraclePGA(NamedTuple):
+@dataclass(frozen=True)
+class OracleSGA:
     name: str
-    id: str
     metric: str
 
-
-def make_oracle_pga(name: str) -> OraclePGA:
-    ident = _convert_to_identifier(name)
-    metric = f"oracle_pga_{ident}"
-    return OraclePGA(name, ident, metric)
+    @property
+    def id(self) -> str:
+        return _to_id(self.name)
 
 
-def make_oracle_pga_list(name_list: Sequence[str]) -> list[OraclePGA]:
-    return [make_oracle_pga(name) for name in name_list]
+ORACLE_SGA_FIELDS: Final = (
+    OracleSGA("Maximum SGA Size", "oracle_sga_size"),
+    OracleSGA("Buffer Cache Size", "oracle_sga_buffer_cache"),
+    OracleSGA("Shared Pool Size", "oracle_sga_shared_pool"),
+    OracleSGA("Redo Buffers", "oracle_sga_redo_buffer"),
+    OracleSGA("Java Pool Size", "oracle_sga_java_pool"),
+    OracleSGA("Large Pool Size", "oracle_sga_large_pool"),
+    OracleSGA("Streams Pool Size", "oracle_sga_streams_pool"),
+    OracleSGA("Shared IO Pool Size", "oracle_sga_shared_io_pool"),
+)
 
 
-oracle_pga_fields: Final = make_oracle_pga_list(
-    [
-        "total PGA allocated",
-        "total PGA inuse",
-        "total freeable PGA memory",
-    ]
+@dataclass(frozen=True)
+class OraclePGA:
+    name: str
+
+    @property
+    def id(self) -> str:
+        return _to_id(self.name)
+
+    @property
+    def metric(self) -> str:
+        return f"oracle_pga_{self.id}"
+
+
+ORACLE_PGA_FIELDS: Final = (
+    OraclePGA("total PGA allocated"),
+    OraclePGA("total PGA inuse"),
+    OraclePGA("total freeable PGA memory"),
 )

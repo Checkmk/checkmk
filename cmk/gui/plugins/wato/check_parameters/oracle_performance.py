@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.oracle_constants import (
-    oracle_io_sizes,
-    oracle_io_types,
-    oracle_iofiles,
-    oracle_pga_fields,
-    oracle_sga_fields,
-    oracle_waitclasses,
+    ORACLE_IO_FILES,
+    ORACLE_IO_SIZES,
+    ORACLE_IO_TYPES,
+    ORACLE_PGA_FIELDS,
+    ORACLE_SGA_FIELDS,
+    ORACLE_WAITCLASSES,
 )
 
 from cmk.gui.i18n import _
@@ -114,7 +114,7 @@ def _parameter_valuespec_oracle_performance():
 
     # memory
     memory_choices: list = []
-    for ga in oracle_sga_fields + oracle_pga_fields:
+    for ga in ORACLE_SGA_FIELDS + ORACLE_PGA_FIELDS:
         memory_choices.append(
             (
                 ga.metric,
@@ -126,14 +126,14 @@ def _parameter_valuespec_oracle_performance():
     # iostat_bytes + iostat_ios
     iostat_bytes_choices: list = []
     iostat_ios_choices: list = []
-    for iofile_name, iofile_id in oracle_iofiles:
-        for size_code, size_text in oracle_io_sizes:
-            for io_code, io_text, io_unit in oracle_io_types:
+    for iofile in ORACLE_IO_FILES:
+        for size_code, size_text in ORACLE_IO_SIZES:
+            for io_code, io_text, io_unit in ORACLE_IO_TYPES:
                 target_array = iostat_bytes_choices if io_unit == "bytes/s" else iostat_ios_choices
                 target_array.append(
                     (
-                        f"oracle_ios_f_{iofile_id}_{size_code}_{io_code}",
-                        f" {iofile_name} {size_text} {io_text}",
+                        f"oracle_ios_f_{iofile.id}_{size_code}_{io_code}",
+                        f" {iofile.name} {size_text} {io_text}",
                         levels_tuple(Integer, io_unit),
                     )
                 )
@@ -151,7 +151,7 @@ def _parameter_valuespec_oracle_performance():
             levels_tuple(Float, "1/s"),
         ),
     ]
-    for waitclass in oracle_waitclasses:
+    for waitclass in ORACLE_WAITCLASSES:
         waitclasses_choices.append(
             (waitclass.metric, "%s wait class" % waitclass.name, levels_tuple(Float, "1/s"))
         )

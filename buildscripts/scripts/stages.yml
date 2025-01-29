@@ -288,7 +288,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT
       DIR: ""
       COMMAND: |
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.werks.utils collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
           scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
           scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
           scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.werks.utils precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt

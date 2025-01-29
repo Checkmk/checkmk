@@ -7,7 +7,7 @@ import logging
 import re
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 from cmk.werks.collect import Config
 from cmk.werks.collect import main as collect_main
@@ -22,6 +22,7 @@ class CmaConfig(Config):
 class CmkConfig(Config):
     branch_regex = r"^master$|^\d+\.\d+\.\d+"
 
+    @override
     def cleanup_branch_name(self, branch_name: str) -> str:
         """
         >>> CmkConfig("cmk").cleanup_branch_name("1.5.0i3")
@@ -37,6 +38,7 @@ class CmkConfig(Config):
             return "1.2.0"
         return re.sub(r"(i\d+)$", "", branch_name)
 
+    @override
     def adapt_werk_string(self, werk_string: str, werk_id: int) -> str:
         if werk_id == 1281:
             # werk 1281 of cmk is missing a newline, but it is available in

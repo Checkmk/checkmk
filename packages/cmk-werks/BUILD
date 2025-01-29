@@ -26,6 +26,7 @@ py_library(
         "cmk/werks/parse.py",
         "cmk/werks/utils/__init__.py",
         "cmk/werks/utils/__main__.py",
+        "cmk/werks/utils/collect.py",
         "cmk/werks/validate.py",
     ],
     imports = ["."],

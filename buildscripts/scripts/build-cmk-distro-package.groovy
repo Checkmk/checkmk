@@ -65,6 +65,7 @@ def main() {
         }
     }
     def package_type = distro_package_type(distro);
+    def package_name = "";
 
     print(
         """
@@ -143,62 +144,59 @@ def main() {
         }
     }
 
-    stage("(lock resources)") {
+    stage("Build package") {
         lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
-            def package_name = {
-                stage("Prepare environment") {
-                    dir("${checkout_dir}") {
-                        // supplying the registry explicitly might not be needed but it looks like
-                        // image.inside() will first try to use the image without registry and only
-                        // if that didn't work falls back to the fully qualified name
-                        inside_container(
-                            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
-                            pull: true,
-                            args: [
-                                "--name ${container_name}",
-                                " --hostname ${distro}",
-                            ],
-                        ) {
-                            versioning.print_image_tag();
-                            sh("make .venv");
-                            stage("Build package") {
-                                withCredentials([
-                                    usernamePassword(
-                                        credentialsId: 'nexus',
-                                        passwordVariable: 'NEXUS_PASSWORD',
-                                        usernameVariable: 'NEXUS_USERNAME'),
-                                ]) {
-                                    withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
-                                        /// Don't use withEnv, see
-                                        /// https://issues.jenkins.io/browse/JENKINS-43632
-                                        sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
-                                    }
-                                }
-                            }
-                            cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}")
-                            ?:
-                            error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}")
+            dir("${checkout_dir}") {
+                // supplying the registry explicitly might not be needed but it looks like
+                // image.inside() will first try to use the image without registry and only
+                // if that didn't work falls back to the fully qualified name
+                inside_container(
+                    image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                    pull: true,
+                    args: [
+                        "--name ${container_name}",
+                        " --hostname ${distro}",
+                    ],
+                ) {
+                    versioning.print_image_tag();
+                    sh("make .venv");
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'nexus',
+                            passwordVariable: 'NEXUS_PASSWORD',
+                            usernameVariable: 'NEXUS_USERNAME'),
+                    ]) {
+                        withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
+                            /// Don't use withEnv, see
+                            /// https://issues.jenkins.io/browse/JENKINS-43632
+                            sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
                         }
                     }
-                }
-            }();
-            inside_container(ulimit_nofile: 1024) {
-                stage("Sign package") {
-                    package_helper.sign_package(
-                        checkout_dir,
-                        "${checkout_dir}/${package_name}"
-                    );
-                }
 
-                stage("Test package") {
-                    package_helper.test_package(
-                        "${checkout_dir}/${package_name}",
-                        distro, WORKSPACE,
-                        checkout_dir,
-                        cmk_version
-                    );
+                    package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
+                    if (!package_type) {
+                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}")
+                    }
                 }
             }
+        }
+    }
+
+    inside_container(ulimit_nofile: 1024) {
+        stage("Sign package") {
+            package_helper.sign_package(
+                checkout_dir,
+                "${checkout_dir}/${package_name}"
+            );
+        }
+
+        stage("Test package") {
+            package_helper.test_package(
+                "${checkout_dir}/${package_name}",
+                distro, WORKSPACE,
+                checkout_dir,
+                cmk_version
+            );
         }
     }
 

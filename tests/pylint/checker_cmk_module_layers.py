@@ -603,6 +603,19 @@ def _allow_for_cmk_piggyback_hub(
     )
 
 
+def _allow_for_cmkpasswd(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.gui.utils.htpasswd")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -631,11 +644,7 @@ _COMPONENTS = (
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
-    (
-        # Allow everything here because it's a program.  It can't be imported anywhere, however.
-        Component("cmk.cmkpasswd"),
-        _allow_for_gui,
-    ),
+    (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),
     (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
     (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),

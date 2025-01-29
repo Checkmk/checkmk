@@ -5,8 +5,7 @@
 
 import sys
 
-# layering violation is a false positive
-from cmk.cmkpasswd import main  # pylint: disable=cmk-module-layer-violation
+from cmk.cmkpasswd import main
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

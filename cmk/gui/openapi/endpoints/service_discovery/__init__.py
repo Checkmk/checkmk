@@ -617,9 +617,10 @@ class BulkDiscovery(BaseSchema):
         "precedence over the mode.",
         required=False,
         example={
-            "monitor_undecided": True,
-            "remove_vanished": True,
+            "monitor_undecided_services": True,
+            "remove_vanished_services": True,
             "update_service_labels": True,
+            "update_host_labels": True,
         },
     )
     do_full_scan = fields.Boolean(

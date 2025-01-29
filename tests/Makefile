@@ -126,8 +126,8 @@ help:
 	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-packaging                      - Run packaging tests"
-	@echo "test-pipfile                        - Run Pipfile test"
-	@echo "test-pipfile-docker                 - Run Pipfile test in docker"
+	@echo "test-requirements                   - Run requirements test"
+	@echo "test-requirements-docker            - Run requirements test in docker"
 	@echo "test-ruff                           - Run ruff based tests"
 	@echo "test-ruff-docker                    - Run ruff based tests in docker"
 	@echo "test-pylint                         - Run pylint based tests"
@@ -372,12 +372,11 @@ test-license-headers:
 test-license-headers-docker:
 	../scripts/run-in-docker.sh make --quiet test-license-headers
 
-test-pipfile:
-	echo "Test is currently disable, re-enable it with CMK-20680"
-	#$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
+test-requirements:
+	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
 
-test-pipfile-docker:
-	../scripts/run-in-docker.sh make --quiet test-pipfile
+test-requirements-docker:
+	../scripts/run-in-docker.sh make --quiet test-requirements
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
@@ -395,7 +394,7 @@ test-werks:
 test-werks-docker:
 	../scripts/run-in-docker.sh make --quiet test-werks
 
-test-code-quality: test-license-headers test-pipfile test-file-content test-werks
+test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality

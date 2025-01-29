@@ -528,6 +528,13 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                     },
                     "stage_errors": [],
                 },
+                {
+                    "stage_index": None,
+                    "formspec_errors": {},
+                    "stage_errors": [
+                        "Stages 1, 2 contain invalid form data. Please correct them and try again."
+                    ],
+                },
             ],
         ),
         (
@@ -545,6 +552,13 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                     "stage_index": 1,
                     "formspec_errors": {},
                     "stage_errors": ["Formspec id 'invalid_id_2' not found"],
+                },
+                {
+                    "stage_index": None,
+                    "formspec_errors": {},
+                    "stage_errors": [
+                        "Stages 1, 2 contain invalid form data. Please correct them and try again."
+                    ],
                 },
             ],
         ),

@@ -11,13 +11,15 @@ Quick setup
 * POST complete the quick setup and save
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from enum import StrEnum
 from typing import Any
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
+
+from cmk.ccc.i18n import _
 
 from cmk.utils.encoding import json_encode
 
@@ -48,6 +50,7 @@ from cmk.gui.quick_setup.handlers.stage import (
     validate_stage_formspecs,
     verify_custom_validators_and_recap_stage,
 )
+from cmk.gui.quick_setup.handlers.utils import ValidationErrors
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
@@ -379,9 +382,10 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         stages_raw_form_data=[RawFormData(stage["form_data"]) for stage in body["stages"]],
         quick_setup_formspec_map=form_spec_map,
     )
+
     if errors is not None:
         return _serve_action_result(
-            CompleteActionResult(all_stage_errors=errors),
+            CompleteActionResult(all_stage_errors=_add_summary_error_message(errors)),
             status_code=400,
         )
 
@@ -449,6 +453,39 @@ def _prepare_response(data: dict, status_code: int) -> Response:
     response.set_data(json_encode(data))
     response.status_code = status_code
     return response
+
+
+def _add_summary_error_message(
+    current_errors: Sequence[ValidationErrors],
+) -> Sequence[ValidationErrors]:
+    """
+    This method will add a summary error message if there is at least one error in a stage
+    """
+
+    all_stage_errors: list[ValidationErrors] = []
+    all_stage_errors.extend(current_errors)
+
+    faulty_stage_indices = [
+        err.stage_index for err in current_errors if err.stage_index is not None
+    ]
+    faulty_stage_indices.sort()
+
+    msg = (
+        _("Stages %s contain invalid form data. Please correct them and try again.")
+        % ", ".join(str(index + 1) for index in faulty_stage_indices)
+        if len(faulty_stage_indices) > 1
+        else _("Stage %s contains invalid form data. Please correct them and try again.")
+        % faulty_stage_indices[0]
+    )
+
+    all_stage_errors.append(
+        ValidationErrors(
+            stage_index=None,
+            stage_errors=[msg],
+        )
+    )
+
+    return all_stage_errors
 
 
 def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:

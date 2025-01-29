@@ -21,6 +21,7 @@ import { useFormEditDispatcher } from '@/form/private'
 import { useId } from '@/form/utils'
 import { immediateWatch } from '@/lib/watch'
 import FormLabel from '@/form/private/FormLabel.vue'
+import FormIndent from '@/form/private/FormIndent.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -159,15 +160,17 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     </template>
   </span>
   <span class="form-cascading-single-choice__cascade">
-    <template v-if="activeElement !== null">
-      <FormEditDispatcher
-        :key="data[0]"
-        v-model:data="data[1]"
-        :spec="activeElement.spec"
-        :backend-validation="elementValidation"
-      />
-    </template>
-    <FormValidation :validation="validation"></FormValidation>
+    <FormIndent :visible="layoutSettings.side_by_side || spec.layout === 'vertical'">
+      <template v-if="activeElement !== null">
+        <FormEditDispatcher
+          :key="data[0]"
+          v-model:data="data[1]"
+          :spec="activeElement.spec"
+          :backend-validation="elementValidation"
+        />
+      </template>
+      <FormValidation :validation="validation"></FormValidation>
+    </FormIndent>
   </span>
 </template>
 

@@ -21,6 +21,10 @@ DONT_STRIP=(
 is_so_or_exec_elf_file() {
     file_type=$(file "$1")
 
+    if [[ $file_type == *"text"* ]]; then
+        return 1
+    fi
+
     if [[ $file_type == *"shared object"* ]]; then
         return 0
     fi

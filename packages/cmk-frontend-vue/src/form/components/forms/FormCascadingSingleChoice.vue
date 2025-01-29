@@ -110,82 +110,78 @@ const activeElement = computed((): ActiveElement | null => {
 
 const componentId = useId()
 
-interface LayoutSettings {
-  cascade_display_style: string
-  cascade_margin_top: string
-  side_by_side: boolean
-}
-
-const layoutSettings = computed((): LayoutSettings => {
-  return {
-    cascade_display_style: props.spec.layout === 'vertical' ? 'block' : 'inline-block',
-    cascade_margin_top: props.spec.layout === 'vertical' ? '4px' : '0',
-    side_by_side: props.spec.layout === 'button_group'
-  }
-})
-
 const buttonGroupButtons = computed((): Array<{ label: string; value: string }> => {
   return props.spec.elements.map((element: CascadingSingleChoiceElement) => {
     return { label: element.title, value: element.name }
   })
 })
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <span class="form-cascading-single-choice__choice">
-    <FormLabel v-if="$props.spec.label" :for="componentId">
-      {{ props.spec.label }}
-      <CmkSpace size="small" />
-    </FormLabel>
-    <template v-if="!layoutSettings.side_by_side">
-      <CmkDropdown
-        v-model:selected-option="selectedOption"
-        :component-id="componentId"
-        :options="spec.elements"
-        :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
-        :required-text="props.spec.i18n_base.required"
-        :input-hint="props.spec.input_hint || ''"
-        :label="props.spec.label || props.spec.title"
-      />
-    </template>
-    <template v-else>
-      <CmkSpace v-if="$props.spec.label" size="small" :direction="'vertical'" />
-      <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
-    </template>
-    <template v-if="activeElement !== null">
-      <CmkSpace size="small" />
-      <HelpText :help="activeElement.spec.help" />
-    </template>
-  </span>
-  <span class="form-cascading-single-choice__cascade">
-    <FormIndent :visible="layoutSettings.side_by_side || spec.layout === 'vertical'">
-      <template v-if="activeElement !== null">
-        <FormEditDispatcher
-          :key="data[0]"
-          v-model:data="data[1]"
-          :spec="activeElement.spec"
-          :backend-validation="elementValidation"
+  <div
+    class="form_cascading_single_choice"
+    :class="{ form_cascading_single_choice__horizontal: props.spec.layout === 'horizontal' }"
+  >
+    <div>
+      <FormLabel v-if="$props.spec.label" :for="componentId">
+        {{ props.spec.label }}
+        <CmkSpace size="small" />
+      </FormLabel>
+      <template v-if="props.spec.layout === 'button_group'">
+        <CmkSpace v-if="$props.spec.label" size="small" :direction="'vertical'" />
+        <ToggleButtonGroup
+          v-model="selectedOption"
+          :options="buttonGroupButtons"
+          class="form_cascading_single_choice__button_group"
         />
       </template>
-      <FormValidation :validation="validation"></FormValidation>
-    </FormIndent>
-  </span>
+      <template v-else>
+        <CmkDropdown
+          v-model:selected-option="selectedOption"
+          :component-id="componentId"
+          :options="spec.elements"
+          :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
+          :required-text="props.spec.i18n_base.required"
+          :input-hint="props.spec.input_hint || ''"
+          :label="props.spec.label || props.spec.title"
+        />
+      </template>
+      <template v-if="activeElement !== null">
+        <CmkSpace size="small" />
+        <HelpText :help="activeElement.spec.help" />
+      </template>
+    </div>
+    <CmkSpace v-if="props.spec.layout === 'horizontal'" :size="'medium'" />
+    <div>
+      <FormIndent :indent="props.spec.layout !== 'horizontal'">
+        <template v-if="activeElement !== null">
+          <FormEditDispatcher
+            :key="data[0]"
+            v-model:data="data[1]"
+            :spec="activeElement.spec"
+            :backend-validation="elementValidation"
+          />
+        </template>
+        <FormValidation :validation="validation"></FormValidation>
+      </FormIndent>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-span.form-cascading-single-choice__choice,
-span.form-cascading-single-choice__cascade {
-  vertical-align: top;
-}
+.form_cascading_single_choice {
+  display: flex;
+  flex-direction: column;
 
-span.form-cascading-single-choice__choice {
-  margin-right: 5px;
-}
+  &.form_cascading_single_choice__horizontal {
+    flex-direction: row;
+  }
 
-span.form-cascading-single-choice__cascade {
-  display: v-bind('layoutSettings.cascade_display_style');
-  margin-top: v-bind('layoutSettings.cascade_margin_top');
+  .form_cascading_single_choice__button_group {
+    display: inline-block;
+  }
 }
 </style>

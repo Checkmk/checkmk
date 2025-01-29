@@ -12,6 +12,7 @@ import { watch, ref } from 'vue'
 import { immediateWatch } from '../../../lib/watch'
 import HelpText from '@/components/HelpText.vue'
 import { useFormEditDispatcher } from '@/form/private'
+import FormIndent from '@/form/private/FormIndent.vue'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice
@@ -57,7 +58,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
   <HelpText :help="spec.help" />
-  <div v-if="data !== null" class="indent dictelement">
+  <FormIndent v-if="data !== null">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}
     </span>
@@ -66,7 +67,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       :spec="spec.parameter_form"
       :backend-validation="embeddedValidation"
     />
-  </div>
+  </FormIndent>
   <FormValidation :validation="localValidation"></FormValidation>
 </template>
 

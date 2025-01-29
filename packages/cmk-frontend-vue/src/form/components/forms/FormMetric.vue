@@ -8,6 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormString from './FormString.vue'
 import { computed, ref } from 'vue'
+import FormIndent from '@/form/private/FormIndent.vue'
 
 const props = defineProps<{
   spec: FormSpec.Metric
@@ -96,12 +97,12 @@ const metricSpec = computed<FormSpec.String>(() => ({
 
 <template>
   <FormString v-model:data="data" :backend-validation="backendValidation" :spec="metricSpec" />
-  <div class="dictelement indent">
+  <FormIndent>
     <FormString v-model:data="filterHostContext" :backend-validation="[]" :spec="filterHostSpec" />
     <FormString
       v-model:data="filterServiceContext"
       :backend-validation="[]"
       :spec="filterServiceSpec"
     />
-  </div>
+  </FormIndent>
 </template>

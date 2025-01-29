@@ -28,12 +28,13 @@ from __future__ import annotations
 
 import json
 import typing
-from typing import Any, assert_never, Final, final, Literal
+from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 
@@ -212,7 +213,7 @@ class HTMLWriter:
     def show_message_by_msg_type(
         self,
         msg: HTML | str,
-        msg_type: Literal["message", "warning", "error"],
+        msg_type: MsgType,
         flashed: bool = False,
     ) -> None:
         self._write(self._render_message(msg, msg_type, flashed))
@@ -250,20 +251,21 @@ class HTMLWriter:
     def _render_message(
         self,
         msg: HTML | str,
-        msg_type: Literal["message", "warning", "error"] = "message",
+        msg_type: MsgType = "message",
         flashed: bool = False,
     ) -> HTML:
-        if msg_type == "message":
-            cls = "success"
-            prefix = _("MESSAGE")
-        elif msg_type == "warning":
-            cls = "warning"
-            prefix = _("WARNING")
-        elif msg_type == "error":
-            cls = "error"
-            prefix = _("ERROR")
-        else:
-            raise TypeError(msg_type)
+        match msg_type:
+            case "message":
+                cls = "success"
+                prefix = _("MESSAGE")
+            case "warning":
+                cls = "warning"
+                prefix = _("WARNING")
+            case "error":
+                cls = "error"
+                prefix = _("ERROR")
+            case other:
+                assert_never(other)
 
         if self.output_format == "html":
             code = HTMLWriter.render_div(msg, class_=[cls, "flashed"] if flashed else cls)

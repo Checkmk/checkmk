@@ -154,8 +154,20 @@ msgid " and the %s '%s'."
 msgstr " și %s \"%s\"."
 
 #, fuzzy
+msgid " batch is"
+msgstr "ID-ul căii"
+
+#, fuzzy
+msgid " batches are"
+msgstr "se potrivește cu regex"
+
+#, fuzzy
 msgid " changes"
 msgstr "%d schimbări"
+
+#, fuzzy
+msgid " current cycle to complete"
+msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 
 #, python-format
 msgid " for %d of %d recipients."
@@ -182,6 +194,10 @@ msgstr " mai mare decât"
 msgid " left in your free trial"
 msgstr " rămasă în procesul gratuit"
 
+#, fuzzy
+msgid " next cycle start"
+msgstr "Următoarea verificare"
+
 msgid " next week"
 msgstr " săptămâna viitoare"
 
@@ -201,6 +217,10 @@ msgstr "Credite rămase"
 
 msgid " to:"
 msgstr " către:"
+
+#, fuzzy
+msgid " waiting for the "
+msgstr "Un titlu pentru view"
 
 #, python-format
 msgid ""
@@ -878,6 +898,10 @@ msgstr "(sugestii maxime atinse, fiți mai specific)"
 msgid "(No fallback email address configured!)"
 msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
 
+#, fuzzy, python-format
+msgid "(Old version: %s, New version: %s)"
+msgstr "Versiunea: %s, Ediție: %s"
+
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveluri de alertă SLA la %d/%d incidente în stânga)"
@@ -902,6 +926,10 @@ msgstr "(Acest modul nu este încă implementat)"
 
 msgid "(Untitled module)"
 msgstr "(Modul fără titlu)"
+
+#, python-format
+msgid "(Version: %s - no version change)"
+msgstr ""
 
 msgid "(built-in)"
 msgstr "(încorporat)"
@@ -1432,6 +1460,12 @@ msgid ""
 msgstr ""
 "<b>Nota</b>: Dacă migrați la conectorul <i>htpasswd</i>, utilizatorii vor "
 "trebui să își schimbe parola la următoarea autentificare."
+
+msgid ""
+"<b>Note</b>: The agent installation will neither create this directory, nor "
+"set needed permissions on it. We recommend to use this setting only if you "
+"encounter problems with the default TMPDIR directory on a target system."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3444,10 +3478,6 @@ msgid "Activate automatic locking of user accounts"
 msgstr "Activați blocarea automată a conturilor de utilizator"
 
 #, fuzzy
-msgid "Activate automation helper"
-msgstr "Activarea modificării Scheduler"
-
-#, fuzzy
 msgid "Activate changes"
 msgstr "A activat modificările"
 
@@ -5136,6 +5166,11 @@ msgstr "Etichete de agent"
 
 msgid "Agent labels simulator"
 msgstr "Simulator de etichete pentru agenți"
+
+msgid ""
+"Agent or agent controller user. Will also be used as name for the "
+"corresponding group on creation."
+msgstr ""
 
 msgid "Agent output"
 msgstr "Ieșirea agentului"
@@ -9420,6 +9455,10 @@ msgstr "Rupt"
 msgid "Broken GUI extensions"
 msgstr "Extensii GUI sparte"
 
+#, fuzzy
+msgid "Broker certificates and configuration"
+msgstr "Configurația notificărilor"
+
 msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr ""
 "Răsfoiți catalogul tuturor plugin-urilor de verificare, creați verificări "
@@ -10318,6 +10357,16 @@ msgstr ""
 "<tt>python</tt> (în funcție de comanda găsită pe sistemul gazdă). Aici "
 "puteți specifica o comandă specifică, independent de scriptul care va fi "
 "executat."
+
+msgid ""
+"By default, the Checkmk agent runs under root. The agent controller, if "
+"deployed, runs under the fixed user <i>cmk-agent</i>, which will be created "
+"automatically if it  doesn't exist yet.<br>If you want to change this "
+"default behavior, you can configure this rule for setting a custom agent/"
+"agent controller user.<br><b>Note</b>: You can only use this configuration "
+"with the new single directory structure. Please enable <i>Customize "
+"installation directories</i> before saving the rule."
+msgstr ""
 
 msgid ""
 "By default, the agent determines the location dynamically based on a few "
@@ -11774,8 +11823,8 @@ msgstr "Poziția schimbată a pachetului de reguli %s"
 msgid "Changed properties of customer"
 msgstr "Proprietăți modificate ale clientului"
 
-#, python-format
-msgid "Changed properties of installed extension package %s"
+#, fuzzy, python-format
+msgid "Changed properties of installed extension package %s %s"
 msgstr "Proprietăți modificate ale pachetului de extensii instalat %s"
 
 #, python-format
@@ -14675,7 +14724,11 @@ msgid "Connect without proxy"
 msgstr "Conectare fără proxy"
 
 #, fuzzy
-msgid "Connectee:"
+msgid "Connectee"
+msgstr "Conectați-vă"
+
+#, fuzzy
+msgid "Connecter"
 msgstr "Conectați-vă"
 
 msgid "Connecter and connectee sites must be different."
@@ -14683,10 +14736,6 @@ msgstr ""
 
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
-
-#, fuzzy
-msgid "Connecter:"
-msgstr "Conectați-vă"
 
 msgid "Connection"
 msgstr "Conexiune"
@@ -17529,6 +17578,16 @@ msgstr "Decibel-millivolt"
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwati"
 
+msgid ""
+"Decide how to apply the configured name and optional UID/GID.<br><b>Note</"
+"b>: In this context, failing means that the agent installation will issue a "
+"warning and abort to setup the agent user and the corresponding permissions, "
+"but will continue with all other parts of the agent installation. Hence, you "
+"can especially specify the UID/GID as a security measure, but please be "
+"aware that the agent installation might remain in an unusable state when the "
+"agent user installation script fails."
+msgstr ""
+
 #, fuzzy
 msgid "Decimal"
 msgstr "Decibel"
@@ -19272,6 +19331,12 @@ msgstr "Director pentru fișierele de configurare"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
+msgstr ""
+"Director pentru stocarea datelor temporare (setați variabila de mediu TMPDIR)"
+
+#, fuzzy
+msgid ""
+"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Director pentru stocarea datelor temporare (setați variabila de mediu TMPDIR)"
 
@@ -30815,6 +30880,10 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "Adresa IP sau FQDN a serverului web JVM"
 
 #, fuzzy
+msgid "IP address or hostname"
+msgstr "Adresa IP a gazdei"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Adresa IP sau numele punctului final al tunelului"
 
@@ -34210,6 +34279,14 @@ msgstr ""
 "seturile de reguli \"Escape HTML in host output\" și \"Escape HTML in "
 "service output\". Seturile de reguli au avantajul suplimentar că valoarea "
 "configurată este accesibilă în contextul notificării."
+
+msgid ""
+"Instead of the classic approach of distributing the agent package's files "
+"over multiple places on the file system, all files of the package will be "
+"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
+"will still be generated outside of this directory for proper operation of "
+"the agent installation."
+msgstr ""
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -43354,6 +43431,10 @@ msgstr "Fără limitare de versiune"
 msgid "No view defined with the name '%s'."
 msgstr "Nu există nicio vizualizare definită cu numele '%s'."
 
+#, fuzzy
+msgid "No waiting batches"
+msgstr "Afișați toate subiectele"
+
 msgid "No, adjust settings"
 msgstr "Nu, reglați setările"
 
@@ -45686,6 +45767,10 @@ msgstr "Deschideți"
 msgid "Open Log"
 msgstr "Jurnal deschis"
 
+#, fuzzy
+msgid "Open Telemetry Collector configuration"
+msgstr "Configurația stilului selectat"
+
 msgid "Open bulk notifications"
 msgstr "Deschideți notificări în masă"
 
@@ -45928,6 +46013,18 @@ msgstr ""
 "Opțiune care permite să se precizeze dacă toate unitățile de alimentare vor "
 "fi grupate într-un singur serviciu (sumar) sau dacă fiecărei unități i se "
 "alocă un serviciu individual (individual)."
+
+msgid ""
+"Optional GID that will be used to create the user's group under the "
+"specified name (with <i>Conditional</i> or <i>Automatic</i> option). Can "
+"also be used to add or verify the group membership to a differently named "
+"group (with <i>Automatic</i> or <i>No user creation</i> option)."
+msgstr ""
+
+msgid ""
+"Optional UID that will be used to create the user under the specified name, "
+"or that will be checked to be associated to the specified username."
+msgstr ""
 
 msgid "Optional general information"
 msgstr "Informații generale opționale"
@@ -52728,6 +52825,10 @@ msgstr "Redenumit părinte din %s în %s."
 msgid "Renamed parent from %s to %s in folder \"%s\""
 msgstr "Redenumit părinte din %s în %s în folderul \"%s\""
 
+#, fuzzy, python-format
+msgid "Renamed site %s"
+msgstr "Gazdă redenumită %s"
+
 msgid "Renaming Operations"
 msgstr "Operațiuni de redenumire"
 
@@ -55822,6 +55923,12 @@ msgstr ""
 "această regulă nu va ține niciodată pentru notificările gazdei!<br>Notă: "
 "Puteți să vă potriviți numai cu tipurile de evenimente <a href=\"%s\">create "
 "de nucleu</a>."
+
+msgid "Select the site that is accepting the TCP connection."
+msgstr ""
+
+msgid "Select the site that is establishing the TCP connection."
+msgstr ""
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -61280,7 +61387,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Opriți procesarea SNMP la expirarea timpului de așteptare"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Opriți-vă și nu creați gazde."
 
 msgid "Stop background jobs"
@@ -63313,8 +63421,9 @@ msgstr ""
 "va umbri)."
 
 msgid ""
-"The IP address the receiver should listen on. To listen only locally, use "
-"'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
+"The IP address or hostname the receiver should listen on. To listen only "
+"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
+"'0.0.0.0' or '::'."
 msgstr ""
 
 msgid "The Index of the Overcurrent Protector"
@@ -69149,6 +69258,11 @@ msgstr ""
 "de agenți pe arhitecturi precum ARM, ppc sau altele."
 
 msgid ""
+"This is identical to a normal agent deployment, but with a custom agent "
+"controller user instead of <i>cmk-agent</i>."
+msgstr ""
+
+msgid ""
 "This is just for testing! The agent will then always send all historic "
 "messages, not just the new ones. This leads to enormous amounts of data."
 msgstr ""
@@ -70802,9 +70916,7 @@ msgstr ""
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
 "agent. If you want to customize the user, such as deploying as an "
-"unprivileged user, you must also configure the installation directory.\n"
-"\n"
-"Note: Work in progress - This ruleset is not yet active."
+"unprivileged user, you must also configure the installation directory."
 msgstr ""
 
 msgid ""
@@ -72112,6 +72224,13 @@ msgstr ""
 "site-ul Checkmk pentru reînnoire atunci când certificatele sunt pe cale să "
 "expire. Prin urmare, cu această setare, vă puteți asigura că înregistrările "
 "agenților inactivi expiră după o anumită perioadă de timp."
+
+msgid ""
+"This setting will lead to a \"non-root agent deployment\". Both agent and "
+"agent controller will be operated under the configured agent user. "
+"Additionally, the agent package will set proper permissions on the agent "
+"package's resources."
+msgstr ""
 
 msgid "This sidebar element is only available on the manager's central site."
 msgstr ""
@@ -76996,10 +77115,6 @@ msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
 "ID unic utilizat pentru a identifica instanța de pe gazdă în cadrul Checkmk."
 
-#, fuzzy
-msgid "Unique ID:"
-msgstr "ID unic"
-
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
 "set."
@@ -81035,10 +81150,6 @@ msgstr "Așteptarea inițializării noului maestru"
 msgid "Waiting for other switches to come online"
 msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 
-#, fuzzy
-msgid "Waiting for previous cycle to complete"
-msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
-
 msgid "Waiting for replication to start"
 msgstr "Așteptare pentru începerea replicării"
 
@@ -83761,6 +83872,15 @@ msgstr ""
 "ultimul element al subiectului."
 
 msgid ""
+"You can define pairs of sites here that will be able to directly "
+"communicate, without routing the messages via the central site. Messages "
+"themselves will be sent in both directions: from the connecter to the "
+"connectee and vice versa. Note that the order in which you choose the sites "
+"here still might matter, depending on your network restrictions: The "
+"connecter must be able to establish a TCP connection to the connectee."
+msgstr ""
+
+msgid ""
 "You can define some rules to which each user password ahers. By default all "
 "passwords are accepted, even ones which are made of only a single character, "
 "which is obviously a bad idea. Using this option you can enforce your users "
@@ -83985,11 +84105,6 @@ msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
 msgstr "Puteți crea un pachet nou numai dacă există fișiere neambalate."
-
-msgid ""
-"You can only use this configuration with the new single directory structure. "
-"Please configure this before saving the rule."
-msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -87753,6 +87868,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "Activate automation helper"
+#~ msgstr "Activarea modificării Scheduler"
+
+#, fuzzy
+#~ msgid "Unique ID:"
+#~ msgstr "ID unic"
+
+#, fuzzy
 #~ msgid ""
 #~ "Here you can specify an alternative user that the agent should be run as. "
 #~ "Please note that only root has enough privileges for all commands and "
@@ -88338,14 +88461,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Trial Phase"
 #~ msgstr "Schimbare banală"
-
-#, fuzzy
-#~ msgid "Batch id"
-#~ msgstr "ID-ul căii"
-
-#, fuzzy
-#~ msgid "Show all batches"
-#~ msgstr "Afișați toate subiectele"
 
 #, fuzzy
 #~ msgid ""

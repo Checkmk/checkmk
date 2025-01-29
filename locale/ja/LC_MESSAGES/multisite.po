@@ -151,8 +151,20 @@ msgid " and the %s '%s'."
 msgstr " および %s '%s'."
 
 #, fuzzy
+msgid " batch is"
+msgstr "パスID"
+
+#, fuzzy
+msgid " batches are"
+msgstr "正規表現に一致"
+
+#, fuzzy
 msgid " changes"
 msgstr "%d の変更"
+
+#, fuzzy
+msgid " current cycle to complete"
+msgstr "他のスイッチがオンラインになるのを待っています"
 
 #, python-format
 msgid " for %d of %d recipients."
@@ -179,6 +191,10 @@ msgstr " より大きい"
 msgid " left in your free trial"
 msgstr " 無料トライアルの残り"
 
+#, fuzzy
+msgid " next cycle start"
+msgstr "次のチェック"
+
 msgid " next week"
 msgstr " 来週"
 
@@ -198,6 +214,10 @@ msgstr "クレジット残"
 
 msgid " to:"
 msgstr " まで:"
+
+#, fuzzy
+msgid " waiting for the "
+msgstr "ビューの見出し"
 
 #, python-format
 msgid ""
@@ -856,6 +876,10 @@ msgstr "(最大提案数到達、より具体的に）"
 msgid "(No fallback email address configured!)"
 msgstr "(フォールバックメールアドレスは設定されていません!)"
 
+#, fuzzy, python-format
+msgid "(Old version: %s, New version: %s)"
+msgstr "バージョン: %s、エディション: %s"
+
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLAアラートレベル %d/%d のインシデントが残っています)"
@@ -880,6 +904,10 @@ msgstr "(このモジュールはまだ実装されていません)"
 
 msgid "(Untitled module)"
 msgstr "(無題モジュール)"
+
+#, python-format
+msgid "(Version: %s - no version change)"
+msgstr ""
 
 msgid "(built-in)"
 msgstr "(組み込み)"
@@ -1389,6 +1417,12 @@ msgid ""
 msgstr ""
 "<b>注意</b>: <i>htpasswd</i>コネクタに移行した場合、ユーザーは次回ログイン時"
 "にパスワードを変更する必要があります。"
+
+msgid ""
+"<b>Note</b>: The agent installation will neither create this directory, nor "
+"set needed permissions on it. We recommend to use this setting only if you "
+"encounter problems with the default TMPDIR directory on a target system."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3292,10 +3326,6 @@ msgid "Activate automatic locking of user accounts"
 msgstr "ユーザーアカウントの自動ロックを有効にする"
 
 #, fuzzy
-msgid "Activate automation helper"
-msgstr "変更スケジューラをアクティブ化する"
-
-#, fuzzy
 msgid "Activate changes"
 msgstr "変更を有効にしました"
 
@@ -4909,6 +4939,11 @@ msgstr "エージェントラベル"
 
 msgid "Agent labels simulator"
 msgstr "エージェントラベルシミュレータ"
+
+msgid ""
+"Agent or agent controller user. Will also be used as name for the "
+"corresponding group on creation."
+msgstr ""
 
 msgid "Agent output"
 msgstr "エージェント出力"
@@ -9042,6 +9077,10 @@ msgstr "壊れた"
 msgid "Broken GUI extensions"
 msgstr "壊れたGUI拡張機能"
 
+#, fuzzy
+msgid "Broker certificates and configuration"
+msgstr "通知設定"
+
 msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr "すべてのチェックプラグインのカタログを参照し、静的チェックを作成します"
 
@@ -9869,6 +9908,16 @@ msgstr ""
 "ンを実行し、<tt>python2</tt>または<tt>python</tt>でPython 2プラグインを実行し"
 "ます(ホストシステムで見つかったコマンドによって異なります)。ここでは、実行さ"
 "れるスクリプトとは関係なく、特定のコマンドを指定できます。"
+
+msgid ""
+"By default, the Checkmk agent runs under root. The agent controller, if "
+"deployed, runs under the fixed user <i>cmk-agent</i>, which will be created "
+"automatically if it  doesn't exist yet.<br>If you want to change this "
+"default behavior, you can configure this rule for setting a custom agent/"
+"agent controller user.<br><b>Note</b>: You can only use this configuration "
+"with the new single directory structure. Please enable <i>Customize "
+"installation directories</i> before saving the rule."
+msgstr ""
 
 msgid ""
 "By default, the agent determines the location dynamically based on a few "
@@ -11282,8 +11331,8 @@ msgstr "ルールパック %s の位置を変更しました"
 msgid "Changed properties of customer"
 msgstr "カスタマーのプロパティを変更しました"
 
-#, python-format
-msgid "Changed properties of installed extension package %s"
+#, fuzzy, python-format
+msgid "Changed properties of installed extension package %s %s"
 msgstr "インストールした拡張パッケージ %s のプロパティを変更"
 
 #, python-format
@@ -14028,7 +14077,11 @@ msgid "Connect without proxy"
 msgstr "プロキシなしで接続する"
 
 #, fuzzy
-msgid "Connectee:"
+msgid "Connectee"
+msgstr "接続する"
+
+#, fuzzy
+msgid "Connecter"
 msgstr "接続する"
 
 msgid "Connecter and connectee sites must be different."
@@ -14036,10 +14089,6 @@ msgstr ""
 
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
-
-#, fuzzy
-msgid "Connecter:"
-msgstr "接続する"
 
 msgid "Connection"
 msgstr "接続"
@@ -16784,6 +16833,16 @@ msgstr "デシベルミリボルト"
 msgid "Decibel-milliwatts"
 msgstr "デシベルミリワット"
 
+msgid ""
+"Decide how to apply the configured name and optional UID/GID.<br><b>Note</"
+"b>: In this context, failing means that the agent installation will issue a "
+"warning and abort to setup the agent user and the corresponding permissions, "
+"but will continue with all other parts of the agent installation. Hence, you "
+"can especially specify the UID/GID as a security measure, but please be "
+"aware that the agent installation might remain in an unusable state when the "
+"agent user installation script fails."
+msgstr ""
+
 #, fuzzy
 msgid "Decimal"
 msgstr "デシベル"
@@ -18417,6 +18476,11 @@ msgstr "設定ファイルのディレクトリ"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
+msgstr "一時データを格納するためのディレクトリ(TMPDIR環境変数を設定)"
+
+#, fuzzy
+msgid ""
+"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr "一時データを格納するためのディレクトリ(TMPDIR環境変数を設定)"
 
 msgid "Directory to save the backup to"
@@ -29705,6 +29769,10 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "JVM WebサーバーのIPアドレスまたはFQDN"
 
 #, fuzzy
+msgid "IP address or hostname"
+msgstr "ホストのIPアドレス"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "トンネルエンドポイントのIPアドレスまたは名前"
 
@@ -32969,6 +33037,14 @@ msgstr ""
 "ホストおよびサービスに対して選択的にエスケープを無効にすることを強くお勧めし"
 "ます。ルールセットには、構成された値が通知コンテキストでアクセス可能であると"
 "いう追加の利点があります。"
+
+msgid ""
+"Instead of the classic approach of distributing the agent package's files "
+"over multiple places on the file system, all files of the package will be "
+"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
+"will still be generated outside of this directory for proper operation of "
+"the agent installation."
+msgstr ""
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -42006,6 +42082,10 @@ msgid "No view defined with the name '%s'."
 msgstr "%s'という名前で定義されたビューはありません。"
 
 #, fuzzy
+msgid "No waiting batches"
+msgstr "全てのトピックを表示"
+
+#, fuzzy
 msgid "No, adjust settings"
 msgstr "ホスト設定"
 
@@ -44291,6 +44371,10 @@ msgstr "開いた"
 msgid "Open Log"
 msgstr "ログを開く"
 
+#, fuzzy
+msgid "Open Telemetry Collector configuration"
+msgstr "状態構成を追加する"
+
 msgid "Open bulk notifications"
 msgstr "一括通知を開く"
 
@@ -44530,6 +44614,18 @@ msgid ""
 msgstr ""
 "すべての電源ユニットを1つのサービスにグループ化するか(集約)、各ユニットに1つ"
 "の個別のサービスを割り当てるか(単一)を指定できるオプション。"
+
+msgid ""
+"Optional GID that will be used to create the user's group under the "
+"specified name (with <i>Conditional</i> or <i>Automatic</i> option). Can "
+"also be used to add or verify the group membership to a differently named "
+"group (with <i>Automatic</i> or <i>No user creation</i> option)."
+msgstr ""
+
+msgid ""
+"Optional UID that will be used to create the user under the specified name, "
+"or that will be checked to be associated to the specified username."
+msgstr ""
 
 msgid "Optional general information"
 msgstr "オプションの一般情報"
@@ -51265,6 +51361,10 @@ msgstr "親の名前を%sから%sに変更しました。"
 msgid "Renamed parent from %s to %s in folder \"%s\""
 msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
 
+#, fuzzy, python-format
+msgid "Renamed site %s"
+msgstr "ホスト%sの名前が変更されました"
+
 msgid "Renaming Operations"
 msgstr "操作の名前変更"
 
@@ -54321,6 +54421,12 @@ msgstr ""
 "プションを有効にして、ホストイベントタイプも<b>指定しない</b>場合、このルール"
 "はホスト通知に対して保持されることはありません！<br>注意: <a href=\"%s\">コア"
 "によって作成された</a>イベントタイプにのみマッチングさせることができます。"
+
+msgid "Select the site that is accepting the TCP connection."
+msgstr ""
+
+msgid "Select the site that is establishing the TCP connection."
+msgstr ""
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -59606,7 +59712,8 @@ msgstr "やめる"
 msgid "Stop SNMP processing on timeout"
 msgstr "イベント処理時間"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "停止し、ホストを作成しないでください。"
 
 msgid "Stop background jobs"
@@ -61588,8 +61695,9 @@ msgstr ""
 "ます)。"
 
 msgid ""
-"The IP address the receiver should listen on. To listen only locally, use "
-"'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
+"The IP address or hostname the receiver should listen on. To listen only "
+"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
+"'0.0.0.0' or '::'."
 msgstr ""
 
 msgid "The Index of the Overcurrent Protector"
@@ -67194,6 +67302,11 @@ msgstr ""
 "タを実行したいユーザには、このスクリプトが適しているかもしれません。"
 
 msgid ""
+"This is identical to a normal agent deployment, but with a custom agent "
+"controller user instead of <i>cmk-agent</i>."
+msgstr ""
+
+msgid ""
 "This is just for testing! The agent will then always send all historic "
 "messages, not just the new ones. This leads to enormous amounts of data."
 msgstr ""
@@ -68746,9 +68859,7 @@ msgstr "このルールを使用すると、特定のVSIDの最大接続数を�
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
 "agent. If you want to customize the user, such as deploying as an "
-"unprivileged user, you must also configure the installation directory.\n"
-"\n"
-"Note: Work in progress - This ruleset is not yet active."
+"unprivileged user, you must also configure the installation directory."
 msgstr ""
 
 #, fuzzy
@@ -69967,6 +70078,13 @@ msgstr ""
 "は、証明書の有効期限が切れそうになると、更新のために自動的にCheckmkサイトを呼"
 "び出します。したがって、この設定により、非アクティブなエージェントの登録が一"
 "定時間後に失効することを保証できます。"
+
+msgid ""
+"This setting will lead to a \"non-root agent deployment\". Both agent and "
+"agent controller will be operated under the configured agent user. "
+"Additionally, the agent package will set proper permissions on the agent "
+"package's resources."
+msgstr ""
 
 msgid "This sidebar element is only available on the manager's central site."
 msgstr "このサイドバー要素は、マネージャーの中央サイトでのみ使用できます。"
@@ -74879,10 +74997,6 @@ msgstr "一意のID"
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "Checkmk内でホスト上のインスタンスを識別するために使用される一意のID。"
 
-#, fuzzy
-msgid "Unique ID:"
-msgstr "一意のID"
-
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
 "set."
@@ -78832,10 +78946,6 @@ msgstr "新しいマスターの初期化を待っています"
 msgid "Waiting for other switches to come online"
 msgstr "他のスイッチがオンラインになるのを待っています"
 
-#, fuzzy
-msgid "Waiting for previous cycle to complete"
-msgstr "他のスイッチがオンラインになるのを待っています"
-
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
 
@@ -81445,6 +81555,15 @@ msgstr ""
 "の最後のアイテムの下にある[すべて表示]オプションで表示されます。"
 
 msgid ""
+"You can define pairs of sites here that will be able to directly "
+"communicate, without routing the messages via the central site. Messages "
+"themselves will be sent in both directions: from the connecter to the "
+"connectee and vice versa. Note that the order in which you choose the sites "
+"here still might matter, depending on your network restrictions: The "
+"connecter must be able to establish a TCP connection to the connectee."
+msgstr ""
+
+msgid ""
 "You can define some rules to which each user password ahers. By default all "
 "passwords are accepted, even ones which are made of only a single character, "
 "which is obviously a bad idea. Using this option you can enforce your users "
@@ -81659,11 +81778,6 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "パッケージ化されていないファイルがある場合にのみ、新しいパッケージを作成でき"
 "ます。"
-
-msgid ""
-"You can only use this configuration with the new single directory structure. "
-"Please configure this before saving the rule."
-msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -85374,6 +85488,14 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, fuzzy
+#~ msgid "Activate automation helper"
+#~ msgstr "変更スケジューラをアクティブ化する"
+
+#, fuzzy
+#~ msgid "Unique ID:"
+#~ msgstr "一意のID"
+
+#, fuzzy
 #~ msgid ""
 #~ "Here you can specify an alternative user that the agent should be run as. "
 #~ "Please note that only root has enough privileges for all commands and "
@@ -85966,14 +86088,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Trial Phase"
 #~ msgstr "ささいな変更"
-
-#, fuzzy
-#~ msgid "Batch id"
-#~ msgstr "パスID"
-
-#, fuzzy
-#~ msgid "Show all batches"
-#~ msgstr "全てのトピックを表示"
 
 #~ msgid ""
 #~ "After setting up a new service in PagerDuty you will receive an "

@@ -153,8 +153,20 @@ msgstr " et %s '%s'"
 msgid " and the %s '%s'."
 msgstr " et le %s '%s'."
 
+#, fuzzy
+msgid " batch is"
+msgstr "ID du chemin"
+
+#, fuzzy
+msgid " batches are"
+msgstr "correspond à un regex"
+
 msgid " changes"
 msgstr " changements"
+
+#, fuzzy
+msgid " current cycle to complete"
+msgstr "En attendant que d'autres interrupteurs soient mis en ligne"
 
 #, python-format
 msgid " for %d of %d recipients."
@@ -181,6 +193,10 @@ msgstr " plus grand que"
 msgid " left in your free trial"
 msgstr " restants dans votre essai gratuit"
 
+#, fuzzy
+msgid " next cycle start"
+msgstr "Vérification suivante"
+
 msgid " next week"
 msgstr " semaine prochaine"
 
@@ -199,6 +215,10 @@ msgstr " secondes restants)"
 
 msgid " to:"
 msgstr " à :"
+
+#, fuzzy
+msgid " waiting for the "
+msgstr "Une rubrique pour la vue"
 
 #, python-format
 msgid ""
@@ -869,6 +889,10 @@ msgstr "(Suggestions maximales atteintes, soyez plus précis)"
 msgid "(No fallback email address configured!)"
 msgstr "(Aucune adresse électronique de secours n'est configurée !)"
 
+#, fuzzy, python-format
+msgid "(Old version: %s, New version: %s)"
+msgstr "Version : %s, Edition : %s"
+
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveaux d'alerte SLA à %d/%d incidents restants)"
@@ -893,6 +917,10 @@ msgstr "(Ce module n'est pas encore implémenté)"
 
 msgid "(Untitled module)"
 msgstr "(Module sans titre)"
+
+#, python-format
+msgid "(Version: %s - no version change)"
+msgstr ""
 
 msgid "(built-in)"
 msgstr "(intégré)"
@@ -1431,6 +1459,12 @@ msgstr ""
 "<b>Note</b> : Si vous migrez vers le connecteur <i>htpasswd</i>, les "
 "utilisateurs devront changer leur mot de passe lors de la prochaine "
 "connexion."
+
+msgid ""
+"<b>Note</b>: The agent installation will neither create this directory, nor "
+"set needed permissions on it. We recommend to use this setting only if you "
+"encounter problems with the default TMPDIR directory on a target system."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3455,10 +3489,6 @@ msgid "Activate automatic locking of user accounts"
 msgstr "Activer le verrouillage automatique des comptes utilisateurs"
 
 #, fuzzy
-msgid "Activate automation helper"
-msgstr "Activer le planificateur de changements"
-
-#, fuzzy
 msgid "Activate changes"
 msgstr "Activé les changements"
 
@@ -5163,6 +5193,11 @@ msgstr "Étiquettes des agents"
 
 msgid "Agent labels simulator"
 msgstr "Simulateur d'étiquettes d'agents"
+
+msgid ""
+"Agent or agent controller user. Will also be used as name for the "
+"corresponding group on creation."
+msgstr ""
 
 msgid "Agent output"
 msgstr "Sortie de l'agent"
@@ -9480,6 +9515,10 @@ msgid "Broken GUI extensions"
 msgstr "Extensions de l'interface graphique cassées"
 
 #, fuzzy
+msgid "Broker certificates and configuration"
+msgstr "Configuration des notifications"
+
+#, fuzzy
 msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr ""
 "Parcourir le catalogue de tous les plugins de vérification, créer des "
@@ -10353,6 +10392,16 @@ msgstr ""
 "<tt>python</tt> (selon la commande trouvée sur le système hôte). Ici, vous "
 "pouvez spécifier une commande spécifique, indépendante du script qui sera "
 "exécuté."
+
+msgid ""
+"By default, the Checkmk agent runs under root. The agent controller, if "
+"deployed, runs under the fixed user <i>cmk-agent</i>, which will be created "
+"automatically if it  doesn't exist yet.<br>If you want to change this "
+"default behavior, you can configure this rule for setting a custom agent/"
+"agent controller user.<br><b>Note</b>: You can only use this configuration "
+"with the new single directory structure. Please enable <i>Customize "
+"installation directories</i> before saving the rule."
+msgstr ""
 
 msgid ""
 "By default, the agent determines the location dynamically based on a few "
@@ -11815,8 +11864,8 @@ msgstr "Changement de la position du paquet de règles %s"
 msgid "Changed properties of customer"
 msgstr "Modification des propriétés du client"
 
-#, python-format
-msgid "Changed properties of installed extension package %s"
+#, fuzzy, python-format
+msgid "Changed properties of installed extension package %s %s"
 msgstr "Modification des propriétés du paquet d'extension installé %s"
 
 #, python-format
@@ -14753,17 +14802,19 @@ msgstr "Se connecter sans mot de passe"
 msgid "Connect without proxy"
 msgstr "Se connecter sans proxy"
 
-msgid "Connectee:"
-msgstr ""
+#, fuzzy
+msgid "Connectee"
+msgstr "déconnecté"
+
+#, fuzzy
+msgid "Connecter"
+msgstr "Connecteur :"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
-
-msgid "Connecter:"
-msgstr "Connecteur :"
 
 msgid "Connection"
 msgstr "Connexion"
@@ -17640,6 +17691,16 @@ msgstr "Décibel-millivolt"
 msgid "Decibel-milliwatts"
 msgstr "Décibel-milliwatts"
 
+msgid ""
+"Decide how to apply the configured name and optional UID/GID.<br><b>Note</"
+"b>: In this context, failing means that the agent installation will issue a "
+"warning and abort to setup the agent user and the corresponding permissions, "
+"but will continue with all other parts of the agent installation. Hence, you "
+"can especially specify the UID/GID as a security measure, but please be "
+"aware that the agent installation might remain in an unusable state when the "
+"agent user installation script fails."
+msgstr ""
+
 #, fuzzy
 msgid "Decimal"
 msgstr "Décibel"
@@ -19379,6 +19440,13 @@ msgstr "Répertoire pour les fichiers de configuration"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
+msgstr ""
+"Répertoire pour le stockage des données temporaires (définir la variable "
+"d'environnement TMPDIR)"
+
+#, fuzzy
+msgid ""
+"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Répertoire pour le stockage des données temporaires (définir la variable "
 "d'environnement TMPDIR)"
@@ -31022,6 +31090,10 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "Adresse IP ou FQDN du serveur web de la JVM"
 
 #, fuzzy
+msgid "IP address or hostname"
+msgstr "Adresse IP de l'hôte"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Adresse IP ou nom de l'extrémité du tunnel"
 
@@ -34412,6 +34484,14 @@ msgstr ""
 "et \"Escape HTML in service output\". Ces jeux de règles présentent "
 "l'avantage supplémentaire que la valeur configurée est accessible dans le "
 "contexte de notification."
+
+msgid ""
+"Instead of the classic approach of distributing the agent package's files "
+"over multiple places on the file system, all files of the package will be "
+"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
+"will still be generated outside of this directory for proper operation of "
+"the agent installation."
+msgstr ""
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -43624,6 +43704,10 @@ msgid "No view defined with the name '%s'."
 msgstr "Aucune vue n'est définie avec le nom '%s'."
 
 #, fuzzy
+msgid "No waiting batches"
+msgstr "Afficher tous les sujets"
+
+#, fuzzy
 msgid "No, adjust settings"
 msgstr "Paramètres de l'hôte"
 
@@ -45979,6 +46063,10 @@ msgstr "Ouvrir"
 msgid "Open Log"
 msgstr "Journal ouvert"
 
+#, fuzzy
+msgid "Open Telemetry Collector configuration"
+msgstr "Ajouter une configuration d'état"
+
 msgid "Open bulk notifications"
 msgstr "Ouvrir les notifications groupées"
 
@@ -46218,6 +46306,18 @@ msgstr ""
 "Option qui permet de spécifier si toutes les unités d'alimentation seront "
 "regroupées en un seul service (résumé) ou si chaque unité se voit attribuer "
 "un service individuel (simple)."
+
+msgid ""
+"Optional GID that will be used to create the user's group under the "
+"specified name (with <i>Conditional</i> or <i>Automatic</i> option). Can "
+"also be used to add or verify the group membership to a differently named "
+"group (with <i>Automatic</i> or <i>No user creation</i> option)."
+msgstr ""
+
+msgid ""
+"Optional UID that will be used to create the user under the specified name, "
+"or that will be checked to be associated to the specified username."
+msgstr ""
 
 msgid "Optional general information"
 msgstr "Informations générales facultatives"
@@ -53087,6 +53187,10 @@ msgstr "Le parent a été renommé de %s en %s."
 msgid "Renamed parent from %s to %s in folder \"%s\""
 msgstr "Renommé le parent de %s à %s dans le dossier \"%s\""
 
+#, fuzzy, python-format
+msgid "Renamed site %s"
+msgstr "Hôte renommé %s"
+
 msgid "Renaming Operations"
 msgstr "Opérations de renommage"
 
@@ -56206,6 +56310,12 @@ msgstr ""
 "tiendra jamais pour les notifications d'hôte !<br>Note : Vous ne pouvez "
 "correspondre que sur les types d'événements <a href=\"%s\">créés par le "
 "noyau</a>."
+
+msgid "Select the site that is accepting the TCP connection."
+msgstr ""
+
+msgid "Select the site that is establishing the TCP connection."
+msgstr ""
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -61646,7 +61756,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Temps de traitement des événements"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Arrêtez et ne créez pas d'hôtes."
 
 msgid "Stop background jobs"
@@ -63720,8 +63831,9 @@ msgstr ""
 "l'imitant)."
 
 msgid ""
-"The IP address the receiver should listen on. To listen only locally, use "
-"'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
+"The IP address or hostname the receiver should listen on. To listen only "
+"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
+"'0.0.0.0' or '::'."
 msgstr ""
 
 msgid "The Index of the Overcurrent Protector"
@@ -69566,6 +69678,11 @@ msgstr ""
 "sur des architectures comme ARM, ppc ou autres."
 
 msgid ""
+"This is identical to a normal agent deployment, but with a custom agent "
+"controller user instead of <i>cmk-agent</i>."
+msgstr ""
+
+msgid ""
 "This is just for testing! The agent will then always send all historic "
 "messages, not just the new ones. This leads to enormous amounts of data."
 msgstr ""
@@ -71217,9 +71334,7 @@ msgstr ""
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
 "agent. If you want to customize the user, such as deploying as an "
-"unprivileged user, you must also configure the installation directory.\n"
-"\n"
-"Note: Work in progress - This ruleset is not yet active."
+"unprivileged user, you must also configure the installation directory."
 msgstr ""
 
 #, fuzzy
@@ -72528,6 +72643,13 @@ msgstr ""
 "certificats sont sur le point d'expirer. Ce paramètre permet donc de "
 "s'assurer que les enregistrements des agents inactifs expirent après un "
 "certain temps."
+
+msgid ""
+"This setting will lead to a \"non-root agent deployment\". Both agent and "
+"agent controller will be operated under the configured agent user. "
+"Additionally, the agent package will set proper permissions on the agent "
+"package's resources."
+msgstr ""
 
 msgid "This sidebar element is only available on the manager's central site."
 msgstr ""
@@ -77506,9 +77628,6 @@ msgstr "ID unique"
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "ID unique utilisé pour identifier l'instance sur l'hôte dans Checkmk."
 
-msgid "Unique ID:"
-msgstr "ID unique :"
-
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
 "set."
@@ -81600,10 +81719,6 @@ msgstr "En attente de l'initialisation du nouveau maître"
 msgid "Waiting for other switches to come online"
 msgstr "En attendant que d'autres interrupteurs soient mis en ligne"
 
-#, fuzzy
-msgid "Waiting for previous cycle to complete"
-msgstr "En attendant que d'autres interrupteurs soient mis en ligne"
-
 msgid "Waiting for replication to start"
 msgstr "En attente du démarrage de la réplication"
 
@@ -84365,6 +84480,15 @@ msgstr ""
 "disponible sous le dernier élément de la rubrique."
 
 msgid ""
+"You can define pairs of sites here that will be able to directly "
+"communicate, without routing the messages via the central site. Messages "
+"themselves will be sent in both directions: from the connecter to the "
+"connectee and vice versa. Note that the order in which you choose the sites "
+"here still might matter, depending on your network restrictions: The "
+"connecter must be able to establish a TCP connection to the connectee."
+msgstr ""
+
+msgid ""
 "You can define some rules to which each user password ahers. By default all "
 "passwords are accepted, even ones which are made of only a single character, "
 "which is obviously a bad idea. Using this option you can enforce your users "
@@ -84599,11 +84723,6 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "Vous ne pouvez créer un nouveau paquet que s'il existe des fichiers non "
 "emballés."
-
-msgid ""
-"You can only use this configuration with the new single directory structure. "
-"Please configure this before saving the rule."
-msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -88391,6 +88510,13 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 
 #, fuzzy
+#~ msgid "Activate automation helper"
+#~ msgstr "Activer le planificateur de changements"
+
+#~ msgid "Unique ID:"
+#~ msgstr "ID unique :"
+
+#, fuzzy
 #~ msgid ""
 #~ "Here you can specify an alternative user that the agent should be run as. "
 #~ "Please note that only root has enough privileges for all commands and "
@@ -88951,14 +89077,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Trial Phase"
 #~ msgstr "Changement trivial"
-
-#, fuzzy
-#~ msgid "Batch id"
-#~ msgstr "ID du chemin"
-
-#, fuzzy
-#~ msgid "Show all batches"
-#~ msgstr "Afficher tous les sujets"
 
 #, fuzzy
 #~ msgid ""

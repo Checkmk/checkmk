@@ -156,8 +156,20 @@ msgid " and the %s '%s'."
 msgstr " en de %s '%s'."
 
 #, fuzzy
+msgid " batch is"
+msgstr "Pad ID"
+
+#, fuzzy
+msgid " batches are"
+msgstr "komt overeen met regex"
+
+#, fuzzy
 msgid " changes"
 msgstr "%d aanpassingen"
+
+#, fuzzy
+msgid " current cycle to complete"
+msgstr "Wachten op andere wissels om online te komen"
 
 #, python-format
 msgid " for %d of %d recipients."
@@ -184,6 +196,10 @@ msgstr " groter dan"
 msgid " left in your free trial"
 msgstr " links in uw gratis proefperiode"
 
+#, fuzzy
+msgid " next cycle start"
+msgstr "Volgende controle"
+
 msgid " next week"
 msgstr " volgende week"
 
@@ -203,6 +219,10 @@ msgstr "Resterende kredieten"
 
 msgid " to:"
 msgstr " naar:"
+
+#, fuzzy
+msgid " waiting for the "
+msgstr "Een rubriek voor het uitzicht"
 
 #, python-format
 msgid ""
@@ -867,6 +887,10 @@ msgstr "(Max suggesties bereikt, wees specifieker)"
 msgid "(No fallback email address configured!)"
 msgstr "(Geen fallback e-mail adres geconfigureerd!)"
 
+#, fuzzy, python-format
+msgid "(Old version: %s, New version: %s)"
+msgstr "Versie: %s, Editie: %s"
+
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLA waarschuwing waarden op %d/%d incidenten over)"
@@ -891,6 +915,10 @@ msgstr "(Deze module is nog niet geïmplementeerd)"
 
 msgid "(Untitled module)"
 msgstr "(Module zonder naam)"
+
+#, python-format
+msgid "(Version: %s - no version change)"
+msgstr ""
 
 #, fuzzy
 msgid "(built-in)"
@@ -1420,6 +1448,12 @@ msgid ""
 msgstr ""
 "<b>Note</b>: Als u migreert naar <i>htpasswd</i> connector, moeten de "
 "gebruikers bij de volgende aanmelding hun wachtwoord wijzigen."
+
+msgid ""
+"<b>Note</b>: The agent installation will neither create this directory, nor "
+"set needed permissions on it. We recommend to use this setting only if you "
+"encounter problems with the default TMPDIR directory on a target system."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3425,10 +3459,6 @@ msgid "Activate automatic locking of user accounts"
 msgstr "Automatisch vergrendelen van gebruikersaccounts activeren"
 
 #, fuzzy
-msgid "Activate automation helper"
-msgstr "Activeer Wijzigingen Planner"
-
-#, fuzzy
 msgid "Activate changes"
 msgstr "Activeerde de veranderingen"
 
@@ -5128,6 +5158,11 @@ msgstr "Agent labels"
 
 msgid "Agent labels simulator"
 msgstr "Agent-labelsimulator"
+
+msgid ""
+"Agent or agent controller user. Will also be used as name for the "
+"corresponding group on creation."
+msgstr ""
 
 msgid "Agent output"
 msgstr "Agent uitgang"
@@ -9427,6 +9462,10 @@ msgid "Broken GUI extensions"
 msgstr "Gebroken GUI uitbreidingen"
 
 #, fuzzy
+msgid "Broker certificates and configuration"
+msgstr "Kennisgeving configuratie"
+
+#, fuzzy
 msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr ""
 "Blader door de catalogus van alle controle plugins, maak statische controles"
@@ -10296,6 +10335,16 @@ msgstr ""
 "(afhankelijk van het gevonden commando op het host systeem). Hier kunt u een "
 "specifiek commando opgeven, onafhankelijk van het script dat zal worden "
 "uitgevoerd."
+
+msgid ""
+"By default, the Checkmk agent runs under root. The agent controller, if "
+"deployed, runs under the fixed user <i>cmk-agent</i>, which will be created "
+"automatically if it  doesn't exist yet.<br>If you want to change this "
+"default behavior, you can configure this rule for setting a custom agent/"
+"agent controller user.<br><b>Note</b>: You can only use this configuration "
+"with the new single directory structure. Please enable <i>Customize "
+"installation directories</i> before saving the rule."
+msgstr ""
 
 msgid ""
 "By default, the agent determines the location dynamically based on a few "
@@ -11746,8 +11795,8 @@ msgstr "Positie van regelpakket %s gewijzigd"
 msgid "Changed properties of customer"
 msgstr "Veranderde eigenschappen van klant"
 
-#, python-format
-msgid "Changed properties of installed extension package %s"
+#, fuzzy, python-format
+msgid "Changed properties of installed extension package %s %s"
 msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
 
 #, python-format
@@ -14662,7 +14711,11 @@ msgid "Connect without proxy"
 msgstr "Verbinden zonder proxy"
 
 #, fuzzy
-msgid "Connectee:"
+msgid "Connectee"
+msgstr "Connect"
+
+#, fuzzy
+msgid "Connecter"
 msgstr "Connect"
 
 msgid "Connecter and connectee sites must be different."
@@ -14670,10 +14723,6 @@ msgstr ""
 
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
-
-#, fuzzy
-msgid "Connecter:"
-msgstr "Connect"
 
 msgid "Connection"
 msgstr "Aansluiting"
@@ -17519,6 +17568,16 @@ msgstr "Decibel-millivolt"
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwatt"
 
+msgid ""
+"Decide how to apply the configured name and optional UID/GID.<br><b>Note</"
+"b>: In this context, failing means that the agent installation will issue a "
+"warning and abort to setup the agent user and the corresponding permissions, "
+"but will continue with all other parts of the agent installation. Hence, you "
+"can especially specify the UID/GID as a security measure, but please be "
+"aware that the agent installation might remain in an unusable state when the "
+"agent user installation script fails."
+msgstr ""
+
 #, fuzzy
 msgid "Decimal"
 msgstr "Decibel"
@@ -19248,6 +19307,13 @@ msgstr "Directory voor configuratiebestanden"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
+msgstr ""
+"Directory voor opslag van tijdelijke gegevens (stel omgevingsvariabele "
+"TMPDIR in)"
+
+#, fuzzy
+msgid ""
+"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Directory voor opslag van tijdelijke gegevens (stel omgevingsvariabele "
 "TMPDIR in)"
@@ -30780,6 +30846,10 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "IP-adres of FQDN van JVM webserver"
 
 #, fuzzy
+msgid "IP address or hostname"
+msgstr "IP-adres van gastheer"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-adres of naam van tunnel-eindpunt"
 
@@ -34128,6 +34198,14 @@ msgstr ""
 "en diensten met de regelsets \"Escape HTML in host output\" en \"Escape HTML "
 "in service output\". De regelsets hebben het bijkomende voordeel dat de "
 "geconfigureerde waarde toegankelijk is in de notificatie context."
+
+msgid ""
+"Instead of the classic approach of distributing the agent package's files "
+"over multiple places on the file system, all files of the package will be "
+"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
+"will still be generated outside of this directory for proper operation of "
+"the agent installation."
+msgstr ""
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -43284,6 +43362,10 @@ msgid "No view defined with the name '%s'."
 msgstr "Geen view gedefinieerd met de naam '%s'."
 
 #, fuzzy
+msgid "No waiting batches"
+msgstr "Toon alle onderwerpen"
+
+#, fuzzy
 msgid "No, adjust settings"
 msgstr "Host instellingen"
 
@@ -45617,6 +45699,10 @@ msgstr "Open"
 msgid "Open Log"
 msgstr "Open Log"
 
+#, fuzzy
+msgid "Open Telemetry Collector configuration"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Open bulk notifications"
 msgstr "Open bulk meldingen"
 
@@ -45857,6 +45943,18 @@ msgstr ""
 "Optie waarmee kan worden aangegeven of alle voedingseenheden in één dienst "
 "worden gegroepeerd (samenvatting) of dat elke eenheid een afzonderlijke "
 "dienst krijgt toegewezen (enkelvoudig)."
+
+msgid ""
+"Optional GID that will be used to create the user's group under the "
+"specified name (with <i>Conditional</i> or <i>Automatic</i> option). Can "
+"also be used to add or verify the group membership to a differently named "
+"group (with <i>Automatic</i> or <i>No user creation</i> option)."
+msgstr ""
+
+msgid ""
+"Optional UID that will be used to create the user under the specified name, "
+"or that will be checked to be associated to the specified username."
+msgstr ""
 
 msgid "Optional general information"
 msgstr "Facultatieve algemene informatie"
@@ -52660,6 +52758,10 @@ msgstr "Hernoemde ouder van %s in %s."
 msgid "Renamed parent from %s to %s in folder \"%s\""
 msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
 
+#, fuzzy, python-format
+msgid "Renamed site %s"
+msgstr "Hernoemde host %s"
+
 msgid "Renaming Operations"
 msgstr "Operaties hernoemen"
 
@@ -55727,6 +55829,12 @@ msgstr ""
 "event types specificeert, dan zal deze regel nooit host meldingen afhandelen."
 "<br>Note: U kunt alleen overeenkomen met event types <a href=\"%s\">gemaakt "
 "door de kern</a>."
+
+msgid "Select the site that is accepting the TCP connection."
+msgstr ""
+
+msgid "Select the site that is establishing the TCP connection."
+msgstr ""
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -61111,7 +61219,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Verwerkingstijd van gebeurtenissen"
 
-msgid "Stop and do not create hosts."
+#, fuzzy
+msgid "Stop and do not create hosts"
 msgstr "Stop en maak geen hosts."
 
 msgid "Stop background jobs"
@@ -63165,8 +63274,9 @@ msgstr ""
 "(shadowing)."
 
 msgid ""
-"The IP address the receiver should listen on. To listen only locally, use "
-"'127.0.0.1' or '::1'. To listen on all interfaces, use '0.0.0.0' or '::'."
+"The IP address or hostname the receiver should listen on. To listen only "
+"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
+"'0.0.0.0' or '::'."
 msgstr ""
 
 msgid "The Index of the Overcurrent Protector"
@@ -68961,6 +69071,11 @@ msgstr ""
 "andere."
 
 msgid ""
+"This is identical to a normal agent deployment, but with a custom agent "
+"controller user instead of <i>cmk-agent</i>."
+msgstr ""
+
+msgid ""
 "This is just for testing! The agent will then always send all historic "
 "messages, not just the new ones. This leads to enormous amounts of data."
 msgstr ""
@@ -70579,9 +70694,7 @@ msgstr ""
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
 "agent. If you want to customize the user, such as deploying as an "
-"unprivileged user, you must also configure the installation directory.\n"
-"\n"
-"Note: Work in progress - This ruleset is not yet active."
+"unprivileged user, you must also configure the installation directory."
 msgstr ""
 
 #, fuzzy
@@ -71861,6 +71974,13 @@ msgstr ""
 "Checkmk site aanroepen voor vernieuwing wanneer certificaten bijna verlopen. "
 "Met deze instelling kunt u er dus voor zorgen dat registraties van inactieve "
 "agents na een bepaalde tijd verlopen."
+
+msgid ""
+"This setting will lead to a \"non-root agent deployment\". Both agent and "
+"agent controller will be operated under the configured agent user. "
+"Additionally, the agent package will set proper permissions on the agent "
+"package's resources."
+msgstr ""
 
 msgid "This sidebar element is only available on the manager's central site."
 msgstr ""
@@ -76820,10 +76940,6 @@ msgstr ""
 "Unieke ID die wordt gebruikt om de instantie op de host binnen Checkmk te "
 "identificeren."
 
-#, fuzzy
-msgid "Unique ID:"
-msgstr "Unieke ID"
-
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
 "set."
@@ -80852,10 +80968,6 @@ msgstr "Wachten op nieuwe master initialisatie"
 msgid "Waiting for other switches to come online"
 msgstr "Wachten op andere wissels om online te komen"
 
-#, fuzzy
-msgid "Waiting for previous cycle to complete"
-msgstr "Wachten op andere wissels om online te komen"
-
 msgid "Waiting for replication to start"
 msgstr "Wachten op replicatie om te beginnen"
 
@@ -83582,6 +83694,15 @@ msgstr ""
 "laatste item van het onderwerp."
 
 msgid ""
+"You can define pairs of sites here that will be able to directly "
+"communicate, without routing the messages via the central site. Messages "
+"themselves will be sent in both directions: from the connecter to the "
+"connectee and vice versa. Note that the order in which you choose the sites "
+"here still might matter, depending on your network restrictions: The "
+"connecter must be able to establish a TCP connection to the connectee."
+msgstr ""
+
+msgid ""
 "You can define some rules to which each user password ahers. By default all "
 "passwords are accepted, even ones which are made of only a single character, "
 "which is obviously a bad idea. Using this option you can enforce your users "
@@ -83808,11 +83929,6 @@ msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
 msgstr "U kunt alleen een nieuw pakket maken als er onverpakte bestanden zijn."
-
-msgid ""
-"You can only use this configuration with the new single directory structure. "
-"Please configure this before saving the rule."
-msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -87573,6 +87689,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "Activate automation helper"
+#~ msgstr "Activeer Wijzigingen Planner"
+
+#, fuzzy
+#~ msgid "Unique ID:"
+#~ msgstr "Unieke ID"
+
+#, fuzzy
 #~ msgid ""
 #~ "Here you can specify an alternative user that the agent should be run as. "
 #~ "Please note that only root has enough privileges for all commands and "
@@ -88143,14 +88267,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Trial Phase"
 #~ msgstr "Triviale verandering"
-
-#, fuzzy
-#~ msgid "Batch id"
-#~ msgstr "Pad ID"
-
-#, fuzzy
-#~ msgid "Show all batches"
-#~ msgstr "Toon alle onderwerpen"
 
 #, fuzzy
 #~ msgid ""

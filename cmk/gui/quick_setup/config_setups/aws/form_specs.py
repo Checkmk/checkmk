@@ -240,7 +240,16 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
                 title=Title("Proxy server details"),
                 elements={
                     "proxy_host": DictElement(
-                        parameter_form=String(title=Title("Proxy host")),
+                        parameter_form=String(
+                            title=Title("Proxy host"),
+                            custom_validate=[
+                                validators.LengthInRange(
+                                    min_value=1,
+                                    max_value=255,
+                                    error_msg=Message("Proxy host is required but not specified."),
+                                )
+                            ],
+                        ),
                         required=True,
                     ),
                     "proxy_port": DictElement(

@@ -261,4 +261,4 @@ relock_venv:
 		bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
 		bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
 	fi; \
-	CC="gcc" $(BAZEL_CMD) run //:create_venv
+	CC="gcc" bazel run //:create_venv

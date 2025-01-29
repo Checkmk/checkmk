@@ -6,6 +6,7 @@
 import traceback
 from collections.abc import Callable
 from datetime import datetime
+from logging import Logger
 
 from pydantic import BaseModel
 
@@ -130,10 +131,11 @@ class UserSyncBackgroundJob(BackgroundJob):
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ) -> None:
+        logger = job_interface.get_logger()
         with job_interface.gui_context():
-            job_interface.send_progress_update(_("Synchronization started..."))
+            logger.info(_("Synchronization started..."))
             if self._execute_sync_action(
-                job_interface,
+                logger,
                 args.add_to_changelog,
                 args.enforce_sync,
                 load_users_func,
@@ -148,7 +150,7 @@ class UserSyncBackgroundJob(BackgroundJob):
 
     def _execute_sync_action(
         self,
-        job_interface: BackgroundProcessInterface,
+        logger: Logger,
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
@@ -160,24 +162,20 @@ class UserSyncBackgroundJob(BackgroundJob):
                 if not enforce_sync and not connection.sync_is_needed():
                     continue
 
-                job_interface.send_progress_update(
-                    _("[%s] Starting sync for connection") % connection_id
-                )
+                logger.info(_("[%s] Starting sync for connection") % connection_id)
                 connection.do_sync(
                     add_to_changelog=add_to_changelog,
                     only_username=None,
                     load_users_func=load_users,
                     save_users_func=save_users,
                 )
-                job_interface.send_progress_update(
-                    _("[%s] Finished sync for connection") % connection_id
-                )
+                logger.info(_("[%s] Finished sync for connection") % connection_id)
             except Exception as e:
-                job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
+                logger.error(_("[%s] Exception: %s") % (connection_id, e))
                 gui_logger.error(
                     "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
                 )
 
-        job_interface.send_progress_update(_("Finalizing synchronization"))
+        logger.info(_("Finalizing synchronization"))
         general_userdb_job(now)
         return True

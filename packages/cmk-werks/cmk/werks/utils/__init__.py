@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-import argparse
 import itertools
 from collections.abc import Iterable, Iterator
 from functools import partial
@@ -14,9 +12,10 @@ from typing import IO
 from pydantic import RootModel, TypeAdapter
 
 from cmk.ccc.i18n import _
-from cmk.ccc.version import __version__, parse_check_mk_version, Version
+from cmk.ccc.version import parse_check_mk_version
+
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Compatibility, Edition, Werk, WerkV1
+from cmk.werks.models import Class, Compatibility, Werk, WerkV1
 
 Werks = RootModel[dict[int, Werk]]
 
@@ -154,43 +153,8 @@ def write_precompiled_werks(path: Path, werks: dict[int, Werk]) -> None:
         fp.write(Werks.model_validate(werks).model_dump_json(by_alias=True))
 
 
-def path_dir(value: str) -> Path:
-    result = Path(value)
-    if not result.exists():
-        raise argparse.ArgumentTypeError(f"File or directory does not exist: {result}")
-    if not result.is_dir():
-        raise argparse.ArgumentTypeError(f"{result} is not a directory")
-    return result
-
-
-def main_precompile(args: argparse.Namespace) -> None:
-    werks_list = load_raw_files(args.werk_dir)
-
-    filter_by_edition = (
-        Edition(args.filter_by_edition) if args.filter_by_edition is not None else None
-    )
-    current_version = Version.from_str(__version__)
-
-    def _filter(werk: Werk) -> bool:
-        if filter_by_edition is not None and werk.edition != filter_by_edition:
-            return False
-        # only include werks of this major version:
-        if Version.from_str(werk.version).base != current_version.base:
-            return False
-        return True
-
-    werks = {werk.id: werk for werk in werks_list if _filter(werk)}
-
-    write_precompiled_werks(args.destination, werks)
-
-
-def main_changelog(args: argparse.Namespace) -> None:
-    werks: dict[int, Werk] = {}
-    for path in (Path(p) for p in args.precompiled_werk):
-        werks.update(load_precompiled_werks_file(path))
-
-    with open(args.destination, "w", encoding="utf-8") as f:
-        write_as_text(werks, f)
+def has_content(description: str) -> bool:
+    return bool(description.strip())
 
 
 # this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo
@@ -218,10 +182,6 @@ def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True
         f.write("\n")
 
 
-def has_content(description: str) -> bool:
-    return bool(description.strip())
-
-
 def write_werk_as_text(f: IO[str], werk: Werk) -> None:
     # TODO: use jinja templates of .announce
     prefix = ""
@@ -240,37 +200,3 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
 
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
-
-
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest="command")
-    subparsers.required = True
-
-    parser_changelog = subparsers.add_parser("changelog", help="Show who worked on a werk")
-    parser_changelog.add_argument("destination")
-    parser_changelog.add_argument("precompiled_werk", nargs="+")
-    parser_changelog.set_defaults(func=main_changelog)
-
-    parser_precompile = subparsers.add_parser(
-        "precompile", help="Collect werk files of current major version into json."
-    )
-    parser_precompile.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
-    parser_precompile.add_argument("destination", type=Path)
-    parser_precompile.add_argument(
-        "--filter-by-edition",
-        default=None,
-        choices=list(x.value for x in Edition),
-    )
-    parser_precompile.set_defaults(func=main_precompile)
-
-    return parser.parse_args()
-
-
-def main():
-    args = parse_arguments()
-    args.func(args)
-
-
-if __name__ == "__main__":
-    main()

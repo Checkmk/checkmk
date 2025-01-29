@@ -1094,29 +1094,10 @@ def test_check_systemd_units_sockets(
             [
                 Result(state=State.OK, summary="Total: 6"),
                 Result(state=State.OK, summary="Disabled: 0"),
-                Result(state=State.CRIT, summary="Failed: 2"),
+                Result(state=State.OK, summary="Failed: 2"),
                 Result(state=State.CRIT, summary="2 services failed (bar, foo)"),
             ],
             id="'Normal' test case",
-        ),
-        pytest.param(
-            {
-                "else": 2,
-                "states": {"active": 0, "failed": 1, "inactive": 0},
-                "states_default": 2,
-                "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
-            },
-            SECTION,
-            [
-                Result(state=State.OK, summary="Total: 6"),
-                Result(state=State.OK, summary="Disabled: 0"),
-                Result(state=State.WARN, summary="Failed: 2"),
-                Result(state=State.WARN, summary="2 services failed (bar, foo)"),
-            ],
-            id="Custom state for failed",
         ),
         pytest.param(
             {

@@ -11,6 +11,7 @@ RegionMap: typing.Final = {
     # https://github.com/GoogleCloudPlatform/gcping/blob/main/tools/terraform/regions.json
     # Changes to the right-hand side of this list cause an incompatible change to the service name
     # of the check `gcp_status`
+    "africa-south1": "Johannesburg",
     "asia-east1": "Taiwan",
     "asia-east2": "Hong Kong",
     "asia-northeast1": "Tokyo",
@@ -31,7 +32,11 @@ RegionMap: typing.Final = {
     "europe-west6": "Zurich",
     "europe-west8": "Milan",
     "europe-west9": "Paris",
+    "europe-west10": "Berlin",
+    "europe-west12": "Turin",
     "europe-southwest1": "Madrid",
+    "me-central1": "Doha",
+    "me-central2": "Dammam",
     "me-west1": "Tel Aviv",
     "northamerica-northeast1": "Montréal",
     "northamerica-northeast2": "Toronto",

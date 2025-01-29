@@ -150,6 +150,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       />
     </template>
     <template v-else>
+      <CmkSpace v-if="$props.spec.label" size="small" :direction="'vertical'" />
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
     <template v-if="activeElement !== null">

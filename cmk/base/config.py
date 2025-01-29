@@ -2952,8 +2952,8 @@ class ConfigCache:
             if notification_spool_to[2]:
                 return "both"
             return "remote"
-        if notification_spooling:
-            return notification_spooling if notification_spooling == "off" else "local"
+        if notification_spooling and isinstance(notification_spooling, str):
+            return notification_spooling
         return "remote"
 
     def notification_plugin_parameters(

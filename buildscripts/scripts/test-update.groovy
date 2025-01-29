@@ -61,6 +61,11 @@ def main() {
 
     def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
 
+    def image_name = "minimal-alpine-checkmk-ci-master:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
     currentBuild.result = parallel(
         all_distros.collectEntries { distro ->
             [("${distro}") : {
@@ -77,32 +82,39 @@ def main() {
                     Utils.markStageSkippedForConditional(stepName);
                 }
 
-                smart_stage(
-                    name: stepName,
-                    condition: run_condition,
-                    raiseOnError: true,
-                ) {
-                    def job = smart_build(
-                        job: relative_job_name,
-                        parameters: [
-                            stringParam(name: "DISTRO", value: distro),
-                            stringParam(name: "EDITION", value: edition),
-                            stringParam(name: "VERSION", value: version),
-                            stringParam(name: "DOCKER_TAG", value: docker_tag),
-                            stringParam(name: "CROSS_EDITION_TARGET", value: cross_edition_target),
-                            stringParam(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
-                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                        ],
-                    );
+                minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+                    smart_stage(
+                        name: stepName,
+                        condition: run_condition,
+                        raiseOnError: true,
+                    ) {
+                        def job = smart_build(
+                            // see global-defaults.yml, needs to run in minimal container
+                            use_upstream_build: true,
+                            relative_job_name: relative_job_name,
+                            build_params: [
+                                DISTRO: distro,
+                                EDITION: edition,
+                                VERSION: version,
+                                CROSS_EDITION_TARGET: cross_edition_target,
+                                CUSTOM_GIT_REF: CUSTOM_GIT_REF,
+                            ],
+                            build_params_no_check: [
+                                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                                CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                                CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                            ],
+                            no_remove_others: true, // do not delete other files in the dest dir
+                            download: false,    // use copyArtifacts to avoid nested directories
+                        );
 
-                    copyArtifacts(
-                        projectName: relative_job_name,
-                        selector: specific(job.getId()), // buildNumber shall be a string
-                        target: "${checkout_dir}/test-results",
-                        fingerprintArtifacts: true
-                    );
+                        copyArtifacts(
+                            projectName: relative_job_name,
+                            selector: specific(job.getId()), // buildNumber shall be a string
+                            target: "${checkout_dir}/test-results",
+                            fingerprintArtifacts: true
+                        );
+                    }
                 }
             }]
         }
@@ -116,7 +128,7 @@ def main() {
             xunit([Custom(
                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                 deleteOutputFiles: true,
-                failIfNotNew: true,
+                failIfNotNew: false,    // as they are copied from the single tests
                 pattern: "**/junit.xml",
                 skipNoTestFiles: false,
                 stopProcessingIfError: true

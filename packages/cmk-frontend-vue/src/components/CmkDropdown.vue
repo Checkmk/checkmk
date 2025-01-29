@@ -136,6 +136,7 @@ function selectOption(option: DropdownOption): void {
     <CmkSuggestions
       v-if="!!suggestionsShown"
       ref="suggestionsRef"
+      role="option"
       :suggestions="options"
       :on-select="selectOption"
       :no-results-hint="noResultsHint"

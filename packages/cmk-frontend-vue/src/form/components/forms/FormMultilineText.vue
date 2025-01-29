@@ -8,7 +8,6 @@ import { computed } from 'vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   spec: FormSpec.MultilineText
@@ -36,17 +35,15 @@ const style = computed(() => {
       <label> {{ spec.label }}</label
       ><br />
     </div>
-    <CmkScrollContainer>
-      <textarea
-        v-model="value"
-        :style="style"
-        :placeholder="spec.input_hint || ''"
-        :aria-label="spec.label || spec.title"
-        rows="20"
-        cols="60"
-        type="text"
-      />
-    </CmkScrollContainer>
+    <textarea
+      v-model="value"
+      :style="style"
+      :placeholder="spec.input_hint || ''"
+      :aria-label="spec.label || spec.title"
+      rows="20"
+      cols="60"
+      type="text"
+    />
     <FormValidation :validation="validation"></FormValidation>
   </div>
 </template>

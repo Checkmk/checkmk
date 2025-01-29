@@ -69,7 +69,7 @@ immediateWatch(
 </script>
 
 <template>
-  <div v-if="!screenshotMode" class="demo">
+  <div v-if="!screenshotMode" class="cmk-vue-app demo">
     <nav>
       <fieldset>
         <legend>global styles</legend>

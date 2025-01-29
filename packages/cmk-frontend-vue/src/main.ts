@@ -88,6 +88,8 @@ function setupVue() {
       }
       app.config.idPrefix = `app${divIndex}` // useId for multiple vue apps
       app.mount(div)
+
+      div.classList.add('cmk-vue-app')
     })
 }
 

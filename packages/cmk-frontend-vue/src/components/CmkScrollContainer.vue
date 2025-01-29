@@ -26,7 +26,10 @@ const { type, maxHeight = '100%' } = defineProps<ScrollContainerProps>()
 </script>
 
 <template>
-  <div :style="{ maxHeight, overflow: 'auto' }" :class="scrollContainerVariants({ type })">
+  <div
+    :style="{ maxHeight, height: '100%', overflow: 'auto' }"
+    :class="scrollContainerVariants({ type })"
+  >
     <slot></slot>
   </div>
 </template>

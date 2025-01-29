@@ -124,24 +124,22 @@ defineExpose({
     <span :class="{ hidden: !showFilter, input: true }">
       <input ref="suggestionInputRef" v-model="filterString" type="text"
     /></span>
-    <CmkScrollContainer>
-      <div class="cmk-suggestions-container">
-        <template v-for="(suggestion, index) in suggestions" :key="suggestion.name">
-          <li
-            v-show="filteredSuggestions.includes(index)"
-            :ref="(el) => (suggestionRefs[index] = el as HTMLLIElement)"
-            tabindex="-1"
-            role="suggestion"
-            :class="{ selected: index === selectedSuggestionIndex, selectable: true }"
-            @click.prevent="() => selectSuggestion(index)"
-          >
-            {{ suggestion.title }}
-          </li>
-        </template>
-        <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
-          {{ noResultsHint }}
+    <CmkScrollContainer :max-height="'200px'">
+      <template v-for="(suggestion, index) in suggestions" :key="suggestion.name">
+        <li
+          v-show="filteredSuggestions.includes(index)"
+          :ref="(el) => (suggestionRefs[index] = el as HTMLLIElement)"
+          tabindex="-1"
+          role="suggestion"
+          :class="{ selected: index === selectedSuggestionIndex, selectable: true }"
+          @click.prevent="() => selectSuggestion(index)"
+        >
+          {{ suggestion.title }}
         </li>
-      </div>
+      </template>
+      <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
+        {{ noResultsHint }}
+      </li>
     </CmkScrollContainer>
   </ul>
 </template>
@@ -191,12 +189,6 @@ defineExpose({
         color: var(--default-select-hover-color);
       }
     }
-  }
-
-  .cmk-suggestions-container {
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
   }
 }
 </style>

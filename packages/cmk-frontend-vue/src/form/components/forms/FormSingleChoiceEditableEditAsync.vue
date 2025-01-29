@@ -114,17 +114,15 @@ const { ErrorBoundary } = useErrorBoundary()
         </CmkAlertBox>
       </div>
       <CmkScrollContainer>
-        <div class="edit-object__content">
-          <div v-if="schema !== undefined && data !== undefined">
-            <FormEditDispatcher
-              v-model:data="data"
-              :spec="schema"
-              :backend-validation="backendValidation"
-            />
-          </div>
-          <div v-if="schema === undefined">
-            <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
-          </div>
+        <div v-if="schema !== undefined && data !== undefined">
+          <FormEditDispatcher
+            v-model:data="data"
+            :spec="schema"
+            :backend-validation="backendValidation"
+          />
+        </div>
+        <div v-if="schema === undefined">
+          <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
         </div>
       </CmkScrollContainer>
     </ErrorBoundary>
@@ -139,9 +137,5 @@ const { ErrorBoundary } = useErrorBoundary()
 }
 .edit-object__buttons {
   margin-bottom: 1em;
-}
-.edit-object__content {
-  overflow: auto;
-  height: 100%;
 }
 </style>

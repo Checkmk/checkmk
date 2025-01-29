@@ -48,5 +48,5 @@ cp \
     "${REPO_ROOT}/defines.make" \
     "${REPO_ROOT}/package_versions.bzl" \
     "${REPO_ROOT}/.bazelversion" \
-    "${REPO_ROOT}/omd/strip_binaries.sh" \
+    "${REPO_ROOT}/omd/strip_binaries" \
     "${TARGET_DIR}"

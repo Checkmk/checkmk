@@ -41,6 +41,8 @@ def main() {
             " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
             " --build-arg CI=1"
         );
+        // no support for 20.04, sorry
+        // python2 would be required, and the system Python does not support typing in "strip_binaries"
         def ubuntu_versions = ["22.04", "24.04"];
 
         dir("${checkout_dir}") {
@@ -48,7 +50,7 @@ def main() {
                 cp \
                     .bazelversion \
                     defines.make \
-                    omd/strip_binaries.sh \
+                    omd/strip_binaries \
                     omd/distros/*.mk \
                     package_versions.bzl \
                 buildscripts/infrastructure/build-nodes/scripts

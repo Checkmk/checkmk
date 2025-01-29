@@ -32,7 +32,7 @@ from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInterna
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
-from cmk.gui.utils.flashed_messages import MSG_TYPET
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
 
@@ -245,7 +245,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
                 ),
             )
 
-    def _flash_message(self, msg_type: MSG_TYPET, message: str) -> None:
+    def _flash_message(self, msg_type: MsgType, message: str) -> None:
         """
 
         Copy of the flash.flash functionality.

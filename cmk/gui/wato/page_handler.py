@@ -18,7 +18,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.utils.flashed_messages import get_flashed_messages
+from cmk.gui.utils.flashed_messages import get_flashed_messages_with_categories
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib import read_only
@@ -142,7 +142,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     html.show_user_errors()
 
     # Show outcome of previous page (that redirected to this one)
-    for message in get_flashed_messages(with_categories=True):
+    for message in get_flashed_messages_with_categories():
         html.show_message_by_msg_type(
             msg=message.msg,
             msg_type=message.msg_type,

@@ -187,6 +187,7 @@ def special_agent_discovery_preview(
             stdin_data=special_agent_preview_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
+            force_cli_interface=True,
         ),
         results.SpecialAgentDiscoveryPreviewResult,
     )

@@ -189,7 +189,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "-m",
         "--sections",
-        type=lambda x: x.split(","),
+        type=lambda x: x.split(",") if x else [],
         default=sections,
         help=f"Comma separated list of data to query. \
                Possible values: {','.join(sections)} (default: all)",
@@ -197,7 +197,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "-n",
         "--disabled_sections",
-        type=lambda x: x.split(","),
+        type=lambda x: x.split(",") if x else [],
         default=(),
         help=f"Comma separated list of data to ignore. \
                Possible values: {','.join(sections)} (default: None)",
@@ -205,7 +205,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "-c",
         "--cached_sections",
-        type=lambda x: x.split(","),
+        type=lambda x: x.split(",") if x else [],
         default=(),
         help=f"Comma separated list of sections and times. \
                Possible values: {','.join(sections)} (default: None)",

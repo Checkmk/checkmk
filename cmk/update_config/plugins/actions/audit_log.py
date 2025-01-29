@@ -13,8 +13,6 @@ from typing_extensions import Buffer
 from cmk.utils import tty
 from cmk.utils.exceptions import MKException, MKGeneralException
 
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.paths import wato_var_dir
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -33,17 +31,21 @@ class WatoAuditLogConversion(UpdateAction):
     def needs_conversion(logs: list[Path]) -> bool:
         """check if we need the conversion
 
-        Checking a file can take up to 15s. That makes checking every file very expensive. So let's
-        assume if one file is converted all are converted. In order to check if a file is
-        converted, we should make sure that we read something and it is not just a empty
-        file..."""
+        1. Version loaded every audit log and made sure all were converted. This took up to 10
+        minutes in old and large setups
+        2. Version just loaded files until one contained entries and if that was converted we
+        assumed all were converted.
+        3. Version (current) we peek into the files and if one contains a "\n" we assume all are
+        converted if it contains a "\0" we say we need conversion
+        """
 
-        try:
-            for file_ in logs:
-                if AuditLogStore(file_).read():
-                    return False
-        except MKUserError:
-            return True
+        for file_ in logs:
+            with file_.open("rb") as fh:
+                while data := fh.read(1024):
+                    if b"\n" in data:
+                        return False
+                    if b"\0" in data:
+                        return True
         return False
 
     @staticmethod

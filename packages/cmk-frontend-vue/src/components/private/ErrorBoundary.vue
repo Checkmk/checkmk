@@ -33,7 +33,7 @@ const props = defineProps<{ error: Ref<Error | null> }>()
       <pre>{{ errorMessage }}</pre>
     </div>
   </CmkAlertBox>
-  <div v-else>
+  <div v-else style="height: 100%">
     <slot></slot>
   </div>
 </template>

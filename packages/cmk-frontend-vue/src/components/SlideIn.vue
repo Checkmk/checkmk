@@ -74,10 +74,6 @@ const emit = defineEmits(['close'])
   }
 }
 
-:slotted(div) {
-  height: 100%;
-}
-
 @keyframes slide-in__content-show {
   from {
     opacity: 0;

@@ -131,10 +131,7 @@ BOM := bill-of-materials.json
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
-	$(BAZEL_CMD) run :venv
-	source .venv/bin/activate \
-	&& python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/ \
-	&& deactivate
+	./strip_binaries.sh --exclude cmk-agent-ctl,mk-sql,cmc,waitmax,agent_modbus --path=$(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)

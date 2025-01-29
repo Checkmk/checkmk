@@ -23,7 +23,7 @@ ARG ADDITIONAL_ARGS
 COPY scripts/.bazelversion /opt/
 COPY scripts/defines.make /opt/
 COPY scripts/package_versions.bzl /opt/
-COPY scripts/strip_binaries /opt/
+COPY scripts/strip_binaries.sh /opt/
 COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 
@@ -34,7 +34,7 @@ RUN /opt/install-development.sh --profile all ${ADDITIONAL_ARGS}
 COPY scripts/.bazelversion /opt/
 COPY scripts/defines.make /opt/
 COPY scripts/package_versions.bzl /opt/
-COPY scripts/strip_binaries /opt/
+COPY scripts/strip_binaries.sh /opt/
 COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 RUN rm -rf /root/.pyenv

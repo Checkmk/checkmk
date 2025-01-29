@@ -146,10 +146,10 @@ RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
-COPY strip_binaries /opt/
-RUN /opt/strip_binaries /opt
+COPY strip_binaries.sh /opt/
+RUN /opt/strip_binaries.sh --path=/opt
 
-# Run this AFTER strip_binaries!!
+# Run this AFTER strip_binaries.sh!!
 COPY install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 

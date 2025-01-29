@@ -74,7 +74,10 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
     else:
         command_arguments += ["--cert-server-name", params.ssl[1]]
 
-    command_arguments.append(host_config.primary_ip_config.address)
+    try:
+        command_arguments.append(host_config.primary_ip_config.address)
+    except ValueError:
+        command_arguments.append(host_config.name)
 
     yield SpecialAgentCommand(command_arguments=command_arguments)
 

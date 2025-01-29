@@ -30,9 +30,9 @@ def main() {
                 /* groovylint-disable LineLength */
                 sh("""
                     scripts/run-uvenv echo build venv...
-                    scripts/run-uvenv python3 -m cmk.utils.werks collect cmk ./ > cmk.json
-                    scripts/run-uvenv python3 -m cmk.utils.werks collect cma ${WORKSPACE}/cma > cma.json
-                    scripts/run-uvenv python3 -m cmk.utils.werks collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
+                    scripts/run-uvenv python3 -m cmk.werks.utils collect cmk ./ > cmk.json
+                    scripts/run-uvenv python3 -m cmk.werks.utils collect cma ${WORKSPACE}/cma > cma.json
+                    scripts/run-uvenv python3 -m cmk.werks.utils collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
 
                     # jq -s '.[0] * .[1] * .[2]' cma.json cmk.json kube.json > all_werks.json
                     # no need to install jq!!!!!

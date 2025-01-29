@@ -170,6 +170,7 @@ fn to_pem(der: &[u8]) -> Vec<u8> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We ran into https://github.com/sfackler/rust-openssl/issues/575
     // without openssl_probe.
+    #[allow(deprecated)]
     openssl_probe::init_ssl_cert_env_vars();
 
     let args = Args::parse();

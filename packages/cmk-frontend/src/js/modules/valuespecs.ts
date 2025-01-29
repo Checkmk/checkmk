@@ -68,7 +68,7 @@ const dynamicParamsCallbacks = {
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            obj["context"] = {};
+            obj["context"] ??= {};
             obj["context"]["host"] = {};
             obj["context"]["host"]["host"] = hint;
         }
@@ -78,7 +78,7 @@ const dynamicParamsCallbacks = {
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            obj["context"] = {};
+            obj["context"] ??= {};
             obj["context"]["service"] = {};
             obj["context"]["service"]["service"] = hint;
         }

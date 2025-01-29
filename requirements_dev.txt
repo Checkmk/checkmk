@@ -58,6 +58,7 @@ sphinx-autodoc-typehints  # used for the plugin API documentation
 sphinx-rtd-theme~=2.0.0  # used for the plugin API documentation # TODO: Unpin this here and in omd/Pipfile when "make -C doc/plugin-api html" works again without it.
 sphinxcontrib-plantuml  # used for the API and architecture
 sphinxcontrib-spelling
+svglib  # license csv pdf generating
 telnetlib3  # used by Windows Agent tests
 time-machine # used by various unit tests. Substitute for freezegun
 twine # used to upload packages to internal PyPi mirror

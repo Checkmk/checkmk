@@ -18,14 +18,15 @@ from livestatus import (
     SiteId,
 )
 
-import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
@@ -120,7 +121,7 @@ def _select_prediction(
         )
 
     with html.form_context("prediction"):
-        html.write_text(_("Show prediction for "))
+        html.write_text_permissive(_("Show prediction for "))
         html.dropdown(
             "prediction_selection",
             ((title, title) for title in available_predictions_sorted),
@@ -252,7 +253,7 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
 
 def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None:
     x_scala = [
-        (i + x_range[0], f"{i//3600:02}:{i%3600:02}")
+        (i + x_range[0], f"{i // 3600:02}:{i % 3600:02}")
         for i in range(0, x_range[1] - x_range[0] + 1, 7200)
     ]
     y_scala = _compute_vertical_scala(*y_range)
@@ -311,7 +312,7 @@ def _get_observed_data(
             until_time,
         )
     except MKLivestatusNotFoundError as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
     if response is None:
@@ -321,9 +322,7 @@ def _get_observed_data(
     return response.values
 
 
-def _compute_vertical_scala(  # pylint: disable=too-many-branches
-    low: float, high: float
-) -> Sequence[tuple[float, str]]:
+def _compute_vertical_scala(low: float, high: float) -> Sequence[tuple[float, str]]:
     letter, factor = _get_oom(low, high)
 
     steps = (max(0, high) - min(0, low)) / factor
@@ -437,7 +436,7 @@ def _create_graph(
         "",
         class_="prediction",
         id_=canvas_id,
-        style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
+        style=f"width: {size[0] // 2}px; height: {size[1] // 2}px;",
         width=str(size[0]),
         height=str(size[1]),
     )

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 
 import sys
 
@@ -15,11 +14,11 @@ from _pytest.monkeypatch import MonkeyPatch
 if sys.version_info[0] == 2:
     from mock import Mock
 
-    import agents.plugins.apache_status_2 as apache_status  # pylint: disable=syntax-error
+    import agents.plugins.apache_status_2 as apache_status
 else:
     from unittest.mock import Mock
 
-    import agents.plugins.apache_status as apache_status
+    from agents.plugins import apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
@@ -89,7 +88,7 @@ def test_agent(
     captured_stdout = capsys.readouterr()[0]
     assert captured_stdout == (
         "<<<apache_status:sep(124)>>>\n"
-        + "\n".join(("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n")))
+        + "\n".join("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n"))
         + "\n"
     )
 

@@ -37,22 +37,24 @@ A host_config object can have the following relations present in `links`:
  * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
 
 """
+
 import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 from urllib.parse import urlparse
 
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
+from cmk.gui.background_job import InitialStatusArgs, JobTarget
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.fields.fields_filter import FieldsFilter, make_filter
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_links
+from cmk.gui.openapi.endpoints.common_fields import field_fields_filter, field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -76,9 +78,11 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
+from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
@@ -187,6 +191,43 @@ def with_access_check_permission(perm: permissions.BasePerm) -> permissions.Base
     )
 
 
+def host_fields_filter(
+    *, is_collection: bool, include_links: bool, effective_attributes: bool
+) -> FieldsFilter:
+    response_fields_filters: dict[str, FieldsFilter] = {}
+    if not include_links:
+        response_fields_filters["links"] = make_filter(this_is="excluded")
+    if not effective_attributes:
+        response_fields_filters["extensions"] = make_filter(
+            exclude={"effective_attributes": make_filter(this_is="excluded")}
+        )
+
+    if not response_fields_filters:
+        # no filters, all fields are included
+        return make_filter(this_is="included")
+
+    fields_filter = make_filter(exclude=response_fields_filters)
+    if not is_collection:
+        return fields_filter
+
+    return make_filter(exclude={"value": fields_filter})
+
+
+def _fields_filter_from_params(params: Mapping[str, Any], *, is_collection: bool) -> FieldsFilter:
+    if "fields" in params:
+        return params["fields"]
+
+    return host_fields_filter(
+        is_collection=is_collection,
+        include_links=params.get(
+            "include_links", True
+        ),  # actual default is false, we use get in case it's not a parameter
+        effective_attributes=params.get(
+            "effective_attributes", True
+        ),  # actual default is false, we use get in case it's not a parameter
+    )
+
+
 @Endpoint(
     constructors.collection_href("host_config"),
     "cmk/create",
@@ -212,7 +253,10 @@ def create_host(params: Mapping[str, Any]) -> Response:
         bakery.try_bake_agents_for_hosts([host_name])
 
     host = Host.load_host(host_name)
-    return _serve_host(host, False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -242,7 +286,10 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
         bakery.try_bake_agents_for_hosts([host_name])
 
     host = Host.load_host(host_name)
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 class FailedHosts(BaseSchema):
@@ -344,6 +391,44 @@ def _bulk_host_action_response(
     return serve_host_collection(succeeded_hosts)
 
 
+class SearchFilter:
+    hostnames_filter = "hostnames"
+    site_filter = "site"
+
+    @classmethod
+    def from_params(cls, params: Mapping[str, Any]) -> "SearchFilter":
+        return cls(
+            hostnames=params.get(cls.hostnames_filter, []),
+            site=params.get(cls.site_filter),
+        )
+
+    def __init__(
+        self,
+        hostnames: Sequence[str] | None,
+        site: str | None,
+    ) -> None:
+        self._hostnames = set(hostnames) if hostnames else None
+        self._site = site
+
+    def __call__(self, host: Host) -> bool:
+        return self.filter_by_hostnames(host) and self.filter_by_site(host)
+
+    def filter_by_hostnames(self, host: Host) -> bool:
+        return host.name() in self._hostnames if self._hostnames else True
+
+    def filter_by_site(self, host: Host) -> bool:
+        return host.site_id() == self._site if self._site else True
+
+
+def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
+    yield from (host for host in folder.hosts().values() if host.permissions.may("read"))
+    for subfolder in folder.subfolders():
+        if not subfolder.permissions.may("read"):
+            continue  # skip all hosts if folder isn't readable
+
+        yield from _iter_hosts_with_permission(subfolder)
+
+
 @Endpoint(
     constructors.collection_href("host_config"),
     ".../collection",
@@ -355,52 +440,76 @@ def _bulk_host_action_response(
         field_include_links(
             "Flag which toggles whether the links field of the individual hosts should be populated."
         ),
+        field_fields_filter(),
+        {
+            SearchFilter.hostnames_filter: fields.List(
+                fields.String(
+                    description="A list of host names to filter the result by.",
+                    required=False,
+                    example="host1",
+                ),
+                description="Filter the result by a list of host names.",
+                required=False,
+                example=["host1", "host2"],
+                minLength=1,
+            ),
+            SearchFilter.site_filter: fields.String(
+                description="Filter the result by a specific site.",
+                required=False,
+                example="site1",
+            ),
+        },
     ],
 )
-def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
+def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
-    effective_attributes: bool = param["effective_attributes"]
-    include_links: bool = param["include_links"]
+    hosts_filter = SearchFilter.from_params(params)
+    if user.may("wato.see_all_folders"):
+        # allowed to see all hosts, no need for individual permission checks
+        hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
+    else:
+        hosts = _iter_hosts_with_permission(root_folder)
 
-    hosts = (
-        host
-        for host in root_folder.all_hosts_recursively().values()
-        if host.permissions.may("read")
-    )
     return serve_host_collection(
-        hosts,
-        effective_attributes=effective_attributes,
-        include_links=include_links,
+        filter(hosts_filter, hosts),
+        fields_filter=_fields_filter_from_params(params, is_collection=True),
     )
 
 
 def serve_host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host], *, fields_filter: FieldsFilter | None = None
 ) -> Response:
-    return serve_json(
-        _host_collection(
-            hosts,
-            effective_attributes=effective_attributes,
-            include_links=include_links,
-        )
-    )
+    return serve_json(_host_collection(hosts, fields_filter=fields_filter))
 
 
 def _host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    *,
+    fields_filter: FieldsFilter | None = None,
 ) -> dict[str, Any]:
-    return {
-        "id": "host",
-        "domainType": "host_config",
-        "value": [
-            serialize_host(
-                host, effective_attributes=effective_attributes, include_links=include_links
-            )
-            for host in hosts
-        ],
-        "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
-    }
+    fields_filter = fields_filter or host_fields_filter(
+        is_collection=True, include_links=False, effective_attributes=False
+    )
+    value_filter = fields_filter.get_nested_fields("value")
+    return fields_filter.apply(
+        {
+            "id": "host",
+            "domainType": "host_config",
+            "value": (
+                [
+                    serialize_host(
+                        host,
+                        fields_filter=value_filter,
+                    )
+                    for host in hosts
+                ]
+                if value_filter
+                else None
+            ),
+            "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
+        }
+    )
 
 
 @Endpoint(
@@ -441,6 +550,31 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     )
 
 
+def _validate_host_attributes_for_quick_setup(host: Host, body: dict[str, Any]) -> bool:
+    if not is_locked_by_quick_setup(host.locked_by()):
+        return True
+
+    locked_attributes: Sequence[str] = host.attributes.get("locked_attributes", [])
+    new_attributes: HostAttributes | None = body.get("attributes")
+    update_attributes: HostAttributes | None = body.get("update_attributes")
+    remove_attributes: Sequence[str] | None = body.get("remove_attributes")
+
+    if new_attributes and (
+        new_attributes.get("locked_by") != host.attributes.get("locked_by")
+        or new_attributes.get("locked_attributes") != locked_attributes
+        or any(new_attributes.get(key) != host.attributes.get(key) for key in locked_attributes)
+    ):
+        return False
+
+    if update_attributes and any(
+        key in locked_attributes and host.attributes.get(key) != attr
+        for key, attr in update_attributes.items()
+    ):
+        return False
+
+    return not (remove_attributes and any(key in locked_attributes for key in remove_attributes))
+
+
 @Endpoint(
     constructors.object_href("host_config", "{host_name}"),
     ".../update",
@@ -458,6 +592,13 @@ def update_host(params: Mapping[str, Any]) -> Response:
     host: Host = Host.load_host(params["host_name"])
     _require_host_etag(host)
     body = params["body"]
+
+    if not _validate_host_attributes_for_quick_setup(host, body):
+        return problem(
+            status=400,
+            title=f'The host "{host.name()}" is locked by Quick setup.',
+            detail="Cannot modify locked attributes.",
+        )
 
     if new_attributes := body.get("attributes"):
         new_attributes["meta_data"] = host.attributes.get("meta_data", {})
@@ -481,7 +622,10 @@ def update_host(params: Mapping[str, Any]) -> Response:
                 detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
             )
 
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -512,6 +656,10 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     for update_detail in body["entries"]:
         host_name = update_detail["host_name"]
         host: Host = Host.load_host(host_name)
+
+        if not _validate_host_attributes_for_quick_setup(host, update_detail):
+            failed_hosts[host_name] = "Host is locked by Quick setup."
+
         faulty_attributes = []
 
         if new_attributes := update_detail.get("attributes"):
@@ -550,9 +698,9 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         }
     ],
     etag="both",
-    additional_status_codes=[302, 409, 422],
+    additional_status_codes=[303, 409, 422],
     status_descriptions={
-        302: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
+        303: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
         409: "There are pending changes not yet activated or a rename background job is already running.",
         422: "The host could not be renamed.",
     },
@@ -581,32 +729,35 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             title="Pending changes are present",
             detail="Please activate all pending changes before executing a host rename process",
         )
-    host_name = params["host_name"]
+    host_name = HostName(params["host_name"])
     host: Host = Host.load_host(host_name)
-    new_name = params["body"]["new_name"]
+    new_name = HostName(params["body"]["new_name"])
 
-    try:
-        background_job = RenameHostBackgroundJob(host)
-        background_job.start(
-            lambda job_interface: rename_hosts_background_job(
-                [(host.folder(), host_name, new_name)], job_interface
-            ),
-            InitialStatusArgs(
-                title="Renaming of %s -> %s" % (host_name, new_name),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=background_job.get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    except BackgroundJobAlreadyRunning:
+    if is_locked_by_quick_setup(host.locked_by()):
         return problem(
-            status=409,
-            title="Conflict",
-            detail="A host rename process is already running",
+            status=400,
+            title=f'The host "{host_name}" is locked by Quick setup.',
+            detail="Locked hosts cannot be renamed.",
         )
 
-    response = Response(status=302)
+    background_job = RenameHostBackgroundJob(host)
+    result = background_job.start(
+        JobTarget(
+            callable=rename_hosts_job_entry_point,
+            args=RenameHostsJobArgs(renamings=[(host.folder().path(), host_name, new_name)]),
+        ),
+        InitialStatusArgs(
+            title=f"Renaming of {host_name} -> {new_name}",
+            lock_wato=True,
+            stoppable=False,
+            estimated_duration=background_job.get_status().duration,
+            user=str(user.id) if user.id else None,
+        ),
+    )
+    if result.is_error():
+        return problem(status=409, title="Conflict", detail=str(result.error))
+
+    response = Response(status=303)
     response.location = urlparse(
         constructors.link_endpoint(
             "cmk.gui.openapi.endpoints.host_config",
@@ -620,12 +771,11 @@ def rename_host(params: Mapping[str, Any]) -> Response:
 @Endpoint(
     constructors.domain_type_action_href("host_config", "wait-for-completion"),
     "cmk/wait-for-completion",
-    method="post",
+    method="get",
     status_descriptions={
         204: "The renaming job has been completed.",
         302: (
-            "The renaming job is still running. Redirecting to the "
-            "'Wait for completion' endpoint."
+            "The renaming job is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
         404: "There is no running renaming job",
     },
@@ -697,7 +847,10 @@ def move(params: Mapping[str, Any]) -> Response:
             title="Permission denied",
             detail=f"You lack the permissions to move host {host.name()} to {folder_slug(target_folder)}.",
         )
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -771,11 +924,14 @@ def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
     host: Host = Host.load_host(host_name)
-    return _serve_host(host, effective_attributes=params["effective_attributes"])
+    return _serve_host(
+        host,
+        _fields_filter_from_params(params, is_collection=False),
+    )
 
 
-def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
-    response = serve_json(serialize_host(host, effective_attributes))
+def _serve_host(host: Host, fields_filter: FieldsFilter) -> Response:
+    response = serve_json(serialize_host(host, fields_filter=fields_filter))
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
@@ -783,18 +939,28 @@ agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
 def serialize_host(
-    host: Host, effective_attributes: bool, include_links: bool = True
+    host: Host,
+    *,
+    fields_filter: FieldsFilter,
 ) -> DomainObject:
-    extensions = {
-        "folder": "/" + host.folder().path(),
-        "attributes": host.attributes,
-        "effective_attributes": host.effective_attributes() if effective_attributes else None,
-        "is_cluster": host.is_cluster(),
-        "is_offline": host.is_offline(),
-        "cluster_nodes": host.cluster_nodes(),
-    }
+    extensions = (
+        {
+            "folder": "/" + host.folder().path(),
+            "attributes": host.attributes,
+            "effective_attributes": (
+                host.effective_attributes()
+                if "extensions.effective_attributes" in fields_filter
+                else None
+            ),
+            "is_cluster": host.is_cluster(),
+            "is_offline": host.is_offline(),
+            "cluster_nodes": host.cluster_nodes(),
+        }
+        if "extensions" in fields_filter
+        else None
+    )
 
-    if include_links:
+    if "links" in fields_filter:
         links = [
             constructors.link_rel(
                 rel="cmk/folder_config",
@@ -812,7 +978,7 @@ def serialize_host(
         title=host.alias() or host.name(),
         links=links,
         extensions=extensions,
-        include_links=include_links,
+        include_links="links" in fields_filter,
     )
 
 

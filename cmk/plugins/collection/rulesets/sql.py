@@ -31,7 +31,7 @@ def _migrate_port_spec(x: object) -> tuple[Literal["explicit"], int] | tuple[Lit
 
 def _port_spec() -> form_specs.CascadingSingleChoice:
     return form_specs.CascadingSingleChoice(
-        title=Title("Database Port"),
+        title=Title("Database port"),
         help_text=Help("The port the DBMS listens to"),
         elements=(
             form_specs.CascadingSingleChoiceElement(
@@ -68,7 +68,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
         elements={
             "description": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Service Description"),
+                    title=Title("Service description"),
                     help_text=Help("The name of this active service to be displayed."),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     macro_support=True,
@@ -77,7 +77,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "dbms": form_specs.DictElement[str](
                 parameter_form=form_specs.SingleChoice(
-                    title=Title("Type of Database"),
+                    title=Title("Type of database"),
                     elements=[
                         form_specs.SingleChoiceElement("mysql", Title("MySQL")),
                         form_specs.SingleChoiceElement("postgres", Title("PostgreSQL")),
@@ -96,7 +96,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "name": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Database Name"),
+                    title=Title("Database name"),
                     help_text=Help("The name of the database on the DBMS"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     macro_support=True,
@@ -105,15 +105,16 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "user": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Database User"),
+                    title=Title("Database user"),
                     help_text=Help("The username used to connect to the database"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
+                    macro_support=True,
                 ),
                 required=True,
             ),
             "password": form_specs.DictElement(
                 parameter_form=form_specs.Password(
-                    title=Title("Database Password"),
+                    title=Title("Database password"),
                     help_text=Help("The password used to connect to the database"),
                     migrate=form_specs.migrate_to_password,
                 ),
@@ -133,6 +134,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     monospaced=True,
+                    macro_support=True,
                 ),
                 required=True,
             ),
@@ -156,7 +158,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                         ),
                         "input": form_specs.DictElement[str](
                             parameter_form=form_specs.String(
-                                title=Title("Input Parameters"),
+                                title=Title("Input parameters"),
                                 help_text=Help(
                                     "Input parameters, if required by the database procedure. "
                                     "If several parameters are required, use commas to separate them."
@@ -190,7 +192,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "perfdata": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Performance Data"),
+                    title=Title("Performance data"),
                     help_text=Help(
                         "Store output value into RRD database in a metric with this name."
                     ),
@@ -222,7 +224,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
 
 
 rule_spec_sql = rule_specs.ActiveCheck(
-    title=Title("Check SQL Database"),
+    title=Title("Check SQL database"),
     topic=rule_specs.Topic.DATABASES,
     name="sql",
     parameter_form=_form_active_checks_sql,

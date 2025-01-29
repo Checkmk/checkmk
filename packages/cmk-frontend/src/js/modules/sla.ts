@@ -4,40 +4,45 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {
+    add_class,
+    has_class,
+    querySelectorAllByClassName,
+    remove_class,
+} from "./utils";
 
 export function details_period_hover(
     td: HTMLTableCellElement,
     sla_period: string,
-    onoff: 0 | 1
+    onoff: 0 | 1,
 ) {
-    if (utils.has_class(td, "lock_hilite")) {
+    if (has_class(td, "lock_hilite")) {
         return;
     }
 
-    const sla_period_elements = utils.querySelectorAllByClassName(sla_period);
+    const sla_period_elements = querySelectorAllByClassName(sla_period);
     for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
-            utils.add_class(sla_period_elements[i], "sla_hilite");
+            add_class(sla_period_elements[i], "sla_hilite");
         } else {
-            utils.remove_class(sla_period_elements[i], "sla_hilite");
+            remove_class(sla_period_elements[i], "sla_hilite");
         }
     }
 }
 
 export function details_period_click(
     td: HTMLTableCellElement,
-    sla_period: string
+    sla_period: string,
 ) {
-    const sla_period_elements = utils.querySelectorAllByClassName(sla_period);
-    const onoff = utils.has_class(td, "lock_hilite");
+    const sla_period_elements = querySelectorAllByClassName(sla_period);
+    const onoff = has_class(td, "lock_hilite");
     for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
-            utils.remove_class(sla_period_elements[i], "sla_hilite");
-            utils.remove_class(sla_period_elements[i], "lock_hilite");
+            remove_class(sla_period_elements[i], "sla_hilite");
+            remove_class(sla_period_elements[i], "lock_hilite");
         } else {
-            utils.add_class(sla_period_elements[i], "sla_hilite");
-            utils.add_class(sla_period_elements[i], "lock_hilite");
+            add_class(sla_period_elements[i], "sla_hilite");
+            add_class(sla_period_elements[i], "lock_hilite");
         }
     }
 }
@@ -45,7 +50,7 @@ export function details_period_click(
 export function details_table_hover(
     tr: HTMLTableRowElement,
     row_id: string,
-    onoff: 1 | 0
+    onoff: 1 | 0,
 ) {
     const sla_period_elements = tr
         .closest("table")!
@@ -53,12 +58,12 @@ export function details_table_hover(
         .getElementsByClassName(row_id) as HTMLCollectionOf<HTMLElement>;
     for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
-            utils.add_class(sla_period_elements[i], "sla_hilite");
-            utils.add_class(sla_period_elements[i], "sla_error_hilite");
+            add_class(sla_period_elements[i], "sla_hilite");
+            add_class(sla_period_elements[i], "sla_error_hilite");
         } else {
-            utils.remove_class(sla_period_elements[i], "sla_error_hilite");
-            if (!utils.has_class(sla_period_elements[i], "lock_hilite")) {
-                utils.remove_class(sla_period_elements[i], "sla_hilite");
+            remove_class(sla_period_elements[i], "sla_error_hilite");
+            if (!has_class(sla_period_elements[i], "lock_hilite")) {
+                remove_class(sla_period_elements[i], "sla_hilite");
             }
         }
     }

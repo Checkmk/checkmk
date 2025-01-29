@@ -2,24 +2,53 @@
 
 unset LANG
 
-PIDFILE=$OMD_ROOT/tmp/run/mkeventd/pid
-STATUS_SOCKET=$OMD_ROOT/tmp/run/mkeventd/status
-DAEMON=$OMD_ROOT/bin/mkeventd
-STATEFILE=$OMD_ROOT/var/mkeventd/status
-THE_PID=$(cat $PIDFILE 2>/dev/null)
+PIDFILE="$OMD_ROOT/tmp/run/mkeventd/pid"
+STATUS_SOCKET="$OMD_ROOT/tmp/run/mkeventd/status"
+DAEMON="$OMD_ROOT/bin/mkeventd"
+THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 # OPTS="--debug"
 OPTS=""
 
-. $OMD_ROOT/etc/omd/site.conf
-if [ "$CONFIG_MKEVENTD" != on ] ; then
+process_is_running() {
+    [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null
+}
+
+await_process_stop() {
+    max=$(("${1}" * 10)) # tenths of a second
+    for N in $(seq "${max}"); do
+        process_is_running || return 0
+        [ $((N % 10)) -eq 0 ] && printf "."
+        sleep 0.1
+    done
+    return 1
+}
+
+force_kill() {
+    printf 'sending SIGKILL.'
+    kill -9 "${THE_PID}"
+}
+
+exit_successfully() {
+    printf "%s\n" "${1}"
+    exit 0
+}
+
+exit_failure() {
+    printf "%s\n" "${1}"
+    exit 1
+}
+
+# shellcheck disable=SC1090,SC1091
+. "$OMD_ROOT/etc/omd/site.conf"
+if [ "$CONFIG_MKEVENTD" != on ]; then
     exit 5
 fi
 
 case "$1" in
     start)
-        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] \
-           || [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ] \
-           || [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
+        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] ||
+            [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ] ||
+            [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
 
             ADD_TXT=
             if [ "$CONFIG_MKEVENTD_SYSLOG" = on ]; then
@@ -36,105 +65,102 @@ case "$1" in
             fi
 
             echo -n "Starting mkeventd (builtin: ${ADD_TXT%*,})..."
-            if kill -0 $THE_PID >/dev/null 2>&1; then
-              echo 'Already running.'
-              exit 0
+            if process_is_running; then
+                exit_successfully 'already running.'
             fi
 
-
-            ${DAEMON}_open514 $OPTS
+            # shellcheck disable=SC2086
+            "${DAEMON}_open514" $OPTS
         else
             echo -n 'Starting mkeventd...'
-            if kill -0 $THE_PID >/dev/null 2>&1; then
-              echo 'Already running.'
-              exit 0
+            if process_is_running; then
+                exit_successfully 'already running.'
             fi
-            $DAEMON $OPTS
+            # shellcheck disable=SC2086
+            "$DAEMON" $OPTS
         fi
         EXIT_CODE=$?
-        if [ $EXIT_CODE -ne 0 ]; then
-            echo Failed
-        else
-            echo OK
+        if [ $EXIT_CODE -eq 0 ]; then
+            exit_successfully 'OK'
         fi
+        printf "failed\n"
         exit $EXIT_CODE
-    ;;
+        ;;
+
     stop)
         echo -n 'Stopping mkeventd...'
-        if [ -z "$THE_PID" ] ; then
-            echo 'Not running.'
-        elif ! kill -0 "$THE_PID" >/dev/null 2>&1; then
-            echo "not running (PID file orphaned)"
-            rm "$PIDFILE"
-        else
-            echo -n "killing $THE_PID..."
-            if kill "$THE_PID" 2>/dev/null; then
-                # Only wait for pidfile removal when the signal could be sent
-                N=0
-                while [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null ; do
-                    sleep 0.1
-                    N=$((N + 1))
-                    if [ $((N % 10)) -eq 0 ]; then echo -n . ; fi
-                    if [ $N -gt 600 ] ; then
-                        echo -n "sending SIGKILL..."
-                        kill -9 "$THE_PID"
-                    elif [ $N = 700 ]; then
-                        echo "Failed"
-                        exit 1
-                    fi
-                done
-            else
-                # Remove the stale pidfile to have a clean state after this
-                rm "$PIDFILE"
-            fi
-            echo 'OK'
+        if [ -z "$THE_PID" ]; then
+            exit_successfully 'not running.'
         fi
-    ;;
+
+        if ! process_is_running; then
+            rm "$PIDFILE"
+            exit_successfully 'not running (PID file orphaned)'
+        fi
+
+        echo -n "killing $THE_PID..."
+
+        if ! kill "$THE_PID" 2>/dev/null; then
+            rm "$PIDFILE"
+            exit_successfully 'OK'
+        fi
+
+        # Signal could be sent
+
+        # Patiently wait for the process to stop
+        if await_process_stop 60; then
+            exit_successfully 'OK'
+        fi
+
+        # Insist on killing the process
+        force_kill
+        if await_process_stop 10; then
+            exit_successfully 'OK'
+        fi
+        exit_failure 'failed'
+        ;;
+
     restart)
         $0 stop && sleep 1 && $0 start
-    ;;
+        ;;
+
     reload)
         echo -n 'Reloading mkeventd...'
-        if [ -z "$THE_PID" ] ; then
-            echo 'Not running.'
-            exit 1
-        else
-            echo "killing $THE_PID with SIGHUP..."
-            kill -1 $THE_PID
+        if [ -z "$THE_PID" ]; then
+            exit_failure 'not running.'
         fi
-    ;;
+
+        echo "killing $THE_PID with SIGHUP..."
+        kill -1 "$THE_PID"
+        ;;
+
     status)
         echo -n 'Checking status of mkeventd...'
-        if [ -z "$THE_PID" ] ; then
-            echo "not running (PID file missing)"
-            exit 1
-        elif ! kill -0 "$THE_PID" ; then
-            echo "not running (PID file orphaned)"
-            exit 1
-        else
-            echo "running"
-            exit 0
+        if [ -z "$THE_PID" ]; then
+            exit_failure 'not running (PID file missing)'
         fi
-    ;;
+
+        if ! process_is_running; then
+            exit_failure 'not running (PID file orphaned)'
+        fi
+        exit_successfully 'running'
+        ;;
+
     flush)
-        if [ -n "$THE_PID" ] && kill -0 "$THE_PID" ; then
+        if process_is_running; then
             echo -n "Flushing current state and history..."
-            result=$(echo "COMMAND FLUSH" | unixcat $STATUS_SOCKET)
-            if [ "$result" = "None" ] ; then
-                echo OK
-                exit 0
-            else
-                echo "ERROR: $result"
-                exit 1
+            result=$(echo "COMMAND FLUSH" | unixcat "$STATUS_SOCKET")
+            if [ "$result" = "None" ]; then
+                exit_successfully 'OK'
             fi
-        else
-            echo -n "Deleting status and history files..."
-            rm -f $OMD_ROOT/var/mkeventd/{status,master_config,slave_status,history/*}
-            echo OK
-            exit 0
+            exit_failure "failed: $result"
         fi
-    ;;
+        echo -n "Deleting status and history files..."
+        rm -f "$OMD_ROOT"/var/mkeventd/{status,master_config,slave_status,history/*}
+        exit_successfully 'OK'
+        ;;
+
     *)
-        echo "Usage: $0 {start|stop|restart|reload|status|flush}"
-    ;;
+        exit_successfully "Usage: $0 {start|stop|restart|reload|status|flush}"
+        ;;
 esac

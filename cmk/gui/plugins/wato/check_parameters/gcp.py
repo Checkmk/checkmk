@@ -16,7 +16,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Percentage, TextInput, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
-# the check plugin. Please do not change them.
+# the check plug-in. Please do not change them.
 
 
 def _vs_disk_elements() -> Sequence[tuple[str, ValueSpec]]:
@@ -92,33 +92,5 @@ rulespec_registry.register(
         parameter_valuespec=_vs_latency_disk,
         title=lambda: _("GCP/Filestore"),
         item_spec=_item_spec_filestore,
-    )
-)
-
-
-def _vs_cost() -> Dictionary:
-    return Dictionary(
-        title=_("Levels monthly GCP costs"),
-        elements=[
-            (
-                "levels",
-                Levels(title=_("Amount in billed currency")),
-            ),
-        ],
-    )
-
-
-def _item_spec_cost() -> ValueSpec:
-    return TextInput(title=_("Project"))
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_cost",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_cost,
-        title=lambda: _("GCP Cost"),
-        item_spec=_item_spec_cost,
     )
 )

@@ -33,61 +33,65 @@ CONFIG_FILE="###ROOT###/etc/stunnel/server.conf"
 PIDFILE="###ROOT###/tmp/run/stunnel-server.pid"
 
 case "$1" in
-start)
-    echo -n 'Starting stunnel...'
-    if [ -e "$PIDFILE" ]; then
-        PID=$(cat $PIDFILE)
-        if [ -n "$PID" ] && ps $PID >/dev/null 2>&1; then
-            echo "Already running."
-            exit 0
+    start)
+        echo -n 'Starting stunnel...'
+        if [ -e "$PIDFILE" ]; then
+            PID=$(cat $PIDFILE)
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
+                echo "Already running."
+                exit 0
+            fi
+            echo "removing stale pid file..."
+            rm -f $PIDFILE
         fi
-        echo "removing stale pid file..."
-        rm -f $PIDFILE
-    fi
 
-    $DAEMON $CONFIG_FILE && echo OK || echo Error
-    ;;
-stop)
-    echo -n 'Stopping stunnel...'
-    PID=$(cat $PIDFILE 2>/dev/null)
-    if [ -z "$PID" ]; then
-        echo "not running."
-    elif kill "$PID"; then
-        echo -n 'waiting for termination..'
-        N=0
-        while [ -d /proc/$PID ]; do
-            sleep 0.05
-            if [ $((N % 20)) -eq 0 ]; then
-                echo -n .
-            fi
-            N=$((N + 1))
-            if [ $N -ge 400 ]; then
-                echo "still running after 20 secs!"
-                exit 1
-            fi
-        done
-        echo "OK"
-    else
-        echo "Failed"
-    fi
-    ;;
-restart | reload)
-    $0 stop
-    $0 start
-    ;;
-status)
-    echo -n 'Checking status of stunnel...'
-    if [ -e "$PIDFILE" ]; then
-        PID=$(cat $PIDFILE)
-        if [ -n "$PID" ] && ps $PID >/dev/null 2>&1; then
-            echo "running"
-            exit 0
+        $DAEMON $CONFIG_FILE && echo OK || echo Error
+        ;;
+
+    stop)
+        echo -n 'Stopping stunnel...'
+        PID=$(cat $PIDFILE 2>/dev/null)
+        if [ -z "$PID" ]; then
+            echo "not running."
+        elif kill "$PID"; then
+            echo -n 'waiting for termination..'
+            N=0
+            while [ -d "/proc/$PID" ]; do
+                sleep 0.05
+                if [ $((N % 20)) -eq 0 ]; then
+                    echo -n .
+                fi
+                N=$((N + 1))
+                if [ $N -ge 400 ]; then
+                    echo "still running after 20 secs!"
+                    exit 1
+                fi
+            done
+            echo "OK"
+        else
+            echo "failed"
         fi
-    fi
-    echo "stopped"
-    exit 1
-    ;;
-*)
-    echo "Usage: $0 {start|stop|restart|reload|status}"
-    ;;
+        ;;
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+
+    status)
+        echo -n 'Checking status of stunnel...'
+        if [ -e "$PIDFILE" ]; then
+            PID=$(cat $PIDFILE)
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
+                echo "running"
+                exit 0
+            fi
+        fi
+        echo "stopped"
+        exit 1
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        ;;
+
 esac

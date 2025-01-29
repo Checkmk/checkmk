@@ -91,7 +91,7 @@ def get_azure_issues(
 
 
 def write_section(args: Args) -> int:
-    response = requests.get("https://status.azure.com/en-us/status/feed/")  # nosec B113
+    response = requests.get("https://status.azure.com/en-us/status/feed/")  # nosec B113 # BNS:0b0eac
     feed = feedparser.parse(response.text)
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]

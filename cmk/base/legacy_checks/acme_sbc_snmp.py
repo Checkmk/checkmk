@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.acme import DETECT_ACME
+from cmk.plugins.acme.agent_based.lib import DETECT_ACME
+
+check_info = {}
 
 # comNET GmbH, Fabian Binder
 
@@ -62,6 +62,7 @@ def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
+    name="acme_sbc_snmp",
     parse_function=parse_acme_sbc_snmp,
     detect=DETECT_ACME,
     fetch=SNMPTree(

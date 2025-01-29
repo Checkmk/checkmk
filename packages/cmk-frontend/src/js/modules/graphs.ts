@@ -4,18 +4,28 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as hover from "./hover";
-import * as reload_pause from "./reload_pause";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {add, hide, update_content} from "./hover";
+import {pause} from "./reload_pause";
+import {
+    add_class,
+    add_event_handler,
+    content_scrollbar,
+    current_script,
+    execute_javascript_by_object,
+    has_class,
+    is_in_viewport,
+    makeuri,
+    prevent_default_events,
+    wheel_event_delta,
+    wheel_event_name,
+} from "./utils";
 
 //types from cmk/utils/type_defs/_misc.py:81
 type Timestamp = number;
 type Seconds = number;
 type TimeRange = [number, number];
 export type TimeSeriesValue = number | null;
-type LazyString = string; // not sure how teal with this for the moment
-export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
 interface GraphTitleFormat {
@@ -116,13 +126,31 @@ interface VerticalAxisLabel {
 
 interface VerticalAxis {
     range: [number, number];
-    real_range: [number, number];
     axis_label: string | null;
     labels: VerticalAxisLabel[];
     max_label_length: null;
     //dynamic
     pixels_per_unit: number;
     pixels_per_second: number;
+}
+
+interface FixedVerticalRange {
+    type: "fixed";
+    min: number | null;
+    max: number | null;
+}
+
+interface MinimalVerticalRange {
+    type: "minimal";
+    min: number | null;
+    max: number | null;
+}
+
+export interface HorizontalRule {
+    value: number;
+    rendered_value: string;
+    color: string;
+    title: string;
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
@@ -149,7 +177,7 @@ export interface GraphArtwork {
     start_time: Timestamp;
     end_time: Timestamp;
     step: Seconds;
-    explicit_vertical_range: [number | null, number | null];
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | null;
     requested_vrange: [number, number] | null;
     requested_start_time: Timestamp;
     requested_end_time: Timestamp;
@@ -206,11 +234,11 @@ function get_id_of_graph(ajax_context: AjaxContext) {
         if (
             JSON.stringify(ajax_context.definition.specification) ==
                 JSON.stringify(
-                    g_graphs[graph_id].ajax_context!.definition.specification
+                    g_graphs[graph_id].ajax_context!.definition.specification,
                 ) &&
             JSON.stringify(ajax_context.render_config) ==
                 JSON.stringify(
-                    g_graphs[graph_id].ajax_context!.render_config
+                    g_graphs[graph_id].ajax_context!.render_config,
                 ) &&
             ajax_context.display_id ==
                 g_graphs[graph_id].ajax_context!.display_id
@@ -227,7 +255,7 @@ export function create_graph(
     html_code: string,
     graph_artwork: GraphArtwork,
     graph_render_config: GraphRenderConfig,
-    ajax_context: AjaxContext
+    ajax_context: AjaxContext,
 ) {
     // Detect whether or not a new graph_id has to be calculated. During the view
     // data reload create_graph() is called again for all already existing graphs.
@@ -238,6 +266,7 @@ export function create_graph(
     // create container div that contains the graph.
     const container_div = document.createElement("div");
     container_div.setAttribute("id", graph_id);
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container_div.innerHTML = html_code;
     if (graph_render_config.show_time_range_previews)
         container_div.className = "graph_container timeranges";
@@ -249,7 +278,7 @@ export function create_graph(
     // @ts-ignore
     embedded_script.parentNode.insertBefore(
         container_div,
-        embedded_script.nextSibling
+        embedded_script.nextSibling,
     );
 
     // Now register and paint the graph
@@ -266,7 +295,7 @@ export function create_graph(
 // determine DOM node of the <javascript> that called us. It's
 // parent will get the graph node attached.
 function get_current_script(): HTMLScriptElement {
-    const embedded_script = utils.current_script;
+    const embedded_script = current_script;
     if (embedded_script) return embedded_script;
 
     //TODO: delete following statement since we don't support IE anymore
@@ -295,14 +324,14 @@ export function load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    graph_display_id: string
+    graph_display_id: string,
 ) {
     const script_object = get_current_script();
 
     // In case the graph load container (-> is at future graph location) is not
     // visible to the user delay processing of this function
     const graph_load_container = script_object.previousSibling;
-    if (!utils.is_in_viewport(graph_load_container as HTMLElement)) {
+    if (!is_in_viewport(graph_load_container as HTMLElement)) {
         g_delayed_graphs.push({
             graph_load_container: graph_load_container,
             graph_recipe: graph_recipe,
@@ -318,7 +347,7 @@ export function load_graph_content(
             graph_data_range,
             graph_render_config,
             script_object,
-            graph_display_id
+            graph_display_id,
         );
     }
 }
@@ -329,15 +358,13 @@ export function register_delayed_graph_listener() {
 
     // Start of delayed graph renderer listening
     // @ts-ignore
-    utils
-        // @ts-ignore
-        //TODO replace content scrollbar with two functions
-        //create_content_scrollbar if no parameter is given
-        //get_content_scrollbar if it is given
-        .content_scrollbar()!
+    // TODO replace content scrollbar with two functions
+    // create_content_scrollbar if no parameter is given
+    // get_content_scrollbar if it is given
+    content_scrollbar()!
         .getScrollElement()
         .addEventListener("scroll", delayed_graph_renderer);
-    utils.add_event_handler("resize", delayed_graph_renderer);
+    add_event_handler("resize", delayed_graph_renderer);
 }
 
 function do_load_graph_content(
@@ -345,13 +372,13 @@ function do_load_graph_content(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
     script_object: HTMLScriptElement,
-    graph_display_id: string
+    graph_display_id: string,
 ) {
     const graph_load_container = script_object.previousSibling as HTMLElement;
     update_graph_load_container(
         graph_load_container,
         "Loading graph...",
-        '<img class="loading" src="themes/facelift/images/load_graph.png">'
+        '<img class="loading" src="themes/facelift/images/load_graph.png">',
     );
 
     const post_data =
@@ -362,10 +389,10 @@ function do_load_graph_content(
                 graph_data_range: graph_data_range,
                 graph_render_config: graph_render_config,
                 graph_display_id: graph_display_id,
-            })
+            }),
         );
 
-    ajax.call_ajax("ajax_render_graph_content.py", {
+    call_ajax("ajax_render_graph_content.py", {
         method: "POST",
         post_data: post_data,
         response_handler: handle_load_graph_content,
@@ -376,7 +403,7 @@ function do_load_graph_content(
 
 function handle_load_graph_content(
     script_object: HTMLOrSVGScriptElement,
-    ajax_response: string
+    ajax_response: string,
 ) {
     const response = JSON.parse(ajax_response);
 
@@ -384,7 +411,7 @@ function handle_load_graph_content(
         handle_load_graph_content_error(
             script_object,
             response.result_code,
-            response.result
+            response.result,
         );
         return;
     }
@@ -393,20 +420,21 @@ function handle_load_graph_content(
     // Then get the just loaded graph objects from the temporary div and
     // add replace the placeholder with it.
     const tmp_div = document.createElement("div");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     tmp_div.innerHTML = response.result;
 
     script_object.parentNode!.replaceChild(
         tmp_div,
-        script_object.previousSibling!
+        script_object.previousSibling!,
     );
     script_object.parentNode!.removeChild(script_object);
-    utils.execute_javascript_by_object(tmp_div);
+    execute_javascript_by_object(tmp_div);
 }
 
 function handle_load_graph_content_error(
     script_object: HTMLOrSVGScriptElement,
     status_code: number,
-    error_msg: string
+    error_msg: string,
 ) {
     const msg =
         "Loading graph failed: (Status: " +
@@ -418,17 +446,19 @@ function handle_load_graph_content_error(
     update_graph_load_container(
         graph_load_container,
         "ERROR",
-        "<pre>" + msg + "</pre>"
+        "<pre>" + msg + "</pre>",
     );
 }
 
 function update_graph_load_container(
     container: HTMLElement,
     title: string,
-    content_html: string
+    content_html: string,
 ) {
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     (<HTMLElement>container.getElementsByClassName("title")[0]).innerText =
         title;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.getElementsByClassName("content")[0].innerHTML = content_html;
 }
 
@@ -441,13 +471,13 @@ function delayed_graph_renderer() {
     let i = num_delayed;
     while (i--) {
         const entry = g_delayed_graphs[i];
-        if (utils.is_in_viewport(entry.graph_load_container as HTMLElement)) {
+        if (is_in_viewport(entry.graph_load_container as HTMLElement)) {
             do_load_graph_content(
                 entry.graph_recipe,
                 entry.graph_data_range,
                 entry.graph_render_config,
                 entry.script_object,
-                entry.graph_display_id
+                entry.graph_display_id,
             );
             g_delayed_graphs.splice(i, 1);
         }
@@ -547,15 +577,14 @@ function render_graph(graph: GraphArtwork) {
     // Now transform the whole coordinate system to our real t and v coords
     // so if we paint something at (0, 0) it will correctly represent a
     // value of 0 and a time point of time_start.
-    const trans_t = function (t: number) {
-        return (t - t_range_from) * t_pixels_per_second + t_orig;
-    };
-    const trans_v = function (v: number) {
-        return v_orig - (v - v_axis_orig) * v_pixels_per_unit;
-    };
-    const trans = function (t: number, v: number): [number, number] {
-        return [trans_t(t), trans_v(v)];
-    };
+    const coordinate_trans = new GraphCoordinateTransformation(
+        t_orig,
+        t_range_from,
+        t_pixels_per_second,
+        v_orig,
+        v_axis_orig,
+        v_pixels_per_unit,
+    );
 
     // render grid
     if (!graph.render_config.preview) {
@@ -570,9 +599,15 @@ function render_graph(graph: GraphArtwork) {
             vertical_axis_label = vertical_axis_labels[i];
             if (vertical_axis_label.line_width > 0) {
                 paint_line(
-                    trans(t_range_from, vertical_axis_label.position),
-                    trans(t_range_to, vertical_axis_label.position),
-                    v_line_color[vertical_axis_label.line_width]
+                    coordinate_trans.trans(
+                        t_range_from,
+                        vertical_axis_label.position,
+                    ),
+                    coordinate_trans.trans(
+                        t_range_to,
+                        vertical_axis_label.position,
+                    ),
+                    v_line_color[vertical_axis_label.line_width],
                 );
             }
 
@@ -580,7 +615,10 @@ function render_graph(graph: GraphArtwork) {
                 ctx.fillText(
                     vertical_axis_label.text,
                     t_orig - v_label_margin,
-                    trans(t_range_from, vertical_axis_label.position)[1]
+                    coordinate_trans.trans(
+                        t_range_from,
+                        vertical_axis_label.position,
+                    )[1],
                 );
         }
         ctx.restore();
@@ -594,21 +632,37 @@ function render_graph(graph: GraphArtwork) {
             time_axis_label = time_axis_labels[i];
             if (time_axis_label.line_width > 0) {
                 paint_line(
-                    trans(time_axis_label.position, v_range_from),
-                    trans(time_axis_label.position, v_range_to),
-                    v_line_color[time_axis_label.line_width]
+                    coordinate_trans.trans(
+                        time_axis_label.position,
+                        v_range_from,
+                    ),
+                    coordinate_trans.trans(
+                        time_axis_label.position,
+                        v_range_to,
+                    ),
+                    v_line_color[time_axis_label.line_width],
                 );
             }
         }
         ctx.restore();
     }
 
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.rect(
+        coordinate_trans.trans_t(t_range_from),
+        coordinate_trans.trans_v(v_range_to),
+        t_range * t_pixels_per_second,
+        v_range * v_pixels_per_unit,
+    );
+    ctx.clip();
+
     // Paint curves
     const curves = graph["curves"];
     const step = graph["step"] / 2.0;
-    let i, j, color, opacity;
+    let color, opacity;
     for (let i = 0; i < curves.length; i++) {
-        let t = graph["start_time"];
         const curve = curves[i];
         const points = curve["points"];
         // the hex color code can have additional opacity information
@@ -622,68 +676,49 @@ function render_graph(graph: GraphArtwork) {
         }
 
         if (curve["type"] == "area") {
-            let prev_lower: TimeSeriesValue = null;
-            let prev_upper: TimeSeriesValue = null;
-            ctx.save();
+            const corner_markers = points as [
+                TimeSeriesValue,
+                TimeSeriesValue,
+            ][];
+
             ctx.fillStyle = hex_to_rgba(color + opacity);
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
-
-            for (j = 0; j < points.length; j++) {
-                const point = points[j] as [TimeSeriesValue, TimeSeriesValue];
-                const lower = point[0];
-                const upper = point[1];
-                if (
-                    lower != null &&
-                    upper != null &&
-                    prev_lower != null &&
-                    prev_upper != null
-                ) {
-                    ctx.beginPath();
-                    ctx.moveTo(trans_t(t - step), trans_v(prev_lower));
-                    ctx.lineTo(trans_t(t - step), trans_v(prev_upper));
-                    ctx.lineTo(trans_t(t), trans_v(upper));
-                    ctx.lineTo(trans_t(t), trans_v(lower));
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.beginPath();
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = curve_line_width;
-                    const mirrored = upper <= 0;
-                    ctx.moveTo(
-                        trans_t(t - step),
-                        trans_v(mirrored ? prev_lower : prev_upper)
-                    );
-                    ctx.lineTo(trans_t(t), trans_v(mirrored ? lower : upper));
-                    ctx.stroke();
-                }
-                prev_lower = lower;
-                prev_upper = upper;
-                t += step;
-            }
-            ctx.restore();
-        } else {
-            // "line"
-            ctx.save();
-            ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
-            let last_value: TimeSeriesValue = null;
-            for (j = 0; j < points.length; j++) {
-                const value = points[j] as TimeSeriesValue;
-                if (value != null) {
-                    const p = trans(t, value);
-                    if (last_value != null) ctx.lineTo(p[0], p[1]);
-                    else ctx.moveTo(p[0], p[1]);
-                }
-                last_value = value;
-                t += step;
-            }
-            ctx.stroke();
-            ctx.closePath();
-            ctx.restore();
+            render_curve(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                corner_markers.map(([lower, upper]) => {
+                    if (lower == null || upper == null) {
+                        return null;
+                    } else {
+                        return upper <= 0 ? lower : upper;
+                    }
+                }),
+                ctx,
+            );
+            render_area(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                corner_markers,
+                ctx,
+            );
+        } else {
+            // "line"
+            ctx.strokeStyle = color;
+            ctx.lineWidth = curve_line_width;
+            render_curve(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                points as TimeSeriesValue[],
+                ctx,
+            );
         }
     }
+    ctx.restore();
 
     if (!graph.render_config.preview && graph.render_config.show_time_axis) {
         // Paint time axis labels
@@ -697,8 +732,8 @@ function render_graph(graph: GraphArtwork) {
                 // @ts-ignore
                 ctx.fillText(
                     time_axis_label.text,
-                    trans(time_axis_label.position, 0)[0],
-                    v_orig + t_label_margin
+                    coordinate_trans.trans(time_axis_label.position, 0)[0],
+                    v_orig + t_label_margin,
                 );
             }
         });
@@ -708,16 +743,15 @@ function render_graph(graph: GraphArtwork) {
     // Paint horizontal rules like warn and crit
     ctx.save();
     ctx.lineWidth = rule_line_width;
-    let position;
-    const rules = graph["horizontal_rules"];
-    for (i = 0; i < rules.length; i++) {
-        position = rules[i][0];
-        color = rules[i][2];
-        if (position >= v_range_from && position <= v_range_to) {
+    for (const horizontal_rule of graph.horizontal_rules) {
+        if (
+            horizontal_rule.value >= v_range_from &&
+            horizontal_rule.value <= v_range_to
+        ) {
             paint_line(
-                trans(t_range_from, position),
-                trans(t_range_to, position),
-                color
+                coordinate_trans.trans(t_range_from, horizontal_rule.value),
+                coordinate_trans.trans(t_range_to, horizontal_rule.value),
+                horizontal_rule.color,
             );
         }
     }
@@ -725,30 +759,163 @@ function render_graph(graph: GraphArtwork) {
 
     // paint the optional pin
     if (graph.render_config.show_pin && graph.pin_time != null) {
-        const pin_x = trans_t(graph.pin_time);
+        const pin_x = coordinate_trans.trans_t(graph.pin_time);
         if (pin_x >= t_orig) {
             paint_line(
                 [pin_x, v_orig + axis_over_width],
                 [pin_x, 0],
-                graph.render_config.foreground_color
+                graph.render_config.foreground_color,
             );
             paint_dot([pin_x, 0], graph.render_config.foreground_color);
         }
     }
     // paint forecast graph future start
     if (graph.mark_requested_end_time) {
-        const pin_x = trans_t(graph.requested_end_time);
+        const pin_x = coordinate_trans.trans_t(graph.requested_end_time);
         if (pin_x >= t_orig) {
             paint_line(
                 [pin_x, v_orig + axis_over_width],
                 [pin_x, 0],
-                "#00ff00"
+                "#00ff00",
             );
         }
     }
 
     // Enable interactive mouse control of graph
     graph_activate_mouse_control(graph);
+}
+
+// Transforms the graph coordinate system to our real t and v coordinates.
+// (0, 0) is at the top left corner of the canvas.
+class GraphCoordinateTransformation {
+    t_orig: number;
+    t_range_from: number;
+    t_pixels_per_second: number;
+    v_orig: number;
+    v_axis_orig: number;
+    v_pixels_per_unit: number;
+
+    constructor(
+        t_orig: number,
+        t_range_from: number,
+        t_pixels_per_second: number,
+        v_orig: number,
+        v_axis_orig: number,
+        v_pixels_per_unit: number,
+    ) {
+        this.t_orig = t_orig;
+        this.t_range_from = t_range_from;
+        this.t_pixels_per_second = t_pixels_per_second;
+        this.v_orig = v_orig;
+        this.v_axis_orig = v_axis_orig;
+        this.v_pixels_per_unit = v_pixels_per_unit;
+    }
+
+    trans_t(t: number): number {
+        return (t - this.t_range_from) * this.t_pixels_per_second + this.t_orig;
+    }
+
+    trans_v(v: number): number {
+        return this.v_orig - (v - this.v_axis_orig) * this.v_pixels_per_unit;
+    }
+
+    trans(t: number, v: number): [number, number] {
+        return [this.trans_t(t), this.trans_v(v)];
+    }
+}
+
+function render_curve(
+    start_time: number,
+    time_step_size: number,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    v_points: TimeSeriesValue[],
+    ctx: CanvasRenderingContext2D,
+) {
+    let t = start_time;
+    let should_connect_to_previous_point = false;
+
+    ctx.beginPath();
+
+    for (const v_value of v_points) {
+        if (v_value == null) {
+            should_connect_to_previous_point = false;
+            t += time_step_size;
+            continue;
+        }
+
+        const p = coordinate_tranformation.trans(t, v_value);
+        if (should_connect_to_previous_point) {
+            ctx.lineTo(p[0], p[1]);
+        } else {
+            ctx.moveTo(p[0], p[1]);
+        }
+        should_connect_to_previous_point = true;
+        t += time_step_size;
+    }
+
+    ctx.stroke();
+    ctx.closePath();
+}
+
+function render_area(
+    start_time: number,
+    time_step_size: number,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    corner_markers: [TimeSeriesValue, TimeSeriesValue][],
+    ctx: CanvasRenderingContext2D,
+) {
+    let t = start_time;
+    let prev_lower: TimeSeriesValue = null;
+    let prev_upper: TimeSeriesValue = null;
+
+    for (const [lower, upper] of corner_markers) {
+        if (
+            lower == null ||
+            upper == null ||
+            prev_lower == null ||
+            prev_upper == null
+        ) {
+            prev_lower = lower;
+            prev_upper = upper;
+            t += time_step_size;
+            continue;
+        }
+
+        render_filled_polygon(
+            ctx,
+            coordinate_tranformation,
+            [t - time_step_size, prev_lower],
+            [t - time_step_size, prev_upper],
+            [t, upper],
+            [t, lower],
+        );
+
+        prev_lower = lower;
+        prev_upper = upper;
+        t += time_step_size;
+    }
+}
+
+function render_filled_polygon(
+    ctx: CanvasRenderingContext2D,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    ...corner_coordinates: [number, number][]
+) {
+    if (!corner_coordinates.length) return;
+
+    ctx.beginPath();
+    ctx.moveTo(
+        coordinate_tranformation.trans_t(corner_coordinates[0][0]),
+        coordinate_tranformation.trans_v(corner_coordinates[0][1]),
+    );
+    for (const corner_coord of corner_coordinates.slice(1)) {
+        ctx.lineTo(
+            coordinate_tranformation.trans_t(corner_coord[0]),
+            coordinate_tranformation.trans_v(corner_coord[1]),
+        );
+    }
+    ctx.closePath();
+    ctx.fill();
 }
 
 function hex_to_rgba(color: string) {
@@ -772,7 +939,7 @@ function graph_vertical_axis_width(graph: GraphArtwork) {
         graph.render_config.vertical_axis_width[0] == "explicit"
     ) {
         return from_display_coord(
-            pt_to_px(graph.render_config.vertical_axis_width[1])
+            pt_to_px(graph.render_config.vertical_axis_width[1]),
         );
     }
 
@@ -781,13 +948,13 @@ function graph_vertical_axis_width(graph: GraphArtwork) {
 
 function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
     const graph_div = container.getElementsByClassName(
-        "graph"
+        "graph",
     )[0] as HTMLElement;
     if (!graph_div) return;
     graph_div.style.color = graph.render_config.foreground_color;
 
     const inverted_fg_color = render_color(
-        invert_color(parse_color(graph.render_config.foreground_color))
+        invert_color(parse_color(graph.render_config.foreground_color)),
     );
 
     const style = document.createElement("style");
@@ -797,7 +964,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             attrs: {
                 color: render_color_rgba(
                     parse_color(graph.render_config.foreground_color),
-                    0.8
+                    0.8,
                 ),
             },
         },
@@ -806,7 +973,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             attrs: {
                 color: render_color_rgba(
                     parse_color(graph.render_config.foreground_color),
-                    0.8
+                    0.8,
                 ),
             },
         },
@@ -816,7 +983,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             attrs: {
                 color: render_color_rgba(
                     parse_color(graph.render_config.foreground_color),
-                    0.6
+                    0.6,
                 ),
             },
         },
@@ -889,6 +1056,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
         css_text += "}\n";
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     style.innerHTML = css_text;
     graph_div.appendChild(style);
 }
@@ -933,7 +1101,7 @@ function paint_rect(
     p: [number, number],
     width: number,
     height: number,
-    color: string
+    color: string,
 ) {
     if (!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
@@ -1039,21 +1207,21 @@ let g_graph_wheel_timeout: null | number = null;
 // so we only need one and the rest should be deleted
 function get_graph_container(obj: HTMLElement) {
     let newObj: null | HTMLElement = obj;
-    while (newObj && !utils.has_class(newObj, "graph_container"))
+    while (newObj && !has_class(newObj, "graph_container"))
         newObj = newObj.parentNode as HTMLElement | null;
     return newObj;
 }
 
 function get_main_graph_container(obj: HTMLElement) {
     let res: HTMLElement | null = obj;
-    while (res && !utils.has_class(res, "graph_with_timeranges"))
+    while (res && !has_class(res, "graph_with_timeranges"))
         res = res.parentNode as HTMLElement | null;
     return res!.childNodes[1] as HTMLElement;
 }
 
 function get_graph_graph_node(obj: HTMLElement) {
     let res: HTMLElement | null = obj;
-    while (res && !utils.has_class(res, "graph"))
+    while (res && !has_class(res, "graph"))
         res = res.parentNode as HTMLElement | null;
     return res;
 }
@@ -1077,35 +1245,35 @@ function graph_global_mouse_wheel(event: Event): boolean | void {
         obj.tagName == "DIV" &&
         obj.className == "graph_container"
     )
-        return utils.prevent_default_events(event!);
+        return prevent_default_events(event!);
 }
 
 function graph_activate_mouse_control(graph: GraphArtwork) {
     const canvas = graph["canvas_obj"];
-    utils.add_event_handler(
+    add_event_handler(
         "mousemove",
         function (event) {
             return graph_mouse_move(event as MouseEvent, graph);
         },
-        canvas
+        canvas,
     );
 
-    utils.add_event_handler(
+    add_event_handler(
         "mousedown",
         function (event) {
             return graph_mouse_down(event, graph);
         },
-        canvas
+        canvas,
     );
 
     const on_wheel = function (event: Event) {
         return graph_mouse_wheel(event, graph);
     };
 
-    utils.add_event_handler(utils.wheel_event_name(), on_wheel, canvas);
-    utils.add_event_handler(utils.wheel_event_name(), graph_global_mouse_wheel);
+    add_event_handler(wheel_event_name(), on_wheel, canvas);
+    add_event_handler(wheel_event_name(), graph_global_mouse_wheel);
 
-    utils.add_event_handler("mouseup", global_graph_mouse_up);
+    add_event_handler("mouseup", global_graph_mouse_up);
 
     if (
         graph.ajax_context!.render_config.show_controls &&
@@ -1114,19 +1282,19 @@ function graph_activate_mouse_control(graph: GraphArtwork) {
         // Find resize img element
         const container = get_graph_container(canvas);
         const resize_img = container!.getElementsByClassName("resize")[0];
-        utils.add_event_handler(
+        add_event_handler(
             "mousedown",
             function (event) {
                 return graph_start_resize(event as MouseEvent, graph);
             },
-            resize_img
+            resize_img,
         );
 
-        utils.add_event_handler("mousemove", graph_mouse_resize);
+        add_event_handler("mousemove", graph_mouse_resize);
     }
 
     if (graph.ajax_context!.render_config.interaction) {
-        utils.add_event_handler("mousemove", update_mouse_hovering);
+        add_event_handler("mousemove", update_mouse_hovering);
     }
 }
 
@@ -1135,14 +1303,14 @@ function graph_start_resize(event: MouseEvent, graph: GraphArtwork) {
         pos: [event.clientX, event.clientY],
         graph: graph,
     };
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function graph_mouse_resize(event: Event) {
     if (!g_resizing_graph) return true;
 
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
 
     const mouseEvent = event as MouseEvent;
     const new_x = mouseEvent.clientX;
@@ -1161,7 +1329,7 @@ function graph_mouse_resize(event: Event) {
         delta_y;
 
     start_graph_update(graph["canvas_obj"], post_data);
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 // Get the mouse position of an event in coords of the
@@ -1169,7 +1337,7 @@ function graph_mouse_resize(event: Event) {
 // lie outside.
 function graph_get_mouse_position(
     event: MouseEvent,
-    graph: GraphArtwork
+    graph: GraphArtwork,
 ): null | [number, number] {
     const time = graph_get_click_time(event, graph);
     if (
@@ -1199,12 +1367,12 @@ function graph_mouse_down(event: Event, graph: GraphArtwork) {
     };
     g_graph_update_in_process = false;
 
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function has_mouse_moved(
     pos1: [number, number],
-    pos2: [number, number] | null
+    pos2: [number, number] | null,
 ) {
     if (pos2 === null) {
         return true; // assume mouse was moved when pos2 is outside of graph
@@ -1234,8 +1402,8 @@ function global_graph_mouse_up(event: Event) {
         const target = event!.target as HTMLElement;
         if (
             target.tagName == "TH" &&
-            utils.has_class(target, "scalar") &&
-            utils.has_class(target, "inactive")
+            has_class(target, "scalar") &&
+            has_class(target, "inactive")
         ) {
             // Click on inactive scalar title: Change graph consolidation function to this one
             graph_id = get_graph_id_of_dom_node(target);
@@ -1243,9 +1411,8 @@ function global_graph_mouse_up(event: Event) {
                 graph = g_graphs[graph_id];
 
                 let consolidation_function = "";
-                if (utils.has_class(target, "min"))
-                    consolidation_function = "min";
-                else if (utils.has_class(target, "max"))
+                if (has_class(target, "min")) consolidation_function = "min";
+                else if (has_class(target, "max"))
                     consolidation_function = "max";
                 else consolidation_function = "average";
 
@@ -1253,7 +1420,7 @@ function global_graph_mouse_up(event: Event) {
                 set_consolidation_function(
                     event,
                     graph,
-                    consolidation_function
+                    consolidation_function,
                 );
             }
         } else if (target.tagName != "IMG" && target.tagName != "A") {
@@ -1276,6 +1443,7 @@ function global_graph_mouse_up(event: Event) {
 
 function handle_graph_clicked(graph: GraphArtwork) {
     if (graph.render_config.onclick) {
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
         eval(graph.render_config.onclick);
     }
 }
@@ -1283,7 +1451,7 @@ function handle_graph_clicked(graph: GraphArtwork) {
 function set_consolidation_function(
     event: Event,
     graph: GraphArtwork,
-    consolidation_function: string
+    consolidation_function: string,
 ) {
     if (graph.render_config.interaction) {
         update_graph(
@@ -1294,7 +1462,7 @@ function set_consolidation_function(
             null,
             null,
             null,
-            consolidation_function
+            consolidation_function,
         );
         sync_all_graph_timeranges(graph.id!);
     }
@@ -1315,7 +1483,7 @@ function remove_pin(event: Event, graph: GraphArtwork) {
 function set_pin_position(
     event: Event,
     graph: GraphArtwork,
-    timestamp: number
+    timestamp: number,
 ): boolean | void {
     if (graph.render_config.interaction && graph.render_config.show_pin)
         return update_graph(
@@ -1326,7 +1494,7 @@ function set_pin_position(
             null,
             null,
             Math.trunc(timestamp),
-            null
+            null,
         );
 }
 
@@ -1356,10 +1524,10 @@ function graph_mouse_move(event: MouseEvent, graph: GraphArtwork) {
         null,
         vertical_zoom,
         null,
-        null
+        null,
     );
 
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function update_mouse_hovering(event: Event) {
@@ -1374,7 +1542,7 @@ function update_mouse_hovering(event: Event) {
     const graph_id = get_graph_id_of_dom_node(graph_node)!;
     const graph = g_graphs[graph_id];
 
-    hover.add();
+    add();
 
     if (!graph.render_config.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
@@ -1383,7 +1551,7 @@ function update_mouse_hovering(event: Event) {
         canvas,
         graph,
         graph_node,
-        (event as MouseEvent).clientX - canvas_rect.left
+        (event as MouseEvent).clientX - canvas_rect.left,
     );
     update_graph_hover_popup(event, graph);
 }
@@ -1425,10 +1593,10 @@ function update_mouse_indicator(
     canvas: HTMLCanvasElement,
     graph: GraphArtwork,
     graph_node: HTMLElement,
-    x: number
+    x: number,
 ) {
     const indicator = document.createElement("div");
-    utils.add_class(indicator, "indicator");
+    add_class(indicator, "indicator");
     graph_node.appendChild(indicator);
 
     indicator.style.left = x + "px";
@@ -1451,10 +1619,10 @@ function remove_all_mouse_indicators() {
 function graph_mouse_wheel(event: Event, graph: GraphArtwork) {
     if (!graph.render_config.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
-    if (g_graph_update_in_process) return utils.prevent_default_events(event);
+    if (g_graph_update_in_process) return prevent_default_events(event);
 
     const time_zoom_center = graph_get_click_time(event as MouseEvent, graph);
-    const delta = utils.wheel_event_delta(event);
+    const delta = wheel_event_delta(event);
 
     let zoom: null | number = null;
     if (delta > 0) {
@@ -1479,7 +1647,7 @@ function graph_mouse_wheel(event: Event, graph: GraphArtwork) {
             time_zoom_center,
             null,
             null,
-            null
+            null,
         )
     )
         return false;
@@ -1491,7 +1659,7 @@ function graph_mouse_wheel(event: Event, graph: GraphArtwork) {
         sync_all_graph_timeranges(graph_id);
     }, 500);
 
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function graph_get_click_time(event: MouseEvent, graph: GraphArtwork) {
@@ -1547,20 +1715,20 @@ interface GraphHover {
 
 function update_graph_hover_popup(
     event: Event,
-    graph: GraphArtwork
+    graph: GraphArtwork,
 ): boolean | void {
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
 
     const hover_timestamp = graph_get_click_time(event as MouseEvent, graph);
 
-    if (!hover_timestamp) return utils.prevent_default_events(event);
+    if (!hover_timestamp) return prevent_default_events(event);
 
     if (
         hover_timestamp < graph["time_axis"]["range"][0] ||
         hover_timestamp > graph["time_axis"]["range"][1]
     )
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
 
     const post_data =
         "context=" +
@@ -1571,7 +1739,7 @@ function update_graph_hover_popup(
     g_graph_update_in_process = true;
     set_graph_update_cooldown();
 
-    ajax.call_ajax("ajax_graph_hover.py", {
+    call_ajax("ajax_graph_hover.py", {
         method: "POST",
         response_handler: handle_graph_hover_popup_update,
         handler_data: {
@@ -1587,7 +1755,7 @@ function handle_graph_hover_popup_update(
         graph: GraphArtwork;
         event: Event;
     },
-    ajax_response: string
+    ajax_response: string,
 ) {
     let popup_data: GraphHover;
     try {
@@ -1595,7 +1763,7 @@ function handle_graph_hover_popup_update(
     } catch (e) {
         console.log(e);
         console.error(
-            "Failed to parse graph hover update response: " + ajax_response
+            "Failed to parse graph hover update response: " + ajax_response,
         );
         g_graph_update_in_process = false;
         return;
@@ -1604,7 +1772,7 @@ function handle_graph_hover_popup_update(
     render_graph_hover_popup(
         handler_data.graph,
         handler_data.event,
-        popup_data
+        popup_data,
     );
 
     //render_graph_and_subgraphs(graph);
@@ -1641,39 +1809,39 @@ interface PopupData {
 function render_graph_hover_popup(
     _graph: GraphArtwork,
     event: Event,
-    popup_data: PopupData
+    popup_data: PopupData,
 ) {
     const wrapper = document.createElement("div");
 
     const popup_container = document.createElement("div");
-    utils.add_class(popup_container, "graph_hover_popup");
+    add_class(popup_container, "graph_hover_popup");
     wrapper.appendChild(popup_container);
 
     const time = document.createElement("div");
-    utils.add_class(time, "time");
+    add_class(time, "time");
     time.innerText = popup_data.rendered_hover_time;
     popup_container.appendChild(time);
 
     const entries = document.createElement("table");
-    utils.add_class(entries, "entries");
+    add_class(entries, "entries");
     popup_container.appendChild(entries);
 
     popup_data.curve_values.forEach(curve => {
         const row = entries.insertRow();
         const title = row.insertCell(0);
         const color = document.createElement("div");
-        utils.add_class(color, "color");
+        add_class(color, "color");
         color.style.backgroundColor = hex_to_rgba(curve.color + "4c");
         color.style.borderColor = curve.color;
         title.appendChild(color);
         title.appendChild(document.createTextNode(curve.title + ": "));
 
         const value = row.insertCell(1);
-        utils.add_class(value, "value");
+        add_class(value, "value");
         value.innerText = curve.rendered_value[1];
     });
 
-    hover.update_content(wrapper.innerHTML, event as MouseEvent);
+    update_content(wrapper.innerHTML, event as MouseEvent);
 }
 
 // Hide the tooltips that show the metric values at the position of the pointer
@@ -1682,7 +1850,7 @@ function remove_all_graph_hover_popups() {
         const graph_container =
             menu.getElementsByClassName("graph_hover_popup");
         if (graph_container.length > 0) {
-            hover.hide();
+            hide();
         }
     }
 }
@@ -1708,7 +1876,7 @@ function update_graph(
     time_zoom_center: number | null,
     vertical_zoom: number | null,
     pin_timestamp: number | null,
-    consolidation_function: null | string
+    consolidation_function: null | string,
 ) {
     const canvas = graph["canvas_obj"];
 
@@ -1812,7 +1980,7 @@ function update_graph(
             encodeURIComponent(consolidation_function);
     }
 
-    if (g_graph_update_in_process) return utils.prevent_default_events(event);
+    if (g_graph_update_in_process) return prevent_default_events(event);
 
     start_graph_update(canvas!, post_data);
     return true;
@@ -1822,9 +1990,9 @@ function start_graph_update(canvas: HTMLCanvasElement, post_data: string) {
     g_graph_update_in_process = true;
 
     set_graph_update_cooldown();
-    reload_pause.pause(g_page_update_delay);
+    pause(g_page_update_delay);
 
-    ajax.call_ajax("ajax_graph.py", {
+    call_ajax("ajax_graph.py", {
         method: "POST",
         //@ts-ignore
         response_handler: handle_graph_update,
@@ -1842,7 +2010,7 @@ function set_graph_update_cooldown() {
 
 function handle_graph_update(
     graph_container: HTMLElement,
-    ajax_response: string
+    ajax_response: string,
 ) {
     let response: AjaxGraph;
     try {
@@ -1850,7 +2018,7 @@ function handle_graph_update(
     } catch (e) {
         console.log(e);
         console.error(
-            "Failed to parse graph update response: " + ajax_response
+            "Failed to parse graph update response: " + ajax_response,
         );
         return;
     }
@@ -1877,6 +2045,7 @@ function handle_graph_update(
     if (g_resizing_graph && g_resizing_graph.graph.id == graph.id)
         g_resizing_graph.graph = graph;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     graph_container.innerHTML = response["html"];
 
     render_graph_and_subgraphs(graph);
@@ -1913,13 +2082,13 @@ export function change_graph_timerange(graph: GraphArtwork, duration: number) {
     main_graph.start_time = now - duration;
     main_graph.end_time = now;
 
-    reload_pause.pause(g_page_update_delay);
+    pause(g_page_update_delay);
     sync_all_graph_timeranges(main_graph_id, false);
 }
 
 function update_pdf_export_link_timerange(
     start_time: number,
-    end_time: number
+    end_time: number,
 ) {
     const context_buttons =
         document.getElementsByClassName("context_pdf_export");
@@ -1927,9 +2096,9 @@ function update_pdf_export_link_timerange(
         const context_button = context_buttons[i];
         if (context_button != undefined) {
             const link = context_button.getElementsByTagName("a")[0];
-            link.href = utils.makeuri(
+            link.href = makeuri(
                 {start_time: start_time, end_time: end_time},
-                link.href
+                link.href,
             );
         }
     }
@@ -1942,7 +2111,7 @@ let g_timerange_update_queue: [string, number, number][] = [];
 // a limit on the concurrent AJAX requests, so we need to slice the requests.
 function sync_all_graph_timeranges(
     graph_id: string,
-    skip_origin: boolean | undefined = undefined
+    skip_origin: boolean | undefined = undefined,
 ) {
     if (skip_origin === undefined) skip_origin = true;
 
@@ -1980,7 +2149,7 @@ function update_next_graph_timerange() {
 function set_graph_timerange(
     graph_id: string,
     start_time: number,
-    end_time: number
+    end_time: number,
 ) {
     const graph = g_graphs[graph_id];
     const canvas = graph["canvas_obj"];
@@ -2002,7 +2171,7 @@ function set_graph_timerange(
             "&step=" +
             encodeURIComponent(step);
 
-        ajax.call_ajax("ajax_graph.py", {
+        call_ajax("ajax_graph.py", {
             method: "POST",
             post_data: post_data,
             //this is related to the third argument of the function, which I think is never used in ajax.ts
@@ -2015,7 +2184,7 @@ function set_graph_timerange(
 // First updates the current graph and then continues with the next graph
 function handle_graph_timerange_update(
     graph_container: HTMLElement,
-    ajax_response: string
+    ajax_response: string,
 ) {
     handle_graph_update(graph_container, ajax_response);
     update_next_graph_timerange();

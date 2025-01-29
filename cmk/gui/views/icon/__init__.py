@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionSectionRegistry
 
 from .base import Icon
@@ -34,7 +32,6 @@ from .builtin import (
     StalenessIcon,
     StarsIcon,
 )
-from .config_icons import update_icons_from_configuration
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
 from .painter import PainterHostIcons, PainterServiceIcons
 from .permission_section import PermissionSectionIconsAndActions
@@ -46,10 +43,8 @@ def register(
     icon_registry: IconRegistry,
     painter_registry: PainterRegistry,
     permission_section_registry: PermissionSectionRegistry,
-    register_post_config_load_hook: Callable[[Callable[[], None]], None],
 ) -> None:
     permission_section_registry.register(PermissionSectionIconsAndActions)
-    register_post_config_load_hook(update_icons_from_configuration)
     painter_registry.register(PainterHostIcons)
     painter_registry.register(PainterServiceIcons)
     icon_registry.register(ShowParentChildTopology)
@@ -82,6 +77,5 @@ __all__ = [
     "icon_and_action_registry",
     "IconRegistry",
     "Icon",
-    "update_icons_from_configuration",
     "ajax_popup_action_menu",
 ]

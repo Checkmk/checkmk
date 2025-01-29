@@ -114,8 +114,6 @@ def _parse_family(params: HttpHostParams, host_config: HostConfig) -> Family:
         case "ipv6_enforced":  # Enforce IPv6
             return Family.ipv6
         case "primary_enforced":  # Enforce primary address family
-            if not host_config.primary_ip_config:
-                raise ValueError("No primary IP address configured")
             match host_config.primary_ip_config.family:
                 case IPAddressFamily.IPV4:
                     return Family.ipv4
@@ -151,8 +149,6 @@ class HostSettings:
                     raise ValueError("No IPv6 address configured")
                 return self.host_config.ipv6_config.address
             case Family.any:
-                if not self.host_config.primary_ip_config:
-                    raise ValueError("No primary IP address configured")
                 return self.host_config.primary_ip_config.address
             case _:
                 assert_never(self.family)
@@ -187,15 +183,12 @@ class DirectHost:
         return self.settings.port
 
     def virtual_host(self, mode: Mode) -> str | None:
-        return (
-            self.settings.virtual
-            if isinstance(self.settings.virtual, str)
-            # In URL mode, don't return the address in this case, because check_http would
-            # automatically set the HTTP Host header and use HTTP/1.1 instead of
-            # HTTP/1.0. This can lead to request timeouts on hosts which are
-            # not compliant with HTTP/1.1.
-            else None if mode is Mode.URL else self.address
-        )
+        if isinstance(self.settings.virtual, str):
+            return self.settings.virtual
+        # In URL mode, don't return the address, because check_http would automatically set the HTTP
+        # Host header and use HTTP/1.1 instead of HTTP/1.0. This can lead to request timeouts on
+        # hosts which are not compliant with HTTP/1.1.
+        return None if mode is Mode.URL else self.address
 
 
 @dataclass(frozen=True)
@@ -261,7 +254,7 @@ def _expect_regex_arguments(expect_regex: RegexMode) -> list[str | Secret]:
     return args
 
 
-def _url_arguments(  # pylint: disable=too-many-branches
+def _url_arguments(
     settings: HttpModeUrlParams,
     proxy_used: bool,
     host_config: HostConfig,

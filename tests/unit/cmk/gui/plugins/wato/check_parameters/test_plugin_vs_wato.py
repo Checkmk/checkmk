@@ -3,34 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import abc
+import logging
 import typing as t
-from pprint import pprint
+from pprint import pformat
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
+from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
+from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     Rulespec,
     rulespec_registry,
+    RulespecSubGroup,
 )
+
+logger = logging.getLogger(__name__)
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
 TC = t.TypeVar("TC", bound=t.Union[CheckPlugin, InventoryPlugin])
-
-
-class FixRegister:  # TODO: make the original class importable?!
-    check_plugins: t.Dict[str, CheckPlugin]
-    inventory_plugins: t.Dict[str, InventoryPlugin]
 
 
 class MergeKey(t.NamedTuple):
@@ -196,21 +196,25 @@ class WatoCheck(Wato[t.Union[CheckParameterRulespecWithoutItem, CheckParameterRu
         return isinstance(self._element, CheckParameterRulespecWithItem)
 
 
-def load_plugin(fix_register: FixRegister) -> t.Iterator[PluginProtocol]:
-    for check_element in fix_register.check_plugins.values():
+def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProtocol]:
+    for check_element in agent_based_plugins.check_plugins.values():
         if check_element.check_ruleset_name is not None:
             yield PluginCheck(check_element)
-    for discovery_element in fix_register.check_plugins.values():
+    for discovery_element in agent_based_plugins.check_plugins.values():
         if discovery_element.discovery_ruleset_name is not None:
             yield PluginDiscovery(discovery_element)
-    for inventory_element in fix_register.inventory_plugins.values():
+    for inventory_element in agent_based_plugins.inventory_plugins.values():
         if inventory_element.inventory_ruleset_name is not None:
             yield PluginInventory(inventory_element)
 
 
 def load_wato() -> t.Iterator[WatoProtocol]:
     for element in rulespec_registry.values():
-        if element.group == RulespecGroupCheckParametersDiscovery:
+        if isinstance(group := element.group(), RulespecGroupCheckParametersDiscovery) or (
+            isinstance(group, RulespecSubGroup)
+            and GENERATED_GROUP_PREFIX in group.__class__.__name__
+            and issubclass(group.main_group, RulespecGroupDiscoveryCheckParameters)
+        ):
             yield WatoDiscovery(element)
         elif element.group == RulespecGroupInventory:
             yield WatoInventory(element)
@@ -224,9 +228,9 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-def test_plugin_vs_wato(fix_register: FixRegister) -> None:
+def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
     error_reporter = ErrorReporter()
-    for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
+    for plugin, wato in merge(sorted(load_plugin(agent_based_plugins)), sorted(load_wato())):
         if plugin is None and wato is not None:
             error_reporter.report_wato_unused(wato)
         elif wato is None and plugin is not None:
@@ -245,8 +249,6 @@ class ErrorReporter:
         # type # name
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
-        ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
-        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
@@ -265,30 +267,26 @@ class ErrorReporter:
         ),  # deprecated since 2.2
     }
 
-    KNOWN_WATO_MISSING = {
+    ENFORCING_ONLY_RULESETS = {
+        # These plugins only have rules to be enforced (and configured),
+        # but no rules to configure discovered services.
+        # This may or may not be intentional and/or reasonable.
+        # If the plugins are discovered by default, it is likely to be unintentional.
         # type # instance # wato
-        ("check", "3ware_units", "raid"),
-        ("check", "brocade_tm", "brocade_tm"),
-        ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
-        ("check", "domino_tasks", "domino_tasks"),
-        ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "lsi_array", "raid"),
-        ("check", "md", "raid"),
-        ("check", "mongodb_replication_info", "mongodb_replication_info"),
-        ("check", "moxa_iologik_register", "iologik_register"),
-        ("check", "netstat", "tcp_connections"),
+        ("check", "3ware_units", "raid"),  # has no params, but can be enforced.
+        ("check", "lsi_array", "raid"),  # has no params, but can be enforced.
+        ("check", "md", "raid"),  # has no params, but can be enforced.
+        ("check", "netstat", "tcp_connections"),  # can only be enforced, never discovered.
         ("check", "nvidia_errors", "hw_errors"),
-        ("check", "qlogic_fcport", "qlogic_fcport"),
-        ("check", "sap_hana_proc", "sap_hana_proc"),
-        ("check", "stormshield_cluster_node", "stormshield_quality"),
-        ("check", "stormshield_policy", "stormshield"),
-        ("check", "stormshield_updates", "stormshield_updates"),
-        ("check", "tsm_stagingpools", "tsm_stagingspools"),
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
+    }
+
+    KNOWN_WATO_MISSING = {
+        # type # instance # wato
         ("discovery", "fileinfo", "fileinfo_groups"),
         ("discovery", "fileinfo_groups", "fileinfo_groups"),
         ("discovery", "sap_hana_fileinfo", "fileinfo_groups"),
@@ -298,235 +296,12 @@ class ErrorReporter:
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
-    KNOWN_ERROR_LOADING_DEFAULTS = {
-        # type # plug-in # wato
-        (
-            "check",
-            "apc_symmetra_temp",
-            RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "brocade_optical",
-            RuleGroup.CheckgroupParameters("brocade_optical"),
-        ),
-        ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
-        (
-            "check",
-            "casa_cpu_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "ceph_status_mgrs",
-            RuleGroup.CheckgroupParameters("ceph_mgrs"),
-        ),
-        (
-            "check",
-            "ceph_status_osds",
-            RuleGroup.CheckgroupParameters("ceph_osds"),
-        ),
-        (
-            "check",
-            "cisco_prime_wifi_connections",
-            RuleGroup.CheckgroupParameters("cisco_prime_wifi_connections"),
-        ),
-        (
-            "check",
-            "couchbase_buckets_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "ddn_s2a_stats_io",
-            RuleGroup.CheckgroupParameters("storage_iops"),
-        ),
-        (
-            "check",
-            "dell_idrac_fans",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        ("check", "dell_om_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "docsis_channels_upstream",
-            RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
-        ),
-        ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
-        (
-            "check",
-            "esx_vsphere_objects_count",
-            RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
-        ),
-        (
-            "check",
-            "esx_vsphere_vm_guest_tools",
-            RuleGroup.CheckgroupParameters("vm_guest_tools"),
-        ),
-        (
-            "check",
-            "esx_vsphere_vm_heartbeat",
-            RuleGroup.CheckgroupParameters("vm_heartbeat"),
-        ),
-        (
-            "check",
-            "fortigate_antivirus",
-            RuleGroup.CheckgroupParameters("fortigate_antivirus"),
-        ),
-        (
-            "check",
-            "fortigate_ips",
-            RuleGroup.CheckgroupParameters("fortigate_ips"),
-        ),
-        (
-            "check",
-            "fortigate_ipsecvpn",
-            RuleGroup.CheckgroupParameters("ipsecvpn"),
-        ),
-        (
-            "check",
-            "fortimail_cpu_load",
-            RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
-        ),
-        (
-            "check",
-            "hivemanager_devices",
-            RuleGroup.CheckgroupParameters("hivemanager_devices"),
-        ),
-        (
-            "check",
-            "huawei_osn_laser",
-            RuleGroup.CheckgroupParameters("huawei_osn_laser"),
-        ),
-        ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
-        (
-            "check",
-            "mongodb_collections",
-            RuleGroup.CheckgroupParameters("mongodb_collections"),
-        ),
-        ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
-        (
-            "check",
-            "msexch_isclienttype",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
-            "msexch_isstore",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
-            "mssql_connections",
-            RuleGroup.CheckgroupParameters("mssql_connections"),
-        ),
-        (
-            "check",
-            "mysql_slave",
-            RuleGroup.CheckgroupParameters("mysql_slave"),
-        ),
-        (
-            "check",
-            "netapp_api_environment_fan_faults",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "netapp_api_environment_fans",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "netscaler_health_fan",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_fan",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_temperature",
-            RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "plesk_backups",
-            RuleGroup.CheckgroupParameters("plesk_backups"),
-        ),
-        (
-            "check",
-            "prometheus_custom",
-            RuleGroup.CheckgroupParameters("prometheus_custom"),
-        ),
-        ("check", "ps", RuleGroup.CheckgroupParameters("ps")),
-        (
-            "check",
-            "pulse_secure_mem_util",
-            RuleGroup.CheckgroupParameters("pulse_secure_mem_util"),
-        ),
-        (
-            "check",
-            "pulse_secure_users",
-            RuleGroup.CheckgroupParameters("pulse_secure_users"),
-        ),
-        ("check", "qnap_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "quanta_fan", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "ra32e_switch",
-            RuleGroup.CheckgroupParameters("switch_contact"),
-        ),
-        (
-            "check",
-            "rabbitmq_nodes_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "redis_info_persistence",
-            RuleGroup.CheckgroupParameters("redis_info_persistence"),
-        ),
-        (
-            "check",
-            "skype_conferencing",
-            RuleGroup.CheckgroupParameters("skype_conferencing"),
-        ),
-        (
-            "check",
-            "skype_sip_stack",
-            RuleGroup.CheckgroupParameters("skype_sip"),
-        ),
-        (
-            "check",
-            "tplink_mem",
-            RuleGroup.CheckgroupParameters("memory_percentage_used"),
-        ),
-        (
-            "check",
-            "tplink_poe_summary",
-            RuleGroup.CheckgroupParameters("epower_single"),
-        ),
-        ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
-        ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
-        ("discovery", "mssql_datafiles", "mssql_transactionlogs_discovery"),
-        ("discovery", "mssql_transactionlogs", "mssql_transactionlogs_discovery"),
-        ("discovery", "ps", "inventory_processes_rules"),
-        ("discovery", "vnx_quotas", "discovery_rules_vnx_quotas"),
-        ("discovery", "hitachi_hnas_volume", "filesystem_groups"),
-        ("discovery", "hitachi_hnas_volume_virtual", "filesystem_groups"),
-    }
 
     def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
-        self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
+        self._known_wato_missing = self.KNOWN_WATO_MISSING | self.ENFORCING_ONLY_RULESETS
 
     def failed(self) -> bool:
         return self._failed
@@ -536,7 +311,7 @@ class ErrorReporter:
         if element in self._known_wato_unused:
             self._known_wato_unused.remove(element)
             return
-        print(f"{wato.get_description()} is not used by any plugin")
+        logger.info(f"{wato.get_description()} is not used by any plugin")
         self._failed |= True
 
     def report_wato_missing(self, plugin: PluginProtocol) -> None:
@@ -544,7 +319,7 @@ class ErrorReporter:
         if element in self._known_wato_missing:
             self._known_wato_missing.remove(element)
             return
-        print(
+        logger.info(
             f"{plugin.get_description()} wants to use "
             f"wato ruleset '{plugin.get_merge_name()}' but this can not be found"
         )
@@ -566,11 +341,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        print(
+        logger.info(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
-        print("    wato   handles item:", wato.has_item())
-        print("    plug-in handles items:", plugin.has_item())
+        logger.info("    wato   handles item: %r", wato.has_item())
+        logger.info("    plug-in handles items: %r", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -579,11 +354,7 @@ class ErrorReporter:
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
-        element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in self._known_error_loading_defaults:
-            self._known_error_loading_defaults.remove(element)
-            return
-        print(
+        logger.info(
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
         )
@@ -609,10 +380,8 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        pprint(self._known_error_loading_defaults)
-        pprint(self._known_wato_missing)
-        pprint(self._known_wato_unused)
-        assert len(self._known_error_loading_defaults) == 0
+        logger.info(pformat(self._known_wato_missing))
+        logger.info(pformat(self._known_wato_unused))
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 

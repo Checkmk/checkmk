@@ -126,11 +126,7 @@ def main(argv=None):
 
 
 def _handle_rabbitmq_connection(args, sections):
-    url_base = "{}://{}:{}/api".format(
-        args.proto,
-        args.hostname,
-        args.port,
-    )
+    url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
 
     for section in sections:
         if section.name not in args.sections:
@@ -154,7 +150,7 @@ def _handle_output(section, section_data):
 
 
 def _handle_request(url, args):
-    response = requests.get(  # nosec B113
+    response = requests.get(  # nosec B113 # BNS:0b0eac
         url,
         auth=(args.user, args.password),
     )

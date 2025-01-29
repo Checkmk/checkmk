@@ -1,5 +1,5 @@
 # global must be presented
 # minimum supported config
 global:
-    #cmk: yes 
+    #cmk: yes
     #port : 6556

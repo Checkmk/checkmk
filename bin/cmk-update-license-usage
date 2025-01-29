@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import sys
+
+from cmk.ccc.site import omd_site
 
 from cmk.utils.licensing.helper import (
     get_instance_id_file_path,
@@ -11,13 +14,37 @@ from cmk.utils.licensing.helper import (
     init_logging,
     load_instance_id,
 )
-from cmk.utils.licensing.usage import create_sample, Now, try_update_license_usage
+from cmk.utils.licensing.usage import (
+    create_sample,
+    get_next_run_file_path,
+    Now,
+    try_update_license_usage,
+)
 from cmk.utils.paths import omd_root
-from cmk.utils.site import omd_site
+
+
+def _parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawTextHelpFormatter,
+        allow_abbrev=False,
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force a license usage update, ie. ignoring the next scheduled update.",
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
+    args = _parse_arguments()
     logger = init_logging()
+
+    if args.force:
+        get_next_run_file_path().unlink(missing_ok=True)
+
     try:
         try_update_license_usage(
             Now.make(),

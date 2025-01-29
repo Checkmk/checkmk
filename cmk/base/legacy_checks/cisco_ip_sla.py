@@ -6,10 +6,10 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, OIDBytes, OIDEnd, SNMPTree
+
+check_info = {}
 
 
 def parse_cisco_ip_sla(string_table):
@@ -162,6 +162,7 @@ def check_cisco_ip_sla(item, params, parsed):
 
 
 check_info["cisco_ip_sla"] = LegacyCheckDefinition(
+    name="cisco_ip_sla",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         contains(".1.3.6.1.2.1.1.1.0", "ios"),

@@ -1,6 +1,3 @@
-# ToDo:
-#    - PIPENV_PYPI_MIRROR (see technical dept socumentation)
-
 load("@python_modules//:requirements.bzl", "packages")
 
 def get_pip_options(module_name):
@@ -36,7 +33,7 @@ build_cmd = """
     # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
     export TMPDIR="/tmp"
-   
+
     # output needs to be an archive for bazel 7
     MODULE_NAME=$$(basename $@)
 
@@ -62,7 +59,7 @@ build_cmd = """
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
-    # Keep in sync with scripts/run-pipenv
+    # Keep in sync with scripts/run-uvenv
     export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4
     export NPY_NUM_BUILD_JOBS=4
 
@@ -76,23 +73,6 @@ build_cmd = """
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
-    if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
-        REQUIREMENTS="{requirements}"
-    else
-        REQUIREMENTS=$$HOME/tmp/$$MODULE_NAME
-	rm -rf $$REQUIREMENTS
-	mkdir -p $$REQUIREMENTS
-        echo "Copy package sources"
-        echo "cp -r {requirements}/** $$REQUIREMENTS"
-        cp -r {requirements}/** $$REQUIREMENTS
-    fi
-
-    # Fix python-gssapi build on SLES12SP5
-    # https://github.com/pythongssapi/python-gssapi/issues/212
-    if grep 'PRETTY_NAME="SUSE Linux Enterprise Server 12 SP5"' /etc/os-release >/dev/null 2>&1; then
-        export GSSAPI_COMPILER_ARGS='-DHAS_GSSAPI_EXT_H'
-    fi
-
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
     # Enforce here the usage of the build image compiler and in the same time enable local building.
     # TODO: CMK-15581 The whole toolchain registration should be bazel wide!
@@ -100,8 +80,8 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
-    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
+    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
+    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freetds/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -113,9 +93,8 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      -i {pypi_mirror} \\
       {pip_add_opts} \\
-      $$REQUIREMENTS 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 
     tar cf $@ $$MODULE_NAME
 """

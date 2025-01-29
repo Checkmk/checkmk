@@ -1,0 +1,17 @@
+Title: mssql_availability_groups: Parsing of section failed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1722418114
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+Provided with invalid lines `parse_mssql_availability_groups()` would crash with an exception
+```
+IndexError: list index out of range
+```
+Resulting in `Parsing of section mssql_availability_groups` error message in UI.
+
+This change makes `parse_mssql_availability_groups()` resilient to those lines by just
+ignoring them.

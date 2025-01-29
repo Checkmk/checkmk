@@ -21,11 +21,11 @@ from .utils import B64SiteInternalSecret
 
 
 class CMKEdition(Enum):
-    cre = "Raw"  # pylint: disable=invalid-name
-    cee = "Enterprise"  # pylint: disable=invalid-name
-    cme = "Managed Services"  # pylint: disable=invalid-name
-    cce = "Cloud"  # pylint: disable=invalid-name
-    cse = "Saas"  # pylint: disable=invalid-name
+    cre = "Raw"
+    cee = "Enterprise"
+    cme = "Managed Services"
+    cce = "Cloud"
+    cse = "Saas"
 
     def supports_register_new(self) -> bool:
         """
@@ -103,17 +103,17 @@ def _forward_put(
 
 
 _TEndpointParams = ParamSpec("_TEndpointParams")
-_TEndpointReturn = TypeVar("_TEndpointReturn")  # pylint: disable=invalid-name
+_TEndpointReturn = TypeVar("_TEndpointReturn")
 
 
 def log_http_exception(
-    endpoint_call: Callable[_TEndpointParams, _TEndpointReturn]
+    endpoint_call: Callable[_TEndpointParams, _TEndpointReturn],
 ) -> Callable[Concatenate[str, _TEndpointParams], _TEndpointReturn]:
     def wrapper(
         log_text: str,
         /,
-        *args: _TEndpointParams.args,  # pylint: disable=no-member
-        **kwargs: _TEndpointParams.kwargs,  # pylint: disable=no-member
+        *args: _TEndpointParams.args,
+        **kwargs: _TEndpointParams.kwargs,
     ) -> _TEndpointReturn:
         try:
             return endpoint_call(*args, **kwargs)
@@ -304,6 +304,6 @@ def _parse_error_response_body(body: str) -> str:
     """
     try:
         error_descr = _RestApiErrorDescr.model_validate_json(body)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         return body
     return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

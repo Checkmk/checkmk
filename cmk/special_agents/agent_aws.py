@@ -23,6 +23,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
+from pathlib import Path
 from time import sleep
 from typing import (
     Any,
@@ -40,9 +41,10 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-import cmk.utils.password_store
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKException
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKException
+
+from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
 from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
@@ -54,7 +56,11 @@ from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-viol
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.agent_common import (
+    ConditionalPiggybackSection,
+    SectionWriter,
+    special_agent_main,
+)
 from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import (
     DataCache,
@@ -287,7 +293,7 @@ class AWSConfig:
     def __init__(
         self,
         hostname: str,
-        sys_argv: Sequence[str],
+        sys_argv: Args,
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
@@ -330,10 +336,11 @@ class AWSConfig:
         self.service_config.setdefault(key, value)
 
     @staticmethod
-    def _compute_config_hash(sys_argv: Sequence[str]) -> str:
-        filtered_sys_argv = [
-            arg for arg in sys_argv if arg not in ["--debug", "--verbose", "--no-cache"]
-        ]
+    def _compute_config_hash(sys_argv: Args) -> str:
+        filtered_sys_argv = dict(
+            filter(lambda el: el[0] not in ["debug", "verbose", "no_cache"], vars(sys_argv).items())
+        )
+
         # Be careful to use a hashing mechanism that generates the same hash across
         # different python processes! Otherwise the config file will always be
         # out-of-date
@@ -444,7 +451,7 @@ def _describe_dynamodb_tables(
     client: BaseClient,
     get_response_content: Callable,
     fetched_table_names: Sequence[str] | None = None,
-) -> Sequence[Mapping[str, object]]:
+) -> Sequence[dict[str, object]]:
     table_names = (
         fetched_table_names
         if fetched_table_names is not None
@@ -457,7 +464,8 @@ def _describe_dynamodb_tables(
             tables.append(
                 get_response_content(client.describe_table(TableName=table_name), "Table")  # type: ignore[attr-defined]
             )
-        except client.exceptions.ResourceNotFoundException:
+        # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+        except client.exceptions.ResourceNotFoundException:  # type: ignore[misc]
             # we raise the exception if we fetched the table names from the API, since in that case
             # all tables should exist, otherwise something went really wrong
             if fetched_table_names is None:
@@ -515,7 +523,10 @@ def _get_wafv2_web_acls(
 ) -> Sequence[dict[str, object]]:
     if web_acls_info is None:
         web_acls_info = _iterate_through_wafv2_list_operations(
-            client.list_web_acls, scope, "WebACLs", get_response_content  # type: ignore[attr-defined]
+            client.list_web_acls,  # type: ignore[attr-defined]
+            scope,
+            "WebACLs",
+            get_response_content,
         )
 
     if web_acls_names is not None:
@@ -535,16 +546,20 @@ def _get_wafv2_web_acls(
         byte_match_statement["SearchString"] = byte_match_statement["SearchString"].decode()
 
     def _byte_convert_statement(general_statement: dict[str, Any]) -> None:
-        for name, statement in general_statement.items():
-            if "ByteMatchStatement" == name:
-                _convert_byte_match_statement(statement)
-            elif name in ["RateBasedStatement", "NotStatement"] and (
-                "ByteMatchStatement" in statement["ScopeDownStatement"]
-            ):
-                _convert_byte_match_statement(statement["ScopeDownStatement"]["ByteMatchStatement"])
-            elif name in ["AndStatement", "OrStatement"]:
-                for s in statement["Statements"]:
-                    _byte_convert_statement(s)
+        for statement_item in general_statement.items():
+            match statement_item:
+                case ("ByteMatchStatement", statement):
+                    _convert_byte_match_statement(statement)
+                case (
+                    "RateBasedStatement" | "NotStatement",
+                    {"ScopeDownStatement": {"ByteMatchStatement": statement}},
+                ):
+                    _convert_byte_match_statement(statement)
+                case ("AndStatement" | "OrStatement", statement):
+                    for s in statement["Statements"]:
+                        _byte_convert_statement(s)
+                case _:
+                    pass
 
     for acl in web_acls:
         for rule in acl["Rules"]:
@@ -651,7 +666,7 @@ class ResultDistributor:
     """
 
     def __init__(self) -> None:
-        self._colleagues: dict[str, list["AWSSection"]] = defaultdict(list)
+        self._colleagues: dict[str, list[AWSSection]] = defaultdict(list)
 
     def add(self, sender_name: str, colleague: "AWSSection") -> None:
         self._colleagues[sender_name].append(colleague)
@@ -1062,7 +1077,7 @@ class AWSSectionCloudwatch(AWSSection):
     def _extend_metrics_by_period(self, metrics: Metrics, raw_content: list) -> None:
         """
         Extend the queried metric values by the corresponding time period. For metrics based on the
-        "Sum" statistics, we add the actual time period which can then be used by the check plugins
+        "Sum" statistics, we add the actual time period which can then be used by the check plug-ins
         to compute a rate. For all other metrics, we add 'None', such that the metric values are
         always 2-tuples (value, period), where period is either an actual time period such as 600 s
         or None.
@@ -1184,7 +1199,8 @@ class ReservationUtilization(AWSSection):
         }
         try:
             response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
-        except self._client.exceptions.DataUnavailableException:
+        # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+        except self._client.exceptions.DataUnavailableException:  # type: ignore[misc]
             logging.warning("ReservationUtilization: No data available")
             return []
         return self._get_response_content(response, "UtilizationsByTime")
@@ -1427,7 +1443,7 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "vpc_elastic_ip_addresses",
-                "VPC Elastic IP Addresses",
+                "VPC Elastic IP addresses",
                 5,
                 vpc_addresses,
             ),
@@ -1436,13 +1452,13 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "elastic_ip_addresses",
-                "Elastic IP Addresses",
+                "Elastic IP addresses",
                 5,
                 std_addresses,
             ),
         )
 
-    def _add_security_group_limits(self, security_groups) -> None:  # type: ignore[no-untyped-def]
+    def _add_security_group_limits(self, security_groups: Sequence[Mapping]) -> None:
         self._add_limit(
             "",
             AWSLimit(
@@ -1467,7 +1483,7 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
 
-    def _add_interface_limits(self, interfaces) -> None:  # type: ignore[no-untyped-def]
+    def _add_interface_limits(self, interfaces: Sequence[Mapping]) -> None:
         # since there can also be interfaces which are not attached to an instance, we add these
         # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
@@ -1497,7 +1513,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type: ignore[no-untyped-def]
+    def _add_spot_fleet_limits(self, spot_fleet_requests: Sequence[Mapping]) -> None:
         active_spot_fleet_requests = 0
         total_target_cap = 0
         for spot_fleet_req in spot_fleet_requests:
@@ -1566,8 +1582,8 @@ class EC2Summary(AWSSection):
 
         return self._fetch_instances_without_filter()
 
-    def _fetch_instances_filtered_by_names(  # type: ignore[no-untyped-def]
-        self, col_reservations
+    def _fetch_instances_filtered_by_names(
+        self, col_reservations: Sequence[dict]
     ) -> Sequence[Mapping[str, object]]:
         if col_reservations:
             instances = [
@@ -3235,7 +3251,7 @@ class ELBv2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "load_balancer_target_groups",
-                "Load balancers Target Groups",
+                "Load balancers target groups",
                 limits["target-groups"],
                 target_groups_count,
             ),
@@ -3764,7 +3780,8 @@ class RDSSummary(AWSSection):
                     DBInstanceIdentifier=name
                 ):
                     instances.extend(self._get_response_content(page, "DBInstances"))
-            except self._client.exceptions.DBInstanceNotFoundFault:
+            # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
+            except self._client.exceptions.DBInstanceNotFoundFault:  # type: ignore[misc]
                 pass
 
         return instances
@@ -3772,7 +3789,8 @@ class RDSSummary(AWSSection):
     def _get_instance_tags(self, instance_arn: str) -> Tags:
         # list_tags_for_resource cannot be paginated
         return self._get_response_content(
-            self._client.list_tags_for_resource(ResourceName=instance_arn), "TagList"  # type: ignore[attr-defined]
+            self._client.list_tags_for_resource(ResourceName=instance_arn),  # type: ignore[attr-defined]
+            "TagList",
         )
 
     def _matches_tag_conditions(self, tagging: Tags) -> bool:
@@ -4046,8 +4064,8 @@ class CloudFront(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    def _get_piggyback_host_by_distribution(  # type: ignore[no-untyped-def]
-        self, cloudfront_summary
+    def _get_piggyback_host_by_distribution(
+        self, cloudfront_summary: Sequence[Mapping]
     ) -> Mapping[str, str]:
         if not cloudfront_summary:
             return {}
@@ -4340,6 +4358,7 @@ class DynamoDBSummary(AWSSection):
         found_tables = []
 
         for table in self._describe_tables(colleague_contents):
+            assert isinstance(table["TableArn"], str)
             tags = self._get_table_tags(table["TableArn"])
 
             if self._matches_tag_conditions(tags):
@@ -4357,9 +4376,9 @@ class DynamoDBSummary(AWSSection):
             tags.extend(self._get_response_content(page, "Tags"))
         return tags
 
-    def _describe_tables(  # type: ignore[no-untyped-def]
+    def _describe_tables(
         self, colleague_contents: AWSColleagueContents
-    ):
+    ) -> Sequence[dict[str, object]]:
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content
@@ -6111,7 +6130,9 @@ class ElastiCacheLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args: AWSColleagueContents) -> tuple[
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
@@ -6465,7 +6486,7 @@ class AWSSections(abc.ABC):
             raise
 
     def run(self, use_cache: bool = True) -> None:
-        exceptions = []
+        exceptions: list[AssertionError | Exception] = []
         results: Results = {}
 
         for section in self._sections:
@@ -6496,11 +6517,7 @@ class AWSSections(abc.ABC):
         return host_labels
 
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
-        return (
-            section_result.piggyback_hostname is not None
-            and section_result.piggyback_hostname != ""
-            and section_result.piggyback_hostname != self._hostname
-        )
+        return section_result.piggyback_hostname not in {None, "", self._hostname}
 
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]
@@ -6526,10 +6543,22 @@ class AWSSections(abc.ABC):
             with ConditionalPiggybackSection(hostname):
                 self._write_labels_section(host_labels)
 
+    def _safe_exception(self, exception: Exception) -> str:
+        """
+        Secure proper exception output.
+        boto3 sometimes throws unpropper exceptions without a 'message' parameter.
+        TODO: Avoid using aws_exception-section
+        """
+        if hasattr(exception, "message"):
+            return exception.message
+
+        return repr(exception)
+
     def _write_exceptions(self, exceptions: Sequence) -> None:
         sys.stdout.write("<<<aws_exceptions>>>\n")
+
         if exceptions:
-            out = "\n".join([e.message for e in exceptions])
+            out = "\n".join([self._safe_exception(e) for e in exceptions])
         else:
             out = "No exceptions"
         sys.stdout.write(f"{self.__class__.__name__}: {out}\n")
@@ -6553,10 +6582,7 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached({},{})".format(
-                    int(cache_timestamp),
-                    int(section_interval + 60),
-                )
+                cached_suffix = f":cached({int(cache_timestamp)},{int(section_interval + 60)})"
 
             if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)
@@ -6704,7 +6730,7 @@ def _create_route53_sections(
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(  # pylint: disable=too-many-branches
+    def init_sections(
         self,
         services: Sequence[str],
         region: str,
@@ -7160,19 +7186,29 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
     parser.add_argument(
         "--access-key-id",
-        required=True,
+        required=False,
         help="The access key ID for your AWS account",
     )
-    parser.add_argument(
+    group_secret_access_key = parser.add_mutually_exclusive_group(required=False)
+    group_secret_access_key.add_argument(
+        "--secret-access-key-reference",
+        help="Password store reference to the secret access key for your AWS account.",
+    )
+    group_secret_access_key.add_argument(
         "--secret-access-key",
-        required=True,
         help="The secret access key for your AWS account.",
     )
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
     parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
-    parser.add_argument(
-        "--proxy-password", help="The password for authentication of the proxy server"
+    group_proxy_password = parser.add_mutually_exclusive_group()
+    group_proxy_password.add_argument(
+        "--proxy-password-reference",
+        help="Password store reference to the password for authentication of the proxy server",
+    )
+    group_proxy_password.add_argument(
+        "--proxy-password",
+        help="The password for authentication of the proxy server",
     )
     parser.add_argument(
         "--global-service-region",
@@ -7297,9 +7333,39 @@ def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def _create_session(
-    access_key_id: str, secret_access_key: str, region: str
+def _create_anonymous_session(
+    region: str,
+    config: botocore.config.Config | None,
 ) -> boto3.session.Session:
+    try:
+        # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
+        # However this does not work and has to be left out (a reported bug on github).
+        # Leave it here for potential future bugfix of the AWS botocore.
+        # https://github.com/boto/botocore/issues/1395
+        # https://github.com/boto/botocore/issues/2442
+        # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
+        # ---------------------------------
+        # if config is None:
+        #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+        # else:
+        #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
+
+        return boto3.session.Session(
+            region_name=region,
+        )
+    except Exception as e:
+        raise AwsAccessError(e)
+
+
+def _create_session(
+    access_key_id: str | None,
+    secret_access_key: str | None,
+    region: str,
+    config: botocore.config.Config | None,
+) -> boto3.session.Session:
+    if access_key_id is None or secret_access_key is None:
+        return _create_anonymous_session(region=region, config=config)
+
     try:
         return boto3.session.Session(
             aws_access_key_id=access_key_id,
@@ -7311,8 +7377,8 @@ def _create_session(
 
 
 def _sts_assume_role(
-    access_key_id: str,
-    secret_access_key: str,
+    access_key_id: str | None,
+    secret_access_key: str | None,
     role_arn: str,
     external_id: str,
     region: str,
@@ -7329,8 +7395,10 @@ def _sts_assume_role(
     :return: AWS session
     """
     try:
-        session = _create_session(access_key_id, secret_access_key, region)
+        session = _create_session(access_key_id, secret_access_key, region, config)
+
         sts_client = session.client("sts", config=config)
+
         if external_id:
             assumed_role_object = sts_client.assume_role(
                 RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
@@ -7411,26 +7479,31 @@ class AWSAccessCredentialsError(Exception):
 
 
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
-    return (
-        botocore.config.Config(
+    if args.proxy_host:
+        if args.proxy_password:
+            proxy_password = args.proxy_password
+        elif args.proxy_password_reference:
+            pw_id, pw_file = args.proxy_password_reference.split(":", 1)
+            proxy_password = password_store.lookup(Path(pw_file), pw_id)
+        else:
+            proxy_password = None
+        return botocore.config.Config(
             proxies={
                 "https": _proxy_address(
                     args.proxy_host,
                     args.proxy_port,
                     args.proxy_user,
-                    args.proxy_password,
+                    proxy_password,
                 )
             }
         )
-        if args.proxy_host
-        else None
-    )
+    return None
 
 
-def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
+def _configure_aws(args: Args) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
-        sys_argv,
+        args,
         (args.overall_tag_key, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
@@ -7496,16 +7569,24 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
 def _create_session_from_args(
     args: Args, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
+    secret_access_key = None
+    if args.secret_access_key:
+        secret_access_key = args.secret_access_key
+    elif args.secret_access_key_reference:
+        pw_id, pw_file = args.secret_access_key_reference.split(":", 1)
+        secret_access_key = password_store.lookup(Path(pw_file), pw_id)
+
     if args.assume_role:
         return _sts_assume_role(
             args.access_key_id,
-            args.secret_access_key,
+            secret_access_key,
             args.role_arn,
             args.external_id,
             region,
             config,
         )
-    return _create_session(args.access_key_id, args.secret_access_key, region)
+
+    return _create_session(args.access_key_id, secret_access_key, region, config=config)
 
 
 def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
@@ -7514,24 +7595,17 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     return account_id
 
 
-def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-many-branches
-    if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
-    args = parse_arguments(sys_argv)
+def agent_aws_main(args: Args) -> int:
     _setup_logging(args.debug, args.verbose)
 
-    hostname = args.hostname
     proxy_config = _get_proxy(args)
-
-    aws_config = _configure_aws(args, sys_argv)
+    aws_config = _configure_aws(args)
 
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)
     )
 
     use_cache = aws_config.is_up_to_date() and not args.no_cache
-    has_exceptions = False
 
     # Special distributor for S3 limits which distributes results across different regions
     s3_limits_distributor = ResultDistributorS3Limits()
@@ -7552,12 +7626,8 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         sys.stdout.write("<<<aws_exceptions>>>\n")
         sys.stdout.write("Exception: %s\n" % ae)
         return 0
-    except Exception as e:
-        logging.info(e)
-        if args.debug:
-            raise
-        return 1
 
+    has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (global_services, [args.global_service_region], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
@@ -7569,7 +7639,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
             try:
                 session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
-                    hostname, session, account_id, debug=args.debug, config=proxy_config
+                    args.hostname, session, account_id, debug=args.debug, config=proxy_config
                 )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
@@ -7586,13 +7656,17 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
                 has_exceptions = True
                 if args.debug:
                     raise
-    if has_exceptions:
-        return 1
-    return 0
+
+    return 1 if has_exceptions else 0
 
 
 class AwsAccessError(MKException):
     pass
+
+
+def main() -> int:
+    """Main entry point to be used"""
+    return special_agent_main(parse_arguments, agent_aws_main)
 
 
 if __name__ == "__main__":

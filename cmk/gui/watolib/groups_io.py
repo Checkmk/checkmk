@@ -2,24 +2,47 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping
-
-from pydantic import BaseModel
+from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.utils import paths
-from cmk.utils.config_validation_layer.groups import (
-    AllGroupSpecs,
-    GroupAliasesModel,
-    GroupConfigsModel,
-    GroupName,
-    GroupSpec,
-    GroupSpecs,
-)
-from cmk.utils.config_validation_layer.type_defs import remove_omitted
 
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs
 from cmk.gui.hooks import request_memoize
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoPydanticConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
+
+NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
+
+
+class PermittedPath(TypedDict):
+    visible_raw_path: str
+    attributes: NotRequired[NothingOrChoices]
+    columns: NotRequired[NothingOrChoices]
+    nodes: NotRequired[NothingOrChoices]
+
+
+InventoryPaths = Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
+
+
+class GroupAliases(TypedDict):
+    define_hostgroups: dict[GroupName, str]
+    define_servicegroups: dict[GroupName, str]
+    define_contactgroups: dict[GroupName, str]
+
+
+class GroupConfig(TypedDict):
+    customer: NotRequired[str | None]
+
+
+class ContactGroupConfig(GroupConfig):
+    inventory_paths: NotRequired[InventoryPaths]
+
+
+class GroupConfigs(TypedDict):
+    multisite_hostgroups: dict[GroupName, GroupConfig]
+    multisite_servicegroups: dict[GroupName, GroupConfig]
+    multisite_contactgroups: dict[GroupName, ContactGroupConfig]
 
 
 def load_host_group_information() -> GroupSpecs:
@@ -41,22 +64,26 @@ def load_group_information() -> AllGroupSpecs:
 
     # Merge information from Checkmk and Multisite worlds together
     return {
-        "host": _combine_configs(aliases.define_hostgroups, configs.multisite_hostgroups),
-        "service": _combine_configs(aliases.define_servicegroups, configs.multisite_servicegroups),
-        "contact": _combine_configs(aliases.define_contactgroups, configs.multisite_contactgroups),
+        "host": _combine_configs(aliases["define_hostgroups"], configs["multisite_hostgroups"]),
+        "service": _combine_configs(
+            aliases["define_servicegroups"], configs["multisite_servicegroups"]
+        ),
+        "contact": _combine_configs(
+            aliases["define_contactgroups"], configs["multisite_contactgroups"]
+        ),
     }
 
 
-def _get_group_spec(alias: str, config: BaseModel | None) -> GroupSpec:
-    spec = GroupSpec(alias=alias)
+def _get_group_spec(alias: str, config: GroupConfig | None) -> GroupSpec:
+    spec: GroupSpec = GroupSpec(alias=alias)
     if config:
-        spec.update(remove_omitted(config.model_dump()))
+        spec.update(config)
     return spec
 
 
 def _combine_configs(
     alias_mapping: dict[GroupName, str],
-    config_mapping: Mapping[GroupName, BaseModel],
+    config_mapping: Mapping[GroupName, GroupConfig],
 ) -> GroupSpecs:
     return {
         group_id: _get_group_spec(alias, config_mapping.get(group_id))
@@ -77,14 +104,16 @@ def save_group_information(
     load_group_information.cache_clear()  # type: ignore[attr-defined]
 
 
-class GroupAliasConfigFile(WatoPydanticConfigFile[GroupAliasesModel]):
-
+class GroupAliasConfigFile(WatoMultiConfigFile[GroupAliases]):
     def __init__(self, config_dir: Path | None = None) -> None:
         if config_dir is None:
             config_dir = Path(paths.default_config_dir)
         super().__init__(
             config_file_path=config_dir / "conf.d" / "wato" / "groups.mk",
-            model_class=GroupAliasesModel,
+            spec_class=GroupAliases,
+            load_default=lambda: GroupAliases(
+                define_hostgroups={}, define_servicegroups={}, define_contactgroups={}
+            ),
         )
 
     def save_group_aliases(self, all_groups: AllGroupSpecs) -> None:
@@ -98,14 +127,16 @@ class GroupAliasConfigFile(WatoPydanticConfigFile[GroupAliasesModel]):
         )
 
 
-class GroupsConfigFile(WatoPydanticConfigFile[GroupConfigsModel]):
-
+class GroupsConfigFile(WatoMultiConfigFile[GroupConfigs]):
     def __init__(self, config_dir: Path | None = None) -> None:
         if config_dir is None:
             config_dir = Path(paths.default_config_dir)
         super().__init__(
             config_file_path=config_dir / "multisite.d" / "wato" / "groups.mk",
-            model_class=GroupConfigsModel,
+            spec_class=GroupConfigs,
+            load_default=lambda: GroupConfigs(
+                multisite_hostgroups={}, multisite_servicegroups={}, multisite_contactgroups={}
+            ),
         )
 
     @staticmethod

@@ -12,32 +12,35 @@ import select
 import socket
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any, cast
 from urllib.parse import quote, urlencode
 
 import livestatus
 
-import cmk.utils.daemon
-import cmk.utils.debug
+import cmk.ccc.daemon
+import cmk.ccc.debug
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
+from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
+from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
+from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
-from cmk.utils.site import omd_site
-from cmk.utils.tags import TagID
-from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
+from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
-import cmk.base.config as config
+from cmk.events.event_context import EnrichedEventContext, EventContext
 
 ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-Matcher = Callable[[EventRule, EventContext, bool], str | None]
+Matcher = Callable[[EventRule, EventContext, bool, TimeperiodSpecs], str | None]
 
 logger = logging.getLogger("cmk.base.events")
 
@@ -53,7 +56,6 @@ def event_keepalive(
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
 ) -> None:
-    # pylint: disable=too-many-branches
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -90,7 +92,7 @@ def event_keepalive(
                     # had an issue related to os.urandom() which kept FDs open.
                     # This specific issue of Python 2.7.9 should've been fixed
                     # since Python 2.7.10. Just to be sure we keep cleaning up.
-                    cmk.utils.daemon.closefrom(3)
+                    cmk.ccc.daemon.closefrom(3)
 
                     os.execvp("cmk", sys.argv)
 
@@ -102,7 +104,7 @@ def event_keepalive(
                     except OSError:
                         new_data = b""
                     except Exception as e:
-                        if cmk.utils.debug.enabled():
+                        if cmk.ccc.debug.enabled():
                             raise
                         logger.info("Cannot read data from CMC: %s", e)
 
@@ -117,7 +119,7 @@ def event_keepalive(
                     context = raw_context_from_string(data.rstrip(b"\n").decode("utf-8"))
                     event_function(context)
                 except Exception:
-                    if cmk.utils.debug.enabled():
+                    if cmk.ccc.debug.enabled():
                         raise
                     logger.exception("ERROR:")
 
@@ -128,7 +130,7 @@ def event_keepalive(
         except SystemExit as e:
             sys.exit(e.code)
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             logger.exception("ERROR:")
 
@@ -136,7 +138,7 @@ def event_keepalive(
             try:
                 call_every_loop()
             except Exception:
-                if cmk.utils.debug.enabled():
+                if cmk.ccc.debug.enabled():
                     raise
                 logger.exception("ERROR:")
 
@@ -168,7 +170,7 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
     cmk_base replaces all occurences of the pipe symbol in the infotext with
     the character "Light vertical bar" before a check result is submitted to
     the core. We remove this special encoding here since it may result in
-    gibberish output when deliered via a notification plugin.
+    gibberish output when deliered via a notification plug-in.
     """
 
     def _remove_pipe_encoding(value):
@@ -193,7 +195,7 @@ def raw_context_from_string(data: str) -> EventContext:
             # Dynamically adding to TypedDict...
             context[varname] = expand_backslashes(value)  # type: ignore[literal-required]
     except Exception:  # line without '=' ignored or alerted
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
     pipe_decode_raw_context(context)
     return context
@@ -246,7 +248,7 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return livestatus_fetch_contacts(host, None)
 
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return None  # We must allow notifications without Livestatus access
 
@@ -267,7 +269,7 @@ def add_rulebased_macros(
         )
 
         contact_list = livestatus_fetch_contacts(
-            raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
+            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
         )
         if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
@@ -288,7 +290,6 @@ def complete_raw_context(
     with_dump: bool,
     contacts_needed: bool,
 ) -> EnrichedEventContext:
-    # pylint: disable=too-many-branches
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -422,7 +423,7 @@ def complete_raw_context(
             enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
         enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_enriched_context_with_labels(enriched_context)
+        _update_enriched_context_from_notify_host_file(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -442,15 +443,20 @@ def complete_raw_context(
     return enriched_context
 
 
-def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
-    labels = read_notify_host_file(enriched_context["HOSTNAME"])
-    for k, v in labels.host_labels.items():
+def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEventContext) -> None:
+    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
+    for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
         enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
     if enriched_context["WHAT"] == "SERVICE":
-        for k, v in labels.service_labels.get(enriched_context["SERVICEDESC"], {}).items():
+        for k, v in notify_host_config.service_labels.get(
+            enriched_context["SERVICEDESC"], {}
+        ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+
+    for k, v in notify_host_config.tags.items():
+        enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?
@@ -475,25 +481,59 @@ def apply_matchers(
     rule: EventRule,
     context: EnrichedEventContext | EventContext,
     analyse: bool,
+    all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context, analyse)
+        try:
+            result = matcher(rule, context, analyse, all_timeperiods)
+        except Exception:
+            return f"Error in matcher: {traceback.format_exc()}"
         if result is not None:
             return result
     return None
 
 
-def event_match_rule(rule: EventRule, context: EventContext, analyse: bool = False) -> str | None:
+def event_match_rule(
+    rule: EventRule,
+    context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    all_timeperiods: TimeperiodSpecs,
+    analyse: bool = False,
+) -> str | None:
     return apply_matchers(
         [
             event_match_site,
             event_match_folder,
             event_match_hosttags,
             event_match_hostgroups,
-            event_match_servicegroups_fixed,
-            event_match_exclude_servicegroups_fixed,
-            event_match_servicegroups_regex,
-            event_match_exclude_servicegroups_regex,
+            lambda rule, context, analyse, all_timeperiods: event_match_servicegroups_fixed(
+                rule,
+                context,
+                define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
+                _analyse=analyse,
+            ),
+            lambda rule, context, analyse, all_timeperiods: event_match_exclude_servicegroups_fixed(
+                rule,
+                context,
+                define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
+                _analyse=analyse,
+            ),
+            lambda rule, context, analyse, all_timeperiods: event_match_servicegroups_regex(
+                rule,
+                context,
+                define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
+                _analyse=analyse,
+            ),
+            lambda rule, context, analyse, all_timeperiods: event_match_exclude_servicegroups_regex(
+                rule,
+                context,
+                define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
+                _analyse=analyse,
+            ),
             event_match_contacts,
             event_match_contactgroups,
             event_match_hosts,
@@ -508,6 +548,7 @@ def event_match_rule(rule: EventRule, context: EventContext, analyse: bool = Fal
         rule,
         context,
         analyse,
+        all_timeperiods,
     )
 
 
@@ -515,6 +556,7 @@ def event_match_site(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_site" not in rule:
         return None
@@ -536,6 +578,7 @@ def event_match_folder(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
@@ -551,10 +594,7 @@ def event_match_folder(
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires folder '{}', but the host is in '{}'".format(
-                            mustfolder,
-                            hasfolder,
-                        )
+                        return f"The rule requires folder '{mustfolder}', but the host is in '{hasfolder}'"
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 
@@ -567,36 +607,51 @@ def event_match_hosttags(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
-    required = rule.get("match_hosttags")
-    if required:
-        tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
-        if not hosttags_match_taglist(tags, (TagID(_) for _ in required)):
-            return "The host's tags {} do not match the required tags {}".format(
-                "|".join(tags),
-                "|".join(required),
-            )
+    required_tags = rule.get("match_hosttags")
+    if required_tags:
+        context_str = "HOSTTAG_"
+        host_tags = {
+            TagGroupID(variable.replace(context_str, "")): TagID(str(value))
+            for variable, value in context.items()
+            if variable.startswith(context_str)
+        }
+        if not matches_host_tags(set(host_tags.items()), required_tags):
+            return f"The host's tags {host_tags} do not match the required tags {required_tags}"
     return None
 
 
 def event_match_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
-    return _event_match_servicegroups(rule, context, is_regex=False)
+    return _event_match_servicegroups(
+        rule, context, define_servicegroups=define_servicegroups, is_regex=False
+    )
 
 
 def event_match_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
-    return _event_match_servicegroups(rule, context, is_regex=True)
+    return _event_match_servicegroups(
+        rule, context, define_servicegroups=define_servicegroups, is_regex=True
+    )
 
 
-def _event_match_servicegroups(  # pylint: disable=too-many-branches
-    rule: EventRule, context: EventContext, is_regex: bool
+def _event_match_servicegroups(
+    rule: EventRule,
+    context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    *,
+    is_regex: bool,
 ) -> str | None:
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
@@ -629,9 +684,7 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = (
-                        config.define_servicegroups[sg] if match_type == "match_alias" else sg
-                    )
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
                     if r.search(match_value):
                         return None
             elif group in servicegroups:
@@ -642,9 +695,7 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
                 return (
                     "The service is only in the groups %s. None of these patterns match: %s"
                     % (
-                        '"'
-                        + '", "'.join(config.define_servicegroups[x] for x in servicegroups)
-                        + '"',
+                        '"' + '", "'.join(define_servicegroups[x] for x in servicegroups) + '"',
                         '"' + '" or "'.join(required_groups),
                     )
                     + '"'
@@ -667,21 +718,33 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
 def event_match_exclude_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
-    return _event_match_exclude_servicegroups(rule, context, is_regex=False)
+    return _event_match_exclude_servicegroups(
+        rule, context, define_servicegroups=define_servicegroups, is_regex=False
+    )
 
 
 def event_match_exclude_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
-    return _event_match_exclude_servicegroups(rule, context, is_regex=True)
+    return _event_match_exclude_servicegroups(
+        rule, context, define_servicegroups=define_servicegroups, is_regex=True
+    )
 
 
 def _event_match_exclude_servicegroups(
-    rule: EventRule, context: EventContext, is_regex: bool
+    rule: EventRule,
+    context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    *,
+    is_regex: bool,
 ) -> str | None:
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
@@ -704,11 +767,9 @@ def _event_match_exclude_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = (
-                        config.define_servicegroups[sg] if match_type == "match_alias" else sg
-                    )
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
                     match_value_inverse = (
-                        sg if match_type == "match_alias" else config.define_servicegroups[sg]
+                        sg if match_type == "match_alias" else define_servicegroups[sg]
                     )
 
                     if r.search(match_value):
@@ -722,6 +783,7 @@ def event_match_contacts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_contacts" not in rule:
         return None
@@ -746,6 +808,7 @@ def event_match_contactgroups(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
@@ -773,7 +836,12 @@ def event_match_contactgroups(
     )
 
 
-def event_match_hostgroups(rule: EventRule, context: EventContext, _analyse: bool) -> str | None:
+def event_match_hostgroups(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -802,6 +870,7 @@ def event_match_hosts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
@@ -817,6 +886,7 @@ def event_match_exclude_hosts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
@@ -827,6 +897,7 @@ def event_match_services(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
@@ -845,6 +916,7 @@ def event_match_exclude_services(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if context["WHAT"] != "SERVICE":
         return None
@@ -862,6 +934,7 @@ def event_match_plugin_output(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
@@ -882,6 +955,7 @@ def event_match_checktype(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
@@ -903,6 +977,7 @@ def event_match_timeperiod(
     rule: EventRule,
     _context: EventContext,
     analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     # don't test on notification tests, in that case this is done within
     # notify.rbn_match_timeperiod
@@ -920,6 +995,7 @@ def event_match_servicelevel(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
@@ -939,6 +1015,29 @@ def add_context_to_environment(
     for key, value in plugin_context.items():
         assert isinstance(value, str)
         os.putenv(prefix + key, value.encode("utf-8"))
+
+
+def convert_proxy_params(params: NotifyPluginParamsDict) -> dict[str, Any]:
+    """
+    This is needed before add_to_event_context() to keep the 2.3 structure for
+    the changes we made in 2.4. The new format can not be handled by add_to_event_context()
+    """
+    params_dict = dict(params)
+    proxy_params = params["proxy_url"]  # type: ignore[typeddict-item]
+    match proxy_params:
+        case "cmk_postprocessed", "environment_proxy", str():
+            params_dict["proxy_url"] = ("environment", "environment")
+        case "cmk_postprocessed", "no_proxy", str():
+            params_dict["proxy_url"] = ("no_proxy", None)
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            params_dict["proxy_url"] = ("global", stored_proxy_id)
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            params_dict["proxy_url"] = ("url", url)
+        case _:
+            # unknown format, take it as it is
+            pass
+
+    return params_dict
 
 
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters

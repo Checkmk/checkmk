@@ -7,7 +7,7 @@ import json
 import traceback
 from collections.abc import Collection, Iterator
 
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui import gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
@@ -93,11 +93,8 @@ class ModeBackgroundJobsOverview(WatoMode):
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
-        if any(job_manager.get_running_job_ids(c) for c in job_registry.values()):
-            html.immediate_browser_redirect(0.8, "")
-
     # Mypy requires the explicit return, pylint does not like it.
-    def action(self) -> ActionResult:  # pylint: disable=useless-return
+    def action(self) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         return None

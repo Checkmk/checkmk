@@ -11,7 +11,7 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui import sites
 from cmk.gui.config import active_config

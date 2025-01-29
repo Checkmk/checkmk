@@ -22,6 +22,7 @@
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ICore.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -36,6 +37,7 @@ using namespace std::chrono_literals;
 
 namespace {
 // NOTE: Keep this in sync with EC code. Ugly...
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<std::string> grepping_filters = {
     "event_id",        "event_text",        "event_comment", "event_host",
     "event_contact",   "event_application", "event_rule_id", "event_owner",
@@ -268,7 +270,7 @@ std::string ECRow::get(const std::string &column_name,
     return it == map_.end() ? default_value : it->second;
 }
 
-const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
+const IHost *ECRow::host() const { return host_; }
 
 namespace {
 std::function<bool(const row_type &)> get_authorizer(const Table &table,

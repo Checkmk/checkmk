@@ -13,7 +13,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import NamedTuple
 
-from cmk.utils import store
+from cmk.ccc import store
 
 
 class LicenseState(Enum):
@@ -62,6 +62,17 @@ class HeaderNotification:
 
 
 @dataclass
+class HeaderNotificationSingleLine:
+    roles: Sequence[str]
+    subject: str
+    message: str
+
+    @property
+    def message_html(self) -> str:
+        return f"<b>{self.subject}</b> {self.message}"
+
+
+@dataclass
 class ActivationBlock:
     subject: str
     message_lines: Sequence[str]
@@ -79,9 +90,10 @@ class ActivationBlock:
 
 @dataclass
 class UserEffect:
-    header: HeaderNotification | None
+    header: HeaderNotification | HeaderNotificationSingleLine | None
     email: EmailNotification | None
     block: ActivationBlock | None
+    banner: HeaderNotificationSingleLine | None = None
 
 
 class NotificationHandler(abc.ABC):

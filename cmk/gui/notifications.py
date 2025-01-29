@@ -11,7 +11,7 @@ from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 import cmk.utils.render
 
 import cmk.gui.pages
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -36,10 +36,10 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.table import table_element
+from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
-from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 
 
@@ -72,7 +72,7 @@ class PermissionSectionNotificationPlugins(PermissionSection):
 
     @property
     def title(self) -> str:
-        return _("Notification plugins")
+        return _("Notification plug-ins")
 
     @property
     def do_sort(self) -> bool:
@@ -80,7 +80,7 @@ class PermissionSectionNotificationPlugins(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 
@@ -246,7 +246,7 @@ class ClearFailedNotificationPage(Page):
                     _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
                 )
                 table.cell(_("Contact"), row[header["contact_name"]])
-                table.cell(_("Plugin"), row[header["type"]])
+                table.cell(_("Plug-in"), row[header["type"]])
                 table.cell(_("Host"), row[header["host_name"]])
                 table.cell(_("Service"), row[header["service_description"]])
                 table.cell(_("Output"), row[header["comment"]])

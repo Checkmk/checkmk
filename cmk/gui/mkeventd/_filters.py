@@ -27,7 +27,7 @@ from cmk.gui.visuals.filter import (
     RegexFilter,
 )
 
-from .defines import phase_names, syslog_priorities
+from .defines import action_whats, phase_names, syslog_priorities
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -206,6 +206,19 @@ def register(filter_registry: FilterRegistry) -> None:
     )
 
     filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("History action type"),
+            sort_index=225,
+            info="history",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="history_what",
+                options=[("history_what_%s" % k, k) for k in action_whats],
+                livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
+            ),
+        )
+    )
+
+    filter_registry.register(
         FilterTime(
             title=_l("First occurrence of event"),
             sort_index=220,
@@ -246,7 +259,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at least"),
+            title=_l("Service level at least"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),
@@ -256,7 +269,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at most"),
+            title=_l("Service level at most"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),
@@ -324,13 +337,13 @@ class FilterECServiceLevelRange(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         selection = self._options()
         html.open_div(class_="service_level min")
-        html.write_text("From")
+        html.write_text_permissive("From")
         html.dropdown(
             self.lower_bound_varname, selection, deflt=value.get(self.lower_bound_varname, "")
         )
         html.close_div()
         html.open_div(class_="service_level max")
-        html.write_text("To")
+        html.write_text_permissive("To")
         html.dropdown(
             self.upper_bound_varname, selection, deflt=value.get(self.upper_bound_varname, "")
         )

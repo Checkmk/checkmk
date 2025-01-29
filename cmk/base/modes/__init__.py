@@ -8,7 +8,9 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
-from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+
+from cmk.utils import tty
 from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
@@ -16,6 +18,8 @@ from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.tags import TagID
 
 from cmk.base.config import ConfigCache
+
+from cmk import trace
 
 OptionSpec = str
 Argument = str
@@ -25,6 +29,8 @@ ModeFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = list[str]
+
+tracer = trace.get_tracer()
 
 
 class Modes:
@@ -50,7 +56,14 @@ class Modes:
         except KeyError:
             return False
 
-    def call(self, opt: str, arg: Argument | None, all_opts: Options, all_args: Arguments) -> int:
+    def call(
+        self,
+        opt: str,
+        arg: Argument | None,
+        all_opts: Options,
+        all_args: Arguments,
+        trace_context: trace.Context,
+    ) -> int:
         mode = self._get(opt)
         sub_options = mode.get_sub_options(all_opts)
 
@@ -67,7 +80,15 @@ class Modes:
         if handler is None:
             raise TypeError()
 
-        return handler(*handler_args)
+        with tracer.span(
+            f"mode[{mode.name()}]",
+            attributes={
+                "cmk.base.mode.name": mode.name(),
+                "cmk.base.mode.args": repr(handler_args),
+            },
+            context=trace_context,
+        ):
+            return handler(*handler_args)
 
     def _get(self, opt: str) -> Mode:
         opt_name = self._strip_dashes(opt)
@@ -172,7 +193,7 @@ class Modes:
                         num_found += 1
                 if num_found == 0:
                     raise MKBailOut(
-                        "Host name or tag specification '%s' does " "not match any host." % arg
+                        "Host name or tag specification '%s' does not match any host." % arg
                     )
         return hostlist
 
@@ -216,19 +237,34 @@ class Modes:
 class Option:
     def __init__(
         self,
+        *,
         long_option: str,
         short_help: str,
         short_option: str | None = None,
+        # ----------------------------------------------------------------------
+        # TODO: To avoid nonsensical and/or contradicting value combinations,
+        # all these argument-related parameters below should actually be a
+        # *single* parameter, see their intrinsic relations below.
         argument: bool = False,
         argument_descr: str | None = None,
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         count: bool = False,
+        # ----------------------------------------------------------------------
         handler_function: OptionFunction | None = None,
-        *,
         deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
+
+        # We have an argument description if and only if we have an argument.
+        assert (argument_descr is not None) == argument
+        # Having a conversion function implies that we have an argument.
+        assert (argument_conv is None) or argument
+        # Being optional implies that we actually have an argument.
+        assert not argument_optional or argument
+        # Counting an option and having an argument is mutually exclusive.
+        assert not (count and argument)
+
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
@@ -310,6 +346,7 @@ class Option:
 class Mode(Option):
     def __init__(
         self,
+        *,
         long_option: OptionName,
         handler_function: ModeFunction,
         short_help: str,
@@ -324,13 +361,13 @@ class Mode(Option):
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
-            long_option,
-            short_help,
-            short_option,
-            argument,
-            argument_descr,
-            argument_conv,
-            argument_optional,
+            long_option=long_option,
+            short_help=short_help,
+            short_option=short_option,
+            argument=argument,
+            argument_descr=argument_descr,
+            argument_conv=argument_conv,
+            argument_optional=argument_optional,
             handler_function=handler_function,
         )
         self.long_help = long_help
@@ -351,7 +388,7 @@ class Mode(Option):
         return specs
 
     # expected format is like this
-    #  -i, --inventory does a HW/SW-Inventory for all, one or several
+    #  -i, --inventory does a HW/SW Inventory for all, one or several
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
     def long_help_text(self) -> str | None:
@@ -404,8 +441,8 @@ class Mode(Option):
 
                 if option.is_deprecated_option(o):
                     console.warning(
-                        console.format_warning(
-                            f"{o!r} is deprecated in favour of option {option.name()!r}\n"
+                        tty.format_warning(
+                            f"{o!r} is deprecated in favour of option {option.name()!r}"
                         )
                     )
 
@@ -421,22 +458,16 @@ class Mode(Option):
                         options[option.name()] = value + 1
                         continue
                     val = True
-                else:
-                    if option.argument_conv:
-                        try:
-                            val = option.argument_conv(a)
-                        except ValueError:
-                            raise MKGeneralException("%s: Invalid argument" % o)
+                elif option.argument_conv:
+                    try:
+                        val = option.argument_conv(a)
+                    except ValueError:
+                        raise MKGeneralException("%s: Invalid argument" % o)
 
                 options[option.name()] = val
 
         return options
 
-
-keepalive_option = Option(
-    long_option="keepalive",
-    short_help="Execute in keepalive mode (CEE only)",
-)
 
 #
 # Initialize the modes object and load all available modes

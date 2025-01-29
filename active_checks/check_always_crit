@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""This check is always CRITICAL and prints the message passed in it's arguments back"""
+
+import argparse
+import sys
+from collections.abc import Sequence
+
+
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("message", type=str, nargs="+")
+    return parser.parse_args(argv)
+
+
+def main(argv: Sequence[str]) -> int:
+    args = parse_arguments(argv[1:])
+    sys.stdout.write(" ".join(args.message))
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

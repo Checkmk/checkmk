@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, render, Result, State
 
 CheckParams = Mapping[str, Any] | None
@@ -22,7 +22,7 @@ Section = Mapping[str, Sensor]
 #        "current" : 12.0,                                # without device state
 #     }
 # }
-def check_elphase(  # pylint: disable=too-many-branches
+def check_elphase(
     item: str,
     params: CheckParams,
     section: Section,
@@ -116,7 +116,7 @@ def check_elphase(  # pylint: disable=too-many-branches
                 if levels[0] is not None and levels[1] is not None:
                     levels_lower = (factor * levels[0], factor * levels[1])
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value * factor,
             levels_upper=levels_upper,
             levels_lower=levels_lower,

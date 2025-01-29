@@ -2,8 +2,6 @@
 
 /// file: notify.groovy
 
-import org.codehaus.groovy.runtime.StackTraceUtils;
-
 def get_author_email() {
     // Workaround since CHANGE_AUTHOR_EMAIL is not available
     // Bug: https://issues.jenkins-ci.org/browse/JENKINS-39838
@@ -70,11 +68,9 @@ def notify_error(error) {
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
-            def notify_emails = [
-                "timotheus.bachinger@checkmk.com",
-                "frans.fuerst@checkmk.com",
-                "jonas.scharpf@checkmk.com",
-            ];
+            def notify_emails = [];
+            // ugly workaround, split() only + unique() does not work
+            notify_emails.addAll(TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
             currentBuild.changeSets.each { changeSet ->
                 def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(
@@ -166,13 +162,6 @@ def notify_error(error) {
     //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
     // This ensures that the build status is set correctly
-
-    StackTraceUtils.sanitize(error);
-    print("ERROR: ${error.stackTrace.head()}: ${error}");
-    currentBuild.description += (
-        "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
-            "<br><strong style='color:red'>${error}</strong>");
-    throw error;
 }
 
 return this;

@@ -6,16 +6,16 @@
 import abc
 from collections.abc import Collection, Iterator, Sequence
 
-import cmk.utils.paths
-from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupType
-from cmk.utils.user import UserId
-from cmk.utils.version import edition_supports_nagvis
+from cmk.ccc import version
+from cmk.ccc.version import edition_supports_nagvis
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
-import cmk.gui.watolib.groups as groups
+import cmk.utils.paths
+from cmk.utils.user import UserId
+
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupName, GroupSpec, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -32,9 +32,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -43,6 +44,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups_io import (
     load_contact_group_information,
     load_host_group_information,
@@ -137,7 +139,8 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(mode_url("%s_groups" % self.type_name))
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
@@ -156,7 +159,11 @@ class ModeGroups(WatoMode, abc.ABC):
             groups.delete_group(delname, self.type_name)
             self._groups = self._load_groups()
 
-        return redirect(mode_url("%s_groups" % self.type_name))
+        if request.var("mode") == "edit_host_group":
+            return redirect(mode_url("%s_groups" % self.type_name))
+
+        request.del_var("_transid")
+        return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
     def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")
@@ -166,7 +173,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
         table.cell("#", css=["narrow nowrap"])
-        html.write_text(nr)
+        html.write_text_permissive(nr)
 
         table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link(
@@ -249,6 +256,8 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         pass
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
@@ -288,7 +297,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 html.text_input("name", size=50)
                 html.set_focus("name")
             else:
-                html.write_text(self._name)
+                html.write_text_permissive(self._name)
                 html.set_focus("alias")
 
             forms.section(_("Alias"), is_required=True)
@@ -406,7 +415,7 @@ class ModeContactgroups(ModeGroups):
         super()._show_row_cells(nr, table, name, group)
         table.cell(_("Members"))
         html.write_html(
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [
                     HTMLWriter.render_a(
                         alias,
@@ -507,7 +516,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         if permitted_inventory_paths:
             self.group["inventory_paths"] = permitted_inventory_paths
 
-        if edition_supports_nagvis():
+        if edition_supports_nagvis(version.edition(cmk.utils.paths.omd_root)):
             permitted_maps = self._vs_nagvis_maps().from_html_vars("nagvis_maps")
             self._vs_nagvis_maps().validate_value(permitted_maps, "nagvis_maps")
             if permitted_maps:
@@ -517,12 +526,15 @@ class ModeEditContactgroup(ABCModeEditGroup):
         super()._show_extra_page_elements()
 
         forms.header(_("Permissions"))
-        forms.section(_("Permitted HW/SW inventory paths"))
+        forms.section(_("Permitted HW/SW Inventory paths"))
         self._vs_inventory_paths_and_keys().render_input(
             "inventory_paths", self.group.get("inventory_paths")
         )
 
-        if edition_supports_nagvis() and self._get_nagvis_maps():
+        if (
+            edition_supports_nagvis(version.edition(cmk.utils.paths.omd_root))
+            and self._get_nagvis_maps()
+        ):
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))

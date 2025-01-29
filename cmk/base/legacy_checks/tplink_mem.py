@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.tplink import DETECT_TPLINK
+
+check_info = {}
 
 
 def inventory_tplink_mem(info):
@@ -44,6 +44,7 @@ def parse_tplink_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["tplink_mem"] = LegacyCheckDefinition(
+    name="tplink_mem",
     parse_function=parse_tplink_mem,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(
@@ -54,4 +55,5 @@ check_info["tplink_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_tplink_mem,
     check_function=check_tplink_mem,
     check_ruleset_name="memory_percentage_used",
+    check_default_parameters={"levels": None},
 )

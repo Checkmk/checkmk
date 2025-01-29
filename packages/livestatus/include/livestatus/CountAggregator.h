@@ -11,21 +11,17 @@
 
 #include "livestatus/Aggregator.h"
 class Filter;
-class Row;
-class RowRenderer;
-class User;
 
 class CountAggregator : public Aggregator {
 public:
-    explicit CountAggregator(const Filter *filter)
-        : _filter(filter), _count(0) {}
+    explicit CountAggregator(const Filter *filter) : _filter{filter} {}
     void consume(Row row, const User &user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:
     const Filter *const _filter;
-    std::uint32_t _count;
+    std::uint32_t _count{0};
 };
 
 #endif  // CountAggregator_h

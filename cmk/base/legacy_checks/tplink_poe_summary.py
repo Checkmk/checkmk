@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.tplink import DETECT_TPLINK
+
+check_info = {}
 
 
 def inventory_tplink_poe_summary(info):
@@ -20,7 +20,7 @@ def inventory_tplink_poe_summary(info):
 def check_tplink_poe_summary(_no_item, params, info):
     deci_watt = float(info[0][0])
     watt = deci_watt / 10
-    return check_levels(watt, "power", params.get("levels", (None, None)), unit="Watt")
+    return check_levels(watt, "power", params.get("levels"), unit="W")
 
 
 def parse_tplink_poe_summary(string_table: StringTable) -> StringTable:
@@ -28,6 +28,7 @@ def parse_tplink_poe_summary(string_table: StringTable) -> StringTable:
 
 
 check_info["tplink_poe_summary"] = LegacyCheckDefinition(
+    name="tplink_poe_summary",
     parse_function=parse_tplink_poe_summary,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(
@@ -38,4 +39,5 @@ check_info["tplink_poe_summary"] = LegacyCheckDefinition(
     discovery_function=inventory_tplink_poe_summary,
     check_function=check_tplink_poe_summary,
     check_ruleset_name="epower_single",
+    check_default_parameters={"levels": None},
 )

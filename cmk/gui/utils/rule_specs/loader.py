@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes

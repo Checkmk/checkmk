@@ -41,7 +41,7 @@ from cmk.plugins.kube.transform_json import (
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
-SUPPORTED_VERSIONS = [(1, 24), (1, 25), (1, 26), (1, 27), (1, 28)]
+SUPPORTED_VERSIONS = [(1, 26), (1, 27), (1, 28), (1, 29), (1, 30), (1, 31)]
 # PM decision: LOWEST_FUNCTIONING_VERSION is incremented, if an issue is reported by a customer.
 # Otherwise, we try not change anything in monitoring (despite lack of support).
 LOWEST_FUNCTIONING_VERSION = (1, 21)
@@ -169,7 +169,9 @@ class CoreAPI(RawAPI):
                 "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
             )
             with contextlib.suppress(requests.RequestException):
-                result.append(send_request(self._config, self._client, request).text)
+                response = send_request(self._config, self._client, request)
+                response.raise_for_status()
+                result.append(response.text)
         return result
 
     def query_raw_nodes(self) -> JSONNodeList:
@@ -180,11 +182,18 @@ class CoreAPI(RawAPI):
         # https://kubernetes.io/docs/reference/using-api/health-checks/
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def query_kubelet_health(self, node_names: Sequence[str]) -> Mapping[str, api.HealthZ]:
-        return {
-            node_name: self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
-            for node_name in node_names
-        }
+    def query_kubelet_health(
+        self, node_names: Sequence[str]
+    ) -> Mapping[str, api.HealthZ | api.NodeConnectionError]:
+        node_to_health: dict[str, api.HealthZ | api.NodeConnectionError] = {}
+        for node_name in node_names:
+            try:
+                node_to_health[node_name] = self._get_healthz(
+                    f"/api/v1/nodes/{node_name}/proxy/healthz"
+                )
+            except requests.RequestException as e:
+                node_to_health[node_name] = api.NodeConnectionError(message=str(e))
+        return node_to_health
 
     def _get_healthz(self, resource_path: str) -> api.HealthZ:
         request = requests.Request("GET", self._config.url(resource_path))
@@ -356,7 +365,7 @@ class UnparsedAPIData:
     raw_deployments: Sequence[client.V1Deployment]
     raw_daemonsets: Sequence[client.V1DaemonSet]
     raw_replica_sets: Sequence[client.V1ReplicaSet]
-    node_to_kubelet_health: Mapping[str, api.HealthZ]
+    node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError]
     api_health: api.APIHealth
     raw_statefulsets: JSONStatefulSetList
     raw_kubelet_open_metrics_dumps: Sequence[str]
@@ -405,7 +414,7 @@ def parse_api_data(
     raw_statefulsets: JSONStatefulSetList,
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
     raw_persistent_volumes: Sequence[client.V1PersistentVolume],
-    node_to_kubelet_health: Mapping[str, api.HealthZ],
+    node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],

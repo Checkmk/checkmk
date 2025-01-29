@@ -9,7 +9,11 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk import trace
+
+tracer = trace.get_tracer()
 
 
 class Hook(NamedTuple):
@@ -21,7 +25,7 @@ hooks: dict[str, list[Hook]] = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Cleanup all plug-in hooks. They need to be renewed by load_plugins()
     # of the other modules
     unregister_plugin_hooks()
@@ -72,15 +76,20 @@ def registered(name: str) -> bool:
 
 
 def call(name: str, *args: Any) -> None:
-    n = 0
-    for hook in hooks.get(name, []):
-        n += 1
-        try:
-            hook.handler(*args)
-        except Exception as e:
-            t, v, tb = sys.exc_info()
-            msg = "".join(traceback.format_exception(t, v, tb, None))
-            raise MKGeneralException(msg) from e
+    if not (registered_hooks := hooks.get(name, [])):
+        return
+
+    with tracer.span(f"hook_call[{name}]"):
+        for hook in registered_hooks:
+            try:
+                hook.handler(*args)
+            except Exception as e:
+                # for builtin hooks do not change exception handling
+                if hook.is_builtin:
+                    raise
+                t, v, tb = sys.exc_info()
+                msg = "".join(traceback.format_exception(t, v, tb, None))
+                raise MKGeneralException(msg) from e
 
 
 ClearEvent = Literal[
@@ -109,7 +118,7 @@ CacheWrapperArgs = typing.ParamSpec("CacheWrapperArgs")
 
 def scoped_memoize(
     clear_events: ClearEvents,
-    cache_impl: Callable[CacheWrapperArgs, Callable[P, R]],
+    cache_impl: Callable[CacheWrapperArgs, Callable[[Callable[P, R]], Callable[P, R]]],
     cache_impl_args: CacheWrapperArgs.args,
     cache_impl_kwargs: CacheWrapperArgs.kwargs,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
@@ -146,7 +155,7 @@ def scoped_memoize(
     if not clear_events:
         raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
 
-    def _decorator(func: P.args) -> P.args:
+    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
         cached_func = cache_impl(*cache_impl_args, **cache_impl_kwargs)(func)
         for clear_event in clear_events:
             # Tried to generically type this such that parameters and added methods are checked,
@@ -179,7 +188,7 @@ def request_memoize(
     """
     return scoped_memoize(
         clear_events=["request-end", "request-context-exit"],
-        cache_impl=functools.lru_cache,  # type: ignore  # too specialized _lru_cache[_P, _R] ...
+        cache_impl=functools.lru_cache,  # type: ignore[return-value]  # too specialized _lru_cache[_P, _R] ...
         cache_impl_args=(),
         cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
     )

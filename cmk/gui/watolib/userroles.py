@@ -13,8 +13,15 @@ from marshmallow import ValidationError
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import UserRole, Users
-from cmk.gui.userdb import load_roles, load_users, save_users, UserRolesConfigFile
+from cmk.gui.type_defs import Users
+from cmk.gui.userdb import (
+    is_two_factor_login_enabled,
+    load_roles,
+    load_users,
+    save_users,
+    UserRole,
+    UserRolesConfigFile,
+)
 from cmk.gui.utils.transaction_manager import transactions
 
 RoleID = NewType("RoleID", str)
@@ -41,6 +48,7 @@ def clone_role(
     cloned_user_role = UserRole(
         name=new_role_id,
         basedon=role_to_clone.basedon or role_to_clone.name,
+        two_factor=role_to_clone.two_factor,
         alias=new_alias,
         permissions=role_to_clone.permissions,
     )
@@ -155,3 +163,11 @@ def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID) -> None:
     del all_roles[old_roleid]
     all_roles[new_roleid] = role
     UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
+
+
+def logout_users_with_role(role_id: RoleID) -> None:
+    users = load_users(lock=True)
+    for user_id, user in users.items():
+        if role_id in user["roles"] and not is_two_factor_login_enabled(user_id):
+            user["serial"] = user.get("serial", 0) + 1
+    save_users(users, datetime.now())

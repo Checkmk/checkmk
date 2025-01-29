@@ -91,6 +91,7 @@ def _parameter_valuespec_ewon():
                 ),
             )
         ],
+        ignored_keys=["device"],
     )
 
 

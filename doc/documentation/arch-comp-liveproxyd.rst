@@ -13,7 +13,7 @@ The main requirement we solve with the Livestatus proxy daemon is:
 Other features we get:
 
 * Caching of Livestatus queries
-* Transport of HW/SW inventory information from remote to central site
+* Transport of HW/SW Inventory information from remote to central site
 * Shared livestatus connections between apache worker processes
 
 The Livestatus proxy daemon is an Enterprise feature.

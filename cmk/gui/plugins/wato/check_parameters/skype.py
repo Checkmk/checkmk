@@ -44,7 +44,7 @@ def _parameter_valuespec_skype():
             (
                 "failed_locations_requests",
                 Dictionary(
-                    title=_("Failed Get Locations Requests"),
+                    title=_("Failed get locations requests"),
                     elements=[
                         (
                             "upper",
@@ -70,7 +70,7 @@ def _parameter_valuespec_skype():
             (
                 "failed_file_requests",
                 Dictionary(
-                    title=_("Failed requests to Adressbook files"),
+                    title=_("Failed requests to adress book files"),
                     elements=[
                         (
                             "upper",
@@ -132,7 +132,7 @@ def _parameter_valuespec_skype():
             (
                 "timedout_ad_requests",
                 Dictionary(
-                    title=_("Timed out Active Directory Requests"),
+                    title=_("Timed out Active Directory requests"),
                     elements=[
                         (
                             "upper",
@@ -158,7 +158,7 @@ def _parameter_valuespec_skype():
             (
                 "5xx_responses",
                 Dictionary(
-                    title=_("HTTP 5xx Responses"),
+                    title=_("HTTP 5xx responses"),
                     elements=[
                         (
                             "upper",
@@ -184,7 +184,7 @@ def _parameter_valuespec_skype():
             (
                 "asp_requests_rejected",
                 Dictionary(
-                    title=_("ASP Requests Rejected"),
+                    title=_("ASP requests rejected"),
                     elements=[
                         (
                             "upper",

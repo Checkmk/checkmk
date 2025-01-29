@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupEnforcedServicesStorage,
 )
-from cmk.gui.valuespec import TextInput
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_raid():
@@ -28,6 +28,11 @@ rulespec_registry.register(
         check_group_name="raid",
         group=RulespecGroupEnforcedServicesStorage,
         item_spec=_item_spec_raid,
+        parameter_valuespec=lambda: Dictionary(
+            elements=(),
+            title=_("This plug-in has no paramaters"),
+            empty_text=_("This plug-in has no paramaters"),
+        ),
         title=lambda: _("RAID: overall state"),
     )
 )

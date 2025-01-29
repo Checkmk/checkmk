@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # Just an assumption, levels as in other fan checks
 
@@ -36,6 +37,7 @@ def parse_netextreme_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["netextreme_fan"] = LegacyCheckDefinition(
+    name="netextreme_fan",
     parse_function=parse_netextreme_fan,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(

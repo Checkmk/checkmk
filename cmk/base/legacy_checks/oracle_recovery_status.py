@@ -23,17 +23,17 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_recovery_status(info):
     return [(line[0], {}) for line in info]
 
 
-def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-many-branches
+def check_oracle_recovery_status(item, params, info):
     state = 0
     offlinecount = 0
     filemissingcount = 0
@@ -145,7 +145,14 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
                 perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn))
             else:
-                perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn, crit))
+                perfdata.append(
+                    (
+                        "checkpoint_age",
+                        oldest_checkpoint_age,
+                        warn,
+                        crit,
+                    )
+                )
 
                 # check the checkpoint age on a non primary database!
                 if oldest_checkpoint_age >= crit:
@@ -155,10 +162,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                     infotext += "(!)"
                     state = max(1, state)
 
-            infotext += " (warn/crit at {}/{} )".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)} )"
 
         if offlinecount > 0:
             infotext += " %i datafiles offline(!!)" % (offlinecount)
@@ -176,10 +180,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
             if params.get("backup_age"):
                 warn, crit = params["backup_age"]
-                infotext += " (warn/crit at {}/{})".format(
-                    render.timespan(warn),
-                    render.timespan(crit),
-                )
+                infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)})"
                 perfdata.append(("backup_age", oldest_backup_age, warn, crit))
 
                 if oldest_backup_age >= crit:
@@ -208,6 +209,7 @@ def parse_oracle_recovery_status(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_recovery_status"] = LegacyCheckDefinition(
+    name="oracle_recovery_status",
     parse_function=parse_oracle_recovery_status,
     service_name="ORA %s Recovery Status",
     discovery_function=inventory_oracle_recovery_status,

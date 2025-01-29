@@ -3,9 +3,14 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <filesystem>
+#include <functional>
 #include <iomanip>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
@@ -15,7 +20,11 @@
 #include "livestatus/Interface.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
+#include "livestatus/data_encoding.h"
 #include "livestatus/opids.h"
+#include "neb/Comment.h"
+#include "neb/Downtime.h"
+#include "neb/NebCore.h"
 #include "neb/NebHost.h"
 #include "test_utilities.h"
 
@@ -39,7 +48,17 @@ struct DictFilterTest : public ::testing::Test {
             Filter::Kind::row, "name",
             [&cvdc](Row row) { return cvdc.getValue(row); },
             RelationalOperator::equal, value};
-        NebHost h{test_host};
+        std::map<unsigned long, std::unique_ptr<Downtime>> downtimes;
+        std::map<unsigned long, std::unique_ptr<Comment>> comments;
+        const NebCore core{downtimes,
+                           comments,
+                           NagiosPathConfig{},
+                           NagiosLimits{},
+                           NagiosAuthorization{},
+                           Encoding::utf8,
+                           "raw",
+                           {}};
+        NebHost h{test_host, core};
         return filter.accepts(Row{&h}, NoAuthUser{}, {});
     }
 

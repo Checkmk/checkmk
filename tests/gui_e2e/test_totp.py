@@ -3,40 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from base64 import b32decode
 from datetime import datetime
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from playwright.sync_api import expect
 
-from cmk.utils.totp import TOTP
+from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.site import Site
+
+from cmk.crypto.totp import TOTP
 
 
-def test_totp(
-    logged_in_page: LoginPage,
-) -> None:
+def test_totp(test_site: Site, dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
     # first go to dashboard to ensure we're reloading the page in case we're already there
-    logged_in_page.goto_main_dashboard()
+    dashboard_page.goto_main_dashboard()
+
     # On two factor registration page
-    logged_in_page.main_menu.user_two_factor_authentication.click()
+    dashboard_page.main_menu.user_two_factor_authentication.click()
+
     # On the App Authenticator page
-    logged_in_page.main_area.check_page_title("Two-factor authentication")
-    logged_in_page.main_area.get_suggestion("Register authenticator app").click()
+    dashboard_page.main_area.check_page_title("Two-factor authentication")
+    dashboard_page.main_area.get_suggestion("Register authenticator app").click()
+
     # Now extract TOTP secret from text and submit
-    logged_in_page.main_area.check_page_title("Register authenticator app")
+    dashboard_page.main_area.check_page_title("Register authenticator app")
     text_list = (
-        logged_in_page.main_area.locator("a[class='copy_to_clipboard']")
+        dashboard_page.main_area.locator("a[class='copy_to_clipboard']")
         .locator("span")
         .all_text_contents()
     )
+
     assert len(text_list) == 1
+
     secret = text_list[0]
     authenticator = TOTP(b32decode(secret))
     current_time = authenticator.calculate_generation(datetime.now())
     otp_value = authenticator.generate_totp(current_time)
-    logged_in_page.main_area.get_input("auth_code").fill(otp_value)
-    logged_in_page.main_area.get_suggestion("Save").click()
+    dashboard_page.main_area.get_input("auth_code").fill(otp_value)
+    dashboard_page.main_area.get_suggestion("Save").click()
+
+    # Log out stuff here
+    dashboard_page.main_menu.logout()
+    login_page = LoginPage(dashboard_page.page, navigate_to_page=False)
+    login_page.login(credentials)
+    expect(login_page.page).to_have_url(re.compile("user_login_two_factor.py"))
+
+    dashboard_page.get_input("_totp_code").fill("1")
+    dashboard_page.get_input("_use_totp_code").click()
+
+    assert test_site.read_file("var/check_mk/web/cmkadmin/num_failed_logins.mk") == "1\n"
+
+    dashboard_page.get_input("_totp_code").fill(otp_value)
+    dashboard_page.get_input("_use_totp_code").click()
+
     # Removing the two factor mechanism
-    logged_in_page.main_area.locator(
+    dashboard_page.main_menu.user_two_factor_authentication.click()
+    dashboard_page.main_area.check_page_title("Two-factor authentication")
+    dashboard_page.main_area.locator(
         "a[title='Delete authentication via authenticator app']"
     ).click()
-    logged_in_page.main_area.locator("button:has-text('Delete')").click()
+    dashboard_page.main_area.locator("button:has-text('Delete')").click()

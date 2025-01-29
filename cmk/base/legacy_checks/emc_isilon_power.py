@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
+
+check_info = {}
 
 
 # Power Supply 1 Input Voltage --> Power Supply 1 Input
@@ -52,6 +52,7 @@ def parse_emc_isilon_power(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_isilon_power"] = LegacyCheckDefinition(
+    name="emc_isilon_power",
     parse_function=parse_emc_isilon_power,
     detect=DETECT_ISILON,
     fetch=SNMPTree(

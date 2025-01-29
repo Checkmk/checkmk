@@ -93,7 +93,8 @@ public:
     }
 
 private:
-    std::shared_ptr<Formatter> _formatter{std::make_shared<SimpleFormatter>()};
+    std::atomic<std::shared_ptr<Formatter>> _formatter{
+        std::make_shared<SimpleFormatter>()};
 };
 
 class SharedStreamHandler : public Handler {

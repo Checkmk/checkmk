@@ -7,11 +7,13 @@ import copy
 
 import pytest
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.type_defs import ColumnSpec
 from cmk.gui.view import View
-from cmk.gui.views.join_service_rows import _get_needed_join_columns
+from cmk.gui.views._join_service_rows import _get_needed_join_columns
 
 
 @pytest.mark.usefixtures("load_config")
@@ -30,7 +32,7 @@ def test_get_needed_join_columns(view: View) -> None:
         "service_description",
     ]
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         expected_columns += [
             "host_custom_variable_names",
             "host_custom_variable_values",

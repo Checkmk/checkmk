@@ -11,10 +11,11 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.debug
+import cmk.ccc.debug
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.version import edition, Edition
 
 from cmk.snmplib import get_single_oid, OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
@@ -24,14 +25,14 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
     StoredWalkSNMPBackend,
 )
 
-if edition() is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
+if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
-cmk.utils.debug.enable()
+cmk.ccc.debug.enable()
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(
+sys.stdout.write(
     repr(
         (
             get_single_oid(
@@ -70,4 +71,5 @@ print(
             snmp_cache.single_oid_cache(),
         )
     )
+    + "\n"
 )

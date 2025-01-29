@@ -11,6 +11,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.userdb import SAMLUserConnectionConfig
 from cmk.gui.userdb.type_defs import RelayState
+from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
@@ -35,7 +36,9 @@ def show_saml2_login(
         saml_css_class = []
         html.close_div()
         if (
-            saml2_user_error := request.get_str_input("_saml2_user_error")
+            saml2_user_error := escape_text(
+                request.get_str_input("_saml2_user_error"), escape_links=True
+            )
         ) and request.get_str_input("_connection_id") == connection["id"]:
             user_errors.add(
                 MKUserError(

@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.systemtime import parse_systemtime
+from cmk.plugins.collection.agent_based.systemtime import parse_systemtime
 
 checkname = "systemtime"
 

@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.unit.rest_api_client import RestApiClient
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

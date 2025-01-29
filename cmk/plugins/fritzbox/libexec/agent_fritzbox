@@ -8,4 +8,4 @@ import sys
 from cmk.plugins.fritzbox.lib import agent
 
 if __name__ == "__main__":
-    sys.exit(agent.main())
+    sys.exit(agent.main())  # type: ignore[no-untyped-call]

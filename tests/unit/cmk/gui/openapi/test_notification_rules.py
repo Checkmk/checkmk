@@ -9,10 +9,13 @@ from typing import Any, get_args, Literal
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from cmk.utils import version
-from cmk.utils.notify_types import CustomPluginName, PluginOptions
+from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.tags import TagID
 
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -21,32 +24,43 @@ from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    AckStateAPI,
+    API_BasicAuthExplicit,
+    API_BasicAuthStore,
+    API_ExplicitToken,
+    API_JiraData,
     API_PushOverData,
     API_ServiceNowData,
+    API_StoreToken,
     APIConditions,
     APIContactSelection,
     APINotificationRule,
     APIPluginDict,
     APIPluginList,
     APIRuleProperties,
-    CASE_STATE_TYPE,
-    INCIDENT_STATE_TYPE,
+    DowntimeStateAPI,
     MatchHostEventsAPIType,
     MatchServiceEventsAPIType,
-    MgmtTypeAPI,
-    MgmtTypeParamsAPI,
+    MgmtTypeCaseAPI,
+    MgmtTypeCaseParamsAPI,
+    MgmtTypeIncidentAPI,
+    MgmtTypeIncidentParamsAPI,
     NotificationBulkingAPIAttrs,
     NotificationBulkingAPIValueType,
     PluginType,
+    RecoveryStateCaseAPI,
+    RecoveryStateIncidentAPI,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
-from cmk.gui.wato._notification_parameter._registry import (
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     register_notification_parameters,
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 
 def test_get_notification_rule(clients: ClientRegistry) -> None:
@@ -148,9 +162,9 @@ def setup_site_data(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="some_store_id",
         title="foobar",
-        owner="admin",
         password="tt",
         shared=["all"],
+        editable_by="admin",
         customer="global",
     )
 
@@ -292,14 +306,14 @@ def conditions_set_2() -> APIConditions:
             "value": [
                 {
                     "tag_type": "aux_tag",
-                    "tag_id": "ip-v4",
+                    "tag_id": TagID("ip-v4"),
                     "operator": "is_set",
                 },
                 {
                     "tag_type": "tag_group",
                     "tag_group_id": "piggyback",
                     "operator": "is_not",
-                    "tag_id": "auto-piggyback",
+                    "tag_id": TagID("auto-piggyback"),
                 },
             ],
         },
@@ -393,7 +407,7 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
-        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore
+        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 
 
@@ -576,6 +590,24 @@ plugin_test_data: list[PluginType] = [
     {
         "plugin_name": "cisco_webex_teams",
         "webhook_url": {
+            "option": "explicit",
+            "url": "http://abc.com",
+        },
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "automatic", "schema": "http"},
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "global", "global_proxy_id": "some_proxy_id"},
+        },
+    },
+    {
+        "plugin_name": "cisco_webex_teams",
+        "webhook_url": {
             "option": "store",
             "store_id": "some_store_id",
         },
@@ -620,7 +652,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
         },
-        "sort_order_for_bulk_notificaions": {
+        "sort_order_for_bulk_notifications": {
             "state": "enabled",
             "value": "newest_first",
         },
@@ -679,7 +711,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "automatic", "schema": "https"},
         },
-        "sort_order_for_bulk_notificaions": {"state": "enabled", "value": "newest_first"},
+        "sort_order_for_bulk_notifications": {"state": "enabled", "value": "newest_first"},
         "send_separate_notification_to_every_recipient": {"state": "enabled"},
         "enable_sync_smtp": {
             "state": "enabled",
@@ -751,8 +783,11 @@ plugin_test_data: list[PluginType] = [
         "plugin_name": "jira_issues",
         "jira_url": "https://test_jira_url.com/here",
         "disable_ssl_cert_verification": {"state": "disabled"},
-        "username": "Gav",
-        "password": "gav1234",
+        "auth": {
+            "option": "explicit_password",
+            "username": "user_username",
+            "password": "user_password",
+        },
         "project_id": "1234",
         "issue_type_id": "2345",
         "host_custom_id": "3456",
@@ -777,6 +812,10 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "label_key:label_value",
         },
+        "graphs_per_notification": {
+            "state": "enabled",
+            "value": 3,
+        },
         "resolution_id": {
             "state": "enabled",
             "value": "abc",
@@ -795,6 +834,9 @@ plugin_test_data: list[PluginType] = [
         "domain": {
             "state": "enabled",
             "value": "https://domain_test",
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
         },
         "http_proxy": {"state": "enabled", "value": {"option": "no_proxy"}},
         "owner": {
@@ -849,6 +891,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "entity_test",
         },
+        "extra_properties": {"state": "disabled"},
     },
     {
         "plugin_name": "opsgenie_issues",
@@ -859,6 +902,9 @@ plugin_test_data: list[PluginType] = [
         "domain": {
             "state": "enabled",
             "value": "https://domain_test",
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
         },
         "http_proxy": {
             "state": "enabled",
@@ -916,6 +962,24 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "entity_test",
         },
+        "extra_properties": {
+            "state": "enabled",
+            "value": [
+                "omd_site",
+                "hosttags",
+                "address",
+                "abstime",
+                "reltime",
+                "longoutput",
+                "ack_author",
+                "ack_comment",
+                "notification_author",
+                "notification_comment",
+                "perfdata",
+                "notesurl",
+                "context",
+            ],
+        },
     },
     {
         "plugin_name": "pagerduty",
@@ -959,7 +1023,7 @@ plugin_test_data: list[PluginType] = [
         "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
         "http_proxy": {
             "state": "enabled",
@@ -967,7 +1031,7 @@ plugin_test_data: list[PluginType] = [
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "high"},
         },
         "sound": {
             "state": "enabled",
@@ -981,14 +1045,14 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
         },
-        "username": "test_username",
-        "user_password": {
-            "option": "explicit",
-            "password": "testpassword",
+        "auth": {
+            "option": "explicit_password",
+            "username": "user_username",
+            "password": "user_password",
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1035,14 +1099,13 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
         },
-        "username": "test_username",
-        "user_password": {
-            "option": "store",
-            "store_id": "some_store_id",
+        "auth": {
+            "option": "explicit_token",
+            "token": "explicit_service_now_token",
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1122,7 +1185,7 @@ plugin_test_data: list[PluginType] = [
         "plugin_name": "slack",
         "webhook_url": {
             "option": "explicit",
-            "url": "http://www.slack-webhook-url.com",
+            "url": "https://hooks.slack.com/services/sorry/not/real",
         },
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
@@ -1152,6 +1215,22 @@ plugin_test_data: list[PluginType] = [
         "http_proxy": {
             "state": "enabled",
             "value": {"option": "environment"},
+        },
+    },
+    {
+        "plugin_name": "slack",
+        "webhook_url": {
+            "option": "explicit",
+            "url": "http://my-mattermost.local/hook/not-real",
+        },
+        "url_prefix_for_links_to_checkmk": {
+            "state": "disabled",
+        },
+        "disable_ssl_cert_verification": {
+            "state": "disabled",
+        },
+        "http_proxy": {
+            "state": "disabled",
         },
     },
     {
@@ -1277,6 +1356,32 @@ plugin_test_data: list[PluginType] = [
             "url": "http://abc.com",
         },
     },
+    {
+        "plugin_name": "pushover",
+        "api_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "environment"},
+        },
+        "priority": {
+            "state": "enabled",
+            "value": {
+                "level": "emergency",
+                "retry": 60,
+                "expire": 3600,
+                "receipt": "abcdefghijklmnopqrst0123456789",
+            },
+        },
+        "sound": {
+            "state": "enabled",
+            "value": "cosmic",
+        },
+    },
 ]
 
 
@@ -1303,8 +1408,14 @@ def test_update_notification_method_cancel_previous(
 def test_update_notification_method(
     clients: ClientRegistry,
     plugin_data: PluginType,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     setup_site_data(clients)
+
+    monkeypatch.setattr(
+        "cmk.gui.fields.custom_fields._global_proxy_choices",
+        lambda: [("some_proxy_id")],
+    )
 
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
@@ -1338,7 +1449,7 @@ def test_pushover_key_regex(
         "user_group_key": invalid_key,
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "automatic", "schema": "http"},
         },
         "http_proxy": {
             "state": "enabled",
@@ -1346,7 +1457,7 @@ def test_pushover_key_regex(
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "low"},
         },
         "sound": {
             "state": "enabled",
@@ -1377,14 +1488,14 @@ service_now: API_ServiceNowData = {
         "state": "enabled",
         "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
     },
-    "username": "test_username",
-    "user_password": {
-        "option": "explicit",
-        "password": "testpassword",
+    "auth": {
+        "option": "explicit_password",
+        "username": "user_username",
+        "password": "user_password",
     },
     "use_site_id_prefix": {
         "state": "enabled",
-        "value": "use_site_id_prefix",
+        "value": "use_site_id",
     },
     "optional_timeout": {
         "state": "enabled",
@@ -1393,7 +1504,7 @@ service_now: API_ServiceNowData = {
     "management_type": {},
 }
 
-service_now_incident: MgmtTypeAPI = {
+service_now_incident: MgmtTypeIncidentAPI = {
     "option": "incident",
     "params": {
         "caller": "",
@@ -1422,59 +1533,59 @@ service_now_incident: MgmtTypeAPI = {
 }
 
 
-def incident_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(INCIDENT_STATE_TYPE))):
+def incident_states() -> list[MgmtTypeIncidentParamsAPI]:
+    d: list[MgmtTypeIncidentParamsAPI] = []
+    for n, predefined_state in enumerate(list(get_args(IncidentStateStr))):
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={
                         "start_predefined": predefined_state,
                         "end_predefined": predefined_state,
                     },
-                },
-            },
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {"start_integer": n, "end_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={"start_integer": n, "end_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1482,10 +1593,10 @@ def incident_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", incident_states())
 def test_service_now_management_incident_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeIncidentParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_incident
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
@@ -1495,7 +1606,7 @@ def test_service_now_management_incident_types_200(
     assert r1.json["extensions"] == {"rule_config": config}
 
 
-service_now_case: MgmtTypeAPI = {
+service_now_case: MgmtTypeCaseAPI = {
     "option": "case",
     "params": {
         "host_description": {
@@ -1518,24 +1629,24 @@ service_now_case: MgmtTypeAPI = {
 }
 
 
-def case_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(CASE_STATE_TYPE))):
+def case_states() -> list[MgmtTypeCaseParamsAPI]:
+    d: list[MgmtTypeCaseParamsAPI] = []
+    for n, predefined_state in enumerate(list(get_args(CaseStateStr))):
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1543,10 +1654,10 @@ def case_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", case_states())
 def test_service_now_management_case_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeCaseParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_case
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
@@ -1572,7 +1683,7 @@ def config_with_bulk(plugin: PluginType) -> APINotificationRule:
 
 
 def plugin_with_bulking(
-    bulking: Literal["allowed", "not_allowed"]
+    bulking: Literal["allowed", "not_allowed"],
 ) -> Iterator[APINotificationRule]:
     notification_scripts = load_notification_scripts()
     plugins: list[str] = []
@@ -1951,6 +2062,7 @@ def setup_host_tags_on_site(clients: ClientRegistry) -> None:
     clients.AuxTag.create(tag_data=test_data)
 
 
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_match_host_tags(clients: ClientRegistry) -> None:
     setup_host_tags_on_site(clients)
     config = notification_rule_request_example()
@@ -1959,23 +2071,85 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
         "value": [
             {
                 "tag_type": "aux_tag",
-                "tag_id": "aux_tag_id_1",
+                "tag_id": TagID("aux_tag_id_1"),
                 "operator": "is_set",
             },
             {
                 "tag_type": "tag_group",
                 "tag_group_id": "criticality",
                 "operator": "is_not",
-                "tag_id": "prod",
+                "tag_id": TagID("prod"),
             },
             {
                 "tag_type": "tag_group",
                 "tag_group_id": "networking",
                 "operator": "is_not",
-                "tag_id": "lan",
+                "tag_id": TagID("lan"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": TagID("cmk-agent"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "snmp_ds",
+                "operator": "one_of",
+                "tag_ids": [TagID("snmp-v1"), TagID("no-snmp"), TagID("snmp-v2")],
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "address_family",
+                "operator": "none_of",
+                "tag_ids": [TagID("ip-v4-only"), TagID("ip-v4v6")],
             },
         ],
     }
 
     resp = clients.RuleNotification.create(rule_config=config)
     assert resp.json["extensions"]["rule_config"] == config
+
+
+auth_methods: list[
+    API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
+] = [
+    {
+        "option": "explicit_password",
+        "username": "a_user_name",
+        "password": "_!$%@w&*@",
+    },
+    {
+        "option": "password_store_id",
+        "username": "a_user_name",
+        "store_id": "some_store_id",
+    },
+    {
+        "option": "explicit_token",
+        "token": "some_token",
+    },
+    {
+        "option": "token_store_id",
+        "store_id": "some_store_id",
+    },
+]
+
+
+@managedtest
+@pytest.mark.parametrize("plugin", [plugin_test_data[8], plugin_test_data[14]])
+@pytest.mark.parametrize("auth_method", auth_methods)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_create_rules_with_basic_and_token_auth(
+    clients: ClientRegistry,
+    plugin: API_JiraData | API_ServiceNowData,
+    auth_method: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore,
+) -> None:
+    setup_site_data(clients)
+    plugin["auth"] = auth_method
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": plugin,
+    }
+    r1 = clients.RuleNotification.create(rule_config=config)
+    assert r1.json["extensions"] == {"rule_config": config}

@@ -17,7 +17,7 @@ else
 fi
 
 TARGET_DIR="${TARGET_DIR:-/opt}"
-OPENSSL_VERSION=3.0.13
+OPENSSL_VERSION=3.0.14
 OPENSSL_PATH="${TARGET_DIR}/openssl-${OPENSSL_VERSION}"
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
@@ -35,9 +35,7 @@ build_package() {
     # Now build the package
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
-    # Under sles12sp5, we need to pass ncursesw include dir explicitly... no idea why
-    CPPFLAGS="-I/usr/include/ncursesw" \
-        LD_LIBRARY_PATH="${OPENSSL_PATH}/lib" \
+    LD_LIBRARY_PATH="${OPENSSL_PATH}/lib" \
         LDFLAGS="-Wl,--rpath,${TARGET_DIR}/${DIR_NAME}/lib -Wl,--rpath,${OPENSSL_PATH}/lib -L${OPENSSL_PATH}/lib" \
         ./configure \
         --prefix="${TARGET_DIR}/${DIR_NAME}" \

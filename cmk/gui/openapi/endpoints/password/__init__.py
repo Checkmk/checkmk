@@ -13,17 +13,25 @@ same way the user interface does. This includes being able to create, update and
 stored passwords. You are also able to fetch a list of passwrods or individual passwords,
 however, the password itself is not returned for security reasons.
 """
+
 from collections.abc import Mapping
 from typing import Any, cast
 
-from cmk.utils import version
+from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
 from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
-from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
+from cmk.gui.openapi.endpoints.utils import (
+    complement_customer,
+    mutually_exclusive_fields,
+    update_customer_info,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -76,12 +84,15 @@ def create_password(params: Mapping[str, Any]) -> Response:
         not in (
             "ident",
             "owned_by",
+            "editable_by",
             "customer",
         )
     }
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
-    password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
+    password_details["owned_by"] = mutually_exclusive_fields(
+        str, body, "owned_by", "editable_by", default="admin"
+    )
     save_password(ident, cast(Password, password_details), new_password=True)
     return _serve_password(ident, load_password(ident))
 
@@ -102,6 +113,11 @@ def update_password(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.passwords")
     body = params["body"]
     ident = params["name"]
+
+    owned_by = mutually_exclusive_fields(str, body, "owned_by", "editable_by")
+    body.pop("editable_by", None)
+    if owned_by is not None:
+        body["owned_by"] = owned_by
     try:
         password_details = load_password_to_modify(ident)
     except KeyError:
@@ -122,16 +138,24 @@ def update_password(params: Mapping[str, Any]) -> Response:
     path_params=[NAME_ID_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[400],
 )
 def delete_password(params: Mapping[str, Any]) -> Response:
     """Delete a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
     ident = params["name"]
-    if ident not in load_passwords():
+    if password := load_passwords().get(ident):
+        if is_locked_by_quick_setup(password.get("locked_by")):
+            return problem(
+                status=400,
+                title=f'The password "{ident}" is locked by Quick setup.',
+                detail="Locked passwords cannot be removed.",
+            )
+    else:
         return problem(
             status=404,
-            title='Password "{ident}" is not known.',
+            title=f'Password "{ident}" is not known.',
             detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     remove_password(ident)

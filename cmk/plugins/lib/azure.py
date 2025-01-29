@@ -10,7 +10,7 @@ from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -118,15 +118,20 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
         key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
-        yield key, AzureMetric(
-            metric_dict["name"],
-            metric_dict["aggregation"],
-            metric_dict["value"],
-            metric_dict["unit"],
+        yield (
+            key,
+            AzureMetric(
+                metric_dict["name"],
+                metric_dict["aggregation"],
+                metric_dict["value"],
+                metric_dict["unit"],
+            ),
         )
 
 
-def _get_resource(resource: Mapping[str, Any], metrics=None):  # type: ignore[no-untyped-def]
+def _get_resource(
+    resource: Mapping[str, Any], metrics: Mapping[str, AzureMetric] | None = None
+) -> Resource:
     return Resource(
         resource["id"],
         resource["name"],
@@ -200,15 +205,15 @@ def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[S
 
 def create_discover_by_metrics_function(
     *desired_metrics: str,
-    resource_type: str | None = None,
+    resource_types: Sequence[str] | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
     def discovery_function(section: Section) -> DiscoveryResult:
         for item, resource in section.items():
-            if (resource_type is None or resource_type == resource.type) and (
-                set(desired_metrics) & set(resource.metrics)
-            ):
+            if (
+                resource_types is None or any(rtype == resource.type for rtype in resource_types)
+            ) and (set(desired_metrics) & set(resource.metrics)):
                 yield Service(
                     item=item, labels=get_service_labels_from_resource_tags(resource.tags)
                 )
@@ -218,7 +223,7 @@ def create_discover_by_metrics_function(
 
 def create_discover_by_metrics_function_single(
     *desired_metrics: str,
-    resource_type: str | None = None,
+    resource_types: Sequence[str] | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
     """
     Return a discovery function, that will discover if any of the metrics are found
@@ -230,7 +235,7 @@ def create_discover_by_metrics_function_single(
             return
 
         resource = list(section.values())[0]
-        if (resource_type is None or resource_type == resource.type) and (
+        if (resource_types is None or any(rtype == resource.type for rtype in resource_types)) and (
             set(desired_metrics) & set(resource.metrics)
         ):
             yield Service(labels=get_service_labels_from_resource_tags(resource.tags))
@@ -249,7 +254,7 @@ def create_discover_by_metrics_function_single(
 
 
 def iter_resource_attributes(
-    resource: Resource, include_keys: tuple[str] = ("location",)
+    resource: Resource, include_keys: tuple[str, ...] = ("location",)
 ) -> Generator[tuple[str, str | None], None, None]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
@@ -277,7 +282,7 @@ def check_resource_metrics(
         if not metric:
             continue
 
-        yield from check_levels(
+        yield from check_levels_v1(
             metric.value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),
@@ -354,10 +359,19 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
                 "active_connections",
                 "Active connections",
                 lambda x: str(int(x)),
+                lower_levels_param="active_connections_lower",
                 upper_levels_param="active_connections",
             ),
             MetricData(
                 "total_connections_failed",
+                "failed_connections",
+                "Failed connections",
+                lambda x: str(int(x)),
+                upper_levels_param="failed_connections",
+            ),
+            MetricData(
+                # MySQL flexible server equivalent to "total_connections_failed"
+                "total_aborted_connections",
                 "failed_connections",
                 "Failed connections",
                 lambda x: str(int(x)),

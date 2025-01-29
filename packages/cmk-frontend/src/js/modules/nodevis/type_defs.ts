@@ -4,19 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
-import {HierarchyNode} from "d3";
+import type {HierarchyNode, Selection} from "d3";
+import {hierarchy as d3hierarchy} from "d3";
 
-import {DatasourceManager} from "./datasources";
-import {ForceOptions} from "./force_utils";
-import {AbstractLayoutStyle, SerializedNodevisLayout} from "./layout_utils";
-import {Viewport} from "./viewport";
+import type {DatasourceManager} from "./datasources";
+import type {ForceOptions} from "./force_utils";
+import type {
+    AbstractLayoutStyle,
+    SerializedNodevisLayout,
+} from "./layout_utils";
+import type {Viewport} from "./viewport";
 
-export type d3Selection = d3.Selection<any, unknown, any, unknown>;
+export type d3Selection = Selection<any, unknown, any, unknown>;
 
-export type d3SelectionDiv = d3.Selection<HTMLDivElement, null, any, unknown>;
-export type d3SelectionSvg = d3.Selection<SVGSVGElement, null, any, any>;
-export type d3SelectionG = d3.Selection<SVGGElement, null, any, any>;
+export type d3SelectionDiv = Selection<HTMLDivElement, null, any, unknown>;
+export type d3SelectionSvg = Selection<SVGSVGElement, null, any, any>;
+export type d3SelectionG = Selection<SVGGElement, null, any, any>;
 
 export type DatasourceType = "bi_aggregations" | "topology";
 export class NodevisWorld {
@@ -38,7 +41,7 @@ export class NodevisWorld {
         callback_update_data: () => void,
         callback_update_browser_url: () => void,
         callback_save_layout: () => void,
-        callback_delete_layout: () => void
+        callback_delete_layout: () => void,
     ) {
         this.root_div = root_div;
         this.viewport = viewport;
@@ -74,7 +77,7 @@ export class InputRangeOptions {
         step: number,
         min: number,
         max: number,
-        default_value: number
+        default_value: number,
     ) {
         this.id = id;
         this.title = title;
@@ -127,7 +130,7 @@ export class ComputationOptions {
         merge_nodes = false,
         show_services: "all" | "none" | "only_problems" = "all",
         hierarchy: "flat" | "full" = "full",
-        enforce_hierarchy_update = false
+        enforce_hierarchy_update = false,
     ) {
         this.merge_nodes = merge_nodes;
         this.show_services = show_services;
@@ -143,7 +146,7 @@ export class OverlaysConfig {
     constructor(
         available_layers: string[] = [],
         overlays: Record<string, OverlayConfig> = {},
-        computation_options: ComputationOptions = new ComputationOptions()
+        computation_options: ComputationOptions = new ComputationOptions(),
     ) {
         this.available_layers = available_layers;
         this.overlays = overlays;
@@ -161,12 +164,12 @@ export class OverlaysConfig {
             options.merge_nodes,
             options.show_services,
             options.hierarchy as "flat" | "full",
-            options.enforce_hierarchy_update
+            options.enforce_hierarchy_update,
         );
         return new OverlaysConfig(
             fake_object.available_layers,
             overlays,
-            computation_options
+            computation_options,
         );
     }
 }
@@ -320,18 +323,15 @@ export interface ContextMenuElement {
     children?: ContextMenuElement[];
 }
 
-declare module "d3" {
-    export interface HierarchyNode<Datum> {
-        data: Datum;
-        _children?: this[] | undefined | null;
-        x: number;
-        y: number;
-        fx: number | null;
-        fy: number | null;
-        force?: number;
-        use_transition?: boolean;
-        children_backup?: this[];
-    }
+export interface NodeVisHierarchyNode<Datum> extends HierarchyNode<Datum> {
+    _children?: this[] | undefined | null;
+    x: number; // can also be undefined in original type definition
+    y: number; // can also be undefined in original type definition
+    fx: number | null;
+    fy: number | null;
+    force?: number;
+    use_transition?: boolean;
+    children_backup?: this[];
 }
 
 // TODO: add class
@@ -343,14 +343,14 @@ export interface LayoutSettings {
 }
 
 export class NodeConfig {
-    hierarchy: d3.HierarchyNode<NodeData>;
+    hierarchy: NodeVisHierarchyNode<NodeData>;
     link_info: NodevisLink[];
-    nodes_by_id: Record<string, d3.HierarchyNode<NodeData>>;
+    nodes_by_id: Record<string, NodeVisHierarchyNode<NodeData>>;
     constructor(serialized_node_config: SerializedNodeConfig) {
         this.hierarchy = this._create_hierarchy(serialized_node_config);
         this.nodes_by_id = this._create_nodes_by_id_lookup(this.hierarchy);
         this.link_info = this._create_link_references(
-            serialized_node_config.links
+            serialized_node_config.links,
         );
     }
 
@@ -363,11 +363,11 @@ export class NodeConfig {
     }
 
     _create_hierarchy(
-        serialized_node_config: SerializedNodeConfig
-    ): d3.HierarchyNode<NodeData> {
-        const hierarchy = d3.hierarchy<NodeData>(
-            serialized_node_config.hierarchy
-        );
+        serialized_node_config: SerializedNodeConfig,
+    ): NodeVisHierarchyNode<NodeData> {
+        const hierarchy = d3hierarchy<NodeData>(
+            serialized_node_config.hierarchy,
+        ) as NodeVisHierarchyNode<NodeData>;
         // Initialize default info of each node
         hierarchy.descendants().forEach(node => {
             node._children = node.children;
@@ -379,8 +379,8 @@ export class NodeConfig {
         return hierarchy;
     }
 
-    _create_nodes_by_id_lookup(hierarchy: d3.HierarchyNode<NodeData>) {
-        const nodes_by_id: Record<string, d3.HierarchyNode<NodeData>> = {};
+    _create_nodes_by_id_lookup(hierarchy: NodeVisHierarchyNode<NodeData>) {
+        const nodes_by_id: Record<string, NodeVisHierarchyNode<NodeData>> = {};
         hierarchy.descendants().forEach(node => {
             nodes_by_id[node.data.id] = node;
         });
@@ -388,7 +388,7 @@ export class NodeConfig {
     }
 
     _create_link_references(
-        link_info: SerializedNodevisLink[] | null
+        link_info: SerializedNodevisLink[] | null,
     ): NodevisLink[] {
         const links: NodevisLink[] = [];
         if (link_info != null) {
@@ -396,8 +396,8 @@ export class NodeConfig {
             link_info.forEach(link => {
                 // Reference by id:string
                 links.push({
-                    source: this.nodes_by_id[link.source],
-                    target: this.nodes_by_id[link.target],
+                    source: this.nodes_by_id[link.source] as NodevisNode,
+                    target: this.nodes_by_id[link.target] as NodevisNode,
                     config: link.config,
                 });
             });
@@ -409,8 +409,8 @@ export class NodeConfig {
         this.hierarchy.descendants().forEach(node => {
             if (!node.parent || node.data.invisible) return;
             links.push({
-                source: node,
-                target: node.parent,
+                source: node as NodevisNode,
+                target: node.parent as NodevisNode,
                 config: {type: "default"},
             });
         });
@@ -418,4 +418,4 @@ export class NodeConfig {
     }
 }
 
-export type NodevisNode = HierarchyNode<NodeData>;
+export type NodevisNode = NodeVisHierarchyNode<NodeData>;

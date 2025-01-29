@@ -487,7 +487,8 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                     ),
                 ),
             ],
-            ignored_keys=["service_level"],
+            # host name and service level provided by nasty hack. Grep for "cmk_postprocessed"
+            ignored_keys=["host_name", "service_level"],
         ),
         migrate=lambda p: {"activation": False} if isinstance(p, str) else p,
     )

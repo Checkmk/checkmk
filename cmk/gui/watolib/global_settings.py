@@ -6,11 +6,13 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.utils.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
-import cmk.gui.watolib.config_domain_name as config_domain_name
+from cmk.utils import paths
+
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -21,14 +23,14 @@ from cmk.gui.watolib.config_domain_name import (
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> GlobalSettings:
-    settings = {}
+    settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
-            settings.update(domain().load_full_config())
+            settings.update(domain.load_full_config())
         elif site_specific:
-            settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
+            settings.update(domain.load_site_globals(custom_site_path=custom_site_path))
         else:
-            settings.update(domain().load())
+            settings.update(domain.load())
     return settings
 
 
@@ -39,7 +41,7 @@ def save_global_settings(
     get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
     skip_cse_edition_check: bool = False,
 ) -> None:
-    if not skip_cse_edition_check and edition() is Edition.CSE:
+    if not skip_cse_edition_check and edition(paths.omd_root) is Edition.CSE:
         global_settings_config = get_global_settings_config().global_settings
         current_global_settings = dict(load_configuration_settings())
         vars_ = {
@@ -60,7 +62,7 @@ def save_global_settings(
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain().ident(), {})[varname] = vars_[varname]
+        per_domain.setdefault(domain.ident(), {})[varname] = vars_[varname]
 
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
@@ -69,11 +71,11 @@ def save_global_settings(
             per_domain.setdefault(config_domain_name.GUI, {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
-        domain_config = per_domain.get(domain().ident(), {})
+        domain_config = per_domain.get(domain.ident(), {})
         if site_specific:
-            domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
+            domain.save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
-            domain().save(domain_config, custom_site_path=custom_site_path)
+            domain.save(domain_config, custom_site_path=custom_site_path)
 
 
 def load_site_global_settings(custom_site_path: str | None = None) -> GlobalSettings:

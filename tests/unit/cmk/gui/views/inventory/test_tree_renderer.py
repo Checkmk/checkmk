@@ -18,13 +18,18 @@ from cmk.utils.structured_data import (
     SDPath,
 )
 
+from cmk.gui.inventory.filters import FilterInvtableText
+from cmk.gui.views.inventory._display_hints import (
+    AttributeDisplayHint,
+    ColumnDisplayHint,
+    NodeDisplayHint,
+)
+from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._tree_renderer import (
     _replace_title_placeholders,
     _SDDeltaItem,
-    _sort_delta_pairs,
-    _sort_delta_rows,
-    _sort_pairs,
-    _sort_rows,
+    _SDDeltaItemsSorter,
+    _SDItemsSorter,
     SDItem,
 )
 
@@ -47,7 +52,11 @@ from cmk.gui.views.inventory._tree_renderer import (
                         SDKey("flashback"): "Flashback 1",
                         SDKey("other"): "Other 1",
                     },
-                    (None,): {SDKey("sid"): None, SDKey("flashback"): None, SDKey("other"): None},
+                    (None,): {
+                        SDKey("sid"): None,
+                        SDKey("flashback"): None,
+                        SDKey("other"): None,
+                    },
                 },
                 retentions={
                     ("SID 2",): {SDKey("sid"): RetentionInterval(1, 2, 3, "previous")},
@@ -55,18 +64,56 @@ from cmk.gui.views.inventory._tree_renderer import (
             ),
             [
                 [
-                    SDItem("sid", "SID 1", None),
-                    SDItem("changed", None, None),
-                    SDItem("foo", None, None),
-                    SDItem("flashback", "Flashback 1", None),
-                    SDItem("other", "Other 1", None),
+                    SDItem(
+                        key="sid",
+                        title="SID",
+                        value="SID 1",
+                        retention_interval=None,
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
+                    SDItem(
+                        key="flashback",
+                        title="Flashback",
+                        value="Flashback 1",
+                        retention_interval=None,
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
+                    SDItem(
+                        key="other",
+                        title="Other",
+                        value="Other 1",
+                        retention_interval=None,
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
                 ],
                 [
-                    SDItem("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
-                    SDItem("changed", None, None),
-                    SDItem("foo", None, None),
-                    SDItem("flashback", "Flashback 2", None),
-                    SDItem("other", "Other 2", None),
+                    SDItem(
+                        key="sid",
+                        title="SID",
+                        value="SID 2",
+                        retention_interval=RetentionInterval(1, 2, 3, "previous"),
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
+                    SDItem(
+                        key="flashback",
+                        title="Flashback",
+                        value="Flashback 2",
+                        retention_interval=None,
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
+                    SDItem(
+                        key="other",
+                        title="Other",
+                        value="Other 2",
+                        retention_interval=None,
+                        paint_function=inv_paint_generic,
+                        icon_path_svc_problems="",
+                    ),
                 ],
             ],
         ),
@@ -76,19 +123,98 @@ def test_sort_table_rows_displayhint(
     table: ImmutableTable,
     expected: Sequence[Sequence[SDItem]],
 ) -> None:
-    assert (
-        _sort_rows(
-            table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
+    items_sorter = _SDItemsSorter(
+        NodeDisplayHint(
+            path=(),
+            icon="",
+            title="",
+            short_title="",
+            long_title="",
+            attributes={},
+            columns={
+                SDKey("sid"): ColumnDisplayHint(
+                    "SID", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("changed"): ColumnDisplayHint(
+                    "Changed", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("foo"): ColumnDisplayHint(
+                    "Foo", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("flashback"): ColumnDisplayHint(
+                    "Flashback", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("other"): ColumnDisplayHint(
+                    "Other", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+            },
+            table_view_name="",
+            table_is_show_more=True,
+        ),
+        "",
+        ImmutableAttributes(),
+        table,
     )
+    assert items_sorter.sort_rows()[-1] == expected
 
 
 @pytest.mark.parametrize(
     "delta_table, expected",
     [
         (ImmutableDeltaTable(), []),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue("Flashback", "Flashback"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                ],
+            ),
+            [],
+        ),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
+                        SDKey("flashback"): SDDeltaValue(None, None),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
+                        SDKey("flashback"): SDDeltaValue("Flashback 21", "Flashback 22"),
+                    },
+                ],
+            ),
+            [
+                [
+                    _SDDeltaItem(
+                        key="sid",
+                        title="SID",
+                        old="SID 2",
+                        new="SID 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key="flashback",
+                        title="Flashback",
+                        old="Flashback 21",
+                        new="Flashback 22",
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+            ],
+        ),
         (
             ImmutableDeltaTable(
                 key_columns=[SDKey("sid")],
@@ -115,34 +241,192 @@ def test_sort_table_rows_displayhint(
             ),
             [
                 [
-                    _SDDeltaItem(SDKey("sid"), "SID 1", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 11", "Changed 12"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 1"),
-                    _SDDeltaItem(SDKey("other"), "Other 1", "Other 1"),
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 1",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 11",
+                        new="Changed 12",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 1",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 1",
+                        new="Other 1",
+                        paint_function=inv_paint_generic,
+                    ),
                 ],
                 [
-                    _SDDeltaItem(SDKey("sid"), "SID 2", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 21", "Changed 22"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 2"),
-                    _SDDeltaItem(SDKey("other"), "Other 2", "Other 2"),
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 2",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 21",
+                        new="Changed 22",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 2",
+                        new="Other 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+            ],
+        ),
+        (
+            ImmutableDeltaTable(
+                key_columns=[SDKey("sid")],
+                rows=[
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 2", None),
+                        SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
+                        SDKey("other"): SDDeltaValue("Other 2", "Other 2"),
+                        SDKey("changed"): SDDeltaValue("Changed 21", "Changed 22"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 1", None),
+                        SDKey("flashback"): SDDeltaValue(None, "Flashback 1"),
+                        SDKey("other"): SDDeltaValue("Other 1", "Other 1"),
+                        SDKey("changed"): SDDeltaValue("Changed 11", "Changed 12"),
+                    },
+                    {
+                        SDKey("sid"): SDDeltaValue("SID 3", "SID 3"),
+                        SDKey("flashback"): SDDeltaValue("Flashback 3", "Flashback 3"),
+                        SDKey("other"): SDDeltaValue(None, None),
+                        SDKey("changed"): SDDeltaValue(None, None),
+                    },
+                ],
+            ),
+            [
+                [
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 1",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 11",
+                        new="Changed 12",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 1",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 1",
+                        new="Other 1",
+                        paint_function=inv_paint_generic,
+                    ),
+                ],
+                [
+                    _SDDeltaItem(
+                        key=SDKey("sid"),
+                        title="SID",
+                        old="SID 2",
+                        new=None,
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("changed"),
+                        title="Changed",
+                        old="Changed 21",
+                        new="Changed 22",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("flashback"),
+                        title="Flashback",
+                        old=None,
+                        new="Flashback 2",
+                        paint_function=inv_paint_generic,
+                    ),
+                    _SDDeltaItem(
+                        key=SDKey("other"),
+                        title="Other",
+                        old="Other 2",
+                        new="Other 2",
+                        paint_function=inv_paint_generic,
+                    ),
                 ],
             ],
         ),
     ],
 )
-def test_sort_deltatable_rows_displayhint(
+def test_sort_delta_table_rows_displayhint(
     delta_table: ImmutableDeltaTable,
     expected: Sequence[Sequence[_SDDeltaItem]],
 ) -> None:
-    assert (
-        _sort_delta_rows(
-            delta_table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
+    delta_items_sorter = _SDDeltaItemsSorter(
+        NodeDisplayHint(
+            path=(),
+            icon="",
+            title="",
+            short_title="",
+            long_title="",
+            attributes={},
+            columns={
+                SDKey("sid"): ColumnDisplayHint(
+                    "SID", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("changed"): ColumnDisplayHint(
+                    "Changed", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("foo"): ColumnDisplayHint(
+                    "Foo", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("flashback"): ColumnDisplayHint(
+                    "Flashback", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+                SDKey("other"): ColumnDisplayHint(
+                    "Other", "", "", inv_paint_generic, lambda r, l: 0, FilterInvtableText
+                ),
+            },
+            table_view_name="",
+            table_is_show_more=True,
+        ),
+        ImmutableDeltaAttributes(),
+        delta_table,
     )
+    assert delta_items_sorter.sort_rows()[-1] == expected
 
 
 @pytest.mark.parametrize(
@@ -160,10 +444,38 @@ def test_sort_deltatable_rows_displayhint(
                 retentions={SDKey("c"): RetentionInterval(1, 2, 3, "previous")},
             ),
             [
-                SDItem(SDKey("a"), "A", None),
-                SDItem(SDKey("b"), "B", None),
-                SDItem(SDKey("d"), "D", None),
-                SDItem(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous")),
+                SDItem(
+                    key=SDKey("a"),
+                    title="A",
+                    value="A",
+                    retention_interval=None,
+                    paint_function=inv_paint_generic,
+                    icon_path_svc_problems="",
+                ),
+                SDItem(
+                    key=SDKey("b"),
+                    title="B",
+                    value="B",
+                    retention_interval=None,
+                    paint_function=inv_paint_generic,
+                    icon_path_svc_problems="",
+                ),
+                SDItem(
+                    key=SDKey("d"),
+                    title="D",
+                    value="D",
+                    retention_interval=None,
+                    paint_function=inv_paint_generic,
+                    icon_path_svc_problems="",
+                ),
+                SDItem(
+                    key=SDKey("c"),
+                    title="C",
+                    value="C",
+                    retention_interval=RetentionInterval(1, 2, 3, "previous"),
+                    paint_function=inv_paint_generic,
+                    icon_path_svc_problems="",
+                ),
             ],
         ),
     ],
@@ -172,7 +484,36 @@ def test_sort_attributes_pairs_displayhint(
     attributes: ImmutableAttributes,
     expected: Sequence[SDItem],
 ) -> None:
-    assert _sort_pairs(attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")]) == expected
+    items_sorter = _SDItemsSorter(
+        NodeDisplayHint(
+            path=(),
+            icon="",
+            title="",
+            short_title="",
+            long_title="",
+            attributes={
+                SDKey("a"): AttributeDisplayHint(
+                    "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("b"): AttributeDisplayHint(
+                    "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("d"): AttributeDisplayHint(
+                    "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("c"): AttributeDisplayHint(
+                    "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+            },
+            columns={},
+            table_view_name="",
+            table_is_show_more=True,
+        ),
+        "",
+        attributes,
+        ImmutableTable(),
+    )
+    assert items_sorter.sort_pairs() == expected
 
 
 @pytest.mark.parametrize(
@@ -189,10 +530,27 @@ def test_sort_attributes_pairs_displayhint(
                 }
             ),
             [
-                _SDDeltaItem(SDKey("a"), "A1", "A2"),
-                _SDDeltaItem(SDKey("b"), "B", None),
-                _SDDeltaItem(SDKey("d"), None, "D"),
-                _SDDeltaItem(SDKey("c"), "C", "C"),
+                _SDDeltaItem(
+                    key=SDKey("a"),
+                    title="A",
+                    old="A1",
+                    new="A2",
+                    paint_function=inv_paint_generic,
+                ),
+                _SDDeltaItem(
+                    key=SDKey("b"),
+                    title="B",
+                    old="B",
+                    new=None,
+                    paint_function=inv_paint_generic,
+                ),
+                _SDDeltaItem(
+                    key=SDKey("d"),
+                    title="D",
+                    old=None,
+                    new="D",
+                    paint_function=inv_paint_generic,
+                ),
             ],
         ),
     ],
@@ -201,10 +559,35 @@ def test_sort_delta_attributes_pairs_displayhint(
     delta_attributes: ImmutableDeltaAttributes,
     expected: Sequence[_SDDeltaItem],
 ) -> None:
-    assert (
-        _sort_delta_pairs(delta_attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")])
-        == expected
+    delta_items_sorter = _SDDeltaItemsSorter(
+        NodeDisplayHint(
+            path=(),
+            icon="",
+            title="",
+            short_title="",
+            long_title="",
+            attributes={
+                SDKey("a"): AttributeDisplayHint(
+                    "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("b"): AttributeDisplayHint(
+                    "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("d"): AttributeDisplayHint(
+                    "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+                SDKey("c"): AttributeDisplayHint(
+                    "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+                ),
+            },
+            columns={},
+            table_view_name="",
+            table_is_show_more=True,
+        ),
+        delta_attributes,
+        ImmutableDeltaTable(),
     )
+    assert delta_items_sorter.sort_pairs() == expected
 
 
 @pytest.mark.parametrize(
@@ -227,4 +610,20 @@ def test_sort_delta_attributes_pairs_displayhint(
 def test__replace_title_placeholders(
     title: str, abc_path: SDPath, path: SDPath, expected_title: str
 ) -> None:
-    assert _replace_title_placeholders(title, abc_path, path) == expected_title
+    assert (
+        _replace_title_placeholders(
+            NodeDisplayHint(
+                path=abc_path,
+                icon="",
+                title=title,
+                short_title=title,
+                long_title=title,
+                attributes={},
+                columns={},
+                table_view_name="",
+                table_is_show_more=True,
+            ),
+            path,
+        )
+        == expected_title
+    )

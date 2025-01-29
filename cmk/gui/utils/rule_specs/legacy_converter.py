@@ -6,21 +6,30 @@ import dataclasses
 import enum
 import urllib.parse
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from types import ModuleType
 from typing import Any, assert_never, Literal, Self, TypeVar
+
+from cmk.ccc.version import Edition
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
-from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import SimplePassword, Tuple
+from cmk.gui.form_specs.private import (
+    DictionaryExtended,
+    LegacyValueSpec,
+    ListExtended,
+    ListOfStrings,
+    MonitoredHostExtended,
+    SingleChoiceExtended,
+)
+from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
@@ -35,17 +44,37 @@ from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
+    FormSpecDefinition,
     ManualCheckParameterRulespec,
     rulespec_group_registry,
+    RulespecSubGroup,
 )
 
 from cmk.rulesets import v1 as ruleset_api_v1
+from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
+
+RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
+RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
+RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
 
 try:
-    legacy_bakery_groups: ModuleType | None
-    import cmk.gui.cee.agent_bakery._rulespec_groups as legacy_bakery_groups  # type: ignore[no-redef,import-untyped,unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.cee.agent_bakery import (  # type: ignore[no-redef, unused-ignore]  # pylint: disable=cmk-module-layer-violation
+        RulespecGroupMonitoringAgentsAgentPlugins,
+        RulespecGroupMonitoringAgentsLinuxUnixAgent,
+        RulespecGroupMonitoringAgentsWindowsAgent,
+    )
 except ImportError:
-    legacy_bakery_groups = None
+    RulespecGroupMonitoringAgentsAgentPlugins = None
+    RulespecGroupMonitoringAgentsLinuxUnixAgent = None
+    RulespecGroupMonitoringAgentsWindowsAgent = None
+
+
+@dataclass(frozen=True)
+class FormSpecCallable:
+    spec: Callable[[], ruleset_api_v1.form_specs.FormSpec[Any]]
+
+    def __call__(self) -> ruleset_api_v1.form_specs.FormSpec:
+        return self.spec()
 
 
 GENERATED_GROUP_PREFIX = "gen-"
@@ -154,7 +183,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.DiscoveryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                legacy_wato_groups.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
         case ruleset_api_v1.rule_specs.Service():
@@ -181,7 +210,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.SpecialAgent():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDatasourcePrograms,
+                legacy_wato_groups.RulespecGroupDatasourcePrograms,
                 localizer,
                 config_scope_prefix=RuleGroup.SpecialAgents,
             )
@@ -194,7 +223,9 @@ def _convert_to_legacy_check_parameter_rulespec(
     edition_only: Edition,
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
-    if isinstance(to_convert.condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
+    convert_condition = to_convert.condition
+    if isinstance(convert_condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
+        item_spec, item_form_spec = _get_item_spec_maker(convert_condition, localizer)
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
             title=(
@@ -205,16 +236,19 @@ def _convert_to_legacy_check_parameter_rulespec(
                 to_convert.topic,
                 localizer,
             ),
-            item_spec=_get_item_spec_maker(to_convert.condition, localizer),
+            item_spec=item_spec,
             match_type="dict",
             parameter_valuespec=partial(
-                _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+                convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
             ),
             is_deprecated=to_convert.is_deprecated,
             create_manual_check=False,
             # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
             # want to mark rulespecs that are available in both the CCE and CME as such
             is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+            form_spec_definition=FormSpecDefinition(
+                to_convert.parameter_form, lambda: item_form_spec
+            ),
         )
     return CheckParameterRulespecWithoutItem(
         check_group_name=to_convert.name,
@@ -224,10 +258,11 @@ def _convert_to_legacy_check_parameter_rulespec(
         ),
         match_type="dict",
         parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
         create_manual_check=False,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -239,8 +274,14 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
     match to_convert.condition:
         case ruleset_api_v1.rule_specs.HostCondition():
             item_spec = None
+            item_form_spec = None
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
-            item_spec = _get_item_spec_maker(to_convert.condition, localizer)
+            item_spec, item_as_form_spec = _get_item_spec_maker(to_convert.condition, localizer)
+
+            def wrapped_value():
+                return item_as_form_spec
+
+            item_form_spec = wrapped_value
         case other:
             assert_never(other)
 
@@ -250,7 +291,9 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         ),
         check_group_name=to_convert.name,
         parameter_valuespec=(
-            partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer)
+            partial(
+                convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+            )
             if to_convert.parameter_form is not None
             else None
         ),
@@ -259,6 +302,9 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         match_type="dict",
         item_spec=item_spec,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        form_spec_definition=None
+        if to_convert.parameter_form is None
+        else FormSpecDefinition(to_convert.parameter_form, item_form_spec),
     )
 
 
@@ -272,7 +318,9 @@ def _convert_to_legacy_rulespec_group(
             legacy_main_group, topic_to_convert, localizer
         )
     if isinstance(topic_to_convert, ruleset_api_v1.rule_specs.CustomTopic):
-        return _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
+        return _custom_to_builtin_legacy_group(
+            legacy_main_group, topic_to_convert
+        ) or _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
     raise ValueError(topic_to_convert)
 
 
@@ -326,11 +374,14 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     return legacy_rulespecs.HostRulespec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+        ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -343,12 +394,15 @@ def _convert_to_legacy_agent_config_rule_spec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=RuleGroup.AgentConfig(to_convert.name),
         valuespec=partial(
-            _transform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
+            _transform_agent_config_rule_spec_match_type,
+            FormSpecCallable(to_convert.parameter_form),
+            localizer,
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(RuleGroup.AgentConfig(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -362,19 +416,40 @@ def _add_agent_config_match_type_key(value: object) -> object:
 
 def _remove_agent_config_match_type_key(value: object) -> object:
     if isinstance(value, dict):
-        value.pop("cmk-match-type", None)
-        return value
+        return {k: v for k, v in value.items() if k != "cmk-match-type"}
 
     raise TypeError(value)
 
 
 def _transform_agent_config_rule_spec_match_type(
-    parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+    parameter_form: FormSpecCallable, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    legacy_vs = convert_to_legacy_valuespec(parameter_form, localizer)
+    inner_transform = (
+        legacy_vs if isinstance(legacy_vs, Transform) and parameter_form().migrate else None
+    )
+    if not inner_transform:
+        return Transform(
+            legacy_vs,
+            forth=_remove_agent_config_match_type_key,
+            back=_add_agent_config_match_type_key,
+        )
+
+    # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
+    # valuespec into a Transform results in the following order of transformations:
+    # 1. outer transform   (_remove_agent_config_match_type_key)
+    # 2. inner transforms
+    # _remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
+    # inner transforms to migrate to a dictionairy in case of a migration from a non-dictionary
+    # rule spec.
     return Transform(
-        _convert_to_legacy_valuespec(parameter_form, localizer),
-        forth=_remove_agent_config_match_type_key,
-        back=_add_agent_config_match_type_key,
+        valuespec=Transform(
+            inner_transform._valuespec,
+            to_valuespec=_remove_agent_config_match_type_key,
+            from_valuespec=_add_agent_config_match_type_key,
+        ),
+        to_valuespec=inner_transform.to_valuespec,
+        from_valuespec=inner_transform.from_valuespec,
     )
 
 
@@ -389,17 +464,20 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         ),
         item_type="service",
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+        ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
         ),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
-def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-branches
+def _get_builtin_legacy_sub_group_with_main_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     topic_to_convert: ruleset_api_v1.rule_specs.Topic,
     localizer: Callable[[str], str],
@@ -414,43 +492,43 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
                 return legacy_wato_groups.RulespecGroupDatasourceProgramsApps
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Applications", localizer)
         case ruleset_api_v1.rule_specs.Topic.CACHING_MESSAGE_QUEUES:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Caching / Message Queues", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.CLOUD:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
                 return legacy_wato_groups.RulespecGroupVMCloudContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Cloud", localizer)
         case ruleset_api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Configuration & Deployment", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.DATABASES:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Databases", localizer)
         case ruleset_api_v1.rule_specs.Topic.GENERAL:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
@@ -461,15 +539,15 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
                 return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesVarious
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
-            if legacy_main_group == legacy_wato.RulespecGroupDiscoveryCheckParameters:
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDiscoveryCheckParameters:
                 return legacy_wato_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.rule_specs.Topic.ENVIRONMENTAL:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersEnvironment
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -478,16 +556,16 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.LINUX:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsLinuxAgent
+                return RulespecGroupMonitoringAgentsLinuxUnixAgent
             return _to_generated_builtin_sub_group(legacy_main_group, "Linux", localizer)
         case ruleset_api_v1.rule_specs.Topic.NETWORKING:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersNetworking
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -496,16 +574,16 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.MIDDLEWARE:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Middleware", localizer)
         case ruleset_api_v1.rule_specs.Topic.NOTIFICATIONS:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupMonitoringConfigurationNotifications
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupHostsMonitoringRules:
@@ -514,9 +592,9 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.OPERATING_SYSTEM:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersOperatingSystem
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -527,9 +605,9 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.PERIPHERALS:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersPrinters
             return _to_generated_builtin_sub_group(legacy_main_group, "Peripherals", localizer)
@@ -538,9 +616,9 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.SERVER_HARDWARE:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersHardware
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -551,9 +629,9 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.STORAGE:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersStorage
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -562,18 +640,18 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.SYNTHETIC_MONITORING:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Synthetic Monitoring", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.VIRTUALIZATION:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsAgentPlugins is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsAgentPlugins
+                return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersVirtualization
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
@@ -584,14 +662,29 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.WINDOWS:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and legacy_bakery_groups is not None
+                and RulespecGroupMonitoringAgentsWindowsAgent is not None
             ):
-                return legacy_bakery_groups.RulespecGroupMonitoringAgentsWindowsAgent
+                return RulespecGroupMonitoringAgentsWindowsAgent
             return _to_generated_builtin_sub_group(legacy_main_group, "Windows", localizer)
         case other:
             assert_never(other)
 
     raise NotImplementedError(topic_to_convert)
+
+
+def _custom_to_builtin_legacy_group(
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    custom_topic_to_convert: ruleset_api_v1.rule_specs.CustomTopic,
+) -> type[legacy_rulespecs.RulespecBaseGroup] | None:
+    if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
+        ruleset_api_v1.Title("Linux/UNIX agent options")
+    ):
+        if (
+            legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
+            and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
+        ):
+            return RulespecGroupMonitoringAgentsLinuxUnixAgent
+    return None
 
 
 def _convert_to_custom_group(
@@ -662,10 +755,10 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.RegularExpression():
             return _convert_to_legacy_regular_expression(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Dictionary():
+        case ruleset_api_v1.form_specs.Dictionary() | DictionaryExtended():
             return _convert_to_legacy_dictionary(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.SingleChoice():
+        case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.CascadingSingleChoice():
@@ -677,8 +770,11 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.HostState():
             return _convert_to_legacy_host_state(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.List():
+        case ruleset_api_v1.form_specs.List() | ListExtended():
             return _convert_to_legacy_list(to_convert, localizer)
+
+        case ListOfStrings():
+            return _convert_to_legacy_list_of_strings(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.FixedValue():
             return _convert_to_legacy_fixed_value(to_convert, localizer)
@@ -701,7 +797,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.MonitoredHost():
+        case ruleset_api_v1.form_specs.MonitoredHost() | MonitoredHostExtended():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MonitoredService():
@@ -711,7 +807,7 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_individual_or_stored_password(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MultipleChoice():
-            return _convert_to_legacy_list_choice(to_convert, localizer)
+            return _convert_to_legacy_list_choice_match_type(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MultilineText():
             return _convert_to_legacy_text_area(to_convert, localizer)
@@ -719,20 +815,36 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.TimePeriod():
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
 
+        case Tuple():
+            return _convert_to_legacy_tuple(to_convert, localizer)
+
+        case SimplePassword():
+            return _convert_to_legacy_password(to_convert, localizer)
+
+        case LegacyValueSpec():
+            return to_convert.valuespec
+
         case other:
             raise NotImplementedError(other)
 
 
-def _convert_to_legacy_valuespec(
-    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+def convert_to_legacy_valuespec(
+    to_convert: ruleset_api_v1.form_specs.FormSpec | FormSpecCallable,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
+    if isinstance(to_convert, FormSpecCallable):
+        to_convert = to_convert()
+
     def allow_empty_value_wrapper(
-        update_func: Callable[[object], object]
+        update_func: Callable[[object], object],
     ) -> Callable[[object], object]:
         def wrapper(v: object) -> object:
-            if v is None:
-                return v
-            return update_func(v)
+            try:
+                return update_func(v)
+            except Exception:
+                if v is None:
+                    return v
+                raise
 
         return wrapper
 
@@ -896,6 +1008,8 @@ def _convert_to_legacy_percentage(
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "display_format": "%r",
+        "minvalue": None,
+        "maxvalue": None,
     }
 
     match to_convert.prefill:
@@ -989,11 +1103,12 @@ def _convert_to_legacy_regular_expression(
 
 
 def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
-    return repr(dict_group).replace(" ", "")
+    """Strip dict group down to html-id friendly string."""
+    return "".join(filter(str.isalnum, repr(dict_group)))
 
 
 def _get_group_keys(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> Sequence[str]:
     return [
         _get_dict_group_key(elem.group)
@@ -1003,7 +1118,7 @@ def _get_group_keys(
 
 
 def _make_group_keys_dict(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> dict:
     # to render the groups in a nicer way the group names are required keys, so have to exist per
     # default
@@ -1016,6 +1131,10 @@ def _get_packed_value(
     packed_dict: dict,
 ) -> object:
     match nested_form, value_to_pack:
+        case DictionaryExtended() as dict_form, dict() as dict_to_pack:
+            return _pack_dict_groups(
+                dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
+            )
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
             return _pack_dict_groups(
                 dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
@@ -1029,7 +1148,12 @@ def _pack_dict_groups(
     ignored_elements: Sequence[str],
     dict_to_pack: Mapping[str, object],
     packed_dict: dict,
-) -> MutableMapping[str, object]:
+) -> Mapping[str, object]:
+    if not set(_get_group_keys(dict_elements)).isdisjoint(
+        dict_to_pack.keys()
+    ):  # already transformed
+        return dict_to_pack
+
     for key_to_pack, value_to_pack in dict_to_pack.items():
         if key_to_pack in ignored_elements:
             packed_dict[key_to_pack] = value_to_pack
@@ -1038,8 +1162,11 @@ def _pack_dict_groups(
         nested_packed_dict = {}
         if isinstance(
             (nested_form := dict_elements[key_to_pack].parameter_form),
-            ruleset_api_v1.form_specs.Dictionary,
+            (ruleset_api_v1.form_specs.Dictionary, DictionaryExtended),
         ):
+            # handle innermost migrations
+            if nested_form.migrate is not None:
+                value_to_pack = nested_form.migrate(value_to_pack)
             nested_packed_dict = _make_group_keys_dict(nested_form.elements)
 
         if isinstance(
@@ -1062,8 +1189,6 @@ def _transform_dict_groups_forth(
     def _forth(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
         if value is None:
             return value
-        if not set(_get_group_keys(dict_elements)).isdisjoint(value.keys()):  # already transformed
-            return value
 
         return _pack_dict_groups(
             dict_elements, ignored_elements, value, _make_group_keys_dict(dict_elements)
@@ -1076,6 +1201,10 @@ def _get_unpacked_value(
     nested_form: ruleset_api_v1.form_specs.FormSpec, value_to_unpack: object
 ) -> object:
     match nested_form, value_to_unpack:
+        case DictionaryExtended() as dict_form, dict() as dict_to_unpack:
+            return _unpack_dict_group(
+                dict_form.elements, dict_form.ignored_elements, dict_to_unpack
+            )
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
             return _unpack_dict_group(
                 dict_form.elements, dict_form.ignored_elements, dict_to_unpack
@@ -1139,13 +1268,24 @@ def _convert_to_dict_legacy_validation(
 
 
 def _convert_to_legacy_dictionary(
-    to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Dictionary | DictionaryExtended,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Transform | legacy_valuespecs.Dictionary:
     ungrouped_element_key_props, ungrouped_elements = _get_ungrouped_elements(
         to_convert.elements, localizer
     )
     grouped_elements_map, hidden_group_keys = _group_elements(to_convert.elements, localizer)
     required_group_keys = set(grouped_elements_map.keys()) - hidden_group_keys
+
+    default_keys: list[str] | None = None
+    if isinstance(to_convert, DictionaryExtended) and (prefill := to_convert.prefill) is not None:
+        default_keys = []
+        for key, value in prefill.value.items():
+            if not isinstance(value, VueDefaultValue):
+                raise ValueError(
+                    "Unable to migrate prefill value. Only able to use Vue-DefaultValue as value for key."
+                )
+            default_keys.append(key)
 
     return legacy_valuespecs.Transform(
         legacy_valuespecs.Dictionary(
@@ -1156,6 +1296,7 @@ def _convert_to_legacy_dictionary(
             required_keys=ungrouped_element_key_props.required + list(required_group_keys),
             ignored_keys=list(to_convert.ignored_elements),
             hidden_keys=ungrouped_element_key_props.hidden + list(hidden_group_keys),
+            default_keys=default_keys,
             validate=(
                 _convert_to_dict_legacy_validation(
                     to_convert.custom_validate,
@@ -1184,7 +1325,7 @@ def _get_ungrouped_elements(
         },
     )
     elements = [
-        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        (key, convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
         for key, dict_element in dict_elements_map.items()
         if isinstance(dict_element.group, ruleset_api_v1.form_specs.NoGroup)
     ]
@@ -1207,11 +1348,11 @@ def _make_group_as_nested_dict(
 ) -> tuple[legacy_valuespecs.Dictionary, bool]:
     key_props = _LegacyDictKeyProps.from_elements(dict_elements)
     elements = [
-        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        (key, convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
         for key, dict_element in dict_elements.items()
     ]
 
-    all_group_elements_hidden = set(key_props.hidden) == set(key for key, _ in elements)
+    all_group_elements_hidden = set(key_props.hidden) == {key for key, _ in elements}
     return (
         legacy_valuespecs.Dictionary(
             elements=elements,
@@ -1279,7 +1420,8 @@ def _convert_to_legacy_host_state(
 
 
 def _convert_to_legacy_dropdown_choice(
-    to_convert: ruleset_api_v1.form_specs.SingleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.SingleChoice | SingleChoiceExtended,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (
@@ -1335,7 +1477,7 @@ def _convert_to_legacy_cascading_dropdown(
         (
             str(element.name),
             element.title.localize(localizer),
-            _convert_to_legacy_valuespec(element.parameter_form, localizer),
+            convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
         for element in to_convert.elements
     ]
@@ -1366,24 +1508,35 @@ def _convert_to_legacy_cascading_dropdown(
 def _get_item_spec_maker(
     condition: ruleset_api_v1.rule_specs.HostAndItemCondition,
     localizer: Callable[[str], str],
-) -> Callable[
-    [],
-    legacy_valuespecs.TextInput
-    | legacy_valuespecs.DropdownChoice
-    | legacy_valuespecs.TextAreaUnicode
-    | legacy_valuespecs.FixedValue,
+) -> tuple[
+    Callable[
+        [],
+        legacy_valuespecs.TextInput
+        | legacy_valuespecs.DropdownChoice
+        | legacy_valuespecs.TextAreaUnicode
+        | legacy_valuespecs.FixedValue,
+    ],
+    ruleset_api_v1.form_specs.FormSpec,
 ]:
     item_form_with_title = dataclasses.replace(condition.item_form, title=condition.item_title)
 
     match item_form_with_title:
         case ruleset_api_v1.form_specs.String():
-            return partial(_convert_to_legacy_text_input, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_text_input, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.SingleChoice():
-            return partial(_convert_to_legacy_dropdown_choice, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_dropdown_choice, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.MultilineText():
-            return partial(_convert_to_legacy_text_area, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_text_area, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.FixedValue():
-            return partial(_convert_to_legacy_fixed_value, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_fixed_value, item_form_with_title, localizer
+            ), item_form_with_title
         case other:
             raise ValueError(other)
 
@@ -1405,9 +1558,9 @@ def _convert_to_legacy_validation(
 
 
 def _convert_to_legacy_list(
-    to_convert: ruleset_api_v1.form_specs.List, localizer: Callable[[str], str]
-) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
-    template = _convert_to_legacy_valuespec(to_convert.element_template, localizer)
+    to_convert: ruleset_api_v1.form_specs.List | ListExtended, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOf:
+    template = convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: dict[str, Any] = {
         "valuespec": template,
         "title": _localize_optional(to_convert.title, localizer),
@@ -1424,7 +1577,39 @@ def _convert_to_legacy_list(
             to_convert.custom_validate, localizer
         )
 
+    if isinstance(to_convert, ListExtended):
+        converted_kwargs["default_value"] = to_convert.prefill.value
+
     return legacy_valuespecs.ListOf(**converted_kwargs)
+
+
+def _convert_to_legacy_list_of_strings(
+    to_convert: ListOfStrings, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOfStrings:
+    template = convert_to_legacy_valuespec(to_convert.string_spec, localizer)
+    match to_convert.layout:
+        case ListOfStringsLayout.horizontal:
+            orientation = "horizontal"
+        case ListOfStringsLayout.vertical:
+            orientation = "vertical"
+        case _:
+            assert_never(to_convert.layout)
+
+    converted_kwargs: dict[str, Any] = {
+        "valuespec": template,
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "orientation": orientation,
+        "default_value": to_convert.prefill.value,
+        **_get_allow_empty_conf(to_convert, localizer),
+    }
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.ListOfStrings(**converted_kwargs)
 
 
 def _convert_to_legacy_fixed_value(
@@ -1501,9 +1686,10 @@ def _get_legacy_level_spec(
     # we someday invent one that does not have this attribute.
     if hasattr(form_spec_template, "prefill"):
         form_spec_template = dataclasses.replace(
-            form_spec_template, prefill=prefill_type(prefill_value)  # type: ignore[call-arg]
+            form_spec_template,
+            prefill=prefill_type(prefill_value),  # type: ignore[call-arg]
         )
-    return _convert_to_legacy_valuespec(
+    return convert_to_legacy_valuespec(
         dataclasses.replace(form_spec_template, title=title), localizer
     )
 
@@ -1943,7 +2129,9 @@ def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
     raise ValueError(value)
 
 
-def _transform_proxy_back(value: tuple[str, str]) -> tuple[
+def _transform_proxy_back(
+    value: tuple[str, str],
+) -> tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
@@ -2078,7 +2266,7 @@ def _convert_to_legacy_metric_name(
 
 
 def _convert_to_legacy_monitored_host_name(
-    to_convert: ruleset_api_v1.form_specs.MonitoredHost,
+    to_convert: ruleset_api_v1.form_specs.MonitoredHost | MonitoredHostExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredHostname:
     converted_kwargs: dict[str, Any] = {
@@ -2096,6 +2284,8 @@ def _convert_to_legacy_monitored_host_name(
     if (title := _localize_optional(to_convert.title, localizer)) is None:
         title = ruleset_api_v1.Title("Host name").localize(localizer)
     converted_kwargs["title"] = title
+    if isinstance(to_convert, MonitoredHostExtended):
+        converted_kwargs["default_value"] = to_convert.prefill.value
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
 
@@ -2113,11 +2303,11 @@ def _convert_to_legacy_monitored_service_description(
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
         help_text = ruleset_api_v1.Help(
-            "Select from a list of service descriptions known to Checkmk"
+            "Select from a list of service names known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Title("Service description").localize(localizer)
+        title = ruleset_api_v1.Title("Service name").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
@@ -2134,7 +2324,7 @@ def _transform_password_forth(value: object) -> tuple[str, str]:
 
 
 def _transform_password_back(
-    value: tuple[str, str]
+    value: tuple[str, str],
 ) -> tuple[
     Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
 ]:
@@ -2158,6 +2348,20 @@ def _convert_to_legacy_individual_or_stored_password(
         ),
         forth=_transform_password_forth,
         back=_transform_password_back,
+    )
+
+
+def _convert_to_legacy_list_choice_match_type(
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec:
+    def _ensure_sequence_str(value: object) -> Sequence | object:
+        if not isinstance(value, Sequence):
+            return value
+        return list(value)
+
+    return Transform(
+        _convert_to_legacy_list_choice(to_convert, localizer),
+        forth=_ensure_sequence_str,
     )
 
 
@@ -2260,4 +2464,32 @@ def _convert_to_legacy_timeperiod_selection(
         ),
         back=_transform_timeperiod_back,
         forth=_transform_timeperiod_forth,
+    )
+
+
+def _convert_to_legacy_tuple(
+    to_convert: Tuple, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Tuple:
+    orientation = to_convert.layout
+    # The legacy Tuple does not support the "horizontal_titles_top" orientation.
+    if orientation == "horizontal_titles_top":
+        orientation = "horizontal"
+    return legacy_valuespecs.Tuple(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        elements=[convert_to_legacy_valuespec(e, localizer) for e in to_convert.elements],
+        orientation=orientation,
+        show_titles=to_convert.show_titles,
+    )
+
+
+def _convert_to_legacy_password(
+    to_convert: SimplePassword, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Password:
+    return legacy_valuespecs.Password(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
+        if to_convert.custom_validate
+        else None,
     )

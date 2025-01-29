@@ -1,0 +1,139 @@
+# https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
+try-import %workspace%/user.bazelrc
+
+# The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
+# Jenkins job (or a user) in the form of:
+# common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
+try-import %workspace%/remote.bazelrc
+
+# default/common bazel args for all commands supporting it
+common --experimental_ui_max_stdouterr_bytes=10000000
+common --experimental_remote_cache_async
+common --remote_cache_compression
+# minimum blob size required to compress/decompress with zstd (1MB)
+common --experimental_remote_cache_compression_threshold=1048576
+common --remote_local_fallback
+common --cycles
+common --local_resources=cpu=HOST_CPUS-2
+common --local_resources=memory=HOST_RAM*.5
+# We standardized on Ubuntu, a Debian-based distro, so LSB
+common --@//:filesystem_layout=lsb
+# Enable Bzlmod for every Bazel command
+common --enable_bzlmod
+# Do not upload artifacts other than from CI, see below, CMK-18656
+common --remote_upload_local_results=false
+common --lockfile_mode=error
+
+## For specific commands
+# Always require debug info.
+# build --copt="-g"
+build --flag_alias=cmk_version=//:cmk_version
+
+# For some obscure reason, the re2 project made itself valgrind-dirty by default:
+# https://github.com/google/re2/commit/ce6f2884c4b52509fd6c5d12b8f1c40587067784
+# Defining the symbol below has a small performance hit, but makes our stuff
+# valgrind-clean again, which is a crucial feature for debugging the NEB & CMC!
+build --copt="-DRE2_ON_VALGRIND"
+
+clean --async
+# all bazel-created temporary and build output files
+# clean --expunge
+# run ...
+test --test_output=all
+
+# Flags for CI builds
+# Definition of "bazel x --config=ci -- ..."
+## Common
+common:ci --color=no
+common:ci --show_progress_rate_limit=0
+common:ci --show_timestamps
+common:ci --memory_profile=bazel-memory.profile
+common:ci --extra_toolchains="//bazel/toolchains/cc:ci"
+common:ci --local_resources=cpu=HOST_CPUS*.21
+common:ci --local_resources=memory=HOST_RAM*.67
+# the later flags will override the previous flags
+# upload artifacts only from CI, CMK-18656
+common:ci --remote_upload_local_results=true
+
+# No standard in the CI where we must explicitly differentiate between LSB and FHS.
+common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
+
+## For specific commands
+# build:ci ...
+# Don't require system python for bootstrapping
+# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
+# TODO: should be dropped as soon as this becomes the default
+# TODO: this should be the overall default, see discussions in
+# https://tribe29.slack.com/archives/C03PW9280U9/p1728303949973099
+build:ci --@rules_python//python/config_settings:bootstrap_impl=script
+
+# clean:ci ...
+# run:ci ...
+# test:ci ...
+
+# Flags for Debug builds
+# Definition of "bazel x --config=debug -- ..."
+## Common
+common:debug --announce_rc
+# gRPC errors provide stack trace as well
+common:debug --verbose_failures
+
+## For specific commands
+# build:debug ...
+# clean:debug ...
+# run:debug ...
+# test:debug ...
+
+################################################################################
+# Example: bazel build --config clang-tidy //packages/cmc:all
+################################################################################
+
+build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:clang-tidy --output_groups=report
+build:clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=//bazel/tools:clangtidy_bin
+build:clang-tidy --@bazel_clang_tidy//:clang_tidy_config=//bazel/tools:clang_tidy_config
+
+################################################################################
+# Example: bazel build --config=iwyu //packages/cmc:all
+################################################################################
+
+build:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect
+build:iwyu --output_groups=report
+build:iwyu --@bazel_iwyu//:iwyu_executable=//bazel/tools:iwyu_bin
+build:iwyu --@bazel_iwyu//:iwyu_opts="--error"
+build:iwyu --@bazel_iwyu//:iwyu_mappings=//bazel/tools:iwyu_mappings
+
+################################################################################
+# Example: bazel build --config=mypy //packages/cmk-agent-based:all
+################################################################################
+build:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
+build:mypy --output_groups=mypy
+
+################################################################################
+# Example: bazel build --config=clippy //packages/host/cmk-agent-ctl:all
+################################################################################
+build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build:clippy --output_groups=+clippy_checks
+build:clippy --@rules_rust//:clippy_flags=-Dwarnings
+
+################################################################################
+# Example: bazel build --config=rustfmt //packages/site/check-http:all
+################################################################################
+build:rustfmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build:rustfmt --output_groups=+rustfmt_checks
+
+# Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
+# (see https://blog.aspect.build/bazelrc-flags)
+build --incompatible_strict_action_env
+
+# Set PATH manually (see above) for both action_env and host_action_env
+# Note: in the future PATH might not be needed at all as long as Bazel provides all the tools
+#       currently taken from system. For now we still need `/usr/bin` and `/bin` for stuff like
+#       `git`, etc.
+#       Also note that in some distro specific exceptions we force tools to be located in
+#       `/usr/bin` (by symlinking) when building the build images
+build --action_env=PATH="/usr/bin:/bin"
+build --host_action_env=PATH="/usr/bin:/bin"
+
+# Must be last
+try-import /etc/ci.bazelrc

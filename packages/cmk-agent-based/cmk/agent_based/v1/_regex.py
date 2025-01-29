@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
     F = TypeVar("F")
 
-    def lru_cache(_f: F) -> F:
-        pass
+    def lru_cache(maxsize: int) -> Callable[[F], F]:
+        del maxsize
 
 else:
     from functools import lru_cache
@@ -17,7 +18,7 @@ else:
 __all__ = ["regex"]
 
 
-@lru_cache
+@lru_cache(maxsize=2048)
 def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     """Cache compiled regexes.
 

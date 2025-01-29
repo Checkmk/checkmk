@@ -6,7 +6,7 @@ import http.client
 
 from werkzeug.http import HTTP_STATUS_CODES
 
-from cmk.utils.exceptions import MKException, MKTimeout
+from cmk.ccc.exceptions import MKException, MKTimeout
 
 
 class RequestTimeout(MKTimeout):

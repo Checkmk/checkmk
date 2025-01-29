@@ -8,13 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.jolokia import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
@@ -22,6 +21,8 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     StringTable,
 )
+
+check_info = {}
 
 # Example output from agent:
 # <<<jolokia_metrics>>>
@@ -37,11 +38,25 @@ from cmk.agent_based.v2 import (
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
 
 
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
+
 def parse_jolokia_metrics(string_table: StringTable) -> StringTable:
     return string_table
 
 
 check_info["jolokia_metrics"] = LegacyCheckDefinition(
+    name="jolokia_metrics",
     parse_function=parse_jolokia_metrics,
 )
 
@@ -137,6 +152,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
 
 check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
+    name="jolokia_metrics_serv_req",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
     discovery_function=inventory_jolokia_metrics_serv,
@@ -186,6 +202,7 @@ def check_jolokia_metrics_app_state(item, _no_params, info):
 
 
 check_info["jolokia_metrics.app_state"] = LegacyCheckDefinition(
+    name="jolokia_metrics_app_state",
     service_name="JVM %s State",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
@@ -306,6 +323,7 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
 
 check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
+    name="jolokia_metrics_app_sess",
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
@@ -320,6 +338,7 @@ check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
 )
 
 check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
+    name="jolokia_metrics_requests",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps("requests", needed_keys={"requestCount"}),
@@ -328,6 +347,7 @@ check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
 
 # Stuff found on BEA Weblogic
 check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
+    name="jolokia_metrics_bea_queue",
     service_name="JVM %s Queue",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps("queue", needed_keys={"QueueLength"}),
@@ -339,6 +359,7 @@ check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
 )
 
 check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(
+    name="jolokia_metrics_bea_requests",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
@@ -348,6 +369,7 @@ check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(
 )
 
 check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
+    name="jolokia_metrics_bea_threads",
     service_name="JVM %s Threads",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
@@ -357,6 +379,7 @@ check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
 )
 
 check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
+    name="jolokia_metrics_bea_sess",
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
@@ -432,6 +455,7 @@ def check_jolokia_metrics_cache_hits(item, _no_params, parsed):
 
 
 check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
+    name="jolokia_metrics_cache_hits",
     service_name="JVM %s Cache Usage",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_cache_hits,
@@ -456,6 +480,7 @@ def check_jolokia_metrics_in_memory(item, _no_params, parsed):
 
 
 check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
+    name="jolokia_metrics_in_memory",
     service_name="JVM %s In Memory",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_in_memory,
@@ -480,6 +505,7 @@ def check_jolokia_metrics_on_disk(item, _no_params, parsed):
 
 
 check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
+    name="jolokia_metrics_on_disk",
     service_name="JVM %s On Disk",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_on_disk,
@@ -504,6 +530,7 @@ def check_jolokia_metrics_off_heap(item, _no_params, parsed):
 
 
 check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
+    name="jolokia_metrics_off_heap",
     service_name="JVM %s Off Heap",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_off_heap,
@@ -522,6 +549,7 @@ def check_jolokia_metrics_writer(item, _no_params, parsed):
 
 
 check_info["jolokia_metrics.writer"] = LegacyCheckDefinition(
+    name="jolokia_metrics_writer",
     service_name="JVM %s Cache Writer",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_writer,

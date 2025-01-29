@@ -8,11 +8,13 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "livestatus/BlobColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 namespace {

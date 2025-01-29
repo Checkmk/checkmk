@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=redefined-outer-name
 
 import datetime
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Final, Protocol
 
@@ -358,7 +356,7 @@ def get_elasticache_sections() -> ElasticacheSections:
     ) -> ElasticacheSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
@@ -372,10 +370,18 @@ def get_elasticache_sections() -> ElasticacheSections:
 
         # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient, etc.
         elasticache_limits = ElastiCacheLimits(
-            fake_elasticache_client1, region, config, distributor, fake_quota_client  # type: ignore[arg-type]
+            fake_elasticache_client1,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_quota_client,  # type: ignore[arg-type]
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, fake_tagging_client, region, config, distributor  # type: ignore[arg-type]
+            fake_elasticache_client2,  # type: ignore[arg-type]
+            fake_tagging_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
         )
         elasticache = ElastiCache(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
@@ -426,7 +432,7 @@ def test_agent_aws_elasticache_limits(
 
 def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
     # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.
     elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)  # type: ignore[arg-type]

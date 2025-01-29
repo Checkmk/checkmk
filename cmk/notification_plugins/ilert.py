@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-# iLert Checkmk Native Plugin
+# iLert Checkmk Native Plug-in
 
 # Copyright (c) 2013-2020, iLert GmbH
 #       iLert <support@ilert.com>
 # License: GNU Public License v2
 
-from os import environ
-
 from cmk.notification_plugins.utils import (
+    get_password_from_env_or_context,
     JsonFieldMatcher,
     post_request,
     process_by_matchers,
     ResponseMatcher,
+    StateInfo,
+    StatusCodeMatcher,
+    StatusCodeRange,
 )
-from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
-from cmk.notification_plugins.utils import StateInfo, StatusCodeMatcher, StatusCodeRange
 
 PLUGIN_VERSION = "1.0"
 
@@ -41,7 +41,7 @@ RESULT_MATCHER: list[tuple[ResponseMatcher | StatusCodeRange, StateInfo]] = [
 
 
 def _ilert_url() -> str:
-    password = passwords(environ["NOTIFY_PARAMETER_ILERT_API_KEY"])
+    password = get_password_from_env_or_context(key="NOTIFY_PARAMETER_ILERT_API_KEY")
     return f"https://api.ilert.com/api/v1/events/checkmk-ext/{password}"
 
 

@@ -6,9 +6,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
     equals,
@@ -18,6 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def inventory_aironet_errors(info):
@@ -49,6 +49,7 @@ def parse_aironet_errors(string_table: StringTable) -> StringTable:
 
 
 check_info["aironet_errors"] = LegacyCheckDefinition(
+    name="aironet_errors",
     parse_function=parse_aironet_errors,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),

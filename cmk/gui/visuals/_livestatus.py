@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Container, Iterable
 from typing import Any, Literal
 
 from livestatus import SiteId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import FilterHeader, VisualContext
 from cmk.gui.utils.user_errors import user_errors
@@ -21,7 +21,9 @@ from .filter import Filter
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
-def get_filter_headers(table, infos, context: VisualContext):  # type: ignore[no-untyped-def]
+def get_filter_headers(
+    infos: Container[str], context: VisualContext
+) -> tuple[str, list[SiteId] | None]:
     filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 

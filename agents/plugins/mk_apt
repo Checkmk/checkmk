@@ -9,20 +9,13 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Check for APT updates (Debian, Ubuntu)
 # TODO:
-# Einstellungen:
-# - upgrade oder dist-upgrade
-# - vorher ein update machen
-# Bakery:
-# - Bakelet anlegen
-# - Async-Zeit einstellbar machen und das Ding immer async laufen lassen
 # Check programmieren:
 #   * Schwellwerte auf Anzahlen
 #   * Regexen auf Pakete, die zu CRIT/WARN führen
-# - Graph malen mit zwei Kurven
 
 # This variable can either be "upgrade" or "dist-upgrade"
 UPGRADE=upgrade

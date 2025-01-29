@@ -6,7 +6,7 @@
 Special agent for monitoring Kubernetes clusters. This agent is required for
 monitoring data provided by the Kubernetes API and the Checkmk collectors,
 which can optionally be deployed within a cluster. The agent requires
-Kubernetes version v1.24 or higher. Moreover, read access to the Kubernetes API
+Kubernetes version v1.26 or higher. Moreover, read access to the Kubernetes API
 endpoints monitored by Checkmk must be provided.
 """
 
@@ -31,8 +31,9 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
+import cmk.ccc.profile
+
 import cmk.utils.password_store
-import cmk.utils.profile
 
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
@@ -441,6 +442,10 @@ Model = TypeVar("Model")
 
 
 def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
+    # This function is called once per agent_kube invocation. Moving the TypeAdapter definition to
+    # import time has no impact. TypeAdapter is faster than RootModel (see CMK-19527), thus
+    # remains unchanged.
+    # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(list[RawMetrics])
     return adapter.validate_json(content)
 
@@ -456,7 +461,15 @@ def request_cluster_collector(
     prepare_request = session.prepare_request(request)
     try:
         cluster_resp = session.send(
-            prepare_request, verify=config.usage_verify_cert, timeout=config.requests_timeout()
+            prepare_request,
+            timeout=config.requests_timeout(),
+            **session.merge_environment_settings(
+                url=request.url,
+                proxies={},
+                stream=None,
+                verify=config.usage_verify_cert,
+                cert=None,
+            ),
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
@@ -807,7 +820,7 @@ def piggyback_formatter_with_cluster_name(
             )
 
 
-def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-branches
+def main(args: list[str] | None = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
@@ -822,7 +835,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         setup_logging(arguments.verbose)
         LOGGER.debug("parsed arguments: %s\n", arguments)
 
-        with cmk.utils.profile.Profile(
+        with cmk.ccc.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
             client_config = query.parse_api_session_config(arguments)
@@ -949,7 +962,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=namespace_piggyback_name,
                     )
                     if (
-                        api_resource_quota := namespace_handler.filter_matching_namespace_resource_quota(
+                        api_resource_quota
+                        := namespace_handler.filter_matching_namespace_resource_quota(
                             namespace_name(api_namespace), resource_quotas
                         )
                     ) is not None:

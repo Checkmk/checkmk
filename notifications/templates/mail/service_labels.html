@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<table align="center"
+       width="100%"
+       style="border-spacing: 0;
+              min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+    <tr>
+        <th colspan="2"
+            style="font-size: 18px;
+                   font-weight: 600;
+                   text-align: left">
+            <img src="cid:label.png" style=" width: 18px; height: 19px " />
+            Service labels
+        </th>
+    </tr>
+    <tr>
+        <td style=" padding: 10px 10px 0 0; ">
+            {% set ns = namespace(has_labels = false) %}
+            {% for key, value in data.items() %}
+                {% if key.startswith('SERVICELABEL_') %}
+                    {% set ns.has_labels = true %}
+                    <span style="margin: 0px 5px 10px 0;
+                                 display: inline-block;
+                                 color: #2c3843;
+                                 text-decoration: none;
+                                 font-size: 14px;
+                                 line-height: 24px;
+                                 padding: 0 10px;
+                                 border-radius: 8px;
+                                 background-color: #dcdcdc;
+                                 border: 1px solid #ccc">{{ key[13:] }}:{{ value }}</span>
+                {% endif %}
+            {% endfor %}
+            {% if not ns.has_labels %}<p style=" margin: 0; font-size: 14px; ">No Service labels</p>{% endif %}
+        </td>
+    </tr>
+</table>

@@ -6,8 +6,7 @@
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from cmk.utils.config_validation_layer.groups import GroupSpecs
-
+from cmk.gui.groups import GroupSpecs
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ChoiceText

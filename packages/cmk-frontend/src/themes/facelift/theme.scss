@@ -3,13 +3,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@import "~select2/dist/css/select2";
-@import "~@yaireo/tagify/dist/tagify";
-@import "~dc/dist/style/dc";
-@import "~simplebar/dist/simplebar";
+@import "select2/dist/css/select2.css";
+@import "@yaireo/tagify/dist/tagify.css";
+@import "dc/dist/style/dc.css";
+@import "simplebar/dist/simplebar.css";
 
 @import "scss/_variables_common.scss";
 @import "scss/_variables.scss";
+@import "scss/_mixins.scss";
 @import "scss/_main.scss";
 @import "scss/_pages.scss";
 @import "scss/_status.scss";
@@ -32,22 +33,9 @@
 @import "scss/_graphs.scss";
 @import "scss/_info.scss";
 @import "scss/_password_meter.scss";
-
-// CEE specific files. Would love to add some kind of conditional import here,
-// but that is simply not possible at the moment using SCSS. Hack around this
-// using symlinks in the git during development and replace the links with empty
-// files during the build procedure of other editions.
-// Note: In case you add something here, you will have to add some dummy files
-// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
-@import "../facelift/scss/cee/_graphs_cee.scss";
-@import "../facelift/scss/cee/_reporting.scss";
-@import "../facelift/scss/cee/_ntop.scss";
-@import "../facelift/scss/cee/_license_usage.scss";
-@import "../facelift/scss/cee/_robotmk.scss";
-@if $ENTERPRISE == "yes" {
-  @include graphs_cee;
-  @include reporting;
-  @include ntop;
-  @include license_usage;
-  @include robotmk;
-}
+@import "scss/_graphs_cee.scss";
+@import "scss/_reporting.scss";
+@import "scss/_ntop.scss";
+@import "scss/_license_usage.scss";
+@import "scss/_robotmk.scss";
+@import "scss/_cse_banner.scss";

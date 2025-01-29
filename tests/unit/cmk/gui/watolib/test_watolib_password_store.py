@@ -123,7 +123,6 @@ def test_password_store_save(store: PasswordStore) -> None:
 
 
 @pytest.fixture(name="test_store")
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def fixture_test_store(store: PasswordStore) -> PasswordStore:
     entries = {
         "ding": Password(

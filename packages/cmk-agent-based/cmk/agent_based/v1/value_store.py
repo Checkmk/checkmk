@@ -41,7 +41,6 @@ the check function is called.
 
 """
 
-
 from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
 from typing import Any, Protocol, TypeVar
@@ -86,7 +85,7 @@ def set_value_store_manager(
     This class is not to be used by plug-ins, and not part of the plug-in API.
     """
     # ^- and yet it sits in this package. That's what you get for using a global state.
-    global _active_host_value_store  # pylint: disable=global-statement
+    global _active_host_value_store
 
     pushed_back_store = _active_host_value_store
 

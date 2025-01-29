@@ -13,7 +13,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import NamedTuple
 
-from PIL import (  # pylint: disable=pillow-module-import
+from PIL import (
     Image,
     PngImagePlugin,
     UnidentifiedImageError,

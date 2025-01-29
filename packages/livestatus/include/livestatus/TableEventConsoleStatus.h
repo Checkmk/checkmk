@@ -8,9 +8,7 @@
 
 #include <string>
 
-#include "livestatus/Row.h"
 #include "livestatus/TableEventConsole.h"
-class ICore;
 
 class TableEventConsoleStatus : public TableEventConsole {
 public:

@@ -12,8 +12,9 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Literal
 
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.regex
-from cmk.utils.exceptions import MKException
 
 
 class MKClientError(MKException):

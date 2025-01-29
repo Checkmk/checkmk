@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import Literal
+
 import pytest
 
 from cmk.utils.http_proxy_config import (
@@ -19,6 +21,11 @@ _PROXIES_GLOBAL_SETTINGS = {
         "ident": "blub",
         "title": "HTTP blub",
         "proxy_url": "http://blub:8080",
+    },
+    "https_blab": {
+        "ident": "blab",
+        "title": "HTTPS blab",
+        "proxy_url": "https://blab:8181",
     },
     "https_blub": {
         "ident": "blub",
@@ -97,10 +104,36 @@ _PROXIES_GLOBAL_SETTINGS = {
             ExplicitProxyConfig("http://8.4.2.1:1337"),
             id="explicitly configured",
         ),
+        pytest.param(
+            ("cmk_postprocessed", "environment", ""),
+            EnvironmentProxyConfig(),
+            id="FormSpec from environment",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "explicit_proxy", "http://11.11.19.81:2020"),
+            ExplicitProxyConfig("http://11.11.19.81:2020"),
+            id="FormSpec explicitly configured",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_proxy", "https_blab"),
+            ExplicitProxyConfig("https://blab:8181"),
+            id="FormSpec global proxy https",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "no_proxy", ""),
+            NoProxyConfig(),
+            id="FormSpec no proxy",
+        ),
     ],
 )
 def test_http_proxy_config_from_user_setting(
-    rulesepc_value: str | tuple[str, str | None],
+    rulesepc_value: str
+    | tuple[str, str | None]
+    | tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
+    ],
     expected_result: HTTPProxyConfig,
 ) -> None:
     assert (

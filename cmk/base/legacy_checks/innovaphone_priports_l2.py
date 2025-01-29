@@ -4,10 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_innovaphone_priports_l2(info):
@@ -43,11 +56,9 @@ def check_innovaphone_priports_l2(item, params, info):
                 state = 2
                 mode_label = "(!!)"
 
-            return state, "State: {}{}, Mode: {}{}".format(
-                states[l2state],
-                state_label,
-                modes[l2mode],
-                mode_label,
+            return (
+                state,
+                f"State: {states[l2state]}{state_label}, Mode: {modes[l2mode]}{mode_label}",
             )
     return 3, "Output not found"
 
@@ -57,6 +68,7 @@ def parse_innovaphone_priports_l2(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
+    name="innovaphone_priports_l2",
     parse_function=parse_innovaphone_priports_l2,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(

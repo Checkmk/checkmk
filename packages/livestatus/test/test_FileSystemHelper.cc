@@ -5,8 +5,9 @@
 
 #include <cassert>
 #include <filesystem>
-#include <memory>
+#include <string>
 #include <tuple>
+#include <variant>
 
 #include "gtest/gtest.h"
 #include "livestatus/FileSystemHelper.h"

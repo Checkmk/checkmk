@@ -7,14 +7,16 @@
 import abc
 import base64
 import json
-import os
 import ssl
-from functools import reduce
+from collections.abc import Mapping
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
+from urllib.parse import urljoin
 from urllib.request import build_opener, HTTPSHandler, Request
 
-from requests import Session
+from requests import Response, Session
+from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -24,10 +26,6 @@ class TokenDict(TypedDict):
     refresh_token: str
     expires_in: float
     expires_in_abs: str | None
-
-
-def get_requests_ca() -> str | None:
-    return os.environ.get("REQUESTS_CA_BUNDLE")
 
 
 def to_token_dict(data: Any) -> TokenDict:
@@ -75,7 +73,7 @@ class HTTPSAuthHandler(HTTPSHandler):
         super().__init__()
         self.__ca_file = ca_file
 
-    def https_open(self, req: Request) -> HTTPResponse:  # pylint: disable=arguments-differ
+    def https_open(self, req: Request) -> HTTPResponse:
         # TODO: Slightly interesting things in the typeshed here, investigate...
         return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
 
@@ -113,73 +111,79 @@ class HTTPSAuthRequester(Requester):
         return json.loads(response.read())
 
 
-def create_api_connect_session(
-    api_url: str,
-    no_cert_check: bool = False,
-    auth: Any = None,
-    token: str | None = None,
-) -> "ApiSession":
-    """Create a custom requests Session
-
-    Args:
-        api_url:
-            url address to the server api
-
-        no_cert_check:
-            option if ssl certificate should be verified. session.verify = False cannot be
-            used at this point due to a bug in requests.session
-
-        auth:
-            authentication option (either username & password or OAuth1 object)
-
-        token:
-            token for Bearer token request
-    """
-    ssl_verify = None
-    if not no_cert_check:
-        ssl_verify = get_requests_ca()
-
-    session = ApiSession(api_url, ssl_verify)
-
-    if auth:
-        session.auth = auth
-    elif token:
-        session.headers.update({"Authorization": "Bearer " + token})
-
-    return session
-
-
-class ApiSession(Session):
-    """Adjusted requests.session class with a focus on multiple API calls
-
-    ApiSession behaves similar to the requests.session
-    with the exception that a base url is provided and persisted
-    all requests forms use the base url and append the actual request
-
-    """
-
-    def __init__(self, base_url: str | None = None, ssl_verify: str | bool | None = None):
+class HostnameValidationAdapter(HTTPAdapter):
+    def __init__(self, hostname: str) -> None:
         super().__init__()
-        self._base_url = base_url if base_url else ""
-        self.ssl_verify = ssl_verify if ssl_verify else False
+        self._reference_hostname = hostname
 
-    def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
-        url = urljoin(self._base_url, url)
-        return super().request(method, url, verify=self.ssl_verify, **kwargs)
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_hostname
+        return super().cert_verify(conn, url, verify, cert)
 
 
-def parse_api_url(  # type: ignore[no-untyped-def]
-    server_address,
-    api_path,
-    protocol="http",
-    port=None,
-    url_prefix=None,
-    path_prefix=None,
+class ApiSession:
+    """Class for issuing multiple API calls
+
+    ApiSession behaves similar to requests.Session with the exception that a
+    base URL is provided and persisted.
+    All requests use the base URL and append the provided url to it.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        auth: HTTPBasicAuth | None = None,
+        tls_cert_verification: bool | HostnameValidationAdapter = True,
+        additional_headers: Mapping[str, str] | None = None,
+    ):
+        self._session = Session()
+        self._session.auth = auth
+        self._session.headers.update(additional_headers or {})
+        self._base_url = base_url
+
+        if isinstance(tls_cert_verification, HostnameValidationAdapter):
+            self._session.mount(self._base_url, tls_cert_verification)
+            self.verify = True
+        else:
+            self.verify = tls_cert_verification
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+            verify=self.verify,
+        )
+
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
+
+
+def parse_api_url(
+    server_address: str,
+    api_path: str,
+    protocol: Literal["http", "https"] = "http",
+    port: int | None = None,
+    url_prefix: str | None = None,
+    path_prefix: str | None = None,
 ) -> str:
     """Parse the server api address
 
     custom url always has priority over other options, if not specified the address contains
-    either the ip-address or the hostname in the url
+    either the ip address or the hostname in the url
 
     the protocol should not be specified through the custom url
 
@@ -189,7 +193,7 @@ def parse_api_url(  # type: ignore[no-untyped-def]
             where the API can be queried
 
         server_address:
-            hostname or ip-address to the server
+            hostname or ip address to the server
 
         protocol:
             the transfer protocol (http or https)
@@ -252,22 +256,3 @@ def parse_api_custom_url(
 
     """
     return f"{protocol}://{url_custom}/{api_path}"
-
-
-def urljoin(*args):
-    """Join two urls without stripping away any parts
-
-    >>> urljoin("http://127.0.0.1:8080", "api/v2")
-    'http://127.0.0.1:8080/api/v2'
-
-    >>> urljoin("http://127.0.0.1:8080/prometheus", "api/v2")
-    'http://127.0.0.1:8080/prometheus/api/v2'
-
-    >>> urljoin("http://127.0.0.1:8080/", "api/v2/")
-    'http://127.0.0.1:8080/api/v2/'
-    """
-
-    def join_slash(base, part):
-        return base.rstrip("/") + "/" + part.lstrip("/")
-
-    return reduce(join_slash, args) if args else ""

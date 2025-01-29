@@ -1,0 +1,67 @@
+#!/bin/sh
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+MANAGEMENT_API_PORT="$(grep  "^CONFIG_RABBITMQ_MANAGEMENT_PORT=" ~/etc/omd/site.conf | cut -d"'" -f2)"
+MONITORING_USER="cmk-internal-monitoring"
+MONITORING_ROLE="monitoring"
+
+usage(){
+    cat <<HERE >&2
+Usage: ${0##*/} [--setup | --query <api_path>]
+
+Used for internal monitoring of RabbitMQ broker.
+For debugging purposes use the --query option to query the RabbitMQ management API,
+e.g. \`${0##*/} --query api/overview\`.
+HERE
+    return 1
+}
+
+_get_secret(){
+    cat ~/.erlang.cookie
+}
+
+_get_user_config(){
+    printf 'user = "%s:' "${MONITORING_USER}"
+    _get_secret
+    printf '"\n'
+}
+
+query(){
+    _get_user_config | curl --config - "http://localhost:${MANAGEMENT_API_PORT}/${1}"
+}
+
+setup_monitoring_user(){
+    _get_secret | "${RABBITMQCTL:-rabbitmqctl}" add_user "${MONITORING_USER}"
+    "${RABBITMQCTL:-rabbitmqctl}" set_permissions_globally "${MONITORING_USER}" "$^" "$^" ".*"
+    "${RABBITMQCTL:-rabbitmqctl}" set_user_tags "${MONITORING_USER}" "${MONITORING_ROLE}"
+}
+
+make_sections(){
+    printf "<<<omd_broker_status:sep(0)>>>\n"
+    query "api/nodes?columns=name,mem_used"
+    printf "\n"
+    printf "<<<omd_broker_queues:sep(0)>>>\n"
+    query "api/queues?columns=node,name,messages,vhost&disable_stats=true&enable_queue_totals=true"
+    printf "\n"
+    printf "<<<omd_broker_shovels:sep(0)>>>\n"
+    query "api/shovels?columns=node,name,state"
+    printf "\n"
+}
+
+
+case "${1}" in
+    "-h" | "--help")
+        usage
+    ;;
+    "--setup")
+        setup_monitoring_user
+    ;;
+    "--query")
+        query "${2}"
+    ;;
+    *)
+        make_sections
+    ;;
+esac

@@ -13,8 +13,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.discovery import DiscoverySettings
 
-import cmk.gui.forms as forms
-import cmk.gui.sites as sites
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -25,6 +24,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
@@ -119,6 +119,8 @@ class ModeBulkDiscovery(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         user.need_permission("wato.services")
 
         try:
@@ -183,7 +185,7 @@ class ModeBulkDiscovery(WatoMode):
                 )
             )
             html.open_p()
-            html.write_text(" ".join(msgs))
+            html.write_text_permissive(" ".join(msgs))
             vs.render_input("bulkinventory", self._bulk_discovery_params)
             forms.end()
 
@@ -262,8 +264,5 @@ class ModeBulkDiscovery(WatoMode):
 
     def _find_hosts_with_failed_agent(self) -> list[HostName]:
         return sites.live().query_column(
-            "GET services\n"
-            "Filter: description = Check_MK\n"
-            "Filter: state >= 2\n"
-            "Columns: host_name"
+            "GET services\nFilter: description = Check_MK\nFilter: state >= 2\nColumns: host_name"
         )

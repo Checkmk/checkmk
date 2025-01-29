@@ -3,8 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+: "${MK_INSTALLDIR:=""}"
+
 RESOURCES="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
-CONTROLLER_TARGET="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
+PREDEFINED_CONNECTIONS_PATH="/var/lib/cmk-agent/pre_configured_connections.json"
+
+if [ -n "${MK_INSTALLDIR}" ]; then
+    CONTROLLER_PACKAGE_PATH="${MK_INSTALLDIR}/package/agent"
+    CONTROLLER_TARGET="${MK_INSTALLDIR}/package/bin/cmk-agent-ctl"
+    PREDEFINED_CONNECTIONS_PATH="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
+else
+    CONTROLLER_PACKAGE_PATH="/var/lib/cmk-agent"
+    CONTROLLER_TARGET="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
+    PREDEFINED_CONNECTIONS_PATH="/var/lib/cmk-agent/pre_configured_connections.json"
+fi
 
 _usage() {
     cat >&2 <<HERE
@@ -65,21 +77,31 @@ _need_ip_access_list() {
     grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback"
 }
 
+_predefined_connection_not_present() {
+    if [ -e "${PREDEFINED_CONNECTIONS_PATH}" ]; then
+        printf "A auto-registration rule was configured for this host!\n" >&2
+        printf "The agent controller does not support the legacy setup and therefore transport encryption and auto-registration are not available!\n" >&2
+        printf "Since this might be expected we abort here. If the legacy setup should really be used exclude this host from the rule that configures the auto-registration\n" >&2
+        return 1
+    fi
+    return 0
+}
+
 _deploy_controller() {
-    [ -e "/var/lib/cmk-agent/cmk-agent-ctl.gz" ] || {
+    [ -e "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl.gz" ] || {
         printf "%s\n" "Agent Controller is not packaged. Falling back to legacy systemd setup."
         return 1
     }
     printf "Deploying agent controller: %s\n" "${CONTROLLER_TARGET}"
-    gunzip --force --quiet -c "/var/lib/cmk-agent/cmk-agent-ctl.gz" >"/var/lib/cmk-agent/cmk-agent-ctl" || {
+    gunzip --force --quiet -c "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl.gz" >"${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl" || {
         printf "%s\n" "...Failed to unpack with gzip. Falling back to legacy systemd setup."
         return 1
     }
-    install -m 755 "/var/lib/cmk-agent/cmk-agent-ctl" "${CONTROLLER_TARGET}" || {
+    install -m 755 "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl" "${CONTROLLER_TARGET}" || {
         printf "%s\n" "...Failed to move to target location. Falling back to legacy systemd setup."
         return 1
     }
-    rm -f "/var/lib/cmk-agent/cmk-agent-ctl"
+    rm -f "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl"
     # Test rightaway. It might be dysfunctional (e.g., wrong architecture)
     "${CONTROLLER_TARGET}" --version >/dev/null 2>&1 || {
         printf "%s\n" "...Not running on this system. Falling back to legacy systemd setup."
@@ -162,7 +184,7 @@ _deploy_systemd_units() {
 deploy() {
     _systemd_sufficient || return 1
     _deploy_controller && _deploy_systemd_units "" && return 0
-    _legacy_setup_supported && _deploy_systemd_units ".fallback" && return 0
+    _predefined_connection_not_present && _legacy_setup_supported && _deploy_systemd_units ".fallback" && return 0
     return 1
 }
 

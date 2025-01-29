@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import NamedTuple, NewType, TypedDict
+from typing import NamedTuple, NewType, NotRequired, TypedDict
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
 TagID = NewType("TagID", str)
 TagGroupID = NewType("TagGroupID", str)
@@ -24,25 +24,19 @@ class GroupedTagSpec(TypedDict):
     aux_tags: list[TagID]
 
 
-class _AuxTagSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class AuxTagSpec(_AuxTagSpecOpt):
+class AuxTagSpec(TypedDict):
     id: TagID
     title: str
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
-class _TagGroupSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class TagGroupSpec(_TagGroupSpecOpt):
+class TagGroupSpec(TypedDict):
     id: TagGroupID
     title: str
     tags: list[GroupedTagSpec]
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
 class TagConfigSpec(TypedDict):
@@ -86,7 +80,7 @@ class AuxTag:
         tag_id: TagID,
         title: str,
         topic: str | None,
-        help: str | None,  # pylint: disable=redefined-builtin
+        help: str | None,
     ) -> None:
         self.id = tag_id
         self.title = title
@@ -243,7 +237,7 @@ class TagGroup:
         group_id: TagGroupID,
         title: str,
         topic: str | None,
-        help: str | None,  # pylint: disable=redefined-builtin
+        help: str | None,
         tags: list[GroupedTag],
     ) -> None:
         self.id = group_id
@@ -480,7 +474,7 @@ class TagConfig:
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
-    def _validate_group(self, tag_group: TagGroup) -> None:  # pylint: disable=too-many-branches
+    def _validate_group(self, tag_group: TagGroup) -> None:
         if not tag_group.id:
             raise MKGeneralException(_("Please specify an ID for your tag group."))
         _validate_tag_id(tag_group.id)

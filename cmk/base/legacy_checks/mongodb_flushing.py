@@ -11,10 +11,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_value_store, render, StringTable
+
+check_info = {}
 
 
 def inventory_mongodb_flushing(info):
@@ -27,8 +27,10 @@ def check_mongodb_flushing(_no_item, params, info):
     info_dict = dict(info)
 
     if not {"last_ms", "average_ms", "flushed"} <= set(info_dict):  # check if keys in dict
-        yield 3, "missing data: %s" % (
-            _get_missing_keys(["last_ms", "average_ms", "flushed"], info_dict)
+        yield (
+            3,
+            "missing data: %s"
+            % (_get_missing_keys(["last_ms", "average_ms", "flushed"], info_dict)),
         )
         return
 
@@ -37,10 +39,13 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
     except (ValueError, TypeError):
-        yield 3, "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
-            info_dict["last_ms"],
-            info_dict["average_ms"],
-            info_dict["flushed"],
+        yield (
+            3,
+            "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
+                info_dict["last_ms"],
+                info_dict["average_ms"],
+                info_dict["flushed"],
+            ),
         )
         return
 
@@ -66,9 +71,11 @@ def check_mongodb_flushing(_no_item, params, info):
     )
 
     yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield 0, "Average flush time since restart: %s" % render.timespan(avg_flush_time), [
-        ("avg_flush_time", avg_flush_time)
-    ]
+    yield (
+        0,
+        "Average flush time since restart: %s" % render.timespan(avg_flush_time),
+        [("avg_flush_time", avg_flush_time)],
+    )
 
 
 def _get_missing_keys(key_list, info_dict):
@@ -84,6 +91,7 @@ def parse_mongodb_flushing(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    name="mongodb_flushing",
     parse_function=parse_mongodb_flushing,
     service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,

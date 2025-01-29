@@ -2,7 +2,6 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import traceback
 import uuid
 from dataclasses import dataclass
@@ -11,8 +10,8 @@ from typing import Any, TypedDict
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 
 class VueCell(TypedDict):
@@ -27,7 +26,7 @@ def create_vue_cell(content=None, html_content=None):
 
 
 class VueRow(TypedDict):
-    columns: list
+    columns: list[str]
     attributes: dict[str, Any]
     css: list[str]
 
@@ -45,12 +44,8 @@ def create_vue_table(rows: list[VueRow]) -> VueTable:
 
 
 def create_vue_table_config(table: dict[str, Any]) -> dict[str, Any]:
-    use_d3_table = False
-    if html.request.has_var("table_mode"):
-        use_d3_table = html.request.var("table_mode") == "d3"
     return {
         "id": "some_table",
-        "app_name": "d3_table" if use_d3_table else "vue_table",
         "component": table,
     }
 
@@ -95,7 +90,7 @@ def create_href(link, alias):
 
 class VueList(TypedDict):
     type: str
-    elements: list
+    elements: list[str]
 
 
 def create_list(elements):
@@ -198,7 +193,7 @@ class IconSettings:
     classes: list[str]
 
 
-def detect_icon_settings(icon: str | dict, title: str = "") -> IconSettings:
+def detect_icon_settings(icon: str | dict[str, str], title: str = "") -> IconSettings:
     classes = []
     icon_name = icon["icon"] if isinstance(icon, dict) else icon
     if icon_name is None:
@@ -216,7 +211,10 @@ def render_vue_table(table: dict[str, Any]) -> None:
     try:
         table_config = create_vue_table_config(table)
         # logger.warning(pprint.pformat(table_config))
-        html.div("", data_cmk_vue_app=json.dumps(table_config))
+        use_d3_table = False
+        if html.request.has_var("table_mode"):
+            use_d3_table = html.request.var("table_mode") == "d3"
+        html.vue_app(app_name="d3_table" if use_d3_table else "vue_table", data=table_config)
     except Exception:
         # Debug only. This block will vanish
         logger.warning("".join(traceback.format_exc()))

@@ -269,7 +269,7 @@ PermissionSeeFailedNotifications24H = Permission(
     title=_l("See failed notifications (last 24 hours)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will only see failed notifications "
         "that occured within the last 24 hours."
     ),
@@ -282,7 +282,7 @@ PermissionSeeFailedNotifications = Permission(
     title=_l("See failed notifications (all)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will see failed notifications between now "
         'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
     ),
@@ -316,8 +316,7 @@ PermissionParentChildTopology = Permission(
     name="parent_child_topology",
     title=_l("Network topology"),
     description=_l(
-        "This dashboard uses the parent relationships of your hosts to "
-        "display a hierarchical map."
+        "This dashboard uses the parent relationships of your hosts to display a hierarchical map."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )

@@ -143,7 +143,7 @@ def _parameter_valuespec_ipmi():
                                 title=_("Sensor name"),
                                 help=_(
                                     "Enter the name of the sensor. In single mode, this can be read off "
-                                    "from the service descriptions of the services 'IPMI Sensor ...'."
+                                    "from the service names of the services 'IPMI Sensor ...'."
                                 ),
                             ),
                             Dictionary(

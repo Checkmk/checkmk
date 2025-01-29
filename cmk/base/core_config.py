@@ -3,42 +3,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import abc
 import os
 import shutil
 import socket
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, nullcontext
+import sys
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import lock_checkmk_configuration
+
 import cmk.utils.config_path
-import cmk.utils.config_warnings as config_warnings
-import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
+from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import lock_checkmk_configuration
+from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.checking import ServiceID
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
-import cmk.base.obsolete_output as out
+from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
+from cmk import trace
+
 CoreCommandName = str
 CoreCommand = str
+
+tracer = trace.get_tracer()
 
 
 class MonitoringCore(abc.ABC):
@@ -59,14 +64,21 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        ip_address_of: config.IPLookup,
+        plugins: agent_based_register.AgentBasedPlugins,
+        ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
         self._create_config(
-            config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
+            config_path,
+            config_cache,
+            ip_address_of,
+            licensing_handler,
+            plugins,
+            passwords,
+            hosts_to_update,
         )
 
     @abc.abstractmethod
@@ -74,8 +86,9 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        ip_address_of: config.IPLookup,
+        ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
+        plugins: agent_based_register.AgentBasedPlugins,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
@@ -95,7 +108,7 @@ def duplicate_service_warning(
     second_occurrence: AbstractServiceID,
 ) -> None:
     return config_warnings.warn(
-        "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+        "ERROR: Duplicate service name (%s check) '%s' for host '%s'!\n"
         " - 1st occurrence: check plug-in / item: %s / %r\n"
         " - 2nd occurrence: check plug-in / item: %s / %r\n"
         % (checktype, description, host_name, *first_occurrence, *second_occurrence)
@@ -245,11 +258,12 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    ip_address_of: config.IPLookup,
+    plugins: agent_based_register.AgentBasedPlugins,
+    ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
     *,
-    duplicates: Sequence[HostName],
+    duplicates: Collection[HostName],
     skip_config_locking_for_bakery: bool = False,
 ) -> None:
     """Creating the monitoring core configuration and additional files
@@ -257,23 +271,36 @@ def do_create_config(
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    out.output("Generating configuration for core (type %s)...\n" % core.name())
+    with suppress(IOError):
+        sys.stdout.write(
+            "Generating configuration for core (type %s)...\n" % core.name(),
+        )
+        sys.stdout.flush()
 
     try:
-        _create_core_config(
-            core,
-            config_cache,
-            ip_address_of,
-            hosts_to_update=hosts_to_update,
-            duplicates=duplicates,
-        )
+        with tracer.span(
+            "create_core_config",
+            attributes={
+                "cmk.core_config.core": core.name(),
+                "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
+            },
+        ):
+            _create_core_config(
+                core,
+                config_cache,
+                plugins,
+                ip_address_of,
+                hosts_to_update=hosts_to_update,
+                duplicates=duplicates,
+            )
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
+        with tracer.span("bake_on_restart"):
+            _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
 
 
 def _bake_on_restart(
@@ -281,9 +308,11 @@ def _bake_on_restart(
 ) -> None:
     try:
         # Local import is needed, because this is not available in all environments
-        import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        from cmk.base.cee.bakery import (
+            agent_bakery,
+        )
 
-        from cmk.cee.bakery.type_defs import (  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        from cmk.cee.bakery.type_defs import (
             BakeRevisionMode,
         )
 
@@ -292,7 +321,7 @@ def _bake_on_restart(
 
     assert isinstance(config_cache, config.CEEConfigCache)
 
-    with nullcontext() if skip_locking else lock_checkmk_configuration():
+    with nullcontext() if skip_locking else lock_checkmk_configuration(configuration_lockfile):
         target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
             config_cache, all_hosts=all_hosts, selected_hosts=None
         )
@@ -352,15 +381,16 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    ip_address_of: config.IPLookup,
+    plugins: agent_based_register.AgentBasedPlugins,
+    ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None = None,
     *,
-    duplicates: Sequence[HostName],
+    duplicates: Collection[HostName],
 ) -> None:
     config_warnings.initialize()
 
     _verify_non_duplicate_hosts(duplicates)
-    _verify_non_deprecated_checkgroups()
+    _verify_non_deprecated_checkgroups(plugins.check_plugins.values())
 
     # recompute and save passwords, to ensure consistency:
     passwords = config_cache.collect_passwords()
@@ -371,6 +401,7 @@ def _create_core_config(
         core.create_config(
             config_path,
             config_cache,
+            plugins,
             ip_address_of,
             hosts_to_update=hosts_to_update,
             passwords=passwords,
@@ -381,21 +412,19 @@ def _create_core_config(
     )
 
 
-def _verify_non_deprecated_checkgroups() -> None:
+def _verify_non_deprecated_checkgroups(check_plugins: Iterable[CheckPlugin]) -> None:
     """Verify that the user has no deprecated check groups configured."""
     # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an PluginName (good),
     # but config.checkgroup_parameters contains strings (todo)
     check_ruleset_names_with_plugin = {
-        str(plugin.check_ruleset_name)
-        for plugin in agent_based_register.iter_all_check_plugins()
-        if plugin.check_ruleset_name
+        str(plugin.check_ruleset_name) for plugin in check_plugins if plugin.check_ruleset_name
     }
 
     for checkgroup in config.checkgroup_parameters:
         if checkgroup not in check_ruleset_names_with_plugin:
             config_warnings.warn(
                 'Found configured rules of deprecated check group "%s". These rules are not used '
-                "by any check plugin. Maybe this check group has been renamed during an update, "
+                "by any check plug-in. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
                 "Please check out the release notes of the involved versions. "
                 'You may use the page "Deprecated rules" in the "Rule search" to view your rules '
@@ -407,7 +436,7 @@ def _verify_non_deprecated_checkgroups() -> None:
             )
 
 
-def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
+def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
     if duplicates:
         config_warnings.warn(
             "The following host names have duplicates: %s. "
@@ -416,37 +445,20 @@ def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
         )
 
 
-# .
-#   .--Argument Thingies---------------------------------------------------.
-#   |    _                                         _                       |
-#   |   / \   _ __ __ _ _   _ _ __ ___   ___ _ __ | |_                     |
-#   |  / _ \ | '__/ _` | | | | '_ ` _ \ / _ \ '_ \| __|                    |
-#   | / ___ \| | | (_| | |_| | | | | | |  __/ | | | |_                     |
-#   |/_/   \_\_|  \__, |\__,_|_| |_| |_|\___|_| |_|\__|                    |
-#   |             |___/                                                    |
-#   | _____ _     _             _                                          |
-#   ||_   _| |__ (_)_ __   __ _(_) ___  ___                                |
-#   |  | | | '_ \| | '_ \ / _` | |/ _ \/ __|                               |
-#   |  | | | | | | | | | | (_| | |  __/\__ \                               |
-#   |  |_| |_| |_|_|_| |_|\__, |_|\___||___/                               |
-#   |                     |___/                                            |
-#   +----------------------------------------------------------------------+
-#   | Command line arguments for special agents or active checks           |
-#   '----------------------------------------------------------------------'
-
-
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
     host_name: HostName,
-    service: ConfiguredService,
+    service_name: ServiceName,
+    service_labels: Labels,
     check_mk_attrs: ObjectAttributes,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
-        host_name,
-        service.description,
         config_cache,
-        service.check_plugin_name,
-        service.parameters,
+        host_name,
+        service_name,
+        service_labels,
+        extra_icon,
     )
 
     attrs["check_interval"] = check_mk_attrs["check_interval"]
@@ -455,58 +467,52 @@ def get_cmk_passive_service_attributes(
 
 
 def get_service_attributes(
-    hostname: HostName,
-    description: ServiceName,
     config_cache: ConfigCache,
-    check_plugin_name: CheckPluginName | None = None,
-    params: TimespecificParameters | None = None,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
-        hostname, description, config_cache, check_plugin_name, params
-    )
-    attrs.update(
-        ConfigCache._get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG")
-    )
-
-    attrs.update(
-        ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.labels_of_service(hostname, description), "LABEL"
-        )
+        config_cache, host_name, service_name, service_labels, extra_icon
     )
     attrs.update(
         ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.label_sources_of_service(hostname, description),
-            "LABELSOURCE",
+            config_cache.tags_of_service(host_name, service_name, service_labels), "TAG"
         )
     )
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABEL"))
+    attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABELSOURCE"))
     return attrs
 
 
 def _extra_service_attributes(
-    hostname: HostName,
-    description: ServiceName,
     config_cache: ConfigCache,
-    check_plugin_name: CheckPluginName | None,
-    params: TimespecificParameters | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in config_cache.custom_attributes_of_service(hostname, description).items():
+    for varname, value in config_cache.custom_attributes_of_service(
+        host_name, service_name, service_labels
+    ).items():
         attrs["_%s" % varname.upper()] = value
 
-    attrs.update(config_cache.extra_attributes_of_service(hostname, description))
+    attrs.update(config_cache.extra_attributes_of_service(host_name, service_name, service_labels))
 
     # Add explicit custom_variables
     for varname, value in ConfigCache.get_explicit_service_custom_variables(
-        hostname, description
+        host_name, service_name
     ).items():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
     actions = config_cache.icons_and_actions_of_service(
-        hostname, description, check_plugin_name, params
+        host_name, service_name, service_labels, extra_icon
     )
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
@@ -515,3 +521,13 @@ def _extra_service_attributes(
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:
     return {key[8:]: value for key, value in key_value_pairs if key.startswith("__LABEL_")}
+
+
+def get_tags_with_groups_from_attributes(
+    key_value_pairs: list[tuple[str, str]],
+) -> dict[TagGroupID, TagID]:
+    return {
+        TagGroupID(key[6:]): TagID(value)
+        for key, value in key_value_pairs
+        if key.startswith("__TAG_")
+    }

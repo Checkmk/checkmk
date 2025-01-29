@@ -77,14 +77,18 @@ class CreateServiceComment(CreateServiceCommentBase):
         required=True,
     )
     service_description = fields.String(
-        description="The service description for which the comment is for. No exception is raised when the specified service description does not exist",
+        description="The service name for which the comment is for. No exception is raised when the specified service name does not exist",
         example="Memory",
         required=True,
     )
 
 
 class CreateServiceQueryComment(CreateServiceCommentBase):
-    query = gui_fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(
+        tables.Services,
+        required=True,
+        example='{"op": "=", "left": "description", "right": "Service description"}',
+    )
 
 
 class CreateServiceRelatedComment(OneOfSchema):
@@ -119,7 +123,10 @@ class DeleteCommentById(BaseBulkDelete):
 
 
 class DeleteCommentsByQuery(BaseBulkDelete):
-    query = gui_fields.query_field(tables.Comments)
+    query = gui_fields.query_field(
+        tables.Comments,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 class DeleteCommentsByParams(BaseBulkDelete):

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from livestatus import LivestatusColumn, OnlySites, Query, QuerySpecification
 
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 from cmk.gui.visuals.filter import Filter
 
@@ -291,7 +291,7 @@ class DataSourceComments(DataSourceLivestatus):
 
     @property
     def title(self) -> str:
-        return _("Host- and Servicecomments")
+        return _("Host and service comments")
 
     @property
     def infos(self) -> SingleInfos:
@@ -303,7 +303,7 @@ class DataSourceComments(DataSourceLivestatus):
 
     @property
     def id_keys(self):
-        return ["comment_id"]
+        return ["site", "comment_id"]
 
 
 class DataSourceDowntimes(DataSourceLivestatus):
@@ -313,7 +313,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
 
     @property
     def title(self) -> str:
-        return _("Scheduled Downtimes")
+        return _("Scheduled downtimes")
 
     @property
     def infos(self) -> SingleInfos:
@@ -367,7 +367,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Host and Service Events")
+        return _("Host and service events")
 
     @property
     def infos(self) -> SingleInfos:
@@ -385,7 +385,7 @@ class DataSourceLogHostEvents(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Host Events")
+        return _("Host events")
 
     @property
     def infos(self) -> SingleInfos:
@@ -515,13 +515,17 @@ class ServiceDiscoveryRowTable(RowTable):
                     continue
 
                 state, check, service_description = parts
-                if state not in ["Ignored service", "Vanished service", "Unmonitored service"]:
+                if state not in [
+                    "Service ignored",
+                    "Service vanished",
+                    "Service unmonitored",
+                ]:
                     continue
 
                 this_row = row.copy()
                 this_row.update(
                     {
-                        "discovery_state": state.split(" ")[0].lower(),
+                        "discovery_state": state.split(" ")[1].lower(),
                         "discovery_check": check,
                         "discovery_service": service_description,
                     }

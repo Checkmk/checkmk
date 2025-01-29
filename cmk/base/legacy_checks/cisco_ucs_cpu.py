@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability, map_presence
-from cmk.base.config import check_info
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY, MAP_PRESENCE
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 # comNET GmbH, Fabian Binder - 2018-05-08
 
@@ -28,10 +29,10 @@ def inventory_cisco_ucs_cpu(info):
 def check_cisco_ucs_cpu(item, _no_params, info):
     for name, presence, serial, model, status in info:
         if name == item:
-            state, state_readable = map_operability.get(
+            state, state_readable = MAP_OPERABILITY.get(
                 status, (3, "Unknown, status code %s" % status)
             )
-            presence_state, presence_readable = map_presence.get(
+            presence_state, presence_readable = MAP_PRESENCE.get(
                 presence, (3, "Unknown, status code %s" % presence)
             )
             yield state, "Status: %s" % state_readable
@@ -44,6 +45,7 @@ def parse_cisco_ucs_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(
+    name="cisco_ucs_cpu",
     parse_function=parse_cisco_ucs_cpu,
     detect=DETECT,
     fetch=SNMPTree(

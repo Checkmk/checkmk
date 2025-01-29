@@ -13,12 +13,12 @@ class Average {
 public:
     void update(double value);
     [[nodiscard]] double get() const {
-        std::scoped_lock l(_lock);
+        const std::scoped_lock l(_lock);
         return _average;
     }
 
 private:
-    std::chrono::steady_clock::time_point _last_update{};
+    std::chrono::steady_clock::time_point _last_update;
     double _average{0};
     mutable std::mutex _lock;
 };

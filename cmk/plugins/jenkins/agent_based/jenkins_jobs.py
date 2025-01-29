@@ -27,11 +27,12 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 from .lib import render_integer
 
-JenkinsJobInfo: NamedTuple = namedtuple(  # pylint: disable=collections-namedtuple-call
+JenkinsJobInfo: NamedTuple = namedtuple(  # nosemgrep: typing-namedtuple-call
     "JenkinsJobInfo",
     [
         "display_name",
@@ -60,14 +61,17 @@ MAP_BUILD_STATES = {
     "unstable": State.WARN,  # some errors but not fatal
     "failure": State.CRIT,  # fatal error
     "aborted": State.OK,  # manually aborted
-    "null": State.WARN,  # module was not built
+    # The 'null' build state is only valid in Jenkins <= v1.622 - relevant commit:
+    # https://github.com/jenkinsci/jenkins/commit/90f29f8cbc68312cbdbef8d4101fa5b5e971e021
+    "null": State.WARN,  # module was not built (legacy)
+    "not_built": State.WARN,  # module was not built
     "none": State.OK,  # running
 }
 
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_jenkins_jobs(string_table: StringTable) -> Section:
     parsed: dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:
@@ -136,8 +140,6 @@ def _process_job(job: JenkinsJobInfo, params: Mapping[str, Any], now: int | floa
         )
 
     if job.build_timestamp is not None:
-        print(f"Job: {job.build_timestamp}")
-        print(f"now: {now}")
         time_since_last_build = now - job.build_timestamp
         build_timestamp_key = "jenkins_last_build"
         yield from check_levels(

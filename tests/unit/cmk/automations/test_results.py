@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.utils import version as cmk_version
+from cmk.ccc import version as cmk_version
+
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
+    DiagSpecialAgentHostConfig,
+    DiagSpecialAgentInput,
     Gateway,
     GatewayResult,
     result_type_registry,
@@ -34,7 +37,7 @@ def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
     automations_missing = (
-        {"bake-agents"} if cmk_version.edition() is cmk_version.Edition.CRE else set()
+        {"bake-agents"} if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE else set()
     )
     assert set(result_type_registry) - automations_missing == set(automations._automations)
 
@@ -174,3 +177,58 @@ class TestScanParentsResult:
 
     def test_deserialization(self) -> None:
         assert ScanParentsResult.deserialize(self.SERIALIZED_RESULT) == self.DESERIALIZED_RESULT
+
+
+class TestDiagSpecialAgentInput:
+    DIAG_SPECIAL_AGENT_INPUT = DiagSpecialAgentInput(
+        host_config=DiagSpecialAgentHostConfig(
+            host_name=HostName("test-host"),
+            host_alias="test-host",
+        ),
+        agent_name="aws",
+        params={
+            "access_key_id": "my_access_key",
+            "secret_access_key": (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("uuid8d60b66c-c3e1-45cb-a771-b8b291a07cea", "wow_this_access_key_is_secret"),
+            ),
+            "access": {},
+            "global_services": {
+                "ce": ("none", None),
+                "route53": ("none", None),
+                "cloudfront": ("none", None),
+            },
+            "regions_to_monitor": ["eu_central_1"],
+            "services": {
+                "ec2": ("all", {"limits": "limits"}),
+                "ebs": ("all", {"limits": "limits"}),
+                "s3": ("all", {"limits": "limits"}),
+                "glacier": ("all", {"limits": "limits"}),
+                "elb": ("all", {"limits": "limits"}),
+                "elbv2": ("all", {"limits": "limits"}),
+                "rds": ("all", {"limits": "limits"}),
+                "cloudwatch_alarms": ("all", {"limits": "limits"}),
+                "dynamodb": ("all", {"limits": "limits"}),
+                "wafv2": ("all", {"limits": "limits"}),
+                "aws_lambda": ("all", {"limits": "limits"}),
+                "sns": ("all", {"limits": "limits"}),
+                "ecs": ("all", {"limits": "limits"}),
+                "elasticache": ("all", {"limits": "limits"}),
+            },
+            "piggyback_naming_convention": "ip_region_instance",
+        },
+        passwords={
+            "uuid8d60b66c-c3e1-45cb-a771-b8b291a07cea": "wow_this_access_key_is_secret",
+        },
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            DiagSpecialAgentInput.deserialize(
+                self.DIAG_SPECIAL_AGENT_INPUT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.DIAG_SPECIAL_AGENT_INPUT
+        )

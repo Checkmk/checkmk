@@ -13,7 +13,8 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, Literal, NotRequired, TYPE_CHECKING, TypedDict
+from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -23,15 +24,17 @@ from werkzeug.routing import Map, Rule, Submount
 
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
-from cmk.utils import crash_reporting, paths, store
-from cmk.utils.exceptions import MKException
-from cmk.utils.site import omd_site
+import cmk.ccc.version as cmk_version
+from cmk.ccc import crash_reporting, store
+from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
+
+from cmk.utils import paths
 
 from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
-from cmk.gui.logged_in import LoggedInNobody, user
+from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
@@ -51,10 +54,9 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+from cmk.crypto import MKCryptoException
 
+if TYPE_CHECKING:
     from cmk.gui.http import HTTPMethod
     from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
@@ -77,25 +79,32 @@ def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
 
 def crash_report_response(exc: Exception) -> WSGIApplication:
     site = omd_site()
-    details: dict[str, Any] = {}
+    details = RestAPIDetails(
+        crash_report_url={},
+        request_info=RequestInfo(
+            method="missing",
+            data_received="missing",
+            headers={"accept": "missing", "content_type": "missing"},
+        ),
+        check_mk_info={},
+    )
 
     if isinstance(exc, GeneralRestAPIException):
-        details["rest_api_exception"] = {
-            "description": exc.description,
-            "detail": exc.detail,
-            "ext": exc.ext,
-            "fields": exc.fields,
-        }
+        details["rest_api_exception"] = RestAPIException(
+            description=exc.description,
+            detail=exc.detail,
+            ext=exc.ext,
+            fields=exc.fields,
+        )
 
-    details["request_info"] = {
-        "method": request.environ["REQUEST_METHOD"],
-        "data_received": request.json if request.data else "",
-        "endpoint_url": request.path,
-        "headers": {
+    details["request_info"] = RequestInfo(
+        method=request.environ["REQUEST_METHOD"],
+        data_received=request.json if request.data else "",
+        headers={
             "accept": request.environ.get("HTTP_ACCEPT", "missing"),
             "content_type": request.environ.get("CONTENT_TYPE", "missing"),
         },
-    }
+    )
 
     details["check_mk_info"] = {
         "site": site,
@@ -106,7 +115,12 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         },
     }
 
-    crash = APICrashReport.from_exception(details=details)
+    crash = APICrashReport(
+        paths.crash_dir,
+        APICrashReport.make_crash_info(
+            cmk_version.get_general_version_infos(paths.omd_root), details
+        ),
+    )
     crash_reporting.CrashReportStore().save(crash)
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
 
@@ -125,9 +139,8 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
 
     del crash.crash_info["exc_traceback"]
     if user.may("general.see_crash_reports"):
-        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")
+        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")  # type: ignore[typeddict-item]
 
-    crash.crash_info["time"] = datetime.fromtimestamp(crash.crash_info["time"]).isoformat()
     crash_msg = (
         exc.description
         if isinstance(exc, GeneralRestAPIException)
@@ -138,7 +151,12 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         status=500,
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
-        ext=EXT(crash.crash_info),
+        ext=EXT(
+            {
+                **crash.crash_info,
+                **{"time": datetime.fromtimestamp(float(crash.crash_info["time"])).isoformat()},
+            }
+        ),
     )
 
 
@@ -163,7 +181,9 @@ class EndpointAdapter(AbstractWSGIApp):
             wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
 
         wsgi_app.headers[_get_header_name(HEADER_CHECKMK_VERSION)] = cmk_version.__version__
-        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition().short
+        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition(
+            paths.omd_root
+        ).short
 
         # Serve the response
         return wsgi_app(environ, start_response)
@@ -368,6 +388,8 @@ def _ensure_authenticated() -> None:
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
+    if session.session.two_factor_pending():
+        raise MKAuthException("Two-factor authentication required.")
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
@@ -475,6 +497,15 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # don't want to have cookies sent to the HTTP client whenever one is logged in using
             # the header methods.
             _ensure_authenticated()
+
+            # A Checmk Reserved endpoint can only be accessed with the site secret
+            if (
+                isinstance(wsgi_endpoint, EndpointAdapter)
+                and wsgi_endpoint.endpoint.internal_user_only
+                and not isinstance(session.session.user, LoggedInSuperUser)
+            ):
+                raise MKAuthException("This endpoint is reserved for Checkmk.")
+
             return wsgi_endpoint(environ, start_response)
 
         except ProblemException as exc:
@@ -505,7 +536,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 detail=str(exc),
             )
 
-        except MKException as exc:
+        except (MKException, MKCryptoException) as exc:
             if self.debug:
                 raise
             response = problem(
@@ -522,7 +553,27 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         return response(environ, start_response)
 
 
-class APICrashReport(crash_reporting.ABCCrashReport):
+class RestAPIException(TypedDict):
+    description: str
+    detail: str
+    ext: dict[str, Any] | None
+    fields: dict[str, Any] | None
+
+
+class RequestInfo(TypedDict):
+    data_received: Any
+    method: str
+    headers: dict[str, Any]
+
+
+class RestAPIDetails(TypedDict):
+    crash_report_url: dict[str, Any]
+    rest_api_exception: NotRequired[RestAPIException]
+    request_info: RequestInfo
+    check_mk_info: dict[str, Any]
+
+
+class APICrashReport(crash_reporting.ABCCrashReport[RestAPIDetails]):
     """API specific crash reporting class."""
 
     @classmethod

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 
@@ -12,7 +11,7 @@ checkname = "3ware_disks"
 
 mock_item_state = {
     "": {
-       "packets_rate": (0, 150512),
+        "packets_rate": (0, 150512),
     }
 }
 

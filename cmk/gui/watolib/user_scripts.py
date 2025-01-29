@@ -21,8 +21,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from six import ensure_str
-
 import cmk.utils.paths
 
 from cmk.gui.i18n import _u
@@ -53,7 +51,6 @@ def _load_user_scripts_from(adir: str) -> dict[str, Any]:
     scripts: dict[str, Any] = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_str(entry)  # pylint: disable= six-ensure-str-bin-call
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

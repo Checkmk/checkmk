@@ -11,8 +11,6 @@ import pytest
 from cmk.agent_based.v2 import HostLabel, Result, State
 from cmk.plugins.lib import ps
 
-pytestmark = pytest.mark.checks
-
 
 def test_host_labels_ps_no_match_attr() -> None:
     section = (
@@ -377,7 +375,10 @@ def test_memory_perc_check_cluster() -> None:
                     1540375342,
                 ),
             ],
-            {"process_info_arguments": 15},
+            {
+                "process_info_arguments": 15,
+                "cpu_rescale_max": False,
+            },
             [
                 [
                     ("name", ("/usr/lib/firefox/firefox", "")),
@@ -420,7 +421,10 @@ def test_memory_perc_check_cluster() -> None:
                     1540375342,
                 ),
             ],
-            {"process_usernames": False},
+            {
+                "process_usernames": False,
+                "cpu_rescale_max": False,
+            },
             [
                 [
                     ("name", ("/usr/lib/firefox/firefox", "")),
@@ -461,7 +465,10 @@ def test_memory_perc_check_cluster() -> None:
                     1540375342,
                 ),
             ],
-            {"process_info_arguments": 15},
+            {
+                "process_info_arguments": 15,
+                "cpu_rescale_max": False,
+            },
             [
                 [
                     ("name", ("/usr/lib/firefox/firefox", "")),

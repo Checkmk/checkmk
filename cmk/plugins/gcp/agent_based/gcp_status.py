@@ -69,7 +69,8 @@ def parse(string_table: StringTable) -> Section:
     data: dict[str, list[Incident]] = {}
     for incident in output.health_info:
         for location in incident.currently_affected_locations:
-            data.setdefault(constants.RegionMap[location.id_], []).append(incident)
+            item = "Global" if location.id_ == "global" else constants.RegionMap[location.id_]
+            data.setdefault(item, []).append(incident)
     return Section(discovery_param=output.discovery_param, data=data)
 
 

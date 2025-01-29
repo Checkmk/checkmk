@@ -21,12 +21,12 @@ constexpr int num_counters = 21;
 
 struct CounterInfo {
     std::mutex mutex;
-    double value;
-    double last_value;
-    double rate;
+    double value{};
+    double last_value{};
+    double rate{};
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTNEXTLINE(cert-err58-cpp,cppcoreguidelines-avoid-non-const-global-variables)
 std::vector<CounterInfo> counters(num_counters);
 
 CounterInfo &counter(Counter which) {
@@ -38,7 +38,7 @@ std::optional<std::chrono::system_clock::time_point> last_statistics_update;
 constexpr auto statistics_interval = 5s;
 constexpr double rating_weight = 0.25;
 
-double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
+double lerp(double a, double b, double t) { return ((1 - t) * a) + (t * b); }
 }  // namespace
 
 void counterReset(Counter which) {
@@ -64,7 +64,7 @@ void counterIncrement(Counter which) {
 void counterIncrementBy(Counter which, std::size_t value) {
     auto &c = counter(which);
     const std::lock_guard<std::mutex> lg(c.mutex);
-    c.value += value;
+    c.value += double(value);
 }
 
 double counterValue(Counter which) {
@@ -94,7 +94,7 @@ void do_statistics() {
         const std::lock_guard<std::mutex> lg(c.mutex);
         auto age_secs = mk::ticks<std::chrono::seconds>(age);
         const double old_rate = c.rate;
-        const double new_rate = (c.value - c.last_value) / age_secs;
+        const double new_rate = (c.value - c.last_value) / double(age_secs);
         c.rate = lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);
         c.last_value = c.value;
     }

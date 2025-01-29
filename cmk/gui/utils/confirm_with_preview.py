@@ -47,7 +47,7 @@ def confirm_with_preview(
         if mobile:
             html.open_center()
         html.open_div(class_="really " + (" ".join(class_) if class_ is not None else ""))
-        html.write_text(msg)
+        html.write_text_permissive(msg)
         with html.form_context("confirm", method=method, add_transid=False):
             html.hidden_fields(add_action_vars=True)
             for title, varname in confirm_options:

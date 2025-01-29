@@ -10,12 +10,7 @@ ROOT=/omd/sites/$SITE
 
 CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
 CMK_VERSION=${CMK_VERSION%.*}
-
-# Needed by {managed,cloud,saas}/cmk/.f12 to set the correct edition after .f12
-if [ -z "$ORIG_EDITION" ]; then
-    ORIG_EDITION=$("$ROOT/bin/python3" -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)')
-    export ORIG_EDITION
-fi
+CMK_EDITION=${CMK_VERSION##*.}
 
 echo "Update site $SITE..."
 
@@ -64,77 +59,15 @@ rsync \
     "$ROOT"/lib/python3/cmk/
 
 # Transform required packages to namespace package
-rm -f \
-    "$ROOT/lib/python3/cmk/__init__.py" \
-    "$ROOT/lib/python3/cmk/active_checks/__init__.py" \
-    "$ROOT/lib/python3/cmk/plugins/collection/server_side_calls/__init__.py" \
-    "$ROOT/lib/python3/cmk/special_agents/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/check_legacy_includes/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
-    "$ROOT/lib/python3/cmk/post_rename_site/__init__.py" \
-    "$ROOT/lib/python3/cmk/post_rename_site/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/raw/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/raw/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/dashboard/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/config/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/cron/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/userdb/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/bi/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/watolib/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/openapi/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/sidebar/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/views/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/views/icons/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/visuals/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/metrics/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/wato/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py" \
-    "$ROOT/lib/python3/cmk/update_config/__init__.py" \
-    "$ROOT/lib/python3/cmk/update_config/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/update_config/plugins/actions/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/dcd/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/dcd/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/post_rename_site/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/update_config/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/update_config/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/plugins/bakery/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/bakery/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/cce/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cee/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cee/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cee/plugins/sla/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cce/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cce/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py"
+grep -rl 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs rm -f
 
 # Restore site version after .f12
-sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
+# sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/ccc/version.py
 
-# Make the target a CME version in case the version is already a CME version
-# (The dev is working on CME files)
-if [ "$ORIG_EDITION" = "cme" ]; then
+# Make the target a CME edition again if it was before after replacing the version.py from the git
+if [ "$CMK_EDITION" = "cme" ]; then
     echo "Make the target version a CME version..."
-    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
+    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/ccc/version.py"
 fi
 
 if [ -z "$ONLY_COPY" ]; then

@@ -21,29 +21,8 @@ XINETD_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XINETD_DIR)
 .PHONY: $(XINETD_BUILD)
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_BUILD):
-	$(BAZEL_BUILD) @xinetd//:xinetd
+	$(BAZEL_CMD) build @$(XINETD)//:$(XINETD)
 endif
-
-#$(XINETD_INTERMEDIATE_INSTALL): $(XINETD_BUILD)
-#ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
-#	$(MKDIR) $(XINETD_INSTALL_DIR)/bin
-#	install -m 755 $(XINETD_BUILD_DIR)/xinetd $(XINETD_INSTALL_DIR)/bin
-#
-#	$(MKDIR) $(XINETD_INSTALL_DIR)/share/man/man5
-#	install -m 644 $(XINETD_BUILD_DIR)/man/xinetd.log.5 $(XINETD_INSTALL_DIR)/share/man/man5
-#	install -m 644 $(XINETD_BUILD_DIR)/man/xinetd.conf.5 $(XINETD_INSTALL_DIR)/share/man/man5
-#	$(MKDIR) $(XINETD_INSTALL_DIR)/share/man/man8/
-#	install -m 644 $(XINETD_BUILD_DIR)/man/xinetd.8 $(XINETD_INSTALL_DIR)/share/man/man8
-#
-#	$(MKDIR) $(XINETD_INSTALL_DIR)/share/doc/xinetd
-#	install -m 644 $(XINETD_BUILD_DIR)/CHANGELOG $(XINETD_INSTALL_DIR)/share/doc/xinetd
-#	install -m 644 $(XINETD_BUILD_DIR)/COPYRIGHT $(XINETD_INSTALL_DIR)/share/doc/xinetd
-#	install -m 644 $(XINETD_BUILD_DIR)/README.md $(XINETD_INSTALL_DIR)/share/doc/xinetd
-#	$(TOUCH) $@
-#else
-#$(XINETD_INTERMEDIATE_INSTALL):
-#	$(TOUCH) $@
-#endif
 
 .PHONY: $(XINETD_INSTALL)
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)

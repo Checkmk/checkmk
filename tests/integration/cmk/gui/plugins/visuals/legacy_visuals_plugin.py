@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.query_filters as query_filters
-from cmk.gui.plugins.visuals import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+from cmk.gui import query_filters
+from cmk.gui.plugins.visuals import (  # type: ignore[attr-defined]
     filter_registry,
 )
-from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]
     InputTextFilter,
 )
 

@@ -13,13 +13,13 @@ from .checktestlib import Check
 pytestmark = pytest.mark.checks
 
 _SECTION = {
-    "1": {"outlet_name": "outlet1", "state": (0, "on")},
-    "2": {"outlet_name": "outlet2", "state": (2, "off")},
-    "3": {"outlet_name": "", "state": (0, "closed")},
-    "4": {"outlet_name": "", "state": (0, "on")},
-    "5": {"outlet_name": "", "state": (0, "on")},
-    "6": {"outlet_name": "", "state": (0, "on")},
-    "7": {"outlet_name": "broken", "state": (3, "unknown")},
+    "1": {"outlet_name": "outlet1", "state": "on"},
+    "2": {"outlet_name": "outlet2", "state": "off"},
+    "3": {"outlet_name": "", "state": "unknown"},
+    "4": {"outlet_name": "", "state": "on"},
+    "5": {"outlet_name": "", "state": "on"},
+    "6": {"outlet_name": "", "state": "on"},
+    "7": {"outlet_name": "broken", "state": "unknown"},
 }
 
 
@@ -52,7 +52,7 @@ def test_inventory_raritan_pdu_plugs() -> None:
         ),
         (
             "3",
-            {"discovered_state": "closed"},
+            {"discovered_state": "unknown"},
         ),
         (
             "4",
@@ -83,68 +83,65 @@ class CombinedParams(TypedDict, total=False):
     [
         pytest.param(
             "1",
-            {"discovered_state": "on"},
+            {"discovered_state": "on", "required_state": None},
             [
                 (0, "outlet1"),
                 (0, "Status: on"),
             ],
-            id="discovered params, ok",
+            id="using discovered params since required state not set - match (OK)",
         ),
         pytest.param(
             "1",
-            {"discovered_state": "above upper warning"},
+            {"discovered_state": "off", "required_state": None},
             [
                 (0, "outlet1"),
-                (0, "Status: on"),
-                (2, "Expected: above upper warning"),
+                (2, "Status: on (expected: off)"),
             ],
-            id="discovered params, not ok",
+            id="using discovered params since required state not set - mismatch (CRIT)",
         ),
         pytest.param(
             "1",
-            {
-                "discovered_state": "on",
-                "required_state": "on",
-            },
+            {"discovered_state": "off", "required_state": "on"},
             [
                 (0, "outlet1"),
                 (0, "Status: on"),
             ],
-            id="discovered and check params, ok",
+            id="required state is set and takes priority over discovered - match (OK)",
         ),
         pytest.param(
             "1",
-            {
-                "discovered_state": "on",
-                "required_state": "off",
-            },
+            {"discovered_state": "on", "required_state": "off"},
             [
                 (0, "outlet1"),
-                (0, "Status: on"),
-                (2, "Expected: off"),
+                (2, "Status: on (expected: off)"),
             ],
-            id="discovered and check params, not ok",
+            id="required state is set and takes priority over discovered - mismatch (CRIT)",
         ),
         pytest.param(
             "5",
-            {"discovered_state": "on"},
+            {"discovered_state": "on", "required_state": "on"},
             [
                 (0, "Status: on"),
             ],
-            id="without outlet_name",
+            id="item without defined outlet_name still works",
         ),
         pytest.param(
             "7",
-            {
-                "discovered_state": "unknown",
-                "required_state": "off",
-            },
+            {"discovered_state": "unknown", "required_state": None},
             [
                 (0, "broken"),
-                (3, "Status: unknown"),
-                (2, "Expected: off"),
+                (0, "Status: unknown"),
             ],
-            id="unknown status",
+            id="unknown status matches discovered state",
+        ),
+        pytest.param(
+            "7",
+            {"discovered_state": "unknown", "required_state": "off"},
+            [
+                (0, "broken"),
+                (2, "Status: unknown (expected: off)"),
+            ],
+            id="unknown status does not match required state",
         ),
     ],
 )

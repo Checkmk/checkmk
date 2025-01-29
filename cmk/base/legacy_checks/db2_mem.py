@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_db2_mem(info):
     return [(x[1], {}) for x in info if x[0] == "Instance"]
 
 
-def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
+def check_db2_mem(item, params, info):
     if not info:
         raise IgnoreResultsError("Login into database failed")
 
@@ -64,6 +64,7 @@ def parse_db2_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["db2_mem"] = LegacyCheckDefinition(
+    name="db2_mem",
     parse_function=parse_db2_mem,
     service_name="Memory %s",
     discovery_function=inventory_db2_mem,

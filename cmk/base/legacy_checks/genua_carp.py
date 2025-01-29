@@ -5,11 +5,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
+
+check_info = {}
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -55,7 +55,7 @@ def genua_carpstate(st):
     return names.get(st, st)
 
 
-def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branches
+def check_genua_carp(item, _no_params, info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
 
@@ -83,9 +83,8 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
                 if masters == 1:
                     if nodes > 1:
                         output = "one "
-                    output += "node in carp state {} with IfLinkState {}".format(
-                        ifCarpStateStr,
-                        ifLinkStateStr,
+                    output += (
+                        f"node in carp state {ifCarpStateStr} with IfLinkState {ifLinkStateStr}"
                     )
                     # first master
                     if ifLinkState == "2":
@@ -105,10 +104,7 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
                     )
             # look for non-masters, only interesting if no cluster
             elif ifName == item and nodes == 1:
-                output = "node in carp state {} with IfLinkState {}".format(
-                    ifCarpStateStr,
-                    ifLinkStateStr,
-                )
+                output = f"node in carp state {ifCarpStateStr} with IfLinkState {ifLinkStateStr}"
                 # carp backup
                 if ifCarpState == "1" and ifLinkState == "1":
                     state = 0
@@ -129,6 +125,7 @@ def parse_genua_carp(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["genua_carp"] = LegacyCheckDefinition(
+    name="genua_carp",
     parse_function=parse_genua_carp,
     detect=DETECT_GENUA,
     fetch=[

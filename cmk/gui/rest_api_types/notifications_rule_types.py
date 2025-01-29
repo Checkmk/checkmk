@@ -4,46 +4,95 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal, TypedDict
+from typing import cast, Literal, NotRequired, Required, TypedDict
 
+from cmk.utils import password_store
 from cmk.utils.notify_types import (
-    BuiltInPluginNames,
-    BulkOutsideTimePeriodType,
+    AckState,
+    AlwaysBulkParameters,
+    AsciiMailPluginName,
+    BasicAuth,
+    BasicAuthCredentials,
+    CaseRecoveryState,
+    CaseState,
+    CaseStateStr,
+    CheckmkPassword,
+    CiscoPluginName,
     ConditionEventConsoleAlertsType,
     CustomPluginName,
     EmailBodyElementsType,
+    EmailFromOrTo,
     EventConsoleOption,
-    FromOrToType,
     GroupbyType,
     HostEventType,
-    IlertAPIKey,
+    IlertPluginName,
+    IncidentRecoveryState,
+    IncidentState,
+    IncidentStateStr,
+    is_always_bulk,
+    is_timeperiod_bulk,
+    JiraPluginName,
+    MailPluginName,
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
+    MgmtTypeCaseType,
+    MgmtTypeIncidentType,
+    MkeventdPluginName,
+    MSTeamsPluginName,
     NotifyBulkType,
+    OpsgenieElement,
+    OpsGeniePluginName,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
-    PasswordType,
+    PagerdutyPluginName,
     PluginOptions,
     ProxyUrl,
-    PushOverPriorityNumType,
+    PushoverPluginName,
     PushOverPriorityStringType,
+    PushOverPriorityType,
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
+    ServiceNowPluginName,
+    Signl4PluginName,
+    SlackPluginName,
+    SmsApiPluginName,
+    SmsPluginName,
+    SMTPAuthAttrs,
     SortOrder,
     SoundType,
+    SpectrumPluginName,
+    SplunkPluginName,
+    SyncDeliverySMTP,
     SysLogFacilityIntType,
     SysLogFacilityStrType,
     SyslogPriorityIntType,
     SysLogPriorityStrType,
+    TimeperiodBulkParameters,
+    TokenAuth,
+    TokenAuthCredentials,
     URLPrefix,
+    UseSiteIDType,
     WebHookUrl,
 )
+from cmk.utils.rulesets.ruleset_matcher import (
+    is_tag_condition_ne,
+    is_tag_condition_nor,
+    is_tag_condition_or,
+    is_tag_condition_tag_id,
+    TagCondition,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+)
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 CheckboxState = Literal["enabled", "disabled"]
 
@@ -234,36 +283,32 @@ class CheckboxSortOrder:
 
 # ----------------------------------------------------------------
 class CheckboxUseSiteIDPrefixAPIType(CheckboxStateType, total=False):
-    value: Literal["deactivated", "use_site_id_prefix"]
+    value: UseSiteIDType
 
 
 @dataclass
 class CheckboxUseSiteIDPrefix:
-    value: bool | None = None
+    value: UseSiteIDType | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: bool | None) -> CheckboxUseSiteIDPrefix:
+    def from_mk_file_format(cls, data: UseSiteIDType | None) -> CheckboxUseSiteIDPrefix:
         return cls(value=data)
 
     @classmethod
     def from_api_request(cls, data: CheckboxUseSiteIDPrefixAPIType) -> CheckboxUseSiteIDPrefix:
         if data["state"] == "disabled":
             return cls()
-
-        if data["value"] == "use_site_id_prefix":
-            return cls(value=True)
-        return cls(value=False)
+        return cls(value=data["value"])
 
     def api_response(self) -> CheckboxUseSiteIDPrefixAPIType:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: CheckboxUseSiteIDPrefixAPIType = {"state": state}
 
         if self.value is not None:
-            r["value"] = "use_site_id_prefix" if self.value else "deactivated"
-
+            r["value"] = self.value
         return r
 
-    def to_mk_file_format(self) -> bool | None:
+    def to_mk_file_format(self) -> UseSiteIDType | None:
         return self.value
 
 
@@ -369,44 +414,80 @@ class ContactMatchMacros:
 
 
 # ----------------------------------------------------------------
-PRIORITY_VALUES: Mapping[PushOverPriorityNumType, PushOverPriorityStringType] = {
-    "-2": "lowest",
-    "-1": "low",
-    "0": "normal",
-    "1": "high",
-}
+class CheckboxPushoverPriorityOther(TypedDict):
+    level: PushOverPriorityStringType
+
+
+class CheckboxPushoverPriorityEmergency(TypedDict):
+    level: Literal["emergency"]
+    retry: int
+    expire: int
+    receipt: str
 
 
 class CheckboxPushoverPriorityAPIType(CheckboxStateType, total=False):
-    value: PushOverPriorityStringType
+    value: CheckboxPushoverPriorityOther | CheckboxPushoverPriorityEmergency
 
 
 @dataclass
 class CheckboxPushoverPriority:
-    value: PushOverPriorityNumType | None = None
+    value: PushOverPriorityType | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: PushOverPriorityNumType | None) -> CheckboxPushoverPriority:
+    def from_mk_file_format(cls, data: PushOverPriorityType | None) -> CheckboxPushoverPriority:
         return cls(value=data)
 
     @classmethod
     def from_api_request(cls, data: CheckboxPushoverPriorityAPIType) -> CheckboxPushoverPriority:
-        if data["state"] == "disabled":
-            return cls()
+        match data:
+            case {"state": "disabled"}:
+                return cls()
 
-        values: Mapping[PushOverPriorityStringType, PushOverPriorityNumType] = {
-            v: k for k, v in PRIORITY_VALUES.items()
-        }
-        return cls(value=values[data["value"]])
+            case {
+                "state": "enabled",
+                "value": {
+                    "level": "emergency",
+                    "retry": int() as retry,
+                    "expire": int() as expire,
+                    "receipt": str() as receipt,
+                },
+            }:
+                return cls(value=("emergency", (float(retry), float(expire), receipt)))
+
+            case {
+                "state": "enabled",
+                "value": {
+                    "level": "lowest" | "low" | "normal" | "high" as level,
+                },
+            }:
+                return cls(value=(level, None))
+
+            case _:
+                raise ValueError("Invalid CheckboxPushoverPriorityAPIType")
 
     def api_response(self) -> CheckboxPushoverPriorityAPIType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: CheckboxPushoverPriorityAPIType = {"state": state}
-        if self.value is not None:
-            r["value"] = PRIORITY_VALUES[self.value]
-        return r
+        match self.value:
+            case None:
+                return CheckboxPushoverPriorityAPIType(state="disabled")
+            case ("emergency", (float() as retry, float() as expire, str() as receipt)):
+                return CheckboxPushoverPriorityAPIType(
+                    state="enabled",
+                    value=CheckboxPushoverPriorityEmergency(
+                        level="emergency",
+                        retry=int(retry),
+                        expire=int(expire),
+                        receipt=receipt,
+                    ),
+                )
+            case ("lowest" | "low" | "normal" | "high" as level, None):
+                return CheckboxPushoverPriorityAPIType(
+                    state="enabled",
+                    value=CheckboxPushoverPriorityOther(level=level),
+                )
+            case _:
+                raise ValueError("Invalid CheckboxPushoverPriority")
 
-    def to_mk_file_format(self) -> PushOverPriorityNumType | None:
+    def to_mk_file_format(self) -> PushOverPriorityType | None:
         return self.value
 
 
@@ -442,19 +523,15 @@ class CheckboxPushoverSound:
 
 
 # ----------------------------------------------------------------
-class API_AuthAttrs(TypedDict, total=False):
-    method: Literal["plaintext"]
-    password: str
-    user: str
 
 
 class API_AuthValueType(CheckboxStateType, total=False):
-    value: API_AuthAttrs
+    value: SMTPAuthAttrs
 
 
-class API_EnableSyncViaSMTPAttrs(TypedDict, total=False):
+class API_EnableSyncViaSMTPAttrs(TypedDict):
     auth: API_AuthValueType
-    encryption: Literal["ssl_tls", "starttls"]
+    encryption: NotRequired[Literal["ssl_tls", "starttls"]]
     port: int
     smarthosts: list[str]
 
@@ -464,104 +541,58 @@ class API_EnableSyncViaSMTPValueType(CheckboxStateType, total=False):
 
 
 @dataclass
-class SMTPAuth:
-    value: API_AuthAttrs | None = None
-
-    @classmethod
-    def from_mk_file_format(cls, data: API_AuthAttrs | None) -> SMTPAuth:
-        return cls(value=data)
-
-    @classmethod
-    def from_api_request(cls, data: API_AuthValueType) -> SMTPAuth:
-        if data["state"] == "disabled":
-            return cls()
-        return cls(value=data["value"])
-
-    def api_response(self) -> API_AuthValueType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: API_AuthValueType = {"state": state}
-        if self.value is not None:
-            r["value"] = self.value
-        return r
-
-    def to_mk_file_format(self) -> API_AuthAttrs | None:
-        if self.value is None:
-            return None
-
-        return self.value
-
-
-# ----------------------------------------------------------------
-class EnableSyncViaSMTPType(TypedDict, total=False):
-    auth: SMTPAuth
-    encryption: Literal["ssl_tls", "starttls"]
-    port: int
-    smarthosts: list[str]
-
-
-@dataclass
 class EnableSyncDeliveryViaSMTP:
-    value: EnableSyncViaSMTPType | None = None
+    value: SyncDeliverySMTP | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: dict[str, Any] | None) -> EnableSyncDeliveryViaSMTP:
-        if data is None:
-            return cls()
-
-        return cls(
-            value=EnableSyncViaSMTPType(
-                auth=SMTPAuth.from_mk_file_format(data.get("auth")),
-                encryption=data["encryption"],
-                port=data["port"],
-                smarthosts=data["smarthosts"],
-            )
-        )
+    def from_mk_file_format(cls, data: SyncDeliverySMTP | None) -> EnableSyncDeliveryViaSMTP:
+        return cls(value=data)
 
     @classmethod
     def from_api_request(cls, data: API_EnableSyncViaSMTPValueType) -> EnableSyncDeliveryViaSMTP:
         if data["state"] == "disabled":
-            return cls()
+            return cls(value=None)
 
         v = data["value"]
 
-        if "smarthosts" in v:
-            smarthosts = v["smarthosts"]
-            if len(v["smarthosts"]) > 2:
-                smarthosts = v["smarthosts"][:2]  # TODO only two allowed - set in schema
-        else:
-            smarthosts = []
+        smarthosts = v["smarthosts"]
+        if len(v["smarthosts"]) > 2:
+            smarthosts = v["smarthosts"][:2]  # TODO only two allowed - set in schema
 
-        value = EnableSyncViaSMTPType(
-            auth=SMTPAuth.from_api_request(v["auth"]),
-            encryption=v["encryption"],
+        value = SyncDeliverySMTP(
             port=v["port"],
             smarthosts=smarthosts,
         )
+
+        if v["auth"]["state"] == "enabled":
+            value["auth"] = v["auth"]["value"]
+
+        if (encryption := v.get("encryption")) is not None:
+            value["encryption"] = encryption
+
         return cls(value=value)
 
     def api_response(self) -> API_EnableSyncViaSMTPValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
         r: API_EnableSyncViaSMTPValueType = {"state": state}
+
         if self.value is not None:
             r["value"] = {
-                "auth": self.value["auth"].api_response(),
-                "encryption": self.value["encryption"],
+                "auth": {"state": "disabled"},
                 "port": self.value["port"],
                 "smarthosts": self.value["smarthosts"],
             }
+
+            if (auth := self.value.get("auth")) is not None:
+                r["value"]["auth"] = {"state": "enabled", "value": auth}
+
+            if (encryption := self.value.get("encryption")) is not None:
+                r["value"]["encryption"] = encryption
+
         return r
 
-    def to_mk_file_format(self) -> Mapping[str, Any] | None:
-        if self.value is None:
-            return None
-
-        r = {
-            "auth": self.value["auth"].to_mk_file_format(),
-            "encryption": self.value["encryption"],
-            "port": self.value["port"],
-            "smarthosts": self.value["smarthosts"],
-        }
-        return {k: v for k, v in r.items() if v is not None}
+    def to_mk_file_format(self) -> SyncDeliverySMTP | None:
+        return self.value
 
 
 # ----------------------------------------------------------------
@@ -742,15 +773,15 @@ class RestrictToNotificationNumbers:
 
 # ----------------------------------------------------------------
 class FromAndToEmailFieldsAPIValueType(CheckboxStateType, total=False):
-    value: FromOrToType
+    value: EmailFromOrTo
 
 
 @dataclass
 class FromAndToEmailFields:
-    value: FromOrToType | None = None
+    value: EmailFromOrTo | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: FromOrToType | None) -> FromAndToEmailFields:
+    def from_mk_file_format(cls, data: EmailFromOrTo | None) -> FromAndToEmailFields:
         return cls(value=data)
 
     @classmethod
@@ -771,7 +802,7 @@ class FromAndToEmailFields:
         }
         return r
 
-    def to_mk_file_format(self) -> FromOrToType | None:
+    def to_mk_file_format(self) -> EmailFromOrTo | None:
         return self.value
 
     def disable(self) -> None:
@@ -780,17 +811,60 @@ class FromAndToEmailFields:
 
 # ---------------------------------------------------------------
 
+old_vs_new = """
+Old - list[str]
+
+['prod', '!ip-v4v6', '!ip-v4']
+
+New - dict[TagGroupID:TagCondition]:
+
+{
+    'address_family': {'$ne': 'ip-v4v6'},
+    'criticality': 'prod',
+    'ip-v4': {'$ne': 'ip-v4'}
+}
+
+"""
+
+
+AuxTagOperator = Literal["is_set", "is_not_set"]
+
+
+class AuxHostTag(TypedDict):
+    tag_type: Literal["aux_tag"]
+    tag_id: TagID
+    operator: AuxTagOperator
+
+
+TagGroupOperator = Literal["is", "is_not", "one_of", "none_of"]
+
+
+class TagGroupTag(TypedDict):
+    tag_type: Literal["tag_group"]
+    operator: TagGroupOperator
+    tag_group_id: str
+
+
+class TagGroupIsOrIsNot(TagGroupTag):
+    tag_id: TagID | None
+
+
+class TagGroupOneOfOrNoneOf(TagGroupTag):
+    tag_ids: Sequence[TagID | None]
+
 
 class MatchHostTagsAPIValueType(CheckboxStateType, total=False):
-    value: list
+    value: list[AuxHostTag | TagGroupOneOfOrNoneOf | TagGroupIsOrIsNot]
 
 
 @dataclass
 class CheckboxMatchHostTags:
-    value: list[str] | None = None
+    value: Mapping[TagGroupID, TagCondition] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: list[str] | None) -> CheckboxMatchHostTags:
+    def from_mk_file_format(
+        cls, data: Mapping[TagGroupID, TagCondition] | None
+    ) -> CheckboxMatchHostTags:
         return cls(value=data)
 
     @classmethod
@@ -798,16 +872,40 @@ class CheckboxMatchHostTags:
         if data["state"] == "disabled":
             return cls()
 
-        tagids: list[str] = []
-        for value in data["value"]:
-            if "is_not" in value["operator"]:
-                tagids.append(
-                    f"!{value['tag_id']}",
-                )
-            else:
-                tagids.append(value["tag_id"])
+        values_host_tags: MutableMapping[TagGroupID, TagCondition] = {}
 
-        return cls(value=tagids)
+        for value in data["value"]:
+            if value["tag_type"] == "tag_group":
+                grouptagid = TagGroupID(value["tag_group_id"])
+
+                if "tag_ids" in value:
+                    one_of_or_none_of = cast(TagGroupOneOfOrNoneOf, value)
+                    if value["operator"] == "one_of":
+                        tag_condition_or: TagConditionOR = {"$or": one_of_or_none_of["tag_ids"]}
+                        values_host_tags[grouptagid] = tag_condition_or
+
+                    elif value["operator"] == "none_of":
+                        tag_condition_nor: TagConditionNOR = {"$nor": one_of_or_none_of["tag_ids"]}
+                        values_host_tags[grouptagid] = tag_condition_nor
+
+                elif "tag_id" in value:
+                    is_or_is_not = cast(TagGroupIsOrIsNot, value)
+                    if value["operator"] == "is_not":
+                        tag_condition_ne: TagConditionNE = {"$ne": is_or_is_not["tag_id"]}
+                        values_host_tags[grouptagid] = tag_condition_ne
+
+                    elif value["operator"] == "is":
+                        values_host_tags[grouptagid] = is_or_is_not["tag_id"]
+
+            else:
+                auxtagid = TagGroupID(value["tag_id"])
+                values_host_tags[auxtagid] = (
+                    TagConditionNE({"$ne": value["tag_id"]})
+                    if value["operator"] == "is_not_set"
+                    else value["tag_id"]
+                )
+
+        return cls(value=values_host_tags)
 
     def api_response(self) -> MatchHostTagsAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
@@ -815,10 +913,66 @@ class CheckboxMatchHostTags:
         if self.value is None:
             return resp
 
-        resp["value"] = self.value
+        tag_config = load_all_tag_config_read_only()
+        aux_tags: list[TagID] = [tag.id for tag in tag_config.aux_tag_list]
+        tag_group_ids = [group.id for group in tag_config.tag_groups]
+
+        resp["value"] = []
+        for k, v in self.value.items():
+            as_aux_tag = TagID(k)
+            if as_aux_tag in aux_tags:
+                resp["value"].append(
+                    AuxHostTag(
+                        tag_type="aux_tag",
+                        tag_id=as_aux_tag,
+                        operator="is_not_set" if is_tag_condition_ne(v) else "is_set",
+                    )
+                )
+
+            elif k in tag_group_ids:
+                if is_tag_condition_ne(v) and v["$ne"]:
+                    resp["value"].append(
+                        TagGroupIsOrIsNot(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="is_not",
+                            tag_id=v["$ne"],
+                        )
+                    )
+
+                elif is_tag_condition_or(v):
+                    resp["value"].append(
+                        TagGroupOneOfOrNoneOf(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="one_of",
+                            tag_ids=v["$or"],
+                        )
+                    )
+
+                elif is_tag_condition_nor(v):
+                    resp["value"].append(
+                        TagGroupOneOfOrNoneOf(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="none_of",
+                            tag_ids=v["$nor"],
+                        )
+                    )
+
+                elif is_tag_condition_tag_id(v):
+                    resp["value"].append(
+                        TagGroupIsOrIsNot(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="is",
+                            tag_id=v,
+                        )
+                    )
+
         return resp
 
-    def to_mk_file_format(self) -> list[str] | None:
+    def to_mk_file_format(self) -> Mapping[TagGroupID, TagCondition] | None:
         return self.value
 
     def disable(self) -> None:
@@ -1116,14 +1270,23 @@ class CheckboxSysLogPriority:
 
 
 # ----------------------------------------------------------------
-class UrlPrefixAPIAttrs(TypedDict, total=False):
-    option: Literal["automatic", "manual"]
-    schema: Literal["http", "https"]
+class HTTPUrlPrefixAPI(TypedDict):
+    option: Literal["automatic"]
+    schema: Literal["http"]
+
+
+class HTTPSUrlPrefixAPI(TypedDict):
+    option: Literal["automatic"]
+    schema: Literal["https"]
+
+
+class ManualUrlPrefixAPI(TypedDict):
+    option: Literal["manual"]
     url: str
 
 
 class CheckboxURLPrefixAPIValueType(CheckboxStateType, total=False):
-    value: UrlPrefixAPIAttrs
+    value: HTTPUrlPrefixAPI | HTTPSUrlPrefixAPI | ManualUrlPrefixAPI
 
 
 @dataclass
@@ -1136,29 +1299,44 @@ class CheckboxURLPrefix:
 
     @classmethod
     def from_api_request(cls, data: CheckboxURLPrefixAPIValueType) -> CheckboxURLPrefix:
-        if data["state"] == "disabled":
-            return cls()
+        match data:
+            case {"state": "disabled"}:
+                return cls()
 
-        value = data["value"]
+            case {"state": "enabled", "value": {"option": "automatic", "schema": "http"}}:
+                return cls(value=("automatic_http", None))
 
-        match value["option"]:
-            case "automatic":
-                return cls(value={"automatic": value["schema"]})
-            case "manual":
-                return cls(value={"manual": value["url"]})
+            case {"state": "enabled", "value": {"option": "automatic", "schema": "https"}}:
+                return cls(value=("automatic_https", None))
+
+            case {"state": "enabled", "value": {"option": "manual", "url": str() as url}}:
+                return cls(value=("manual", url))
+
+            case _:
+                raise ValueError("Invalid CheckboxURLPrefixAPIValueType")
 
     def api_response(self) -> CheckboxURLPrefixAPIValueType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: CheckboxURLPrefixAPIValueType = {"state": state}
-        if self.value is None:
-            return r
+        match self.value:
+            case None:
+                return CheckboxURLPrefixAPIValueType(state="disabled")
 
-        if self.value.get("automatic"):
-            r["value"] = {"option": "automatic", "schema": self.value["automatic"]}
-            return r
-
-        r["value"] = {"option": "manual", "url": self.value["manual"]}
-        return r
+            case ("automatic_http", None):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "automatic", "schema": "http"},
+                )
+            case ("automatic_https", None):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "automatic", "schema": "https"},
+                )
+            case ("manual", str() as url):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "manual", "url": url},
+                )
+            case _:
+                raise ValueError("Invalid URLPrefix")
 
     def to_mk_file_format(self) -> URLPrefix | None:
         return self.value
@@ -1169,13 +1347,28 @@ class CheckboxURLPrefix:
 
 
 # ----------------------------------------------------------------
-class HttpProxyAPIAttrs(TypedDict, total=False):
-    option: Literal["no_proxy", "environment", "url"]
+
+
+class HttpProxyAPINoProxy(TypedDict):
+    option: Literal["no_proxy"]
+
+
+class HttpProxyAPIEnvironment(TypedDict):
+    option: Literal["environment"]
+
+
+class HttpProxyAPIUrl(TypedDict):
+    option: Literal["url"]
     url: str
 
 
+class HttpProxyAPIGlobal(TypedDict):
+    option: Literal["global"]
+    global_proxy_id: str
+
+
 class HttpProxyAPIValueType(CheckboxStateType, total=False):
-    value: HttpProxyAPIAttrs
+    value: HttpProxyAPINoProxy | HttpProxyAPIEnvironment | HttpProxyAPIUrl | HttpProxyAPIGlobal
 
 
 @dataclass
@@ -1188,18 +1381,24 @@ class CheckboxHttpProxy:
 
     @classmethod
     def from_api_request(cls, data: HttpProxyAPIValueType) -> CheckboxHttpProxy:
-        if data["state"] == "disabled":
-            return cls()
+        match data:
+            case {"state": "enabled", "value": {"option": "no_proxy"}}:
+                return cls(value=("cmk_postprocessed", "no_proxy", ""))
 
-        value = data["value"]
+            case {"state": "enabled", "value": {"option": "url", "url": str() as url}}:
+                return cls(value=("cmk_postprocessed", "explicit_proxy", url))
 
-        match value["option"]:
-            case "no_proxy":
-                return cls(value=("no_proxy", None))
-            case "environment":
-                return cls(value=("environment", "environment"))
-            case "url":
-                return cls(value=("url", value["url"]))
+            case {
+                "state": "enabled",
+                "value": {"option": "global", "global_proxy_id": str() as global_proxy_id},
+            }:
+                return cls(value=("cmk_postprocessed", "stored_proxy", global_proxy_id))
+
+            case {"state": "enabled", "value": {"option": "environment"}}:
+                return cls(value=("cmk_postprocessed", "environment_proxy", ""))
+
+            case _:
+                return cls()
 
     def api_response(self) -> HttpProxyAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
@@ -1207,15 +1406,18 @@ class CheckboxHttpProxy:
         if self.value is None:
             return r
 
-        option, value = self.value
+        _, option, value = self.value
         if option == "no_proxy":
-            r["value"] = {"option": option}
+            r["value"] = {"option": "no_proxy"}
 
-        if option == "environment":
-            r["value"] = {"option": option}
+        if option == "environment_proxy":
+            r["value"] = {"option": "environment"}
 
-        if option == "url" and value is not None:
-            r["value"] = {"option": option, "url": value}
+        if option == "explicit_proxy":
+            r["value"] = {"option": "url", "url": value}
+
+        if option == "stored_proxy":
+            r["value"] = {"option": "global", "global_proxy_id": value}
 
         return r
 
@@ -1227,27 +1429,8 @@ class CheckboxHttpProxy:
 
 
 # ----------------------------------------------------------------
-INCIDENT_STATE_TYPE = Literal[
-    "none",
-    "new",
-    "progress",
-    "hold",
-    "resolved",
-    "closed",
-    "canceled",
-]
-CASE_STATE_TYPE = Literal[
-    "none",
-    "new",
-    "closed",
-    "open",
-    "awaiting_info",
-    "resolved",
-]
-
-
 class AckStateValue(TypedDict, total=False):
-    start_predefined: INCIDENT_STATE_TYPE
+    start_predefined: IncidentStateStr
     start_integer: int
 
 
@@ -1255,28 +1438,24 @@ class AckStateAPI(CheckboxStateType, total=False):
     value: AckStateValue
 
 
-class AckStateMk(TypedDict):
-    start: INCIDENT_STATE_TYPE | int
-
-
 @dataclass
-class AckState:
-    value: AckStateMk | None = None
+class AcknowledgeState:
+    value: AckState | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: AckStateMk | None) -> AckState:
+    def from_mk_file_format(cls, data: AckState | None) -> AcknowledgeState:
         return cls(value=data)
 
     @classmethod
-    def from_api_request(cls, data: AckStateAPI) -> AckState:
+    def from_api_request(cls, data: AckStateAPI) -> AcknowledgeState:
         if data["state"] == "disabled":
             return cls()
 
         value = data["value"]
 
         if "start_predefined" in value:
-            return cls(value={"start": value["start_predefined"]})
-        return cls(value={"start": value["start_integer"]})
+            return cls(value={"start": ("predefined", value["start_predefined"])})
+        return cls(value={"start": ("integer", value["start_integer"])})
 
     def api_response(self) -> AckStateAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
@@ -1284,71 +1463,123 @@ class AckState:
         if self.value is None:
             return r
 
-        if isinstance(self.value["start"], int):
-            r["value"] = {"start_integer": self.value["start"]}
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
             return r
 
-        r["value"] = {"start_predefined": self.value["start"]}
+        r["value"] = {"start_predefined": self.value["start"][1]}
         return r
 
-    def to_mk_file_format(self) -> AckStateMk | None:
+    def to_mk_file_format(self) -> AckState | None:
         return self.value
 
 
 # ----------------------------------------------------------------
-class RecoveryStateValue(TypedDict, total=False):
-    start_predefined: CASE_STATE_TYPE | INCIDENT_STATE_TYPE
+class RecoveryStateIncidentValue(TypedDict, total=False):
+    start_predefined: IncidentStateStr
     start_integer: int
 
 
-class RecoveryStateAPI(CheckboxStateType, total=False):
-    value: RecoveryStateValue
-
-
-class RecoveryStateMk(TypedDict):
-    start: CASE_STATE_TYPE | INCIDENT_STATE_TYPE | int
+class RecoveryStateIncidentAPI(CheckboxStateType, total=False):
+    value: RecoveryStateIncidentValue
 
 
 @dataclass
-class RecoveryState:
-    value: RecoveryStateMk | None = None
+class RecoveryStateIncident:
+    value: IncidentRecoveryState | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: RecoveryStateMk | None) -> RecoveryState:
+    def from_mk_file_format(cls, data: IncidentRecoveryState | None) -> RecoveryStateIncident:
         return cls(value=data)
 
     @classmethod
-    def from_api_request(cls, data: RecoveryStateAPI) -> RecoveryState:
+    def from_api_request(cls, data: RecoveryStateIncidentAPI) -> RecoveryStateIncident:
         if data["state"] == "disabled":
             return cls()
 
         value = data["value"]
 
+        state: IncidentState
         if value.get("start_predefined") is not None:
-            return cls(value={"start": value["start_predefined"]})
-        return cls(value={"start": value["start_integer"]})
+            state = ("predefined", value["start_predefined"])
+            return cls(value={"start": state})
 
-    def api_response(self) -> RecoveryStateAPI:
+        state = ("integer", value["start_integer"])
+        return cls(value={"start": state})
+
+    def api_response(self) -> RecoveryStateIncidentAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
-        r: RecoveryStateAPI = {"state": state}
+        r: RecoveryStateIncidentAPI = {"state": state}
         if self.value is None:
             return r
 
-        if isinstance(self.value["start"], int):
-            r["value"] = {"start_integer": self.value["start"]}
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
             return r
 
-        r["value"] = {"start_predefined": self.value["start"]}
+        r["value"] = {"start_predefined": self.value["start"][1]}
         return r
 
-    def to_mk_file_format(self) -> RecoveryStateMk | None:
+    def to_mk_file_format(self) -> IncidentRecoveryState | None:
+        return self.value
+
+
+class RecoveryStateCaseValue(TypedDict, total=False):
+    start_predefined: CaseStateStr
+    start_integer: int
+
+
+class RecoveryStateCaseAPI(CheckboxStateType, total=False):
+    value: RecoveryStateCaseValue
+
+
+@dataclass
+class RecoveryStateCase:
+    value: CaseRecoveryState | None = None
+
+    @classmethod
+    def from_mk_file_format(
+        cls,
+        data: CaseRecoveryState | None,
+    ) -> RecoveryStateCase:
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(cls, data: RecoveryStateCaseAPI) -> RecoveryStateCase:
+        if data["state"] == "disabled":
+            return cls()
+
+        value = data["value"]
+
+        state: CaseState
+        if value.get("start_predefined") is not None:
+            state = ("predefined", value["start_predefined"])
+            return cls(value={"start": state})
+
+        state = ("integer", value["start_integer"])
+        return cls(value={"start": state})
+
+    def api_response(self) -> RecoveryStateCaseAPI:
+        state: CheckboxState = "disabled" if not self.value else "enabled"
+        r: RecoveryStateCaseAPI = {"state": state}
+        if self.value is None:
+            return r
+
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
+            return r
+
+        r["value"] = {"start_predefined": self.value["start"][1]}
+        return r
+
+    def to_mk_file_format(self) -> CaseRecoveryState | None:
         return self.value
 
 
 # ----------------------------------------------------------------
 class DowntimeStateValue(TypedDict, total=False):
-    start_predefined: INCIDENT_STATE_TYPE
-    end_predefined: INCIDENT_STATE_TYPE
+    start_predefined: IncidentStateStr
+    end_predefined: IncidentStateStr
     start_integer: int
     end_integer: int
 
@@ -1358,8 +1589,8 @@ class DowntimeStateAPI(CheckboxStateType, total=False):
 
 
 class DowntimeStateMk(TypedDict, total=False):
-    start: INCIDENT_STATE_TYPE | int
-    end: INCIDENT_STATE_TYPE | int
+    start: IncidentState
+    end: IncidentState
 
 
 @dataclass
@@ -1379,16 +1610,16 @@ class DowntimeState:
         value: DowntimeStateMk = {}
 
         if "start_predefined" in v:
-            value["start"] = v["start_predefined"]
+            value["start"] = ("predefined", v["start_predefined"])
 
         if "start_integer" in v:
-            value["start"] = v["start_integer"]
+            value["start"] = ("integer", v["start_integer"])
 
         if "end_predefined" in v:
-            value["end"] = v["end_predefined"]
+            value["end"] = ("predefined", v["end_predefined"])
 
         if "end_integer" in v:
-            value["end"] = v["end_integer"]
+            value["end"] = ("integer", v["end_integer"])
 
         return cls(value=value)
 
@@ -1399,16 +1630,16 @@ class DowntimeState:
             return r
 
         v: DowntimeStateValue = {}
-        if isinstance(self.value["start"], int):
-            v["start_integer"] = self.value["start"]
+        if self.value["start"][0] == "integer":
+            v["start_integer"] = self.value["start"][1]
         else:
-            v["start_predefined"] = self.value["start"]
+            v["start_predefined"] = self.value["start"][1]
 
         if "end" in self.value:
-            if isinstance(self.value["end"], int):
-                v["end_integer"] = self.value["end"]
+            if self.value["end"][0] == "integer":
+                v["end_integer"] = self.value["end"][1]
             else:
-                v["end_predefined"] = self.value["end"]
+                v["end_predefined"] = self.value["end"][1]
 
         r["value"] = v
         return r
@@ -1426,23 +1657,35 @@ class MgmntUrgencyAPIValueType(CheckboxStateType, total=False):
     value: MgmntUrgencyType
 
 
-class MgmtTypeParamsAPI(TypedDict, total=False):
+class MgmtTypeParams(TypedDict, total=False):
     host_short_description: CheckboxStrAPIType
     service_short_description: CheckboxStrAPIType
     service_description: CheckboxStrAPIType
     host_description: CheckboxStrAPIType
-    urgency: MgmntUrgencyAPIValueType
-    impact: CheckboxStrAPIType
-    caller: str
-    state_recovery: RecoveryStateAPI
-    state_acknowledgement: AckStateAPI
-    state_downtime: DowntimeStateAPI
+
+
+class MgmtTypeCaseParamsAPI(MgmtTypeParams, total=False):
+    state_recovery: RecoveryStateCaseAPI
     priority: MgmntPriorityAPIValueType
 
 
-class MgmtTypeAPI(TypedDict, total=False):
-    option: Literal["case", "incident"]
-    params: MgmtTypeParamsAPI
+class MgmtTypeCaseAPI(TypedDict, total=False):
+    option: Literal["case"]
+    params: MgmtTypeCaseParamsAPI
+
+
+class MgmtTypeIncidentParamsAPI(MgmtTypeParams, total=False):
+    urgency: MgmntUrgencyAPIValueType
+    impact: CheckboxStrAPIType
+    caller: str
+    state_recovery: RecoveryStateIncidentAPI
+    state_acknowledgement: AckStateAPI
+    state_downtime: DowntimeStateAPI
+
+
+class MgmtTypeIncidentAPI(TypedDict, total=False):
+    option: Literal["incident"]
+    params: MgmtTypeIncidentParamsAPI
 
 
 @dataclass
@@ -1506,134 +1749,170 @@ class ManagementType:
     urgency: ManagementTypeUrgency = field(default_factory=ManagementTypeUrgency)
     impact: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     caller: str | None = None
-    state_recovery: RecoveryState = field(default_factory=RecoveryState)
-    state_acknowledgement: AckState = field(default_factory=AckState)
+    case_state_recovery: RecoveryStateCase = field(default_factory=RecoveryStateCase)
+    incident_state_recovery: RecoveryStateIncident = field(default_factory=RecoveryStateIncident)
+    state_acknowledgement: AcknowledgeState = field(default_factory=AcknowledgeState)
     state_downtime: DowntimeState = field(default_factory=DowntimeState)
 
     @classmethod
     def from_mk_file_format(
-        cls, config: tuple[Literal["case", "incident"], Mapping] | None
+        cls, config: MgmtTypeCaseType | MgmtTypeIncidentType | None
     ) -> ManagementType:
         if config is None:
             return cls()
 
-        mgmt_type, params = config
-
-        if mgmt_type == "case":
+        if config[0] == "case":
+            case_params = config[1]
             return cls(
-                mgmt_type=mgmt_type,
+                mgmt_type="case",
                 host_short_desc=CheckboxWithStrValue.from_mk_file_format(
-                    params.get("host_short_desc")
+                    case_params.get("host_short_desc")
                 ),
                 svc_short_desc=CheckboxWithStrValue.from_mk_file_format(
-                    params.get("svc_short_desc")
+                    case_params.get("svc_short_desc")
                 ),
-                host_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_desc")),
-                svc_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_desc")),
-                state_recovery=RecoveryState.from_mk_file_format(params.get("recovery_state")),
-                priority=ManagementTypePriority.from_mk_file_format(params.get("priority")),
+                host_desc=CheckboxWithStrValue.from_mk_file_format(case_params.get("host_desc")),
+                svc_desc=CheckboxWithStrValue.from_mk_file_format(case_params.get("svc_desc")),
+                case_state_recovery=RecoveryStateCase.from_mk_file_format(
+                    case_params.get("recovery_state")
+                ),
+                priority=ManagementTypePriority.from_mk_file_format(case_params.get("priority")),
             )
 
+        incident_params = config[1]
         return cls(
-            mgmt_type=mgmt_type,
-            host_short_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_short_desc")),
-            svc_short_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_short_desc")),
-            host_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_desc")),
-            svc_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_desc")),
-            state_recovery=RecoveryState.from_mk_file_format(params.get("recovery_state")),
-            caller=params.get("caller", ""),
-            urgency=ManagementTypeUrgency.from_mk_file_format(params.get("urgency")),
-            impact=CheckboxWithStrValue.from_mk_file_format(params.get("impact")),
-            state_acknowledgement=AckState.from_mk_file_format(params.get("ack_state")),
-            state_downtime=DowntimeState.from_mk_file_format(params.get("dt_state")),
+            mgmt_type="incident",
+            host_short_desc=CheckboxWithStrValue.from_mk_file_format(
+                incident_params.get("host_short_desc")
+            ),
+            svc_short_desc=CheckboxWithStrValue.from_mk_file_format(
+                incident_params.get("svc_short_desc")
+            ),
+            host_desc=CheckboxWithStrValue.from_mk_file_format(incident_params.get("host_desc")),
+            svc_desc=CheckboxWithStrValue.from_mk_file_format(incident_params.get("svc_desc")),
+            incident_state_recovery=RecoveryStateIncident.from_mk_file_format(
+                incident_params.get("recovery_state")
+            ),
+            caller=incident_params.get("caller", ""),
+            urgency=ManagementTypeUrgency.from_mk_file_format(incident_params.get("urgency")),
+            impact=CheckboxWithStrValue.from_mk_file_format(incident_params.get("impact")),
+            state_acknowledgement=AcknowledgeState.from_mk_file_format(
+                incident_params.get("ack_state")
+            ),
+            state_downtime=DowntimeState.from_mk_file_format(incident_params.get("dt_state")),
         )
 
     @classmethod
-    def from_api_request(cls, data: MgmtTypeAPI) -> ManagementType:
+    def from_api_request(cls, data: MgmtTypeIncidentAPI | MgmtTypeCaseAPI) -> ManagementType:
         option = data["option"]
-        params = data["params"]
 
-        if option == "incident":
+        if data["option"] == "incident":
+            incident_params = data["params"]
             return cls(
                 mgmt_type=option,
                 host_short_desc=CheckboxWithStrValue.from_api_request(
-                    params["host_short_description"]
+                    incident_params["host_short_description"]
                 ),
                 svc_short_desc=CheckboxWithStrValue.from_api_request(
-                    params["service_short_description"]
+                    incident_params["service_short_description"]
                 ),
-                svc_desc=CheckboxWithStrValue.from_api_request(params["service_description"]),
-                host_desc=CheckboxWithStrValue.from_api_request(params["host_description"]),
-                urgency=ManagementTypeUrgency.from_api_request(params["urgency"]),
-                impact=CheckboxWithStrValue.from_api_request(params["impact"]),
-                caller=params["caller"],
-                state_recovery=RecoveryState.from_api_request(
-                    params["state_recovery"],
+                svc_desc=CheckboxWithStrValue.from_api_request(
+                    incident_params["service_description"]
                 ),
-                state_acknowledgement=AckState.from_api_request(params["state_acknowledgement"]),
-                state_downtime=DowntimeState.from_api_request(params["state_downtime"]),
+                host_desc=CheckboxWithStrValue.from_api_request(
+                    incident_params["host_description"]
+                ),
+                urgency=ManagementTypeUrgency.from_api_request(incident_params["urgency"]),
+                impact=CheckboxWithStrValue.from_api_request(incident_params["impact"]),
+                caller=incident_params["caller"],
+                incident_state_recovery=RecoveryStateIncident.from_api_request(
+                    incident_params["state_recovery"],
+                ),
+                state_acknowledgement=AcknowledgeState.from_api_request(
+                    incident_params["state_acknowledgement"]
+                ),
+                state_downtime=DowntimeState.from_api_request(incident_params["state_downtime"]),
             )
 
+        case_params = data["params"]
         return cls(
             mgmt_type=option,
-            host_short_desc=CheckboxWithStrValue.from_api_request(params["host_short_description"]),
-            svc_short_desc=CheckboxWithStrValue.from_api_request(
-                params["service_short_description"]
+            host_short_desc=CheckboxWithStrValue.from_api_request(
+                case_params["host_short_description"]
             ),
-            svc_desc=CheckboxWithStrValue.from_api_request(params["service_description"]),
-            host_desc=CheckboxWithStrValue.from_api_request(params["host_description"]),
-            priority=ManagementTypePriority.from_api_request(params["priority"]),
-            state_recovery=RecoveryState.from_api_request(
-                params["state_recovery"],
+            svc_short_desc=CheckboxWithStrValue.from_api_request(
+                case_params["service_short_description"]
+            ),
+            svc_desc=CheckboxWithStrValue.from_api_request(case_params["service_description"]),
+            host_desc=CheckboxWithStrValue.from_api_request(case_params["host_description"]),
+            priority=ManagementTypePriority.from_api_request(case_params["priority"]),
+            case_state_recovery=RecoveryStateCase.from_api_request(
+                case_params["state_recovery"],
             ),
         )
 
-    def api_response(self) -> MgmtTypeAPI:
-        r: MgmtTypeAPI = {"option": self.mgmt_type}
-        params: MgmtTypeParamsAPI = {
+    def api_response(self) -> MgmtTypeIncidentAPI | MgmtTypeCaseAPI:
+        if self.mgmt_type == "case":
+            case_params: MgmtTypeCaseParamsAPI = {
+                "host_description": self.host_desc.api_response(),
+                "service_description": self.svc_desc.api_response(),
+                "host_short_description": self.host_short_desc.api_response(),
+                "service_short_description": self.svc_short_desc.api_response(),
+                "state_recovery": self.case_state_recovery.api_response(),
+                "priority": self.priority.api_response(),
+            }
+
+            return MgmtTypeCaseAPI(option="case", params=case_params)
+
+        incident_params: MgmtTypeIncidentParamsAPI = {
             "host_description": self.host_desc.api_response(),
             "service_description": self.svc_desc.api_response(),
             "host_short_description": self.host_short_desc.api_response(),
             "service_short_description": self.svc_short_desc.api_response(),
-            "state_recovery": self.state_recovery.api_response(),
+            "state_recovery": self.incident_state_recovery.api_response(),
+            "caller": "" if self.caller is None else self.caller,
+            "urgency": self.urgency.api_response(),
+            "impact": self.impact.api_response(),
+            "state_acknowledgement": self.state_acknowledgement.api_response(),
+            "state_downtime": self.state_downtime.api_response(),
         }
 
-        if self.mgmt_type == "case":
-            params["priority"] = self.priority.api_response()
-            r["params"] = params
-            return r
+        return MgmtTypeIncidentAPI(option="incident", params=incident_params)
 
-        params.update(
-            {
-                "caller": "" if self.caller is None else self.caller,
-                "urgency": self.urgency.api_response(),
-                "impact": self.impact.api_response(),
-                "state_acknowledgement": self.state_acknowledgement.api_response(),
-                "state_downtime": self.state_downtime.api_response(),
-            }
-        )
-        r["params"] = params
-        return r
-
-    def to_mk_file_format(self) -> tuple[Literal["case", "incident"], Mapping] | None:
+    def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
         if self.mgmt_type is None:
             return None
 
-        r = {
-            "ack_state": self.state_acknowledgement.to_mk_file_format(),
-            "caller": self.caller,
-            "dt_state": self.state_downtime.to_mk_file_format(),
-            "host_desc": self.host_desc.to_mk_file_format(),
-            "host_short_desc": self.host_short_desc.to_mk_file_format(),
-            "impact": self.impact.to_mk_file_format(),
-            "recovery_state": self.state_recovery.to_mk_file_format(),
-            "svc_desc": self.svc_desc.to_mk_file_format(),
-            "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
-            "urgency": self.urgency.to_mk_file_format(),
-            "priority": self.priority.to_mk_file_format(),
-        }
+        if self.mgmt_type == "case":
+            r_case = {
+                "host_short_desc": self.host_short_desc.to_mk_file_format(),
+                "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
+                "host_desc": self.host_desc.to_mk_file_format(),
+                "svc_desc": self.svc_desc.to_mk_file_format(),
+                "priority": self.priority.to_mk_file_format(),
+                "recovery_state": self.case_state_recovery.to_mk_file_format(),
+            }
+            return cast(
+                MgmtTypeCaseType,
+                ("case", {k: v for k, v in r_case.items() if v is not None}),
+            )
 
-        return (self.mgmt_type, {k: v for k, v in r.items() if v is not None})
+        r_incident = {
+            "host_short_desc": self.host_short_desc.to_mk_file_format(),
+            "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
+            "host_desc": self.host_desc.to_mk_file_format(),
+            "svc_desc": self.svc_desc.to_mk_file_format(),
+            "caller": self.caller,
+            "urgency": self.urgency.to_mk_file_format(),
+            "impact": self.impact.to_mk_file_format(),
+            "ack_state": self.state_acknowledgement.to_mk_file_format(),
+            "dt_state": self.state_downtime.to_mk_file_format(),
+            "recovery_state": self.incident_state_recovery.to_mk_file_format(),
+        }
+        return cast(
+            MgmtTypeIncidentType,
+            ("incident", {k: v for k, v in r_incident.items() if v is not None}),
+        )
 
 
 # ----------------------------------------------------------------
@@ -1807,7 +2086,7 @@ class BulkOutsideTimePeriod:
     time_horizon: int
 
     @classmethod
-    def from_mk_file_format(cls, data: BulkOutsideTimePeriodType | None) -> BulkOutsideTimePeriod:
+    def from_mk_file_format(cls, data: AlwaysBulkParameters | None) -> BulkOutsideTimePeriod:
         if data is None:
             return BulkOutsideTimePeriod.disabled()
 
@@ -1816,10 +2095,10 @@ class BulkOutsideTimePeriod:
             subject_for_bulk_notifications=CheckboxWithStrValue.from_mk_file_format(
                 data.get("bulk_subject")
             ),
-            max_bulk_size=data.get("count", 0),
-            notification_bulks_based_on=data.get("groupby", []),
-            notification_bulks_based_on_custom_macros=data.get("groupby_custom", []),
-            time_horizon=data.get("interval", 0),
+            max_bulk_size=data["count"],
+            notification_bulks_based_on=data["groupby"],
+            notification_bulks_based_on_custom_macros=data["groupby_custom"],
+            time_horizon=data["interval"],
         )
 
     @classmethod
@@ -1854,15 +2133,17 @@ class BulkOutsideTimePeriod:
             }
         return r
 
-    def to_mk_file_format(self) -> BulkOutsideTimePeriodType:
-        r = {
-            "count": self.max_bulk_size,
-            "groupby": self.notification_bulks_based_on,
-            "groupby_custom": self.notification_bulks_based_on_custom_macros,
-            "interval": self.time_horizon,
-            "bulk_subject": self.subject_for_bulk_notifications.to_mk_file_format(),
-        }
-        return cast(BulkOutsideTimePeriodType, {k: v for k, v in r.items() if v is not None})
+    def to_mk_file_format(self) -> AlwaysBulkParameters:
+        r = AlwaysBulkParameters(
+            count=self.max_bulk_size,
+            groupby=self.notification_bulks_based_on,
+            groupby_custom=self.notification_bulks_based_on_custom_macros,
+            interval=self.time_horizon,
+        )
+        if (bulk_subject := self.subject_for_bulk_notifications.to_mk_file_format()) is not None:
+            r["bulk_subject"] = bulk_subject
+
+        return r
 
     @classmethod
     def disabled(cls):
@@ -1924,7 +2205,7 @@ class CheckboxNotificationBulking:
 
         bulk: NotificationBulkingAlwaysParams | NotificationBulkingTimeoutParams
 
-        if when_to_bulk == "always":
+        if is_always_bulk(bulk_params):
             bulk = NotificationBulkingAlwaysParams(
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=bulk_params["count"],
@@ -1932,7 +2213,7 @@ class CheckboxNotificationBulking:
                 notification_bulks_based_on_custom_macros=bulk_params["groupby_custom"],
                 time_horizon=bulk_params["interval"],
             )
-        elif when_to_bulk == "timeperiod":
+        elif is_timeperiod_bulk(bulk_params):
             bulk = NotificationBulkingTimeoutParams(
                 time_period=bulk_params["timeperiod"],
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
@@ -2000,22 +2281,26 @@ class CheckboxNotificationBulking:
             "count": self.bulk.max_bulk_size,
             "groupby": self.bulk.notification_bulks_based_on,
             "groupby_custom": self.bulk.notification_bulks_based_on_custom_macros,
-            "bulk_subject": self.bulk.subject_for_bulk_notifications.to_mk_file_format(),
         }
+
+        if (
+            bulk_subject := self.bulk.subject_for_bulk_notifications.to_mk_file_format()
+        ) is not None:
+            r["bulk_subject"] = bulk_subject
 
         if isinstance(self.bulk, NotificationBulkingAlwaysParams):
             r["interval"] = self.bulk.time_horizon
+            always_bulk_params = cast(AlwaysBulkParameters, r)
+            return ("always", always_bulk_params)
 
-        elif isinstance(self.bulk, NotificationBulkingTimeoutParams):
-            r.update(
-                {
-                    "timeperiod": self.bulk.time_period,
-                    "bulk_outside": self.bulk.bulk_outside_timeperiod.to_mk_file_format(),
-                }
-            )
-
-        nbt: NotifyBulkType = (self.when_to_bulk, {k: v for k, v in r.items() if v is not None})
-        return nbt
+        r.update(
+            {
+                "timeperiod": self.bulk.time_period,
+                "bulk_outside": self.bulk.bulk_outside_timeperiod.to_mk_file_format(),
+            }
+        )
+        timeperiod_bulk_params = cast(TimeperiodBulkParameters, r)
+        return ("timeperiod", timeperiod_bulk_params)
 
 
 # ----------------------------------------------------------------
@@ -2024,95 +2309,103 @@ class API_ExplicitOrStore(TypedDict, total=False):
     store_id: str
 
 
-class API_Password(API_ExplicitOrStore, total=False):  # ServiceNowPlugin, SMSAPIPlugin
+class API_Password(API_ExplicitOrStore, total=False):
     password: str
 
 
 @dataclass
-class APIPasswordOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    password: str = ""
+class APICheckmkPassword_FromPassword:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: API_Password) -> APIPasswordOption:
-        if "password" in incoming:
-            return cls(option="explicit", password=incoming["password"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: API_Password) -> APICheckmkPassword_FromPassword:
+        match incoming:
+            case {"option": "explicit", "password": str() as password}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), password),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid API_Password")
 
     def api_response(self) -> API_Password:
-        if self.option is None:
-            return {}
-
-        r: API_Password = {"option": self.option}
-        if self.option == "explicit":
-            r["password"] = self.password
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case ("cmk_postprocessed", "explicit_password", (_, str() as password)):
+                return API_Password(option="explicit", password=password)
+            case ("cmk_postprocessed", "stored_password", (str() as password_id, _)):
+                return API_Password(option="store", store_id=password_id)
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APIPasswordOption:
-        if data is None:
-            return cls()
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromPassword:
+        return cls(checkmk_password=data)
 
-        if "password" in data:
-            return cls(option="explicit", password=data[1])
-        return cls(option="store", password=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "password", self.password
-        return "store", self.store_id
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        return self.checkmk_password
 
 
 # ----------------------------------------------------------------
-class APISecret(API_ExplicitOrStore, total=False):  # SignL4Plugin
+class APISecret(API_ExplicitOrStore, total=False):
     secret: str
 
 
 @dataclass
-class APISignL4SecretOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    secret: str = ""
+class APICheckmkPassword_FromSecret:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: APISecret) -> APISignL4SecretOption:
-        if "secret" in incoming:
-            return cls(option="explicit", secret=incoming["secret"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: APISecret) -> APICheckmkPassword_FromSecret:
+        match incoming:
+            case {"option": "explicit", "secret": str() as secret}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), secret),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid APISecret")
 
     def api_response(self) -> APISecret:
-        if self.option is None:
-            return {}
-
-        r: APISecret = {"option": self.option}
-        if self.option == "explicit":
-            r["secret"] = self.secret
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case ("cmk_postprocessed", "explicit_password", (_, str() as password)):
+                return APISecret(option="explicit", secret=password)
+            case ("cmk_postprocessed", "stored_password", (str() as password_id, _)):
+                return APISecret(option="store", store_id=password_id)
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APISignL4SecretOption:
-        if data is None:
-            return cls()
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromSecret:
+        return cls(checkmk_password=data)
 
-        if "password" in data:
-            return cls(option="explicit", secret=data[1])
-        return cls(option="store", secret=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "password", self.secret
-        return "store", self.store_id
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        return self.checkmk_password
 
 
 # ----------------------------------------------------------------
@@ -2121,44 +2414,56 @@ class APIKey(API_ExplicitOrStore, total=False):
 
 
 @dataclass
-class APIIlertKeyOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    key: str = ""
+class APICheckmkPassword_FromKey:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: APIKey) -> APIIlertKeyOption:
-        if "key" in incoming:
-            return cls(option="explicit", key=incoming["key"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: APIKey) -> APICheckmkPassword_FromKey:
+        match incoming:
+            case {"option": "explicit", "key": str() as key}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), key),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid APIKey")
 
     def api_response(self) -> APIKey:
-        if self.option is None:
-            return {}
-
-        r: APIKey = {"option": self.option}
-        if self.option == "explicit":
-            r["key"] = self.key
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str() as password_id, str() as password),
+            ):
+                return {"option": "explicit", "key": password}
+            case (
+                "cmk_postprocessed",
+                "stored_password",
+                (str() as password_id, str() as password),
+            ):
+                return {"option": "store", "store_id": password_id}
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: IlertAPIKey | None) -> APIIlertKeyOption:
-        if data is None:
-            return cls()
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromKey:
+        return cls(checkmk_password=data)
 
-        if "ilert_api_key" in data:
-            return cls(option="explicit", key=data[1])
-        return cls(option="store", key=data[1])
-
-    def to_mk_file_format(self) -> IlertAPIKey | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "ilert_api_key", self.key
-        return "store", self.store_id
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        return self.checkmk_password
 
 
 @dataclass
@@ -2199,47 +2504,6 @@ class APIPagerDutyKeyOption:
 
         if self.option == "explicit":
             return "routing_key", self.key
-        return "store", self.store_id
-
-
-@dataclass
-class APIOpenGenieKeyOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    key: str = ""
-
-    @classmethod
-    def from_api_request(cls, incoming: APIKey) -> APIOpenGenieKeyOption:
-        if "key" in incoming:
-            return cls(option="explicit", key=incoming["key"])
-        return cls(option="store", store_id=incoming["store_id"])
-
-    def api_response(self) -> APIKey:
-        if self.option is None:
-            return {}
-
-        r: APIKey = {"option": self.option}
-        if self.option == "explicit":
-            r["key"] = self.key
-            return r
-        r["store_id"] = self.store_id
-        return r
-
-    @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APIOpenGenieKeyOption:
-        if data is None:
-            return cls()
-
-        if "password" in data:
-            return cls(option="explicit", key=data[1])
-        return cls(option="store", key=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "password", self.key
         return "store", self.store_id
 
 
@@ -2290,25 +2554,226 @@ class WebhookURLOption:
 
 
 # ----------------------------------------------------------------
+class CheckboxListOfExtraPropertiesAPIType(CheckboxStateType, total=False):
+    value: list[OpsgenieElement]
 
 
-class APINotifyPluginParams(TypedDict):
-    plugin_name: BuiltInPluginNames
+@dataclass
+class CheckboxWithListOfExtraPropertiesValues:
+    value: list[OpsgenieElement] | None = None
+
+    @classmethod
+    def from_mk_file_format(
+        cls, data: list[OpsgenieElement] | None
+    ) -> CheckboxWithListOfExtraPropertiesValues:
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(
+        cls,
+        data: CheckboxListOfExtraPropertiesAPIType,
+    ) -> CheckboxWithListOfExtraPropertiesValues:
+        if data["state"] == "disabled":
+            return cls()
+        return cls(value=data["value"])
+
+    def api_response(self) -> CheckboxListOfExtraPropertiesAPIType:
+        state: CheckboxState = "disabled" if self.value is None else "enabled"
+        r: CheckboxListOfExtraPropertiesAPIType = {"state": state}
+        if self.value is not None:
+            r["value"] = self.value
+        return r
+
+    def to_mk_file_format(self) -> list[OpsgenieElement] | None:
+        return self.value
 
 
-class API_AsciiMailData(APINotifyPluginParams, total=False):
+class API_ExplicitToken(TypedDict, total=False):
+    option: Literal["explicit_token"]
+    token: str
+
+
+class API_StoreToken(TypedDict, total=False):
+    option: Literal["token_store_id"]
+    store_id: str
+
+
+class API_BasicAuthExplicit(TypedDict, total=False):
+    option: Literal["explicit_password"]
+    username: str
+    password: str
+
+
+class API_BasicAuthStore(TypedDict, total=False):
+    option: Literal["password_store_id"]
+    username: str
+    store_id: str
+
+
+@dataclass
+class BasicOrTokenAuth:
+    auth: BasicAuth | TokenAuth | None = None
+
+    @classmethod
+    def from_mk_file_format(cls, data: BasicAuth | TokenAuth | None) -> BasicOrTokenAuth:
+        if data is None:
+            return cls()
+        return cls(auth=data)
+
+    @classmethod
+    def from_api_request(
+        cls,
+        incoming: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore,
+    ) -> BasicOrTokenAuth:
+        match incoming:
+            case {
+                "option": "explicit_token",
+                "token": str() as token,
+            }:
+                return cls(
+                    auth=(
+                        "auth_token",
+                        TokenAuthCredentials(
+                            token=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (password_store.ad_hoc_password_id(), token),
+                            ),
+                        ),
+                    )
+                )
+
+            case {
+                "option": "token_store_id",
+                "store_id": str() as store_id,
+            }:
+                return cls(
+                    auth=(
+                        "auth_token",
+                        TokenAuthCredentials(
+                            token=(
+                                "cmk_postprocessed",
+                                "stored_password",
+                                (store_id, ""),
+                            ),
+                        ),
+                    )
+                )
+            case {
+                "option": "explicit_password",
+                "username": str() as username,
+                "password": str() as password,
+            }:
+                return cls(
+                    auth=(
+                        "auth_basic",
+                        BasicAuthCredentials(
+                            username=username,
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (password_store.ad_hoc_password_id(), password),
+                            ),
+                        ),
+                    )
+                )
+            case {
+                "option": "password_store_id",
+                "username": str() as username,
+                "store_id": str() as store_id,
+            }:
+                return cls(
+                    auth=(
+                        "auth_basic",
+                        BasicAuthCredentials(
+                            username=username,
+                            password=(
+                                "cmk_postprocessed",
+                                "stored_password",
+                                (store_id, ""),
+                            ),
+                        ),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid auth")
+
+    def api_response(
+        self,
+    ) -> API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore:
+        match self.auth:
+            case None:
+                return {}
+
+            case (
+                "auth_basic",
+                {
+                    "password": (
+                        "cmk_postprocessed",
+                        explicit_or_stored,
+                        (str() as password_store_id, str() as password),
+                    ),
+                    "username": str() as username,
+                },
+            ):
+                if explicit_or_stored == "explicit_password":
+                    return API_BasicAuthExplicit(
+                        option="explicit_password",
+                        username=username,
+                        password=password,
+                    )
+                return API_BasicAuthStore(
+                    option="password_store_id",
+                    username=username,
+                    store_id=password_store_id,
+                )
+
+            case (
+                "auth_token",
+                {
+                    "token": (
+                        "cmk_postprocessed",
+                        explicit_or_stored,
+                        (str() as password_store_id, str() as token),
+                    )
+                },
+            ):
+                if explicit_or_stored == "explicit_password":
+                    return API_ExplicitToken(
+                        option="explicit_token",
+                        token=token,
+                    )
+                return API_StoreToken(
+                    option="token_store_id",
+                    store_id=password_store_id,
+                )
+            case _:
+                raise TypeError("Invalid auth")
+
+    def to_mk_file_format(self) -> BasicAuth | TokenAuth | None:
+        if self.auth is None:
+            return None
+        return self.auth
+
+
+# ----------------------------------------------------------------
+
+
+class API_AsciiMailData(TypedDict, total=False):
+    plugin_name: Required[AsciiMailPluginName]
     from_details: FromAndToEmailFieldsAPIValueType
     reply_to: FromAndToEmailFieldsAPIValueType
     subject_for_host_notifications: CheckboxStrAPIType
     subject_for_service_notifications: CheckboxStrAPIType
     send_separate_notification_to_every_recipient: CheckboxStateType
-    sort_order_for_bulk_notificaions: CheckboxSortOrderAPIType
+    sort_order_for_bulk_notifications: CheckboxSortOrderAPIType
     body_head_for_both_host_and_service_notifications: CheckboxStrAPIType
     body_tail_for_host_notifications: CheckboxStrAPIType
     body_tail_for_service_notifications: CheckboxStrAPIType
 
 
-class API_HTMLMailData(APINotifyPluginParams, total=False):
+class API_HTMLMailData(TypedDict, total=False):
+    plugin_name: Required[MailPluginName]
     from_details: FromAndToEmailFieldsAPIValueType
     reply_to: FromAndToEmailFieldsAPIValueType
     subject_for_host_notifications: CheckboxStrAPIType
@@ -2316,7 +2781,7 @@ class API_HTMLMailData(APINotifyPluginParams, total=False):
     info_to_be_displayed_in_the_email_body: CheckboxEmailBodyInfoAPIType
     insert_html_section_between_body_and_table: CheckboxStrAPIType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
-    sort_order_for_bulk_notificaions: CheckboxSortOrderAPIType
+    sort_order_for_bulk_notifications: CheckboxSortOrderAPIType
     send_separate_notification_to_every_recipient: CheckboxStateType
     enable_sync_smtp: API_EnableSyncViaSMTPValueType
     display_graphs_among_each_other: CheckboxStateType
@@ -2324,19 +2789,22 @@ class API_HTMLMailData(APINotifyPluginParams, total=False):
     bulk_notifications_with_graphs: CheckboxIntAPIType
 
 
-class API_CiscoData(APINotifyPluginParams, total=False):
+class API_CiscoData(TypedDict, total=False):
+    plugin_name: Required[CiscoPluginName]
     webhook_url: API_WebhookURL
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
 
 
-class API_MKEventData(APINotifyPluginParams, total=False):
+class API_MKEventData(TypedDict, total=False):
+    plugin_name: Required[MkeventdPluginName]
     syslog_facility_to_use: SysLogFacilityAPIValueType
     ip_address_of_remote_event_console: CheckboxStrAPIType
 
 
-class API_IlertData(APINotifyPluginParams, total=False):
+class API_IlertData(TypedDict, total=False):
+    plugin_name: Required[IlertPluginName]
     api_key: APIKey
     disable_ssl_cert_verification: CheckboxStateType
     notification_priority: Literal["HIGH", "LOW"]
@@ -2346,11 +2814,11 @@ class API_IlertData(APINotifyPluginParams, total=False):
     http_proxy: HttpProxyAPIValueType
 
 
-class API_JiraData(APINotifyPluginParams, total=False):
+class API_JiraData(TypedDict, total=False):
+    plugin_name: Required[JiraPluginName]
     jira_url: str
     disable_ssl_cert_verification: CheckboxStateType
-    username: str
-    password: str
+    auth: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
     project_id: str
     issue_type_id: str
     host_custom_id: str
@@ -2361,13 +2829,16 @@ class API_JiraData(APINotifyPluginParams, total=False):
     host_summary: CheckboxStrAPIType
     service_summary: CheckboxStrAPIType
     label: CheckboxStrAPIType
+    graphs_per_notification: CheckboxIntAPIType
     resolution_id: CheckboxStrAPIType
     optional_timeout: CheckboxStrAPIType
 
 
-class API_OpsGenieIssueData(APINotifyPluginParams, total=False):
+class API_OpsGenieIssueData(TypedDict, total=False):
+    plugin_name: Required[OpsGeniePluginName]
     api_key: APIKey
     domain: CheckboxStrAPIType
+    disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     owner: CheckboxStrAPIType
     source: CheckboxStrAPIType
@@ -2382,49 +2853,55 @@ class API_OpsGenieIssueData(APINotifyPluginParams, total=False):
     actions: CheckboxListOfStrAPIType
     tags: CheckboxListOfStrAPIType
     entity: CheckboxStrAPIType
+    extra_properties: CheckboxListOfExtraPropertiesAPIType
 
 
-class API_PagerDutyData(APINotifyPluginParams, total=False):
+class API_PagerDutyData(TypedDict, total=False):
+    plugin_name: Required[PagerdutyPluginName]
     integration_key: APIKey
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
 
 
-class API_PushOverData(APINotifyPluginParams, total=False):
+class API_PushOverData(TypedDict, total=False):
+    plugin_name: Required[PushoverPluginName]
     api_key: str
     user_group_key: str
-    url_prefix_for_links_to_checkmk: CheckboxStrAPIType
+    url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     http_proxy: HttpProxyAPIValueType
     priority: CheckboxPushoverPriorityAPIType
     sound: CheckboxPushoverSoundAPIType
 
 
-class API_ServiceNowData(APINotifyPluginParams, total=False):
+class API_ServiceNowData(TypedDict, total=False):
+    plugin_name: Required[ServiceNowPluginName]
     servicenow_url: str
     http_proxy: HttpProxyAPIValueType
-    username: str
-    user_password: API_Password
+    auth: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
     use_site_id_prefix: CheckboxUseSiteIDPrefixAPIType
     optional_timeout: CheckboxStrAPIType
-    management_type: MgmtTypeAPI
+    management_type: MgmtTypeIncidentAPI | MgmtTypeCaseAPI
 
 
-class API_SignL4Data(APINotifyPluginParams, total=False):
+class API_SignL4Data(TypedDict, total=False):
+    plugin_name: Required[Signl4PluginName]
     team_secret: APISecret
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_SlackData(APINotifyPluginParams, total=False):
+class API_SlackData(TypedDict, total=False):
+    plugin_name: Required[SlackPluginName]
     webhook_url: API_WebhookURL
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_SmsAPIData(APINotifyPluginParams, total=False):
+class API_SmsAPIData(TypedDict, total=False):
+    plugin_name: Required[SmsApiPluginName]
     modem_type: Literal["trb140"]
     modem_url: str
     disable_ssl_cert_verification: CheckboxStateType
@@ -2434,24 +2911,28 @@ class API_SmsAPIData(APINotifyPluginParams, total=False):
     timeout: str
 
 
-class API_SmsData(APINotifyPluginParams, total=False):
+class API_SmsData(TypedDict, total=False):
+    plugin_name: Required[SmsPluginName]
     params: list[str]
 
 
-class API_SpectrumData(APINotifyPluginParams, total=False):
+class API_SpectrumData(TypedDict, total=False):
+    plugin_name: Required[SpectrumPluginName]
     base_oid: str
     destination_ip: str
     snmp_community: str
 
 
-class API_VictorOpsData(APINotifyPluginParams, total=False):
+class API_VictorOpsData(TypedDict, total=False):
+    plugin_name: Required[SplunkPluginName]
     splunk_on_call_rest_endpoint: API_WebhookURL
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_MSTeamsData(APINotifyPluginParams, total=False):
+class API_MSTeamsData(TypedDict, total=False):
+    plugin_name: Required[MSTeamsPluginName]
     webhook_url: API_WebhookURL
     http_proxy: HttpProxyAPIValueType
     host_title: CheckboxStrAPIType

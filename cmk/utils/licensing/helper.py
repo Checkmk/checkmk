@@ -15,7 +15,7 @@ from cmk.utils.paths import log_dir
 
 
 def get_licensing_logger() -> logging.Logger:
-    return logging.getLogger("licensing")
+    return logging.getLogger("cmk.licensing")
 
 
 def init_logging() -> logging.Logger:

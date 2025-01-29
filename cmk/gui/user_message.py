@@ -6,7 +6,7 @@
 import time
 from collections.abc import Iterator
 
-import cmk.gui.message as message
+from cmk.gui import message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

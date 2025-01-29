@@ -4,17 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {BaseType, Transition} from "d3";
+import type {BaseType, Transition} from "d3";
 
-import {ForceOptions, SimulationForce} from "./force_utils";
-import {LineConfig} from "./layout_utils";
-import {
+import type {ForceOptions, SimulationForce} from "./force_utils";
+import type {LineConfig} from "./layout_utils";
+import type {
     d3SelectionG,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
 } from "./type_defs";
-import {AbstractClassRegistry, DefaultTransition, TypeWithName} from "./utils";
+import type {TypeWithName} from "./utils";
+import {AbstractClassRegistry, DefaultTransition} from "./utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;
@@ -62,7 +63,7 @@ export class AbstractLink implements TypeWithName {
         // Straight line style
         const line_selection = selection
             .selectAll<SVGLineElement, [string, number, number, boolean]>(
-                "line"
+                "line",
             )
             .data(this._line_config.style == "straight" ? lines : [], d => d[0])
             .join("line")
@@ -73,7 +74,7 @@ export class AbstractLink implements TypeWithName {
         // Elbow and round style
         const path_selection = selection
             .selectAll<SVGPathElement, [string, number, number, boolean]>(
-                "path"
+                "path",
             )
             .data(this._line_config.style != "straight" ? lines : [], d => d[0])
             .join("path")
@@ -138,7 +139,7 @@ export class AbstractLink implements TypeWithName {
             }
             case "round": {
                 tmp_selection.attr("d", () =>
-                    this.diagonal_line(x1, y1, x2, y2)
+                    this.diagonal_line(x1, y1, x2, y2),
                 );
                 break;
             }
@@ -151,7 +152,7 @@ export class AbstractLink implements TypeWithName {
 
     _add_fancy_line_transitition(
         source: NodevisNode,
-        target: NodevisNode
+        target: NodevisNode,
     ): void {
         const source_selection = this._world.viewport
             .get_nodes_layer()
@@ -176,8 +177,8 @@ export class AbstractLink implements TypeWithName {
                 transform_source.e,
                 transform_source.f,
                 transform_target.e,
-                transform_target.f
-            )
+                transform_target.f,
+            ),
         );
     }
 
@@ -185,7 +186,7 @@ export class AbstractLink implements TypeWithName {
         source_x: number,
         source_y: number,
         target_x: number,
-        target_y: number
+        target_y: number,
     ) {
         return (
             "M" + source_x + "," + source_y + "V" + target_y + "H" + target_x
@@ -197,7 +198,7 @@ export class AbstractLink implements TypeWithName {
         source_x: number,
         source_y: number,
         target_x: number,
-        target_y: number
+        target_y: number,
     ) {
         const s = {
             y: source_x,
@@ -225,7 +226,7 @@ export class AbstractLink implements TypeWithName {
             return selection;
 
         return DefaultTransition.add_transition(
-            selection.attr("in_transit", 100)
+            selection.attr("in_transit", 100),
         )
             .on("end", () => null)
             .attr("in_transit", 0)
@@ -237,14 +238,14 @@ export class AbstractLink implements TypeWithName {
 
     get_force(
         force_name: SimulationForce,
-        force_options: ForceOptions
+        force_options: ForceOptions,
     ): number {
         return this._get_link_type_specific_force(force_name, force_options);
     }
 
     _get_link_type_specific_force(
         force_name: SimulationForce,
-        force_options: ForceOptions
+        force_options: ForceOptions,
     ): number {
         return force_options[force_name];
     }

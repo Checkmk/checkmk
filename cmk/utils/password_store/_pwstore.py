@@ -6,15 +6,18 @@ import os
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 from uuid import uuid4
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
-from cmk.utils.crypto.secrets import PasswordStoreSecret
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.global_ident_type import GlobalIdent
+from cmk.utils.local_secrets import PasswordStoreSecret
+
+from cmk.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
@@ -34,6 +37,8 @@ class Password(TypedDict):
     # str -> Name of the contact group owning the password
     owned_by: str | None
     shared_with: list[str]
+    customer: NotRequired[str | None]
+    locked_by: NotRequired[GlobalIdent]
 
 
 def password_store_path() -> Path:
@@ -164,7 +169,7 @@ class PasswordStore:
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        _version, rest = (  # noqa: F841
+        _version, rest = (
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )

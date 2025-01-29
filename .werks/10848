@@ -8,11 +8,12 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i1
 
-An configuration directory for mk_oracle has been added.  mk_oracle
-usually reads mk_oracle.cfg. Now it also reads all files with *.cfg from
-$MK_CONFDIR/mk_oracle.d This feauture is needed for setups with bakery and
+A configuration directory for <code>mk_oracle</code> has been added. <code>mk_oracle</code>
+usually reads <code>mk_oracle.cfg</code>. Now, it also reads all files with <code>*.cfg</code> from
+<code>$MK_CONFDIR/mk_oracle.d</code>. This feauture is needed for setups with bakery and
 local changes on the database server. It is possible to configure through
-the bakery and add custom SQLs in configuration directory.
+the bakery and add custom SQLs in configuration directory <code>mk_oracle.d</code>.
 
-All variables in files from mk_oracle.d will oerwrite possible entries from
-mk_oracle.cfg.
+All variables defined in files from the <code>mk_oracle.d</code> directory will overwrite entries with the same name from
+<code>mk_oracle.cfg</code>. Further, all variables defined in <code>*.cfg</code> files within the <code>mk_oracle.d</code>, must be unique, otherwise the last
+read file wins.

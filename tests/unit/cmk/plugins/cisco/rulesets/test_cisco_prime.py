@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from unittest.mock import ANY
+
 import pytest
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
@@ -38,7 +40,7 @@ from cmk.plugins.cisco.rulesets.cisco_prime import _migrate, rule_spec_cisco_pri
                     "password": (
                         "cmk_postprocessed",
                         "explicit_password",
-                        ("throwaway-id", "test_password"),
+                        (ANY, "test_password"),
                     ),
                 }
             },

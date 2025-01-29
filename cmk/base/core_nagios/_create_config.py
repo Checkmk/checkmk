@@ -7,45 +7,52 @@
 import base64
 import itertools
 import socket
+import sys
 from collections import Counter
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from io import StringIO
-from typing import Any, cast, IO, Literal
+from typing import Any, cast, Final, IO, Literal
+
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.config_path
 import cmk.utils.paths
-from cmk.utils import config_warnings, password_store, store, tty
+from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.labels import CollectedHostLabels, Labels
+from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import write_notify_host_file
+from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.store.host_storage import ContactgroupName
-from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.obsolete_output as out
-import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
+from cmk.base import config, core_config
+from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
     CoreCommand,
     CoreCommandName,
     get_labels_from_attributes,
+    get_tags_with_groups_from_attributes,
 )
-from cmk.base.ip_lookup import IPStackConfig
 
-from ._precompile_host_checks import precompile_hostchecks
+from cmk.server_side_calls_backend import ActiveServiceData
 
+from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
+
+_ContactgroupName = str
 ObjectSpec = dict[str, Any]
+
+
+_NO_DISCOVERED_LABELS: Final[Labels] = {}  # just for better readablity
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -63,18 +70,26 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
+        plugins: AgentBasedPlugins,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         self._config_cache = config_cache
-        self._create_core_config(config_path, licensing_handler, passwords)
-        self._precompile_hostchecks(config_path)
+        self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
+        self._precompile_hostchecks(
+            config_path,
+            plugins,
+            precompile_mode=(
+                PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
+            ),
+        )
 
     def _create_core_config(
         self,
         config_path: VersionedConfigPath,
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
+        ip_address_of: config.IPLookup,
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -100,14 +115,30 @@ class NagiosCore(core_config.MonitoringCore):
             ),
             licensing_handler=licensing_handler,
             passwords=passwords,
+            ip_address_of=ip_address_of,
         )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
-    def _precompile_hostchecks(self, config_path: VersionedConfigPath) -> None:
-        out.output("Precompiling host checks...")
-        precompile_hostchecks(config_path, self._config_cache)
-        out.output(tty.ok + "\n")
+    def _precompile_hostchecks(
+        self,
+        config_path: VersionedConfigPath,
+        plugins: AgentBasedPlugins,
+        *,
+        precompile_mode: PrecompileMode,
+    ) -> None:
+        with suppress(IOError):
+            sys.stdout.write("Precompiling host checks...")
+            sys.stdout.flush()
+        precompile_hostchecks(
+            config_path,
+            self._config_cache,
+            plugins,
+            precompile_mode=precompile_mode,
+        )
+        with suppress(IOError):
+            sys.stdout.write(tty.ok + "\n")
+            sys.stdout.flush()
 
 
 #   .--Create config-------------------------------------------------------.
@@ -130,7 +161,7 @@ class NagiosConfig:
 
         self.hostgroups_to_define: set[HostgroupName] = set()
         self.servicegroups_to_define: set[ServicegroupName] = set()
-        self.contactgroups_to_define: set[ContactgroupName] = set()
+        self.contactgroups_to_define: set[_ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()
         self.active_checks_to_define: dict[str, str] = {}
         self.custom_commands_to_define: set[CoreCommandName] = set()
@@ -157,21 +188,22 @@ def create_config(
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
+    ip_address_of: config.IPLookup,
 ) -> None:
     cfg = NagiosConfig(outfile, hostnames)
 
     _output_conf_header(cfg)
 
     licensing_counter = Counter("services")
-    all_host_labels: dict[HostName, CollectedHostLabels] = {}
+    all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
-        all_host_labels[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, passwords, licensing_counter
+        all_notify_host_configs[hostname] = _create_nagios_config_host(
+            cfg, config_cache, hostname, passwords, licensing_counter, ip_address_of
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
 
-    write_notify_host_file(config_path, all_host_labels)
+    write_notify_host_file(config_path, all_notify_host_configs)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -201,21 +233,18 @@ def _create_nagios_config_host(
     hostname: HostName,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
-) -> CollectedHostLabels:
+    ip_address_of: config.IPLookup,
+) -> NotificationHostConfig:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
-
-    ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
-    )
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:
         host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
         cfg.write(format_nagios_object("host", host_spec))
 
-    return CollectedHostLabels(
+    return NotificationHostConfig(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
             cfg,
@@ -226,10 +255,11 @@ def _create_nagios_config_host(
             license_counter,
             ip_address_of,
         ),
+        tags=get_tags_with_groups_from_attributes(list(host_attrs.items())),
     )
 
 
-def create_nagios_host_spec(  # pylint: disable=too-many-branches
+def create_nagios_host_spec(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,
@@ -342,21 +372,20 @@ def create_nagios_host_spec(  # pylint: disable=too-many-branches
     return host_spec
 
 
-def transform_active_service_command(
-    cfg: NagiosConfig, service_data: server_side_calls.ActiveServiceData
-) -> str:
+def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServiceData) -> str:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
 
-    if service_data.command == "check-mk-custom":
+    if service_data.command_name == "check-mk-custom":
         cfg.custom_commands_to_define.add("check-mk-custom")
-        return f"{service_data.command}!{service_data.command_line}"
+        return f"{service_data.command_name}!{service_data.command}"
 
-    return service_data.command_display
+    escaped_args = " ".join(service_data.command[1:]).replace("\\", "\\\\").replace("!", "\\!")
+    return f"{service_data.command_name}!{escaped_args}"
 
 
-def create_nagios_servicedefs(  # pylint: disable=too-many-branches
+def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,
@@ -365,7 +394,12 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+    check_mk_labels = config_cache.ruleset_matcher.labels_of_service(
+        hostname, "Check_MK", _NO_DISCOVERED_LABELS
+    )
+    check_mk_attrs = core_config.get_service_attributes(
+        config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None
+    )
 
     #   _____
     #  |___ /
@@ -373,10 +407,12 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     #   ___) |
     #  |____/   3. Services
 
-    def do_omit_service(hostname: HostName, description: ServiceName) -> bool:
-        if config_cache.service_ignored(hostname, description):
+    def do_omit_service(
+        host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> bool:
+        if config_cache.service_ignored(host_name, service_name, service_labels):
             return True
-        if hostname != config_cache.effective_host(hostname, description):
+        if hostname != config_cache.effective_host(host_name, service_name, service_labels):
             return True
         return False
 
@@ -435,18 +471,24 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
+        plugin = get_check_plugin(service.check_plugin_name)
         passive_service_attributes = core_config.get_cmk_passive_service_attributes(
-            config_cache, hostname, service, check_mk_attrs
+            config_cache,
+            hostname,
+            service.description,
+            service.labels,
+            check_mk_attrs,
+            extra_icon=None
+            if plugin is None
+            else config_cache.make_extra_icon(plugin.check_ruleset_name, service.parameters),
         )
 
-        service_labels[service.description] = {
-            label.name: label.value for label in service.service_labels.values()
-        } | dict(get_labels_from_attributes(list(passive_service_attributes.items())))
+        service_labels[service.description] = service.labels
 
         service_spec.update(passive_service_attributes)
 
         service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, service.description)
+            _extra_service_conf_of(cfg, config_cache, hostname, service.description, service.labels)
         )
 
         cfg.write(format_nagios_object("service", service_spec))
@@ -463,35 +505,25 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "service_description": "Check_MK",
         }
         service_spec.update(check_mk_attrs)
-        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
+        service_spec.update(
+            _extra_service_conf_of(cfg, config_cache, hostname, "Check_MK", check_mk_labels)
+        )
         cfg.write(format_nagios_object("service", service_spec))
         license_counter["services"] += 1
 
     # legacy checks via active_checks
     active_services = []
-
-    translations = config.get_service_translations(config_cache.ruleset_matcher, hostname)
-    host_macros = ConfigCache.get_host_macros_from_attributes(hostname, host_attrs)
-    resource_macros = config.get_resource_macros()
-    macros = {**host_macros, **resource_macros}
-    active_check_config = server_side_calls.ActiveCheck(
-        server_side_calls.load_active_checks()[1],
-        config.active_check_info,
+    for service_data in config_cache.active_check_services(
         hostname,
-        config.get_ssc_host_config(hostname, config_cache, macros, ip_address_of),
         host_attrs,
-        config.http_proxies,
-        lambda x: config.get_final_service_description(x, translations),
-        config.use_new_descriptions_for,
+        ip_address_of,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
-    )
-
-    active_checks = config_cache.active_checks(hostname)
-    actchecks = [name for name, params in active_checks if params]
-    for service_data in active_check_config.get_active_service_data(active_checks):
-        if do_omit_service(hostname, service_data.description):
+    ):
+        active_service_labels = config_cache.ruleset_matcher.labels_of_service(
+            hostname, service_data.description, _NO_DISCOVERED_LABELS
+        )
+        if do_omit_service(hostname, service_data.description, active_service_labels):
             continue
 
         if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
@@ -517,16 +549,28 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "active_checks_enabled": str(1),
         }
         service_spec.update(
-            core_config.get_service_attributes(hostname, service_data.description, config_cache)
+            core_config.get_service_attributes(
+                config_cache,
+                hostname,
+                service_data.description,
+                active_service_labels,
+                extra_icon=None,
+            )
         )
         service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
+            _extra_service_conf_of(
+                cfg, config_cache, hostname, service_data.description, active_service_labels
+            )
         )
 
-        cfg.active_checks_to_define[service_data.plugin_name] = service_data.detected_executable
+        cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
-    if actchecks:
+    active_checks_rules_exist = any(params for name, params in config_cache.active_checks(hostname))
+    # Note: ^- This is not the same as `active_checks_present = bool(active_services)`
+    # Services can be omitted, or rules can result in zero services (theoretically).
+    # I am not sure if this is intentional.
+    if active_checks_rules_exist:
         cfg.write("\n\n# Active checks\n")
 
         for service_spec in active_services:
@@ -546,7 +590,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:
             # entries are dicts with the following keys:
-            # "service_description"        Service description to use
+            # "service_description"        Service name to use
             # "command_line"  (optional)   Unix command line for executing the check
             #                              If this is missing, we create a passive check
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
@@ -605,6 +649,10 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
             command = f"{command_name}!{command_line}"
 
+            labels = config_cache.ruleset_matcher.labels_of_service(
+                hostname, description, _NO_DISCOVERED_LABELS
+            )
+
             service_spec = {
                 "use": "check_mk_perf,check_mk_default",
                 "host_name": hostname,
@@ -614,9 +662,13 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             }
             service_spec.update(freshness)
             service_spec.update(
-                core_config.get_service_attributes(hostname, description, config_cache)
+                core_config.get_service_attributes(
+                    config_cache, hostname, description, labels, extra_icon=None
+                )
             )
-            service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
+            service_spec.update(
+                _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
+            )
             cfg.write(format_nagios_object("service", service_spec))
             license_counter["services"] += 1
 
@@ -627,17 +679,23 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
+        labels = config_cache.ruleset_matcher.labels_of_service(
+            hostname, service_discovery_name, _NO_DISCOVERED_LABELS
+        )
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
             "service_description": service_discovery_name,
         }
+
         service_spec.update(
-            core_config.get_service_attributes(hostname, service_discovery_name, config_cache)
+            core_config.get_service_attributes(
+                config_cache, hostname, service_discovery_name, labels, extra_icon=None
+            )
         )
 
         service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name)
+            _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name, labels)
         )
 
         service_spec.update(
@@ -665,14 +723,15 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not actchecks and not custchecks:
+    if not have_at_least_one_service and not active_checks_rules_exist and not custchecks:
         _add_ping_service(
             cfg,
             config_cache,
             hostname,
+            "PING",
+            config_cache.ruleset_matcher.labels_of_service(hostname, "PING", _NO_DISCOVERED_LABELS),
             host_attrs["address"],
             config_cache.default_address_family(hostname),
-            "PING",
             host_attrs.get("_NODEIPS"),
             license_counter,
         )
@@ -684,24 +743,29 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
                     cfg,
                     config_cache,
                     hostname,
-                    host_attrs["_ADDRESS_4"],
-                    socket.AF_INET,
                     "PING IPv4",
+                    config_cache.ruleset_matcher.labels_of_service(
+                        hostname, "PING IPv4", _NO_DISCOVERED_LABELS
+                    ),
+                    host_attrs["address"],
+                    socket.AF_INET,
                     host_attrs.get("_NODEIPS_4"),
                     license_counter,
                 )
-        else:
-            if "PING IPv6" not in used_descriptions:
-                _add_ping_service(
-                    cfg,
-                    config_cache,
-                    hostname,
-                    host_attrs["_ADDRESS_6"],
-                    socket.AF_INET6,
-                    "PING IPv6",
-                    host_attrs.get("_NODEIPS_6"),
-                    license_counter,
-                )
+        elif "PING IPv6" not in used_descriptions:
+            _add_ping_service(
+                cfg,
+                config_cache,
+                hostname,
+                "PING IPv6",
+                config_cache.ruleset_matcher.labels_of_service(
+                    hostname, "PING IPv6", _NO_DISCOVERED_LABELS
+                ),
+                host_attrs["address"],
+                socket.AF_INET6,
+                host_attrs.get("_NODEIPS_6"),
+                license_counter,
+            )
 
     return service_labels
 
@@ -710,9 +774,10 @@ def _add_ping_service(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
     ipaddress: HostAddress,
     family: socket.AddressFamily,
-    descr: ServiceName,
     node_ips: str | None,
     licensing_counter: Counter,
 ) -> None:
@@ -728,11 +793,17 @@ def _add_ping_service(
     service_spec = {
         "use": config.pingonly_template,
         "host_name": host_name,
-        "service_description": descr,
+        "service_description": service_name,
         "check_command": f"{ping_command}!{arguments}",
     }
-    service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
-    service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
+    service_spec.update(
+        core_config.get_service_attributes(
+            config_cache, host_name, service_name, service_labels, extra_icon=None
+        )
+    )
+    service_spec.update(
+        _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
+    )
     cfg.write(format_nagios_object("service", service_spec))
     licensing_counter["services"] += 1
 
@@ -846,17 +917,12 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
     # active_checks
     for acttype, detected_executable in cfg.active_checks_to_define.items():
-        command_line = (
-            core_config.autodetect_plugin(act_info["command_line"])
-            if (act_info := config.active_check_info.get(acttype)) is not None
-            else f"{detected_executable} $ARG1$"
-        )
         cfg.write(
             format_nagios_object(
                 "command",
                 {
                     "command_name": f"check_mk_active-{acttype}",
-                    "command_line": command_line,
+                    "command_line": f"{detected_executable} $ARG1$",
                 },
             )
         )
@@ -915,7 +981,7 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
                         timeperiod_spec[key] = times
 
             if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(cast(list[TimeperiodName], tp["exclude"]))
+                timeperiod_spec["exclude"] = ",".join(tp["exclude"])
 
             cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
 
@@ -972,8 +1038,9 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
                     {
                         "%s_notification_options" % what: ",".join(no),
                         "%s_notification_period" % what: contact.get("notification_period", "24X7"),
-                        "%s_notification_commands"
-                        % what: contact.get("%s_notification_commands" % what, "check-mk-notify"),
+                        "%s_notification_commands" % what: contact.get(
+                            "%s_notification_commands" % what, "check-mk-notify"
+                        ),
                     }
                 )
 
@@ -1011,7 +1078,11 @@ def _quote_nagios_string(s: str) -> str:
 
 
 def _extra_service_conf_of(
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, description: ServiceName
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
 ) -> ObjectSpec:
     """Collect all extra configuration data for a service"""
     service_spec: ObjectSpec = {}
@@ -1020,12 +1091,12 @@ def _extra_service_conf_of(
     # Otherwise inherit the contact groups from the host.
     # "check-mk-notify" is always returned for rulebased notifications and
     # the Nagios core and not defined by the user.
-    sercgr = config_cache.contactgroups_of_service(hostname, description)
+    sercgr = config_cache.contactgroups_of_service(host_name, service_name, service_labels)
     if sercgr != ["check-mk-notify"]:
         service_spec["contact_groups"] = ",".join(sercgr)
         cfg.contactgroups_to_define.update(sercgr)
 
-    sergr = config_cache.servicegroups_of_service(hostname, description)
+    sergr = config_cache.servicegroups_of_service(host_name, service_name, service_labels)
     if sergr:
         service_spec["service_groups"] = ",".join(sergr)
         if config.define_servicegroups:

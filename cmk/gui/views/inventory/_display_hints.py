@@ -5,14 +5,13 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from cmk.utils.structured_data import SDKey, SDPath
 
-import cmk.gui.inventory as inventory
+from cmk.gui import inventory
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
     FilterInvBool,
@@ -33,22 +32,18 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 @dataclass(frozen=True)
 class _RelatedLegacyHints:
-    for_node: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    for_table: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
+    for_node: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
+    for_table: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
     by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
 def _get_related_legacy_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
-        inventory_path = inventory.InventoryPath.parse(raw_path)
+        inventory_path = inventory.parse_inventory_path(raw_path)
         related_legacy_hints = related_legacy_hints_by_path.setdefault(
             inventory_path.path,
             _RelatedLegacyHints(),
@@ -224,8 +219,8 @@ class _NodeDisplayHint:
     title: str
     short_title: str
     icon: str
-    attributes: OrderedDict[SDKey, AttributeDisplayHint]
-    columns: OrderedDict[SDKey, ColumnDisplayHint]
+    attributes: OrderedAttributeDisplayHints
+    columns: OrderedColumnDisplayHints
     table_view_name: str
     table_is_show_more: bool
 
@@ -244,18 +239,14 @@ def _parse_node_hint(
         title=title,
         short_title=title,
         icon=legacy_hint.get("icon", ""),
-        attributes=OrderedDict(
-            {
-                SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
-                for key in _complete_key_order(attributes_key_order, set(attributes))
-            }
-        ),
-        columns=OrderedDict(
-            {
-                key: _parse_column_hint(title, key, columns.get(key, {}))
-                for key in _complete_key_order(table_key_order, set(columns))
-            }
-        ),
+        attributes={
+            SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
+            for key in _complete_key_order(attributes_key_order, set(attributes))
+        },
+        columns={
+            SDKey(key): _parse_column_hint(title, key, columns.get(key, {}))
+            for key in _complete_key_order(table_key_order, set(columns))
+        },
         table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view")),
         table_is_show_more=legacy_hint.get("is_show_more", True),
     )
@@ -289,7 +280,7 @@ _ALLOWED_KEYS: Sequence[
 
 
 def _parse_legacy_display_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Iterator[_NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]
@@ -334,6 +325,9 @@ class AttributeDisplayHint:
         return _("Inventory attribute: %s") % self.long_title
 
 
+OrderedAttributeDisplayHints: TypeAlias = Mapping[SDKey, AttributeDisplayHint]
+
+
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     title: str
@@ -357,6 +351,9 @@ class ColumnDisplayHint:
         return _("Inventory column: %s") % self.long_title
 
 
+OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     path: SDPath
@@ -364,8 +361,8 @@ class NodeDisplayHint:
     short_title: str
     long_title: str
     icon: str
-    attributes: OrderedDict[SDKey, AttributeDisplayHint]
-    columns: OrderedDict[SDKey, ColumnDisplayHint]
+    attributes: OrderedAttributeDisplayHints
+    columns: OrderedColumnDisplayHints
     table_view_name: str
     table_is_show_more: bool
 
@@ -454,8 +451,8 @@ class DisplayHints:
                 title,
             ),
             "",
-            OrderedDict(),
-            OrderedDict(),
+            {},
+            {},
             "",
             True,
         )
@@ -465,12 +462,12 @@ inv_display_hints = DisplayHints(
     {
         (): NodeDisplayHint(
             (),
-            str(_l("Inventory Tree")),
-            str(_l("Inventory Tree")),
-            str(_l("Inventory Tree")),
+            str(_l("Inventory tree")),
+            str(_l("Inventory tree")),
+            str(_l("Inventory tree")),
             "",
-            OrderedDict(),
-            OrderedDict(),
+            {},
+            {},
             "",
             True,
         )

@@ -671,23 +671,23 @@ class Eventconsolehistory(Table):
     host_last_time_down = Column(
         'host_last_time_down',
         col_type='time',
-        description='The last time the host was DOWN (Unix timestamp)',
+        description='Last time the host was DOWN (Unix timestamp)',
     )
-    """The last time the host was DOWN (Unix timestamp)"""
+    """Last time the host was DOWN (Unix timestamp)"""
 
     host_last_time_unreachable = Column(
         'host_last_time_unreachable',
         col_type='time',
-        description='The last time the host was UNREACHABLE (Unix timestamp)',
+        description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
-    """The last time the host was UNREACHABLE (Unix timestamp)"""
+    """Last time the host was UNREACHABLE (Unix timestamp)"""
 
     host_last_time_up = Column(
         'host_last_time_up',
         col_type='time',
-        description='The last time the host was UP (Unix timestamp)',
+        description='Last time the host was UP (Unix timestamp)',
     )
-    """The last time the host was UP (Unix timestamp)"""
+    """Last time the host was UP (Unix timestamp)"""
 
     host_latency = Column(
         'host_latency',
@@ -727,23 +727,23 @@ class Eventconsolehistory(Table):
     host_mk_inventory = Column(
         'host_mk_inventory',
         col_type='blob',
-        description='The file content of the Check_MK HW/SW-Inventory',
+        description='The file content of the Check_MK HW/SW Inventory',
     )
-    """The file content of the Check_MK HW/SW-Inventory"""
+    """The file content of the Check_MK HW/SW Inventory"""
 
     host_mk_inventory_gz = Column(
         'host_mk_inventory_gz',
         col_type='blob',
-        description='The gzipped file content of the Check_MK HW/SW-Inventory',
+        description='The gzipped file content of the Check_MK HW/SW Inventory',
     )
-    """The gzipped file content of the Check_MK HW/SW-Inventory"""
+    """The gzipped file content of the Check_MK HW/SW Inventory"""
 
     host_mk_inventory_last = Column(
         'host_mk_inventory_last',
         col_type='time',
-        description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
+        description='The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present',
     )
-    """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""
+    """The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present"""
 
     host_mk_logwatch_files = Column(
         'host_mk_logwatch_files',
@@ -1091,9 +1091,9 @@ class Eventconsolehistory(Table):
     host_structured_status = Column(
         'host_structured_status',
         col_type='blob',
-        description='The file content of the structured status of the Check_MK HW/SW-Inventory',
+        description='The file content of the structured status of the Check_MK HW/SW Inventory',
     )
-    """The file content of the structured status of the Check_MK HW/SW-Inventory"""
+    """The file content of the structured status of the Check_MK HW/SW Inventory"""
 
     host_tag_names = Column(
         'host_tag_names',

@@ -9,9 +9,7 @@ from typing import ContextManager
 
 from livestatus import SiteId
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
+from cmk.gui import site_config, sites, user_sites
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -199,7 +197,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         command = commands.get((column, state))
         if not command:
-            html.write_text(_("Command %s/%d not found") % (column, state))
+            html.write_text_permissive(_("Command %s/%d not found") % (column, state))
             return
 
         sites.live().command("[%d] %s" % (int(time.time()), command), site)

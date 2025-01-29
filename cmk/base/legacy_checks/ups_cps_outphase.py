@@ -7,12 +7,13 @@
 from collections.abc import Iterable, Mapping
 from typing import Literal, TypedDict
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
+
+check_info = {}
 
 
 class Phase(TypedDict):
@@ -45,6 +46,7 @@ def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
 
 
 check_info["ups_cps_outphase"] = LegacyCheckDefinition(
+    name="ups_cps_outphase",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.4.2",

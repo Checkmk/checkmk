@@ -3,27 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
+from cmk.gui import pagetypes, visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
+from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -33,12 +30,11 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
-from cmk.gui.views.sorter import sorter_registry, SorterEntry
+from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware, view_title
 
 
@@ -84,14 +80,32 @@ class View:
     def row_cells(self) -> list[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells: list[Cell] = []
+        registered_sorters = all_sorters(active_config)
+        registered_painters = all_painters(active_config)
         for e in self.spec["painters"]:
-            if not painter_exists(e):
+            if e.name not in registered_painters:
                 continue
 
             if (col_type := e.column_type) in ["join_column", "join_inv_column"]:
-                cells.append(JoinCell(e, self._compute_sort_url_parameter(e)))
+                cells.append(
+                    JoinCell(
+                        e,
+                        self._compute_sort_url_parameter(
+                            e, registered_sorters, registered_painters
+                        ),
+                        registered_painters,
+                    )
+                )
             elif col_type == "column":
-                cells.append(Cell(e, self._compute_sort_url_parameter(e)))
+                cells.append(
+                    Cell(
+                        e,
+                        self._compute_sort_url_parameter(
+                            e, registered_sorters, registered_painters
+                        ),
+                        registered_painters,
+                    )
+                )
             else:
                 raise NotImplementedError()
 
@@ -100,10 +114,16 @@ class View:
     @property
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
+        registered_sorters = all_sorters(active_config)
+        registered_painters = all_painters(active_config)
         return [
-            Cell(e, self._compute_sort_url_parameter(e))
+            Cell(
+                e,
+                self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
+                registered_painters,
+            )
             for e in self.spec["group_painters"]
-            if painter_exists(e)
+            if e.name in registered_painters
         ]
 
     @property
@@ -114,11 +134,17 @@ class View:
     @property
     def sorters(self) -> list[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
+        registered_sorters = all_sorters(active_config)
         return self._get_sorter_entries(
-            self.user_sorters if self.user_sorters else self.spec["sorters"]
+            self.user_sorters if self.user_sorters else self.spec["sorters"], registered_sorters
         )
 
-    def _compute_sort_url_parameter(self, painter: ColumnSpec) -> str | None:
+    def _compute_sort_url_parameter(
+        self,
+        painter: ColumnSpec,
+        registered_sorters: Mapping[str, Sorter],
+        registered_painters: Mapping[str, type[Painter]],
+    ) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None
 
@@ -129,31 +155,28 @@ class View:
             self.spec["group_painters"],
             self.spec["sorters"],
             self._user_sorters or [],
+            registered_sorters,
+            registered_painters,
         )
 
-    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:
+    def _get_sorter_entries(
+        self, sorter_list: Iterable[SorterSpec], registered_sorters: Mapping[str, Sorter]
+    ) -> list[SorterEntry]:
         sorters: list[SorterEntry] = []
         for entry in sorter_list:
-            sorter = entry.sorter
-            sorter_cls = sorter_registry.get(
-                sorter[0] if isinstance(sorter, tuple) else sorter, None
+            sorter_spec = entry.sorter
+            sorter = registered_sorters.get(
+                sorter_spec[0] if isinstance(sorter_spec, tuple) else sorter_spec, None
             )
-            if sorter_cls is None:
+            if sorter is None:
                 continue  # Skip removed sorters
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(
-                        user=user,
-                        config=active_config,
-                        request=request,
-                        painter_options=PainterOptions.get_instance(),
-                        theme=theme,
-                        url_renderer=RenderLink(request, response, display_options),
-                    ),
+                    sorter=sorter,
                     negate=entry.negate,
                     join_key=entry.join_key,
-                    parameters=sorter[1] if isinstance(sorter, tuple) else None,
+                    parameters=sorter_spec[1] if isinstance(sorter_spec, tuple) else None,
                 )
             )
         return sorters

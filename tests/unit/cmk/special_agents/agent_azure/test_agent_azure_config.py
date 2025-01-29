@@ -48,7 +48,6 @@ ARGS = Args(
     debug=False,
     verbose=0,
     vcrtrace=False,
-    sequential=False,
     dump_config=False,
     timeout=10,
     piggyback_vms="grouphost",
@@ -63,6 +62,7 @@ ARGS = Args(
     explicit_config=["group=test-group", "resources=Resource1,Resource2"],
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
+    connection_test=False,
 )
 
 
@@ -76,7 +76,6 @@ ARGS = Args(
                 "argparse: debug = False",
                 "argparse: verbose = 0",
                 "argparse: vcrtrace = False",
-                "argparse: sequential = False",
                 "argparse: dump_config = False",
                 "argparse: timeout = 10",
                 "argparse: piggyback_vms = 'grouphost'",
@@ -91,12 +90,16 @@ ARGS = Args(
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: authority = 'global'",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
+                "argparse: connection_test = False",
             ],
         ),
     ],
 )
 def test_parse_arguments(
-    argv: Sequence[str], args: Args, expected_log: Sequence[str], caplog: pytest.LogCaptureFixture
+    argv: Sequence[str],
+    args: Args,
+    expected_log: Sequence[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args

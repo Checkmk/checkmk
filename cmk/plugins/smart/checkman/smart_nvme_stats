@@ -1,0 +1,30 @@
+title: HDD Health Statistics Using S.M.A.R.T Via NMVe
+agents: linux
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors health statistics of hard disk drives using the
+ information reported by S.M.A.R.T. This check requires that the monitored
+ device supports NMVe.
+
+ During discovery the current value of the following counters is stored as a
+ service parameter.
+
+ - Media and data integrity errors
+
+ - Critical warning
+
+ If any of these counters increase, the check goes {CRIT}.
+ It will become {OK} again if the service is rediscovered.
+ Additionally, the check compares the available spare to the corresponding
+ tresholds reported via smartctl.
+
+ The check requires enabling agent plugin {smart_posix}.
+ Moreover, the monitored device needs support the NMVe protocol.
+
+item:
+ Block device name, e.g., /dev/nvme0
+
+discovery:
+ One service is created if the device uses the NMVe protocol.

@@ -32,6 +32,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from .._group_selection import sorted_host_group_choices
+from ._rule_conditions import DictHostTagCondition
 
 
 def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:
@@ -76,13 +77,22 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, title: str, help: str) -> None:  # pylint: disable=redefined-builtin
+    def __init__(self, title: str, help: str) -> None:
         super().__init__(title=title, help=help, choices=folder_tree().folder_choices_fulltitle)
 
 
 def common_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
+        (
+            "match_hosttags",
+            DictHostTagCondition(
+                title=_("Match host tags"),
+                help_txt=_(
+                    "Rule only applies to hosts that meet all of the host tag "
+                    "conditions listed here",
+                ),
+            ),
+        ),
         (
             "match_hostlabels",
             Labels(
@@ -199,7 +209,9 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             varprefix += "_"
 
         if not active_config.tags.get_tag_ids():
-            html.write_text(_('You have not configured any <a href="wato.py?mode=tags">tags</a>.'))
+            html.write_text_permissive(
+                _('You have not configured any <a href="wato.py?mode=tags">tags</a>.')
+            )
             return
 
         tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
@@ -230,7 +242,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
                     default_tag, deflt = self._current_tag_setting(choices, tag_specs)
                     self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
                     if tag_group.is_checkbox_tag_group:
-                        html.write_text(" " + _("set"))
+                        html.write_text_permissive(" " + _("set"))
                     else:
                         html.dropdown(
                             varprefix + "tagvalue_" + tag_group.id,
@@ -249,7 +261,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
                         [(aux_tag.id, _u(aux_tag.title))], tag_specs
                     )
                     self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
-                    html.write_text(" " + _("set"))
+                    html.write_text_permissive(" " + _("set"))
                     html.close_div()
                     html.close_td()
                     html.close_tr()

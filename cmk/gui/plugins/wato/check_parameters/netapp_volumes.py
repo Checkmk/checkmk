@@ -16,7 +16,7 @@ from cmk.gui.valuespec import ListChoice, TextInput
 def _parameter_valuespec_netapp_volumes():
     return vs_filesystem(
         elements=[
-            FilesystemElements.levels_unbound,
+            FilesystemElements.levels,
             FilesystemElements.magic_factor,
             FilesystemElements.inodes,
             FilesystemElements.size_trend,

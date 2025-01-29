@@ -6,4 +6,4 @@
 set -e
 
 REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
-exec "$REPO_PATH/scripts/run-pipenv" run autoflake --remove-all-unused-imports -i "$@"
+exec "$REPO_PATH/scripts/run-uvenv" autoflake --remove-all-unused-imports -i "$@"

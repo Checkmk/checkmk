@@ -10,10 +10,10 @@ description:
  comment section of the two Veeam agent plug-in scripts on how to install
  the scripts.
 
- This check is {OK} if the result of the backup is {Success} or the state
- of the backup is {Working}..
- It is {CRIT} if the result of the backup is {Failed}. It is
- {UNKNOWN} in all other cases.
+ This check is {OK} if the result of the backup is Success. It is {WARN} if the
+ result of the backup is Warning. It is {CRIT} if the result of the backup is
+ Failed. It is {OK} or {UNKNOWN} if the result of the backup is None. This then
+ depends on the state of the last backup.
 
 discovery:
  One service is created for each backup job created by the Veeam tool.

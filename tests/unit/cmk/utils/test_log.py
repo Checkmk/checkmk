@@ -3,130 +3,98 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import contextlib
-import datetime
 import logging
 import queue
 from collections.abc import Iterator
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
-import time_machine
 from pytest import CaptureFixture
 
-import cmk.utils.log as log
-import cmk.utils.log.security_event as se
+from cmk.utils import log
+from cmk.utils.log.security_event import log_security_event, SecurityEvent
+
+
+@contextlib.contextmanager
+def set_log_level(logger: logging.Logger, level: int | str) -> Iterator[None]:
+    old_level = logger.level
+    logger.setLevel(level)
+    yield
+    logger.setLevel(old_level)
 
 
 def test_get_logger() -> None:
-    l = logging.getLogger("cmk.asd")
-    assert l.parent == log.logger
+    assert logging.getLogger("cmk.asd").parent == log.logger
 
 
 def test_setup_console_logging(capsys: CaptureFixture[str]) -> None:
-    out, err = capsys.readouterr()
-    log.clear_console_logging()
-
-    assert out == ""
-    assert err == ""
-
     logging.getLogger("cmk.test").info("test123")
+    assert ("", "") == capsys.readouterr()
 
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-    log.setup_console_logging()
-    l = logging.getLogger("cmk.test")
-    l.info("test123")
-
-    # Cleanup handler registered with log.setup_console_logging()
-    log.logger.handlers.pop()
-
-    out, err = capsys.readouterr()
-    assert out == "test123\n"
-    assert err == ""
-
-
-def test_open_log(tmp_path: Path) -> None:
-    log_file = tmp_path / "test.log"
-    log.open_log(log_file)
-
-    with time_machine.travel(
-        datetime.datetime(2018, 4, 15, 18, 50, tzinfo=ZoneInfo("CET")), tick=False
-    ):
-        log.logger.warning("abc")
-        log.logger.warning("äbc")
-
-    with log_file.open("rb") as f:
-        assert f.read() == (
-            b"2018-04-15 18:50:00,000 [30] [cmk] abc\n"
-            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n"
-        )
+    old_handlers = list(log.logger.handlers)
+    try:
+        log.setup_console_logging()
+        logging.getLogger("cmk.test").warning("test123")
+        assert ("test123\n", "") == capsys.readouterr()
+    finally:
+        log.logger.handlers = old_handlers
 
 
 def test_set_verbosity() -> None:
-    root = logging.getLogger("cmk")
-    root.setLevel(logging.INFO)
+    with set_log_level(logging.getLogger("cmk"), logging.INFO):
+        l = logging.getLogger("cmk.test_logger")
 
-    l = logging.getLogger("cmk.test_logger")
-    assert l.getEffectiveLevel() == logging.INFO
-    assert l.isEnabledFor(log.VERBOSE) is False
-    assert l.isEnabledFor(logging.DEBUG) is False
+        assert l.getEffectiveLevel() == logging.INFO
+        assert l.isEnabledFor(log.VERBOSE) is False
+        assert l.isEnabledFor(logging.DEBUG) is False
 
-    log.logger.setLevel(log.verbosity_to_log_level(0))
-    assert l.getEffectiveLevel() == logging.INFO
-    assert l.isEnabledFor(log.VERBOSE) is False
-    assert l.isEnabledFor(logging.DEBUG) is False
+        with set_log_level(log.logger, log.verbosity_to_log_level(0)):
+            assert l.getEffectiveLevel() == logging.INFO
+            assert l.isEnabledFor(log.VERBOSE) is False
+            assert l.isEnabledFor(logging.DEBUG) is False
 
-    log.logger.setLevel(log.verbosity_to_log_level(1))
-    assert l.getEffectiveLevel() == log.VERBOSE
-    assert l.isEnabledFor(log.VERBOSE) is True
-    assert l.isEnabledFor(logging.DEBUG) is False
+        with set_log_level(log.logger, log.verbosity_to_log_level(1)):
+            assert l.getEffectiveLevel() == log.VERBOSE
+            assert l.isEnabledFor(log.VERBOSE) is True
+            assert l.isEnabledFor(logging.DEBUG) is False
 
-    log.logger.setLevel(log.verbosity_to_log_level(2))
-    assert l.getEffectiveLevel() == logging.DEBUG
-    assert l.isEnabledFor(log.VERBOSE) is True
-    assert l.isEnabledFor(logging.DEBUG) is True
+        with set_log_level(log.logger, log.verbosity_to_log_level(2)):
+            assert l.getEffectiveLevel() == logging.DEBUG
+            assert l.isEnabledFor(log.VERBOSE) is True
+            assert l.isEnabledFor(logging.DEBUG) is True
 
-    # Use debug level (highest supported)
-    log.logger.setLevel(log.verbosity_to_log_level(3))
-    assert l.getEffectiveLevel() == logging.DEBUG
-    assert l.isEnabledFor(log.VERBOSE) is True
-    assert l.isEnabledFor(logging.DEBUG) is True
-
-    # Reset verbosity for next test run.
-    log.logger.setLevel(log.verbosity_to_log_level(0))
+        with set_log_level(log.logger, log.verbosity_to_log_level(3)):
+            assert l.getEffectiveLevel() == logging.DEBUG
+            assert l.isEnabledFor(log.VERBOSE) is True
+            assert l.isEnabledFor(logging.DEBUG) is True
 
 
 @contextlib.contextmanager
 def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRecord]]:
-    old_level = logger.level
-
-    logger.setLevel(logging.INFO)
     q: queue.Queue[logging.LogRecord] = queue.Queue()
     queue_handler = logging.handlers.QueueHandler(q)
     logger.addHandler(queue_handler)
-    yield q
-
-    logger.setLevel(old_level)
-    logger.removeHandler(queue_handler)
+    try:
+        yield q
+    finally:
+        logger.removeHandler(queue_handler)
 
 
 def test_security_event(tmp_path: Path) -> None:
-    event = se.SecurityEvent(
+    event = SecurityEvent(
         "test security event",
         {"a": ["serialize", "me"], "b": {"b.1": 42.23}},
-        se.SecurityEvent.Domain.auth,
+        SecurityEvent.Domain.auth,
     )
 
-    with queue_log_sink(se._root_logger()) as log_queue:
-        se.log_security_event(event)
-        entry = log_queue.get_nowait()
-        assert entry.name == "cmk_security.auth"
-        assert (
-            entry.getMessage() == '{"summary": "test security event", '
-            '"details": {"a": ["serialize", "me"], "b": {"b.1": 42.23}}}'
-        )
+    logger = logging.getLogger("cmk_security")
+    with set_log_level(logger, logging.INFO):
+        with queue_log_sink(logger) as log_queue:
+            log_security_event(event)
+            entry = log_queue.get_nowait()
+            assert entry.name == "cmk_security.auth"
+            assert (
+                entry.getMessage() == '{"summary": "test security event", '
+                '"details": {"a": ["serialize", "me"], "b": {"b.1": 42.23}}}'
+            )

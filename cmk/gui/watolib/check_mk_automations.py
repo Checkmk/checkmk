@@ -9,15 +9,18 @@ from typing import Any, NamedTuple, TypeVar
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.diagnostics import DiagnosticsCLParameters
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.notify_types import EventContext
 from cmk.utils.servicename import ServiceName
 
+from cmk.events.event_context import EventContext
+
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -51,6 +54,7 @@ def _automation_serialized(
     timeout: int | None = None,
     sync: bool = True,
     non_blocking_http: bool = False,
+    force_cli_interface: bool = False,
 ) -> AutomationResponse:
     if args is None:
         args = []
@@ -62,6 +66,7 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            force_cli_interface=force_cli_interface,
         )
         return AutomationResponse(
             command=command,
@@ -170,6 +175,23 @@ def discovery(
     )
 
 
+def special_agent_discovery_preview(
+    site_id: SiteId,
+    special_agent_preview_input: results.DiagSpecialAgentInput,
+) -> results.SpecialAgentDiscoveryPreviewResult:
+    return _deserialize(
+        _automation_serialized(
+            "special-agent-discovery-preview",
+            siteid=site_id,
+            args=None,
+            stdin_data=special_agent_preview_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+        ),
+        results.SpecialAgentDiscoveryPreviewResult,
+    )
+
+
 def local_discovery_preview(
     host_name: HostName,
     *,
@@ -210,6 +232,21 @@ def set_autochecks(
             indata=checks,
         ),
         results.SetAutochecksResult,
+    )
+
+
+def set_autochecks_v2(
+    site_id: SiteId,
+    checks: SetAutochecksInput,
+) -> results.SetAutochecksV2Result:
+    return _deserialize(
+        _automation_serialized(
+            "set-autochecks-v2",
+            siteid=site_id,
+            args=None,
+            stdin_data=checks.serialize(),
+        ),
+        results.SetAutochecksV2Result,
     )
 
 
@@ -302,14 +339,14 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: list[HostName] | None = None) -> results.RestartResult:
+def restart(hosts_to_update: Sequence[HostName] | None = None) -> results.RestartResult:
     return _deserialize(
         _automation_serialized("restart", args=hosts_to_update),
         results.RestartResult,
     )
 
 
-def reload(hosts_to_update: list[HostName] | None = None) -> results.ReloadResult:
+def reload(hosts_to_update: Sequence[HostName] | None = None) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized("reload", args=hosts_to_update),
         results.ReloadResult,
@@ -358,6 +395,23 @@ def scan_parents(
             args=[*params, host_name],
         ),
         results.ScanParentsResult,
+    )
+
+
+def diag_special_agent(
+    site_id: SiteId,
+    diag_special_agent_input: results.DiagSpecialAgentInput,
+) -> results.DiagSpecialAgentResult:
+    return _deserialize(
+        _automation_serialized(
+            "diag-special-agent",
+            siteid=site_id,
+            args=None,
+            stdin_data=diag_special_agent_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+        ),
+        results.DiagSpecialAgentResult,
     )
 
 
@@ -439,11 +493,11 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
     )
 
 
-def notification_test(raw_context: EventContext, dispatch: bool) -> results.NotificationTestResult:
+def notification_test(raw_context: EventContext, dispatch: str) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",
-            args=[json.dumps(raw_context), str(dispatch)],
+            args=[json.dumps(raw_context), dispatch],
         ),
         results.NotificationTestResult,
     )
@@ -476,11 +530,15 @@ def create_diagnostics_dump(
     )
 
 
-def bake_agents(indata: Mapping[str, Any] | None = None) -> results.BakeAgentsResult:
+def bake_agents(
+    indata: Mapping[str, Any] | None = None,
+    force_automation_cli_interface: bool = False,
+) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
             "bake-agents",
             indata="" if indata is None else indata,
+            force_cli_interface=force_automation_cli_interface,
         ),
         results.BakeAgentsResult,
     )

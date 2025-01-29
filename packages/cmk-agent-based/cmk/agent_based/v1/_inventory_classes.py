@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for check plug-ins
-"""
+"""Classes used by the API for check plug-ins"""
+
 import string
 from collections.abc import Mapping
 from typing import NamedTuple, NoReturn, Self
@@ -53,7 +53,7 @@ class _AttributesTuple(NamedTuple):
 
 
 class Attributes(_AttributesTuple):
-    """Attributes to be written at a node in the HW/SW inventory"""
+    """Attributes to be written at a node in the HW/SW Inventory"""
 
     def __new__(
         cls,
@@ -102,7 +102,7 @@ class _TableRowTuple(NamedTuple):
 
 
 class TableRow(_TableRowTuple):
-    """TableRow to be written into a Table at a node in the HW/SW inventory"""
+    """TableRow to be written into a Table at a node in the HW/SW Inventory"""
 
     def __new__(
         cls,

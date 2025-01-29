@@ -53,7 +53,7 @@ class CMKEventConsoleStatus:
             if not chunk:
                 break
 
-        return eval(response_text)  # pylint: disable=eval-used
+        return eval(response_text)
 
     def query_table_assoc(self, query: str) -> list[dict]:
         response = self.query(query)

@@ -74,7 +74,7 @@ class HostAddress(str):
 
         if len(text) > 254:
             # ext4 and others allow filenames of up to 255 bytes
-            raise ValueError(f"HostName too long: {text[:16]+'…'!r}")
+            raise ValueError(f"HostName too long: {text[:16] + '…'!r}")
 
         try:
             ipaddress.ip_address(text)

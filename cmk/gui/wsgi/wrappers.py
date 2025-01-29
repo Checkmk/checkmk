@@ -7,7 +7,7 @@ from typing import Any
 from cmk.gui.openapi.utils import ProblemException
 
 
-class ProblemKeyError(ProblemException, KeyError):  # pylint: disable=too-many-ancestors
+class ProblemKeyError(ProblemException, KeyError):
     """Composite Exception representing a ProblemException and a dict KeyError"""
 
 

@@ -6,10 +6,6 @@
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -21,6 +17,10 @@ from cmk.gui.userdb import (
     HtpasswdUserConnectionConfig,
     UserConnector,
 )
+from cmk.gui.utils.htpasswd import Htpasswd
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 
 # Checkmk supports different authentication frontends for verifying the
@@ -37,7 +37,7 @@ from cmk.gui.userdb import (
 # See:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 #
-def hash_password(password: Password) -> PasswordHash:
+def hash_password(password: Password) -> password_hashing.PasswordHash:
     """Hash a password
 
     Invalid inputs raise MKUserError.
@@ -85,9 +85,6 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
         if not (pw_hash := self._htpasswd.get_hash(user_id)):
             return None  # not user in htpasswd, skip so other connectors can try
 
-        if self._is_automation_user(user_id):
-            raise MKUserError(None, _("Automation user rejected"))
-
         if pw_hash.startswith("!"):
             raise MKUserError(None, _("User is locked"))
 
@@ -96,9 +93,6 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
         return user_id
-
-    def _is_automation_user(self, user_id: UserId) -> bool:
-        return AutomationUserSecret(user_id).exists()
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During
@@ -114,7 +108,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
                 continue
 
             if user.get("password"):
-                entries[uid] = PasswordHash(
+                entries[uid] = password_hashing.PasswordHash(
                     "{}{}".format("!" if user["locked"] else "", user["password"])
                 )
 

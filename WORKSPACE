@@ -3,24 +3,6 @@ workspace(name = "omd_packages")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-RULES_FOREIGN_CC_VERSION = "0.9.0"
-
-http_archive(
-    name = "rules_foreign_cc",
-    patch_args = ["-p1"],
-    patches = ["//omd/packages/foreign_cc:symlink.patch"],
-    sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
-    strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
-    urls = [
-        "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-    ],
-)
-
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
-
 RULES_PKG_VERSION = "0.9.1"
 
 http_archive(
@@ -33,20 +15,8 @@ http_archive(
     ],
 )
 
-RULES_RUST_VERSION = "0.36.2"
-
-http_archive(
-    name = "rules_rust",
-    sha256 = "a761d54e49db06f863468e6bba4a13252b1bd499e8f706da65e279b3bcbc5c52",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_rust/releases/download/" + RULES_RUST_VERSION + "/rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-        "https://github.com/bazelbuild/rules_rust/releases/download/" + RULES_RUST_VERSION + "/rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_rust-v" + RULES_RUST_VERSION + ".tar.gz",
-    ],
-)
-
-load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
-load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
+load("//bazel/rules:rust_workspace.bzl", "rust_workspace")
 
 rust_workspace()
 
@@ -62,271 +32,227 @@ rules_pkg_dependencies()
 #   |          |_| /_/   \_\____|_|\_\/_/   \_\____|_____|____/            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-load(
-    "//:package_versions.bzl",
-    "CRYPT_SSL_SHA256",
-    "CRYPT_SSL_VERSION",
-    "FREETDS_SHA256",
-    "FREETDS_VERSION",
-    "HEIRLOOMMAILX_SHA256",
-    "HEIRLOOMMAILX_VERSION",
-    "HEIRLOOM_PKGTOOLS_SHA256",
-    "HEIRLOOM_PKGTOOLS_VERSION",
-    "LCAB_SHA256",
-    "LCAB_VERSION",
-    "LIBGSF_SHA256",
-    "LIBGSF_VERSION",
-    "MOD_FCGID_SHA256",
-    "MOD_FCGID_VERSION",
-    "MOD_WSGI_SHA256",
-    "MOD_WSGI_VERSION",
-    "MONITORING_PLUGINS_SHA256",
-    "MONITORING_PLUGINS_VERSION",
-    "MSITOOLS_SHA256",
-    "MSITOOLS_VERSION",
-    "NAGIOS_SHA256",
-    "NAGIOS_VERSION",
-    "NET_SNMP_SHA256",
-    "NET_SNMP_VERSION",
-    "NRPE_SHA256",
-    "NRPE_VERSION",
-    "OPENSSL_SHA256",
-    "OPENSSL_VERSION",
-    "PATCH_SHA256",
-    "PATCH_VERSION",
-    "PNP4NAGIOS_SHA256",
-    "PNP4NAGIOS_VERSION",
-    "PYTHON_SHA256",
-    "PYTHON_VERSION",
-    "REDFISH_MKP_COMMIT_HASH",
-    "REDFISH_MKP_SHA256",
-    "REDFISH_MKP_VERSION",
-    "REDIS_SHA256",
-    "REDIS_VERSION",
-    "ROBOTMK_SHA256",
-    "ROBOTMK_VERSION",
-    "RRDTOOL_SHA256",
-    "RRDTOOL_VERSION",
-    "SNAP7_SHA256",
-    "SNAP7_VERSION",
-    "STUNNEL_SHA256",
-    "STUNNEL_VERSION",
-    "XINETD_SHA256",
-    "XINETD_VERSION",
-    "XMLSEC1_SHA256",
-    "XMLSEC1_VERSION",
+
+# Repin with `CARGO_BAZEL_REPIN=1 bazel sync --only=cargo_deps_site`.
+crates_repository(
+    # Repository for rust binaries or libraries deployed in the site.
+    name = "cargo_deps_site",
+    annotations = {
+        "openssl-sys": [
+            crate.annotation(
+                build_script_data = [
+                    "@openssl//:gen_dir",
+                ],
+                build_script_env = {
+                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+                    "OPENSSL_NO_VENDOR": "1",
+                },
+                deps = [
+                    "@openssl//:openssl_shared",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = "//packages/site:Cargo.lock",
+    lockfile = "//packages/site:Cargo.lock.bazel",
+    manifests = [
+        "//packages/site:Cargo.toml",
+        "//packages/site/check-cert:Cargo.toml",
+        "//packages/site/check-http:Cargo.toml",
+    ],
 )
 
-cargo_deps(
-    name = "check-cert-deps",
-    package = "packages/check-cert",
+load("@cargo_deps_site//:defs.bzl", site_crate_repository = "crate_repositories")
+
+site_crate_repository()
+
+# Repin with `CARGO_BAZEL_REPIN=1 bazel sync --only=cargo_deps_host`.
+crates_repository(
+    # Repository for rust binaries deployed on the host.
+    name = "cargo_deps_host",
+    annotations = {
+        "openssl-sys": [
+            crate.annotation(
+                build_script_data = [
+                    "@openssl//:gen_dir",
+                ],
+                build_script_env = {
+                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+                    "OPENSSL_NO_VENDOR": "1",
+                    "OPENSSL_STATIC": "1",
+                },
+                data = ["@openssl//:gen_dir"],
+                deps = [
+                    "@openssl",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = "//packages/host:Cargo.lock",
+    lockfile = "//packages/host:Cargo.lock.bazel",
+    manifests = [
+        "//packages/host:Cargo.toml",
+        "//packages/host/cmk-agent-ctl:Cargo.toml",
+        "//packages/host/mk-sql:Cargo.toml",
+    ],
 )
 
-load("@check-cert-deps//:defs.bzl", check_cert_deps = "crate_repositories")
+load("@cargo_deps_host//:defs.bzl", host_crate_repository = "crate_repositories")
 
-check_cert_deps()
+host_crate_repository()
 
-cargo_deps(
-    name = "check-http-deps",
-    package = "packages/check-http",
-)
+load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
-load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
+redis_workspace()
 
-check_http_deps()
+load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
 
-load("//omd/packages/patch:patch_http.bzl", "patch")
+asio_workspace()
 
-patch(
-    sha256 = PATCH_SHA256,
-    version_str = PATCH_VERSION,
-)
+load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
-load("//omd/packages/redis:redis_http.bzl", "redis")
+re2_workspace()
 
-redis(
-    sha256 = REDIS_SHA256,
-    version_str = REDIS_VERSION,
-)
+load("//omd/packages/openssl:openssl_http.bzl", "openssl_workspace")
 
-load("//omd/packages/openssl:openssl_http.bzl", "openssl")
+openssl_workspace()
 
-openssl(
-    sha256 = OPENSSL_SHA256,
-    version_str = OPENSSL_VERSION,
-)
+load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec_workspace")
 
-load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
+xmlsec_workspace()
 
-xmlsec1(
-    sha256 = XMLSEC1_SHA256,
-    version_str = XMLSEC1_VERSION,
-)
+load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx_workspace")
 
-load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
+heirloommailx_workspace()
 
-heirloommailx(
-    sha256 = HEIRLOOMMAILX_SHA256,
-    version_str = HEIRLOOMMAILX_VERSION,
-)
+load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins_workspace")
 
-load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
+monitoring_plugins_workspace()
 
-monitoring_plugins(
-    sha256 = MONITORING_PLUGINS_SHA256,
-    version_str = MONITORING_PLUGINS_VERSION,
-)
+load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel_workspace")
 
-load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel")
+stunnel_workspace()
 
-stunnel(
-    sha256 = STUNNEL_SHA256,
-    version_str = STUNNEL_VERSION,
-)
+load("//omd/packages/freetds:freetds_http.bzl", "freetds_workspace")
 
-load("//omd/packages/freetds:freetds_http.bzl", "freetds")
+freetds_workspace()
 
-freetds(
-    sha256 = FREETDS_SHA256,
-    version_str = FREETDS_VERSION,
-)
+load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools_workspace")
 
-load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+heirloom_pkgtools_workspace()
 
-heirloom_pkgtools(
-    sha256 = HEIRLOOM_PKGTOOLS_SHA256,
-    version_str = HEIRLOOM_PKGTOOLS_VERSION,
-)
+load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf_workspace")
 
-load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf")
+libgsf_workspace()
 
-libgsf(
-    sha256 = LIBGSF_SHA256,
-    version_str = LIBGSF_VERSION,
-)
+load("//omd/packages/lcab:lcab_http.bzl", "lcab_workspace")
 
-load("//omd/packages/lcab:lcab_http.bzl", "lcab")
+lcab_workspace()
 
-lcab(
-    sha256 = LCAB_SHA256,
-    version_str = LCAB_VERSION,
-)
+load("//omd/packages/msitools:msitools_http.bzl", "msitools_workspace")
 
-load("//omd/packages/msitools:msitools_http.bzl", "msitools")
+msitools_workspace()
 
-msitools(
-    sha256 = MSITOOLS_SHA256,
-    version_str = MSITOOLS_VERSION,
-)
+load("//omd/packages/snap7:snap7_http.bzl", "snap7_workspace")
 
-load("//omd/packages/snap7:snap7_http.bzl", "snap7")
-
-snap7(
-    sha256 = SNAP7_SHA256,
-    version_str = SNAP7_VERSION,
-)
+snap7_workspace()
 
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
-# TODO: Centralize perl modules versions
 perl_modules()
 
-load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay")
+load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
 
-crypt_ssleay(
-    sha256 = CRYPT_SSL_SHA256,
-    version_str = CRYPT_SSL_VERSION,
-)
+crypt_ssleay_workspace()
 
-load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
+load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe_workspace")
 
-nrpe(
-    sha256 = NRPE_SHA256,
-    version_str = NRPE_VERSION,
-)
+nrpe_workspace()
 
-load("//omd/packages/Python:Python_http.bzl", "python")
+load("//omd/packages/Python:Python_http.bzl", "python_workspace")
 
-python(
-    sha256 = PYTHON_SHA256,
-    version_str = PYTHON_VERSION,
-)
+python_workspace()
 
-load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
+load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios_workspace")
 
-pnp4nagios(
-    sha256 = PNP4NAGIOS_SHA256,
-    version_str = PNP4NAGIOS_VERSION,
-)
+pnp4nagios_workspace()
 
-load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
+load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
-mod_fcgid(
-    sha256 = MOD_FCGID_SHA256,
-    version_str = MOD_FCGID_VERSION,
-)
+mod_fcgid_workspace()
 
-load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd")
+load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd_workspace")
 
-xinetd(
-    sha256 = XINETD_SHA256,
-    version_str = XINETD_VERSION,
-)
+xinetd_workspace()
 
-load("//omd/packages/nagios:nagios_http.bzl", "nagios")
+load("//omd/packages/nagios:nagios_http.bzl", "nagios_workspace")
 
-nagios(
-    sha256 = NAGIOS_SHA256,
-    version_str = NAGIOS_VERSION,
-)
+nagios_workspace()
 
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
 
 create_python_requirements(
     name = "python_modules",
-    # TODO: differentiate between own code and things we get from other omd packages
     ignored_modules = [
-        "protobuf",  # don't build with pip -> see protobuf omd packages
-        "rrdtool",  # don't build with pip -> see rrdtool omd packages
-        "agent-receiver",  # don't build with pip (yet)
-        "werks",  # don't build with pip (yet)
+        # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
-    requirements = "//:Pipfile",
+    requirements_lock = "//:requirements_runtime_lock.txt",
 )
 
-load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi")
+load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")
 
-mod_wsgi(
-    sha256 = MOD_WSGI_SHA256,
-    version_str = MOD_WSGI_VERSION,
+mod_wsgi_workspace()
+
+load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp_workspace")
+
+netsnmp_workspace()
+
+load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk_workspace")
+
+robotmk_workspace()
+
+load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool_workspace")
+
+rrdtool_workspace()
+
+load("//omd/packages/glib:glib.bzl", "glib_local_repo")
+
+glib_local_repo("glib")
+
+load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native_workspace")
+
+rrdtool_native_workspace()
+
+load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
+
+httplib_workspace()
+
+http_archive(
+    name = "gtest",
+    sha256 = "4911bfedea2a94cbf50ea328b2e9b3bcb0bd03cdc28c3492cc810f77e44b2746",
+    strip_prefix = "googletest-57e107a10ea4ff5d8d31df9e4833f80b414b0dd2",
+    url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
 
-load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
+load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
-netsnmp(
-    sha256 = NET_SNMP_SHA256,
-    version_str = NET_SNMP_VERSION,
+jaeger_workspace()
+
+load("//omd/packages/erlang:erlang_http.bzl", "erlang_workspace")
+
+erlang_workspace()
+
+http_archive(
+    name = "bazel_iwyu",
+    patches = ["//bazel/tools:0001-Make-IWYU-executable-configurable.patch"],
+    sha256 = "058d2ba699c1a6ef15ffb8b6e98f056250bb6080e634037034099d10bff4d19f",
+    strip_prefix = "bazel_iwyu-bb102395e553215abd66603bcdeb6e93c66ca6d7",
+    urls = [
+        "https://github.com/storypku/bazel_iwyu/archive/bb102395e553215abd66603bcdeb6e93c66ca6d7.tar.gz",
+    ],
 )
 
-load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
+load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
-robotmk(
-    sha256 = ROBOTMK_SHA256,
-    version_str = ROBOTMK_VERSION,
-)
-
-load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
-
-rrdtool(
-    sha256 = RRDTOOL_SHA256,
-    version_str = RRDTOOL_VERSION,
-)
-
-load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
-
-redfish_mkp(
-    commit_hash = REDFISH_MKP_COMMIT_HASH,
-    sha256 = REDFISH_MKP_SHA256,
-    version_str = REDFISH_MKP_VERSION,
-)
+rabbitmq_workspace()

@@ -6,11 +6,9 @@
 #ifndef DynamicEventConsoleReplicationColumn_h
 #define DynamicEventConsoleReplicationColumn_h
 
-#include <memory>
 #include <string>
 
 #include "livestatus/DynamicColumn.h"
-class Column;
 class ColumnOffsets;
 class ICore;
 

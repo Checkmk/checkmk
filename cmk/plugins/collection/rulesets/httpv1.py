@@ -49,7 +49,7 @@ def _migrate_ssl_choices(value: object) -> str:
             return "ssl_1_2"
         case "1" | "2" | "3":
             return f"ssl_{value}"
-        case "auto" | "ssl_1" | "ssl_2" | "ssl_3":
+        case "auto" | "ssl_1" | "ssl_2" | "ssl_3" | "ssl_1_1" | "ssl_1_2":
             return str(value)
     raise ValueError(value)
 
@@ -376,7 +376,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                     ),
                                     SingleChoiceElement(
                                         "stickyport",
-                                        Title("Follow, but stay to same IP-address and port"),
+                                        Title("Follow, but stay to same IP address and port"),
                                     ),
                                 ],
                                 prefill=DefaultValue("follow"),
@@ -605,8 +605,8 @@ def _parameter_form_active_checks_http() -> Dictionary:
                 parameter_form=String(
                     title=Title("Service name"),
                     help_text=Help(
-                        "Will be used in the service description. If the name starts with a caret"
-                        " (<tt>^</tt>), the service description will not be prefixed with either"
+                        "Will be used in the service name. If the name starts with a caret"
+                        " (<tt>^</tt>), the service name will not be prefixed with either"
                         " <tt>HTTP</tt> or <tt>HTTPS</tt>."
                     ),
                     custom_validate=(

@@ -451,13 +451,13 @@ def process_discovery_descr_option():
             "substitute all such groups with the actual values when creating the "
             "check. That way one rule can create several checks on a host.</p>"
             "<p>If the pattern contains more groups then occurrences of <tt>%s</tt> in "
-            "the service description then only the first matching subexpressions are "
-            "used for the service descriptions. The matched substrings corresponding to "
+            "the service name then only the first matching subexpressions are "
+            "used for the service names. The matched substrings corresponding to "
             "the remaining groups are copied into the regular expression, "
             "nevertheless.</p>"
             "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
-            "<tt>%2</tt>, etc.  These will be replaced by the first, second, "
-            "... matching group. This allows you to reorder thing"
+            "<tt>%2</tt>, etc. These will be replaced by the first, second, "
+            "... matching group. This allows you to reorder things."
         ),
     )
 
@@ -631,7 +631,7 @@ def _manual_item_spec_ps():
         regex="^[a-zA-Z_0-9 _./-]*$",
         regex_error=_(
             "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot, hyphen and slash for your service description"
+            "dot, hyphen and slash for your service name"
         ),
     )
 
@@ -702,7 +702,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                 "label",
                 Labels(
                     world=Labels.World.CONFIG,
-                    title=_("Host Label"),
+                    title=_("Host label"),
                     help=_(
                         "Here you can set host labels that automatically get created when discovering the services."
                     ),
@@ -800,7 +800,7 @@ def hr_process_match_name_option():
 
 def hr_process_match_path_option():
     return Alternative(
-        title=_("Process Path Matching"),
+        title=_("Process path matching"),
         elements=[
             TextInput(
                 title=_("Exact name of the process path"),
@@ -840,7 +840,7 @@ def hr_process_match_elements():
         (
             "match_name_or_path",
             CascadingDropdown(
-                title=_("Process Match textual description or path of process"),
+                title=_("Process match textual description or path of process"),
                 choices=[
                     ("match_name", _("Match textual description"), hr_process_match_name_option()),
                     ("match_path", _("Match process path"), hr_process_match_path_option()),
@@ -851,7 +851,7 @@ def hr_process_match_elements():
         (
             "match_status",
             ListChoice(
-                title=_("Process Status Matching"),
+                title=_("Process status matching"),
                 choices=[
                     ("running", _("Running")),
                     ("runnable", _("Runnable (Waiting for resource)")),
@@ -999,7 +999,7 @@ def _manual_item_spec_hr_ps():
         regex="^[a-zA-Z_0-9 _./-]*$",
         regex_error=_(
             "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot, hyphen and slash for your service description"
+            "dot, hyphen and slash for your service name"
         ),
     )
 

@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from collections.abc import MutableMapping
 from dataclasses import dataclass
 from typing import NoReturn
 
 import requests
 
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     collect_context,
+    get_password_from_env_or_context,
     get_sms_message_from_context,
     quote_message,
-    retrieve_from_passwordstore,
 )
 
 #   .--Classes-------------------------------------------------------------.
@@ -44,7 +46,7 @@ class RequestParameter:
     recipient: str
     url: str
     verify: bool
-    proxies: dict[str, str] | None
+    proxies: MutableMapping[str, str] | None
     user: str
     pwd: str
     timeout: float
@@ -85,7 +87,7 @@ def _get_context_parameter(raw_context: PluginNotificationContext) -> Errors | C
         "PARAMETER_MODEM_TYPE",
         "PARAMETER_URL",
         "PARAMETER_USERNAME",
-        "PARAMETER_PASSWORD",
+        "PARAMETER_PASSWORD_1",
     ]:
         if mandatory not in raw_context:
             missing_params.append(mandatory)
@@ -129,16 +131,18 @@ def _get_request_params_from_context(
     if not recipient:
         return Errors(["Error: Pager Number of %s not set\n" % raw_context["CONTACTNAME"]])
 
-    proxy_url = raw_context.get("PARAMETER_PROXY_URL", "")
-    proxies = {"https": proxy_url} if proxy_url else None
-
     return RequestParameter(
         recipient=recipient,
         url=raw_context["PARAMETER_URL"],
         verify="PARAMETER_IGNORE_SSL" in raw_context,
-        proxies=proxies,
+        proxies=deserialize_http_proxy_config(
+            raw_context.get("PARAMETER_PROXY_URL")
+        ).to_requests_proxies(),
         user=raw_context["PARAMETER_USERNAME"],
-        pwd=retrieve_from_passwordstore(raw_context["PARAMETER_PASSWORD"]),
+        pwd=get_password_from_env_or_context(
+            key="PARAMETER_PASSWORD",
+            context=raw_context,
+        ),
         timeout=float(raw_context.get("PARAMETER_TIMEOUT", 10.0)),
     )
 

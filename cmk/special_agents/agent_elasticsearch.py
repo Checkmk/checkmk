@@ -35,7 +35,7 @@ def agent_elasticsearch_main(args: Args) -> int:
                 auth = (args.user, args.password) if args.user and args.password else None
                 certcheck = not args.no_cert_check
                 try:
-                    response = requests.get(url, auth=auth, verify=certcheck)  # nosec B113
+                    response = requests.get(url, auth=auth, verify=certcheck)  # nosec B113 # BNS:0b0eac
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:

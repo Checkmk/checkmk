@@ -1,0 +1,227 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+# port from upstream `src/Makefile.am`
+
+NUMVERS = "1.7002"
+
+cc_library(
+    name = "rrd_config",
+    hdrs = ["src/rrd_config.h"],
+    includes = ["src"],
+)
+
+cc_library(
+    name = "rrdupd",
+    srcs = [
+        "src/mutex.c",
+        "src/optparse.c",
+        "src/rrd_strtod.c",
+        "src/rrd_create.c",
+        "src/hash_32.c",
+        "src/rrd_parsetime.c",
+        "src/rrd_hw.c",
+        "src/rrd_hw_math.c",
+        "src/rrd_hw_update.c",
+        "src/rrd_diff.c",
+        "src/rrd_format.c",
+        "src/rrd_info.c",
+        "src/rrd_error.c",
+        "src/rrd_open.c",
+        "src/rrd_client.c",
+        "src/rrd_nan_inf.c",
+        "src/rrd_rpncalc.c",
+        "src/rrd_utils.c",
+        "src/rrd_snprintf.c",
+        "src/rrd_update.c",
+        "src/rrd_modify.c",
+        "src/quicksort.c",
+        "src/rrd_thread_safe.c",
+        # private headers
+        "src/unused.h",
+        "src/gettext.h",
+        "src/mutex.h",
+        "src/rrd_strtod.h",
+        "src/rrd_snprintf.h",
+        "src/rrd_parsetime.h",
+        "src/rrd_config_bottom.h",
+        "src/rrd_i18n.h",
+        "src/rrd_format.h",
+        "src/rrd_tool.h",
+        "src/rrd_xport.h",
+        "src/optparse.h",
+        "src/rrd.h",
+        "src/rrd_rpncalc.h",
+        "src/rrd_hw.h",
+        "src/rrd_hw_math.h",
+        "src/rrd_hw_update.h",
+        "src/rrd_restore.h",
+        "src/rrd_create.h",
+        "src/fnv.h",
+        "src/rrd_graph.h",
+        "src/rrd_is_thread_safe.h",
+        "src/rrd_modify.h",
+        "src/rrd_update.h",
+        "src/quicksort.h",
+    ],
+    hdrs = [
+        "src/rrd.h",
+        "src/rrd_client.h",
+        "src/rrd_format.h",
+    ],
+    copts = [
+        "-Wno-int-conversion",
+        "-Wno-stringop-truncation",
+        "-O2",
+    ],
+    deps = [
+        ":rrd_config",
+        "@glib",
+    ],
+)
+
+cc_library(
+    name = "rrd",
+    srcs = [
+        "src/rrd_dump.c",
+        "src/rrd_fetch.c",
+        "src/rrd_fetch_cb.c",
+        "src/rrd_first.c",
+        "src/rrd_flushcached.c",
+        "src/rrd_last.c",
+        "src/rrd_lastupdate.c",
+        "src/rrd_list.c",
+        "src/rrd_resize.c",
+        "src/rrd_tune.c",
+        "src/rrd_version.c",
+    ],
+    copts = [
+        "-Wformat-truncation=0",  # false positive in src/rrd_list.c
+        "-O2",  # maybe O3?
+    ],
+    local_defines = ['NUMVERS="' + NUMVERS + '"'],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rrdupd",
+    ],
+)
+
+# libbdi
+# librados
+
+cc_library(
+    name = "rrdgraph",
+    srcs = [
+        "src/pngsize.c",
+        "src/rrd_gfx.c",
+        "src/rrd_graph.c",
+        "src/rrd_graph_helper.c",
+        "src/rrd_xport.c",
+    ],
+    copts = [
+        "-I/usr/include/cairo",
+        "-I/usr/include/pango-1.0",
+        "-I/usr/include/harfbuzz",
+        "-Wno-implicit-function-declaration",
+        "-Wno-format-truncation",
+        "-Wno-strict-aliasing",
+        "-O2",
+    ],
+    linkopts = [
+        "-lcairo",
+        "-lgobject-2.0",
+        "-lpango-1.0",
+        "-lpangocairo-1.0",
+        "-lpng",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rrd",
+        "@glib",
+    ],
+)
+
+cc_binary(
+    name = "rrdupdate",
+    srcs = ["src/rrdupdate.c"],
+    copts = [
+        "-O2",
+    ],
+    linkopts = [
+        "-lpthread",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":rrdupd"],
+)
+
+cc_binary(
+    name = "rrdtool",
+    srcs = ["src/rrd_tool.c"],
+    copts = [
+        "-Wno-implicit-function-declaration",
+        "-Wno-format-truncation",
+        "-O2",
+    ],
+    linkopts = [
+        "-lpthread",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["rrdgraph"],
+)
+
+cc_binary(
+    name = "rrdcached",
+    srcs = ["src/rrd_daemon.c"],
+    copts = [
+        "-Wno-format-truncation",
+        "-O2",
+    ],
+    linkopts = [
+        "-lpthread",
+    ],
+    local_defines = ["LOCALSTATEDIR="],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rrd",
+        ":rrdupd",
+        "@glib",
+    ],
+)
+
+cc_library(
+    name = "rrdtoolmodule",
+    srcs = [
+        "bindings/python/rrdtoolmodule.c",
+    ],
+    copts = [
+        "-Wno-discarded-qualifiers",
+        "-O2",
+    ],
+    deps = [
+        ":rrd_config",
+        ":rrdgraph",
+        "@rules_python//python/cc:current_py_cc_headers",
+    ],
+    alwayslink = True,
+)
+
+cc_shared_library(
+    name = "rrdtoolmodule_shared",
+    shared_lib_name = "rrdtool.so",
+    deps = [":rrdtoolmodule"],
+)
+
+py_library(
+    name = "rrdtool_python_lib",
+    data = [":rrdtoolmodule_shared"],
+    visibility = ["//visibility:public"],
+)
+
+py_wheel(
+    name = "rrdtool_python_wheel",
+    distribution = "rrdtool",
+    version = "1",
+    visibility = ["//visibility:public"],
+    deps = [":rrdtoolmodule_shared"],
+)

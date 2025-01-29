@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from typing import Any, Literal
 
@@ -13,7 +12,9 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
@@ -24,12 +25,12 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import base as painter_base
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0 import all_painters, Cell, Painter, PainterRegistry, register_painter
+from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
@@ -197,9 +198,14 @@ def test_registered_commands() -> None:
             "tables": ["comment"],
             "title": "Delete comments",
         },
+        "remove_downtimes_hosts_services": {
+            "permission": "action.downtimes",
+            "tables": ["host", "service"],
+            "title": "Remove downtimes",
+        },
         "remove_downtimes": {
             "permission": "action.downtimes",
-            "tables": ["host", "service", "downtime"],
+            "tables": ["downtime"],
             "title": "Remove downtimes",
         },
         "schedule_downtimes": {
@@ -276,13 +282,13 @@ def test_registered_commands() -> None:
         },
     }
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected.update(
             {
                 "edit_downtimes": {
                     "permission": "action.downtimes",
                     "tables": ["downtime"],
-                    "title": "Edit Downtimes",
+                    "title": "Edit downtimes",
                 },
             }
         )
@@ -290,8 +296,7 @@ def test_registered_commands() -> None:
     names = command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    for cmd_class in command_registry.values():
-        cmd = cmd_class()
+    for cmd in command_registry.values():
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
         assert cmd.tables == cmd_spec["tables"], cmd.ident
@@ -317,7 +322,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     )
 
-    cmd = registry["blabla"]()
+    cmd = registry["blabla"]
     assert isinstance(cmd, command.Command)
     assert cmd.ident == "blabla"
     assert cmd.title == "Bla Bla"
@@ -325,6 +330,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
+    registered_painters = all_painters(active_config)
     painters: list[Painter] = [
         painter_class(
             user=user,
@@ -334,15 +340,16 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
             theme=theme,
             url_renderer=RenderLink(request, response, display_options),
         )
-        for painter_class in painter_registry.values()
+        for painter_class in registered_painters.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
-        (painter, Cell(ColumnSpec(name=painter.ident), None)) for painter in painters
+        (painter, Cell(ColumnSpec(name=painter.ident), None, registered_painters))
+        for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
     for painter, cell in painters_and_cells:
-        cell._painter_params = {"ident": dummy_ident}  # pylint: disable=protected-access
+        cell._painter_params = {"ident": dummy_ident}
         expected_title: str = painter.ident
         if painter.ident in ["host_custom_variable", "service_custom_variable"]:
             expected_title += "_%s" % dummy_ident
@@ -350,16 +357,12 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
 
 def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    monkeypatch.setattr(
-        painter_base,
-        "painter_registry",
-        PainterRegistry(),
-    )
+    monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
     def rendr(row):
         return ("abc", "xyz")
 
-    painter_base.register_painter(
+    register_painter(
         "abc",
         {
             "title": "A B C",
@@ -373,7 +376,8 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"](
+    registered_painters = all_painters(active_config)
+    painter = registered_painters["abc"](
         user=user,
         config=active_config,
         request=request,
@@ -381,7 +385,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
+    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -585,6 +589,13 @@ def test_registered_display_hints() -> None:
         ".hardware.cpu.threads_per_cpu",
         ".hardware.cpu.type",
         ".hardware.cpu.voltage",
+        ".hardware.firmware.",
+        ".hardware.firmware.redfish:",
+        ".hardware.firmware.redfish:*.component",
+        ".hardware.firmware.redfish:*.description",
+        ".hardware.firmware.redfish:*.location",
+        ".hardware.firmware.redfish:*.updateable",
+        ".hardware.firmware.redfish:*.version",
         ".hardware.memory.",
         ".hardware.memory.arrays:",
         ".hardware.memory.arrays:*.",
@@ -694,6 +705,14 @@ def test_registered_display_hints() -> None:
         ".networking.routes:*.gateway",
         ".networking.routes:*.target",
         ".networking.routes:*.type",
+        ".networking.sip_interfaces:",
+        ".networking.sip_interfaces:*.application_type",
+        ".networking.sip_interfaces:*.device",
+        ".networking.sip_interfaces:*.gateway",
+        ".networking.sip_interfaces:*.name",
+        ".networking.sip_interfaces:*.index",
+        ".networking.sip_interfaces:*.sys_interface",
+        ".networking.sip_interfaces:*.tcp_port",
         ".networking.total_ethernet_ports",
         ".networking.total_interfaces",
         ".networking.tunnels:",
@@ -1129,7 +1148,7 @@ def test_registered_display_hints() -> None:
         ".software.packages:*.version",
     ]
 
-    assert sorted(inventory_displayhints.keys()) == sorted(expected)
+    assert set(inventory_displayhints) == set(expected)
 
 
 def test_get_inventory_display_hint() -> None:
@@ -1137,7 +1156,7 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:

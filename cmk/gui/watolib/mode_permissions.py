@@ -5,7 +5,7 @@
 
 from typing import Protocol
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 
 class ModePermissionsEnsurance(Protocol):

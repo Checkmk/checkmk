@@ -8,86 +8,116 @@ filegroup(
     ),
 )
 
+# these, ladies and gentleman, are the "args"
+ARGS = ["-j6"]
+
+# In contrast to "sources", @build_data is a list of files we need
+# to build stuff, lol
+BUILD_DATA = ["@omd_packages//omd/packages/monitoring-plugins:cmk_password_store.h"]
+
+CONFIGURE_COMMAND = "configure"
+
+CONFIGURE_IN_PLACE = True
+
+CONFIGURE_OPTIONS = [
+    "--with-openssl=$$EXT_BUILD_DEPS/openssl",
+    # We're using here only the relative folder for snmp commands:
+    # the full path will be dynamically calculated in the check_snmp/check_hpjd binary.
+    # That way we can use cached builds in multiple checkmk versions.
+    "--with-snmpget-command=/bin/snmpget",
+    "--with-snmpgetnext-command=/bin/snmpgetnext",
+]
+
+COPTS = [
+    "-I$EXT_BUILD_ROOT/omd/packages/monitoring-plugins/",
+    # will be prepended to executable and appended to dynamic libraries,
+    # leaving all other "copts" non-optional, lol
+    "-Wl,--rpath,$ORIGIN_VAR/../lib",
+]
+
+# dict: Environment variables to set during the build.
+# $(execpath) macros may be used to point at files which are listed as data, deps, or build_data,
+# but unlike with other rules, these will be replaced with absolute paths to those files, because
+# the build does not run in the exec root. This attribute is subject to make variable substitution.
+# No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
+# entries will be prepended to the existing variable.
+ENV = {
+    "PKG_CONFIG_PATH": ":".join([
+        "/usr/lib/pkgconfig",
+        "/usr/lib64/pkgconfig",
+        "/usr/lib/x86_64-linux-gnu/pkgconfig",
+    ]),
+    #
+    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
+    # combined with foreign_cc/configure_make's RPATH agnosticness
+    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
+    # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
+    #   + the actual build directory, leading to a potentially wrong RPATH
+    #   next to the fact that build artifacts won't be binary identical even
+    #   when built in an exact same environment
+    # This can be worked around by setting RPATH again after `bazel build` still
+    # leaving us with RPATH placeholders of different size
+    "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
+}
+
+LIB_SOURCE = ":all_srcs"
+
+# Those are the directories we want to copied
+OUT_DATA_DIRS = [
+    "libexec",
+    "share",
+]
+
+# without this bazel complains about missing .a files, lol
+OUT_HEADERS_ONLY = True
+
+# str: Optional part of the shell script to be added after the make commands
+POSTFIX_SCRIPT = """
+    # unfortunately we can't restore symlinks here since they get destroed
+    # _after_ this step
+
+    # unfortunately we also can't set RPATH here since the files generated
+    # are read-only (while we can still delete them, lol)
+    # In case we need it, there is still a way to modify those binaries here:
+    #   by copying, removing, modifying the copy and copying it back
+    #   we achieve the same result
+
+    # remove files we don't want to be deployed
+    # check_disk_smb is being deployed with check_mk.make, because it was migrated to Python
+    rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
+    "$INSTALLDIR/libexec/check_disk_smb"
+
+    # check_ircd requires the perl module IO::Socket::IP since https://github.com/monitoring-plugins/monitoring-plugins/commit/93cd51bc6221ffc846c69135f2746120683b44c5
+    # We don't want to deploy yet another perl module nor cannot guarantee that the required perl version is available under all distros.
+    rm -f "$INSTALLDIR/libexec/check_ircd"
+
+    mkdir -p "$INSTALLDIR/share/doc/monitoring-plugins"
+    cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \
+      "$INSTALLDIR/share/doc/monitoring-plugins"
+"""
+
+TARGETS = [
+    "all",
+    "install",
+    "install-root",
+]
+
+VISIBILITY = ["//visibility:public"]
+
 configure_make(
     name = "monitoring-plugins",
-
-    # these, ladies and gentleman, are the "args"
-    args = ["-j6"],
-
-    # In contrast to "sources", @build_data is a list of files we need
-    # to build stuff, lol
-    build_data = ["@omd_packages//omd/packages/monitoring-plugins:cmk_password_store.h"],
-    configure_command = "configure",
-    configure_in_place = True,
-    configure_options = [
-        "--with-openssl=$EXT_BUILD_DEPS/openssl",
-        # We're using here only the relative folder for snmp commands:
-        # the full path will be dynamically calculated in the check_snmp/check_hpjd binary.
-        # That way we can use cached builds in multiple checkmk versions.
-        "--with-snmpget-command=/bin/snmpget",
-        "--with-snmpgetnext-command=/bin/snmpgetnext",
-    ],
-    copts = [
-        "-I$EXT_BUILD_ROOT/omd/packages/monitoring-plugins/",
-        # will be prepended to executable and appended to dynamic libraries,
-        # leaving all other "copts" non-optional, lol
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
-    ],
-
-    # dict: Environment variables to set during the build.
-    # $(execpath) macros may be used to point at files which are listed as data, deps, or build_data,
-    # but unlike with other rules, these will be replaced with absolute paths to those files, because
-    # the build does not run in the exec root. This attribute is subject to make variable substitution.
-    # No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
-    # entries will be prepended to the existing variable.
-    env = {
-        #
-        # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
-        # combined with foreign_cc/configure_make's RPATH agnosticness
-        #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
-        # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
-        #   + the actual build directory, leading to a potentially wrong RPATH
-        #   next to the fact that build artifacts won't be binary identical even
-        #   when built in an exact same environment
-        # This can be worked around by setting RPATH again after `bazel build` still
-        # leaving us with RPATH placeholders of different size
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
-    },
-    lib_source = ":all_srcs",
-
-    # Those are the directories we want to copied
-    out_data_dirs = [
-        "libexec",
-        "share",
-    ],
-
-    # without this bazel complains about missing .a files, lol
-    out_headers_only = True,
-
-    # str: Optional part of the shell script to be added after the make commands
-    postfix_script = """
-        # unfortunately we can't restore symlinks here since they get destroed
-        # _after_ this step
-
-        # unfortunately we also can't set RPATH here since the files generated
-        # are read-only (while we can still delete them, lol)
-        # In case we need it, there is still a way to modify those binaries here:
-        #   by copying, removing, modifying the copy and copying it back
-        #   we achieve the same result
-
-        # remove files we don't want to be deployed
-        # check_disk_smb is being deployed with check_mk.make, because it was migrated to Python
-        rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
-        "$INSTALLDIR/libexec/check_disk_smb"
-
-        mkdir -p "$INSTALLDIR/share/doc/monitoring-plugins"
-        cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \
-          "$INSTALLDIR/share/doc/monitoring-plugins"
-    """,
-    targets = [
-        "all",
-        "install",
-        "install-root",
-    ],
+    args = ARGS,
+    build_data = BUILD_DATA,
+    configure_command = CONFIGURE_COMMAND,
+    configure_in_place = CONFIGURE_IN_PLACE,
+    configure_options = CONFIGURE_OPTIONS,
+    copts = COPTS,
+    env = ENV,
+    lib_source = LIB_SOURCE,
+    out_data_dirs = OUT_DATA_DIRS,
+    out_headers_only = OUT_HEADERS_ONLY,
+    postfix_script = POSTFIX_SCRIPT,
+    targets = TARGETS,
+    visibility = VISIBILITY,
     deps = ["@openssl"],
 )

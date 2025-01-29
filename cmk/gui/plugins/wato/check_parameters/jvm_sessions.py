@@ -22,7 +22,7 @@ def _item_spec_jvm_sessions():
 
 
 def _migrate_quadruple(
-    params: tuple[int, int, int, int] | dict[str, tuple[int, int]]
+    params: tuple[int, int, int, int] | dict[str, tuple[int, int]],
 ) -> dict[str, tuple[int, int]]:
     if isinstance(params, dict):
         return params

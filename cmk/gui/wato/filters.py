@@ -8,8 +8,7 @@ from collections.abc import Iterator
 
 from livestatus import lq_logic
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l

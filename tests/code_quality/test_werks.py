@@ -11,27 +11,33 @@ from pathlib import Path
 
 import pytest
 
-import tests.testlib as testlib
+from tests.testlib.repo import repo_path
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.werks
 
-CVSS_REGEX = re.compile(
+import cmk.werks.utils
+
+CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
+)
+CVSS_REGEX_V40 = re.compile(
+    r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
 
 
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
-    cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
+    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
+    cmk.werks.utils.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
 def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = str(tmp_path)
 
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
+    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
     cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
     cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
     cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
@@ -43,20 +49,20 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
     assert len(cre_werks) > 9847
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
 
     assert len(cee_werks) > 1358
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
 
     assert len(cme_werks) > 50
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
 
     assert len(cce_werks) > 10
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
 
     # We currently don't have cse werks (yet)
     assert len(cse_werks) == 0
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
 
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
     werks_loaded = cmk.utils.werks.load()
@@ -81,9 +87,9 @@ def test_werk_versions(precompiled_werks: None) -> None:
     for werk_id, werk in cmk.utils.werks.load().items():
         parsed_werk_version = cmk_version.Version.from_str(werk.version)
 
-        assert (
-            parsed_werk_version <= parsed_version
-        ), "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        assert parsed_werk_version <= parsed_version, (
+            "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        )
 
 
 def test_secwerk_has_cvss(precompiled_werks: None) -> None:
@@ -95,7 +101,8 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
         if werk.class_.value != "security":
             continue
         assert (
-            CVSS_REGEX.search(werk.description) is not None
+            CVSS_REGEX_V31.search(werk.description) is not None
+            or CVSS_REGEX_V40.search(werk.description) is not None
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
@@ -141,7 +148,7 @@ def _git_tag_exists(tag: str) -> bool:
             ["git", "rev-list", tag],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         ).wait()
         == 0
     )
@@ -165,7 +172,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only", tag.encode(), b".werks"],
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         )
         .decode()
         .split("\n")

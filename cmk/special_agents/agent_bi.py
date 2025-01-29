@@ -3,41 +3,98 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
+import argparse
 import json
+import select
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from multiprocessing.pool import ThreadPool
-from typing import Any
+from pathlib import Path
+from typing import Any, Literal, NotRequired, Self, TypedDict
 
 import requests
 import urllib3
+from pydantic import BaseModel, Field
 
-import cmk.utils.site
-from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.exceptions import MKException
-from cmk.utils.password_store import extract
+import cmk.ccc.site
+from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
+
+from cmk.utils.local_secrets import AutomationUserSecret
+from cmk.utils.password_store import lookup
+from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
-from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+class AgentBiAuthentication(BaseModel):
+    username: str
+    password_store_path: Path | None = None
+    password_store_identifier: str | None = None
+
+    def merge_arg(self, arg: str) -> None:
+        pw_id, pw_file = arg.split(":", 1)
+        self.password_store_path = Path(pw_file)
+        self.password_store_identifier = pw_id
+
+    def lookup(self) -> str:
+        assert self.password_store_path is not None and self.password_store_identifier is not None
+
+        return lookup(
+            self.password_store_path,
+            self.password_store_identifier,
+        )
+
+
+class AgentBiAdditionalOptions(TypedDict):
+    state_scheduled_downtime: NotRequired[Literal[0, 1, 2, 3]]
+    state_acknowledged: NotRequired[Literal[0, 1, 2, 3]]
+
+
+class AgentBiAssignments(BaseModel):
+    querying_host: bool = False
+    affected_hosts: bool = False
+    regex: list[tuple[str, str]] = Field(default_factory=list)
+
+
+class AgentBiFilter(BaseModel):
+    names: list[str] = Field(default_factory=list)
+    groups: list[str] = Field(default_factory=list)
+
+
+class AgentBiConfig(BaseModel):
+    assignments: AgentBiAssignments | None = None
+    authentication: AgentBiAuthentication | None = None
+    filter: AgentBiFilter = Field(default_factory=AgentBiFilter)
+    # mypy sees here a dict[Any, Any] I could fix that with lambda but then pylint will complain
+    # with unnecessary-lambda. I chose simple and I guess efficient way?
+    options: AgentBiAdditionalOptions = Field(default_factory=dict)  # type: ignore[arg-type]
+    site_url: str | None = None
+
+
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        bi_rawdata: Mapping[str, Any] | None,
+        config: AgentBiConfig,
+        error: str | None,
+    ) -> None:
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
-        self._output: list = []
-        self._options = config.get("options", {})
-        self._assignments = config.get("assignments", {})
+        self._output: list[str] = []
+        self._options = config.options
+        self._assignments = config.assignments
         self._missing_sites: list = []
         self._missing_aggr: list = []
         self._aggregation_targets: dict = {}
 
     @property
-    def bi_rawdata(self):
+    def bi_rawdata(self) -> Mapping[str, Any] | None:
         return self._bi_rawdata
 
     @property
@@ -49,14 +106,14 @@ class AggregationData:
         return self._missing_sites
 
     @property
-    def error(self):
+    def error(self) -> str | None:
         return self._error
 
     @property
-    def output(self):
+    def output(self) -> list[str]:
         return self._output
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         if not self._bi_rawdata:
             return
 
@@ -80,7 +137,9 @@ class AggregationData:
             self._output.append(repr(aggregations))
 
     @classmethod
-    def parse_aggregation_response(cls, aggr_response):
+    def parse_aggregation_response(
+        cls, aggr_response: Mapping[str, Any]
+    ) -> dict[str, dict[str, Any]]:
         if "rows" in aggr_response:
             return AggregationData.parse_legacy_response(aggr_response["rows"])
         return aggr_response["aggregations"]
@@ -101,7 +160,7 @@ class AggregationData:
             }
         return result
 
-    def _rewrite_aggregation(self, aggr_data):
+    def _rewrite_aggregation(self, aggr_data: dict[str, Any]) -> None:
         aggr_data["state_computed_by_agent"] = aggr_data["state"]
         if aggr_data["in_downtime"] and "state_scheduled_downtime" in self._options:
             aggr_data["state_computed_by_agent"] = self._options["state_scheduled_downtime"]
@@ -109,21 +168,24 @@ class AggregationData:
         if aggr_data["acknowledged"] and "state_acknowledged" in self._options:
             aggr_data["state_computed_by_agent"] = self._options["state_acknowledged"]
 
-    def _process_assignments(self, aggr_name, aggr_data):
+    def _process_assignments(self, aggr_name: str, aggr_data: dict[str, Any]) -> None:
         if not self._assignments:
             self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
             return
 
-        if "querying_host" in self._assignments:
+        if self._assignments.querying_host:
             self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
 
-        if "affected_hosts" in self._assignments:
+        if self._assignments.affected_hosts:
             for hostname in aggr_data["hosts"]:
                 self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
-        for pattern, target_host in self._assignments.get("regex", []):
-            if regex(pattern).match(aggr_name):
-                self._aggregation_targets.setdefault(target_host, {})[aggr_name] = aggr_data
+        for pattern, target_host in self._assignments.regex:
+            if mo := regex(pattern).match(aggr_name):
+                target_name = target_host
+                for nr, text in enumerate(mo.groups("")):
+                    target_name = target_name.replace("\\%d" % (nr + 1), text)
+                self._aggregation_targets.setdefault(target_name, {})[aggr_name] = aggr_data
 
 
 class RawdataException(MKException):
@@ -131,30 +193,25 @@ class RawdataException(MKException):
 
 
 class AggregationRawdataGenerator:
-    def __init__(self, config: Mapping[str, Any]) -> None:
+    def __init__(self, config: AgentBiConfig) -> None:
         self._config = config
 
-        self._credentials = config["credentials"]
-        if self._credentials == "automation":
-            self._username = self._credentials
-            self._secret = AutomationUserSecret(self._username).read()
-        else:
-            self._username, automation_secret = self._credentials[1]
-            if (secret := extract(automation_secret)) is None:
-                raise ValueError(
-                    f"No automation secret found for user {self._username} found in password store"
-                )
-            self._secret = secret
-
-        site_config = config["site"]
-
-        if site_config == "local":
+        if self._config.site_url is None:
             self._site_url = "http://localhost:%d/%s" % (
-                cmk.utils.site.get_apache_port(),
+                cmk.ccc.site.get_apache_port(omd_root),
                 omd_site(),
             )
         else:
-            self._site_url = site_config[1]
+            self._site_url = self._config.site_url
+
+    def _get_bearer_token(self) -> str:
+        if self._config.authentication is None:
+            username = "automation"
+            secret = AutomationUserSecret(UserId(username)).read()
+        else:
+            username = self._config.authentication.username
+            secret = self._config.authentication.lookup()
+        return f"Bearer {username} {secret.strip()}"
 
     def generate_data(self) -> AggregationData:
         try:
@@ -166,23 +223,23 @@ class AggregationRawdataGenerator:
         except requests.exceptions.RequestException as e:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
-    def _fetch_aggregation_data(self):
-        filter_query = self._config.get("filter") or {}
+    def _fetch_aggregation_data(self) -> str:
+        filter_query = self._config.filter
 
-        response = requests.get(  # nosec B113
+        response = requests.get(  # nosec B113 # BNS:0b0eac
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
-            headers={"Authorization": f"Bearer {self._username} {self._secret.strip()}"},
+            headers={"Authorization": self._get_bearer_token()},
             params={
-                "filter_names": filter_query.get("names") or [],
-                "filter_groups": filter_query.get("groups") or [],
+                "filter_names": filter_query.names,
+                "filter_groups": filter_query.groups,
             },
         )
         response.raise_for_status()
         return response.text
 
-    def _parse_response_text(self, response_text):
+    def _parse_response_text(self, response_text: str) -> dict[str, Any]:
         try:
             data = json.loads(response_text)
         except ValueError:
@@ -199,9 +256,9 @@ class AggregationRawdataGenerator:
 
 
 class AggregationOutputRenderer:
-    def render(self, aggregation_data_results) -> None:  # type: ignore[no-untyped-def]
+    def render(self, aggregation_data_results: Sequence[AggregationData]) -> None:
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}  #
+        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -229,19 +286,71 @@ class AggregationOutputRenderer:
         sys.stdout.write("\n".join(output))
 
 
-def query_data(config: Mapping[str, Any]) -> AggregationData:
+def query_data(config: AgentBiConfig) -> AggregationData:
     output_generator = AggregationRawdataGenerator(config)
     return output_generator.generate_data()
 
 
-def main():
+def merge_config(secrets: Sequence[str], raw_configs: Sequence[str]) -> list[AgentBiConfig]:
+    # we could just use zip( . , strict=True), but let's be explicit:
+    if (ls := len(secrets)) != (lc := len(raw_configs)):
+        raise ValueError(
+            f"Number of arguments to `--secrets` ({ls}) and `--configs` ({lc}) must match"
+        )
+    configs = []
+    for arg, config_j in zip(secrets, raw_configs):
+        config = AgentBiConfig.model_validate_json(config_j)
+        if (config.authentication is None) is not (":" not in arg):
+            raise ValueError("Secrets and configs must match")
+        configs.append(config)
+        if config.authentication is not None:
+            config.authentication.merge_arg(arg)
+    return configs
+
+
+@dataclass(frozen=True)
+class _Args:
+    debug: bool
+    configs: Sequence[AgentBiConfig]
+
+    @classmethod
+    def from_argv(cls, args: Sequence[str]) -> Self:
+        raw = parse_arguments(args)
+        return cls(debug=bool(raw.debug), configs=merge_config(raw.secrets, raw.configs))
+
+
+def _optionally_read_stdin_list() -> list[str]:
+    """Try to read additional argv elements from stdin
+
+    Most of the time, stdin will be available, and we immediately return
+    the read elements.
+    In case stdin is not provided (in manual calls for example) we time out
+    after just 1 second.
+    """
+    if select.select([sys.stdin], [], [], 1.0)[0]:
+        return json.load(sys.stdin)
+    return []
+
+
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    parser.add_argument("--secrets", default=[], nargs="*", help="List of secrets")
+    parser.add_argument("--configs", default=[], nargs="*", help="List of configs")
+    return parser.parse_args(argv)
+
+
+def main() -> int:
+    args = _Args.from_argv(sys.argv[1:] + _optionally_read_stdin_list())
     try:
-        # Config is a list of site connections
-        config = ast.literal_eval(sys.stdin.read())
         p = ThreadPool()
-        results = p.map(query_data, config)
+        results = p.map(query_data, args.configs)
         AggregationOutputRenderer().render(results)
-    except Exception as e:
+    except () if args.debug else (Exception,) as e:
         sys.stderr.write("%s" % e)
         return 1
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

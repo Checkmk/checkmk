@@ -30,7 +30,7 @@ from cmk.rulesets.v1.rule_specs import (
 
 
 # ignore mypy errors due to `Any` since we care about testing the name validation
-@pytest.mark.parametrize(  # type: ignore[misc]
+@pytest.mark.parametrize(
     ["name"],
     [
         pytest.param("element\x07bc", id="invalid identifier"),
@@ -45,7 +45,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="ActiveCheck",
         ),
@@ -54,7 +54,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
                 "eval_type": EvalType.MERGE,
             },
             id="AgentAccess",
@@ -64,7 +64,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="AgentConfig",
         ),
@@ -73,7 +73,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
                 "condition": HostCondition(),
             },
             id="CheckParameters",
@@ -83,7 +83,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="DiscoveryParameters",
         ),
@@ -92,7 +92,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
                 "condition": HostCondition(),
             },
             id="EnforcedService",
@@ -102,7 +102,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="InventoryParameters",
         ),
@@ -111,7 +111,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="NotificationParameters",
         ),
@@ -120,7 +120,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
                 "eval_type": EvalType.MERGE,
                 "condition": HostAndServiceCondition(),
             },
@@ -131,7 +131,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
                 "eval_type": EvalType.MERGE,
             },
             id="SNMP",
@@ -141,7 +141,7 @@ from cmk.rulesets.v1.rule_specs import (
             {
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
-                "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
+                "parameter_form": lambda: Dictionary(elements={}),
             },
             id="SpecialAgent",
         ),
@@ -167,4 +167,4 @@ def test_ruleset_name_validation(
     with pytest.raises(
         ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
     ):
-        input_rulespec(name=name, **kwargs)  # type: ignore[misc]
+        input_rulespec(name=name, **kwargs)

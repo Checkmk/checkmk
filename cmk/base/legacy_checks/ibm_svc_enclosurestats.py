@@ -6,10 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_enclosurestats:sep(58)>>>
@@ -47,6 +49,7 @@ def parse_ibm_svc_enclosurestats(info):
 
 
 check_info["ibm_svc_enclosurestats"] = LegacyCheckDefinition(
+    name="ibm_svc_enclosurestats",
     parse_function=parse_ibm_svc_enclosurestats,
 )
 
@@ -74,6 +77,7 @@ def check_ibm_svc_enclosurestats_temp(item, params, section):
 
 
 check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
+    name="ibm_svc_enclosurestats_temp",
     service_name="Temperature Enclosure %s",
     sections=["ibm_svc_enclosurestats"],
     discovery_function=inventory_ibm_svc_enclosurestats_temp,
@@ -108,6 +112,7 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, section):
 
 
 check_info["ibm_svc_enclosurestats.power"] = LegacyCheckDefinition(
+    name="ibm_svc_enclosurestats_power",
     service_name="Power Enclosure %s",
     sections=["ibm_svc_enclosurestats"],
     discovery_function=inventory_ibm_svc_enclosurestats_power,

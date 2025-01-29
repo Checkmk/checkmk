@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {ForceSimulation} from "./force_simulation";
-import {StyleOptionSpecRange, StyleOptionValues} from "./layout_utils";
+import type {ForceSimulation} from "./force_simulation";
+import type {StyleOptionSpecRange, StyleOptionValues} from "./layout_utils";
 
 export type ForceOptions = {
     charge: number;
@@ -23,7 +23,7 @@ export class ForceConfig {
 
     constructor(
         force_simulation: ForceSimulation,
-        options: ForceOptions | null = null
+        options: ForceOptions | null = null,
     ) {
         this._force_simulation = force_simulation;
         if (options == null) options = this.get_default_options();

@@ -14,6 +14,7 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
     config_variable_group_registry.register(ConfigVariableGroupUserInterface)
     config_variable_group_registry.register(ConfigVariableGroupWATO)
     config_variable_group_registry.register(ConfigVariableGroupSiteManagement)
+    config_variable_group_registry.register(ConfigVariableGroupSupport)
     config_variable_group_registry.register(ConfigVariableGroupDeveloperTools)
 
 
@@ -47,6 +48,14 @@ class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
 
     def sort_index(self) -> int:
         return 30
+
+
+class ConfigVariableGroupSupport(ConfigVariableGroup):
+    def title(self) -> str:
+        return _("Support")
+
+    def sort_index(self) -> int:
+        return 80
 
 
 class ConfigVariableGroupDeveloperTools(ConfigVariableGroup):

@@ -5,14 +5,14 @@
 
 import pytest
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 
 
 def test_print_table(capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(["foo", "bar"], ["", ""], [["Guildo", "Horn"], ["Dieter Thomas", "Kuhn"]])
     captured = capsys.readouterr()
     assert captured.out == (
-        "foo           bar \n" "------------- ----\n" "Guildo        Horn\n" "Dieter Thomas Kuhn\n"
+        "foo           bar \n------------- ----\nGuildo        Horn\nDieter Thomas Kuhn\n"
     )
     assert captured.err == ""
 
@@ -20,9 +20,7 @@ def test_print_table(capsys: pytest.CaptureFixture[str]) -> None:
 def test_print_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(["foo", "bar"], ["XX", "YY"], [["Angus", "Young"], ["Estas", "Tonne"]])
     captured = capsys.readouterr()
-    assert captured.out == (
-        "XXfoo  YY bar  \n" "XX-----YY -----\n" "XXAngusYY Young\n" "XXEstasYY Tonne\n"
-    )
+    assert captured.out == ("XXfoo  YY bar  \nXX-----YY -----\nXXAngusYY Young\nXXEstasYY Tonne\n")
     assert captured.err == ""
 
 

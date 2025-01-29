@@ -8,9 +8,10 @@ import os
 import subprocess
 from pathlib import Path
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -67,7 +68,7 @@ def do_git_commit() -> None:
         if not message:
             message = _("Unknown configuration change")
 
-        _git_command(["commit", "--author", author, "-m", message])
+        _git_command(["commit", "--author", author, "-F", "-"], stdin=message)
 
 
 def _git_add_files() -> None:
@@ -78,32 +79,38 @@ def _git_add_files() -> None:
     _git_command(["add", "--all", ".gitignore"] + rel_paths)
 
 
-def _git_command(args: list[str]) -> None:
+def _git_command(args: list[str], stdin: str | None = None) -> None:
     command = ["git"] + args
+    debug_command = subprocess.list2cmdline(command)
+    if stdin:
+        if (len_stdin := len(stdin)) > 50:
+            debug_command += f" < {stdin[:45]}[...] ({len_stdin} chars)"
+        else:
+            debug_command += f" < {stdin}"
     logger.debug(
         "GIT: Execute in %s: %s",
         cmk.utils.paths.default_config_dir,
-        subprocess.list2cmdline(command),
+        debug_command,
     )
     try:
         completed_process = subprocess.run(
             command,
             cwd=cmk.utils.paths.default_config_dir,
+            input=stdin,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
             check=False,
         )
-    except FileNotFoundError as e:
+    except (FileNotFoundError, UnicodeEncodeError) as e:
         raise MKGeneralException(
-            _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
-            % (subprocess.list2cmdline(command), e)
+            _("Error executing GIT command <tt>%s</tt>:<br><br>%s") % (debug_command, e)
         ) from e
 
     if completed_process.returncode:
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
-            % (subprocess.list2cmdline(command), completed_process.stdout.replace("\n", "<br>\n"))
+            % (debug_command, completed_process.stdout.replace("\n", "<br>\n"))
         )
 
 

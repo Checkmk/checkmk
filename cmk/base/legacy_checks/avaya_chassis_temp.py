@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.avaya import DETECT_AVAYA
+
+check_info = {}
 
 
 def inventory_avaya_chassis_temp(info):
@@ -27,6 +28,7 @@ def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["avaya_chassis_temp"] = LegacyCheckDefinition(
+    name="avaya_chassis_temp",
     parse_function=parse_avaya_chassis_temp,
     detect=DETECT_AVAYA,
     fetch=SNMPTree(

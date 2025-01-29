@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import os
 import subprocess
 from pathlib import Path
 from subprocess import check_output
 from typing import NamedTuple, NewType
 
 import pytest
-from pipfile import Pipfile  # type: ignore[import-untyped]
 from semver import VersionInfo
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 
 ImportName = NewType("ImportName", "str")
@@ -80,12 +78,8 @@ def assert_uninstall_and_purge_cache(pip_cmd: PipCommand, package_name: str, sit
         assert p.returncode == 0
 
 
-def _load_pipfile_data() -> dict:
-    return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
-
-
 def test_01_python_interpreter_exists(site: Site) -> None:
-    assert os.path.exists(site.root + f"/bin/python{_get_python_version_from_defines_make().major}")
+    assert site.path(f"bin/python{_get_python_version_from_defines_make().major}").exists()
 
 
 def test_02_python_interpreter_path(site: Site) -> None:
@@ -114,19 +108,19 @@ def test_03_python_path(site: Site) -> None:
 
     ordered_path_elements = [
         # there may be more, but these have to occur in this order:
-        site.root + f"/local/lib/python{python_version.major}",
-        site.root + f"/lib/python{python_version.major}/cloud",
-        site.root + f"/lib/python{python_version.major}.{python_version.minor}",
-        site.root + f"/lib/python{python_version.major}",
+        site.root.as_posix() + f"/local/lib/python{python_version.major}",
+        site.root.as_posix() + f"/lib/python{python_version.major}/cloud",
+        site.root.as_posix() + f"/lib/python{python_version.major}.{python_version.minor}",
+        site.root.as_posix() + f"/lib/python{python_version.major}",
     ]
     assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
 
     for path in sys_path[1:]:
-        assert path.startswith(site.root), f"Found non site path {path!r} in sys.path"
+        assert path.startswith(site.root.as_posix()), f"Found non site path {path!r} in sys.path"
 
 
 def test_01_pip_exists(site: Site) -> None:
-    assert os.path.exists(site.root + "/bin/pip3")
+    assert site.path("bin/pip3").exists()
 
 
 def test_02_pip_path(site: Site) -> None:
@@ -161,7 +155,7 @@ def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
 @pytest.mark.parametrize("pip_cmd", SUPPORTED_PIP_CMDS)
 def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand) -> None:
     # We're using here another package which is needed for check_sql but not deployed by us
-    package_name = "cx_Oracle"
+    package_name = "oracledb"
     if pip_cmd.needs_target_as_commandline:
         command = pip_cmd.command + [
             "install",

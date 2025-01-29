@@ -9,8 +9,12 @@ from typing import Any
 
 from livestatus import SiteConfigurations, SiteId
 
-from cmk.utils.config_validation_layer.groups import GroupSpec
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import edition
 
+from cmk.utils import paths
+
+from cmk.gui.groups import GroupSpec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
@@ -22,6 +26,9 @@ CustomerIdOrGlobal = CustomerId | None
 
 
 class ABCCustomerAPI(ABC):
+    def __init__(self, ident: str):
+        self.ident = ident
+
     @classmethod
     @abstractmethod
     def get_sites_of_customer(cls, customer_id: CustomerId) -> SiteConfigurations: ...
@@ -132,7 +139,12 @@ class CustomerAPIStub(ABCCustomerAPI):
 
 @request_memoize()
 def customer_api() -> ABCCustomerAPI:
-    return CustomerAPIClass()
+    return customer_api_registry[str(edition(paths.omd_root))]
 
 
-CustomerAPIClass: type[ABCCustomerAPI] = CustomerAPIStub
+class CustomerAPIRegistry(Registry[ABCCustomerAPI]):
+    def plugin_name(self, instance: ABCCustomerAPI) -> str:
+        return instance.ident
+
+
+customer_api_registry = CustomerAPIRegistry()

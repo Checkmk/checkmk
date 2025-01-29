@@ -107,18 +107,17 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
             bean = parsed[inst].setdefault(bean_type, {}).setdefault(bean_name, {})
             bean[var] = value
             bean.update(attributes)
-        else:
-            if positional:
-                app = positional[0]
-                app_dict = parsed[inst].setdefault("apps", {}).setdefault(app, {})
-                if len(positional) > 1:
-                    servlet = positional[1]
-                    app_dict.setdefault("servlets", {}).setdefault(servlet, {})
-                    app_dict["servlets"][servlet][var] = value
-                else:
-                    app_dict[var] = value
+        elif positional:
+            app = positional[0]
+            app_dict = parsed[inst].setdefault("apps", {}).setdefault(app, {})
+            if len(positional) > 1:
+                servlet = positional[1]
+                app_dict.setdefault("servlets", {}).setdefault(servlet, {})
+                app_dict["servlets"][servlet][var] = value
             else:
-                parsed[inst][var] = value
+                app_dict[var] = value
+        else:
+            parsed[inst][var] = value
     return parsed
 
 
@@ -145,7 +144,7 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
 #   '----------------------------------------------------------------------'
 
 
-def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
+def get_inventory_jolokia_metrics_apps(
     what: str,
     *,
     needed_keys: set[str],

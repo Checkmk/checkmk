@@ -8,10 +8,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def strem1_sensors_parse_info(info):
@@ -64,6 +64,7 @@ def parse_strem1_sensors(string_table: Sequence[StringTable]) -> Sequence[String
 
 
 check_info["strem1_sensors"] = LegacyCheckDefinition(
+    name="strem1_sensors",
     parse_function=parse_strem1_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
     fetch=[

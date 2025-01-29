@@ -51,7 +51,7 @@ def parse_netapp_ontap_luns(string_table: StringTable) -> Section:
     return {
         lun.item_name(): lun
         for line in string_table
-        if (lun := models.LunModel.model_validate_json(line[0]))
+        for lun in [models.LunModel.model_validate_json(line[0])]
     }
 
 
@@ -85,6 +85,10 @@ def _check_netapp_ontap_luns(
 
     yield Result(state=State.OK, summary=f"Volume: {lun.volume_name}")
     yield Result(state=State.OK, summary=f"SVM: {lun.svm_name}")
+
+    if lun.space_used is None:
+        yield Result(state=State.UNKNOWN, summary="Space used is unknown")
+        return
 
     yield from check_netapp_luns(
         item=item,

@@ -63,19 +63,19 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
 
     captured = capsys.readouterr()
     assert captured.err == "", "stderr is not empty"
-    assert (
-        """<<<<device1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out
-    ), "piggyback header is not correct"
+    assert """<<<<device1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out, (
+        "piggyback header is not correct"
+    )
 
     # make sure the device from the second partition is in
-    assert (
-        """<<<<partition2device1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out
-    ), "piggyback header is not correct"
+    assert """<<<<partition2device1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out, (
+        "piggyback header is not correct"
+    )
 
     # make sure the device from the overflow is in
-    assert (
-        """<<<<overflowdevice1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out
-    ), "piggyback header is not correct"
+    assert """<<<<overflowdevice1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out, (
+        "piggyback header is not correct"
+    )
 
     assert "1636109710590" in captured.out
     assert "device_duplication" in captured.out

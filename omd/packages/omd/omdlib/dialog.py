@@ -15,8 +15,9 @@ from typing import TYPE_CHECKING
 
 from omdlib.type_defs import ConfigChoiceHasError
 
+from cmk.ccc.exceptions import MKTerminate
+
 from cmk.utils import tty
-from cmk.utils.exceptions import MKTerminate
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -132,7 +133,7 @@ def _run_dialog(args: list[str]) -> DialogResult:
     # dialog returns 1 on the nolabel answer. But a return code of 1 is
     # used for errors. So we need to check the output.
     if completed_process.returncode != 0 and completed_process.stderr != "":
-        print(completed_process.stderr, file=sys.stderr)
+        sys.stderr.write(completed_process.stderr + "\n")
     return completed_process.returncode == 0, completed_process.stderr
 
 

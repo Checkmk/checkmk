@@ -8,7 +8,7 @@ import os
 import re
 from collections.abc import Sequence
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 LOGGER = logging.getLogger()
 
@@ -57,16 +57,19 @@ GPL_HEADER_NOTIFICATION = re.compile(
 
 ignored_files = [
     "cmk/notification_plugins/ilert.py",
-    "notifications/ilert",
     "cmk/notification_plugins/signl4.py",
+    "notifications/ilert",
     "notifications/signl4",
-    "omd/packages/maintenance/merge-crontabs",
     "omd/packages/Python/pip",
+    "omd/packages/maintenance/merge-crontabs",
+    "tests/integration_redfish/mockup-server/redfishMockupServer.py",
+    "tests/integration_redfish/mockup-server/rfSsdpServer.py",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories
 # based on their name.
 enterprise_names = [
+    "non-free",
     "nonfree",
     "cloud",
     "enterprise",
@@ -97,7 +100,7 @@ def get_file_header(path: str, length: int = 30) -> str:
         return "".join(head)
 
 
-def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=too-many-branches
+def check_for_license_header_violation(rel_path, abs_path):
     if rel_path.startswith("non-free/cmk-update-agent/"):
         if not ENTERPRISE_HEADER_CODING.match(get_file_header(abs_path, length=5)):
             yield "enterprise header with coding not matching", rel_path
@@ -116,9 +119,8 @@ def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=t
     elif rel_path.startswith("notifications/"):
         if not GPL_HEADER_NOTIFICATION.match(get_file_header(abs_path, length=10)):
             yield "gpl header with notification not matching", rel_path
-    else:
-        if not GPL_HEADER.match(get_file_header(abs_path, length=4)):
-            yield "gpl header not matching", rel_path
+    elif not GPL_HEADER.match(get_file_header(abs_path, length=4)):
+        yield "gpl header not matching", rel_path
 
 
 def test_license_headers(python_files: Sequence[str]) -> None:
@@ -135,6 +137,6 @@ def test_license_headers(python_files: Sequence[str]) -> None:
     violations = sorted(list(generator()))
     violations_formatted = "\n".join(f"{ident}: {path}" for (ident, path) in violations)
 
-    assert (
-        not violations
-    ), f"The following license header violations were detected:\n{violations_formatted}"
+    assert not violations, (
+        f"The following license header violations were detected:\n{violations_formatted}"
+    )

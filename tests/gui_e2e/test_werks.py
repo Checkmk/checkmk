@@ -4,71 +4,58 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import re
+from collections.abc import Iterator
+from urllib.parse import quote_plus
 
 import pytest
+from playwright.sync_api import expect
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib import repo_path
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.werks import Werks
-
-import cmk.utils.werks
-
-from cmk.werks.models import Edition
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="skip until CMK-17126.")
-def test_werks_available(logged_in_page: LoginPage) -> None:
-    # get the expected editions for the werks
-    # NOTE: We can not use cmk_version to detect the edition due to monkey-patching in the testlib!
-    # since the tests are always running in a CEE environment, we do not consider other editions
-    werk_editions = {
-        Edition.CRE,
-        Edition.CEE,
-    }
-    logger.info("Checking for editions: %s", ",".join(str(e.value) for e in werk_editions))
-    # get all werks (list is required to retain the order)
-    raw_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
-    # sort werks by date
-    internal_werks = {werk.id: werk for werk in sorted(raw_werks, key=lambda item: item.date)}
-    # filter werks by edition
-    internal_werks = {
-        werk_id: werk for werk_id, werk in internal_werks.items() if werk.edition in werk_editions
-    }
-    internal_werk_ids = list(internal_werks.keys())
-    assert len(internal_werk_ids) > 0, "No werks found in the repo!"
+@pytest.fixture(name="werks_page", scope="function")
+def fixture_werks_page(dashboard_page: Dashboard) -> Iterator[Werks]:
+    yield Werks(dashboard_page.page)
 
-    # get all werks on the werks page (list is required to retain the order)
-    werks_page = Werks(logged_in_page.page)
-    displayed_werks = werks_page.get_recent_werks()
+
+def test_werks_available(werks_page: Werks) -> None:
+    displayed_werks = werks_page.get_recent_werks(count=5)
     displayed_werk_ids = list(displayed_werks.keys())
-    assert len(displayed_werk_ids) > 0, "Werk page does not return any werks!"
+    assert len(displayed_werk_ids) > 0, "Checkmk site does not display any werks!"
 
-    # get the relevant slice of werks for comparison (displayed werks are sorted descending)
-    oldest_displayed_werk_index = internal_werk_ids.index(displayed_werk_ids[-1])
-    current_internal_werk_ids = internal_werk_ids[oldest_displayed_werk_index:]
-    assert (
-        len(current_internal_werk_ids) > 0
-    ), "Could not detect current werks! Site not in sync with repo?"
+    for werk_id in displayed_werks:
+        _url_pattern: str = quote_plus(f"werk.py?werk={werk_id}")
+        werks_page.werk(werk_id).click()
+        werks_page.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
+        werks_page.page.go_back(wait_until="load")
 
-    # detect any missing werks
-    different_werks = set(current_internal_werk_ids).symmetric_difference(set(displayed_werk_ids))
-    if different_werks:
-        missing_werks = set(current_internal_werk_ids).difference(set(displayed_werk_ids))
-        if missing_werks:
-            logger.warning("Missing werks detected: %s", missing_werks)
-        unexpected_werks = set(displayed_werk_ids).difference(set(internal_werk_ids))
-        if unexpected_werks:
-            logger.warning("Unexpected werks found: %s Site ahead of repo?", unexpected_werks)
-        missing_werks_cnt = len(missing_werks)
-        # check if the site is outdated (i.e. missing werks are identical to the latest werks)
-        latest_werks = set(current_internal_werk_ids[-missing_werks_cnt:])
-        if missing_werks == latest_werks:
-            logger.warning("Latest werks missing! Site not in sync with repo?")
-    assert len(different_werks) == 0, "Werks mismatch! Make sure site and repo are in sync!"
 
-    # check that all werk links share the same url format
-    for werk in displayed_werks:
-        response = werks_page.go(displayed_werks[werk])
-        assert response and response.ok, f"Could not navigate to werk {werk}!"
+def test_navigate_to_werks(werks_page: Werks) -> None:
+    # validate presence of dropdown buttons
+    for button_name in werks_page.dropdown_buttons:
+        expect(werks_page.main_area.dropdown_button(button_name)).to_be_visible()
+
+    # validate 'Filter' button works
+    werks_page.get_link("Filter").click()
+    expect(
+        werks_page.main_area.locator().get_by_role(role="heading", name="Filter")
+    ).to_be_visible()
+    expect(werks_page.apply_filter).to_have_count(1)
+    expect(werks_page.reset_filter).to_have_count(1)
+
+    # validate 'Acnowledge all' button is disabled
+    with pytest.raises(PWTimeoutError):
+        werks_page.get_link("Acknowledge all").click()
+
+    # validate presence of Werks
+    max_number_of_werks_displayed = 100
+    number_of_werks_displayed = werks_page.get_link("#", exact=False).count()
+    assert number_of_werks_displayed > 0, "Checkmk site does not display any werks!"
+    assert number_of_werks_displayed <= max_number_of_werks_displayed, (
+        f"Checkmk site displays a maximum of {max_number_of_werks_displayed} werks, by default!"
+    )

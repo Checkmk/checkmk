@@ -48,8 +48,9 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hyperv_vms(string_table):
@@ -93,16 +94,19 @@ def check_hyperv_vms(item, params, parsed):
     if not (vm := parsed.get(item)):
         return
 
-    compare_mode, target_states = params["vm_target_state"]
-    # compare against discovered VM state
+    compare_mode = params["vm_target_state"][0]
+
     if compare_mode == "discovery":
         discovered_state = params.get("discovered_state")
 
         # this means that the check is executed as a manual check
         if discovered_state is None:
-            yield 3, "State is {} ({}), discovery state is not available".format(
-                vm["state"],
-                vm["state_msg"],
+            yield (
+                3,
+                "State is {} ({}), discovery state is not available".format(
+                    vm["state"],
+                    vm["state_msg"],
+                ),
             )
             return
 
@@ -110,14 +114,18 @@ def check_hyperv_vms(item, params, parsed):
             yield 0, "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
             return
 
-        yield 2, "State {} ({}) does not match discovery ({})".format(
-            vm["state"],
-            vm["state_msg"],
-            discovered_state,
+        yield (
+            2,
+            "State {} ({}) does not match discovery ({})".format(
+                vm["state"],
+                vm["state_msg"],
+                discovered_state,
+            ),
         )
         return
 
     # service state defined in rule
+    target_states = DEFAULT_STATE_MAPPING | params["vm_target_state"][1]
     service_state = target_states.get(vm["state"])
 
     # as a precaution, if in the future there are new VM states we do not know about
@@ -127,40 +135,43 @@ def check_hyperv_vms(item, params, parsed):
         yield service_state, "State is {} ({})".format(vm["state"], vm["state_msg"])
 
 
+DEFAULT_STATE_MAPPING = {
+    "FastSaved": 0,
+    "FastSavedCritical": 2,
+    "FastSaving": 0,
+    "FastSavingCritical": 2,
+    "Off": 1,
+    "OffCritical": 2,
+    "Other": 3,
+    "Paused": 0,
+    "PausedCritical": 2,
+    "Pausing": 0,
+    "PausingCritical": 2,
+    "Reset": 1,
+    "ResetCritical": 2,
+    "Resuming": 0,
+    "ResumingCritical": 2,
+    "Running": 0,
+    "RunningCritical": 2,
+    "Saved": 0,
+    "SavedCritical": 2,
+    "Saving": 0,
+    "SavingCritical": 2,
+    "Starting": 0,
+    "StartingCritical": 2,
+    "Stopping": 1,
+    "StoppingCritical": 2,
+}
+
 DEFAULT_PARAMETERS = {
     "vm_target_state": (
         "map",
-        {
-            "FastSaved": 0,
-            "FastSavedCritical": 2,
-            "FastSaving": 0,
-            "FastSavingCritical": 2,
-            "Off": 1,
-            "OffCritical": 2,
-            "Other": 3,
-            "Paused": 0,
-            "PausedCritical": 2,
-            "Pausing": 0,
-            "PausingCritical": 2,
-            "Reset": 1,
-            "ResetCritical": 2,
-            "Resuming": 0,
-            "ResumingCritical": 2,
-            "Running": 0,
-            "RunningCritical": 2,
-            "Saved": 0,
-            "SavedCritical": 2,
-            "Saving": 0,
-            "SavingCritical": 2,
-            "Starting": 0,
-            "StartingCritical": 2,
-            "Stopping": 1,
-            "StoppingCritical": 2,
-        },
+        DEFAULT_STATE_MAPPING,
     ),
 }
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
+    name="hyperv_vms",
     parse_function=parse_hyperv_vms,
     service_name="VM %s",
     discovery_function=inventory_hyperv_vms,

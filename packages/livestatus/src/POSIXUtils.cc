@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include <compare>
-#include <ratio>
 #include <thread>
 
 #include "livestatus/Logger.h"
@@ -158,8 +157,11 @@ file_lock::~file_lock() {
 
 bool file_lock::fcntl_impl(short l_type, int cmd, const char *msg,
                            bool accecpt_timeout) const {
-    struct ::flock fl {
-        .l_type = l_type, .l_whence = SEEK_SET, .l_start = 0, .l_len = 0,
+    struct ::flock fl{
+        .l_type = l_type,
+        .l_whence = SEEK_SET,
+        .l_start = 0,
+        .l_len = 0,
         .l_pid = 0,
     };
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
@@ -208,6 +210,7 @@ ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
             return -1;
         }
     }
+    // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     return size;
 }
 

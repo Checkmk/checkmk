@@ -5,9 +5,34 @@
 
 import re
 
-from cmk.base.check_api import savefloat, saveint
-
 from .temperature import check_temperature
+
+
+def savefloat(f: str) -> float:
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
+    try:
+        return float(f)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
 
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |

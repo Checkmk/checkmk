@@ -7,11 +7,11 @@
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 
@@ -57,6 +57,7 @@ def check_couchbase_nodes_cache(item, params, parsed):
 
 
 check_info["couchbase_nodes_cache"] = LegacyCheckDefinition(
+    name="couchbase_nodes_cache",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase %s Cache",
     discovery_function=discover_couchbase_nodes_cache,

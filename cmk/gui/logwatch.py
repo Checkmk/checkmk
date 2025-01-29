@@ -11,10 +11,11 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -41,7 +42,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -349,7 +349,7 @@ def show_file(site, host_name, file_name):
                 _("Analyze this line"),
                 "analyze",
             )
-            html.write_text(line["line"].replace(" ", "&nbsp;").replace("\1", "<br>"))
+            html.write_text_permissive(line["line"].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_td()
             html.close_tr()
 
@@ -516,7 +516,7 @@ def _page_menu_entry_acknowledge(
     )
 
 
-def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
+def do_log_ack(site, host_name, file_name):
     sites.live().set_auth_domain("action")
 
     logs_to_ack = []
@@ -607,7 +607,7 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 #   '----------------------------------------------------------------------'
 
 
-def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disable=too-many-branches
+def parse_file(site, host_name, file_name, hidecontext=False):
     log_chunks: list[dict[str, Any]] = []
     try:
         chunk: dict[str, Any] | None = None
@@ -681,7 +681,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disabl
     except Exception as e:
         if active_config.debug:
             raise
-        raise MKGeneralException(escape_to_html(_("Cannot parse log file %s: %s") % (file_name, e)))
+        raise MKGeneralException(_("Cannot parse log file %s: %s") % (file_name, e))
 
     return log_chunks
 
@@ -824,15 +824,10 @@ def logfiles_of_host(site, host_name):
 def get_logfile_lines(site, host_name, file_name):
     if site:  # Honor site hint if available
         sites.live().set_only_sites([site])
-    query = (
-        "GET hosts\n"
-        "Columns: mk_logwatch_file:file:%s/%s\n"
-        "Filter: name = %s\n"
-        % (
-            livestatus.lqencode(host_name),
-            livestatus.lqencode(file_name.replace("\\", "\\\\").replace(" ", "\\s")),
-            livestatus.lqencode(host_name),
-        )
+    query = "GET hosts\nColumns: mk_logwatch_file:file:{}/{}\nFilter: name = {}\n".format(
+        livestatus.lqencode(host_name),
+        livestatus.lqencode(file_name.replace("\\", "\\\\").replace(" ", "\\s")),
+        livestatus.lqencode(host_name),
     )
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available

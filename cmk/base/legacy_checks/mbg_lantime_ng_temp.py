@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 
 def inventory_mbg_lantime_ng_temp(info):
@@ -27,6 +28,7 @@ def parse_mbg_lantime_ng_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_temp",
     parse_function=parse_mbg_lantime_ng_temp,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(

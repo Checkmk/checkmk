@@ -5,7 +5,7 @@
 
 from collections.abc import Hashable, Sequence
 
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import Row
 
 

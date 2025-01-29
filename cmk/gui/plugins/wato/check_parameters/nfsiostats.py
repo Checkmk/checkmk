@@ -46,7 +46,7 @@ def _parameter_valuespec_nfsiostats():
     return Migrate(
         migrate=_migrate_milliseconds,
         valuespec=Dictionary(
-            title=_("NFS IO Statistics"),
+            title=_("NFS IO statistics"),
             optional_keys=True,
             elements=[
                 (
@@ -62,7 +62,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "rpc_backlog",
                     Tuple(
-                        title=_("RPC Backlog"),
+                        title=_("RPC backlog"),
                         elements=[
                             Float(title=_("Warning below"), unit="queue"),
                             Float(title=_("Critical below"), unit="queue"),
@@ -72,7 +72,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "read_ops",
                     Tuple(
-                        title=_("Read Operations /s"),
+                        title=_("Read operations /s"),
                         elements=[
                             Float(title=_("Warning at"), unit="1/s"),
                             Float(title=_("Critical at"), unit="1/s"),
@@ -102,7 +102,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "read_retrans",
                     Tuple(
-                        title=_("Read Retransmissions"),
+                        title=_("Read retransmissions"),
                         elements=[
                             Percentage(title=_("Warning at")),
                             Percentage(title=_("Critical at")),
@@ -112,7 +112,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "read_avg_rtt_s",
                     Tuple(
-                        title=_("Read Average RTT (ms)"),
+                        title=_("Read average RTT (ms)"),
                         elements=[
                             Transform(
                                 valuespec=Float(title=_("Warning at"), unit="ms"),
@@ -130,7 +130,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "read_avg_exe_s",
                     Tuple(
-                        title=_("Read Average Executions (ms)"),
+                        title=_("Read average executions (ms)"),
                         elements=[
                             Transform(
                                 valuespec=Float(title=_("Warning at"), unit="ms"),
@@ -148,7 +148,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "write_ops_s",
                     Tuple(
-                        title=_("Write Operations/s"),
+                        title=_("Write operations/s"),
                         elements=[
                             Float(title=_("Warning at"), unit="1/s"),
                             Float(title=_("Critical at"), unit="1/s"),
@@ -178,7 +178,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "write_retrans",
                     Tuple(
-                        title=_("Write Retransmissions"),
+                        title=_("Write retransmissions"),
                         elements=[
                             Percentage(title=_("Warning at")),
                             Percentage(title=_("Critical at")),
@@ -188,7 +188,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "write_avg_rtt_s",
                     Tuple(
-                        title=_("Write Avg RTT (ms)"),
+                        title=_("Write avg RTT (ms)"),
                         elements=[
                             Transform(
                                 valuespec=Float(title=_("Warning at"), unit="ms"),
@@ -206,7 +206,7 @@ def _parameter_valuespec_nfsiostats():
                 (
                     "write_avg_exe_s",
                     Tuple(
-                        title=_("Write Avg exe (ms)"),
+                        title=_("Write avg exe (ms)"),
                         elements=[
                             Transform(
                                 valuespec=Float(title=_("Warning at"), unit="ms"),
@@ -231,10 +231,10 @@ rulespec_registry.register(
         check_group_name="nfsiostats",
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(
-            title=_("NFS IO Statistics"),
+            title=_("NFS IO statistics"),
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_nfsiostats,
-        title=lambda: _("NFS IO Statistics"),
+        title=lambda: _("NFS IO statistics"),
     )
 )

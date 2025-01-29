@@ -10,8 +10,7 @@ from typing import Generic, NamedTuple, TypeVar
 
 from livestatus import MKLivestatusNotFoundError
 
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
+from cmk.gui import sites, visuals
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
@@ -334,9 +333,7 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
     def _get_stats(
         cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
     ) -> S:
-        filter_headers, only_sites = visuals.get_filter_headers(
-            table=cls._livestatus_table(), infos=infos, context=context
-        )
+        filter_headers, only_sites = visuals.get_filter_headers(infos=infos, context=context)
         query = cls._stats_query() + "\n" + filter_headers
         try:
             with sites.only_sites(only_sites):

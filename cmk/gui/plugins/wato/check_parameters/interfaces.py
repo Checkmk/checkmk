@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-import cmk.gui.ifaceoper as ifaceoper
+from cmk.gui import ifaceoper
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -59,7 +59,14 @@ def _vs_item_appearance(title, help_txt):
             ("alias", _("Use alias")),
         ],
         default_value="index",
-        help=help_txt,
+        help=help_txt
+        + _(
+            "<br> <br>  "
+            "<b>Important note</b>: When changing this option, the services "
+            "need to be removed and rediscovered to apply the changes. "
+            "Otherwise there is a risk of mismatch between the discovered "
+            "and checked services."
+        ),
     )
 
 
@@ -130,7 +137,7 @@ def _vs_grouping():
         help=_(
             "Normally, the interface checks create a single service for each interface. By defining "
             "interface groups, multiple interfaces can be combined together. For each group, a "
-            "single service is created. This services reports the total traffic amount summed over "
+            "single service is created. These services report the total traffic amount summed over "
             "all group members."
         ),
         choices=[
@@ -156,7 +163,7 @@ def _vs_grouping():
                                             "group_name",
                                             TextInput(
                                                 title=_("Group name"),
-                                                help=_("Name of group in service description"),
+                                                help=_("Name of group in service name"),
                                                 allow_empty=False,
                                             ),
                                         ),
@@ -423,7 +430,7 @@ vs_elements_if_groups_group: list[DictionaryEntry] = [
         "group_name",
         TextInput(
             title=_("Group name"),
-            help=_("Name of group in service description"),
+            help=_("Name of group in service name"),
             allow_empty=False,
         ),
     ),
@@ -578,7 +585,7 @@ PERC_DISCARD_LEVELS = (10.0, 20.0)
 PERC_PKG_LEVELS = (10.0, 20.0)
 
 
-def _vs_alternative_levels(  # pylint: disable=redefined-builtin
+def _vs_alternative_levels(
     title: str,
     help: str,
     percent_levels: tuple[float, float] = (0.0, 0.0),
@@ -605,7 +612,7 @@ def _vs_alternative_levels(  # pylint: disable=redefined-builtin
                 optional_keys=False,
             ),
             Dictionary(
-                title="Provide seperate levels for in and out",
+                title="Provide separate levels for in and out",
                 elements=[
                     (
                         "in",
@@ -742,6 +749,7 @@ def _parameter_valuespec_if() -> Dictionary:
             "discovered_oper_status",
             "discovered_admin_status",
             "discovered_speed",
+            "item_appearance",
         ],  # Created by discovery
         elements=[
             (
@@ -938,8 +946,8 @@ def _parameter_valuespec_if() -> Dictionary:
                     title=_("Activate total bandwidth metric (sum of in and out)"),
                     help=_(
                         "By activating this item, the sum of incoming and outgoing traffic will "
-                        "be monitored via a seperate metric. Setting levels on the used total bandwidth "
-                        "is optional. If you do set levels you might also consider using averaging."
+                        "be monitored via a separate metric. Setting levels on the used total bandwidth "
+                        "is optional. If you set levels you might also consider using averaging."
                     ),
                     elements=[
                         (

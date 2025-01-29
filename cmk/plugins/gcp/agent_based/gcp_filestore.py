@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.gcp.lib import gcp
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 
 def parse(string_table: StringTable) -> gcp.Section:
@@ -86,7 +86,7 @@ def check(
     }
     disk_data["capacity"] = disk_data.pop("free_capacity") + disk_data["used_capacity"]
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk_data,
         value_store=get_value_store(),

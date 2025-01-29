@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.eltek import DETECT_ELTEK
+
+check_info = {}
 
 # .1.3.6.1.4.1.12148.9.3.1.0 --> ELTEK-DISTRIBUTED-MIB::batteryName.0
 # .1.3.6.1.4.1.12148.9.3.2.0 5485 --> ELTEK-DISTRIBUTED-MIB::batteryVoltage.0
@@ -63,6 +64,7 @@ def check_eltek_battery(_no_item, _no_params, parsed):
 
 
 check_info["eltek_battery"] = LegacyCheckDefinition(
+    name="eltek_battery",
     detect=DETECT_ELTEK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.3",
@@ -101,6 +103,7 @@ def check_eltek_battery_temp(item, params, parsed):
 
 
 check_info["eltek_battery.temp"] = LegacyCheckDefinition(
+    name="eltek_battery_temp",
     service_name="Temperature %s",
     sections=["eltek_battery"],
     discovery_function=inventory_eltek_battery_temp,
@@ -131,6 +134,7 @@ def check_eltek_battery_supply(item, params, parsed):
 
 
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
+    name="eltek_battery_supply",
     service_name="Battery %s",
     sections=["eltek_battery"],
     discovery_function=discover_eltek_battery_supply,

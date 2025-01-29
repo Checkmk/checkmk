@@ -18,7 +18,7 @@ def _parameter_valuespec_skype_mobile():
             (
                 "requests_processing",
                 Dictionary(
-                    title=_("Requests in Processing"),
+                    title=_("Requests in processing"),
                     elements=[
                         (
                             "upper",

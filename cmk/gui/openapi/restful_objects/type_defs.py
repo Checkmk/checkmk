@@ -17,15 +17,19 @@ DomainType = Literal[
     "agent",
     "agent_binary",
     "audit_log",
+    "background_job",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
+    "broker_connection",
     "comment",
+    "configuration_entity",
     "contact_group_config",
     "dcd",
     "discovery_run",
     "downtime",
     "event_console",
+    "form_spec",
     "folder_config",
     "host",
     "host_config",
@@ -35,9 +39,12 @@ DomainType = Literal[
     "host_tag_group",
     "ldap_connection",
     "licensing",
+    "license_response",
     "license_usage",
+    "license_request",
     "metric",
     "notification_rule",
+    "notification_parameter",
     "password",
     "parent_scan",
     "rule",
@@ -57,11 +64,18 @@ DomainType = Literal[
     "user_role",
     "aux_tag",
     "autocomplete",
-]  # fmt: off
+    "quick_setup",
+    "quick_setup_action_result",
+    "quick_setup_stage",
+    "quick_setup_stage_action_result",
+    "managed_robots",
+    "onboarding",
+]
 
 
 CmkEndpointName = Literal[
     "cmk/run",
+    "cmk/run_setup",
     "cmk/activate",
     "cmk/bake",
     "cmk/bake_and_sign",
@@ -81,6 +95,8 @@ CmkEndpointName = Literal[
     "cmk/download",
     "cmk/download_by_hash",
     "cmk/download_by_host",
+    "cmk/download_license_request",
+    "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",
     "cmk/move",
@@ -125,9 +141,13 @@ CmkEndpointName = Literal[
     "cmk/site_login",
     "cmk/update",
     "cmk/update_and_acknowledge",
+    "cmk/upload_license_response",
     "cmk/change_state",
     "cmk/verify",
     "cmk/register",
+    "cmk/quick_setup",
+    "cmk/save_quick_setup",
+    "cmk/edit_quick_setup",
 ]
 
 RestfulEndpointName = Literal[
@@ -154,6 +174,7 @@ RestfulEndpointName = Literal[
     ".../domain-types",
     ".../element",
     ".../element-type",
+    ".../fetch",
     ".../invoke",
     ".../modify",
     ".../persist",
@@ -169,6 +190,7 @@ RestfulEndpointName = Literal[
 ]  # fmt: off
 
 LinkRelation = CmkEndpointName | RestfulEndpointName
+TagGroup = Literal["Monitoring", "Setup", "Checkmk Internal", "Undocumented Endpoint"]
 
 PropertyFormat = Literal[
     # String values
@@ -229,7 +251,7 @@ class DomainObject(TypedDict):
     title: str
     links: list[LinkType]
     members: dict[str, Any]
-    extensions: dict[str, Any]
+    extensions: NotRequired[dict[str, Any]]
 
 
 class CollectionObject(TypedDict):
@@ -365,6 +387,7 @@ ResponseType = TypedDict(
         "204": PathItem,
         "301": PathItem,
         "302": PathItem,
+        "303": PathItem,
         "400": PathItem,
         "401": PathItem,
         "403": PathItem,
@@ -449,12 +472,14 @@ ErrorStatusCodeInt = Literal[
 ]
 SuccessStatusCodeInt = Literal[
     200,
+    201,
     204,
 ]
 
 RedirectStatusCodeInt = Literal[
     301,
     302,
+    303,
 ]
 
 StatusCodeInt = Literal[
@@ -465,9 +490,11 @@ StatusCodeInt = Literal[
 
 StatusCode = Literal[
     "200",
+    "201",
     "204",
     "301",
     "302",
+    "303",
     "400",
     "401",
     "403",

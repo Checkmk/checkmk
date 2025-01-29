@@ -7,10 +7,7 @@ Everything from the packaging module that is not yet properly sorted.
 Don't add new stuff here!
 """
 
-# pylint: disable=too-many-arguments
-
 import logging
-import subprocess
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
@@ -130,6 +127,10 @@ class PackageStore:
     def read_bytes(self, package_id: PackageID) -> bytes:
         return self._get_existing_package_path(package_id).read_bytes()
 
+    def is_package_pushed_from_central(self, package_id: PackageID) -> bool:
+        """Return whether the package was pushed from the central site, not created locally"""
+        return self._get_existing_package_path(package_id).parent == self.enabled_packages
+
     def _get_existing_package_path(self, package_id: PackageID) -> Path:
         """Return the path of an existing package
 
@@ -217,7 +218,11 @@ def create(
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(
-        package_store, manifest, path_config, persisting_function, version_packaged=version_packaged
+        package_store,
+        manifest,
+        path_config,
+        persisting_function,
+        version_packaged=version_packaged,
     )
 
 
@@ -290,6 +295,7 @@ def install(
     parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
+        pushed_from_central_site = package_store.is_package_pushed_from_central(package_id)
         return _install(
             installer,
             package_store,
@@ -299,6 +305,7 @@ def install(
             site_version=site_version,
             allow_outdated=allow_outdated,
             parse_version=parse_version,
+            pushed_from_central_site=pushed_from_central_site,
         )
     finally:
         # it is enabled, even if installing failed
@@ -319,6 +326,7 @@ def _install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool,
+    pushed_from_central_site: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -333,7 +341,13 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, site_version, allow_outdated, parse_version
+        installer,
+        path_config,
+        manifest,
+        old_manifest,
+        site_version,
+        allow_outdated,
+        parse_version,
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
@@ -352,7 +366,9 @@ def _install(
             new_files = set(manifest.files.get(part, []))
             callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
-        package_store.remove_enabled_mark(old_manifest.id)
+        if not pushed_from_central_site:
+            # If we are a remote site and the mkp was pushed, we mustn't delete our only copy
+            package_store.remove_enabled_mark(old_manifest.id)
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
@@ -361,7 +377,9 @@ def _install(
 
 
 def remove_files(
-    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+    manifest: Manifest,
+    keep_files: Mapping[PackagePart, Iterable[Path]],
+    path_config: PathConfig,
 ) -> tuple[str, ...]:
     errors = []
     for part, files in manifest.files.items():
@@ -438,7 +456,10 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(
-                    "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
+                    "Fixing %s: %s -> %s",
+                    path,
+                    filemode(has_perm),
+                    filemode(desired_perm),
                 )
                 path.chmod(desired_perm)
 
@@ -465,7 +486,9 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
 
 
 def _raise_for_too_old_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], min_version: str, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    min_version: str,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too old for this package
 
@@ -473,7 +496,7 @@ def _raise_for_too_old_cmk_version(
     """
     try:
         too_old = parse_version(site_version) < parse_version(min_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
@@ -484,7 +507,9 @@ def _raise_for_too_old_cmk_version(
 
 
 def _raise_for_too_new_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], until_version: str | None, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    until_version: str | None,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too new for this package
 
@@ -495,7 +520,7 @@ def _raise_for_too_new_cmk_version(
 
     try:
         too_new = parse_version(site_version) >= parse_version(until_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
@@ -750,15 +775,3 @@ def make_post_package_change_actions(
             callback()
 
     return _execute_post_package_change_actions
-
-
-def reload_apache() -> None:
-    try:
-        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        return
-
-    try:
-        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        _logger.error("Error reloading apache", exc_info=True)

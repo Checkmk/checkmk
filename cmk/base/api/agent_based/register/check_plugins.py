@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plugin
-"""
+"""Background tools required to register a check plug-in"""
+
 import functools
 from collections.abc import Callable, Generator
 from typing import Any
@@ -14,7 +14,12 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+    LegacyPluginLocation,
+)
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
@@ -166,7 +171,7 @@ def create_check_plugin(
     check_default_parameters: ParametersTypeAlias | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
-    location: PluginLocation | None = None,
+    location: PluginLocation | LegacyPluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one

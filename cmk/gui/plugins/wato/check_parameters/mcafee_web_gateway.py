@@ -7,6 +7,7 @@ The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its
 Where possibile the "McAfee" string has been removed in favor of more generic therms.
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -25,7 +26,7 @@ def _parameter_valuespec_mcafee_web_gateway():
                     title=_("Upper levels for infections"),
                     help=_(
                         "Here you can specify upper levels for the number of "
-                        "infections detected by Antimalware Engine."
+                        "infections detected by anti-malware engine."
                     ),
                     elements=[
                         Float(title=_("Warning at")),

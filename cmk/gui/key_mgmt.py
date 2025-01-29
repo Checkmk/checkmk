@@ -11,15 +11,12 @@ from typing import Any, Literal
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 import cmk.utils.render
-import cmk.utils.store as store
 from cmk.utils.certs import CertManagementEvent
-from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
-from cmk.utils.crypto.keys import WrongPasswordError
-from cmk.utils.crypto.password import Password as PasswordType
-from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -38,6 +35,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -48,6 +46,11 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+
+from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 class KeypairStore:
@@ -162,6 +165,8 @@ class PageKeyManagement:
         return True
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if self._may_edit_config() and request.has_var("_delete"):
             key_id_as_str = request.var("_delete")
             if key_id_as_str is None:
@@ -212,7 +217,7 @@ class PageKeyManagement:
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
@@ -245,8 +250,8 @@ class PageKeyManagement:
 class PageEditKey:
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore, passphrase_min_len: int | None = None) -> None:
-        self._minlen = passphrase_min_len
+    def __init__(self, key_store: KeypairStore) -> None:
+        self._minlen = 12
         self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -255,6 +260,8 @@ class PageEditKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
@@ -348,6 +355,8 @@ class PageUploadKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             request.del_var("key_p_passphrase")
@@ -357,10 +366,8 @@ class PageUploadKey:
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            try:
-                self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
-            except InvalidPEMError:
-                raise MKUserError(None, _("The file does not look like a valid key file."))
+            self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
+
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
                 code=302,
@@ -379,17 +386,17 @@ class PageUploadKey:
         return cert_spec[1]
 
     def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
-        # This will raise various ValueErrors, if the cert is not valid, if the passphrase is wrong, etc.
         try:
             key_pair = CertificateWithPrivateKey.load_combined_file_content(key_file, passphrase)
-        except WrongPasswordError:
-            raise MKUserError("key_p_passphrase", "Invalid pass phrase")
+        except PEMDecodingError:
+            raise MKUserError(None, _("The key file is invalid or the password is wrong."))
 
         try:
             # check if the key is an RSA key, which is assumed by backup encryption at the moment
             _rsa_key = key_pair.private_key.get_raw_rsa_key()
         except ValueError:
             raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
+
         cert = key_pair.certificate
         self._log_upload_key(cert)
         key = Key(
@@ -427,7 +434,7 @@ class PageUploadKey:
         #   encrypted (using that passphrase) and have the '-----BEGIN ENCRYPTED PRIVATE KEY-----'
         #   form. The positive side effect is that the user proves that they know the passphrase
         #   now, rather than later whenever the key is used.
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Here you can upload an existing certificate and private key. "
                 "The key must be an RSA key and it must be password protected."
@@ -508,6 +515,8 @@ class PageDownloadKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             keys = self.key_store.load()
 
@@ -527,7 +536,7 @@ class PageDownloadKey:
 
             try:
                 keys[key_id].to_certificate_with_private_key(PasswordType(value["passphrase"]))
-            except ValueError:
+            except (PEMDecodingError, ValueError):
                 raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)
@@ -577,13 +586,20 @@ class PageDownloadKey:
         )
 
 
-def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
+def generate_key(
+    alias: str,
+    passphrase: PasswordType,
+    user_id: UserId,
+    site_id: SiteId,
+    key_size: int = 4096,
+) -> Key:
     # Note: Verification of the signatures makes assumptions about the key (RSA) and the padding
     # scheme (PKCS1v15). Make sure this is adjusted before changing it here.
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
         organization=f"Checkmk Site {site_id}",
         organizational_unit=user_id,
+        key_size=key_size,
     )
     return Key(
         certificate=key_pair.certificate.dump_pem().str,

@@ -8,7 +8,12 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 
 def test_parse_version():
-    params = {"port": 123, "service": "foobar", "job": "version"}
+    params = {
+        "port": 123,
+        "service": "foobar",
+        "check_version": True,
+        "check_address": ("no", None),
+    }
     assert list(
         active_check_uniserv(
             params,
@@ -17,7 +22,7 @@ def test_parse_version():
     ) == [
         ActiveCheckCommand(
             service_description="Uniserv foobar Version",
-            command_arguments=["address", "123", "foobar", "VERSION"],
+            command_arguments=("address", "123", "foobar", "VERSION"),
         )
     ]
 
@@ -26,8 +31,9 @@ def test_parse_address():
     params = {
         "port": 123,
         "service": "foobar",
-        "job": (
-            "address",
+        "check_version": False,
+        "check_address": (
+            "yes",
             {"street": "street", "street_no": 0, "city": "city", "search_regex": "regex"},
         ),
     }
@@ -39,7 +45,7 @@ def test_parse_address():
     ) == [
         ActiveCheckCommand(
             service_description="Uniserv foobar Address city",
-            command_arguments=[
+            command_arguments=(
                 "address",
                 "123",
                 "foobar",
@@ -48,6 +54,6 @@ def test_parse_address():
                 "0",
                 "city",
                 "regex",
-            ],
+            ),
         )
     ]

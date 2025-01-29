@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_veeam_client(string_table):
@@ -28,9 +28,8 @@ def parse_veeam_client(string_table):
                 last_found = line[1]
                 data[last_found] = {}
                 data[last_found]["Status"] = last_status
-        else:
-            if last_status and len(line) == 2:
-                data[last_found][line[0]] = line[1]
+        elif last_status and len(line) == 2:
+            data[last_found][line[0]] = line[1]
     return data
 
 
@@ -39,7 +38,7 @@ def inventory_veeam_client(parsed):
         yield job, {}
 
 
-def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branches
+def check_veeam_client(item, params, parsed):
     # Fallback for old None item version
     # FIXME Can be remvoed in CMK 2.0
     if item is None and len(parsed) > 0:
@@ -111,17 +110,11 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
 
     # Check duration only if currently not running
@@ -150,6 +143,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
 
 check_info["veeam_client"] = LegacyCheckDefinition(
+    name="veeam_client",
     parse_function=parse_veeam_client,
     service_name="VEEAM Client %s",
     discovery_function=inventory_veeam_client,

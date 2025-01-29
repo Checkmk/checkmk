@@ -18,7 +18,7 @@ description:
  does this in situations where disk buffers (are assumed to) speed up the
  overall performance more than keeping rarely used parts of processes in RAM.
 
- For example after a complete backup of your system you might experiance
+ For example after a complete backup of your system you might experience
  that your swap usage has increased while you have more RAM free then
  before. That is because Linux has taken RAM from processes in order to
  increase disk buffers.

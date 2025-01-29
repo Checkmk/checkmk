@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import itertools
@@ -17,12 +16,13 @@ from typing import Final, Literal, TypeVar
 
 import livestatus
 
-import cmk.utils.plugin_registry
-from cmk.utils.exceptions import MKException, MKGeneralException
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKException, MKGeneralException
+
 from cmk.utils.redis import get_redis_client
 
-import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -360,9 +360,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(
-            self.livestatus_table, []
-        )  # TODO: Is the default correct/necessary?
+        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
@@ -742,6 +740,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
                 livestatus.lqencode(query)
@@ -762,6 +761,9 @@ class QuicksearchSnapin(SidebarSnapin):
             if active_config.debug:
                 raise
             html.show_error(traceback.format_exc())
+
+        if not search_objects:
+            return
 
         QuicksearchResultRenderer().show(
             self._quicksearch_manager._evaluate_results(search_objects), query
@@ -793,7 +795,7 @@ class QuicksearchResultRenderer:
 
             for result in sorted(results, key=lambda x: x.title):
                 html.open_a(id_="result_%s" % query, href=result.url, target="main")
-                html.write_text(
+                html.write_text_permissive(
                     result.title
                     + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
                 )
@@ -901,7 +903,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
         raise NotImplementedError()
 
 
-class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[ABCMatchPlugin]):
+class MatchPluginRegistry(cmk.ccc.plugin_registry.Registry[ABCMatchPlugin]):
     def plugin_name(self, instance):
         return instance.name
 
@@ -1011,7 +1013,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
         super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
-        return _("Service Description")
+        return _("Service description")
 
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["service_description"]
@@ -1410,7 +1412,7 @@ class MenuSearchResultsRenderer(abc.ABC):
     def _render_error(self, error: MKException) -> str:
         with output_funnel.plugged():
             html.open_div(class_="error")
-            html.write_text(f"{error}")
+            html.write_text_permissive(f"{error}")
             html.close_div()
             error_as_html = output_funnel.drain()
         return error_as_html
@@ -1491,10 +1493,10 @@ class MenuSearchResultsRenderer(abc.ABC):
                 if use_show_all:
                     html.open_li(class_="show_all_items")
                     html.open_a(
-                        href="",
+                        href=None,
                         onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
                     )
-                    html.write_text(_("Show all results"))
+                    html.write_text_permissive(_("Show all results"))
                     html.close_a()
                     html.close_li()
 
@@ -1503,7 +1505,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                         class_="hidden warning",
                         **{"data-extended": "false"},
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         _("More than %d results available, please refine your search.")
                         % self.max_results_after_show_all
                     )
@@ -1520,7 +1522,7 @@ class MenuSearchResultsRenderer(abc.ABC):
 
         html.open_a(
             class_="show_all_topics",
-            href="",
+            href=None,
             onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
         )
         html.icon(icon="collapse_arrow", title=_("Show all topics"))
@@ -1544,7 +1546,7 @@ class MenuSearchResultsRenderer(abc.ABC):
             onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
             title=result.title + (" %s" % result.context if result.context else ""),
         )
-        html.write_text(
+        html.write_text_permissive(
             result.title + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
         )
         html.close_a()
@@ -1609,7 +1611,7 @@ class PageSearchSetup(AjaxPage):
             with output_funnel.plugged():
                 html.open_div(class_="topic")
                 html.open_ul()
-                html.write_text(_("Currently indexing, please try again shortly."))
+                html.write_text_permissive(_("Currently indexing, please try again shortly."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()
@@ -1617,7 +1619,7 @@ class PageSearchSetup(AjaxPage):
             with output_funnel.plugged():
                 html.open_div(class_="error")
                 html.open_ul()
-                html.write_text(_("Redis server is not reachable."))
+                html.write_text_permissive(_("Redis server is not reachable."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()

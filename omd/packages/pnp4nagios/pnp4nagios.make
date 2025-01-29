@@ -8,8 +8,8 @@ CONFIG_SITE = ''
 
 .PHONY: $(PNP4NAGIOS_BUILD)
 $(PNP4NAGIOS_BUILD):
-	$(BAZEL_BUILD) @pnp4nagios//:pnp4nagios
-	$(BAZEL_BUILD) @pnp4nagios//:skel
+	$(BAZEL_CMD) build @$(PNP4NAGIOS)//:$(PNP4NAGIOS)
+	$(BAZEL_CMD) build @$(PNP4NAGIOS)//:skel
 
 .PHONY: $(PNP4NAGIOS_INSTALL)
 $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
@@ -24,3 +24,4 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ ; \
 	ln -sf ../init.d/npcd 50-npcd ; \
 	ln -sf ../init.d/pnp_gearman_worker 52-pnp_gearman_worker
+	sed -i 's|PLACEHOLDER|$(OMD_ROOT)|' $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/process_perfdata.pl

@@ -238,10 +238,8 @@ class _BIFrozenAggregations(Filter):
             if compiled_aggregation.frozen_info:
                 if show_frozen:
                     new_rows.append(row)
-            else:
-                # dynamic aggregation
-                if show_dynamic:
-                    new_rows.append(row)
+            elif show_dynamic:
+                new_rows.append(row)
 
         return new_rows
 
@@ -352,9 +350,9 @@ class _FilterAggrService(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("Host") + ": ")
+        html.write_text_permissive(_("Host") + ": ")
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
-        html.write_text(_("Service") + ": ")
+        html.write_text_permissive(_("Service") + ": ")
         html.text_input(self.htmlvars[2], default_value=value.get(self.htmlvars[2], ""))
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:

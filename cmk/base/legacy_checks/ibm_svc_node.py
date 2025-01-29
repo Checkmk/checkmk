@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the
@@ -84,6 +86,7 @@ def discover_ibm_svc_node(section):
 
 
 check_info["ibm_svc_node"] = LegacyCheckDefinition(
+    name="ibm_svc_node",
     parse_function=parse_ibm_svc_node,
     service_name="IO Group %s",
     discovery_function=discover_ibm_svc_node,

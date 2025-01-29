@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-""" JSON parsing for Kubernetes API objects.
+"""JSON parsing for Kubernetes API objects.
 
 This file contains helper functions to parse JSON received from the Kubernetes
 API into version independent data structures defined in `schemata.api`. This
@@ -203,7 +203,7 @@ def dependent_object_owner_refererences_from_json(
 
 def node_list_from_json(
     node_list_raw: JSONNodeList,
-    node_to_kubelet_health: Mapping[str, api.HealthZ],
+    node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError],
 ) -> Sequence[api.Node]:
     return [
         api.Node(

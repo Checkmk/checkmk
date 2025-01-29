@@ -18,7 +18,7 @@ __Service__:  $SERVICEDESC$\n
 __Event__:    $EVENT_TXT$\n
 __Output__:   $SERVICEOUTPUT$\n
 __Perfdata__: $SERVICEPERFDATA$\n
-<br>
+\n
 $LONGSERVICEOUTPUT$
 """
 
@@ -36,6 +36,6 @@ def ms_teams_tmpl_host_details() -> str:
 __Event__:    $EVENT_TXT$\n
 __Output__:   $HOSTOUTPUT$\n
 __Perfdata__: $HOSTPERFDATA$\n
-<br>
+\n
 $LONGHOSTOUTPUT$
 """

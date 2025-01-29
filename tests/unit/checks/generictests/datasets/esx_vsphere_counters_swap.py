@@ -6,9 +6,9 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
+from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 
-checkname = "esx_vsphere_counters"
+checkname = "esx_vsphere_counters_swap"
 
 parsed = parse_esx_vsphere_counters(
     [
@@ -19,17 +19,11 @@ parsed = parse_esx_vsphere_counters(
 )
 
 discovery = {
-    "cpu": [],
-    "diskio": [],
-    "": [],
-    "if": [],
-    "uptime": [],
-    "ramdisk": [],
-    "swap": [(None, {})],
+    "": [(None, {})]
 }
 
 checks = {
-    "swap": [
+    "": [
         (
             None,
             {},

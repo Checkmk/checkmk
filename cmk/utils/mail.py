@@ -12,9 +12,10 @@ from email.message import Message
 from email.utils import formatdate, parseaddr
 from typing import TypeVar
 
+from cmk.ccc import version as cmk_version
+from cmk.ccc.store import load_text_from_file
+
 from cmk.utils import paths
-from cmk.utils import version as cmk_version
-from cmk.utils.store import load_text_from_file
 
 
 class MailString(str):

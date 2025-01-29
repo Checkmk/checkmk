@@ -4,31 +4,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import enum
 import os
-import signal
-from contextlib import redirect_stdout
-from types import FrameType
-from typing import Any, NoReturn
+import sys
+from contextlib import nullcontext, redirect_stdout, suppress
 
-import cmk.utils.debug
-import cmk.utils.log as log
-import cmk.utils.paths as paths
-from cmk.utils import version as cmk_version
-from cmk.utils.exceptions import MKException, MKTimeout
+import cmk.ccc.debug
+from cmk.ccc import version as cmk_version
+from cmk.ccc.exceptions import MKException, MKTimeout
+
+from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.timeout import Timeout
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.base.obsolete_output as out
-import cmk.base.profiling as profiling
+from cmk.base import config, profiling
+
+from cmk import trace
+
+tracer = trace.get_tracer()
 
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(MKException):
     pass
+
+
+class AutomationExitCode(enum.IntEnum):
+    SUCCESS = 0
+    KNOWN_ERROR = 1
+    UNKNOWN_ERROR = 2
 
 
 class Automations:
@@ -41,61 +48,80 @@ class Automations:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    def execute(self, cmd: str, args: list[str]) -> Any:
-        self._handle_generic_arguments(args)
+    def execute(
+        self, cmd: str, args: list[str], *, called_from_automation_helper: bool = False
+    ) -> AutomationExitCode:
+        remaining_args, timeout = self._extract_timeout_from_args(args)
+        with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
+            return self._execute(
+                cmd,
+                remaining_args,
+                called_from_automation_helper=called_from_automation_helper,
+            )
 
+    def _execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationExitCode:
         try:
             try:
                 automation = self._automations[cmd]
             except KeyError:
-                raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
+                raise MKAutomationError(
+                    f"Unknown automation command: {cmd!r}"
+                    f" (available: {', '.join(sorted(self._automations))})"
+                )
 
-            if automation.needs_checks:
-                with redirect_stdout(open(os.devnull, "w")):
+            if not called_from_automation_helper and automation.needs_checks:
+                with (
+                    tracer.span("load_all_plugins"),
+                    redirect_stdout(open(os.devnull, "w")),
+                ):
                     log.setup_console_logging()
                     config.load_all_plugins(
-                        check_api.get_check_api_context,
                         local_checks_dir=paths.local_checks_dir,
                         checks_dir=paths.checks_dir,
                     )
 
-            if automation.needs_config:
-                config.load(validate_hosts=False)
+            if not called_from_automation_helper and automation.needs_config:
+                with tracer.span("load_config"):
+                    config.load(validate_hosts=False)
 
-            result = automation.execute(args)
+            with tracer.span(f"execute_automation[{cmd}]"):
+                result = automation.execute(args, called_from_automation_helper)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error("%s\n" % e)
-            if cmk.utils.debug.enabled():
+            console.error(f"{e}", file=sys.stderr)
+            if cmk.ccc.debug.enabled():
                 raise
-            return 1
+            return AutomationExitCode.KNOWN_ERROR
 
         except Exception as e:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
-            console.error("%s\n" % e)
-            return 2
+            console.error(f"{e}", file=sys.stderr)
+            return AutomationExitCode.UNKNOWN_ERROR
 
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize(cmk_version.Version.from_str(cmk_version.__version__)))
-        out.output("\n")
+        with suppress(IOError):
+            sys.stdout.write(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
+            )
+            sys.stdout.flush()
 
-        return 0
+        return AutomationExitCode.SUCCESS
 
-    def _handle_generic_arguments(self, args: list[str]) -> None:
-        """Handle generic arguments (currently only the optional timeout argument)"""
-        if len(args) > 1 and args[0] == "--timeout":
-            args.pop(0)
-            timeout = int(args.pop(0))
-
-            if timeout:
-                signal.signal(signal.SIGALRM, self._raise_automation_timeout)
-                signal.alarm(timeout)
-
-    def _raise_automation_timeout(self, signum: int, stackframe: FrameType | None) -> NoReturn:
-        raise MKTimeout("Action timed out.")
+    def _extract_timeout_from_args(self, args: list[str]) -> tuple[list[str], int | None]:
+        match args:
+            case ["--timeout", timeout, *remaining_args]:
+                return remaining_args, int(timeout)
+            case _:
+                return args, None
 
 
 class Automation(abc.ABC):
@@ -104,7 +130,11 @@ class Automation(abc.ABC):
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: list[str]) -> ABCAutomationResult: ...
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> ABCAutomationResult: ...
 
 
 #

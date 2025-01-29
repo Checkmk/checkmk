@@ -9,12 +9,13 @@ import json
 from collections.abc import Collection
 from typing import NotRequired, TypedDict
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -35,9 +36,8 @@ from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float, Integer, Password
 from cmk.gui.valuespec import HostAddress as VSHostAddress
-from cmk.gui.valuespec import Integer, Password
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
@@ -148,6 +148,8 @@ class ModeDiagHost(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 
@@ -373,7 +375,7 @@ class ModeDiagHost(WatoMode):
                         unit=_("sec"),
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
-                        title=_('TCP Connection Timeout (<a href="%s">Rules</a>)')
+                        title=_('TCP connection timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
                         ),

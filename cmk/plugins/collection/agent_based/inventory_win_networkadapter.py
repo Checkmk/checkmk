@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, S
 Section = Sequence[Mapping]
 
 
-def parse_win_networkadapter(  # pylint: disable=too-many-branches
+def parse_win_networkadapter(
     string_table: StringTable,
 ) -> Section:
     adapters: list[Mapping] = []

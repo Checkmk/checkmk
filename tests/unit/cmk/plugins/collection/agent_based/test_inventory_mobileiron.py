@@ -5,10 +5,9 @@
 import json
 from collections.abc import Iterable
 
-from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
-
 from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.collection.agent_based.inventory_mobileiron import inventory_mobileiron
+from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron
 
 from .utils_inventory import sort_inventory_result
 

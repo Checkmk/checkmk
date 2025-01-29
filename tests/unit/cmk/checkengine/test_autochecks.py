@@ -3,28 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.parameters import TimespecificParameters
-
-# pylint: disable=redefined-outer-name
-
-_COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 
 
 @pytest.fixture(autouse=True)
@@ -76,7 +70,7 @@ class TestAutochecksStore:
         assert store.read() == _entries()
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -86,14 +80,11 @@ class TestAutochecksStore:
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
 ]""",
             [
-                ConfiguredService(
+                AutocheckEntry(
                     check_plugin_name=CheckPluginName("df"),
                     item="/",
-                    description="df-/",  # we pass a simple callback, not the real one!
-                    parameters=_COMPUTED_PARAMETERS_SENTINEL,
-                    discovered_parameters={},
+                    parameters={},
                     service_labels={},
-                    is_enforced=False,
                 ),
             ],
         ),
@@ -101,7 +92,7 @@ class TestAutochecksStore:
 )
 def test_manager_get_autochecks_of(
     autochecks_content: str,
-    expected_result: Sequence[ConfiguredService],
+    expected_result: Sequence[AutocheckEntry],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
@@ -114,18 +105,8 @@ def test_manager_get_autochecks_of(
 
     manager = config_cache._autochecks_manager
 
-    result = manager.get_autochecks_of(
-        HostName("host"),
-        lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
-        lambda _host, check, item: f"{check}-{item}",
-        lambda hostname, _desc: hostname,
-    )
+    result = manager.get_autochecks(HostName("host"))
     assert result == expected_result
-    # see that compute_check_parameters has been called:
-    assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL
-
-    # Check that the ConfigCache method also returns the correct data
-    assert config_cache.get_autochecks_of(HostName("host")) == result
 
 
 def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:

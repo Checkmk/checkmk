@@ -40,7 +40,8 @@ def add_change(
     add_user: bool = True,
     need_sync: bool | None = None,
     need_restart: bool | None = None,
-    domains: Sequence[type[ABCConfigDomain]] | None = None,
+    need_apache_reload: bool | None = None,
+    domains: Sequence[ABCConfigDomain] | None = None,
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
     prevent_discard_changes: bool = False,
@@ -67,6 +68,7 @@ def add_change(
         add_user,
         need_sync,
         need_restart,
+        need_apache_reload,
         domains,
         sites,
         domain_settings,
@@ -95,7 +97,8 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: bool | None,
         need_restart: bool | None,
-        domains: Sequence[type[ABCConfigDomain]] | None,
+        need_apache_reload: bool | None,
+        domains: Sequence[ABCConfigDomain] | None,
         sites: Iterable[SiteId] | None,
         domain_settings: DomainSettings | None,
         prevent_discard_changes: bool = False,
@@ -124,6 +127,7 @@ class ActivateChangesWriter:
                 add_user,
                 need_sync,
                 need_restart,
+                need_apache_reload,
                 domains,
                 domain_settings,
                 prevent_discard_changes,
@@ -143,7 +147,8 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: bool | None,
         need_restart: bool | None,
-        domains: Sequence[type[ABCConfigDomain]],
+        need_apache_reload: bool | None,
+        domains: Sequence[ABCConfigDomain],
         domain_settings: DomainSettings | None,
         prevent_discard_changes: bool,
         diff_text: str | None = None,
@@ -154,6 +159,10 @@ class ActivateChangesWriter:
 
         if need_sync is None:
             need_sync = any(d.needs_sync for d in domains)
+
+        # Only changes are currently capable of requesting an apache reload not the entire domain
+        if need_apache_reload is None:
+            need_apache_reload = False
 
         # Using attrencode here is against our regular rule to do the escaping
         # at the last possible time: When rendering. But this here is the last
@@ -176,7 +185,8 @@ class ActivateChangesWriter:
                 "prevent_discard_changes": prevent_discard_changes,
                 "diff_text": diff_text,
                 "has_been_activated": site_is_local(active_config, site_id)
-                and need_restart is False,
+                and need_restart is False
+                and need_apache_reload is False,
             }
         )
 

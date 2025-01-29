@@ -196,10 +196,9 @@ bool Query::processDataset(Row row) {
 void Query::renderSorters() {
     // See also Query::renderAggregators()
     const auto &o = orderBy();
-    std::sort(
-        sorted_rows_.begin(), sorted_rows_.end(), [&o](auto &&x, auto &&y) {
-            return o.direction == OrderByDirection::ascending ? x < y : x > y;
-        });
+    std::ranges::sort(sorted_rows_, [&o](auto &&x, auto &&y) {
+        return o.direction == OrderByDirection::ascending ? x < y : x > y;
+    });
     for (auto &&[k, row_fragment] : sorted_rows_) {
         if (parsed_query_.limit && ++current_line_ > *parsed_query_.limit) {
             break;
@@ -327,7 +326,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
         QueryRenderer q{*renderer, EmitBeginEnd::off};
         renderColumns(row, q);
     }
-    RowFragment row_fragment{os.str()};
+    const RowFragment row_fragment{os.str()};
     auto it = stats_groups_.find(row_fragment);
     if (it == stats_groups_.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggregators;

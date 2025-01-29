@@ -4,38 +4,41 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+// eslint-disable-next-line no-duplicate-imports -- Explicitly imported for side-effects
 import "./layout";
 
-import * as d3 from "d3";
+import type {D3ZoomEvent, ScaleLinear, Selection, ZoomBehavior} from "d3";
+import {scaleLinear, zoom, zoomIdentity} from "d3";
 
 import {ForceSimulation} from "./force_simulation";
-import {ForceConfig} from "./force_utils";
-import {
+import type {ForceConfig} from "./force_utils";
+import type {
     AbstractLayer,
     AbstractNodeVisConstructor,
+    LayerSelections,
+} from "./layer_utils";
+import {
     DynamicToggleableLayer,
     FixLayer,
     layer_class_registry,
-    LayerSelections,
     ToggleableLayer,
 } from "./layer_utils";
 import {LayeredNodesLayer} from "./layers";
-import {LayoutManagerLayer} from "./layout";
-import {
+import type {LayoutManagerLayer} from "./layout";
+import type {
     BackendResponse,
     Coords,
     d3SelectionDiv,
     d3SelectionG,
     d3SelectionSvg,
-    NodeConfig,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
     OverlayConfig,
-    OverlaysConfig,
     Rectangle,
     RectangleWithCoords,
 } from "./type_defs";
+import {NodeConfig, OverlaysConfig} from "./type_defs";
 import {DefaultTransition, get_bounding_rect} from "./utils";
 
 export class Viewport {
@@ -43,17 +46,17 @@ export class Viewport {
     _div_selection: d3SelectionDiv;
     _div_content_selection: d3SelectionDiv;
     _svg_content_selection: d3SelectionSvg;
-    _zoom_behaviour: d3.ZoomBehavior<any, any>;
-    last_zoom = d3.zoomIdentity;
-    scale_x: d3.ScaleLinear<number, number>;
-    scale_y: d3.ScaleLinear<number, number>;
+    _zoom_behaviour: ZoomBehavior<any, any>;
+    last_zoom = zoomIdentity;
+    scale_x: ScaleLinear<number, number>;
+    scale_y: ScaleLinear<number, number>;
     always_update_layout = false;
     _node_config: NodeConfig;
     _margin = {top: 10, right: 10, bottom: 10, left: 10};
     _overlays_configs: OverlaysConfig;
     // Infos usable by layers
     _div_layers_selection: d3SelectionDiv;
-    _status_table: d3.Selection<HTMLTableElement, null, any, unknown>;
+    _status_table: Selection<HTMLTableElement, null, any, unknown>;
     _feeding_data = false;
     _show_debug_messages = true;
 
@@ -75,7 +78,7 @@ export class Viewport {
         into_selection: d3SelectionDiv,
         datasource: string,
         force_config: typeof ForceConfig,
-        update_browser_url: () => void
+        update_browser_url: () => void,
     ) {
         this._update_browser_url = update_browser_url;
         this._force_simulation = new ForceSimulation(this, force_config);
@@ -118,17 +121,17 @@ export class Viewport {
             .on("click.remove_context", event =>
                 this._layers[
                     LayeredNodesLayer.prototype.id()
-                ].hide_context_menu(event)
+                ].hide_context_menu(event),
             );
 
         this._svg_layers_selection = this._svg_content_selection.append("g");
         this._svg_layers_selection.attr("id", "svg_layers");
-        this._zoom_behaviour = d3.zoom();
+        this._zoom_behaviour = zoom();
         this._zoom_behaviour
             .scaleExtent([0.2, 10])
             .on("zoom", event => this.zoomed(event))
             .on("end", () =>
-                this._svg_content_selection.style("cursor", "grab")
+                this._svg_content_selection.style("cursor", "grab"),
             )
             .filter(event => {
                 // Disable left click zoom
@@ -160,8 +163,8 @@ export class Viewport {
             .style("table-layout", "fixed");
 
         // Initialize viewport size and scales before loading the layers
-        this.scale_x = d3.scaleLinear();
-        this.scale_y = d3.scaleLinear();
+        this.scale_x = scaleLinear();
+        this.scale_y = scaleLinear();
 
         this._node_config = NodeConfig.prototype.create_empty_config();
     }
@@ -218,7 +221,7 @@ export class Viewport {
                     this._world_for_layers!,
                     this._create_selections(layer_id),
                     dynamic_id,
-                    dynamic_id
+                    dynamic_id,
                 );
             }
         });
@@ -230,7 +233,7 @@ export class Viewport {
             if (this._layers[layer_id]) return;
             this._layers[layer_id] = new layer_class(
                 this._world_for_layers!,
-                this._create_selections(layer_id)
+                this._create_selections(layer_id),
             );
         }
 
@@ -257,7 +260,7 @@ export class Viewport {
 
     set_overlay_layer_config(
         overlay_id: string,
-        new_config: OverlayConfig
+        new_config: OverlayConfig,
     ): void {
         this._overlays_configs.overlays[overlay_id] = new_config;
         this.update_active_overlays();
@@ -328,7 +331,7 @@ export class Viewport {
 
         this.update_data_of_layers();
         this.get_layout_manager().apply_current_layout(
-            nodes_changed || this.always_update_layout
+            nodes_changed || this.always_update_layout,
         );
         this.get_layout_manager().compute_node_positions();
         this.update_gui_of_layers(true);
@@ -457,7 +460,7 @@ export class Viewport {
         }
     }
 
-    zoomed(event: d3.D3ZoomEvent<any, any>) {
+    zoomed(event: D3ZoomEvent<any, any>) {
         this.last_zoom = event.transform;
         this.scale_x.range([0, this.width * event.transform.k]);
         this.scale_y.range([0, this.height * event.transform.k]);
@@ -484,7 +487,7 @@ export class Viewport {
 
     // Applies scale
     scale_to_zoom(
-        coords: RectangleWithCoords | Coords
+        coords: RectangleWithCoords | Coords,
     ): RectangleWithCoords | Coords {
         // TODO: be more specific, create distinct functions
         const translated: RectangleWithCoords = {
@@ -513,12 +516,10 @@ export class Viewport {
         this.width = rectangle.width - this._margin.left - this._margin.right;
         this.height = rectangle.height - this._margin.top - this._margin.bottom;
 
-        this.scale_x = d3
-            .scaleLinear()
+        this.scale_x = scaleLinear()
             .domain([0, this.width])
             .range([0, this.width]);
-        this.scale_y = d3
-            .scaleLinear()
+        this.scale_y = scaleLinear()
             .domain([0, this.height])
             .range([0, this.height]);
 
@@ -540,11 +541,11 @@ export class Viewport {
         DefaultTransition.add_transition(this._svg_content_selection).call(
             this._zoom_behaviour.transform,
             () => {
-                return d3.zoomIdentity
+                return zoomIdentity
                     .translate(this.width / 2, this.height / 2)
                     .scale(use_scale)
                     .translate(x, y);
-            }
+            },
         );
     }
 
@@ -552,7 +553,7 @@ export class Viewport {
         this._svg_content_selection
             .transition()
             .duration(DefaultTransition.duration())
-            .call(this._zoom_behaviour.transform, d3.zoomIdentity);
+            .call(this._zoom_behaviour.transform, zoomIdentity);
     }
 
     zoom_fit() {
@@ -569,37 +570,37 @@ export class Viewport {
         size.width -= 200;
         let new_scale = Math.min(
             size.width / rect.width,
-            size.height / rect.height
+            size.height / rect.height,
         );
         new_scale *= 0.8;
         this.zoom_to_coords(
             -(rect.x_min + rect.width / 2),
             -(rect.y_min + rect.height / 2),
-            new_scale
+            new_scale,
         );
     }
 
     set_zoom(to_percent: number) {
         const new_scale = to_percent / 100;
-        const new_zoom = d3.zoomIdentity
+        const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
-                (-this.height / 2) * new_scale + this.height / 2
+                (-this.height / 2) * new_scale + this.height / 2,
             )
             .scale(new_scale);
         DefaultTransition.add_transition(this._svg_content_selection).call(
             this._zoom_behaviour.transform,
-            () => new_zoom
+            () => new_zoom,
         );
     }
 
     change_zoom(by_percent: number) {
         const new_scale =
             Math.floor((this.last_zoom.k * 100 + by_percent) / 10) / 10;
-        const new_zoom = d3.zoomIdentity
+        const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
-                (-this.height / 2) * new_scale + this.height / 2
+                (-this.height / 2) * new_scale + this.height / 2,
             )
             .scale(new_scale);
         this._svg_content_selection
@@ -639,7 +640,7 @@ export class Viewport {
         row.select("td.timedelta").text(
             (now.getTime() - parseInt(row.attr("update_time")))
                 .toFixed(2)
-                .toString() + "ms"
+                .toString() + "ms",
         );
         row.datum(null);
         row.transition()
@@ -684,7 +685,7 @@ export class Viewport {
 }
 function build_node_config(
     data: BackendResponse,
-    old_node_config: NodeConfig
+    old_node_config: NodeConfig,
 ): NodeConfig {
     const new_node_config = new NodeConfig(data.node_config);
 
@@ -707,7 +708,7 @@ function _migrate_node_content(old_node: NodevisNode, new_node: NodevisNode) {
 
 function linked_nodes_with_coords(
     node: NodevisNode,
-    node_config: NodeConfig
+    node_config: NodeConfig,
 ): NodevisNode[] {
     const linked_nodes: NodevisNode[] = [];
     node_config.link_info.forEach(link => {
@@ -722,7 +723,7 @@ function linked_nodes_with_coords(
 function compute_spawn_coords(
     node: NodevisNode,
     node_config: NodeConfig,
-    fallback_coords: Coords
+    fallback_coords: Coords,
 ) {
     const linked_nodes = linked_nodes_with_coords(node, node_config);
     if (linked_nodes.length > 0)
@@ -732,7 +733,7 @@ function compute_spawn_coords(
 
 function compute_missing_spawn_coords(
     node_config: NodeConfig,
-    fallback_coords: Coords
+    fallback_coords: Coords,
 ) {
     let rad = 0;
     const rad_delta = Math.PI / 8;
@@ -743,7 +744,7 @@ function compute_missing_spawn_coords(
         const spawn_coords = compute_spawn_coords(
             node,
             node_config,
-            fallback_coords
+            fallback_coords,
         );
         // Do not spawn all nodes at the same location.
         // This will create a singularity which causes the force simulation to explode

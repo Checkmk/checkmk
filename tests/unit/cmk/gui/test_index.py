@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -40,7 +40,8 @@ def test_get_start_url_user_config(set_config: SetConfig, request_context: None)
         def start_url(self) -> str:
             return "correct_url.py"
 
-        def is_automation_user(self) -> bool:
+        @property
+        def automation_user(self) -> bool:
             return False
 
     with set_config(start_url="wrong_url.py"):

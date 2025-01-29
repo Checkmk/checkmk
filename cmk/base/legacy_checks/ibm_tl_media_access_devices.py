@@ -6,14 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_tape_library import (
     ibm_tape_library_get_device_state,
     ibm_tape_library_parse_device_name,
 )
-from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree, startswith
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import any_of, SNMPTree, startswith
+
+check_info = {}
 
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.1 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.1
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.2 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.2
@@ -76,7 +77,11 @@ def check_ibm_tl_media_access_devices(item, params, parsed):
 
 
 check_info["ibm_tl_media_access_devices"] = LegacyCheckDefinition(
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
+    name="ibm_tl_media_access_devices",
+    detect=any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.254"),
+    ),
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14851.3.1.6.2.1",

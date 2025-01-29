@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380
@@ -76,7 +76,7 @@ main() {
     if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
         IS_DETECTED=true
         # find instances and remove entries like "*:6879", possible with docker container
-        DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ { print $3 }')
+        DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ || /unixsocket:.*/ { print $3 }')
 
         # add found redis instances
         for REDIS_INSTANCE in $DETECTED; do
@@ -84,11 +84,17 @@ main() {
                 IFS=":" read -ra parts <<<"$inst"
 
                 # dot of IP can not be used in variable names
-                REDIS_NAME=$(echo "$inst" | tr :. _)
+                REDIS_NAME=$(echo "$inst" | tr ':./' '_')
 
                 # create dynamic variables
-                declare "REDIS_HOST_$REDIS_NAME=${parts[0]}"
-                declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
+                if [[ "${parts[0]}" == "unixsocket" ]]; then
+                    # handle checkmk redis instances as configured sockets
+                    declare "REDIS_HOST_$REDIS_NAME=${parts[1]}"
+                    declare "REDIS_PORT_$REDIS_NAME=unix-socket"
+                else
+                    declare "REDIS_HOST_$REDIS_NAME=${parts[0]}"
+                    declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
+                fi
 
                 # append instance to array
                 REDIS_INSTANCES+=("${REDIS_NAME}")
@@ -106,10 +112,21 @@ main() {
         # print server section
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
-        # TODO: Use an array instead of the suppression for the command, too.
-        # shellcheck disable=SC2086
-        waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" || true
-        echo
+        if [[ "${!HOST}" == /omd/sites/* ]]; then
+            # use site redis-cli for redis instances in site
+            IFS="/" read -ra ADDR <<<"${!HOST}"
+            output=$(waitmax 3 bash -c "/omd/sites/${ADDR[3]}/bin/redis-cli ${REDIS_ARGS[*]}" 2>&1 || true)
+        else
+            output=$(waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" 2>&1 || true)
+        fi
+
+        if [[ "$output" == *"Could not connect to Redis at ${!HOST}: Permission denied"* ]]; then
+            # mark error explicitly for easier parsing
+            echo "error: $output"
+        else
+            echo "$output"
+        fi
+
     done
 
 }

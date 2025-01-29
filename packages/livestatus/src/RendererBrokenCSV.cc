@@ -6,6 +6,7 @@
 #include "livestatus/RendererBrokenCSV.h"
 
 #include <ostream>
+#include <vector>
 
 // --------------------------------------------------------------------------
 
@@ -51,6 +52,7 @@ bool RendererBrokenCSV::useSurrogatePairs() const { return false; };
 void RendererBrokenCSV::outputNull() {}
 
 void RendererBrokenCSV::outputBlob(const std::vector<char> &value) {
+    // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     _os.write(value.data(), value.size());
 }
 

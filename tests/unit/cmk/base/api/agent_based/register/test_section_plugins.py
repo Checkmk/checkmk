@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 
@@ -13,8 +12,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register import section_plugins
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -26,13 +25,14 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     StringTable,
 )
+from cmk.discover_plugins import PluginLocation
 
 
 def _generator_function():
     yield None
 
 
-def parse_dummy(string_table):  # pylint: disable=unused-argument
+def parse_dummy(string_table):
     return None
 
 
@@ -112,7 +112,7 @@ def test_create_agent_section_plugin() -> None:
             parse_function=parse_dummy,
             supersedes=["foo", "bar"],
         ),
-        location=None,
+        location=PluginLocation(module="norris", name="check_plugin_norris"),
         validate=True,
     )
 
@@ -147,7 +147,7 @@ def test_create_snmp_section_plugin() -> None:
             detect=detect,
             supersedes=["foo", "bar"],
         ),
-        location=None,
+        location=PluginLocation(module="norris", name="check_plugin_norris"),
         validate=True,
     )
 
@@ -176,7 +176,7 @@ def test_create_snmp_section_plugin_single_tree() -> None:
             fetch=single_tree,
             detect=matches(".1.2.3.4.5", "Foo.*"),
         ),
-        location=None,
+        location=PluginLocation(module="norris", name="check_plugin_norris"),
         validate=True,
     )
 

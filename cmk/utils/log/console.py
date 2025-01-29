@@ -5,64 +5,59 @@
 
 import logging
 import sys
-from collections.abc import Generator
-from contextlib import contextmanager
 from typing import TextIO
-
-import cmk.utils.tty as tty
 
 from ._level import VERBOSE as VERBOSE
 
-
-# For StreamHandler.setStream()
-@contextmanager
-def set_stream(
-    logger: logging.Logger, handler: logging.StreamHandler[TextIO], stream: TextIO
-) -> Generator[None, None, None]:
-    # See `https://bugs.python.org/issue6333` for why this is necessary.
-    old = handler.setStream(stream)
-    logger.addHandler(handler)
-    try:
-        yield
-    finally:
-        logger.removeHandler(handler)
-        handler.close()
-        if old:
-            handler.setStream(old)
-
-
-_handler = logging.StreamHandler()
-_handler.terminator = ""  # TODO: let the handler add '\n'
+# NOTE: We abuse the log level of this logger as a global variable!
 _console = logging.getLogger("cmk.base.console")
-_console.propagate = False
 
 
-def format_warning(text: str) -> str:
-    stripped = text.lstrip()
-    indent = text[: len(text) - len(stripped)]
-    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
+def error(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(logging.ERROR):
+        file.write(text + "\n")
+        file.flush()
 
 
-def _log(level: int, text: str, *args: object, stream: TextIO | None = None) -> None:
-    with set_stream(_console, _handler, sys.stdout if stream is None else stream):
-        _console.log(level, text, *args)
+def warning(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(logging.WARNING):
+        file.write(text + "\n")
+        file.flush()
 
 
-def debug(text: str) -> None:
-    _log(logging.DEBUG, text)
+def info(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(logging.INFO):
+        file.write(text + "\n")
+        file.flush()
 
 
-def verbose(text: str, stream: TextIO | None = None) -> None:
-    _log(VERBOSE, text, stream=stream)
+# TODO: Figure out where this is used for a "real" console vs. some internal protocol.
+# The latter should really be disentangled from this file here.
+def verbose_no_lf(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(VERBOSE):
+        file.write(text)
+        file.flush()
 
 
-def info(text: str) -> None:
-    _log(logging.INFO, text)
+def verbose(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(VERBOSE):
+        file.write(text + "\n")
+        file.flush()
 
 
-def warning(text: str, stream: TextIO | None = None) -> None:
-    _log(logging.WARNING, text, stream=stream)
-
-
-def error(text: str) -> None:
-    _log(logging.ERROR, text, stream=sys.stderr)
+def debug(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
+    if _console.isEnabledFor(logging.DEBUG):
+        file.write(text + "\n")
+        file.flush()

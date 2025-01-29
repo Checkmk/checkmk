@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # This plugin was sponsored by BenV. Thanks!
 # https://notes.benv.junerules.com/mtr/
@@ -30,7 +30,7 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 
@@ -49,9 +49,8 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    else:
-        if isinstance(s, unicode):  # pylint: disable=undefined-variable
-            return s.encode("utf-8")
+    elif isinstance(s, unicode):  # noqa: F821
+        return s.encode("utf-8")
     return s
 
 
@@ -178,7 +177,7 @@ def check_mtr_pid(pid):
         return False  # any error
 
 
-def parse_report(host, status):  # pylint: disable=too-many-branches
+def parse_report(host, status):
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if host not in status.keys():
@@ -249,7 +248,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
             parts = line.split()
             if len(parts) < 8:
                 sys.stdout.write(
-                    "**ERROR** Bug parsing host/hop, " "line has less than 8 parts: %s\n" % line
+                    "**ERROR** Bug parsing host/hop, line has less than 8 parts: %s\n" % line
                 )
                 continue
             status[host]["hops"][hopcount] = {
@@ -294,7 +293,7 @@ def output_report(host, status):
     sys.stdout.write("%s\n" % hoststring)
 
 
-def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-branches
+def start_mtr(host, mtr_binary, config, status):
     options = [mtr_binary, "--report", "--report-wide"]
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")
@@ -332,7 +331,6 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
         return
 
     os.chdir("/")
-    os.umask(0)
     os.setsid()
 
     # Close all fd except stdin,out,err
@@ -378,9 +376,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     with open(reportfile, "a+") as report:
         report.write(str(int(time.time())) + "\n")
         report.flush()
-        process = subprocess.Popen(  # pylint: disable=consider-using-with
-            options, stdout=report, stderr=report
-        )
+        process = subprocess.Popen(options, stdout=report, stderr=report)
     # Write pid to report.pid
     with open(reportfile + ".pid", "w") as pidfile:
         pidfile.write("%d\n" % process.pid)

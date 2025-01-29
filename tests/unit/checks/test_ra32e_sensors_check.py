@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
             [[["2070", "", ""]], []],
             [
                 ("ra32e_sensors", [("Internal", {})]),
-                ("ra32e_sensors.humidity", []),
+                ("ra32e_sensors_humidity", []),
             ],
             [
                 (
@@ -32,7 +32,7 @@ pytestmark = pytest.mark.checks
                 ),
                 ("ra32e_sensors", "Heat Index", {}, BasicCheckResult(3, "no data for sensor")),
                 (
-                    "ra32e_sensors.humidity",
+                    "ra32e_sensors_humidity",
                     "Internal",
                     {},
                     BasicCheckResult(3, "no data for sensor"),
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.checks
             [[["", "6000", "2070"]], []],
             [
                 ("ra32e_sensors", [("Heat Index", {})]),
-                ("ra32e_sensors.humidity", [("Internal", {})]),
+                ("ra32e_sensors_humidity", [("Internal", {})]),
             ],
             [
                 ("ra32e_sensors", "Internal", {}, BasicCheckResult(3, "no data for sensor")),
@@ -54,7 +54,7 @@ pytestmark = pytest.mark.checks
                     BasicCheckResult(0, "20.7 °C", [("temp", 20.70)]),
                 ),
                 (
-                    "ra32e_sensors.humidity",
+                    "ra32e_sensors_humidity",
                     "Internal",
                     {},
                     BasicCheckResult(0, "60.00%", [("humidity", 60.0, None, None, 0, 100)]),
@@ -74,7 +74,7 @@ pytestmark = pytest.mark.checks
             [[["", "", ""]], [], [], [], [], [["3100", "9999", "0", "", ""]], [], [], []],
             [
                 ("ra32e_sensors", [("Sensor 5", {})]),
-                ("ra32e_sensors.power", [("Sensor 5", {})]),
+                ("ra32e_sensors_power", [("Sensor 5", {})]),
             ],
             [
                 (
@@ -86,13 +86,13 @@ pytestmark = pytest.mark.checks
                     ),
                 ),
                 (
-                    "ra32e_sensors.power",
+                    "ra32e_sensors_power",
                     "Sensor 5",
                     {},
                     BasicCheckResult(2, "Device status: no power detected(2)"),
                 ),
                 (
-                    "ra32e_sensors.power",
+                    "ra32e_sensors_power",
                     "Sensor 5",
                     {"map_device_states": [("no power detected", 1)]},
                     BasicCheckResult(1, "Device status: no power detected(2)"),
@@ -117,8 +117,8 @@ pytestmark = pytest.mark.checks
             ],
             [
                 ("ra32e_sensors", [("Heat Index 1", {}), ("Sensor 1", {}), ("Sensor 8", {})]),
-                ("ra32e_sensors.voltage", [("Sensor 8", {})]),
-                ("ra32e_sensors.humidity", [("Sensor 1", {})]),
+                ("ra32e_sensors_voltage", [("Sensor 8", {})]),
+                ("ra32e_sensors_humidity", [("Sensor 1", {})]),
             ],
             [
                 ("ra32e_sensors", "Sensor 8", {}, BasicCheckResult(0, "25.8 °C", [("temp", 25.8)])),
@@ -131,7 +131,7 @@ pytestmark = pytest.mark.checks
                     ),
                 ),
                 (
-                    "ra32e_sensors.voltage",
+                    "ra32e_sensors_voltage",
                     "Sensor 8",
                     {"voltage": (210, 180)},
                     BasicCheckResult(
@@ -145,7 +145,7 @@ pytestmark = pytest.mark.checks
                     BasicCheckResult(1, "27.9 °C (warn/crit below 30.0/25.0 °C)", [("temp", 27.9)]),
                 ),
                 (
-                    "ra32e_sensors.humidity",
+                    "ra32e_sensors_humidity",
                     "Sensor 1",
                     {"levels_lower": (85.0, 75.0)},
                     BasicCheckResult(
@@ -165,9 +165,9 @@ def test_ra32e_sensors_inputs(
 ) -> None:
     ra32e_sensors_checks = [
         "ra32e_sensors",
-        "ra32e_sensors.humidity",
-        "ra32e_sensors.voltage",
-        "ra32e_sensors.power",
+        "ra32e_sensors_humidity",
+        "ra32e_sensors_voltage",
+        "ra32e_sensors_power",
     ]
 
     checks = {name: Check(name) for name in ra32e_sensors_checks}

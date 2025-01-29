@@ -8,10 +8,14 @@ import uuid
 from collections.abc import Collection, Sequence
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
@@ -38,7 +42,6 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
 )
-from cmk.utils.site import omd_site
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
@@ -47,11 +50,12 @@ from cmk.gui.background_job import (
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -65,10 +69,12 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -76,6 +82,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
     Integer,
+    MonitoredHostname,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -132,6 +139,7 @@ class ModeDiagnostics(WatoMode):
                 "general": params["general"],
                 "opt_info": params["opt_info"],
                 "comp_specific": params["comp_specific"],
+                "checkmk_server_host": params["checkmk_server_host"],
             }
         return None
 
@@ -169,6 +177,8 @@ class ModeDiagnostics(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 
@@ -178,7 +188,10 @@ class ModeDiagnostics(WatoMode):
         params = self._diagnostics_parameters
         assert params is not None
         self._job.start(
-            lambda job_interface: self._job.do_execute(params, job_interface),
+            JobTarget(
+                callable=diagnostics_dump_entry_point,
+                args=DiagnosticsDumpArgs(params=params),
+            ),
             InitialStatusArgs(
                 title=self._job.gui_title(),
                 lock_wato=False,
@@ -260,19 +273,24 @@ class ModeDiagnostics(WatoMode):
                                 "timeout",
                                 Integer(
                                     title=_(
-                                        "If exceeded, an Exception will appear. "
+                                        "If exceeded, an exception will appear. "
                                         "In extraordinary cases, consider calling "
                                         "Support Diagnostics from command line "
                                         "(see inline help)."
                                     ),
                                     help=_(
-                                        "The timeout in seconds when gathering the Support "
-                                        "Diagnostics Data. The default is 110 seconds. When "
+                                        "The timeout in seconds when gathering the support "
+                                        "diagnostics data. The default is 110 seconds. When "
                                         "very large files are collected, it's also possible to "
-                                        "call the support diagnostics from command line using "
-                                        "the command 'cmk --create-diagnostics-dump' with "
-                                        " appropriate parameters in the context of the affected "
-                                        "site."
+                                        "call the support diagnostics from the command line "
+                                        "using the command 'cmk --create-diagnostics-dump' with "
+                                        "appropriate parameters in the context of the affected "
+                                        "site. See the %s."
+                                    )
+                                    % html.render_a(
+                                        "user manual",
+                                        href=doc_reference_url(DocReference.DIAGNOSTICS_CLI),
+                                        target="_blank",
                                     ),
                                     default_value=timeout_default,
                                     minvalue=60,
@@ -280,6 +298,19 @@ class ModeDiagnostics(WatoMode):
                                 ),
                             ),
                         ],
+                    ),
+                ),
+                (
+                    "checkmk_server_host",
+                    MonitoredHostname(
+                        title=_("Checkmk server host"),
+                        help=_(
+                            "Some of the diagnostics data needs to be collected from the host "
+                            "that represents the Checkmk server of the related site. "
+                            "In case your Checkmk server is not monitored by itself, but from "
+                            "a different site (which is actually recommended), please enter "
+                            "the name of that host here."
+                        ),
                     ),
                 ),
                 (
@@ -299,6 +330,15 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Optional general information"),
                         elements=self._get_optional_information_elements(),
+                        default_keys=[
+                            OPT_LOCAL_FILES,
+                            OPT_OMD_CONFIG,
+                            OPT_CHECKMK_OVERVIEW,
+                            OPT_CHECKMK_CRASH_REPORTS,
+                            OPT_CHECKMK_LOG_FILES,
+                            OPT_CHECKMK_CONFIG_FILES,
+                            OPT_PERFORMANCE_GRAPHS,
+                        ],
                     ),
                 ),
                 (
@@ -306,6 +346,11 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Component specific information"),
                         elements=self._get_component_specific_elements(),
+                        default_keys=[
+                            OPT_COMP_BUSINESS_INTELLIGENCE,
+                            OPT_COMP_CMC,
+                            OPT_COMP_LICENSING,
+                        ],
                     ),
                 ),
             ],
@@ -384,7 +429,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_PERFORMANCE_GRAPHS,
@@ -458,7 +503,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_COMP_CMC,
@@ -640,6 +685,16 @@ class ModeDiagnostics(WatoMode):
         ]
 
 
+class DiagnosticsDumpArgs(BaseModel, frozen=True):
+    params: DiagnosticsParameters
+
+
+def diagnostics_dump_entry_point(
+    job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
+) -> None:
+    DiagnosticsDumpBackgroundJob().do_execute(args.params, job_interface)
+
+
 class DiagnosticsDumpBackgroundJob(BackgroundJob):
     job_prefix = "diagnostics_dump"
 
@@ -654,6 +709,14 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         return makeuri(request, [])
 
     def do_execute(
+        self,
+        diagnostics_parameters: DiagnosticsParameters,
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
+        with job_interface.gui_context():
+            self._do_execute(diagnostics_parameters, job_interface)
+
+    def _do_execute(
         self,
         diagnostics_parameters: DiagnosticsParameters,
         job_interface: BackgroundProcessInterface,
@@ -710,10 +773,17 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 ],
                 filename="download_diagnostics_dump.py",
             )
-            button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
-            job_interface.send_result_message(_("%s Retrieve created dump file") % button)
+            job_interface.send_result_message(
+                _("%s Retrieve created dump file")
+                % HTMLGenerator.render_icon_button(
+                    url=download_url,
+                    title=_("Download"),
+                    icon="diagnostics_dump_file",
+                    theme=make_theme(validate_choices=False),
+                )
+            )
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))
@@ -747,6 +817,7 @@ def _merge_results(
 
 
 def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
+    cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
         file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))
@@ -791,7 +862,7 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
 
-class AutomationDiagnosticsDumpGetFile(AutomationCommand):
+class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 

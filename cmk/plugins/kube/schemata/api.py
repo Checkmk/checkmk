@@ -20,6 +20,7 @@ class Correct(BaseModel):
     a: int | None = None
 
 """
+
 import datetime
 import enum
 import math
@@ -81,7 +82,7 @@ labels with other special characters.
         >>> is_prefix_part = lambda x: bool(validation_prefix_part.fullmatch(x))
         >>> is_prefix_part('a-a')  #  DNS label
         True
-        >>> is_prefix_part('a.a')  # Two DNS labels seperated by a dot
+        >>> is_prefix_part('a.a')  # Two DNS labels separated by a dot
         True
         >>> is_prefix_part('A')  # not a DNS label, upper case not allowed
         False
@@ -448,6 +449,10 @@ class HealthZ(BaseModel):
     response: str
 
 
+class NodeConnectionError(BaseModel):
+    message: str
+
+
 class APIHealth(BaseModel):
     ready: HealthZ
     live: HealthZ
@@ -534,7 +539,7 @@ def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
 class Node(BaseModel):
     metadata: NodeMetaData
     status: NodeStatus
-    kubelet_health: HealthZ
+    kubelet_health: HealthZ | NodeConnectionError
 
     def roles(self) -> Sequence[str]:
         return [
@@ -811,6 +816,7 @@ class ConditionType(str, enum.Enum):
 
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
     PODHASNETWORK = "hasnetwork"
+    PODREADYTOSTARTCONTAINERS = "readytostartcontainers"
     PODSCHEDULED = "scheduled"
     CONTAINERSREADY = "containersready"
     INITIALIZED = "initialized"
@@ -918,6 +924,8 @@ class JobConditionType(enum.Enum):
     COMPLETE = "Complete"
     FAILED = "Failed"
     SUSPENDED = "Suspended"
+    SUCCESS_CRITERIA_MET = "Successcriteriamet"
+    FAILURE_TARGET = "Failuretarget"
 
 
 class JobCondition(BaseModel):

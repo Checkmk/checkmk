@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
 def _parameter_valuespec_epower_single():
@@ -19,11 +20,10 @@ def _parameter_valuespec_epower_single():
             elements=[
                 (
                     "levels",
-                    Tuple(
-                        elements=[
-                            Integer(title=_("warning if at"), unit="Watt", default_value=300),
-                            Integer(title=_("critical if at"), unit="Watt", default_value=400),
-                        ],
+                    SimpleLevels(
+                        title=_("Upper levels"),
+                        spec=Integer,
+                        unit="W",
                     ),
                 ),
             ],

@@ -6,19 +6,31 @@
 
 import "select2";
 
-import * as d3 from "d3";
+import {select} from "d3";
 import $ from "jquery";
-import {set} from "lodash";
-import {QueryOptions} from "select2";
+import type {QueryOptions} from "select2";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 //TODO: this causes an error because allowJS is set to false in tsconfig
 // colorpicker should be used as a package instead of copied file
 //@ts-ignore
-import * as colorpicker from "./colorpicker";
-import * as forms from "./forms";
-import * as popup_menu from "./popup_menu";
-import * as utils from "./utils";
+import {ColorPicker} from "./colorpicker";
+import {
+    enable_dynamic_form_elements,
+    enable_select2_dropdowns,
+    format_select2_item,
+} from "./forms";
+import {close_popup} from "./popup_menu";
+import type {Nullable} from "./utils";
+import {
+    add_class,
+    add_simplebar_scrollbar,
+    execute_javascript_by_object,
+    has_class,
+    prevent_default_events,
+    querySelectorID,
+    remove_class,
+} from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
@@ -32,12 +44,12 @@ const dynamicParamsCallbacks = {
     },
     tag_group_options_autocompleter(
         autocompleter: GroupAutocompleterConfig,
-        elem: HTMLSelectElement
+        elem: HTMLSelectElement,
     ) {
         return {
             group_id: (
                 document.getElementById(
-                    elem.id.replace(/_val$/, "_grp")
+                    elem.id.replace(/_val$/, "_grp"),
                 ) as HTMLInputElement
             ).value,
             ...autocompleter.params,
@@ -45,26 +57,30 @@ const dynamicParamsCallbacks = {
     },
     host_and_service_hinted_autocompleter(
         autocompleter: ContextAutocompleterConfig,
-        elem: HTMLSelectElement
+        elem: HTMLSelectElement,
     ) {
         // fetch metrics, filtered by hostname and service from another input field
         // DropdownChoiceWithHostAndServiceHints
-        const obj = {};
+        const obj: Record<string, Record<string, Record<string, string>>> = {};
         let hint = (
             document.getElementById(
-                `${elem.id}_hostname_hint`
+                `${elem.id}_hostname_hint`,
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            set(obj, "context.host.host", hint);
+            obj["context"] = {};
+            obj["context"]["host"] = {};
+            obj["context"]["host"]["host"] = hint;
         }
         hint = (
             document.getElementById(
-                `${elem.id}_service_hint`
+                `${elem.id}_service_hint`,
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            set(obj, "context.service.service", hint);
+            obj["context"] = {};
+            obj["context"]["service"] = {};
+            obj["context"]["service"]["service"] = hint;
         }
 
         return {
@@ -74,7 +90,7 @@ const dynamicParamsCallbacks = {
     },
     host_hinted_autocompleter(
         autocompleter: ContextAutocompleterConfig,
-        elem: HTMLSelectElement
+        elem: HTMLSelectElement,
     ) {
         // fetch services, filtered by host name of another input field
         const host_id = elem.id.endsWith("_service_hint")
@@ -85,7 +101,7 @@ const dynamicParamsCallbacks = {
 
         return {
             context: val_or_empty(
-                <HTMLSelectElement | null>document.getElementById(host_id)
+                <HTMLSelectElement | null>document.getElementById(host_id),
             ),
             ...autocompleter.params,
         };
@@ -94,7 +110,7 @@ const dynamicParamsCallbacks = {
         const label_selects_of_group = elem
             .closest(".label_group")!
             .getElementsByClassName(
-                "label"
+                "label",
             ) as HTMLCollectionOf<HTMLOptionElement>;
         const group_labels: string[] = [];
 
@@ -147,11 +163,12 @@ type AutoCompleterConfigIdent =
     | "tag_group_opt"
     | "kubernetes_labes"
     | "service_levels"
-    | "syslog_facilities";
+    | "syslog_facilities"
+    | "graph_template_for_combined_graph";
 
 type ContextAutocompleterConfigIdent =
     | "monitored_service_description"
-    | "available_graphs"
+    | "available_graph_templates"
     | "monitored_metrics";
 
 type GroupAutocompleterConfigIdent = "allgroups" | "kubernetes_labels";
@@ -202,7 +219,7 @@ interface TableEntries {
 export function toggle_option(
     oCheckbox: HTMLInputElement,
     divid: string,
-    negate: 1 | 0
+    negate: 1 | 0,
 ) {
     const oDiv = document.getElementById(divid)!;
     if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
@@ -218,7 +235,7 @@ export function toggle_dropdown(oDropdown: HTMLInputElement, divid: string) {
 
 export function toggle_tag_dropdown(
     oDropdown: HTMLInputElement,
-    divid: string
+    divid: string,
 ) {
     const oDiv = document.getElementById(divid)!;
     if (oDropdown.value == "ignore") oDiv.style.display = "none";
@@ -232,7 +249,7 @@ export function toggle_tag_dropdown(
 export function list_of_strings_init(
     divid: string,
     split_on_paste: boolean,
-    split_separators: string
+    split_separators: string,
 ) {
     const container = document.getElementById(divid)!;
     const children = container.getElementsByTagName("div");
@@ -244,21 +261,21 @@ export function list_of_strings_init(
     list_of_strings_add_event_handlers(
         last_input,
         split_on_paste,
-        split_separators
+        split_separators,
     );
 }
 
 function list_of_strings_add_event_handlers(
     input: HTMLElement,
     split_on_paste: boolean,
-    split_separators: string
+    split_separators: string,
 ) {
     const handler_func = function () {
         if (this.value != "") {
             return list_of_strings_extend(
                 this,
                 split_on_paste,
-                split_separators
+                split_separators,
             );
         }
     };
@@ -273,16 +290,16 @@ function list_of_strings_add_event_handlers(
         const stripped = pasted.replace(
             new RegExp(
                 "^[" + split_separators + "]+|[" + split_separators + "]+$",
-                "g"
+                "g",
             ),
-            ""
+            "",
         );
         return stripped.split(new RegExp("[" + split_separators + "]+"));
     };
 
     const setup_new_entries = (
         anchor: HTMLInputElement | HTMLSelectElement,
-        event: Event
+        event: Event,
     ) => {
         const entries = new_entries_from_event(event);
         let last_input = anchor;
@@ -301,7 +318,7 @@ function list_of_strings_add_event_handlers(
         list_of_strings_extend(last_input, split_on_paste, split_separators);
 
         // Stop original data actually being pasted
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
     };
 
     if (input.tagName == "INPUT") {
@@ -324,7 +341,7 @@ function list_of_strings_add_event_handlers(
                     if (search_field.val() != "") return true; // The field had a value before: Don't do custom stuff
                     return setup_new_entries(
                         <HTMLSelectElement>input,
-                        event.originalEvent!
+                        event.originalEvent!,
                     );
                 });
             });
@@ -348,7 +365,7 @@ function list_of_strings_remove_event_handlers(input: HTMLElement) {
 export function list_of_strings_extend(
     input: HTMLInputElement | HTMLSelectElement,
     split_on_paste: boolean,
-    split_separators: string
+    split_separators: string,
 ) {
     const new_input = list_of_strings_add_new_field(input);
 
@@ -356,13 +373,13 @@ export function list_of_strings_extend(
     list_of_strings_add_event_handlers(
         new_input,
         split_on_paste,
-        split_separators
+        split_separators,
     );
     list_of_strings_remove_event_handlers(input);
 }
 
 function list_of_strings_add_new_field(
-    input: HTMLInputElement | HTMLSelectElement
+    input: HTMLInputElement | HTMLSelectElement,
 ) {
     /* The input field has a unique name like "extra_emails_2" for the field with
        the index 2. We need to convert this into "extra_emails_3". */
@@ -389,21 +406,23 @@ function list_of_strings_add_new_field(
     const tagtype = input.tagName == "INPUT" ? "input" : "select";
     const new_div = document.createElement("DIV");
     if (input.tagName == "INPUT") {
+        /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
         new_div.innerHTML = div.innerHTML.replace(
             '"' + old_name + '"',
-            '"' + new_name + '"'
+            '"' + new_name + '"',
         );
         // Do not clone placeholder help texts
-        d3.select(new_div).select("input").attr("placeholder", null);
+        select(new_div).select("input").attr("placeholder", null);
         // IE7 does not have quotes in innerHTML, trying to workaround this here.
         new_div.innerHTML = new_div.innerHTML.replace(
             "=" + old_name + " ",
-            "=" + new_name + " "
+            "=" + new_name + " ",
         );
         new_div.innerHTML = new_div.innerHTML.replace(
             "=" + old_name + ">",
-            "=" + new_name + ">"
+            "=" + new_name + ">",
         );
+        /* eslint-enable no-unsanitized/property -- Highlight existing violations CMK-17846 */
     } else {
         // shallow because select2 ands dynamically some spans with form_elements
         const new_select = input.cloneNode() as HTMLInputElement;
@@ -412,7 +431,7 @@ function list_of_strings_add_new_field(
         delete new_select.dataset.select2Id;
         new_div.appendChild(new_select);
     }
-    forms.enable_dynamic_form_elements(new_div);
+    enable_dynamic_form_elements(new_div);
     container.appendChild(new_div);
 
     return new_div.getElementsByTagName(tagtype)[0] as
@@ -433,7 +452,7 @@ interface CascadingSubValuespecParameters {
 
 export function add_cascading_sub_valuespec_parameters(
     varprefix: string,
-    parameters: CascadingSubValuespecParameters
+    parameters: CascadingSubValuespecParameters,
 ) {
     cascading_sub_valuespec_parameters[varprefix] = parameters;
 }
@@ -441,7 +460,7 @@ export function add_cascading_sub_valuespec_parameters(
 export function cascading_change(
     oSelect: HTMLInputElement,
     varprefix: string,
-    count: number
+    count: number,
 ) {
     const nr = parseInt(oSelect.value);
 
@@ -460,12 +479,12 @@ export function cascading_change(
             container.childElementCount == 0 &&
             Object.prototype.hasOwnProperty.call(
                 cascading_sub_valuespec_parameters,
-                vp
+                vp,
             )
         ) {
             show_cascading_sub_valuespec(
                 vp,
-                cascading_sub_valuespec_parameters[vp]
+                cascading_sub_valuespec_parameters[vp],
             );
         }
     }
@@ -473,34 +492,35 @@ export function cascading_change(
 
 function show_cascading_sub_valuespec(
     varprefix: string,
-    parameters: CascadingSubValuespecParameters
+    parameters: CascadingSubValuespecParameters,
 ) {
     const post_data =
         "request=" +
         encodeURIComponent(JSON.stringify(parameters["request_vars"]));
 
-    ajax.call_ajax(parameters["page_name"] + ".py", {
+    call_ajax(parameters["page_name"] + ".py", {
         method: "POST",
         post_data: post_data,
         response_handler: function (
             handler_data: {varprefix: string},
-            ajax_response: string
+            ajax_response: string,
         ) {
             const response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
-                    "Error [" + response.result_code + "]: " + response.result
+                    "Error [" + response.result_code + "]: " + response.result,
                 ); // eslint-disable-line
                 return;
             }
 
             const container = document.getElementById(
-                handler_data.varprefix + "_sub"
+                handler_data.varprefix + "_sub",
             )!;
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             container.innerHTML = response.result.html_code;
 
-            utils.execute_javascript_by_object(container);
-            forms.enable_dynamic_form_elements(container);
+            execute_javascript_by_object(container);
+            enable_dynamic_form_elements(container);
         },
         handler_data: {
             varprefix: varprefix,
@@ -515,29 +535,37 @@ export function textarea_resize(oArea: HTMLInputElement) {
 export function listof_add(
     varprefix: string,
     magic: string,
-    style: string | null
+    style: string | null,
 ) {
     const count_field = document.getElementById(
-        varprefix + "_count"
+        varprefix + "_count",
     ) as HTMLInputElement;
     const count = parseInt(count_field.value);
-    const str_count = "" + (count + 1);
+    let str_count = "" + (count + 1);
+
+    // Make sure the new entry we're creating does not already exist. We cannot rely on the count
+    // value here -> increment the count until the according id does not exist
+    while (document.querySelector(`[id^=${varprefix}][id$="${str_count}"]`)) {
+        str_count = "" + (parseInt(str_count) + 1);
+    }
     count_field.value = str_count;
 
     const html_code = listof_get_new_entry_html_code(
         varprefix,
         magic,
-        str_count
+        str_count,
     );
     const container = document.getElementById(varprefix + "_container");
 
     let new_child: HTMLElement;
     const tmp_container = document.createElement("div");
     if (style == "floating") {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         tmp_container.innerHTML = html_code;
         new_child = tmp_container.children[0] as HTMLElement;
     } else {
         // Hack for IE. innerHTML does not work correctly directly on tbody/tr
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         tmp_container.innerHTML =
             "<table><tbody>" + html_code + "</tbody></tr>";
         new_child = tmp_container.children[0].children[0]
@@ -545,8 +573,8 @@ export function listof_add(
     }
 
     container!.appendChild(new_child);
-    utils.execute_javascript_by_object(new_child);
-    forms.enable_dynamic_form_elements(new_child);
+    execute_javascript_by_object(new_child);
+    enable_dynamic_form_elements(new_child);
 
     listof_update_indices(varprefix);
 }
@@ -554,7 +582,7 @@ export function listof_add(
 function listof_get_new_entry_html_code(
     varprefix: string,
     magic: string,
-    str_count: string
+    str_count: string,
 ) {
     const container = document.getElementById(varprefix + "_container")!;
     let oPrototype: HTMLElement | null = null;
@@ -562,7 +590,7 @@ function listof_get_new_entry_html_code(
         // Adding the first element. See if there's a specific prototype given for the first
         // element, i.e. the first element is rendered differently than the subsequent ones.
         oPrototype = document.getElementById(
-            varprefix + "_first_elem_prototype"
+            varprefix + "_first_elem_prototype",
         );
     }
     if (oPrototype == null) {
@@ -578,7 +606,7 @@ function listof_get_new_entry_html_code(
     // retrieving the data from HTTP vars easier.
     html_code = html_code.replace(
         new RegExp(magic + "_first_elem", "g"),
-        magic
+        magic,
     );
     // Replace the magic in simple strings
     ["_entry_", "_indexof_", "_orig_indexof_", "_"].forEach(element => {
@@ -678,7 +706,7 @@ export function listof_drop_handler(handler_args: {
     const cur_index = handler_args.cur_index;
 
     const indexof: NodeListOf<HTMLElement> = document.getElementsByName(
-        varprefix + "_indexof_" + cur_index
+        varprefix + "_indexof_" + cur_index,
     );
     if (indexof.length == 0) throw "Failed to find the indexof_fied";
     const firstIndexof = indexof[0];
@@ -696,10 +724,10 @@ export function listof_drop_handler(handler_args: {
 export function listof_sort(
     varprefix: string,
     _magic: string,
-    sort_by: number | null
+    sort_by: number | null,
 ) {
     const tbody = document.getElementById(
-        varprefix + "_container"
+        varprefix + "_container",
     ) as HTMLTableElement;
     const rows = tbody.rows;
 
@@ -760,12 +788,12 @@ export function listof_update_indices(varprefix: string) {
     for (let i = 0; i < container.children.length; i++) {
         const child_node = container.children[i];
         const index = child_node.getElementsByClassName(
-            "index"
+            "index",
         )[0] as HTMLInputElement;
         if (index.value === "") {
             // initialization of recently added row
             const orig_index = child_node.getElementsByClassName(
-                "orig_index"
+                "orig_index",
             )[0] as HTMLInputElement;
             orig_index.value = "" + (i + 1);
         }
@@ -787,7 +815,7 @@ export function list_choice_toggle_all(varprefix: string) {
 
 export function rule_comment_prefix_date_and_user(
     img: HTMLAnchorElement,
-    text: string
+    text: string,
 ) {
     const container = <HTMLElement>img.parentNode!.parentNode;
     const textarea = container.getElementsByTagName("textarea")[0];
@@ -848,19 +876,19 @@ export function duallist_enlarge(field_suffix: string, varprefix: string) {
     const other_field = document.getElementById(other_id);
     if (!other_field) return;
 
-    utils.remove_class(other_field, "large");
-    utils.add_class(other_field, "small");
-    utils.remove_class(field, "small");
-    utils.add_class(field, "large");
+    remove_class(other_field, "large");
+    add_class(other_field, "small");
+    remove_class(field, "small");
+    add_class(field, "large");
 }
 
 export function duallist_switch(
     field_suffix: string,
     varprefix: string,
-    keeporder: number
+    keeporder: number,
 ) {
     const field = document.getElementById(
-        varprefix + "_" + field_suffix
+        varprefix + "_" + field_suffix,
     ) as HTMLSelectElement;
     let other_id, positive;
     if (field.id != varprefix + "_selected") {
@@ -935,7 +963,7 @@ function sort_select(select: HTMLSelectElement) {
         (a, b) =>
             collator.compare(a[0], b[0]) ||
             collator.compare(String(a[1]), String(b[1])) ||
-            collator.compare(String(a[2]), String(b[2]))
+            collator.compare(String(a[2]), String(b[2])),
     );
     while (select.options.length > 0) {
         // @ts-ignore
@@ -954,24 +982,24 @@ function sort_select(select: HTMLSelectElement) {
 export function iconselector_select(
     _event: Event,
     varprefix: string,
-    value: string
+    value: string,
 ) {
     // set value of valuespec
     const obj = document.getElementById(
-        varprefix + "_value"
+        varprefix + "_value",
         //not sure if this cast is correct
     ) as HTMLInputElement;
     obj.value = value;
 
     const src_img = document.getElementById(
-        varprefix + "_i_" + value
+        varprefix + "_i_" + value,
     ) as HTMLImageElement;
 
     // Set the new choosen icon in the valuespecs image
     const img = document.getElementById(varprefix + "_img") as HTMLImageElement;
     img.src = src_img.src;
 
-    popup_menu.close_popup();
+    close_popup();
 }
 
 export function iconselector_toggle(varprefix: string, category_name: string) {
@@ -980,20 +1008,20 @@ export function iconselector_toggle(varprefix: string, category_name: string) {
     let i;
     for (i = 0; i < nav_links.length; i++) {
         if (nav_links[i].id == varprefix + "_" + category_name + "_nav")
-            utils.add_class(
-                nav_links[i].parentNode as utils.Nullable<HTMLElement>,
-                "active"
+            add_class(
+                nav_links[i].parentNode as Nullable<HTMLElement>,
+                "active",
             );
         else
-            utils.remove_class(
-                nav_links[i].parentNode as utils.Nullable<HTMLElement>,
-                "active"
+            remove_class(
+                nav_links[i].parentNode as Nullable<HTMLElement>,
+                "active",
             );
     }
 
     // Now update the category containers
     const containers = document.getElementsByClassName(
-        varprefix + "_container"
+        varprefix + "_container",
     ) as HTMLCollectionOf<HTMLElement>;
     for (i = 0; i < containers.length; i++) {
         if (containers[i].id == varprefix + "_" + category_name + "_container")
@@ -1004,16 +1032,15 @@ export function iconselector_toggle(varprefix: string, category_name: string) {
 
 export function iconselector_toggle_names(_event: Event, varprefix: string) {
     const icons = document.getElementById(varprefix + "_icons");
-    if (utils.has_class(icons, "show_names"))
-        utils.remove_class(icons, "show_names");
-    else utils.add_class(icons, "show_names");
+    if (has_class(icons, "show_names")) remove_class(icons, "show_names");
+    else add_class(icons, "show_names");
 }
 
 export function listofmultiple_add(
     varprefix: string,
     choice_page_name: string,
     page_request_vars: Record<string, any>,
-    trigger?: HTMLAnchorElement
+    trigger?: HTMLAnchorElement,
 ) {
     let ident;
     let triggerElement: HTMLAnchorElement | HTMLOptionElement | undefined =
@@ -1021,10 +1048,10 @@ export function listofmultiple_add(
     if (trigger) {
         // trigger given: Special case for ViewFilterList style choice rendering
         ident = trigger.id.replace(varprefix + "_add_", "");
-        utils.add_class(trigger, "disabled");
+        add_class(trigger, "disabled");
     } else {
         const choice = document.getElementById(
-            varprefix + "_choice"
+            varprefix + "_choice",
         ) as HTMLSelectElement;
         ident = choice.value;
 
@@ -1050,7 +1077,7 @@ export function listofmultiple_add(
 
     const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
-    ajax.call_ajax(choice_page_name + ".py", {
+    call_ajax(choice_page_name + ".py", {
         method: "POST",
         post_data: post_data,
         handler_data: {
@@ -1059,14 +1086,14 @@ export function listofmultiple_add(
         },
         response_handler: function (handler_data, ajax_response: string) {
             const table = document.getElementById(
-                varprefix + "_table"
+                varprefix + "_table",
             ) as HTMLTableElement;
             const tbody = table.getElementsByTagName("tbody")[0];
 
             const response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
-                    "Error [" + response.result_code + "]: " + response.result
+                    "Error [" + response.result_code + "]: " + response.result,
                 ); // eslint-disable-line
                 return;
             }
@@ -1082,23 +1109,24 @@ export function listofmultiple_add(
             }
 
             const tmp_container = document.createElement("tbody");
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             tmp_container.innerHTML = response.result.html_code;
             const new_row = tmp_container.childNodes[0] as HTMLElement;
             if (new_row.tagName != "TR") {
                 console.log(
                     "Error: Invalid choice HTML code: " +
-                        response.result.html_code
+                        response.result.html_code,
                 ); // eslint-disable-line
                 return;
             }
 
             tbody.insertBefore(new_row, tbody.firstChild);
-            forms.enable_dynamic_form_elements(new_row);
-            utils.execute_javascript_by_object(new_row);
+            enable_dynamic_form_elements(new_row);
+            execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements
             const active = document.getElementById(
-                varprefix + "_active"
+                varprefix + "_active",
             ) as HTMLInputElement;
             if (active.value != "") active.value += ";" + ident;
             else active.value = ident;
@@ -1107,12 +1135,12 @@ export function listofmultiple_add(
             if (tbody.childNodes.length == 1)
                 table.parentNode!.insertBefore(
                     document.createElement("br"),
-                    table.nextSibling
+                    table.nextSibling,
                 );
 
             // Enable the reset button
             const reset_button = document.getElementById(
-                varprefix + "_reset"
+                varprefix + "_reset",
             ) as HTMLButtonElement;
             if (reset_button) reset_button.disabled = false;
         },
@@ -1127,7 +1155,7 @@ export function listofmultiple_del(varprefix: string, ident: string) {
 
     // Make it choosable from the dropdown field again
     let choice = document.getElementById(
-        varprefix + "_choice"
+        varprefix + "_choice",
     ) as HTMLSelectElement | null;
     let i;
     if (choice) {
@@ -1141,14 +1169,14 @@ export function listofmultiple_del(varprefix: string, ident: string) {
     } else {
         // trigger given: Special case for ViewFilterList style choice rendering
         choice = document.getElementById(
-            varprefix + "_add_" + ident
+            varprefix + "_add_" + ident,
         ) as HTMLSelectElement;
-        utils.remove_class(choice, "disabled");
+        remove_class(choice, "disabled");
     }
 
     // Remove it from the list of active elements
     const active = document.getElementById(
-        varprefix + "_active"
+        varprefix + "_active",
     ) as HTMLInputElement;
     const l = active.value.split(";");
     for (i = 0; i < l.length; i++) {
@@ -1168,7 +1196,7 @@ export function listofmultiple_del(varprefix: string, ident: string) {
 
     // Enable the reset button
     const reset_button = document.getElementById(
-        varprefix + "_reset"
+        varprefix + "_reset",
     ) as HTMLButtonElement;
     if (reset_button) reset_button.disabled = false;
 }
@@ -1178,7 +1206,7 @@ export function listofmultiple_init(varprefix: string, was_submitted: boolean) {
     const tbody = table.getElementsByTagName("tbody")[0];
 
     const choice_field = document.getElementById(
-        varprefix + "_choice"
+        varprefix + "_choice",
     ) as null | HTMLOptionElement;
     if (choice_field) choice_field.value = "";
 
@@ -1187,12 +1215,12 @@ export function listofmultiple_init(varprefix: string, was_submitted: boolean) {
     if (tbody.childNodes.length >= 1)
         table.parentNode!.insertBefore(
             document.createElement("br"),
-            table.nextSibling
+            table.nextSibling,
         );
 
     // Disable the reset button if the form was not submitted yet
     const reset_button = document.getElementById(
-        varprefix + "_reset"
+        varprefix + "_reset",
     ) as null | HTMLButtonElement;
     if (reset_button && !was_submitted) {
         reset_button.disabled = true;
@@ -1203,7 +1231,7 @@ export function listofmultiple_init(varprefix: string, was_submitted: boolean) {
 // elements need to be disabled.
 function listofmultiple_disable_selected_options(varprefix: string) {
     const active = document.getElementById(
-        varprefix + "_active"
+        varprefix + "_active",
     ) as HTMLOptionElement;
     if (active.value == "") {
         return;
@@ -1211,7 +1239,7 @@ function listofmultiple_disable_selected_options(varprefix: string) {
 
     const active_choices = active.value.split(";");
     const choice_field = document.getElementById(
-        varprefix + "_choice"
+        varprefix + "_choice",
     ) as null | HTMLSelectElement;
     let i;
     if (choice_field) {
@@ -1225,9 +1253,9 @@ function listofmultiple_disable_selected_options(varprefix: string) {
         let choice;
         for (i = 0; i < active_choices.length; i++) {
             choice = document.getElementById(
-                varprefix + "_add_" + active_choices[i]
+                varprefix + "_add_" + active_choices[i],
             );
-            utils.add_class(choice, "disabled");
+            add_class(choice, "disabled");
         }
     }
 }
@@ -1243,14 +1271,14 @@ function hook_select2_hint(elem: HTMLSelectElement, source_id: string) {
     if (!source_field) return;
     set_select2_element(elem, String(source_field.val() ?? "")); // page initialization
     source_field.on("change", () =>
-        set_select2_element(elem, String(source_field.val() ?? ""))
+        set_select2_element(elem, String(source_field.val() ?? "")),
     );
 }
 
 function ajax_autocomplete_request(
     value: string,
     elem: HTMLSelectElement,
-    autocompleter: AutoCompleter
+    autocompleter: AutoCompleter,
 ) {
     const callback: (autocompleter: any, elem: HTMLSelectElement) => any =
         dynamicParamsCallbacks[
@@ -1263,23 +1291,23 @@ function ajax_autocomplete_request(
                 ident: autocompleter.ident,
                 params: callback(autocompleter, elem),
                 value: value,
-            })
+            }),
         )
     );
 }
 
 function select2_ajax_vs_autocomplete(
     elem: HTMLSelectElement,
-    autocompleter: AutoCompleter
+    autocompleter: AutoCompleter,
 ) {
     const value: (term: QueryOptions) => string = term =>
         term.term !== undefined
             ? term.term
             : ["hostname", "service", "label"].find(el =>
-                  autocompleter.ident.includes(el)
-              )
-            ? elem.options[elem.selectedIndex]?.innerText || ""
-            : "";
+                    autocompleter.ident.includes(el),
+                )
+              ? elem.options[elem.selectedIndex]?.innerText || ""
+              : "";
 
     return {
         url: "ajax_vs_autocomplete.py",
@@ -1300,7 +1328,7 @@ function select2_ajax_vs_autocomplete(
 }
 
 function select2_vs_autocomplete(
-    container: JQuery<Document> | HTMLElement | HTMLDocument
+    container: JQuery<Document> | HTMLElement | HTMLDocument,
 ) {
     $(container)
         .find<HTMLSelectElement>("select.ajax-vals")
@@ -1329,8 +1357,8 @@ function select2_vs_autocomplete(
                     allowClear: true,
                     placeholder: placeholder_title,
                     ajax: select2_ajax_vs_autocomplete(elem, autocompleter),
-                    templateResult: forms.format_select2_item,
-                    templateSelection: forms.format_select2_item,
+                    templateResult: format_select2_item,
+                    templateSelection: format_select2_item,
                 })
                 .on("select2:open", () => {
                     if (
@@ -1375,7 +1403,7 @@ function select2_vs_autocomplete(
 }
 
 export function initialize_autocompleters(
-    container: JQuery<Document> | HTMLElement | HTMLDocument
+    container: JQuery<Document> | HTMLElement | HTMLDocument,
 ) {
     select2_vs_autocomplete(container);
 }
@@ -1389,14 +1417,14 @@ export function initialize_autocompleters(
 const vs_color_pickers: Record<string, any> = {};
 
 export function add_color_picker(varprefix: string, value: string) {
-    vs_color_pickers[varprefix] = colorpicker.ColorPicker(
+    vs_color_pickers[varprefix] = ColorPicker(
         document.getElementById(varprefix + "_picker"),
         function (hex: string) {
             update_color_picker(varprefix, hex, false);
-        }
+        },
     );
 
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_input")!.oninput =
+    querySelectorID<HTMLInputElement>(varprefix + "_input")!.oninput =
         function () {
             //@ts-ignore
             update_color_picker(varprefix, this["value"], true);
@@ -1408,13 +1436,13 @@ export function add_color_picker(varprefix: string, value: string) {
 function update_color_picker(
     varprefix: string,
     hex: string,
-    update_picker: boolean
+    update_picker: boolean,
 ) {
     if (!/^#[0-9A-F]{6}$/i.test(hex)) return; // skip invalid/unhandled colors
 
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_input")!.value = hex;
-    utils.querySelectorID<HTMLInputElement>(varprefix + "_value")!.value = hex;
-    utils.querySelectorID(varprefix + "_preview")!.style.backgroundColor = hex;
+    querySelectorID<HTMLInputElement>(varprefix + "_input")!.value = hex;
+    querySelectorID<HTMLInputElement>(varprefix + "_value")!.value = hex;
+    querySelectorID(varprefix + "_preview")!.style.backgroundColor = hex;
 
     //@ts-ignore
     if (update_picker) vs_color_pickers[varprefix].setHex(hex);
@@ -1424,7 +1452,7 @@ export function visual_filter_list_reset(
     varprefix: string,
     page_request_vars: Record<string, any> | undefined,
     page_name: string,
-    reset_ajax_page: string
+    reset_ajax_page: string,
 ) {
     const request = {
         varprefix: varprefix,
@@ -1433,7 +1461,7 @@ export function visual_filter_list_reset(
     };
     const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
-    ajax.call_ajax(reset_ajax_page + ".py", {
+    call_ajax(reset_ajax_page + ".py", {
         method: "POST",
         post_data: post_data,
         handler_data: {
@@ -1441,33 +1469,34 @@ export function visual_filter_list_reset(
         },
         response_handler: function (
             _handler_data: {varprefix: string},
-            ajax_response: string
+            ajax_response: string,
         ) {
             const response = JSON.parse(ajax_response);
             const filters_html = response.result.filters_html;
             const filter_list = document.getElementById(
-                varprefix + "_popup_filter_list_selected"
+                varprefix + "_popup_filter_list_selected",
             )!;
             set_inner_html_and_execute_scripts(
                 filter_list.getElementsByClassName(
-                    "simplebar-content"
+                    "simplebar-content",
                 )[0] as HTMLElement,
-                filters_html
+                filters_html,
             );
-            utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
+            add_simplebar_scrollbar(varprefix + "_popup_filter_list");
             listofmultiple_disable_selected_options(varprefix);
-            forms.enable_dynamic_form_elements();
+            enable_dynamic_form_elements();
         },
     });
 
     // Disable the reset button
     const reset_button = document.getElementById(
-        varprefix + "_reset"
+        varprefix + "_reset",
     ) as HTMLButtonElement;
     reset_button.disabled = true;
 }
 
 function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     elm.innerHTML = html;
 
     for (const original_script of elm.getElementsByTagName("script")) {
@@ -1480,6 +1509,7 @@ function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
             new_script.setAttribute(attr.name, attr.value);
         }
 
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         new_script.innerHTML = original_script.innerHTML;
         original_script.parentNode!.replaceChild(new_script, original_script);
     }
@@ -1487,11 +1517,11 @@ function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
 
 export function update_unit_selector(selectbox: string, metric_prefix: string) {
     const change_unit_to_match_metric = (
-        metric: string | number | string[] | undefined
+        metric: string | number | string[] | undefined,
     ) => {
         const post_data =
             "request=" + encodeURIComponent(JSON.stringify({metric: metric}));
-        ajax.call_ajax("ajax_vs_unit_resolver.py", {
+        call_ajax("ajax_vs_unit_resolver.py", {
             method: "POST",
             post_data: post_data,
             response_handler: (_indata: any, response: string) => {
@@ -1499,7 +1529,7 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
                 // Error handling is: If request failed do nothing
                 if (json_data.result_code == 0)
                     $("#" + selectbox + "_sel")
-                        .val(json_data.result.option_place)
+                        .val(json_data.result.unit_choice_index)
                         .trigger("change");
             },
         });
@@ -1513,19 +1543,19 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
         change_unit_to_match_metric(metric_selected);
     }
     metric_selector.on("change", event =>
-        change_unit_to_match_metric((event.target as HTMLOptionElement).value)
+        change_unit_to_match_metric((event.target as HTMLOptionElement).value),
     );
 }
 
 export function fetch_ca_from_server(varprefix: string) {
     const address = document.querySelector<HTMLInputElement>(
-        `input[name='${varprefix + "_address"}']`
+        `input[name='${varprefix + "_address"}']`,
     )!.value;
     const port = document.querySelector<HTMLInputElement>(
-        `input[name='${varprefix + "_port"}']`
+        `input[name='${varprefix + "_port"}']`,
     )!.value;
 
-    ajax.call_ajax("ajax_fetch_ca.py", {
+    call_ajax("ajax_fetch_ca.py", {
         method: "POST",
         post_data:
             "address=" +
@@ -1536,15 +1566,17 @@ export function fetch_ca_from_server(varprefix: string) {
             const response = JSON.parse(ajax_response);
 
             const status = document.getElementById(
-                varprefix + "_status"
+                varprefix + "_status",
             ) as HTMLInputElement;
             const content = document.querySelector<HTMLTextAreaElement>(
-                `textarea[name='${varprefix}']`
+                `textarea[name='${varprefix}']`,
             )!;
             if (response.result_code !== 0) {
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 status.innerText = response.result;
                 content.value = "";
             } else {
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 status.innerHTML = response.result.summary;
                 content.value = response.result.cert_pem;
             }
@@ -1563,7 +1595,7 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
     $(select_elem).select2("close");
     const tbody: HTMLTableSectionElement = select_elem.closest("tbody")!;
     const labels = tbody.getElementsByClassName(
-        "label"
+        "label",
     ) as HTMLCollectionOf<HTMLSelectElement>;
 
     // If the last select.label within tbody has a non empty value, add a new row
@@ -1577,13 +1609,13 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
     // Let the new bool dropdown default to the value of the last one
     const new_row = tbody.children[tbody.children.length - 1]!;
     const last_bool_elem = document.getElementById(
-        select_elem.id.replace(/_vs$/, "_bool")
+        select_elem.id.replace(/_vs$/, "_bool"),
     ) as HTMLSelectElement;
     const new_bool_elem = document.getElementById(
-        new_row.id.replace("vs_entry", "vs") + "_bool"
+        new_row.id.replace("vs_entry", "vs") + "_bool",
     ) as HTMLSelectElement;
     new_bool_elem.value = last_bool_elem.value;
-    forms.enable_select2_dropdowns(new_row as HTMLElement);
+    enable_select2_dropdowns(new_row as HTMLElement);
 
     // Automatically open (and focus) the newly added select2 element
     const new_vs_select_id = new_bool_elem.id.replace(/_bool$/, "_vs");
@@ -1592,16 +1624,16 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
 
 export function toggle_label_row_opacity(
     elem: HTMLSelectElement,
-    is_active: boolean
+    is_active: boolean,
 ) {
     const tr: HTMLTableRowElement = elem.closest("tr")!;
     const tbody: HTMLTableSectionElement = tr.closest("tbody")!;
     if (tbody.lastChild !== tr) return;
 
     if (is_active) {
-        utils.add_class(tr, "active");
+        add_class(tr, "active");
     } else {
-        utils.remove_class(tr, "active");
+        remove_class(tr, "active");
     }
 }
 
@@ -1609,10 +1641,10 @@ export function label_group_delete(
     varprefix: string,
     index: string,
     first_elem_choices_or_label: [string, string][] | string,
-    show_empty_group_by_default: boolean
+    show_empty_group_by_default: boolean,
 ) {
     const tr = document.getElementById(
-        varprefix + "_entry_" + index
+        varprefix + "_entry_" + index,
     )! as HTMLTableRowElement;
     const tbody = tr.parentNode as HTMLTableSectionElement;
 
@@ -1643,9 +1675,10 @@ export function label_group_delete(
                     if (
                         Object.prototype.hasOwnProperty.call(
                             first_elem_choices,
-                            options[i].value
+                            options[i].value,
                         )
                     ) {
+                        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                         options[i].innerHTML =
                             first_elem_choices[options[i].value];
                     } else {
@@ -1659,14 +1692,14 @@ export function label_group_delete(
                 const next_bool_div =
                     next_row_select.parentNode as HTMLDivElement;
                 const hidden_input = document.getElementsByName(
-                    varprefix + "_" + index + "_bool"
+                    varprefix + "_" + index + "_bool",
                 )![0] as HTMLInputElement;
                 hidden_input.name = next_row_select.name;
                 next_bool_div.removeChild(next_row_select.nextSibling!); // select2 span
                 next_bool_div.removeChild(next_row_select);
                 next_bool_div.insertBefore(
                     tr.getElementsByClassName("vs_label")[0],
-                    next_bool_div.lastChild
+                    next_bool_div.lastChild,
                 );
                 next_bool_div.append(hidden_input);
             }
@@ -1674,12 +1707,12 @@ export function label_group_delete(
     }
 
     listof_delete(varprefix, index);
-    forms.enable_dynamic_form_elements(tbody);
+    enable_dynamic_form_elements(tbody);
 }
 
 export function init_on_change_validation(
     varname: string,
-    filter_ident: string
+    filter_ident: string,
 ) {
     const select = document.getElementById(varname) as HTMLSelectElement;
     if (!select) return;
@@ -1692,13 +1725,13 @@ export function init_on_change_validation(
         };
         const post_data =
             "request=" + encodeURIComponent(JSON.stringify(request));
-        ajax.call_ajax("ajax_validate_filter.py", {
+        call_ajax("ajax_validate_filter.py", {
             method: "POST",
             post_data: post_data,
             handler_data: {select: select},
             response_handler: function (
                 handler_data: {select: HTMLSelectElement},
-                ajax_response: string
+                ajax_response: string,
             ) {
                 const resp = JSON.parse(ajax_response);
                 const parent = handler_data.select
@@ -1716,6 +1749,7 @@ export function init_on_change_validation(
                 if (error_html) {
                     const error_div = document.createElement("div");
                     parent.insertBefore(error_div, select);
+                    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                     error_div.outerHTML = resp.result.error_html;
                 }
             },

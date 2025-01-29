@@ -106,17 +106,15 @@ class Uptime(pydantic.BaseModel):
 
 
 class FilesystemInfo:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, name, fstype, mountpoint, size=None, available=None, used=None
-    ) -> None:
+    def __init__(self, name: str, fstype: str, mountpoint: str) -> None:
         self.name = name
         self.fstype = fstype
         self.mountpoint = mountpoint
-        self.size = size
-        self.available = available
-        self.used = used
+        self.size: int | None = None
+        self.available: int | None = None
+        self.used: int | None = None
 
-    def set_entity(self, entity_name, value):
+    def set_entity(self, entity_name: str, value: int) -> None:
         setattr(self, entity_name, value)
 
     def is_complete(self) -> bool:
@@ -174,9 +172,7 @@ class NodeExporter:
             temp_list: list[str] = []
             for _device, device_info in node_dict.items():
                 if device_info.is_complete():
-                    device_parsed = "{0.name} {0.fstype} {0.size} {0.used} {0.available} None {0.mountpoint}".format(
-                        device_info
-                    )
+                    device_parsed = f"{device_info.name} {device_info.fstype} {device_info.size} {device_info.used} {device_info.available} None {device_info.mountpoint}"
                     temp_list.append(device_parsed)
             if temp_list:
                 result[node_name] = temp_list
@@ -341,7 +337,7 @@ class NodeExporter:
 
     @staticmethod
     def _process_kernel_info(
-        temp_result: dict[str, dict[str, dict[str, int]]]
+        temp_result: dict[str, dict[str, dict[str, int]]],
     ) -> dict[str, SectionStr]:
         result: dict[str, SectionStr] = {}
         for node_name, cpu_result in temp_result.items():

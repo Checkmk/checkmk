@@ -1,0 +1,103 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: Checkmk Enterprise License
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+unset LANG
+
+PIDFILE=$OMD_ROOT/tmp/run/jaeger.pid
+LOGFILE=$OMD_ROOT/var/log/jaeger.log
+THE_PID=$(cat "$PIDFILE" 2>/dev/null)
+
+process_is_running() {
+    kill -0 "$1" >/dev/null 2>&1
+}
+
+await_process_stop() {
+    max=$(("${1}" * 10))
+    for N in $(seq "${max}"); do
+        process_is_running "$2" || return 0
+        [ $((N % 10)) -eq 0 ] && printf "."
+        sleep 0.1
+    done
+    return 1
+}
+
+# shellcheck source=/dev/null
+. "$OMD_ROOT/etc/omd/site.conf"
+if [ "$CONFIG_TRACE_RECEIVE" != on ]; then
+    exit 5
+fi
+
+case "$1" in
+    start)
+        echo -n 'Starting jaeger...'
+        if [ -n "$THE_PID" ] && process_is_running "$THE_PID" ; then
+            echo 'already running.'
+            exit 0
+        fi
+
+        nohup "$OMD_ROOT"/bin/jaeger \
+            --config="$OMD_ROOT"/etc/jaeger/config.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-query-port.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-grpc.yaml \
+            >>"$LOGFILE" 2>&1 &
+        STATUS=$?
+        if [ $STATUS -eq 0 ]; then
+            echo "$!" >"$PIDFILE"
+            echo OK
+            exit 0
+        else
+            echo failed
+            exit 1
+        fi
+        ;;
+    stop)
+        echo -n 'Stopping jaeger...'
+        if [ -z "$THE_PID" ]; then
+            echo 'not running.'
+        elif ! process_is_running "$THE_PID"; then
+            echo 'not running (PID file orphaned).'
+            rm -f "$PIDFILE"
+        else
+            echo -n "killing $THE_PID..."
+            if kill "$THE_PID" 2>/dev/null; then
+                # Only wait for pidfile removal when the signal could be sent
+                if ! await_process_stop 60 "$THE_PID"; then
+                    kill -9 "$THE_PID" 2>/dev/null
+                    await_process_stop 10 "$THE_PID"
+                fi
+            fi
+
+            if process_is_running; then
+                echo "process did not terminate."
+                exit 1
+            fi
+
+            rm -f "$PIDFILE"
+            echo 'OK'
+        fi
+        ;;
+
+    restart)
+        $0 stop && $0 start
+        ;;
+
+    status)
+        echo -n 'Checking status of jaeger...'
+        if [ -z "$THE_PID" ]; then
+            echo "not running (PID file missing)."
+            exit 1
+        elif ! process_is_running "$THE_PID"; then
+            echo "not running (PID file stale)."
+            exit 1
+        else
+            echo "running."
+            exit 0
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        ;;
+esac

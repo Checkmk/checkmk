@@ -6,7 +6,7 @@
 import abc
 import multiprocessing
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from pathlib import Path
 
@@ -15,16 +15,16 @@ import urllib3
 
 from livestatus import LocalConnection, SiteConfiguration, SiteId
 
-from cmk.utils.crypto.password import Password
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.paths import local_checks_dir, local_inventory_dir
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
+from cmk.utils.paths import local_agent_based_plugins_dir, local_checks_dir, local_inventory_dir
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
+from cmk.gui import userdb
 from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -38,7 +38,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,
@@ -49,7 +49,9 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
+
+from cmk.crypto.password import Password
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
@@ -75,7 +77,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestCheckMKHelperUsage)
     ac_test_registry.register(ACTestCheckMKFetcherUsage)
     ac_test_registry.register(ACTestCheckMKCheckerUsage)
-    ac_test_registry.register(ACTestAlertHandlerEventTypes)
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
@@ -183,8 +184,8 @@ class ACTestLiveproxyd(ACTest):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "The Livestatus Proxy is not only good for slave sites, "
-                    "enable it for your master site"
+                    "The Livestatus Proxy is not only good for remote sites, "
+                    "enable it for your central site"
                 ),
                 site_id=site_id,
             )
@@ -634,7 +635,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
             "But there are specific reasons to deactivate this security feature. E.g. when "
-            "you want to display the HTML output produced by a specific check plugin."
+            "you want to display the HTML output produced by a specific check plug-in. "
             "Disabling the escaping also allows the plug-in to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
             "execute arbitrary Javascript, even for injection attacks.<br>"
@@ -697,7 +698,7 @@ class ABCACApacheTest(ACTest, abc.ABC):
         cfg = ConfigDomainOMD().default_globals()
         url = "http://127.0.0.1:%s/server-status?auto" % cfg["site_apache_tcp_port"]
 
-        response = requests.get(url, headers={"Accept": "text/plain"})  # nosec B113
+        response = requests.get(url, headers={"Accept": "text/plain"}, timeout=110)
         return response.text
 
 
@@ -1043,36 +1044,6 @@ class ACTestCheckMKCheckerUsage(ACTest):
             )
 
 
-class ACTestAlertHandlerEventTypes(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.performance
-
-    def title(self) -> str:
-        return _("Alert handler: Don't handle all check executions")
-
-    def help(self) -> str:
-        return _(
-            "In general it will result in a significantly increased load when alert handlers are "
-            "configured to handle all check executions. It is highly recommended to "
-            '<a href="wato.py?mode=edit_configvar&varname=alert_handler_event_types">disable '
-            "this</a> in most cases."
-        )
-
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    def execute(self) -> Iterator[ACSingleResult]:
-        if "checkresult" in self._get_effective_global_setting("alert_handler_event_types"):
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_("Alert handler are configured to handle all check execution."),
-            )
-        else:
-            yield ACSingleResult(
-                state=ACResultState.OK, text=_("Alert handlers will handle state changes.")
-            )
-
-
 class ACTestGenericCheckHelperUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -1151,15 +1122,8 @@ class ACTestSizeOfExtensions(ACTest):
     def is_relevant(self) -> bool:
         return has_wato_slave_sites() and self._replicates_mkps()
 
-    def _replicates_mkps(self):
-        replicates_mkps = False
-        for site in wato_slave_sites().values():
-            if site.get("replicate_mkps"):
-                replicates_mkps = True
-                break
-
-        if not replicates_mkps:
-            return
+    def _replicates_mkps(self) -> bool:
+        return any(site.get("replicate_mkps") for site in wato_slave_sites().values())
 
     def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()
@@ -1249,17 +1213,62 @@ class ACTestESXDatasources(ACTest):
             yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
 
 
+class ACTestDeprecatedV1CheckPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check plug-ins (v1)")
+
+    def help(self) -> str:
+        return _(
+            "The check plug-in API for plug-ins in <tt>%s</tt> is removed."
+            " Plug-in files in this folder are ignored."
+            " Please migrate the plug-ins to the new API."
+            " More information can be found in"
+            " <a href='%s'>Werk #%d</a> and our"
+            " <a href='%s'>User Guide</a>."
+        ) % (
+            werk_reference_url(WerkReference.DECOMMISSION_V1_API),
+            WerkReference.DECOMMISSION_V1_API.ref(),
+            "/".join(local_agent_based_plugins_dir.parts[-4:]),
+            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+        )
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_agent_based_plugins_dir.rglob("*.py"))
+        except FileNotFoundError:
+            return ()
+
+    def is_relevant(self) -> bool:
+        return bool(self._get_files())
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        if plugin_files := self._get_files():
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_("%d check plug-ins trying to use the removed API: %s")
+                % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+            )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK, text=_("No check plug-ins trying to use the removed API")
+        )
+
+
 class ACTestDeprecatedCheckPlugins(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plugins")
+        return _("Deprecated check plug-ins (legacy)")
 
     def help(self) -> str:
         return _(
             "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated."
-            " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
+            " Plug-in files in this folder are still considered, but the API they are using may change at any time without notice."
             " Please migrate the plug-ins to the new API."
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
@@ -1290,12 +1299,12 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated HW/SW inventory plugins")
+        return _("Deprecated HW/SW Inventory plug-ins")
 
     def help(self) -> str:
         return _(
             "The old inventory plug-in API has been removed in Checkmk version 2.2."
-            " Plugin files in <tt>'%s'</tt> are ignored."
+            " Plug-in files in <tt>'%s'</tt> are ignored."
             " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
 
@@ -1307,18 +1316,18 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             if plugin_files := list(local_inventory_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW inventory plug-ins found: %s")
+                    text=_("%d ignored HW/SW Inventory plug-ins found: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW inventory plug-ins found")
+            state=ACResultState.OK, text=_("No ignored HW/SW Inventory plug-ins found")
         )
 
 
 def _site_is_using_livestatus_proxy(site_id):
-    site_configs = SiteManagementFactory().factory().load_sites()
+    site_configs = site_management_registry["site_management"].load_sites()
     return site_configs[site_id].get("proxy") is not None
 
 

@@ -262,7 +262,7 @@ def parse_arguments(argv):
         action="append",
         help="The names of workflows of the given project",
     )
-    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service description.")
+    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service name.")
     parser.add_argument("--jql-query", nargs=1, action="append", help="JQL search string.")
     parser.add_argument(
         "--jql-result",
@@ -277,12 +277,12 @@ def parse_arguments(argv):
         "--jql-field",
         nargs=1,
         action="append",
-        help='Field for operation. Please use "None" if you ' 'use "count" as result option.',
+        help='Field for operation. Please use "None" if you use "count" as result option.',
     )
     parser.add_argument(
         "--jql-limit", nargs=1, action="append", help="Maximum number of processed search results."
     )
-    parser.add_argument("--hostname", required=True, help="JIRA server to use")
+    parser.add_argument("--hostname", required=True, help="Jira server to use")
 
     return parser.parse_args(argv)
 

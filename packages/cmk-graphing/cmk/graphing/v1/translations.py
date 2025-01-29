@@ -83,7 +83,7 @@ class NagiosPlugin:
     A classical Nagios plug-in has the prefix ``check_``.
 
     Args:
-        name: The name of the Nagios plugin
+        name: The name of the Nagios plug-in
 
     Example:
 

@@ -1,52 +1,43 @@
 # The common set of distros which gets build during an official release
 common: &common
-    - "debian-10"
     - "debian-11"
     - "debian-12"
-    - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "centos-8"
     - "almalinux-9"
-    - "sles-12sp5"
     - "sles-15sp3"
     - "sles-15sp4"
     - "sles-15sp5"
+    - "sles-15sp6"
 
 # A reduced set of distros for the daily builds
+# Containing only the latest version of each supported OS
+# ubuntu-22.04 is used as internal base image
 daily_reduced: &daily_reduced
-    - "ubuntu-20.04"
-    - "ubuntu-22.04"
-    - "ubuntu-24.04"
-    - "debian-10"
-    - "sles-15sp5"
-
-daily_extended: &daily_extended
-    - "debian-12"
-    - "ubuntu-20.04"
-    - "ubuntu-22.04"
-    - "ubuntu-24.04"
-    - "centos-8"
     - "almalinux-9"
+    - "ubuntu-22.04"
+    - "ubuntu-24.04"
+    - "debian-12"
     - "sles-15sp5"
+    - "sles-15sp6"
 
-# Max L runs on the latest ubuntu and does not want to reinstall his machine
 daily_saas: &daily_saas
     - "ubuntu-22.04"
-    - "ubuntu-23.10"
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
-internal_distros: &internal_distros
-    - "ubuntu-23.10"
+# internal_distros: &internal_distros
+#     - "ubuntu-23.10"
 
 # Currently, all builds of the saas edition should stay completley internal
 internal_editions:
     - "saas"
 
 cma_distros: &cma_distros
-    - "cma-3"
     - "cma-4"
+
+fips_distros: &fips_distros
+    - "ubuntu-22.04"
 
 # README:
 # - the following sections defines what will be build/tested under which "use-case"
@@ -57,16 +48,18 @@ cma_distros: &cma_distros
 editions:
     enterprise:
         release: [*common, *cma_distros]
-        daily: [*daily_extended, *internal_distros, "cma-4"]
-        daily_tests: [*daily_extended, *internal_distros]
+        daily: [*common, *cma_distros]
+        daily_tests: [*common]
+        fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_extended]
+        daily_update_tests: [*common]
         weekly: [*common, *cma_distros]
-        testbuild: ["ubuntu-24.04", "centos-8", "cma-4"]
+        testbuild: ["ubuntu-24.04", "sles-15sp6", "cma-4"]
     cloud:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
         weekly: *daily_reduced
@@ -75,12 +68,14 @@ editions:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         weekly: *daily_reduced
         testbuild: []
     raw:
         release: *common
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         weekly: *daily_reduced
         testbuild: []
     saas:
@@ -88,6 +83,7 @@ editions:
         daily: *daily_saas
         daily_tests: *daily_saas
         daily_update_tests: [*daily_saas]
+        fips: []
         weekly: *daily_saas
         testbuild: []
 

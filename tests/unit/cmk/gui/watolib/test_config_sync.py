@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import time
 from collections.abc import Callable, Iterable, Iterator
@@ -14,21 +13,23 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.utils import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
 import cmk.gui.mkeventd.wato
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.config_sync as config_sync
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.watolib import activate_changes, config_sync
 
+from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.messaging import rabbitmq
 
 
 @pytest.fixture(name="mocked_responses")
@@ -116,7 +117,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         f.write("DUMMY_PWD_ENTRY \n")
 
     with monkeypatch.context() as m:
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
             m.setattr(
                 active_config,
                 "customers",
@@ -170,6 +171,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     if remote_site == SiteId("unit_remote_2"):
         return {
@@ -197,6 +199,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     raise ValueError(remote_site)
 
@@ -216,6 +219,7 @@ def _get_activation_manager(
                     "disabled": False,
                     "insecure": False,
                     "multisiteurl": "",
+                    "message_broker_port": 5672,
                     "persist": False,
                     "replicate_ec": False,
                     "replication": "",
@@ -246,9 +250,12 @@ def _generate_sync_snapshot(
         if edition is cmk_version.Edition.CME
         else "CRESnapshotDataCollector"
     )
+
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._activation_id, activation_manager._sites
+        activation_manager._activation_id,
+        activation_manager._sites,
+        {remote_site: rabbitmq.Definitions()},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
 
@@ -257,9 +264,9 @@ def _generate_sync_snapshot(
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
-    snapshot_manager = activate_changes.SnapshotManager.factory(
-        str(work_dir), site_snapshot_settings, edition
-    )
+    snapshot_manager = activate_changes.activation_features_registry[
+        str(edition)
+    ].snapshot_manager_factory(str(work_dir), site_snapshot_settings)
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
     snapshot_manager.generate_snapshots()
@@ -291,6 +298,7 @@ def _get_expected_paths(
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
         "var/check_mk/web/%s" % user_id,
+        "var/check_mk/web/%s/automation_user.mk" % user_id,
         "var/check_mk/web/%s/cached_profile.mk" % user_id,
         "var/check_mk/web/%s/enforce_pw_change.mk" % user_id,
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,
@@ -307,6 +315,9 @@ def _get_expected_paths(
         "etc/check_mk/apache.d/wato/sitespecific.mk",
         "etc/check_mk/conf.d/distributed_wato.mk",
         "etc/check_mk/conf.d/wato/sitespecific.mk",
+        "etc/check_mk/diskspace.d",
+        "etc/check_mk/diskspace.d/wato",
+        "etc/check_mk/diskspace.d/wato/sitespecific.mk",
         "etc/check_mk/mkeventd.d/wato/sitespecific.mk",
         "etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk",
         "etc/check_mk/multisite.d/wato/sitespecific.mk",
@@ -316,6 +327,12 @@ def _get_expected_paths(
         "etc/omd",
         "etc/omd/distributed.mk",
         "etc/omd/sitespecific.mk",
+        "etc/check_mk/piggyback_hub.d",
+        "etc/check_mk/piggyback_hub.d/wato",
+        "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
+        "etc/rabbitmq",
+        "etc/rabbitmq/definitions.d",
+        "etc/rabbitmq/definitions.d/definitions.next.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:
@@ -323,6 +340,7 @@ def _get_expected_paths(
             "etc/check_mk/dcd.d/wato/distributed.mk",
             "etc/check_mk/dcd.d",
             "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/dcd.d/wato/connections.mk",
             "etc/check_mk/dcd.d/wato/sitespecific.mk",
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
@@ -412,18 +430,34 @@ def _get_expected_paths(
             "local/share/check_mk/web/htdocs/themes/modern-dark/images",
         ]
 
+    if (is_cloud_repo() and edition is cmk_version.Edition.CCE) or (
+        is_managed_repo() and edition is cmk_version.Edition.CME
+    ):
+        expected_paths += [
+            "etc/check_mk/otel_collector.d",
+            "etc/check_mk/otel_collector.d/wato",
+            "etc/check_mk/otel_collector.d/wato/otel_collector.mk",
+            "etc/check_mk/otel_collector.d/wato/sitespecific.mk",
+        ]
+
     return expected_paths
 
 
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", [SiteId("unit_remote_1"), SiteId("unit_remote_2")])
 def test_generate_snapshot(
-    edition: cmk_version.Edition,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     with_user_login: UserId,
     remote_site: SiteId,
 ) -> None:
+    # Unfortunately we can not use the edition fixture anymore, which parameterizes the test with
+    # all editions. The reason for this is that cmk.gui.main_modules now executes the registrations
+    # for the edition it detects. In the future we want be able to create edition specific
+    # application objects, which would make testing them independently possible. Until then we have
+    # to accept the smaller test scope.
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+
     with _get_activation_manager(monkeypatch, remote_site) as activation_manager:
         with _create_sync_snapshot(
             activation_manager,
@@ -449,12 +483,15 @@ def test_generate_snapshot(
 def test_synchronize_site(
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
-    edition: cmk_version.Edition,
     tmp_path: Path,
     mocker: MockerFixture,
 ) -> None:
-    if edition is cmk_version.Edition.CME:
-        pytest.skip("Seems faked site environment is not 100% correct")
+    # Unfortunately we can not use the edition fixture anymore, which parameterizes the test with
+    # all editions. The reason for this is that cmk.gui.main_modules now executes the registrations
+    # for the edition it detects. In the future we want be able to create edition specific
+    # application objects, which would make testing them independently possible. Until then we have
+    # to accept the smaller test scope.
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
 
     mocked_responses.add(
         method=responses.POST,
@@ -492,7 +529,7 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: edition)
 
     file_filter_func = None
     site_id = SiteId("unit_remote_1")
@@ -519,24 +556,23 @@ def _synchronize_site(
         site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
     )
 
+    current_span = trace.get_current_span()
     fetch_state_result = activate_changes.fetch_sync_state(
         snapshot_settings.snapshot_components,
         site_activation_state,
         {},
+        current_span,
     )
 
     assert fetch_state_result is not None
-    (
-        sync_state,
-        site_activation_state,
-        sync_start,
-    ) = fetch_state_result
+    sync_state, site_activation_state, sync_start = fetch_state_result
 
     calc_delta_result = activate_changes.calc_sync_delta(
         sync_state,
         file_filter_func,
         site_activation_state,
         sync_start,
+        current_span,
     )
     assert calc_delta_result is not None
     sync_delta, site_activation_state, sync_start = calc_delta_result
@@ -547,5 +583,6 @@ def _synchronize_site(
         Path(snapshot_settings.work_dir),
         site_activation_state,
         sync_start,
+        current_span,
     )
     assert sync_result is not None

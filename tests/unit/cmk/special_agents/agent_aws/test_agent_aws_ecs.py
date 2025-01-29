@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Final, Protocol
 
@@ -159,7 +159,7 @@ def get_ecs_sections() -> ECSSections:
     ) -> ECSSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("ecs_names", names)
         config.add_service_tags("ecs_tags", tags)
@@ -298,7 +298,7 @@ def test_agent_aws_ecs_limits_without_quota_client(
     get_ecs_sections: ECSSections,
 ) -> None:
     region = "region"
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
     # TODO: FakeECSClient shoud actually subclass ECSClient, etc.

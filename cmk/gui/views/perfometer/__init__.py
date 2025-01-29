@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter.v0 import PainterRegistry
 
 from ..sorter import SorterRegistry
-from .base import Perfometer
 from .painter import PainterPerfometer
 from .sorter import SorterPerfometer
 

@@ -11,15 +11,19 @@ import threading
 import time
 import traceback
 from collections.abc import Sequence
+from datetime import timedelta
 from typing import Literal, NamedTuple, TypeGuard
 
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -27,10 +31,16 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 
 from ..config import active_config
-from . import bakery
-from .automation_commands import AutomationCommand
+from . import bakery, builtin_attributes
+from .automation_commands import AutomationCommand, AutomationCommandRegistry
 from .automations import do_remote_automation
-from .host_attributes import ExcludeIPRange, HostAttributes, IPRange, NetworkScanResult
+from .host_attributes import (
+    ExcludeIPRange,
+    HostAttributeRegistry,
+    HostAttributes,
+    IPRange,
+    NetworkScanResult,
+)
 from .hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
@@ -155,24 +165,26 @@ def _add_scanned_hosts_to_folder(
         if not Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    with store.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration(configuration_lockfile):
         folder.create_hosts(entries)
-        folder.save()
+        folder.save_folder_attributes()
+        folder_tree().invalidate_caches()
 
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
 
 
 def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:
     # Reload the folder, lock Setup before to protect against concurrency problems.
-    with store.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration(configuration_lockfile):
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = folder_tree().folder(folder.path())
         write_folder.attributes["network_scan_result"] = result
-        write_folder.save()
+        write_folder.save_folder_attributes()
+        folder_tree().invalidate_caches()
 
 
-class AutomationNetworkScan(AutomationCommand):
+class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
     def command_name(self) -> str:
         return "network-scan"
 
@@ -185,6 +197,23 @@ class AutomationNetworkScan(AutomationCommand):
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
         folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
+
+
+def register(
+    host_attribute_registry: HostAttributeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    cron_job_registry: CronJobRegistry,
+) -> None:
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScan)
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScanResult)
+    automation_command_registry.register(AutomationNetworkScan)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_network_scan_job",
+            callable=execute_network_scan_job,
+            interval=timedelta(minutes=1),
+        )
+    )
 
 
 # This is executed in the site the host is assigned to.
@@ -331,8 +360,8 @@ def _excludes_by_regexes(
 
     excludes = []
     for address in addresses:
-        for p in patterns:
-            if p.match(address):
+        for p2 in patterns:
+            if p2.match(address):
                 excludes.append(address)
                 break  # one match is enough, exclude this.
 

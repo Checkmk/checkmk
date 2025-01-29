@@ -7,8 +7,7 @@
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import State, StringTable
 
 from .checktestlib import Check
 

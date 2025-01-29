@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.acme import ACME_ENVIRONMENT_STATES
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.acme import DETECT_ACME
+from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.1 MAIN 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.2 MAIN 1.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.2
@@ -61,12 +61,13 @@ def inventory_acme_voltage(info):
 
 
 def check_acme_voltage(item, params, info):
-    for descr, value_str, state in info:
+    for descr, value_str, rstate in info:
         if item == descr:
+            state, readable = ACME_ENVIRONMENT_STATES[rstate]
             return check_elphase(
                 descr,
                 params,
-                {descr: {"voltage": (float(value_str) / 1000.0, ACME_ENVIRONMENT_STATES[state])}},
+                {descr: {"voltage": (float(value_str) / 1000.0, (int(state), readable))}},
             )
     return None
 
@@ -76,6 +77,7 @@ def parse_acme_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_voltage"] = LegacyCheckDefinition(
+    name="acme_voltage",
     parse_function=parse_acme_voltage,
     detect=DETECT_ACME,
     fetch=SNMPTree(

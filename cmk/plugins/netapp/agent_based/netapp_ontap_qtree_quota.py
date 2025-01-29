@@ -42,25 +42,19 @@ def parse_netapp_ontap_qtree_quota(string_table: StringTable) -> Section:
 
     for line in string_table:
         qtree_quota = models.QtreeQuotaModel.model_validate_json(line[0])
-        if qtree_quota.type_ != "tree":
-            # The same netapp quota could exist of both type "tree" and "user",
-            # which would mean the "tree" quotas would be overwritten.
-            continue
-
         qtree = Qtree(
-            quota=qtree_quota.name,
-            quota_users=qtree_quota.users or "",
-            quota_type=qtree_quota.type_,
+            quota=qtree_quota.name or "",
+            quota_users=",".join(qtree_quota.users),
             volume=qtree_quota.volume,
             disk_limit=str(qtree_quota.hard_limit) if qtree_quota.hard_limit is not None else "",
             disk_used=str(qtree_quota.used_total) if qtree_quota.used_total is not None else "",
         )
-        qtrees[qtree_quota.name] = qtree
+        qtrees[qtree.quota] = qtree
 
         # item name is configurable, so we add data under both names to the parsed section
         # to make the check function easier
         if qtree.volume:
-            qtrees[f"{qtree.volume}/{qtree_quota.name}"] = qtree
+            qtrees[f"{qtree.volume}/{qtree.quota}"] = qtree
 
     return qtrees
 

@@ -106,7 +106,6 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on one or more hosts
  cmk --snmptranslate HOST             Do snmptranslate on walk
  cmk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
- cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  cmk -P, --package COMMAND            do package operations
  cmk --localize COMMAND               do localization operations
  cmk --handle-alerts                  used to handle alerts from core
@@ -115,8 +114,8 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
  cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
- cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
- cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
+ cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW Inventory of some ar all hosts
+ cmk --inventory-as-check HOST        Do HW/SW Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
  cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
  cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
@@ -140,7 +139,6 @@ OPTIONS:
   --interactive  Some errors are only reported in interactive mode, i.e. if stdout
                  is a TTY. This option forces interactive mode even if the output
                  is directed into a pipe or file.
-  --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify
                  in continous mode. Read data from stdin and from cmd line.
@@ -151,6 +149,7 @@ OPTIONS:
                  You can specify this option multiple times.
   --hw-changes=S --inventory-as-check: Use monitoring state S for HW changes
   --sw-changes=S --inventory-as-check: Use monitoring state S for SW changes
+  --nw-changes=S --inventory-as-check: Use monitoring state S for NW changes
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -230,10 +229,6 @@ NOTES:
   --snmptranslate does not contact the host again, but reuses the hosts
   walk from the directory %s.%s
 
-  --scan-parents uses traceroute in order to automatically detect
-  hosts's parents. It creates the file conf.d/parents.mk which
-  defines gateway hosts and parent declarations.
-
   -A, --bake-agents creates RPM/DEB/MSI packages with host-specific
   monitoring agents. If you add the option -f, --force then all
   agents are renewed, even if an uptodate version for a configuration
@@ -251,6 +246,6 @@ NOTES:
   of the RRDs has changed. The option --split will activate conversion
   from exising RRDs in PNP storage type SINGLE to MULTIPLE.
 
-  -i, --inventory does a HW/SW-Inventory for all, one or several
+  -i, --inventory does a HW/SW Inventory for all, one or several
   hosts. If you add the option -f, --force then persisted sections
   will be used even if they are outdated.

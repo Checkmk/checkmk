@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
+
+check_info = {}
 
 
 def inventory_palo_alto_sessions(info):
@@ -64,6 +64,7 @@ def parse_palo_alto_sessions(string_table: StringTable) -> StringTable | None:
 
 
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(
+    name="palo_alto_sessions",
     parse_function=parse_palo_alto_sessions,
     detect=DETECT_PALO_ALTO,
     fetch=SNMPTree(

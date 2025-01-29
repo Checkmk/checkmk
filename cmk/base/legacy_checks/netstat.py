@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netstat import check_netstat_generic
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyDiscoveryResult
+from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 # Example output from agent (Linux) - note missing LISTENING column for UDP
 # <<netstat>>>
@@ -39,8 +42,11 @@ from cmk.base.config import check_info
 # tcp4  0   0   127.0.0.1.1234  127.0.0.1.5678  ESTABLISHED
 
 
-def parse_netstat(string_table):
-    def split_ip_address(ip_address):
+Section = list[tuple[str, list[str], list[str], str]]
+
+
+def parse_netstat(string_table: StringTable) -> Section:
+    def split_ip_address(ip_address: str) -> list[str]:
         if ":" in ip_address:
             return ip_address.rsplit(":", 1)
         return ip_address.rsplit(".", 1)
@@ -66,9 +72,15 @@ def parse_netstat(string_table):
     return connections
 
 
+def discover_netstat_never(section: Section) -> LegacyDiscoveryResult:
+    yield from ()  # can only be enforced
+
+
 check_info["netstat"] = LegacyCheckDefinition(
+    name="netstat",
     parse_function=parse_netstat,
     service_name="TCP Connection %s",
+    discovery_function=discover_netstat_never,
     check_function=check_netstat_generic,
     check_ruleset_name="tcp_connections",
 )

@@ -7,12 +7,13 @@
 /* eslint-disable indent */
 
 import crossfilter from "crossfilter2";
-import * as d3 from "d3";
-import * as dc from "dc";
-import {PieChart} from "dc";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
+import type {PieChart} from "dc";
+import {pieChart} from "dc";
 
-import * as cmk_figures from "./cmk_figures";
-import {FigureData} from "./figure_types";
+import {figure_registry, FigureBase} from "./cmk_figures";
+import type {FigureData} from "./figure_types";
 
 export interface Cell<Config = PieChartData | NtopTalkerData> {
     id?: string;
@@ -80,8 +81,8 @@ export interface TableFigureData<Config = PieChartData | NtopTalkerData>
     classes?: string[];
 }
 
-export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
-    _table!: d3.Selection<HTMLTableElement, unknown, d3.BaseType, unknown>;
+export class TableFigure extends FigureBase<TableFigureData> {
+    _table!: Selection<HTMLTableElement, unknown, BaseType, unknown>;
 
     override ident() {
         return "table";
@@ -92,7 +93,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     }
 
     override initialize(debug?: boolean) {
-        cmk_figures.FigureBase.prototype.initialize.call(this, debug);
+        FigureBase.prototype.initialize.call(this, debug);
         this._table = this._div_selection.append("table");
     }
 
@@ -128,14 +129,14 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
             .join(enter =>
                 enter.append(d => {
                     return document.createElement(d.cell_type || "td");
-                })
+                }),
             )
             .attr("class", d => ["cell"].concat(d.classes || []).join(" "))
             .attr("id", d => d.id || null)
             .attr("colspan", d => d.colspan || null)
             .attr("rowspan", d => d.rowspan || null)
             .each(function (d) {
-                const cell = d3.select(this);
+                const cell = select(this);
                 if (d.text != null) cell.text(d.text);
                 if (d.html != null) cell.html(d.html);
             });
@@ -148,21 +149,21 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
 }
 
 class HTMLTableCellElement extends HTMLElement {
-    __figure_instance__?: cmk_figures.FigureBase<FigureData>;
+    __figure_instance__?: FigureBase<FigureData>;
     __crossfilter__: any;
 }
 
 function _update_figures_in_selection(
-    selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
 ) {
     selection
         .selectAll<HTMLTableCellElement, Cell>(".figure_cell")
         .each((d, idx, nodes) => {
             const figure_config = d["figure_config"];
             if (nodes[idx].__figure_instance__ == undefined) {
-                const figure_class = cmk_figures.figure_registry.get_figure(
+                const figure_class = figure_registry.get_figure(
                     //@ts-ignore
-                    figure_config["figure_type"]
+                    figure_config["figure_type"],
                 );
                 if (figure_class == undefined)
                     // unknown figure type
@@ -170,7 +171,7 @@ function _update_figures_in_selection(
 
                 const new_figure = new figure_class(
                     figure_config["selector"],
-                    (<NtopTalkerData>figure_config)["size"]
+                    (<NtopTalkerData>figure_config)["size"],
                 );
                 new_figure.initialize(false);
                 nodes[idx].__figure_instance__ = new_figure;
@@ -183,8 +184,8 @@ function _update_figures_in_selection(
 }
 
 function _update_dc_graphs_in_selection(
-    selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>,
-    graph_group: string | null
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
+    graph_group: string | null,
 ) {
     selection
         .selectAll<HTMLTableCellElement, Cell<PieChartData>>(".figure_cell")
@@ -194,7 +195,7 @@ function _update_dc_graphs_in_selection(
                 // new format, not to be handled by this legacy block
                 return;
 
-            const node = d3.select(nodes[idx]);
+            const node = select(nodes[idx]);
             const svg = node.select("svg");
 
             if (svg.empty()) {
@@ -203,9 +204,9 @@ function _update_dc_graphs_in_selection(
                 const label_group = label_dimension
                     .group()
                     .reduceSum(d => +d.value);
-                const pie_chart = dc.pieChart(
+                const pie_chart = pieChart(
                     d.figure_config.selector,
-                    String(graph_group)
+                    String(graph_group),
                 );
                 pie_chart
                     .width(450)
@@ -251,9 +252,9 @@ function _pie_chart_custom_renderlet(chart: PieChart, d: Cell<PieChartData>) {
     if (chart.svg().select(".empty-chart").empty()) return;
 
     // TODO: WIP
-    const labels_data: d3.Selection<d3.BaseType, any, d3.BaseType, any>[] = [];
+    const labels_data: Selection<BaseType, any, BaseType, any>[] = [];
     chart.selectAll("text.pie-label").each((_d, idx, nodes) => {
-        labels_data.push(d3.select(nodes[idx]));
+        labels_data.push(select(nodes[idx]));
     });
 
     let labels_key = chart

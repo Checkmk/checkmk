@@ -40,8 +40,29 @@ class MatchSuccess:
 MatchResult = MatchFailure | MatchSuccess
 
 
-def compile_matching_value(key: str, val: str) -> TextPattern | None:
-    value = val.strip()
+def compile_matching_value(key: str, original_value: str) -> TextPattern | None:
+    """Tries to convert a string to a compiled regex pattern.
+
+    If the value is empty, it returns None.
+    Or returns the value.lower() if it is not a regex.
+
+    The leading '.*' is removed from the regex since it has a performance impact.
+    See the benchmarks last 4 lines on a longer string here:
+
+    Testing pattern         'ODBC' on test_string:  0.00043 seconds
+    Testing pattern         '.*ODBC' on test_string:        0.00049 seconds
+    Testing pattern         '.*ODBC.*' on test_string:      0.00049 seconds
+    Testing pattern         'ODBC.*' on test_string:        0.00050 seconds
+    Testing pattern         'ODBC' on test_string:  0.00076 seconds
+    Testing pattern         '.*ODBC' on test_string:        0.09972 seconds
+    Testing pattern         '.*ODBC.*' on test_string:      0.10019 seconds
+    Testing pattern         'ODBC.*' on test_string:        0.00056 seconds
+
+    Especially the search is dramatically slower on a NON-MATCHING long(100 characters) string.
+
+    """
+
+    value = original_value.strip()
     # Remove leading .* from regex. This is redundant and
     # dramatically destroys performance when doing an infix search.
     if key in {"match", "match_ok"}:
@@ -51,7 +72,7 @@ def compile_matching_value(key: str, val: str) -> TextPattern | None:
         return None
     if cmk.utils.regex.is_regex(value):
         return re.compile(value, re.IGNORECASE)
-    return val.lower()
+    return value.lower()
 
 
 def compile_rule_attribute(

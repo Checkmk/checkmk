@@ -43,7 +43,7 @@ Handler output: $ALERTHANDLEROUTPUT$
 tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler_host_body
 
 
-def construct_content(context: dict[str, str]) -> str:  # pylint: disable=too-many-branches
+def construct_content(context: dict[str, str]) -> str:
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to
     # make it available every in all notification scripts

@@ -9,11 +9,11 @@
 # .1.3.6.1.4.1.17163.1.1.2.6.1.1.5.1 CX770 --> STEELHEAD-MIB::peerModel.1
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
+
+check_info = {}
 
 
 def inventory_steelhead_peers(info):
@@ -32,6 +32,7 @@ def parse_steelhead_peers(string_table: StringTable) -> StringTable:
 
 
 check_info["steelhead_peers"] = LegacyCheckDefinition(
+    name="steelhead_peers",
     parse_function=parse_steelhead_peers,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(

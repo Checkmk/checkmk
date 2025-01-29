@@ -46,7 +46,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.permissions import load_dynamic_permissions
-from cmk.gui.type_defs import UserRole
+from cmk.gui.userdb import UserRole
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles
@@ -62,22 +62,25 @@ RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
-def serialize_user_role(user_role: UserRole) -> DomainObject:
-    extns = {
+def _serialize_user_role_extensions(user_role: UserRole) -> dict[str, Any]:
+    extensions = {
         "alias": user_role.alias,
         "builtin": user_role.builtin,
         "permissions": get_role_permissions().get(user_role.name),
     }
     if not user_role.builtin:
-        extns["basedon"] = user_role.basedon
+        extensions["basedon"] = user_role.basedon
+    return extensions
 
+
+def serialize_user_role(user_role: UserRole) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_role",
         identifier=user_role.name,
         title=user_role.alias,
-        extensions=extns,
+        extensions=_serialize_user_role_extensions(user_role),
         editable=True,
-        deletable=not (user_role.builtin),
+        deletable=not user_role.builtin,
     )
 
 

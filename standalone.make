@@ -3,8 +3,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO(sp) We should really use autotools here...
-ifneq ($(shell which g++-13 2>/dev/null),)
+ifneq ($(shell which g++-14 2>/dev/null),)
+        CXX := g++-14 -std=c++20
+else ifneq ($(shell which clang++-19 2>/dev/null),)
+        CXX := clang++-19 -std=c++20
+else ifneq ($(shell which g++-13 2>/dev/null),)
         CXX := g++-13 -std=c++20
+else ifneq ($(shell which clang++-18 2>/dev/null),)
+        CXX := clang++-18 -std=c++20
 else ifneq ($(shell which clang++-17 2>/dev/null),)
         CXX := clang++-17 -std=c++20
 else ifneq ($(shell which clang++-16 2>/dev/null),)
@@ -29,7 +35,7 @@ else
         CXX := clang++ -std=c++20
 endif
 
-CXXFLAGS    := -gdwarf-4 -O3 -Wall -Wextra
+CXXFLAGS    := -g -O3 -Wall -Wextra
 LDFLAGS     := -static-libstdc++
 
 .PHONY: all clean

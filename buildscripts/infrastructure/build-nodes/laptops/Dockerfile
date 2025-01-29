@@ -10,7 +10,12 @@ ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG CI
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" CI="$CI"
+ENV \
+    NEXUS_ARCHIVES_URL="${NEXUS_ARCHIVES_URL}" \
+    NEXUS_USERNAME="${NEXUS_USERNAME}" \
+    NEXUS_PASSWORD="${NEXUS_PASSWORD}" \
+    DISTRO="${DISTRO}" \
+    CI="${CI}"
 
 ARG ADDITIONAL_ARGS
 
@@ -18,8 +23,7 @@ ARG ADDITIONAL_ARGS
 COPY scripts/.bazelversion /opt/
 COPY scripts/defines.make /opt/
 COPY scripts/package_versions.bzl /opt/
-COPY scripts/static_variables.bzl /opt/
-COPY scripts/strip_binaries /opt/
+COPY scripts/strip_binaries.sh /opt/
 COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 
@@ -30,8 +34,7 @@ RUN /opt/install-development.sh --profile all ${ADDITIONAL_ARGS}
 COPY scripts/.bazelversion /opt/
 COPY scripts/defines.make /opt/
 COPY scripts/package_versions.bzl /opt/
-COPY scripts/static_variables.bzl /opt/
-COPY scripts/strip_binaries /opt/
+COPY scripts/strip_binaries.sh /opt/
 COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 RUN rm -rf /root/.pyenv

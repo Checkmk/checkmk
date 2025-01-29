@@ -6,16 +6,20 @@ import datetime
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils import version
+from cmk.ccc import version
+
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.openapi.endpoints.downtime import _with_defaulted_timezone
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
@@ -1152,7 +1156,7 @@ def test_openapi_service_description_for_service_downtimes(
         assert len(resp.json["value"]) == 2
 
         for val in resp.json["value"]:
-            if val["extensions"]["is_service"] == "yes":
+            if val["extensions"]["is_service"]:
                 assert val["extensions"]["service_description"] == "CPU load"
             else:
                 assert "service_description" not in val["extensions"]
@@ -1207,11 +1211,11 @@ def test_openapi_service_description_for_single_downtime(
     with mock_livestatus:
         resp = clients.Downtime.get(downtime_id=service_id, site_id="NO_SITE")
 
+        assert resp.json["extensions"]["is_service"] == service_downtime
+
         if service_downtime:
-            assert resp.json["extensions"]["is_service"] == "yes"
             assert resp.json["extensions"]["service_description"] == "CPU load"
         else:
-            assert resp.json["extensions"]["is_service"] == "no"
             assert "service_description" not in resp.json["extensions"]
 
 
@@ -1568,3 +1572,53 @@ def test_openapi_modify_downtime_non_existing_service_group(
         expect_ok=False,
     ).assert_status_code(400)
     assert resp.json["fields"]["servicegroup_name"] == ["Group missing: 'non-existent'"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_downtime_fields_format(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "literally nothing",
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+            "Filter: is_service = 0",
+            "Filter: host_name = example.com",
+            "And: 2",
+        ]
+    )
+    with mock_livestatus:
+        resp = clients.Downtime.get_all(host_name="example.com", downtime_type="host")
+        for dt in resp.json["value"]:
+            attributes = dt["extensions"]
+            assert isinstance(attributes["recurring"], bool)
+            assert isinstance(attributes["is_service"], bool)

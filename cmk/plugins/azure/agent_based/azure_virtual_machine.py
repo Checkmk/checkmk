@@ -7,7 +7,7 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -153,7 +153,7 @@ def discover_azure_virtual_machine_summary(section: Section) -> DiscoveryResult:
 
 
 def check_state(state: str, count: int, levels: VMSummaryParams) -> tuple[State, str]:
-    for result in check_levels(
+    for result in check_levels_v1(
         value=count,
         levels_upper=levels.get(state, {}).get("levels"),
         levels_lower=levels.get(state, {}).get("levels_lower"),
@@ -372,7 +372,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
     resource = list(section.values())[0]
 
     if (read_bytes := resource.metrics.get("total_Disk_Read_Bytes")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             read_bytes.value / 60,
             levels_upper=params.get("disk_read"),
             metric_name="disk_read_throughput",
@@ -381,7 +381,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
         )
 
     if (write_bytes := resource.metrics.get("total_Disk_Write_Bytes")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             write_bytes.value / 60,
             levels_upper=params.get("disk_write"),
             metric_name="disk_write_throughput",
@@ -390,7 +390,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
         )
 
     if (read_ops := resource.metrics.get("average_Disk_Read_Operations/Sec")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             read_ops.value,
             levels_upper=params.get("disk_read_ios"),
             metric_name="disk_read_ios",
@@ -399,7 +399,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
         )
 
     if (write_ops := resource.metrics.get("average_Disk_Write_Operations/Sec")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             write_ops.value,
             levels_upper=params.get("disk_write_ios"),
             metric_name="disk_write_ios",

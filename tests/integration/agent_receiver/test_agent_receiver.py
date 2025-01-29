@@ -8,10 +8,9 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import NamedTuple
 
-import cryptography.hazmat.primitives.asymmetric as asymmetric
 import pytest
 import requests
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import asymmetric, serialization
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.x509 import (
     CertificateSigningRequest,

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal, TypeVar
+from uuid import uuid4
 
 from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel, SimpleLevelsConfigModel
 
@@ -87,10 +88,12 @@ def _parse_to_predictive_levels(
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
-        case {
-            "period": "wday" | "day" | "hour" | "minute",
-            "horizon": int(),
-        } as val if "levels" not in val and "bound" not in val:  # type: ignore[operator]
+        case (
+            {
+                "period": "wday" | "day" | "hour" | "minute",
+                "horizon": int(),
+            } as val
+        ) if "levels" not in val and "bound" not in val:  # type: ignore[operator]
             return None
         case _:
             raise TypeError(
@@ -276,7 +279,11 @@ def migrate_to_password(
     match model:
         # old password format
         case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", ("throwaway-id", password)
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str(uuid4()), password),
+            )
         case "store", str(password_store_id):
             return "cmk_postprocessed", "stored_password", (password_store_id, "")
 
@@ -295,7 +302,7 @@ def migrate_to_password(
     raise TypeError(f"Could not migrate {model!r} to Password.")
 
 
-def migrate_to_proxy(  # pylint: disable=too-many-return-statements
+def migrate_to_proxy(
     model: object,
 ) -> tuple[
     Literal["cmk_postprocessed"],
@@ -305,6 +312,7 @@ def migrate_to_proxy(  # pylint: disable=too-many-return-statements
     """
     Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
     Previous configurations are transformed in the following way:
+
         ("global", <stored-proxy-id>) -> ("cmk_postprocessed", "stored_proxy", <stored-proxy-id>)
         ("environment", "environment") -> ("cmk_postprocessed", "environment_proxy", "")
         ("url", <url>) -> ("cmk_postprocessed", "explicit_proxy", <url>)
@@ -340,6 +348,7 @@ def migrate_to_time_period(
     """
     Transform a previous time period configuration to a model of the `TimePeriod` FormSpec.
     Previous configurations are transformed in the following way:
+
         <time-period> -> ("time_period", "preconfigured", <time-period>)
 
     Args:

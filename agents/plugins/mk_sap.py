@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module pyrfc.
@@ -42,12 +42,12 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):
-    RecursionError = RuntimeError  # pylint: disable=redefined-builtin
+    RecursionError = RuntimeError  # noqa: A001
 
 # #############################################################################
 
@@ -112,8 +112,8 @@ local_cfg = {
     "passwd": "",
     "trace": "3",
     "loglevel": "warn",
-    #'lang':     'EN',
-    #'host_prefix': 'FOOBAR_',
+    # "lang": "EN",
+    # "host_prefix": "FOOBAR_",
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -358,7 +358,7 @@ def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):
     return logs
 
 
-def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
+def check(pyrfc, cfg_entry):
     conn = pyrfc.Connection(
         ashost=cfg_entry["ashost"],
         sysnr=cfg_entry["sysnr"],
@@ -473,7 +473,7 @@ def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
     conn.close()
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     global state_file_changed
 
     try:

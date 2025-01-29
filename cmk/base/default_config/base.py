@@ -6,13 +6,13 @@
 from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict, Union
 
+from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
-from cmk.utils.store.host_storage import ContactgroupName, FolderAttributesForBase
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
@@ -25,9 +25,13 @@ from cmk.fetchers import IPMICredentials
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
+
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
+
+_ContactgroupName = str
 
 # TODO: Remove the duplication with cmk.base.config
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
@@ -59,7 +63,7 @@ cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[TranslationOptions]] = []
-# Ruleset for translating service descriptions
+# Ruleset for translating service names
 service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
@@ -181,20 +185,17 @@ tag_config: TagConfigSpec = {
     "tag_groups": [],
 }
 static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
-check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
-# for HW/SW-Inventory
+# for HW/SW Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 
 
 # WATO variant for fully formalized checks
 # WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-active_checks: dict[str, list[RuleSpec[object]]] = {}
+active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 # WATO variant for datasource_programs
 # WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-special_agents: dict[str, list[RuleSpec[object]]] = {}
+special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 
 # WATO variant for free-form custom checks without formalization
@@ -252,8 +253,8 @@ host_contactgroups: list[RuleSpec[str]] = []
 parents: list[RuleSpec[str]] = []
 define_hostgroups: dict[_HostgroupName, str] = {}
 define_servicegroups: dict[_ServicegroupName, str] = {}
-define_contactgroups: dict[ContactgroupName, str] = {}
-contactgroup_members: dict[ContactgroupName, list[ContactName]] = {}
+define_contactgroups: dict[_ContactgroupName, str] = {}
+contactgroup_members: dict[_ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}
 # needed for WATO
 timeperiods: TimeperiodSpecs = {}
@@ -306,7 +307,9 @@ check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
 check_periods: list[RuleSpec[str]] = []
-snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
+snmp_check_interval: list[
+    RuleSpec[tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]]
+] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}

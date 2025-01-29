@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
+from cmk.plugins.collection.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
@@ -23,7 +23,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 2.57% - 15.8 TB of 616 TB",
+                    "Used: 2.57% - 14.4 TiB of 560 TiB",
                     [
                         ("fs_used", 15077125, 469629670.4, 528333379.2, 0, 587037088.0),
                         ("fs_free", 571959963, None, None, 0, None),

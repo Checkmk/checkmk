@@ -18,16 +18,20 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
+from cmk.ccc import store
+
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import store
 
 from .config import (
     ConfigFromWATO,
+    ContactGroups,
     ECRulePack,
     ECRulePackSpec,
+    LogConfig,
     MkpRulePackBindingError,
     MkpRulePackProxy,
+    ServiceLevel,
 )
 from .defaults import default_config, default_rule_pack
 from .settings import create_paths, Settings
@@ -96,7 +100,7 @@ def _bind_to_rule_pack_proxies(
 
 
 # Used by ourselves *and* the GUI!
-def _load_config(  # pylint: disable=too-many-branches
+def _load_config(
     config_files: Iterable[Path],
 ) -> ConfigFromWATO:
     """Load event console configuration."""
@@ -106,9 +110,7 @@ def _load_config(  # pylint: disable=too-many-branches
     global_context["mkp_rule_packs"] = {}
     for path in config_files:
         with open(str(path), mode="rb") as file_object:
-            exec(
-                compile(file_object.read(), path, "exec"), global_context
-            )  # nosec B102 # BNS:aee528
+            exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
     _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
@@ -134,17 +136,17 @@ def _load_config(  # pylint: disable=too-many-branches
         for rule in rule_pack["rules"]:
             # Convert old contact_groups config
             if isinstance(rule.get("contact_groups"), list):
-                rule["contact_groups"] = {
-                    "groups": rule["contact_groups"],
-                    "notify": False,
-                    "precedence": "host",
-                }
+                rule["contact_groups"] = ContactGroups(
+                    groups=rule["contact_groups"],
+                    notify=False,
+                    precedence="host",
+                )
             # Old configs only have a naked service level without a precedence.
             if isinstance(rule["sl"], int):
-                rule["sl"] = {"value": rule["sl"], "precedence": "message"}
+                rule["sl"] = ServiceLevel(value=rule["sl"], precedence="message")
 
     # Convert old logging configurations
-    levels = config["log_level"]
+    levels: LogConfig = config["log_level"]
     if isinstance(levels, int):  # TODO: Move this to upgrade time
         level = logging.INFO if levels == 0 else cmk.utils.log.VERBOSE  # type: ignore[unreachable]
         levels = {
@@ -267,7 +269,7 @@ def export_rule_pack(rule_pack: ECRulePack, pretty_print: bool, path: Path) -> N
     output = f"""# Written by WATO
 # encoding: utf-8
 
-mkp_rule_packs['{rule_pack['id']}'] = \\
+mkp_rule_packs['{rule_pack["id"]}'] = \\
 {repr_}
 """
     path.mkdir(parents=True, exist_ok=True)

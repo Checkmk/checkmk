@@ -12,15 +12,17 @@ from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
 from typing import Any, cast, Literal, TypedDict
 
-import cmk.utils.werks.werk as utils_werks_werk
+from cmk.ccc.version import __version__, Edition, Version
+
 from cmk.utils.man_pages import make_man_page_path_map
-from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks.acknowledgement import is_acknowledged
+from cmk.utils.werks.acknowledgement import (
+    is_acknowledged,
+    load_werk_entries,
+    sort_by_date,
+    unacknowledged_incompatible_werks,
+)
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
-from cmk.utils.werks.acknowledgement import load_werk_entries
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
-from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
-from cmk.utils.werks.werk import WerkTranslator
 
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -51,11 +53,11 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
-from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
+from cmk.gui.theme.current_theme import theme
+from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -68,6 +70,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+import cmk.werks.utils as werks_utils
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
 
@@ -78,10 +81,6 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("info")(AboutCheckmkPage)
     page_registry.register_page("change_log")(ChangeLogPage)
     page_registry.register_page_handler("werk", page_werk)
-
-
-def render_description(description: str) -> HTML:
-    return HTML(description)
 
 
 def get_werk_by_id(werk_id: int) -> Werk:
@@ -126,7 +125,7 @@ class AboutCheckmkPage(Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,
@@ -183,7 +182,7 @@ class ChangeLogPage(Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         werk_table_options = _werk_table_options_from_request()
@@ -311,7 +310,7 @@ def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
             html.close_div()
             html.hidden_fields()
 
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:
@@ -352,7 +351,7 @@ def page_werk() -> None:
         html.td(content, class_=css)
         html.close_tr()
 
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk))
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
@@ -374,7 +373,7 @@ def page_werk() -> None:
         css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
     werk_table_row(
-        _("Description"), render_description(werk.description), css="nowiki"
+        _("Description"), HTML.without_escaping(werk.description), css="nowiki"
     )  # TODO: remove nowiki
 
     html.close_table()
@@ -454,7 +453,7 @@ def num_unacknowledged_incompatible_werks() -> int:
 
 
 def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, ValueSpec, Any]]:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     component_choices: list[tuple[None | str, str]] = [(None, _("All components"))]
     component_choices += sorted(translator.components())
     return [
@@ -524,7 +523,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE, Edition.CSE)
                     ),
                 ],
             ),
@@ -583,7 +582,7 @@ def render_unacknowleged_werks() -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
-        html.write_text(
+        html.write_text_permissive(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks)
         )
         html.br()
@@ -596,9 +595,9 @@ def render_unacknowleged_werks() -> None:
 
 
 def get_sort_key_by_version_and_component(
-    translator: WerkTranslator, werk: Werk
+    translator: werks_utils.WerkTranslator, werk: Werk
 ) -> tuple[str | int, ...]:
-    werk_result = utils_werks_werk.get_sort_key_by_version_and_component(translator, werk)
+    werk_result = werks_utils.get_sort_key_by_version_and_component(translator, werk)
     result = (
         *werk_result[:4],
         int(is_acknowledged(werk, load_acknowledgements())),
@@ -608,7 +607,7 @@ def get_sort_key_by_version_and_component(
 
 
 def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
@@ -641,11 +640,13 @@ _SORT_AND_GROUP: dict[
 
 
 def render_werks_table(werk_table_options: WerkTableOptions) -> None:
-    translator = WerkTranslator()
+    translator = werks_utils.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     list_of_werks = sorter(
-        werk for werk in load_werk_entries() if werk_matches_options(werk, werk_table_options)  #
+        werk
+        for werk in load_werk_entries()
+        if werk_matches_options(werk, werk_table_options)  #
     )
     groups = itertools.groupby(list_of_werks, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
@@ -670,7 +671,9 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
     return compatibilities[(compatible, acknowledged)]
 
 
-def render_werks_table_row(table: Table, translator: WerkTranslator, werk: Werk) -> None:
+def render_werks_table_row(
+    table: Table, translator: werks_utils.WerkTranslator, werk: Werk
+) -> None:
     table.row()
     table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
     table.cell(_("Version"), werk.version, css=["number narrow"])
@@ -734,7 +737,7 @@ def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bo
 
     if werk_table_options["werk_content"]:
         search_text = werk_table_options["werk_content"].lower()
-        text = werk.title + strip_tags(render_description(werk.description))
+        text = werk.title + strip_tags(werk.description)
         if search_text not in text.lower():
             return False
 
@@ -784,7 +787,7 @@ def render_werk_link(werk: Werk) -> HTML:
 
 def render_werk_title(werk: Werk) -> HTML:
     title = werk.title
-    # if the title begins with the name or names of check plugins, then
+    # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
@@ -792,7 +795,7 @@ def render_werk_title(werk: Werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_nowiki_werk_description(  # pylint: disable=too-many-branches
+def render_nowiki_werk_description(
     description_raw: list[str],
 ) -> HTML:
     with output_funnel.plugged():
@@ -833,13 +836,13 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
                 elif not line.strip() and not in_code:
                     html.p("")
                 else:
-                    html.write_text(line + "\n")
+                    html.write_text_permissive(line + "\n")
 
         if in_list:
             html.close_ul()
 
         html.close_p()
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def insert_manpage_links(text: str) -> HTML:
@@ -858,8 +861,8 @@ def insert_manpage_links(text: str) -> HTML:
             )
             new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
-            new_parts.append(escape_to_html(part))
-    return HTML(" ").join(new_parts)
+            new_parts.append(HTML.with_escaping(part))
+    return HTML.without_escaping(" ").join(new_parts)
 
 
 @request_memoize()

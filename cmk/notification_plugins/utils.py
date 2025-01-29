@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import os
 import re
 import sys
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Container, Iterable
 from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
@@ -17,16 +18,19 @@ from typing import Any, NamedTuple, NoReturn
 import requests
 from requests import JSONDecodeError
 
+from cmk.ccc import site
+
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.escaping import escape, escape_permissive
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.notify import find_wato_folder, NotificationContext
-from cmk.utils.notify_types import PluginNotificationContext
-
-from cmk.utils.html import (  # noqa: F401  # pylint: disable=unused-import  # isort:skip
+from cmk.utils.html import (  # noqa: F401
     replace_state_markers as format_plugin_output,
 )
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.local_secrets import SiteInternalSecret
+from cmk.utils.notify import find_wato_folder, NotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
+from cmk.utils.paths import omd_root
 
 
 def collect_context() -> PluginNotificationContext:
@@ -83,6 +87,23 @@ def service_url_from_context(context: PluginNotificationContext) -> str:
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
+def graph_url_from_context(context: PluginNotificationContext) -> str:
+    base = _base_url(context)
+    view_url = base + "/check_mk/view.py?"
+    if context["WHAT"] == "HOST":
+        return (
+            view_url + f"siteopt={context['OMD_SITE']}&"
+            f"view_name=host_graphs&"
+            f"host={context['HOSTNAME']}"
+        )
+    return (
+        view_url + f"siteopt={context['OMD_SITE']}&"
+        f"view_name=service_graphs&"
+        f"host={context['HOSTNAME']}&"
+        f"service={context['SERVICEDESC']}"
+    )
+
+
 def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",
@@ -135,9 +156,8 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
     elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += f"{varname}={value}\n"
-        html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
-            varname,
-            escape(value),
+        html_output += (
+            f"<tr><td class=varname>{varname}</td><td class=value>{escape(value)}</td></tr>\n"
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
@@ -226,21 +246,42 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 
 #################################################################################################
 # REST
-def retrieve_from_passwordstore(parameter: str) -> str:
-    values = parameter.split()
-
-    if len(values) == 2:
-        if values[0] == "store":
-            value = cmk.utils.password_store.extract(values[1])
+def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
+    if isinstance(parameter, list):
+        if "explicit_password" in parameter:
+            value: str | None = parameter[-1]
+        else:
+            value = cmk.utils.password_store.extract(parameter[-2])
             if value is None:
                 sys.stderr.write("Unable to retrieve password from passwordstore")
                 sys.exit(2)
-        else:
-            value = values[1]
     else:
-        value = values[0]
+        # old valuespec style
+        values = parameter.split()
 
+        if len(values) == 2:
+            if values[0] == "store":
+                value = cmk.utils.password_store.extract(values[1])
+                if value is None:
+                    sys.stderr.write("Unable to retrieve password from passwordstore")
+                    sys.exit(2)
+            else:
+                value = values[1]
+        else:
+            value = values[0]
+
+    assert value is not None
     return value
+
+
+def get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
+    """
+    Since 2.4 the passwords are stored in FormSpec format, this leads to
+    multiple keys in the notification context
+    """
+    source = context if context else os.environ
+    password_parameter_list = [source[k] for k in source if k.startswith(key)]
+    return retrieve_from_passwordstore(password_parameter_list)
 
 
 def post_request(
@@ -263,25 +304,36 @@ def post_request(
         verify = False
 
     try:
-        response = requests.post(  # nosec B113
+        response = requests.post(
             url=url,
             json=message_constructor(context),
             proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
             headers=headers,
             verify=verify,
+            timeout=110,
         )
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
+        sys.exit(2)
+    except requests.exceptions.Timeout:
+        # Not expose the url in the error, as it might contain sensitive information
+        sys.stderr.write("Connection timeout in notification plugin \n")
         sys.exit(2)
 
     return response
 
 
-def process_by_status_code(response: requests.Response, success_code: int = 200) -> int:
+def process_by_status_code(
+    response: requests.Response, success_code: int | Container[int] = 200
+) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
-    if status_code == success_code:
+    if isinstance(success_code, int):
+        if status_code == success_code:
+            sys.stderr.write(summary)
+            return 0
+    elif status_code in success_code:
         sys.stderr.write(summary)
         return 0
     if 500 <= status_code <= 599:
@@ -396,9 +448,8 @@ def get_sms_message_from_context(raw_context: PluginNotificationContext) -> str:
             message += raw_context["SERVICEOUTPUT"][:avail_len]
         else:
             message += raw_context["SERVICEDESC"]
-    else:
-        if notification_type in ["PROBLEM", "RECOVERY"]:
-            message += "is " + raw_context["HOSTSTATE"]
+    elif notification_type in ["PROBLEM", "RECOVERY"]:
+        message += "is " + raw_context["HOSTSTATE"]
 
     if notification_type.startswith("FLAP"):
         if "START" in notification_type:
@@ -426,3 +477,95 @@ def quote_message(message: str, max_length: int | None = None) -> str:
     if max_length:
         return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + message.replace("'", "'\"'\"'") + "'"
+
+
+def pretty_notification_type(notification_type: str) -> str:
+    if notification_type == "DOWNTIMESTART":
+        return "Downtime Start"
+    if notification_type == "DOWNTIMEEND":
+        return "Downtime End"
+    if notification_type == "DOWNTIMECANCELLED":
+        return "Downtime Cancelled"
+    if notification_type == "FLAPPINGSTART":
+        return "Flapping Start"
+    if notification_type == "FLAPPINGSTOP":
+        return "Flapping Stop"
+    if notification_type == "FLAPPINGDISABLED":
+        return "Flapping Disabled"
+    if notification_type.startswith("ALERTHANDLER"):
+        if suffix := notification_type[12:].lstrip().title():
+            return f"Alert Handler {suffix}"
+        return "Alert Handler"
+    return notification_type.title()
+
+
+def pretty_state(state: str) -> str:
+    if state == "OK":
+        return state
+    return state.title()
+
+
+def _sanitize_filename(value: str) -> str:
+    value = value.replace(" ", "_")
+    # replace forbidden characters < > ? " : | \ / *
+    for token in ("<", ">", "?", '"', ":", "|", "\\", "/", "*"):
+        value = value.replace(token, "x%s" % ord(token))
+    return value
+
+
+class Graph(NamedTuple):
+    filename: str
+    data: bytes
+
+
+def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) -> list[Graph]:
+    if context["WHAT"] == "HOST":
+        svc_desc = "_HOST_"
+    else:
+        svc_desc = context["SERVICEDESC"]
+
+    request = requests.Request(
+        "GET",
+        f"http://localhost:{site.get_apache_port(omd_root)}/{os.environ['OMD_SITE']}/check_mk/ajax_graph_images.py",
+        params={
+            "host": context["HOSTNAME"],
+            "service": svc_desc,
+            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
+        },
+        headers={"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"},
+    ).prepare()
+
+    timeout = 10
+    try:
+        response = requests.Session().send(
+            request,
+            timeout=timeout,
+        )
+    except requests.exceptions.ReadTimeout:
+        if raise_exception:
+            raise
+        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {request.url}\n")
+        return []
+    except Exception as e:
+        if raise_exception:
+            raise
+        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {request.url}\n")
+        return []
+
+    try:
+        base64_strings = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        if response.text == "":
+            return []
+        if raise_exception:
+            raise
+        sys.stderr.write(
+            f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
+        )
+        return []
+
+    file_prefix = _sanitize_filename(f"{context['HOSTNAME']}-{svc_desc}")
+    return [
+        Graph(filename=f"{file_prefix}-{i}.png", data=base64.b64decode(s))
+        for i, s in enumerate(base64_strings)
+    ]

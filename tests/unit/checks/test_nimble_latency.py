@@ -107,7 +107,7 @@ def test_nimble_latency_read_params(params: Param, data: Data, result: Result) -
     """Test that latency read levels are applied to read types only."""
 
     read_check = Check("nimble_latency")
-    write_check = Check("nimble_latency.write")
+    write_check = Check("nimble_latency_write")
     read_results = list(read_check.run_check("itemxyz", params, data))
     write_results = list(write_check.run_check("itemxyz", params, data))
     assert result == read_results[0]
@@ -134,7 +134,7 @@ def test_nimble_latency_write_params(params: Param, data: Data, result: Result) 
     """Test that latency write levels are applied to write types only."""
 
     read_check = Check("nimble_latency")
-    write_check = Check("nimble_latency.write")
+    write_check = Check("nimble_latency_write")
     read_results = list(read_check.run_check("itemxyz", params, data))
     write_results = list(write_check.run_check("itemxyz", params, data))
     assert result == write_results[0]

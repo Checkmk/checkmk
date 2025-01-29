@@ -11,7 +11,7 @@ from marshmallow import fields, Schema
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
-def is_value_typed_dict(schema) -> bool:  # type: ignore[no-untyped-def]
+def is_value_typed_dict(schema: object) -> bool:
     is_class = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
     is_instance = isinstance(schema, ValueTypedDictSchema)
     return is_class or is_instance
@@ -99,7 +99,7 @@ def field_properties(field: fields.Field) -> FieldProperties:
     return properties
 
 
-class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc]
+class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc,unused-ignore]
     def schema2jsonschema(self, schema):
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)
@@ -123,7 +123,7 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
             "additionalProperties": properties,
         }
 
-    def nested2properties(self, field: fields.Field, ret):  # type: ignore[no-untyped-def]
+    def nested2properties(self, field: fields.Field, ret: dict) -> dict:
         """Return a dictionary of properties from :class:`Nested <marshmallow.fields.Nested` fields.
 
         Typically provides a reference object and will add the schema to the spec
@@ -148,5 +148,24 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
         return super().nested2properties(field, ret)
 
 
+class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined,misc,unused-ignore]
+    def resolve_parameters(self, parameters: list[object]) -> list[object]:
+        parameters = super().resolve_parameters(parameters)
+
+        # wrap object parameters in content.application/json to keep them as str/json in swagger
+        # see: https://swagger.io/docs/specification/describing-parameters/#schema-vs-content
+        for parameter in parameters:
+            if (
+                isinstance(parameter, dict)
+                and "schema" in parameter
+                and "type" not in parameter["schema"]
+            ):
+                content = parameter.setdefault("content", {}).setdefault("application/json", {})
+                content["schema"] = parameter.pop("schema")
+
+        return parameters
+
+
 class CheckmkMarshmallowPlugin(marshmallow.MarshmallowPlugin):
     Converter = CheckmkOpenAPIConverter
+    Resolver = CheckmkOpenAPIResolver

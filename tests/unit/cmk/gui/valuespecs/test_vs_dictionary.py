@@ -99,7 +99,7 @@ class TestValueSpecDictionary:
         with pytest.raises(TypeError, match="got an unexpected keyword argument 'default_value'"):
             # default_value was intentionally removed from
             # Dictionary, because it does not have any effect.
-            d = vs.Dictionary(  # type: ignore[call-arg] # pylint: disable=unexpected-keyword-arg
+            d = vs.Dictionary(  # type: ignore[call-arg]
                 elements=_test_elements(), default_value=None
             )
             _ = d.default_value() == {}
@@ -152,7 +152,7 @@ class TestValueSpecDictionary:
         )
         assert vs.Dictionary(elements=_test_elements(), required_keys=["a", "c"]).value_to_html(
             {"a": "", "c": "z"}
-        ) == HTML(
+        ) == HTML.without_escaping(
             "<table>"
             "<tr>"
             '<td class="title">A:&nbsp;</td><td></td>'
@@ -193,6 +193,4 @@ class TestValueSpecDictionary:
             elements=[
                 ("a", vs.TextInput()),
             ]
-        ).transform_value(
-            {"a": "lala"}
-        ) == {"a": "lala"}
+        ).transform_value({"a": "lala"}) == {"a": "lala"}

@@ -13,12 +13,12 @@ from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QueryS
 
 from cmk.utils.check_utils import worst_service_state
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.visuals.filter import Filter
 
@@ -76,9 +76,7 @@ class RowTableLivestatus(RowTable):
         # columns to allow for repeatable tests.
         return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
-    def create_livestatus_query(  # type: ignore[no-untyped-def]
-        self, columns: Sequence[LivestatusColumn], headers
-    ) -> Query:
+    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers: str) -> Query:
         return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
 
     def query(
@@ -171,13 +169,13 @@ def _merge_data(
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a
 
         mergefuncs.append(mergefunc)
 

@@ -16,7 +16,7 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-splunk-{__version__}"
 
@@ -84,7 +84,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
             try:
                 url = url_base + section.uri
 
-                response = requests.get(  # nosec B113
+                response = requests.get(  # nosec B113 # BNS:0b0eac
                     url,
                     auth=(args.user, args.password),
                     data={"output_mode": "json"},

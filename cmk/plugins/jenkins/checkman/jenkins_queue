@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the state of the jenkins task queue. The service output
  gives information about the queue length and the number of stuck and blocked
- tasks. The long output lists all jobs with its associated details (eg. "ID",
+ tasks. The long output lists all jobs with its associated details (e.g. "ID",
  "Stuck", "Blocked", "In queue since", "Why kept").
 
  Needs the integration "Jenkins" to be configured.

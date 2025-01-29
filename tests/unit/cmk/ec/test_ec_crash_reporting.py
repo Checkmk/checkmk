@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+from pathlib import Path
 
-from cmk.utils.crash_reporting import crash_report_registry
+from cmk.ccc.crash_reporting import crash_report_registry, VersionInfo
 
 from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
 
@@ -14,12 +14,25 @@ def test_ec_crash_report_registry() -> None:
     assert crash_report_registry["ec"] == ECCrashReport
 
 
-@pytest.mark.usefixtures("patch_omd_site")
-def test_ec_crash_report_from_exception() -> None:
+def test_ec_crash_report_from_exception(tmp_path: Path) -> None:
+    crashdir = tmp_path / "crash"
     try:
         raise ValueError("DING")
     except Exception:
-        crash = ECCrashReport.from_exception()
+        crash = ECCrashReport(
+            crashdir,
+            ECCrashReport.make_crash_info(
+                VersionInfo(
+                    core="test",
+                    python_version="test",
+                    edition="test",
+                    python_paths=["foo", "bar"],
+                    version="3.99",
+                    time=0.0,
+                    os="Foobuntu",
+                )
+            ),
+        )
         CrashReportStore().save(crash)
 
     assert crash.type() == "ec"

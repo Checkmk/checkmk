@@ -3,6 +3,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+@use "_mixins" as *;
+
 /*-------------------------------------------------------------------------.
 |                     __        ___  _____ ___                             |
 |                     \ \      / / \|_   _/ _ \                            |
@@ -213,6 +215,24 @@ div.warning_container {
     margin: 0;
     background-color: $headline-color;
     border-radius: 0 $theme-border-radius $theme-border-radius 0;
+
+    .heading {
+      margin-top: 0;
+      margin-bottom: 4px;
+    }
+
+    div.button-container {
+      padding-top: 8px;
+
+      a {
+        padding: 8px 18px;
+        line-height: 30px;
+        color: $font-color-black;
+        background: $color-state-1-background;
+        border-radius: $theme-border-radius;
+        text-decoration: none;
+      }
+    }
   }
   &::before {
     display: inline-block;
@@ -458,6 +478,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 
   .title {
     position: absolute;
+    line-height: 17px; // prevents text from cut of on top
     right: 20px;
     bottom: -4px;
     left: 20px;
@@ -581,7 +602,17 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   }
 }
 
+.wato h1.edit_configuration_bundle_header {
+  padding-top: $spacing;
+}
+
 .wato form.rule_editor {
+  table.locked tbody {
+    pointer-events: none;
+    td.content {
+      opacity: 0.5;
+    }
+  }
   table.hosttags td.title {
     min-width: 200px;
   }
@@ -606,10 +637,15 @@ span.tagify__tag-text {
 }
 
 .wato table.data.ruleset {
+  td.rulebuttons a.disabled img {
+    opacity: 0.5;
+  }
+
   td.condition,
   td.value,
-  td.description {
-    min-width: 30%;
+  td.description,
+  td.source {
+    min-width: 20%;
   }
 
   tr.disabled td {
@@ -625,6 +661,10 @@ span.tagify__tag-text {
       opacity: 0.5;
     }
   }
+}
+
+.wato table.data td.buttons a.disabled img {
+  opacity: 0.5;
 }
 
 table.data.oddeven > tbody > .matches_search > td {
@@ -691,6 +731,10 @@ div.filter_buttons {
     width: 317px;
     padding: $spacing 0 0;
     border: $wato-a-border;
+
+    &.large {
+      height: 110px;
+    }
   }
 
   div {
@@ -740,11 +784,6 @@ div.filter_buttons {
     margin-right: 10px;
     margin-left: 10px;
 
-    &.nofloat {
-      float: none;
-      clear: left;
-    }
-
     div {
       height: 16px;
 
@@ -771,13 +810,52 @@ div.filter_buttons {
       width: 16px;
       text-align: right;
     }
+  }
+}
 
-    /* Only rendered, when the global "Setup" setting wato_hide_help_in_lists is turned off and
-     * inline help is enabled */
-    div.help {
-      height: auto;
-      clear: left;
-    }
+.wato a.config-bundle-link {
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    background-image: url("images/icon_manual_active.svg");
+    background-repeat: no-repeat;
+    background-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+  }
+}
+
+.wato div.no-config-bundles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  font-size: $font-size-large;
+  text-align: center;
+
+  img {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 32px;
+  }
+
+  p {
+    max-width: 280px;
+    line-height: 1.5;
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: $font-weight-bold;
+    color: $font-color-light-bg;
+    background-color: $success-dimmed;
+    border: 1px solid $default-button-border-color;
+    border-radius: $theme-border-radius;
+    padding: 12px 16px;
   }
 }
 
@@ -996,6 +1074,10 @@ table.data td.bi_rule_tree {
     margin: 0 0 0 1px;
     list-style: inside none;
   }
+}
+
+.user_security_form_container {
+  margin: $spacing-half 0 $spacing 18px;
 }
 
 /*-Host Diag-----------------------------------------------------------.
@@ -1291,6 +1373,7 @@ a.create_rule {
 }
 
 tr.condition div.label_groups,
+form.biaggr div.label_groups,
 form.birule div.label_groups {
   @include label-groups-mixin; // from _main.scss
 
@@ -1304,4 +1387,30 @@ form.birule div.label_groups {
   div.label_group {
     flex-grow: unset;
   }
+}
+
+div.dcd_host_manager_state,
+div.dcd_hosts_about_cycle {
+  background-color: $bg-color !important;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-top: 0 !important;
+  padding-left: 5px !important;
+
+  div.section {
+    height: 25px;
+    display: flex;
+
+    .title {
+      font-weight: 600;
+    }
+  }
+}
+
+h3.table.dcd_about_cycle {
+  margin-top: 20px;
+}
+
+table.dcd_host_processing {
+  margin-bottom: 20px;
 }

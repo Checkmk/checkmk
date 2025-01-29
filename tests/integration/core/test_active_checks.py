@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="test_cfg", scope="module", autouse=True)
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "test-host",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -30,14 +30,14 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         yield
     finally:
         print("Cleaning up test config")
-        site.openapi.delete_host("test-host")
+        site.openapi.hosts.delete("test-host")
         site.activate_changes_and_wait_for_core_reload()
 
 
 @skip_if_saas_edition  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="custom_checks",
         value={
             "service_description": "\xc4ctive-Check",
@@ -59,7 +59,7 @@ def test_active_check_execution(site: Site) -> None:
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        site.openapi.delete_rule(rule_id)
+        site.openapi.rules.delete(rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -92,7 +92,7 @@ def test_active_check_macros(site: Site) -> None:
         "$USER1$": "/omd/sites/%s/lib/nagios/plugins" % site.id,
         "$USER2$": "/omd/sites/%s/local/lib/nagios/plugins" % site.id,
         "$USER3$": site.id,
-        "$USER4$": site.root,
+        "$USER4$": site.root.as_posix(),
     }
 
     def descr(var):
@@ -102,7 +102,7 @@ def test_active_check_macros(site: Site) -> None:
     try:
         for var, value in macros.items():
             rule_ids.append(
-                site.openapi.create_rule(
+                site.openapi.rules.create(
                     ruleset_name="custom_checks",
                     value={
                         "service_description": descr(var),
@@ -140,11 +140,11 @@ def test_active_check_macros(site: Site) -> None:
                     splitted_output = plugin_output.split(" ")
                     plugin_output = splitted_output[0] + " " + " ".join(sorted(splitted_output[1:]))
 
-            assert (
-                expected_output == plugin_output
-            ), f"Macro {var} has wrong value ({plugin_output!r} instead of {expected_output!r})"
+            assert expected_output == plugin_output, (
+                f"Macro {var} has wrong value ({plugin_output!r} instead of {expected_output!r})"
+            )
 
     finally:
         for rule_id in rule_ids:
-            site.openapi.delete_rule(rule_id)
+            site.openapi.rules.delete(rule_id)
         site.activate_changes_and_wait_for_core_reload()

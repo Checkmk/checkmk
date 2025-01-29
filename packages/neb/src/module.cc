@@ -4,7 +4,7 @@
 // source code package.
 
 // Needed for S_ISSOCK
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp,cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
 #include <pthread.h>
@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cerrno>
 #include <charconv>
@@ -24,11 +25,14 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -51,6 +55,7 @@
 #include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
 #include "livestatus/global_counters.h"
+#include "neb/CmkVersion.h"
 #include "neb/Comment.h"
 #include "neb/Downtime.h"
 #include "neb/NebCore.h"
@@ -61,93 +66,67 @@ using namespace std::chrono_literals;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+// TODO(sp) Globals are accessed in NebCore/TimeperiodsCache without any header.
+// NOLINTBEGIN(misc-use-internal-linkage)
 size_t g_livestatus_threads = 10;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_queued_connections = 0;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 TimeperiodsCache *g_timeperiods_cache = nullptr;
-/* simple statistics data for TableStatus */
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+// simple statistics data for TableStatus
 int g_num_hosts;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_services;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool g_any_event_handler_enabled;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 double g_average_active_latency;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Average g_avg_livestatus_usage;
+Average g_avg_livestatus_usage;  // NOLINT(cert-err58-cpp)
+// NOLINTEND(misc-use-internal-linkage)
 
 namespace {
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::chrono::milliseconds fl_idle_timeout = 5min;
+std::chrono::milliseconds fl_idle_timeout = 5min;  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::chrono::milliseconds fl_query_timeout = 10s;
+std::chrono::milliseconds fl_query_timeout = 10s;  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t fl_thread_stack_size = size_t{1024} * 1024;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *fl_nagios_handle;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_unix_socket = -1;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_max_fd_ever = 0;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosPathConfig fl_paths;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::string fl_edition{"free"};
+std::string fl_edition{"free"};  // NOLINT(cert-err58-cpp)
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool fl_should_terminate;
 
 struct ThreadInfo {
-    pthread_t id;
+    pthread_t id{};
     std::string name;
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::vector<ThreadInfo> fl_thread_info;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 thread_local ThreadInfo *tl_info;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosLimits fl_limits;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int fl_thread_running = 0;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NagiosAuthorization fl_authorization;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Encoding fl_data_encoding{Encoding::utf8};
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Logger *fl_logger_nagios = nullptr;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 LogLevel fl_livestatus_log_level = LogLevel::notice;
 using ClientQueue_t = Queue<int>;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 ClientQueue_t *fl_client_queue = nullptr;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NebCore *fl_core = nullptr;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void update_status() {
     bool any_event_handler_enabled{false};
@@ -183,12 +162,11 @@ void update_status() {
     g_average_active_latency = active_latency / std::max(num_active_checks, 1);
     g_avg_livestatus_usage.update(
         static_cast<double>(g_livestatus_active_connections) /
-        g_livestatus_threads);
+        static_cast<double>(g_livestatus_threads));
 }
 
 bool shouldTerminate() { return fl_should_terminate; }
 void shouldTerminate(bool value) { fl_should_terminate = value; }
-}  // namespace
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
@@ -197,7 +175,7 @@ void livestatus_cleanup_after_fork() {
     // more trouble than it tries to avoid. It might lead to a deadlock
     // with Nagios' fork()-mechanism...
     // store_deinit();
-    struct stat st;
+    struct stat st{};
 
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
@@ -242,9 +220,7 @@ void *main_thread(void *data) {
             Warning(logger) << ge;
             continue;
         }
-        if (cc > fl_max_fd_ever) {
-            fl_max_fd_ever = cc;
-        }
+        fl_max_fd_ever = std::max(cc, fl_max_fd_ever);
         auto &&[ok, size] =
             fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest);
         switch (ok) {
@@ -295,7 +271,6 @@ void *client_thread(void *data) {
     return nullptr;
 }
 
-namespace {
 class NagiosHandler : public Handler {
 public:
     NagiosHandler() { setFormatter(std::make_unique<NagiosFormatter>()); }
@@ -332,7 +307,159 @@ private:
         }
     };
 };
-}  // namespace
+
+std::string_view callback_name(int callback_type) {
+    static constexpr std::array<std::pair<int, std::string_view>, 33> table{{
+        {NEBCALLBACK_RESERVED0, "RESERVED0"sv},
+        {NEBCALLBACK_RESERVED1, "RESERVED1"sv},
+        {NEBCALLBACK_RESERVED2, "RESERVED2"sv},
+        {NEBCALLBACK_RESERVED3, "RESERVED3"sv},
+        {NEBCALLBACK_RESERVED4, "RESERVED4"sv},
+        {NEBCALLBACK_RAW_DATA, "RAW"sv},
+        {NEBCALLBACK_NEB_DATA, "NEB"sv},
+        {NEBCALLBACK_PROCESS_DATA, "PROCESS"sv},
+        {NEBCALLBACK_TIMED_EVENT_DATA, "TIMED_EVENT"sv},
+        {NEBCALLBACK_LOG_DATA, "LOG"sv},
+        {NEBCALLBACK_SYSTEM_COMMAND_DATA, "SYSTEM_COMMAND"sv},
+        {NEBCALLBACK_EVENT_HANDLER_DATA, "EVENT_HANDLER"sv},
+        {NEBCALLBACK_NOTIFICATION_DATA, "NOTIFICATION"sv},
+        {NEBCALLBACK_SERVICE_CHECK_DATA, "SERVICE_CHECK"sv},
+        {NEBCALLBACK_HOST_CHECK_DATA, "HOST_CHECK"sv},
+        {NEBCALLBACK_COMMENT_DATA, "COMMENT"sv},
+        {NEBCALLBACK_DOWNTIME_DATA, "DOWNTIME"sv},
+        {NEBCALLBACK_FLAPPING_DATA, "FLAPPING"sv},
+        {NEBCALLBACK_PROGRAM_STATUS_DATA, "PROGRAM_STATUS"sv},
+        {NEBCALLBACK_HOST_STATUS_DATA, "HOST_STATUS"sv},
+        {NEBCALLBACK_SERVICE_STATUS_DATA, "SERVICE_STATUS"sv},
+        {NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, "ADAPTIVE_PROGRAM"sv},
+        {NEBCALLBACK_ADAPTIVE_HOST_DATA, "ADAPTIVE_HOST"sv},
+        {NEBCALLBACK_ADAPTIVE_SERVICE_DATA, "ADAPTIVE_SERVICE"sv},
+        {NEBCALLBACK_EXTERNAL_COMMAND_DATA, "EXTERNAL_COMMAND"sv},
+        {NEBCALLBACK_AGGREGATED_STATUS_DATA, "AGGREGATED_STATUS"sv},
+        {NEBCALLBACK_RETENTION_DATA, "RETENTION"sv},
+        {NEBCALLBACK_CONTACT_NOTIFICATION_DATA, "CONTACT_NOTIFICATION"sv},
+        {NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA,
+         "CONTACT_NOTIFICATION_METHOD"sv},
+        {NEBCALLBACK_ACKNOWLEDGEMENT_DATA, "ACKNOWLEDGEMENT"sv},
+        {NEBCALLBACK_STATE_CHANGE_DATA, "STATE_CHANGE"sv},
+        {NEBCALLBACK_CONTACT_STATUS_DATA, "CONTACT_STATUS"sv},
+        {NEBCALLBACK_ADAPTIVE_CONTACT_DATA, "ADAPTIVE_CONTACT"sv},
+    }};
+    const auto *it = std::ranges::find_if(
+        table, [&](const auto &entry) { return entry.first == callback_type; });
+    return it == end(table) ? "UNKNOWN"sv : it->second;
+}
+
+std::string_view data_type_name(int type) {
+    static constexpr std::array<std::pair<int, std::string_view>, 71> table{{
+        {NEBTYPE_NONE, "NONE"sv},
+        //
+        {NEBTYPE_HELLO, "HELLO"sv},
+        {NEBTYPE_GOODBYE, "GOODBYE"sv},
+        {NEBTYPE_INFO, "INFO"sv},
+        //
+        {NEBTYPE_PROCESS_START, "PROCESS_START"sv},
+        {NEBTYPE_PROCESS_DAEMONIZE, "PROCESS_DAEMONIZE"sv},
+        {NEBTYPE_PROCESS_RESTART, "PROCESS_RESTART"sv},
+        {NEBTYPE_PROCESS_SHUTDOWN, "PROCESS_SHUTDOWN"sv},
+        {NEBTYPE_PROCESS_PRELAUNCH, "PROCESS_PRELAUNCH"sv},
+        {NEBTYPE_PROCESS_EVENTLOOPSTART, "PROCESS_EVENTLOOPSTART"sv},
+        {NEBTYPE_PROCESS_EVENTLOOPEND, "PROCESS_EVENTLOOPEND"sv},
+        //
+        {NEBTYPE_TIMEDEVENT_ADD, "TIMEDEVENT_ADD"sv},
+        {NEBTYPE_TIMEDEVENT_REMOVE, "TIMEDEVENT_REMOVE"sv},
+        {NEBTYPE_TIMEDEVENT_EXECUTE, "TIMEDEVENT_EXECUTE"sv},
+        {NEBTYPE_TIMEDEVENT_DELAY, "TIMEDEVENT_DELAY"sv},
+        {NEBTYPE_TIMEDEVENT_SKIP, "TIMEDEVENT_SKIP"sv},
+        {NEBTYPE_TIMEDEVENT_SLEEP, "TIMEDEVENT_SLEEP"sv},
+        //
+        {NEBTYPE_LOG_DATA, "LOG_DATA"sv},
+        {NEBTYPE_LOG_ROTATION, "LOG_ROTATION"sv},
+        //
+        {NEBTYPE_SYSTEM_COMMAND_START, "SYSTEM_COMMAND_START"sv},
+        {NEBTYPE_SYSTEM_COMMAND_END, "SYSTEM_COMMAND_END"sv},
+        //
+        {NEBTYPE_EVENTHANDLER_START, "EVENTHANDLER_START"sv},
+        {NEBTYPE_EVENTHANDLER_END, "EVENTHANDLER_END"sv},
+        //
+        {NEBTYPE_NOTIFICATION_START, "NOTIFICATION_START"sv},
+        {NEBTYPE_NOTIFICATION_END, "NOTIFICATION_END"sv},
+        {NEBTYPE_CONTACTNOTIFICATION_START, "CONTACTNOTIFICATION_START"sv},
+        {NEBTYPE_CONTACTNOTIFICATION_END, "CONTACTNOTIFICATION_END"sv},
+        {NEBTYPE_CONTACTNOTIFICATIONMETHOD_START,
+         "CONTACTNOTIFICATIONMETHOD_START"sv},
+        {NEBTYPE_CONTACTNOTIFICATIONMETHOD_END,
+         "CONTACTNOTIFICATIONMETHOD_END"sv},
+        //
+        {NEBTYPE_SERVICECHECK_INITIATE, "SERVICECHECK_INITIATE"sv},
+        {NEBTYPE_SERVICECHECK_PROCESSED, "SERVICECHECK_PROCESSED"sv},
+        {NEBTYPE_SERVICECHECK_RAW_START, "SERVICECHECK_RAW_START"sv},
+        {NEBTYPE_SERVICECHECK_RAW_END, "SERVICECHECK_RAW_END"sv},
+        {NEBTYPE_SERVICECHECK_ASYNC_PRECHECK, "SERVICECHECK_ASYNC_PRECHECK"sv},
+        //
+        {NEBTYPE_HOSTCHECK_INITIATE, "HOSTCHECK_INITIATE"sv},
+        {NEBTYPE_HOSTCHECK_PROCESSED, "HOSTCHECK_PROCESSED"sv},
+        {NEBTYPE_HOSTCHECK_RAW_START, "HOSTCHECK_RAW_START"sv},
+        {NEBTYPE_HOSTCHECK_RAW_END, "HOSTCHECK_RAW_END"sv},
+        {NEBTYPE_HOSTCHECK_ASYNC_PRECHECK, "HOSTCHECK_ASYNC_PRECHECK"sv},
+        {NEBTYPE_HOSTCHECK_SYNC_PRECHECK, "HOSTCHECK_SYNC_PRECHECK"sv},
+        //
+        {NEBTYPE_COMMENT_ADD, "COMMENT_ADD"sv},
+        {NEBTYPE_COMMENT_DELETE, "COMMENT_DELETE"sv},
+        {NEBTYPE_COMMENT_LOAD, "COMMENT_LOAD"sv},
+        //
+        {NEBTYPE_FLAPPING_START, "FLAPPING_START"sv},
+        {NEBTYPE_FLAPPING_STOP, "FLAPPING_STOP"sv},
+        //
+        {NEBTYPE_DOWNTIME_ADD, "DOWNTIME_ADD"sv},
+        {NEBTYPE_DOWNTIME_DELETE, "DOWNTIME_DELETE"sv},
+        {NEBTYPE_DOWNTIME_LOAD, "DOWNTIME_LOAD"sv},
+        {NEBTYPE_DOWNTIME_START, "DOWNTIME_START"sv},
+        {NEBTYPE_DOWNTIME_STOP, "DOWNTIME_STOP"sv},
+        //
+        {NEBTYPE_PROGRAMSTATUS_UPDATE, "PROGRAMSTATUS_UPDATE"sv},
+        {NEBTYPE_HOSTSTATUS_UPDATE, "HOSTSTATUS_UPDATE"sv},
+        {NEBTYPE_SERVICESTATUS_UPDATE, "SERVICESTATUS_UPDATE"sv},
+        {NEBTYPE_CONTACTSTATUS_UPDATE, "CONTACTSTATUS_UPDATE"sv},
+        //
+        {NEBTYPE_ADAPTIVEPROGRAM_UPDATE, "ADAPTIVEPROGRAM_UPDATE"sv},
+        {NEBTYPE_ADAPTIVEHOST_UPDATE, "ADAPTIVEHOST_UPDATE"sv},
+        {NEBTYPE_ADAPTIVESERVICE_UPDATE, "ADAPTIVESERVICE_UPDATE"sv},
+        {NEBTYPE_ADAPTIVECONTACT_UPDATE, "ADAPTIVECONTACT_UPDATE"sv},
+
+        {NEBTYPE_EXTERNALCOMMAND_START, "EXTERNALCOMMAND_START"sv},
+        {NEBTYPE_EXTERNALCOMMAND_END, "EXTERNALCOMMAND_END"sv},
+        //
+        {NEBTYPE_AGGREGATEDSTATUS_STARTDUMP, "AGGREGATEDSTATUS_STARTDUMP"sv},
+        {NEBTYPE_AGGREGATEDSTATUS_ENDDUMP, "AGGREGATEDSTATUS_ENDDUMP"sv},
+        //
+        {NEBTYPE_RETENTIONDATA_STARTLOAD, "RETENTIONDATA_STARTLOAD"sv},
+        {NEBTYPE_RETENTIONDATA_ENDLOAD, "RETENTIONDATA_ENDLOAD"sv},
+        {NEBTYPE_RETENTIONDATA_STARTSAVE, "RETENTIONDATA_STARTSAVE"sv},
+        {NEBTYPE_RETENTIONDATA_ENDSAVE, "RETENTIONDATA_ENDSAVE"sv},
+        //
+        {NEBTYPE_ACKNOWLEDGEMENT_ADD, "ACKNOWLEDGEMENT_ADD"sv},
+        {NEBTYPE_ACKNOWLEDGEMENT_REMOVE, "ACKNOWLEDGEMENT_REMOVE"sv},
+        {NEBTYPE_ACKNOWLEDGEMENT_LOAD, "ACKNOWLEDGEMENT_LOAD"sv},
+        //
+        {NEBTYPE_STATECHANGE_START, "STATECHANGE_START"sv},
+        {NEBTYPE_STATECHANGE_END, "STATECHANGE_END"sv},
+    }};
+    const auto *it = std::ranges::find_if(
+        table, [&](const auto &entry) { return entry.first == type; });
+    return it == end(table) ? "UNKNOWN"sv : it->second;
+}
+
+void log_callback(int callback_type, int type) {
+    // TODO(sp) This is quite a hack because we get callbacks *very* early and
+    // our loggers have not been set up then.
+    if (fl_livestatus_log_level == LogLevel::debug) {
+        std::ofstream{fl_paths.log_file, std::ios::app}
+            << FormattedTimePoint(std::chrono::system_clock::now())
+            << " [nagios] " << callback_name(callback_type)
+            << " callback: " << data_type_name(type) << "\n";
+    }
+}
 
 void start_threads() {
     if (fl_thread_running == 1) {
@@ -410,6 +537,7 @@ void start_threads() {
         }
     }
 
+    fl_core->dump_infos();
     fl_thread_running = 1;
     if (auto result = pthread_attr_destroy(&attr); result != 0) {
         Warning(fl_logger_nagios) << generic_error{
@@ -449,7 +577,7 @@ void terminate_threads() {
 }
 
 void open_unix_socket() {
-    struct stat st;
+    struct stat st{};
     if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
         if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
@@ -468,9 +596,7 @@ void open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name
     // fl_paths.livestatus_socket
-    struct sockaddr_un sockaddr {
-        .sun_family = AF_UNIX, .sun_path = ""
-    };
+    struct sockaddr_un sockaddr{.sun_family = AF_UNIX, .sun_path = ""};
     fl_paths.livestatus_socket.string().copy(&sockaddr.sun_path[0],
                                              sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
@@ -512,169 +638,242 @@ void close_unix_socket() {
     }
 }
 
-int broker_host(int event_type __attribute__((__unused__)),
-                void *data __attribute__((__unused__))) {
+int broker_host_check(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_host_check_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_HOSTCHECK_INITIATE:
+        case NEBTYPE_HOSTCHECK_ASYNC_PRECHECK:
+        case NEBTYPE_HOSTCHECK_SYNC_PRECHECK:
+        case NEBTYPE_HOSTCHECK_RAW_START:
+        case NEBTYPE_HOSTCHECK_RAW_END:
+            break;
+        case NEBTYPE_HOSTCHECK_PROCESSED:
+            counterIncrement(Counter::host_checks);
+            fl_core->triggers().notify_all(Triggers::Kind::check);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-int broker_check(int event_type, void *data) {
-    const int result = NEB_OK;
-    if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto *c = static_cast<nebstruct_service_check_data *>(data);
-        if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
+int broker_service_check(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_service_check_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_SERVICECHECK_INITIATE:
+        case NEBTYPE_SERVICECHECK_ASYNC_PRECHECK:
+        case NEBTYPE_SERVICECHECK_RAW_START:
+        case NEBTYPE_SERVICECHECK_RAW_END:
+            break;
+        case NEBTYPE_SERVICECHECK_PROCESSED:
             counterIncrement(Counter::service_checks);
-        }
-    } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto *c = static_cast<nebstruct_host_check_data *>(data);
-        if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
-            counterIncrement(Counter::host_checks);
-        }
+            fl_core->triggers().notify_all(Triggers::Kind::check);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
-    fl_core->triggers().notify_all(Triggers::Kind::check);
-    return result;
+    counterIncrement(Counter::neb_callbacks);
+    return 0;
 }
 
-int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    auto *co = static_cast<nebstruct_comment_data *>(data);
-    const unsigned long id = co->comment_id;
-    switch (co->type) {
+int broker_comment(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_comment_data *>(data);
+    log_callback(callback_type, info->type);
+    const unsigned long id = info->comment_id;
+    switch (info->type) {
         case NEBTYPE_COMMENT_ADD:
+            // We get a NEBTYPE_COMMENT_LOAD *and* a NEBTYPE_COMMENT_ADD for a
+            // single ADD_*_COMMENT command. The LOAD/DELETE events correspond
+            // to the actual changes in the Nagios data structures, so we use
+            // those and ignore the ADD.
+            break;
         case NEBTYPE_COMMENT_LOAD: {
-            auto *hst = ::find_host(co->host_name);
-            auto *svc =
-                co->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(co->host_name, co->service_description);
+            auto *hst = ::find_host(info->host_name);
+            auto *svc = info->service_description == nullptr
+                            ? nullptr
+                            : ::find_service(info->host_name,
+                                             info->service_description);
             fl_comments[id] = std::make_unique<Comment>(Comment{
-                ._id = co->comment_id,
-                ._author = co->author_name,
-                ._comment = co->comment_data,
+                ._id = info->comment_id,
+                ._author = info->author_name,
+                ._comment = info->comment_data,
                 ._entry_type = static_cast<CommentType>(
-                    static_cast<int32_t>(co->entry_type)),
+                    static_cast<int32_t>(info->entry_type)),
                 ._entry_time =
-                    std::chrono::system_clock::from_time_t(co->entry_time),
-                ._is_service = co->service_description != nullptr,
+                    std::chrono::system_clock::from_time_t(info->entry_time),
+                ._is_service = info->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
                 ._expire_time =
-                    std::chrono::system_clock::from_time_t(co->expire_time),
-                ._persistent = co->persistent != 0,
+                    std::chrono::system_clock::from_time_t(info->expire_time),
+                ._persistent = info->persistent != 0,
                 ._source = static_cast<CommentSource>(
-                    static_cast<int32_t>(co->source)),
-                ._expires = co->expires != 0});
+                    static_cast<int32_t>(info->source)),
+                ._expires = info->expires != 0});
+            fl_core->triggers().notify_all(Triggers::Kind::comment);
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
             if (fl_comments.erase(id) == 0) {
                 Informational(fl_logger_nagios)
-                    << "Cannot delete non-existing comment " << id;
+                    << "cannot delete non-existing comment " << id;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::comment);
             break;
         default:
+            // We should never see other event types here.
             break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
 }
 
-int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    const unsigned long id = dt->downtime_id;
-    switch (dt->type) {
+int broker_downtime(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_downtime_data *>(data);
+    log_callback(callback_type, info->type);
+    const unsigned long id = info->downtime_id;
+    switch (info->type) {
         case NEBTYPE_DOWNTIME_ADD:
+            // We get a NEBTYPE_DOWNTIME_LOAD *and* a NEBTYPE_DOWNTIME_ADD for a
+            // single ADD_*_DOWNTIME command. The LOAD/DELETE events correspond
+            // to the actual changes in the Nagios data structures, so we use
+            // those and ignore the ADD. Note that Nagios adds a comment to the
+            // host/service after the ADD, too, so we get additional callbacks.
+            break;
         case NEBTYPE_DOWNTIME_LOAD: {
-            auto *hst = ::find_host(dt->host_name);
-            auto *svc =
-                dt->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(dt->host_name, dt->service_description);
+            auto *hst = ::find_host(info->host_name);
+            auto *svc = info->service_description == nullptr
+                            ? nullptr
+                            : ::find_service(info->host_name,
+                                             info->service_description);
             fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
-                ._id = static_cast<int32_t>(dt->downtime_id),
-                ._author = dt->author_name,
-                ._comment = dt->comment_data,
+                ._id = static_cast<int32_t>(info->downtime_id),
+                ._author = info->author_name,
+                ._comment = info->comment_data,
                 ._origin_is_rule = false,
                 ._entry_time =
-                    std::chrono::system_clock::from_time_t(dt->entry_time),
+                    std::chrono::system_clock::from_time_t(info->entry_time),
                 ._start_time =
-                    std::chrono::system_clock::from_time_t(dt->start_time),
+                    std::chrono::system_clock::from_time_t(info->start_time),
                 ._end_time =
-                    std::chrono::system_clock::from_time_t(dt->end_time),
-                ._fixed = dt->fixed != 0,
-                ._duration = std::chrono::seconds{dt->duration},
+                    std::chrono::system_clock::from_time_t(info->end_time),
+                ._fixed = info->fixed != 0,
+                ._duration = std::chrono::seconds{info->duration},
                 ._host = hst,
                 ._service = svc,
-                ._triggered_by = static_cast<int32_t>(dt->triggered_by),
+                ._triggered_by = static_cast<int32_t>(info->triggered_by),
                 ._is_active = false,  // TODO(sp) initial state?
             });
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         }
         case NEBTYPE_DOWNTIME_DELETE:
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)
-                    << "Cannot delete non-existing downtime " << id;
+                    << "cannot delete non-existing downtime " << id;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         case NEBTYPE_DOWNTIME_START:
             if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
                 it->second->_is_active = true;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
 
         case NEBTYPE_DOWNTIME_STOP:
             if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
                 it->second->_is_active = false;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         default:
+            // We should never see other event types here.
             break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
 }
 
-int broker_log(int event_type __attribute__((__unused__)),
-               void *data __attribute__((__unused__))) {
-    counterIncrement(Counter::neb_callbacks);
-    counterIncrement(Counter::log_messages);
-    // NOTE: We use logging very early, even before the core is
-    // instantiated!
-    if (fl_core != nullptr) {
-        fl_core->triggers().notify_all(Triggers::Kind::log);
-    }
-    return 0;
-}
-
-// called twice (start/end) for each external command, even builtin ones
-int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    auto *sc = static_cast<nebstruct_external_command_data *>(data);
-    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
-        counterIncrement(Counter::commands);
-        if (sc->command_type == CMD_CUSTOM_COMMAND &&
-            sc->command_string == "_LOG"s) {
-            write_to_all_logs(sc->command_args, -1);
+int broker_log(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_log_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_LOG_DATA:
+            // Note that we are called *after* the entry has been written to the
+            // Nagios log file.
             counterIncrement(Counter::log_messages);
-            fl_core->triggers().notify_all(Triggers::Kind::log);
-        }
+            // NOTE: We use logging very early, even before the core is
+            // instantiated!
+            if (fl_core != nullptr) {
+                fl_core->triggers().notify_all(Triggers::Kind::log);
+            }
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::command);
     return 0;
 }
 
-int broker_state(int event_type __attribute__((__unused__)),
-                 void *data __attribute__((__unused__))) {
+int broker_external_command(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_external_command_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_EXTERNALCOMMAND_START:
+            counterIncrement(Counter::commands);
+            if (info->command_type == CMD_CUSTOM_COMMAND &&
+                info->command_string == "_LOG"s) {
+                write_to_all_logs(info->command_args, -1);
+                counterIncrement(Counter::log_messages);
+                fl_core->triggers().notify_all(Triggers::Kind::log);
+            }
+            fl_core->triggers().notify_all(Triggers::Kind::command);
+            break;
+        case NEBTYPE_EXTERNALCOMMAND_END:
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::state);
     return 0;
 }
 
-int broker_program(int event_type __attribute__((__unused__)),
-                   void *data __attribute__((__unused__))) {
+int broker_state_change(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_statechange_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_STATECHANGE_START:
+        case NEBTYPE_STATECHANGE_END:
+            // Called after a host/service state change
+            fl_core->triggers().notify_all(Triggers::Kind::state);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::program);
+    return 0;
+}
+
+int broker_adaptive_program(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_adaptive_program_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_ADAPTIVEPROGRAM_UPDATE:
+            fl_core->triggers().notify_all(Triggers::Kind::program);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
+    }
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
@@ -698,31 +897,56 @@ void livestatus_log_initial_states() {
     g_timeperiods_cache->logCurrentTimeperiods();
 }
 
-int broker_event(int event_type __attribute__((__unused__)), void *data) {
-    counterIncrement(Counter::neb_callbacks);
-    auto *ts = static_cast<struct nebstruct_timed_event_struct *>(data);
-    if (ts->event_type == EVENT_LOG_ROTATION) {
-        if (fl_thread_running == 1) {
-            livestatus_log_initial_states();
-        } else if (log_initial_states == 1) {
-            // initial info during startup
-            Informational(fl_logger_nagios) << "logging initial states";
-        }
+int broker_timed_event(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_timed_event_data *>(data);
+    log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_TIMEDEVENT_ADD:
+        case NEBTYPE_TIMEDEVENT_REMOVE:
+        case NEBTYPE_TIMEDEVENT_EXECUTE:
+        case NEBTYPE_TIMEDEVENT_DELAY:
+        case NEBTYPE_TIMEDEVENT_SKIP:
+        case NEBTYPE_TIMEDEVENT_SLEEP:
+            // TODO(sp) Do we really want to do this for all event types above?
+            if (info->event_type == EVENT_LOG_ROTATION) {
+                if (fl_thread_running == 1) {
+                    livestatus_log_initial_states();
+                } else if (log_initial_states == 1) {
+                    // initial info during startup
+                    Informational(fl_logger_nagios) << "logging initial states";
+                }
+            }
+            g_timeperiods_cache->update(from_timeval(info->timestamp));
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
-    g_timeperiods_cache->update(from_timeval(ts->timestamp));
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    auto *ps = static_cast<struct nebstruct_process_struct *>(data);
-    switch (ps->type) {
+int broker_process(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_process_data *>(data);
+    log_callback(callback_type, info->type);
+    // The event types below are in chronological order.
+    switch (info->type) {
+        case NEBTYPE_PROCESS_PRELAUNCH:
+            // Called prior to reading/parsing object configuration files.
+            break;
         case NEBTYPE_PROCESS_START:
+            // Called after reading all configuration objects and after passing
+            // the pre-flight check. Called before entering daemon mode, opening
+            // command pipe, starting worker threads, intitializing the status,
+            // comments, downtime, performance and initial host/service
+            // structures.
             try {
                 auto now = std::chrono::system_clock::now();
                 auto state_file_created = mk::state_file_created(
                     fl_paths.state_file_created_file, now);
                 auto is_licensed =
                     mk::is_licensed(fl_paths.licensed_state_file);
+                // NOLINTBEGIN(cppcoreguidelines-owning-memory)
                 fl_core =
                     new NebCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
                                 fl_authorization, fl_data_encoding, fl_edition,
@@ -736,138 +960,131 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                                      num_services);
                 fl_client_queue = new ClientQueue_t{};
                 g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
+                // NOLINTEND(cppcoreguidelines-owning-memory)
             } catch (const std::exception &e) {
                 std::cerr << e.what() << "\n";
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
             }
             break;
+        case NEBTYPE_PROCESS_DAEMONIZE:
+            // Called right after Nagios successfully "daemonizes"; that is,
+            // detaches from the controlling terminal and is running in the
+            // background.
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
-            g_timeperiods_cache->update(from_timeval(ps->timestamp));
+            // Called immediately prior to entering the main event execution.
+            g_timeperiods_cache->update(from_timeval(info->timestamp));
             start_threads();
             fl_core->dumpPaths(fl_core->loggerLivestatus());
             break;
+        case NEBTYPE_PROCESS_EVENTLOOPEND:
+            // Called immediately after exiting the main event execution loop
+            // (due to either a shutdown or a restart)
+        case NEBTYPE_PROCESS_SHUTDOWN:
+            // Invoked if exiting due to either a process-initiated (abnormal)
+            // or a user-initiated (normal) shutdown
+        case NEBTYPE_PROCESS_RESTART:
+            // Invoked if exiting due to a user-initiated restart. Always
+            // invoked after NEBTYPE_EVENLOOPEND.
         default:
+            // We should never see other event types here.
             break;
     }
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-int verify_event_broker_options() {
-    int errors = 0;
-    if ((event_broker_options & BROKER_PROGRAM_STATE) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_PROGRAM_STATE (" << BROKER_PROGRAM_STATE
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_TIMED_EVENTS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_TIMED_EVENTS (" << BROKER_TIMED_EVENTS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_SERVICE_CHECKS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_SERVICE_CHECKS (" << BROKER_SERVICE_CHECKS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_HOST_CHECKS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_HOST_CHECKS (" << BROKER_HOST_CHECKS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_LOGGED_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_LOGGED_DATA (" << BROKER_LOGGED_DATA
-            << ") event_broker_option enabled to work.",
-            errors++;
-    }
-    if ((event_broker_options & BROKER_COMMENT_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_COMMENT_DATA (" << BROKER_COMMENT_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_DOWNTIME_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_DOWNTIME_DATA (" << BROKER_DOWNTIME_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_STATUS_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_STATUS_DATA (" << BROKER_STATUS_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_ADAPTIVE_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_ADAPTIVE_DATA (" << BROKER_ADAPTIVE_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_EXTERNALCOMMAND_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_EXTERNALCOMMAND_DATA ("
-                                   << BROKER_EXTERNALCOMMAND_DATA
-                                   << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_STATECHANGE_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_STATECHANGE_DATA (" << BROKER_STATECHANGE_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
+struct nagios_callback {
+    int callback_type;
+    int (*callback_func)(int, void *);
+    std::string_view event_broker_option_name;
+    int event_broker_option_flag;
+};
 
-    return static_cast<int>(errors == 0);
-}
+const std::array<nagios_callback, 10> nagios_callbacks{{
+    {
+        .callback_type = NEBCALLBACK_COMMENT_DATA,
+        .callback_func = broker_comment,
+        .event_broker_option_name = "BROKER_COMMENT_DATA"sv,
+        .event_broker_option_flag = BROKER_COMMENT_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_DOWNTIME_DATA,
+        .callback_func = broker_downtime,
+        .event_broker_option_name = "BROKER_DOWNTIME_DATA"sv,
+        .event_broker_option_flag = BROKER_DOWNTIME_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_SERVICE_CHECK_DATA,
+        .callback_func = broker_service_check,
+        .event_broker_option_name = "BROKER_SERVICE_CHECKS"sv,
+        .event_broker_option_flag = BROKER_SERVICE_CHECKS,
+    },
+    {
+        .callback_type = NEBCALLBACK_HOST_CHECK_DATA,
+        .callback_func = broker_host_check,
+        .event_broker_option_name = "BROKER_HOST_CHECKS"sv,
+        .event_broker_option_flag = BROKER_HOST_CHECKS,
+    },
+    {
+        .callback_type = NEBCALLBACK_LOG_DATA,
+        .callback_func = broker_log,
+        .event_broker_option_name = "BROKER_LOGGED_DATA"sv,
+        .event_broker_option_flag = BROKER_LOGGED_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_EXTERNAL_COMMAND_DATA,
+        .callback_func = broker_external_command,
+        .event_broker_option_name = "BROKER_EXTERNALCOMMAND_DATA"sv,
+        .event_broker_option_flag = BROKER_EXTERNALCOMMAND_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_STATE_CHANGE_DATA,
+        .callback_func = broker_state_change,
+        .event_broker_option_name = "BROKER_STATECHANGE_DATA"sv,
+        .event_broker_option_flag = BROKER_STATECHANGE_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
+        .callback_func = broker_adaptive_program,
+        .event_broker_option_name = "BROKER_ADAPTIVE_DATA"sv,
+        .event_broker_option_flag = BROKER_ADAPTIVE_DATA,
+    },
+    {
+        .callback_type = NEBCALLBACK_PROCESS_DATA,
+        .callback_func = broker_process,
+        .event_broker_option_name = "BROKER_PROGRAM_STATE"sv,
+        .event_broker_option_flag = BROKER_PROGRAM_STATE,
+    },
+    {
+        .callback_type = NEBCALLBACK_TIMED_EVENT_DATA,
+        .callback_func = broker_timed_event,
+        .event_broker_option_name = "BROKER_TIMED_EVENTS"sv,
+        .event_broker_option_flag = BROKER_TIMED_EVENTS,
+    },
+}};
 
 void register_callbacks() {
-    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA, fl_nagios_handle, 0,
-                          broker_host);  // Needed to start threads
-    neb_register_callback(NEBCALLBACK_COMMENT_DATA, fl_nagios_handle, 0,
-                          broker_comment);  // dynamic data
-    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, fl_nagios_handle, 0,
-                          broker_downtime);  // dynamic data
-    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_check);  // only for statistics
-    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_check);  // only for statistics
-    neb_register_callback(NEBCALLBACK_LOG_DATA, fl_nagios_handle, 0,
-                          broker_log);  // only for trigger 'log'
-    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, fl_nagios_handle,
-                          0,
-                          broker_command);  // only for trigger 'command'
-    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA, fl_nagios_handle, 0,
-                          broker_state);  // only for trigger 'state'
-    neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, fl_nagios_handle,
-                          0,
-                          broker_program);  // only for trigger 'program'
-    neb_register_callback(NEBCALLBACK_PROCESS_DATA, fl_nagios_handle, 0,
-                          broker_process);  // used for starting threads
-    neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA, fl_nagios_handle, 0,
-                          broker_event);  // used for timeperiods cache
+    for (const auto &cb : nagios_callbacks) {
+        if ((event_broker_options & cb.event_broker_option_flag) == 0) {
+            throw generic_error{
+                EINVAL, "need " + std::string{cb.event_broker_option_name} +
+                            " (" + std::to_string(cb.event_broker_option_flag) +
+                            ") event_broker_option enabled to work"};
+        }
+        neb_register_callback(cb.callback_type, fl_nagios_handle, 0,
+                              cb.callback_func);
+    }
 }
 
 void deregister_callbacks() {
-    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host);
-    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
-    neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, broker_check);
-    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_check);
-    neb_deregister_callback(NEBCALLBACK_LOG_DATA, broker_log);
-    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
-    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA, broker_state);
-    neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
-    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, broker_program);
-    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_event);
+    for (const auto &cb : nagios_callbacks) {
+        neb_deregister_callback(cb.callback_type, cb.callback_func);
+    }
 }
 
 std::filesystem::path check_path(const std::string &name,
                                  std::string_view path) {
-    struct stat st;
+    struct stat st{};
     if (stat(std::string{path}.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
         return {};  // disable
@@ -888,6 +1105,7 @@ T parse_number(std::string_view str) {
     return ec != std::errc{} || ptr != str.end() ? T{} : value;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void livestatus_parse_argument(Logger *logger, std::string_view param_name,
                                std::string_view param_value) {
     Warning(logger) << "name=[" << param_name << "], value=[" << param_value
@@ -901,7 +1119,7 @@ void livestatus_parse_argument(Logger *logger, std::string_view param_name,
         } else {
             fl_livestatus_log_level = LogLevel::notice;
         }
-        Notice(logger) << "setting debug level to " << fl_livestatus_log_level;
+        Notice(logger) << "setting log level to " << fl_livestatus_log_level;
     } else if (param_name == "max_cached_messages"sv) {
         fl_limits._max_cached_messages = parse_number<size_t>(param_value);
         Notice(logger) << "setting max number of cached log messages to "
@@ -918,7 +1136,8 @@ void livestatus_parse_argument(Logger *logger, std::string_view param_name,
         fl_limits._max_response_size = parse_number<size_t>(param_value);
         Notice(logger) << "setting maximum response size to "
                        << fl_limits._max_response_size << " bytes ("
-                       << (fl_limits._max_response_size / (1024.0 * 1024.0))
+                       << (static_cast<double>(fl_limits._max_response_size) /
+                           (1024.0 * 1024.0))
                        << " MB)";
     } else if (param_name == "num_client_threads"sv) {
         const int c = parse_number<int>(param_value);
@@ -1095,17 +1314,18 @@ void omd_advertize(Logger *logger) {
 #else
 #define BUILD_CXX "unknown C++ compiler"
 #endif
-    Notice(logger) << "version " << VERSION << " compiled " << __TIMESTAMP__
-                   << " with " << BUILD_CXX << ", using " << RegExp::engine()
-                   << " regex engine";
+    Notice(logger) << "version " << cmk::version() << " compiled "
+                   << __TIMESTAMP__ << " with " << BUILD_CXX << ", using "
+                   << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
-    if (char *omd_site = getenv("OMD_SITE")) {
+    if (char *omd_site = getenv("OMD_SITE")) {  // NOLINT(concurrency-mt-unsafe)
         Informational(logger)
             << "running on Checkmk site " << omd_site << ", cool.";
     } else {
         Notice(logger) << "Hint: Please try out Checkmk (https://checkmk.com/)";
     }
 }
+}  // namespace
 
 // Called from Nagios after we have been loaded.
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
@@ -1120,27 +1340,17 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     try {
         open_unix_socket();
-
-        if (verify_event_broker_options() == 0) {
-            throw generic_error{
-                EINVAL,
-                "bailing out, please fix event_broker_options. Hint : Your event_broker_options are set to " +
-                    std::to_string(event_broker_options) +
-                    ", try setting it to -1."};
-        }
-        Informational(fl_logger_nagios)
-            << "your event_broker_options are sufficient for livestatus.";
-
         if (enable_environment_macros == 1) {
             Notice(fl_logger_nagios)
                 << "environment_macros are enabled, this might decrease the "
                    "overall nagios performance";
         }
-
         register_callbacks();
+        Informational(fl_logger_nagios)
+            << "your event_broker_options are sufficient for livestatus.";
     } catch (const std::exception &e) {
         std::cerr << e.what() << "\n";
-        exit(EXIT_FAILURE);
+        ::exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
     }
 
     /* Unfortunately, we cannot start our socket thread right now.
@@ -1163,6 +1373,7 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     close_unix_socket();
     deregister_callbacks();
 
+    // NOLINTBEGIN(cppcoreguidelines-owning-memory)
     delete g_timeperiods_cache;
     g_timeperiods_cache = nullptr;
 
@@ -1171,6 +1382,7 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
 
     delete fl_core;
     fl_core = nullptr;
+    // NOLINTEND(cppcoreguidelines-owning-memory)
 
     return 0;
 }

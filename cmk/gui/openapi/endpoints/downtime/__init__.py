@@ -27,15 +27,16 @@ Downtime object can have the following relations:
  * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
 
 """
+
 import datetime as dt
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any, Literal
 
 from livestatus import SiteId
 
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query, ResultRow
 from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 
@@ -56,6 +57,7 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
 from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
@@ -70,7 +72,7 @@ FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist. This parameter can be combined with the host_name parameter "
         "to only filter for service downtimes of on a specific host. Cannot be used "
         "together with the query parameter.",
@@ -341,12 +343,12 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     response_schema=DowntimeCollection,
     permissions_required=PERMISSIONS,
 )
-def show_downtimes(param):
+def show_downtimes(param: Mapping[str, Any]) -> Response:
     """Show all scheduled downtimes"""
     return _show_downtimes(param)
 
 
-def _show_downtimes(param):
+def _show_downtimes(param: Mapping[str, Any]) -> Response:
     """
     Examples:
 
@@ -558,18 +560,14 @@ def _generate_target_downtimes_query(
     return query_expr, site_id
 
 
-def _serialize_downtimes(downtimes):
-    entries = []
-    for downtime in downtimes:
-        entries.append(_serialize_single_downtime(downtime))
-
+def _serialize_downtimes(downtimes: Iterable[ResultRow]) -> CollectionObject:
     return constructors.collection_object(
         "downtime",
-        value=entries,
+        value=[_serialize_single_downtime(downtime) for downtime in downtimes],
     )
 
 
-def _serialize_single_downtime(downtime):
+def _serialize_single_downtime(downtime: ResultRow) -> DomainObject:
     links = []
     if downtime["is_service"]:
         downtime_detail = f"service: {downtime['service_description']}"
@@ -605,15 +603,15 @@ def _serialize_single_downtime(downtime):
     )
 
 
-def _downtime_properties(info):
+def _downtime_properties(info: ResultRow) -> dict[str, Any]:
     downtime = {
         "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
-        "is_service": "yes" if info["is_service"] else "no",
+        "is_service": bool(info["is_service"]),
         "start_time": info["start_time"],
         "end_time": info["end_time"],
-        "recurring": "yes" if info["recurring"] else "no",
+        "recurring": bool(info["recurring"]),
         "comment": info["comment"],
     }
 

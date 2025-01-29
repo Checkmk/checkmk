@@ -15,20 +15,18 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_specification import (
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    MetricOpRRDSource,
-)
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._legacy import CheckMetricEntry
+from cmk.gui.graphing._metric_operation import MetricOpRRDSource, RRDDataKey
 from cmk.gui.graphing._rrd_fetch import (
     _reverse_translate_into_all_potentially_relevant_metrics,
     fetch_rrd_data_for_graph,
     translate_and_merge_rrd_columns,
 )
-from cmk.gui.graphing._type_defs import RRDDataKey
-from cmk.gui.graphing._utils import CheckMetricEntry
+from cmk.gui.graphing._translated_metrics import TranslationSpec
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -75,11 +73,13 @@ _GRAPH_RECIPE = GraphRecipe(
             ),
             color="#ffa000",
             unit="c",
-            visible=True,
         )
     ],
-    unit="c",
-    explicit_vertical_range=(None, None),
+    unit_spec=ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol="°C"),
+        precision=AutoPrecision(digits=2),
+    ),
+    explicit_vertical_range=None,
     horizontal_rules=[],
     omit_zero_metrics=False,
     consolidation_function="max",
@@ -166,10 +166,12 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             ),
         ],
         {
-            "my_old_metric": {
-                "name": "my_metric",
-                "scale": 10,
-            }
+            "my_old_metric": TranslationSpec(
+                name="my_metric",
+                scale=10,
+                auto_graph=True,
+                deprecated="",
+            )
         },
     ) == TimeSeries(
         [10, 20, 3, 4],
@@ -294,7 +296,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    ["canonical_name", "current_version", "all_translations", "expected_result"],
+    ["canonical_name", "current_version", "translations", "expected_result"],
     [
         pytest.param(
             MetricName("my_metric"),
@@ -373,14 +375,14 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
 def test_reverse_translate_into_all_potentially_relevant_metrics(
     canonical_name: MetricName,
     current_version: int,
-    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
+    translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
     expected_result: frozenset[MetricName],
 ) -> None:
     assert (
         _reverse_translate_into_all_potentially_relevant_metrics(
             canonical_name,
             current_version,
-            all_translations,
+            translations,
         )
         == expected_result
     )

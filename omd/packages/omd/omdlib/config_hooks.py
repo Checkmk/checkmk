@@ -21,19 +21,21 @@ import re
 import subprocess
 import sys
 from collections.abc import Iterable
-from ipaddress import ip_network
+from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
 import pydantic
 
-from omdlib.type_defs import ConfigChoiceHasError
+from omdlib.type_defs import Config, ConfigChoiceHasError
+
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import edition
 
 import cmk.utils.resulttype as result
-from cmk.utils.exceptions import MKTerminate
+from cmk.utils import paths
 from cmk.utils.log import VERBOSE
-from cmk.utils.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -68,6 +70,39 @@ class IpAddressListHasError(ConfigChoiceHasError):
                 ip_network(ip_address)
             except ValueError:
                 return result.Error(f"The IP address {ip_address} does match the expected format.")
+        return result.OK(None)
+
+
+class IpListenAddressHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        if not value:
+            return result.Error("Empty address")
+
+        if value.startswith("[") and value.endswith("]"):
+            try:
+                IPv6Address(value[1:-1])
+                return result.OK(None)
+            except ValueError:
+                return result.Error("Invalid IPv6 address")
+
+        try:
+            IPv4Address(value)
+        except ValueError:
+            return result.Error("Invalid IPv4 address")
+
+        return result.OK(None)
+
+
+class NetworkPortHasError(ConfigChoiceHasError):
+    def __call__(self, value: str) -> result.Result[None, str]:
+        try:
+            port = int(value)
+        except ValueError:
+            return result.Error("Invalid port number")
+
+        if port < 1024 or port > 65535:
+            return result.Error("Invalid port number")
+
         return result.OK(None)
 
 
@@ -129,7 +164,7 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(  # pylint: disable=too-many-branches
+def _config_load_hook(
     site: "SiteContext",
     hook_name: str,
 ) -> ConfigHook:
@@ -178,6 +213,10 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     match [choice.strip() for choice in hook_info.split("\n")]:
         case [""]:
             raise MKTerminate("Invalid output of hook: empty output")
+        case ["@{IP_LISTEN_ADDRESS}"]:
+            return IpListenAddressHasError()
+        case ["@{NETWORK_PORT}"]:
+            return NetworkPortHasError()
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case ["@{APACHE_TCP_ADDR}"]:
@@ -206,16 +245,40 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
     return config_hooks
 
 
-def load_defaults(site: "SiteContext") -> dict[str, str]:
-    """Get the default values of all config hooks for the site configuration"""
-    if not site.hook_dir or not os.path.exists(site.hook_dir):
+def load_config(site: "SiteContext") -> Config:
+    """Load all variables from omd/sites.conf. These variables always begin with
+    CONFIG_. The reason is that this file can be sources with the shell.
+
+    Puts these variables into the config dict without the CONFIG_. Also
+    puts the variables into the process environment."""
+    config = read_site_config(site)
+    if site.hook_dir and os.path.exists(site.hook_dir):
+        for hook_name in sort_hooks(os.listdir(site.hook_dir)):
+            if hook_name[0] != "." and hook_name not in config:
+                config[hook_name] = call_hook(
+                    site, hook_name, ["default", edition(paths.omd_root).short]
+                )[1]
+    return config
+
+
+def read_site_config(site: "SiteContext") -> Config:
+    """Read and parse the file site.conf of a site into a dictionary and returns it"""
+    config: Config = {}
+    if not (confpath := Path(site.dir, "etc/omd/site.conf")).exists():
         return {}
 
-    return {
-        hook_name: call_hook(site, hook_name, ["default", edition().short])[1]
-        for hook_name in sort_hooks(os.listdir(site.hook_dir))
-        if hook_name[0] != "."
-    }
+    with confpath.open() as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            var, value = line.split("=", 1)
+            if not var.startswith("CONFIG_"):
+                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+            else:
+                config[var[7:].strip()] = value.strip().strip("'")
+
+    return config
 
 
 # Always sort CORE hook to the end because it runs "cmk -U" which

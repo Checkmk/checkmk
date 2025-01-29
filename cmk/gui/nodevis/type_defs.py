@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import glob
 import hashlib
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Literal
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.utils import topology_data_dir
@@ -42,8 +42,8 @@ class NodeType(Enum):
 
 @dataclass(kw_only=True)
 class TopologyFilterConfiguration:
-    max_nodes: int = field(default_factory=FilterTopologyMaxNodes().range_config.default)
-    mesh_depth: int = field(default_factory=FilterTopologyMeshDepth().range_config.default)
+    max_nodes: int = FilterTopologyMaxNodes().range_config.default
+    mesh_depth: int = FilterTopologyMeshDepth().range_config.default
     growth_auto_max_nodes: int = 400
     query: str = ""
 
@@ -183,58 +183,6 @@ class FrontendConfiguration:
         }
 
 
-@dataclass(kw_only=True)
-class TopologyConfiguration:
-    version: int = 1
-    type: str = ""
-    frontend: FrontendConfiguration = field(default_factory=FrontendConfiguration)
-    filter: TopologyFilterConfiguration = field(default_factory=TopologyFilterConfiguration)
-    layout: Layout = field(default_factory=Layout)
-
-    @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "TopologyConfiguration":
-        if (version := serialized_config.get("version")) is None:
-            cls._migrate_legacy_data(serialized_config)
-            version = 1
-
-        return cls(
-            version=version,
-            type=serialized_config.get("type", ""),
-            frontend=FrontendConfiguration.parse(serialized_config.get("frontend", {})),
-            filter=TopologyFilterConfiguration.parse(serialized_config.get("filter", {})),
-            layout=Layout(**serialized_config.get("layout", {})),
-        )
-
-    @classmethod
-    def _migrate_legacy_data(cls, data: dict[str, Any]) -> dict[str, Any]:
-        force_options = data.pop("force_options", {})
-        line_config = data.pop("line_config", {})
-        ref_size = data.pop("reference_size", {"height": 1024, "width": 768})
-        style_configs = data.pop("style_configs", None)
-        migrated_layout = {
-            "force_config": force_options,
-            "line_config": line_config,
-            "reference_size": [ref_size["width"], ref_size["height"]],
-            "style_configs": style_configs,
-        }
-        # NOTE: legacy format only had parent_child_topology
-        return {
-            "type": "parent_child_topology",
-            "frontend": data,
-            "filter": TopologyFilterConfiguration().ident,
-            "layout": migrated_layout,
-        }
-
-
-@dataclass(kw_only=True)
-class GrowthSettings:
-    growth_root: bool = False  # growth should start here
-    growth_continue: bool = False  # growth may continue here, ignores mesh depth
-    growth_forbidden: bool = False  # growth should stop here
-    indicator_growth_possible: bool = False  # indicator, growth possible
-    indicator_growth_root: bool = False  # indicator, growth started here
-
-
 class TopologyQueryIdentifier:
     """Describes the query parameters which were used to generate the result"""
 
@@ -256,6 +204,69 @@ class TopologyQueryIdentifier:
 
 
 @dataclass(kw_only=True)
+class TopologyConfiguration:
+    version: int = 1
+    type: str = ""
+    frontend: FrontendConfiguration = field(default_factory=FrontendConfiguration)
+    filter: TopologyFilterConfiguration = field(default_factory=TopologyFilterConfiguration)
+    layout: Layout = field(default_factory=Layout)
+
+    @classmethod
+    def parse(
+        cls, serialized_config: dict[str, Any], query_identifier: TopologyQueryIdentifier
+    ) -> "TopologyConfiguration":
+        if serialized_config.get("version") is None:
+            serialized_config = cls._migrate_legacy_data(serialized_config, query_identifier)
+
+        return cls(
+            version=int(serialized_config.get("version", 1)),
+            type=serialized_config.get("type", "parent_child_topology"),
+            frontend=FrontendConfiguration.parse(serialized_config.get("frontend", {})),
+            filter=TopologyFilterConfiguration.parse(serialized_config.get("filter", {})),
+            layout=Layout(**serialized_config.get("layout", {})),
+        )
+
+    @classmethod
+    def _migrate_legacy_data(
+        cls, data: dict[str, Any], query_identifier: TopologyQueryIdentifier
+    ) -> dict[str, Any]:
+        force_options = data.pop("force_options", {})
+        line_config = data.pop("line_config", {})
+        ref_size = data.pop("reference_size", {"height": 1024, "width": 768})
+        style_configs = data.pop("style_configs", None)
+        migrated_layout = {
+            "force_config": force_options,
+            "line_config": line_config,
+            "reference_size": [ref_size["width"], ref_size["height"]],
+            "style_configs": style_configs,
+        }
+        # NOTE: legacy format only had parent_child_topology
+        return {
+            "version": 1,
+            "type": "parent_child_topology",
+            "frontend": data,
+            "filter": asdict(
+                TopologyFilterConfiguration(
+                    max_nodes=int(query_identifier.identifier[1]),
+                    mesh_depth=int(query_identifier.identifier[2]),
+                    growth_auto_max_nodes=int(query_identifier.identifier[3]),
+                    query=query_identifier.identifier[4],
+                )
+            ),
+            "layout": migrated_layout,
+        }
+
+
+@dataclass(kw_only=True)
+class GrowthSettings:
+    growth_root: bool = False  # growth should start here
+    growth_continue: bool = False  # growth may continue here, ignores mesh depth
+    growth_forbidden: bool = False  # growth should stop here
+    indicator_growth_possible: bool = False  # indicator, growth possible
+    indicator_growth_root: bool = False  # indicator, growth started here
+
+
+@dataclass(kw_only=True)
 class TopologyNode:
     id: str
     name: str
@@ -269,7 +280,7 @@ class TopologyNode:
 TopologyNodes = dict[str, TopologyNode]
 
 
-#### FRONTEND DATACLASSES
+# FRONTEND DATACLASSES ##
 
 
 @dataclass

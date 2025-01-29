@@ -7,7 +7,9 @@ import sys
 
 import pytest
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 import cmk.gui.pages
 
@@ -104,7 +106,6 @@ def test_registered_pages() -> None:
         "mobile",
         "mobile_view",
         "noauth:automation",
-        "noauth:run_cron",
         "message",
         "prediction_graph",
         "parent_child_topology",
@@ -133,6 +134,7 @@ def test_registered_pages() -> None:
         "user_webauthn_register_begin",
         "user_totp_register",
         "user_two_factor_overview",
+        "user_two_factor_enforce",
         "user_two_factor_edit_credential",
         "user_webauthn_register_complete",
         "user_login_two_factor",
@@ -151,11 +153,11 @@ def test_registered_pages() -> None:
         "ajax_initial_dashboard_filters",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
-        "noauth:ajax_graph_images",
+        "ajax_graph_images",
         "gui_timings",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",
@@ -222,16 +224,21 @@ def test_registered_pages() -> None:
             "noauth:saml_acs",
             "noauth:saml_metadata",
             "noauth:saml_sso",
-            "noauth:cognito_sso",
-            "noauth:cognito_callback",
-            "cognito_logout",
             "robotmk_suite_log",
             "robotmk_suite_report",
             "download_robotmk_suite_report",
         ]
 
-    if cmk_version.edition() is cmk_version.Edition.CSE:
-        expected_pages += ["ajax_saas_onboarding_button_toggle"]
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:
+        expected_pages += [
+            "ajax_saas_onboarding_button_toggle",
+            "noauth:cognito_sso",
+            "noauth:cognito_callback",
+            "cognito_logout",
+            "noauth:download_license_request",
+            "noauth:upload_license_response",
+            "noauth:download_license_usage",
+        ]
 
     # TODO: Depending on how we call the test (single test or whole package) we
     # see this page or we don't...

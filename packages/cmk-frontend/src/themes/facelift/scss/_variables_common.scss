@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -18,16 +19,16 @@ $white: rgb(255, 255, 255);
 $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
-$danger-dimmed: darken($danger, 25%);
+$danger-dimmed: color.adjust($danger, $lightness: -25%);
 // TODO: Exchange the variable $success with $new-success and adjust the occurences of $new-success
 //       in _login.scss. Rebranding and the 2.2.0 release made this temporary hack necessary.
 //       See https://jira.lan.tribe29.com/browse/CMK-13295
 $new-success: rgb(21, 209, 160);
 $success: rgb(19, 211, 137);
-$success-dimmed: darken($success, 5%);
-$success-dimmed-2: darken($success, 15%);
+$success-dimmed: color.adjust($success, $lightness: -5%);
+$success-dimmed-2: color.adjust($success, $lightness: -15%);
 $info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
-$info-light: lighten($info, 10%);
+$info-light: color.adjust($info, $lightness: 10%);
 $grey-1: rgb(250, 250, 250);
 $midgrey: rgb(220, 220, 220);
 $middarkgrey: rgb(202, 202, 202);
@@ -39,7 +40,7 @@ $grey-5: rgb(40, 40, 40);
 $grey-6: rgb(33, 33, 33);
 $green: rgb(170, 255, 187);
 $orange-1: rgb(255, 160, 66);
-$orange-2: darken($orange-1, 15%);
+$orange-2: color.adjust($orange-1, $lightness: -15%);
 $red-1: rgb(247, 197, 197);
 $red-2: rgb(130, 50, 50);
 $blue: rgb(25, 90, 230);
@@ -64,7 +65,7 @@ $tag-changed-color-light: rgba(255, 132, 0);
 // Fonts
 // Theme specific font colors are in _variables.scss.
 // -----------------------------------------------------------------------------
-$font-family-default: "Lato", "Roboto", Helvetica, Arial, sans-serif;
+$font-family-default: "Inter", Verdana, Arial, Helvetica, sans-serif;
 $font-family-monospace: monospace, sans-serif;
 $font-family-courier: courier, monospace;
 

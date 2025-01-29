@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Informix
 # Make ENV-VARs avail for subshells
@@ -88,10 +88,9 @@ do_check() {
 }
 
 sql() {
-    db="sysmaster"
     sqltxt="$1"
     export DBDELIMITER="|"
-    echo "$sqltxt" | dbaccess ${db}
+    echo "$sqltxt" | $EXECUTION_MODE "$INFORMIXDIR/bin/dbaccess sysmaster"
 }
 
 set_excludes() {
@@ -227,12 +226,9 @@ informix_logusage() {
 # - oninit-path; Default is empty, which means autodetection:
 #       ONINIT_PATH=<path to oninit-binary>
 # - Excluding sections ("status sessions locks tabextents dbspaces logusage"):
-#       EXCLUDES_INFORMIX_INSTANCE="SECTION SECTION ..."
-#       EXCLUDES_INFORMIX_INSTANCE=ALL
 #       EXCLUDES="SECTION SECTION ..."
 #       EXCLUDES=ALL
 
-# shellcheck disable=SC1091 # TODO: add a configuration example and remove this suppression
 # shellcheck source=agents/cfg_examples/informix.cfg
 . "$MK_CONFDIR/informix.cfg" 2>/dev/null
 
@@ -289,16 +285,11 @@ for IDSENV in $(
 ); do
     (
         set_env "$IDSENV"
-        # FIXME: This is supressed, so we can enable the shellcheck.
-        # I think the shellchecker is right here: INFORMIXDIR will not
-        # be available in the for-loops body.
-        # shellcheck disable=SC2031
-        PATH="$PATH:$INFORMIXDIR/bin"
 
         # try to set them via 'onstat -g env' otherwise
         # DB HAS TO BE RUNNING
         if [ -z "$INFORMIXSQLHOSTS" ] || [ -z "$ONCONFIG" ]; then
-            onstat -g env | grep -E -e '^INFORMIXSQLHOSTS' \
+            $EXECUTION_MODE "$INFORMIXDIR/bin/onstat -g env" | grep -E -e '^INFORMIXSQLHOSTS' \
                 -e '^ONCONFIG' |
                 sed -e 's/[         ][      ]*/=/'
         fi

@@ -7,9 +7,9 @@ from logging import Logger
 
 from livestatus import SiteId
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
@@ -26,7 +26,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
     - etc/nagvis/conf.d/cmk_backends.ini.php
     """
     changed = False
-    site_mgmt = SiteManagementFactory().factory()
+    site_mgmt = site_management_registry["site_management"]
     all_sites = site_mgmt.load_sites()
 
     if old_site_id in all_sites:

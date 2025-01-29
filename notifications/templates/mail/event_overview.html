@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<table align="center"
+       width="100%"
+       style="border-collapse: collapse;
+              mso-table-lspace: 0pt;
+              mso-table-rspace: 0pt;
+              min-width: 220px;
+              max-width: 536px;
+              font-size: 14px">
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+    <th style="font-size: 18px;
+               font-weight: 600;
+               text-align: left;
+               padding: 0 0 5px 0;
+               margin: 0;
+               line-height: 1.4;
+               mso-line-height-rule: exactly"
+        colspan="2">
+        <img src="cid:overview.png"
+             style="width: 18px;
+                    height: 19px;
+                    display: inline;
+                    vertical-align: middle"
+             alt="Event overview" />
+        Event overview
+    </th>
+    <tr>
+        <td width="120"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Event date:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">{{ data.LONGDATETIME }}</td>
+    </tr>
+    <tr>
+        <td width="100"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Address:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">{{ data.HOSTADDRESS }}</td>
+    </tr>
+    <tr>
+        <td width="100"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Site:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">{{ data.OMD_SITE }}</td>
+    </tr>
+    <tr>
+        <td width="100"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Summary:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">
+            {% if service_notification %}
+                {{ macros.replace_statemarker(data.SERVICEOUTPUT_HTML) }}
+            {% else %}
+                {{ macros.replace_statemarker(data.HOSTOUTPUT_HTML) }}
+            {% endif %}
+        </td>
+    </tr>
+    {% if service_notification %}
+        <tr>
+            <td width="100"
+                style="padding: 5px 0;
+                       margin: 0;
+                       line-height: 1.4;
+                       mso-line-height-rule: exactly;
+                       font-weight: 600">Service details:</td>
+        </tr>
+    </table>
+    <table align="center"
+           width="100%"
+           style="background-color: #f6f6f6;
+                  min-width: 220px;
+                  max-width: 536px">
+        <tr>
+            <td>
+                <p style="padding: 10px 0 10px 10px">
+                    {% if data.LONGSERVICEOUTPUT_HTML %}
+                        {{ macros.replace_statemarker(data.LONGSERVICEOUTPUT_HTML) }}
+                    {% else %}
+                        No details available
+                    {% endif %}
+                </p>
+            </td>
+        </tr>
+    {% endif %}
+</table>

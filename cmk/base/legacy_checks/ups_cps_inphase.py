@@ -5,12 +5,13 @@
 
 from typing import Literal
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
+
+check_info = {}
 
 
 def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]] | None:
@@ -33,6 +34,7 @@ def inventory_ups_cps_inphase(parsed):
 
 
 check_info["ups_cps_inphase"] = LegacyCheckDefinition(
+    name="ups_cps_inphase",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.3.2",

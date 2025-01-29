@@ -61,20 +61,9 @@ build_binutils() {
     fi
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
-    # HACK: Dispatching on the distro is not nice, we should really check the versions.
-    case "$DISTRO" in
-        sles-12*)
-            echo "bison 2.7 is too old, gprofng requires bison 3.0.4 or later"
-            BINUTILS_CONFIGURE_ADD_OPTS="--disable-gprofng"
-            ;;
-        *)
-            BINUTILS_CONFIGURE_ADD_OPTS=""
-            ;;
-    esac
-    # sles-12* have ancient makeinfo versions, so let's just skip
+    # sles-12* had (we don't build it anymore anyways) ancient makeinfo versions, so let's just skip
     # info generation for all distros, we don't really need it.
     MAKEINFO=true ../binutils-${BINUTILS_VERSION}/configure \
-        "${BINUTILS_CONFIGURE_ADD_OPTS}" \
         --prefix="${PREFIX}"
     make -j4 MAKEINFO=true
     make install MAKEINFO=true

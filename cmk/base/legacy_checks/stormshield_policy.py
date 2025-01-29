@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
 
 
 def inventory_stormshield_policy(info):
@@ -16,7 +16,7 @@ def inventory_stormshield_policy(info):
         yield (line[0], None)
 
 
-def check_stormshield_policy(item, params, info):
+def check_stormshield_policy(item, _no_params, info):
     sync_status_mapping = {
         "1": "synced",
         "2": "not synced",
@@ -39,6 +39,7 @@ def parse_stormshield_policy(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_policy"] = LegacyCheckDefinition(
+    name="stormshield_policy",
     parse_function=parse_stormshield_policy,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
@@ -48,5 +49,4 @@ check_info["stormshield_policy"] = LegacyCheckDefinition(
     service_name="Policy %s",
     discovery_function=inventory_stormshield_policy,
     check_function=check_stormshield_policy,
-    check_ruleset_name="stormshield",
 )

@@ -12,8 +12,6 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.gui.plugins.wato.check_parameters.diskstat import scale_back, scale_forth
-
 from cmk.agent_based.v2 import (
     CheckResult,
     get_rate,
@@ -26,13 +24,6 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import diskstat
 
 
-def migrated_parameters(p: dict) -> dict:
-    """replace the test parameters with the scaled ones
-
-    inline this once the migration is done."""
-    return scale_back(scale_forth(p))
-
-
 @pytest.mark.parametrize(
     "params,exp_res",
     [
@@ -40,6 +31,10 @@ def migrated_parameters(p: dict) -> dict:
             [
                 {
                     "summary": True,
+                    "physical": {},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
                 },
             ],
             [
@@ -50,7 +45,10 @@ def migrated_parameters(p: dict) -> dict:
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": {"service_description": "name"},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
                 },
             ],
             [
@@ -63,7 +61,7 @@ def migrated_parameters(p: dict) -> dict:
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": {"service_description": "wwn"},
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,
@@ -71,8 +69,8 @@ def migrated_parameters(p: dict) -> dict:
             ],
             [
                 Service(item="SUMMARY"),
-                Service(item="disk1"),
-                Service(item="disk2"),
+                Service(item="wwn1"),
+                Service(item="wwn2"),
                 Service(item="LVM disk"),
                 Service(item="VxVM disk"),
                 Service(item="xsd0 disk"),
@@ -86,8 +84,8 @@ def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no
             diskstat.discovery_diskstat_generic(
                 params,
                 {
-                    "disk1": {},
-                    "disk2": {},
+                    "disk1:wwn1": {},
+                    "disk2:wwn2": {},
                     "LVM disk": {},
                     "VxVM disk": {},
                     "xsd0 disk": {},
@@ -369,20 +367,18 @@ def test_summarize_disks(
             ],
         ),
         (
-            migrated_parameters(
-                {
-                    "utilization": (10, 20),
-                    "read": (1e-5, 1e-4),
-                    "write": (1e-5, 1e-4),
-                    "latency": (1e3, 2e3),
-                    "read_latency": (1e3, 2e3),
-                    "write_latency": (1e3, 2e3),
-                    "read_wait": (1e3, 2e3),
-                    "write_wait": (1e3, 2e3),
-                    "read_ios": (1e4, 1e5),
-                    "write_ios": (1e5, 1e6),
-                }
-            ),
+            {
+                "read_throughput": ("fixed", (10, 100)),
+                "write_throughput": ("fixed", (10, 100)),
+                "utilization": ("fixed", (0.1, 0.2)),
+                "latency": ("fixed", (1.0, 2.0)),
+                "read_latency": ("fixed", (1.0, 2.0)),
+                "write_latency": ("fixed", (1.0, 2.0)),
+                "average_read_wait": ("fixed", (1.0, 2.0)),
+                "average_write_wait": ("fixed", (1.0, 2.0)),
+                "read_ios": ("fixed", (10000.0, 100000.0)),
+                "write_ios": ("fixed", (100000.0, 1000000.0)),
+            },
             DISK,
             [
                 Result(state=State.CRIT, notice="Utilization: 53.24% (warn/crit at 10.00%/20.00%)"),
@@ -452,20 +448,20 @@ def test_check_diskstat_dict(
     params: Mapping[str, object], disk: diskstat.Disk, exp_res: CheckResult
 ) -> None:
     value_store: dict[str, Any] = {}
-
+    expected = list(exp_res)
     assert (
         list(
-            diskstat.check_diskstat_dict(
+            diskstat.check_diskstat_dict_legacy(
                 params=params,
                 disk=disk,
                 value_store=value_store,
                 this_time=0.0,
             )
         )
-        == exp_res
+        == expected
     )
     assert list(
-        diskstat.check_diskstat_dict(
+        diskstat.check_diskstat_dict_legacy(
             params={**params, "average": 300},
             disk=disk,
             value_store=value_store,
@@ -474,8 +470,8 @@ def test_check_diskstat_dict(
     ) == [
         *(
             [Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds")]
-            if exp_res
+            if expected
             else []
         ),
-        *exp_res,
+        *expected,
     ]

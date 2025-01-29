@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -12,21 +12,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from flask import Flask
 from pytest import MonkeyPatch
 
-from tests.testlib.utils import is_managed_repo
+from tests.testlib.repo import is_managed_repo
+
+import cmk.ccc.version
 
 import cmk.utils.paths
-import cmk.utils.version
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
-import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
+import cmk.gui.userdb.session  # pylint: disable-unused-import
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -39,15 +35,18 @@ from cmk.gui.type_defs import (
     WebAuthnCredential,
 )
 from cmk.gui.userdb import ldap_connector as ldap
-from cmk.gui.userdb import UserAttributeRegistry
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
 
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
+
 if TYPE_CHECKING:
-    from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest
+    from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest, WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")
@@ -58,9 +57,7 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def single_user_session_enabled(
-    set_config: SetConfig, user_id: UserId
-) -> Generator[None, None, None]:
+def single_user_session_enabled(set_config: SetConfig, user_id: UserId) -> Generator[None]:
     with set_config(single_user_session=10):
         assert active_config.single_user_session == 10
         yield
@@ -195,28 +192,27 @@ def test_on_failed_login_with_locking(
         assert userdb.user_locked(user_id)
 
 
-def test_on_logout_no_session(flask_app: Flask, auth_request: http.Request) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
+def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
+    wsgi_app.get(auth_request)
 
-        user_id = session.user.ident
-        old_session = session.session_info
-        session_id = old_session.session_id
+    user_id = session.user.ident
+    old_session = session.session_info
+    session_id = old_session.session_id
 
-        old_session.invalidate()
-        userdb.session.save_session_infos(user_id, {session_id: old_session})
+    old_session.invalidate()
+    userdb.session.save_session_infos(user_id, {session_id: old_session})
 
-        # Make another request to update "last_activity"
-        client.get(auth_request)
-        # import time
+    # Make another request to update "last_activity"
+    wsgi_app.get(auth_request)
+    # import time
 
-        # time.sleep(2)
-        # print("slept 2", datetime.now().timestamp())
+    # time.sleep(2)
+    # print("slept 2", datetime.now().timestamp())
 
-        assert session.session_info.session_id != old_session.session_id
-        assert session.session_info.started_at >= old_session.started_at
-        #        assert session.session_info.last_activity == int(datetime.now().timestamp())
-        assert session.session_info.last_activity >= old_session.last_activity
+    assert session.session_info.session_id != old_session.session_id
+    assert session.session_info.started_at >= old_session.started_at
+    #        assert session.session_info.last_activity == int(datetime.now().timestamp())
+    assert session.session_info.last_activity >= old_session.last_activity
 
 
 def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> None:
@@ -243,47 +239,45 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
 
 
 def test_on_access_update_valid_session(
-    flask_app: Flask,
+    wsgi_app: WebTestAppForCMK,
     auth_request: http.Request,
 ) -> None:
-    with flask_app.test_client() as client:
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        # We push the access furhter in the past to see if its updated on the next request.
-        session.session_info.last_activity -= 3600
-        session.persist()
+    # We push the access furhter in the past to see if its updated on the next request.
+    session.session_info.last_activity -= 3600
+    session.persist()
 
-        session_info = session.session_info
+    session_info = session.session_info
 
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        assert session.session_info.session_id == session_info.session_id
-        assert session.session_info.started_at == session_info.started_at
-        assert session.session_info.last_activity > session_info.last_activity
+    assert session.session_info.session_id == session_info.session_id
+    assert session.session_info.started_at == session_info.started_at
+    assert session.session_info.last_activity > session_info.last_activity
 
 
 def test_timed_out_session_gets_a_new_one_instead(
-    flask_app: Flask, auth_request: http.Request
+    wsgi_app: WebTestAppForCMK, auth_request: http.Request
 ) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        user_id = session.user.ident
-        session_id = session.session_info.session_id
+    user_id = session.user.ident
+    session_id = session.session_info.session_id
 
-        # Make the session older than it actually was
-        old_session = session.session_info
-        old_session.started_at -= 3600 * 2
-        old_session.last_activity -= 3600 * 2
-        userdb.session.save_session_infos(user_id, {session_id: old_session})
+    # Make the session older than it actually was
+    old_session = session.session_info
+    old_session.started_at -= 3600 * 2
+    old_session.last_activity -= 3600 * 2
+    userdb.session.save_session_infos(user_id, {session_id: old_session})
 
-        # Make another request to update "last_activity"
-        client.get(auth_request)
+    # Make another request to update "last_activity"
+    wsgi_app.get(auth_request)
 
-        # A new session is created, because the old one expired.
-        assert session.session_info.session_id != old_session.session_id
-        assert session.session_info.started_at != old_session.started_at
-        assert session.session_info.last_activity > old_session.last_activity
+    # A new session is created, because the old one expired.
+    assert session.session_info.session_id != old_session.session_id
+    assert session.session_info.started_at != old_session.started_at
+    assert session.session_info.last_activity > old_session.last_activity
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -366,6 +360,17 @@ def test_ensure_user_can_init_no_previous_session(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> None:
+    userdb.session.ensure_user_can_init_session(user_id, datetime.now())
+
+
+@pytest.mark.usefixtures("single_user_session_enabled")
+def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId) -> None:
+    session.initialize(user_id, auth_type="web_server")
+    session.invalidate()
+    userdb.session.save_session_infos(
+        user_id, {session.session_info.session_id: session.session_info}
+    )
+
     userdb.session.ensure_user_can_init_session(user_id, datetime.now())
 
 
@@ -490,21 +495,7 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
-    monkeypatch.setattr(userdb, "user_attribute_registry", UserAttributeRegistry())
-    monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._registry, "user_attribute_registry", UserAttributeRegistry()
-    )
-    monkeypatch.setattr(
-        userdb._user_attribute._registry,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(
-        cmk.gui.userdb._custom_attributes,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
+    # Need to use a new context here to patch the config initialized by request_context
     with monkeypatch.context() as m:
         m.setattr(
             active_config,
@@ -522,14 +513,6 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
                 }
             ],
         )
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
-
-        userdb.update_config_based_user_attributes()
-
-        assert "vip" in userdb.user_attribute_registry
-        assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
             LDAPUserConnectionConfig(
@@ -588,19 +571,15 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
             )
         )
 
-        ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
+        plugins = dict(ldap.all_attribute_plugins())
+        ldap_plugin = plugins["vip"]()
         assert ldap_plugin.title == "VIP"
         assert ldap_plugin.help == "VIP attribute"
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
-        # Test removing previously registered ones
-        with set_config(wato_user_attrs=[]):
-            userdb.update_config_based_user_attributes()
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
+        assert "vip" in dict(ldap.ldap_attribute_plugins_elements(connection)).keys()
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
@@ -649,11 +628,9 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def make_cme(
-    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
-) -> Generator[None, None, None]:
-    monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
-    assert cmk.utils.version.edition() is cmk.utils.version.Edition.CME
+def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -> Generator[None]:
+    monkeypatch.setattr(cmk.ccc.version, "omd_version", lambda: "2.0.0i1.cme")
+    assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.CME
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined
@@ -666,7 +643,7 @@ def make_cme(
 def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
     now = datetime.now()
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme import managed
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
@@ -688,7 +665,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_wrong_customer_user_is_denied(
-    with_user: tuple[UserId, str]
+    with_user: tuple[UserId, str],
 ) -> None:
     user_id, password = with_user
     now = datetime.now()
@@ -743,8 +720,8 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                 ),
             },
             "backup_codes": [
-                PasswordHash("asdr2ar2a2ra2rara2"),
-                PasswordHash("dddddddddddddddddd"),
+                password_hashing.PasswordHash("asdr2ar2a2ra2rara2"),
+                password_hashing.PasswordHash("dddddddddddddddddd"),
             ],
             "totp_credentials": {
                 "uuid": TotpCredential(

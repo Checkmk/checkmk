@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
@@ -72,6 +74,7 @@ def discover_rds_licenses(section):
 
 
 check_info["rds_licenses"] = LegacyCheckDefinition(
+    name="rds_licenses",
     parse_function=parse_rds_licenses,
     service_name="RDS Licenses %s",
     discovery_function=discover_rds_licenses,

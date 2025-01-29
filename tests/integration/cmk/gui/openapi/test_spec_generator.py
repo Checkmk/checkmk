@@ -9,14 +9,17 @@ import subprocess
 from tests.testlib.site import Site
 
 
+def test_initial_api_spec_computation_was_done(site: Site) -> None:
+    assert site.file_exists("var/check_mk/rest_api/spec/doc.spec")
+    assert site.file_exists("var/check_mk/rest_api/spec/swagger-ui.spec")
+
+
 def test_compute_api_spec(site: Site) -> None:
     site.delete_file("var/check_mk/rest_api/spec/doc.spec")
     site.delete_file("var/check_mk/rest_api/spec/swagger-ui.spec")
 
-    p = site.execute(["cmk-compute-api-spec"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    assert p.wait() == 0
+    output = site.check_output(["cmk-compute-api-spec"], stderr=subprocess.STDOUT)
 
-    output = p.communicate()[0]
     assert "warnings.warn" not in output, output
 
     assert site.file_exists("var/check_mk/rest_api/spec/doc.spec")

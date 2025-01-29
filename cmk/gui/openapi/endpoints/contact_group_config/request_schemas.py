@@ -7,16 +7,9 @@ from cmk.utils.regex import GROUP_NAME_PATTERN
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.contact_group_config.common import InventoryPaths
 
 from cmk import fields
-
-
-class InputGroup(BaseSchema):
-    customer = gui_fields.customer_field(
-        required=True,
-        should_exist=True,
-        allow_global=True,
-    )
 
 
 class UpdateContactGroupAttributes(BaseSchema):
@@ -25,6 +18,12 @@ class UpdateContactGroupAttributes(BaseSchema):
         description="The name used for displaying in the GUI.",
         required=True,
     )
+    inventory_paths = fields.Nested(
+        InventoryPaths,
+        required=False,
+        description="Permitted HW/SW Inventory paths.",
+        example={"type": "allow_all"},
+    )
     customer = gui_fields.customer_field(
         required=False,
         should_exist=True,
@@ -32,7 +31,7 @@ class UpdateContactGroupAttributes(BaseSchema):
     )
 
 
-class InputContactGroup(InputGroup):
+class InputContactGroup(BaseSchema):
     """Creating a contact group"""
 
     name = gui_fields.GroupField(
@@ -43,11 +42,21 @@ class InputContactGroup(InputGroup):
         description="The name of the contact group.",
         pattern=GROUP_NAME_PATTERN,
     )
-
     alias = fields.String(
         required=True,
         description="The name used for displaying in the GUI.",
         example="Not on Sundays.",
+    )
+    inventory_paths = fields.Nested(
+        InventoryPaths,
+        load_default=lambda: {"type": "allow_all"},
+        description="Permitted HW/SW Inventory paths.",
+        example={"type": "allow_all"},
+    )
+    customer = gui_fields.customer_field(
+        required=True,
+        should_exist=True,
+        allow_global=True,
     )
 
 

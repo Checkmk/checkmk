@@ -18,15 +18,19 @@ from typing import NamedTuple
 
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
+
+from cmk.messaging import rabbitmq
 
 Command = list[str]
 
@@ -61,6 +65,14 @@ class ReplicationPath(_BaseReplicationPath):
         )
 
 
+class ReplicationPathRegistry(Registry[ReplicationPath]):
+    def plugin_name(self, instance: ReplicationPath) -> str:
+        return instance.ident
+
+
+replication_path_registry = ReplicationPathRegistry()
+
+
 class SnapshotSettings(NamedTuple):
     # TODO: Refactor to Path
     snapshot_path: str
@@ -70,6 +82,7 @@ class SnapshotSettings(NamedTuple):
     snapshot_components: list[ReplicationPath]
     component_names: set[str]
     site_config: SiteConfiguration
+    rabbitmq_definition: rabbitmq.Definitions
 
 
 class ABCSnapshotDataCollector(abc.ABC):
@@ -330,13 +343,15 @@ class SnapshotCreationBase:
 
         # Simply compute the checksum of the sitespecific.mk
         source_path = os.path.join(snapshot_work_dir, custom_components[0].site_path)
-        return hashlib.md5(  # pylint: disable=unexpected-keyword-arg
+        return hashlib.md5(
             open(source_path, "rb").read(),
             usedforsecurity=False,
         ).hexdigest()
 
 
 class SnapshotCreator(SnapshotCreationBase):
+    """Packe the snapshots into snapshot archives"""
+
     def __init__(
         self, activation_work_dir: str, all_generic_components: list[ReplicationPath]
     ) -> None:
@@ -493,7 +508,7 @@ def _create_distributed_wato_file_for_base(
 
 
 def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
         return
 
     output = wato_fileheader()
@@ -506,3 +521,7 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
     output = wato_fileheader()
     output += f"is_wato_remote_site = {is_remote}\n"
     store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)
+
+
+def create_rabbitmq_new_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
+    store.save_text_to_file(base_dir / rabbitmq.NEW_DEFINITIONS_FILE_PATH, definition.dumps())

@@ -66,7 +66,7 @@ not true. It only contains:
 Version 2.3 and higher ship only Werks from the current major version.
 
 Precompiled Werks consist of multiple files: one for each edition. It is created
-while building checkmk. A make-target is executing ``python -m cmk.utils.werks precompile``
+while building checkmk. A make-target is executing ``python -m cmk.werks.utils precompile``
 
 
 Website

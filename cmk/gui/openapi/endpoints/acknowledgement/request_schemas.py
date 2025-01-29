@@ -134,7 +134,7 @@ class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
         required=True,
     )
     service_description = fields.String(
-        description="The acknowledgement process will be applied to all matching service descriptions",
+        description="The acknowledgement process will be applied to all matching service names",
         example="CPU load",
         required=True,
     )
@@ -152,7 +152,11 @@ class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
-    query = gui_fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(
+        tables.Services,
+        required=True,
+        example='{"op": "=", "left": "description", "right": "Service description"}',
+    )
 
 
 class AcknowledgeServiceRelatedProblem(OneOfSchema):

@@ -56,7 +56,7 @@ def _parameter_valuespec_oracle_tablespaces():
             (
                 "defaultincrement",
                 DropdownChoice(
-                    title=_("Default Increment"),
+                    title=_("Default increment"),
                     choices=[
                         (True, _("State is WARNING in case the next extent has the default size.")),
                         (False, _("Ignore default increment")),
@@ -84,20 +84,20 @@ def _parameter_valuespec_oracle_tablespaces():
             (
                 "temptablespace",
                 DropdownChoice(
-                    title=_("Monitor temporary Tablespace"),
+                    title=_("Monitor temporary tablespace"),
                     choices=[
-                        (False, _("Ignore temporary Tablespaces (Default)")),
-                        (True, _("Apply rule to temporary Tablespaces")),
+                        (False, _("Ignore temporary tablespaces (Default)")),
+                        (True, _("Apply rule to temporary tablespaces")),
                     ],
                 ),
             ),
             (
                 "monitor_undo_tablespace",
                 DropdownChoice(
-                    title=_("Monitor undo Tablespace"),
+                    title=_("Monitor undo tablespace"),
                     choices=[
-                        (False, _("Ignore undo Tablespaces (Default)")),
-                        (True, _("Apply rule to undo Tablespaces")),
+                        (False, _("Ignore undo tablespaces (Default)")),
+                        (True, _("Apply rule to undo tablespaces")),
                     ],
                     help=_(
                         "Please be aware that the monitoring of UNDO tablespaces is only useful in very rare situations with very specific preconditions."
@@ -116,6 +116,6 @@ rulespec_registry.register(
         item_spec=_item_spec_oracle_tablespaces,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_tablespaces,
-        title=lambda: _("Oracle Tablespaces"),
+        title=lambda: _("Oracle tablespaces"),
     )
 )

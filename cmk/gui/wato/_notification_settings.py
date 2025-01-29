@@ -15,7 +15,6 @@ from cmk.gui.valuespec import (
     Integer,
     ValueSpec,
 )
-from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigVariable,
@@ -24,6 +23,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupNotifications
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.utils import site_neutral_path
 
 
@@ -41,8 +41,8 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_fallback_email"
@@ -67,8 +67,8 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_fallback_format"
@@ -79,12 +79,12 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
             choices=[
                 (
                     "asciimail",
-                    _("ASCII Email"),
+                    _("ASCII email"),
                     notification_parameter_registry["asciimail"]().spec,
                 ),
                 (
                     "mail",
-                    _("HTML Email"),
+                    _("HTML email"),
                     notification_parameter_registry["mail"]().spec,
                 ),
             ],
@@ -95,8 +95,8 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_backlog"
@@ -120,8 +120,8 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_bulk_interval"
@@ -146,8 +146,8 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_plugin_timeout"
@@ -164,8 +164,8 @@ class ConfigVariableNotificationLogging(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_logging"
@@ -191,8 +191,8 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "failed_notification_horizon"
@@ -201,8 +201,8 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
         return Age(
             title=_("Failed notification horizon"),
             help=_(
-                "The tactical overview snap-in is reporing about notifications that could not be sent "
-                'by Checkmk. Users with the permission "See failed Notifications (all)" get the number '
+                "The tactical overview snap-in is reporting about notifications that could not be sent "
+                'by Checkmk. Users with the permission "See failed notifications (all)" get the number '
                 "of failed notification within the configured horizon."
             ),
             default_value=60 * 60 * 24 * 7,

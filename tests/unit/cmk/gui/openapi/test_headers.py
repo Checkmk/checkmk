@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from webtest import TestResponse  # type: ignore[import-untyped]
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+import cmk.ccc.version as cmk_version
 
-import cmk.utils.version as cmk_version
+from cmk.utils import paths
 
 
-def _get_version(app: WebTestAppForCMK, status: int = 200) -> TestResponse:
+def _get_version(app: WebTestAppForCMK, status: int = 200) -> CmkTestResponse:
     return app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/version",
@@ -28,7 +28,7 @@ def test_headers_exposed(
     resp = _get_version(
         aut_user_auth_wsgi_app,
     )
-    assert resp.headers["x-checkmk-edition"] == cmk_version.edition().short
+    assert resp.headers["x-checkmk-edition"] == cmk_version.edition(paths.omd_root).short
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 

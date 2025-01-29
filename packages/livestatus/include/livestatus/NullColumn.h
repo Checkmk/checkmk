@@ -7,18 +7,10 @@
 #define NullColumn_h
 
 #include <chrono>
-#include <memory>
 #include <string>
 
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
-#include "livestatus/Sorter.h"
-
-class Aggregator;
-enum class RelationalOperator;
-class Row;
-class RowRenderer;
-class User;
 
 class NullColumn : public Column {
 public:

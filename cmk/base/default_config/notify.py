@@ -5,8 +5,15 @@
 
 from __future__ import annotations
 
-import cmk.utils.version as cmk_version
-from cmk.utils.notify_types import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
+    NotifyPluginParamsDict,
+)
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -24,6 +31,7 @@ notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParam
     {},
 )
 notification_rules: list[EventRule] = []
+notification_parameter: NotificationParameterSpecs = {}
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60
@@ -37,7 +45,7 @@ notification_plugin_timeout = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if cmk_version.edition() is cmk_version.Edition.CRE:
+if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
     notification_spooling: bool | str = "off"
 else:
     notification_spooling = "local"

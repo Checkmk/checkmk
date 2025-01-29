@@ -64,10 +64,10 @@ def log(msg, *args):
 class ConsoleFormatter:
     __slots__ = ["out"]
 
-    def __init__(self, args) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, _args) -> None:  # type: ignore[no-untyped-def]
         self.out = sys.stdout
 
-    def push(self, importer, imported):
+    def push(self, _importer, _imported):
         self.out.write(">")
         self.out.flush()
 
@@ -104,7 +104,7 @@ class JSONFormatter:
         # TODO: The stack is an almost untypeable mess...
         self.stack: list[Any] = [self.metric]
 
-    def push(self, from_, module):
+    def push(self, _from, module):
         node = {"name": module}
         parent = self.stack[-1]
         if "children" not in parent:
@@ -282,7 +282,6 @@ def _get_mem(pid: int) -> Memory:
         _name, amount, unit = _line.split()
         val = int(amount)
 
-        # pylint: disable=raising-format-tuple
         if unit == "kB":
             val *= KiB
         elif unit == "MB":
@@ -335,7 +334,7 @@ class MeasureMemory:
 
 
 @contextlib.contextmanager
-def track_growth(parent, module, fromlist):
+def track_growth(parent, module):
     # This is a separate contextmanager so we can actually gracefully recover from any errors.
     if _FORMATTER is None:
         raise Exception("no formatter")
@@ -433,7 +432,7 @@ def _importer(
             module_name = "? (unknown)"
 
     # Here goes the real magic.
-    with track_growth(parent, module_name, fromlist):
+    with track_growth(parent, module_name):
         try:
             return __imp(name, _globals, _locals, fromlist, level)
         except ValueError as e:
@@ -483,10 +482,10 @@ def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
     # Close stdout and stderr so we won't have an ugly terminal.
-    subprocess.Popen(  # pylint: disable=consider-using-with
+    subprocess.Popen(
         args,
-        stdout=open("/dev/null", "w"),  # pylint: disable=consider-using-with
-        stderr=open("/dev/null", "w"),  # pylint: disable=consider-using-with
+        stdout=open("/dev/null", "w"),
+        stderr=open("/dev/null", "w"),
         start_new_session=True,
     )
 

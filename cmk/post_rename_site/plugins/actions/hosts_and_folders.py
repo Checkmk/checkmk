@@ -7,7 +7,7 @@ from logging import Logger
 
 from livestatus import SiteId
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -37,7 +37,6 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
         # config
         logger.debug("Folder %s: Saving config", folder.alias_path())
         folder.save()
-        folder.save_hosts()
 
 
 rename_action_registry.register(

@@ -16,4 +16,4 @@ def test_no_lq_injection() -> None:
         ScalarExpression("f\noo")
 
     with pytest.raises(ValueError):
-        ScalarExpression("foo") == "bar\nfoo"  # pylint: disable=expression-not-assigned
+        ScalarExpression("foo") == "bar\nfoo"

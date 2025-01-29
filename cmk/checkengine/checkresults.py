@@ -43,7 +43,6 @@ class ServiceCheckResult:
 
 
 class SubmittableServiceCheckResult(ServiceCheckResult):
-
     def is_submittable(self) -> bool:
         return True
 
@@ -57,7 +56,6 @@ class SubmittableServiceCheckResult(ServiceCheckResult):
 
 
 class UnsubmittableServiceCheckResult(ServiceCheckResult):
-
     def is_submittable(self) -> bool:
         return False
 

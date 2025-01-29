@@ -34,9 +34,9 @@ class Timeperiods(Table):
     next_transition = Column(
         'next_transition',
         col_type='time',
-        description='The time of the next transition. 0 if there is no further transition.',
+        description='Time of the next transition. 0 if there is no further transition.',
     )
-    """The time of the next transition. 0 if there is no further transition."""
+    """Time of the next transition. 0 if there is no further transition."""
 
     next_transition_id = Column(
         'next_transition_id',

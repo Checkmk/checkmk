@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Alias: Receive traces
+# Menu: Addons
+# Description:
+#  This option enables receiving OpenTelemetry traces in a Jaeger instance running in the Checkmk
+#  site. This instance is run for diagnostic purposes of Checkmk and currently not intended to be
+#  used for external use cases.
+
+case "$1" in
+    default)
+        echo "off"
+        ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+        ;;
+    set)
+        # Toggle the apache reverse proxy for accessing the Jaeger UI
+        if [ "$2" = "on" ]; then
+            ln -sf ../../jaeger/apache.conf "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf
+        elif [ -f "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf ]; then
+            rm "$OMD_ROOT"/etc/apache/conf.d/jaeger.conf
+        fi
+        ;;
+esac

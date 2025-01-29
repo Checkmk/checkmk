@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 # mypy: disallow_untyped_defs
 import datetime
 from abc import ABC, abstractmethod
@@ -14,13 +14,14 @@ from typing import Any
 import pytest
 from google.cloud import monitoring_v3
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, ServiceLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    ServiceLabel,
     StringTable,
 )
-
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents import agent_gcp

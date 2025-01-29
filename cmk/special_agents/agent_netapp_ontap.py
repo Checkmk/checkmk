@@ -4,33 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import sys
 from collections.abc import Iterable, Sequence
 
 import requests
 from netapp_ontap import resources as NetAppResource
+from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
+from pydantic import BaseModel
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 __version__ = "2.3.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
 
-def write_section(section_header: str, generator: Iterable, logger: logging.Logger) -> None:
-    section_header = f"netapp_ontap_{section_header}"
-    with SectionWriter(section_header) as writer:
-        for element in generator:
-            logger.debug(
-                "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
-            )
-            writer.append_json(element.model_dump(exclude_unset=True, exclude_none=False))
+def write_section(
+    section_name: str, generator: Iterable[BaseModel], logger: logging.Logger
+) -> None:
+    sys.stdout.write(f"<<<netapp_ontap_{section_name}:sep(0)>>>\n")
+    for element in generator:
+        json_dict = element.model_dump_json(exclude_unset=True, exclude_none=False)
+        logger.debug("Element data: %r", json_dict)
+        sys.stdout.write(json_dict + "\n")
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
-
     field_query = (
         "uuid",
         "state",
@@ -55,7 +58,6 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
 
 
 def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
-
     for netapp_resources in netapp_volumes:
         element_data = netapp_resources.to_dict()
 
@@ -85,7 +87,6 @@ def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeMo
 
 
 def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=True)
     )
@@ -183,7 +184,7 @@ def fetch_volumes_counters(
             id=volume_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(volumes_counters_field_query)},
         ):
             element_serialized = element.to_dict()
@@ -268,9 +269,9 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         yield models.LunModel(
             name=element_data["name"],
             space_size=element_data["space"]["size"],
-            space_used=element_data["space"]["used"],
+            space_used=element_data["space"].get("used"),
             enabled=element_data["enabled"],
-            read_only=element_data["status"]["read_only"],
+            read_only=element_data.get("status", {}).get("read_only"),
             svm_name=element_data["svm"]["name"],
             volume_name=element_data["location"]["volume"]["name"],
         )
@@ -393,7 +394,7 @@ def fetch_interfaces_counters(
             id=interface_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(interfaces_counters_field_query)},
         ):
             element_data = element.to_dict()
@@ -451,7 +452,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
         "id",
         "fans.id",
         "fans.state",
-        "fans.rpm",
+        # "fans.rpm",        # Can be missing, currently unused
         # "fans.installed",  # ! NOT WORKING
     )
 
@@ -467,7 +468,6 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
                 list_id=list_id,
                 id=fan["id"],
                 state=fan["state"],
-                rpm=fan["rpm"],
             )
 
 
@@ -523,7 +523,7 @@ def fetch_temperatures(
                 id=temp["id"],
                 # installed=temp["installed"],
                 state=temp["state"],
-                temperature=temp["temperature"],
+                temperature=temp.get("temperature"),
                 ambient=temp["ambient"],
                 low_warning=temp.get("threshold", {}).get("low", {}).get("warning"),
                 low_critical=temp.get("threshold", {}).get("low", {}).get("critical"),
@@ -536,7 +536,7 @@ def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.Aler
     response = requests.get(
         url=f"{connection.origin}/api/private/support/alerts",
         headers=connection.headers,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        verify=False if args.no_cert_check else True,
         auth=(connection.username, connection.password),
         timeout=args.timeout,
     )
@@ -598,7 +598,7 @@ def fetch_vs_traffic_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -638,7 +638,7 @@ def fetch_fc_interfaces_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type]
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -726,13 +726,16 @@ def fetch_qtree_quota(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
+
+        if element_data["type"] != "tree":
+            continue
+
         yield models.QtreeQuotaModel(
-            type_=element_data["type"],
-            name=element_data["qtree"]["name"],
+            name=element_data.get("qtree", {}).get("name"),
             volume=element_data["volume"]["name"],
             hard_limit=element_data.get("space", {}).get("hard_limit"),
             used_total=element_data.get("space", {}).get("used", {}).get("total"),
-            users=element_data.get("users", {}).get("name"),
+            users=[user["name"] for user in element_data.get("users", []) if "name" in user],
         )
 
 
@@ -801,7 +804,10 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
-    write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+
+    if "volumes" not in args.no_counters:
+        write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+
     write_section("disk", fetch_disks(connection), logger)
     write_section("luns", fetch_luns(connection), logger)
     write_section("aggr", fetch_aggr(connection), logger)
@@ -825,9 +831,9 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--hostname", help="Host name or IP-address of NetApp Filer.")
-    parser.add_argument("--username", help="Username for NetApp login")
-    parser.add_argument("--password", help="Secret/Password for NetApp login")
+    parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.", required=True)
+    parser.add_argument("--username", help="Username for NetApp login", required=True)
+    parser.add_argument("--password", help="Secret/Password for NetApp login", required=True)
 
     parser.add_argument(
         "-t",
@@ -841,7 +847,20 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         ),
     )
     parser.add_argument(
+        "--no-counters",
+        nargs="*",
+        type=str,
+        default=[],
+        choices=["volumes"],
+        help=('Skip counters for the given element. Right now only "volumes" is supported.'),
+    )
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
         "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.",
     )
 
     return parser.parse_args(argv)
@@ -855,17 +874,33 @@ def _setup_logging(verbose: bool) -> logging.Logger:
 
 
 def agent_netapp_main(args: Args) -> int:
+    """
+    For NetApp responses HTTP status codes:
+    https://docs.netapp.com/us-en/ontap-restapi-9141//ontap/getting_started_with_the_ontap_rest_api.html#HTTP_status_codes
+
+    """
+
     logger = _setup_logging(args.verbose)
     with HostConnection(
         args.hostname,
         args.username,
         args.password,
-        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        verify=False if args.no_cert_check else True,
         headers={"User-Agent": USER_AGENT},
     ) as connection:
-        logger.debug("Connection estabilished. Start writing sections")
-        write_sections(connection, logger, args)
-        logger.debug("Sections have been written")
+        if isinstance(args.cert_server_name, str):
+            connection.session.mount(
+                connection.origin, HostnameValidationAdapter(args.cert_server_name)
+            )
+
+        logger.debug("Start writing sections")
+        try:
+            write_sections(connection, logger, args)
+        except NetAppRestError as exc:
+            if exc.status_code == 401:
+                raise CannotRecover("Authentication failed. Please check the credentials.")
+            raise exc
+        logger.debug("All sections have been written")
 
     return 0
 

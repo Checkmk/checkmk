@@ -7,6 +7,8 @@
 Host groups are a way to organize hosts in Checkmk for monitoring.
 By using a host group you can generate suitable views for overview and/or analysis.
 
+The hosts part of a host group can be queried using the Monitoring's relevant host_status endpoints.
+
 You can find an introduction to hosts including host groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 
@@ -17,12 +19,14 @@ A host group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this host group.
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils import version
+from cmk.ccc import version
 
-import cmk.gui.watolib.groups as groups
+from cmk.utils import paths
+
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
@@ -37,6 +41,7 @@ from cmk.gui.openapi.endpoints.host_group_config.response_schemas import (
     HostGroupCollection,
 )
 from cmk.gui.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -52,6 +57,7 @@ from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_host_group_information
 
@@ -81,7 +87,7 @@ def create(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body["alias"]}
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         group_details = update_customer_info(group_details, body["customer"])
     groups.add_group(name, "host", group_details)
     group = fetch_group(name, "host")
@@ -123,7 +129,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
     user.need_permission("wato.groups")
-    collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
+    collection = build_group_list(load_host_group_information())
     return serve_json(serialize_group_list("host_group_config", collection))
 
 

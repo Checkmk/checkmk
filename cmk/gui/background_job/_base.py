@@ -4,18 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import multiprocessing
 import os
 import shutil
-import signal
 import time
-from collections.abc import Callable
-from typing import NoReturn, TypedDict
 
-import psutil
+from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.resulttype as result
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
@@ -25,22 +20,19 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
+from cmk.trace import get_tracer, SpanContext, Status, StatusCode
+
 from ._defines import BackgroundJobDefines
-from ._process import BackgroundProcess, BackgroundProcessInterface
+from ._executor import JobExecutor, StartupError, ThreadedJobExecutor
+from ._interface import JobTarget, SpanContextModel
+from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
-
-class BackgroundJobAlreadyRunning(MKGeneralException):
-    pass
+tracer = get_tracer()
 
 
-class JobParameters(TypedDict):
-    """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
-
-    work_dir: str
-    job_id: str
-    target: Callable[[BackgroundProcessInterface], None]
+class AlreadyRunningError(Exception): ...
 
 
 class BackgroundJob:
@@ -56,21 +48,38 @@ class BackgroundJob:
         # instantiated in various places.
         raise NotImplementedError()
 
+    @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        """Called when the job scheduler starts
+
+        Can be used to implement initialization tasks that should be triggered once
+        the job scheduler is ready to start background jobs"""
+
     def __init__(
         self,
         job_id: str,
         logger: logging.Logger | None = None,
+        executor: JobExecutor | None = None,
     ) -> None:
         super().__init__()
         self.validate_job_id(job_id)
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
-        self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
 
         self._logger = logger if logger else log.logger.getChild("background-job")
 
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
+
+        self._executor: JobExecutor = (
+            executor
+            if executor
+            else (
+                ThreadedJobExecutor(self._logger)
+                if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
+                else JobSchedulerExecutor(self._logger)
+            )
+        )
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:
@@ -137,24 +146,10 @@ class BackgroundJob:
         return self.get_status().user != user.id
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
-        if job_status.state == JobStatusStates.INITIALIZED:
-            # The process was created a millisecond ago
-            # The child process however, did not have time to update the statefile with its PID
-            # We consider this scenario as OK, if the start time was recent enough
-            if time.time() - job_status.started < 5:  # 5 seconds
-                return True
-
-        if job_status.pid is None:
-            return False
-
         try:
-            p = psutil.Process(job_status.pid)
-            if self._is_correct_process(job_status, p):
-                return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return self._executor.is_alive(self._job_id)
+        except KeyError:
             return False
-
-        return False
 
     def is_active(self) -> bool:
         if not self.exists():
@@ -202,69 +197,14 @@ class BackgroundJob:
             pass
 
     def _terminate_processes(self) -> None:
-        job_status = self.get_status()
-
-        if job_status.pid is None:
-            return
-
-        # Send SIGTERM
-        self._logger.debug(
-            'Stopping job using SIGTERM "%s" (PID: %s)', self._job_id, job_status.pid
-        )
-        try:
-            process = psutil.Process(job_status.pid)
-            if not self._is_correct_process(job_status, process):
-                return
-            process.send_signal(signal.SIGTERM)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return
-
-        self._logger.debug("Waiting for job")
-        start_time = time.time()
-        while time.time() - start_time < 10:  # 10 seconds SIGTERM grace period
-            job_still_running = False
-            try:
-                process = psutil.Process(job_status.pid)
-                if not self._is_correct_process(job_status, process):
-                    return
-                job_still_running = True
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                return
-
-            if not job_still_running:
-                break
-            time.sleep(0.1)
-
-        try:
-            p = psutil.Process(job_status.pid)
-            if self._is_correct_process(job_status, process):
-                # Kill unresponsive jobs
-                self._logger.debug("Killing job")
-                p.send_signal(signal.SIGKILL)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return
-
-    def _is_correct_process(
-        self, job_status: JobStatusSpec, psutil_process: psutil.Process
-    ) -> bool:
-        if psutil_process.name() != BackgroundJobDefines.process_name:
-            return False
-
-        return True
+        self._executor.terminate(self._job_id)
 
     def get_status(self) -> JobStatusSpec:
         status = self._jobstatus_store.read()
 
         # Some dynamic stuff
-        if status.state == JobStatusStates.RUNNING and status.pid is not None:
-            try:
-                p = psutil.Process(status.pid)
-                if not self._is_correct_process(status, p):
-                    status.state = JobStatusStates.STOPPED
-                else:
-                    status.duration = time.time() - status.started
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                status.state = JobStatusStates.STOPPED
+        if status.state == JobStatusStates.RUNNING:
+            status.duration = time.time() - status.started
 
         map_job_state_to_is_active = {
             JobStatusStates.INITIALIZED: True,
@@ -279,24 +219,39 @@ class BackgroundJob:
 
     def start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
-    ) -> None:
-        # if initial_status_args is None:
-        #    initial_status_args = InitialStatusArgs(
-        #        user=str(user.id) if user.id else None,
-        #    )
-
-        with store.locked(self._job_initializiation_lock):
-            self._start(target, initial_status_args)
+        override_job_log_level: int | None = None,
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
+        with tracer.span(f"start_background_job[{self._job_id}]") as span:
+            if (
+                start_result := self._start(
+                    target,
+                    initial_status_args,
+                    override_job_log_level,
+                    span.get_span_context(),
+                )
+            ).is_ok():
+                self._logger.debug('Started job "%s"', self._job_id)
+            else:
+                self._logger.debug('Failed to start job "%s"', self._job_id)
+                if not isinstance(start_result.error, AlreadyRunningError):
+                    # Callers decided on the severity of this case, so we don't report this as an
+                    # error condition here.
+                    span.set_status(Status(StatusCode.ERROR, str(start_result.error)))
+            return start_result
 
     def _start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
-    ) -> None:
+        override_job_log_level: int | None,
+        origin_span_context: SpanContext,
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if self.is_active():
-            raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
+            return result.Error(
+                AlreadyRunningError(f"Background Job {self._job_id} already running")
+            )
 
         self._prepare_work_dir()
 
@@ -323,67 +278,35 @@ class BackgroundJob:
         )
         self._jobstatus_store.write(initial_status)
 
-        job_parameters = JobParameters(
-            {
-                "work_dir": self._work_dir,
-                "job_id": self._job_id,
-                "target": target,
-            }
+        return self._executor.start(
+            self.__class__.__name__,
+            self._job_id,
+            self._work_dir,
+            self.job_prefix,
+            target,
+            initial_status_args.lock_wato,
+            initial_status_args.stoppable,
+            override_job_log_level,
+            origin_span_context=SpanContextModel.from_span_context(origin_span_context),
         )
-        p = multiprocessing.Process(
-            target=self._start_background_subprocess, args=(job_parameters,)
-        )
-
-        p.start()
-        p.join()
-
-        if p.exitcode == 0:
-            job_status = self.get_status()
-            self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
 
     def _prepare_work_dir(self) -> None:
         self._delete_work_dir()
         os.makedirs(self._work_dir)
 
-    def _start_background_subprocess(self, job_parameters: JobParameters) -> None:
-        try:
-            # Even the "short living" intermediate process here needs to close
-            # the inherited file descriptors as soon as possible to prevent
-            # race conditions with inherited locks that have been inherited
-            # from the parent process. The job_initialization.lock is such a
-            # thing we had a problem with when background jobs were initialized
-            # while the apache tried to stop / restart.
-            #
-            # Had problems with closefrom() during the tests. Explicitly
-            # closing the locks here instead of closing all fds to keep logging
-            # related fds open.
-            # daemon.closefrom(3)
-            store.release_all_locks()
+    def wait_for_completion(self, timeout: float | None = None) -> bool:
+        """Wait for background job to be complete.
 
-            self._jobstatus_store.update({"ppid": os.getpid()})
-
-            p = BackgroundProcess(
-                logger=log.logger.getChild("background_process"),
-                work_dir=job_parameters["work_dir"],
-                job_id=job_parameters["job_id"],
-                target=job_parameters["target"],
-            )
-            p.start()
-        except Exception as e:
-            self._logger.exception("Error while starting subprocess: %s", e)
-            self._exit(1)
-        self._exit(0)
-
-    def _exit(self, code: int) -> NoReturn:
-        """Exit the interpreter.
-
-        This is here so we can mock this away cleanly."""
-        os._exit(code)
-
-    def wait_for_completion(self) -> None:
-        """Wait for background job to be complete."""
-        while self.is_active():
+        Optionally timeout can be given to limit the waiting time. A return value of `True`
+        indicates that the job is completed and `False` if it isn't.
+        """
+        start = time.time()
+        while is_active := self.is_active():
             time.sleep(0.5)
+            if timeout is not None and time.time() >= start + timeout:
+                break
+
+        return not is_active
 
     def get_status_snapshot(self) -> BackgroundStatusSnapshot:
         status = self.get_status()

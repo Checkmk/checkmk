@@ -18,10 +18,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_mq_queues(info):
@@ -38,37 +38,30 @@ def check_mq_queues(item, params, info):
     for line in info:
         if found is True:
             size, consumerCount, enqueueCount, dequeueCount = map(int, line)
-            msg = ""
-            state = 0
-            warn, crit = params["consumerCount"]
-            if crit and consumerCount < crit:
-                state = 2
-                label = "(!!)"
-            elif warn and consumerCount < warn:
-                state = 1
-                label = "(!)"
-            if state > 0:
-                msg = "%s consuming connections " % consumerCount
-                msg += f"(Levels Warn/Crit below {warn}/{crit}){label}, "
 
-            label = ""
-            warn, crit = params["size"]
-            if crit and size >= crit:
-                state = 2
-                label = "(!!)"
-            elif warn and size >= warn:
-                state = max(state, 1)
-                label = "(!)"
-            msg += "Queue Size: %s" % size
-            if label != "":
-                msg += f"(Levels Warn/Crit at {warn}/{crit}){label}"
-            msg += f", Enqueue Count: {enqueueCount}, Dequeue Count: {dequeueCount}"
+            if (
+                count_result := check_levels(
+                    consumerCount,
+                    None,
+                    params["consumerCount"],
+                    infoname="Consuming connections",
+                    human_readable_func=str,
+                )
+            )[0]:
+                yield count_result
+            yield check_levels(
+                size, "queue", params["size"], infoname="Queue size", human_readable_func=str
+            )
+            yield check_levels(
+                enqueueCount, "enque", None, infoname="Enqueue count", human_readable_func=str
+            )
+            yield check_levels(
+                dequeueCount, "deque", None, infoname="Dequeue count", human_readable_func=str
+            )
+            return
 
-            perf = [("queue", size, warn, crit), ("enque", enqueueCount), ("deque", dequeueCount)]
-            return state, msg, perf
         if line[0].startswith("[[") and line[0][2:-2] == item:
             found = True
-    return 2, "Queue not found"
 
 
 def parse_mq_queues(string_table: StringTable) -> StringTable:
@@ -76,13 +69,14 @@ def parse_mq_queues(string_table: StringTable) -> StringTable:
 
 
 check_info["mq_queues"] = LegacyCheckDefinition(
+    name="mq_queues",
     parse_function=parse_mq_queues,
     service_name="Queue %s",
     discovery_function=inventory_mq_queues,
     check_function=check_mq_queues,
     check_ruleset_name="mq_queues",
     check_default_parameters={
-        "size": (None, None),
-        "consumerCount": (None, None),
+        "size": None,
+        "consumerCount": None,
     },
 )

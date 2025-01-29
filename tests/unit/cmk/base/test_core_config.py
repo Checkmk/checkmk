@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import shutil
 from collections.abc import Mapping
@@ -12,12 +11,13 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.config_path
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
-from cmk.utils import password_store
+from cmk.utils import ip_lookup, password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels, LabelSources
@@ -26,11 +26,11 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
-import cmk.base.config as config
-import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
+from cmk.base import config, core_config
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.core_config import get_labels_from_attributes
+from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
 
 
@@ -71,11 +71,12 @@ def test_do_create_config_nagios(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=config.handle_ip_lookup_failure
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
     )
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
+        AgentBasedPlugins({}, {}, {}, {}),
         ip_address_of,
         all_hosts=[HostName("test-host")],
         duplicates=(),
@@ -90,7 +91,7 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=config.handle_ip_lookup_failure
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
     )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
@@ -101,6 +102,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
+        AgentBasedPlugins({}, {}, {}, {}),
         ip_address_of,
         all_hosts=[HostName("test-host")],
         duplicates=(),
@@ -146,8 +148,10 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
         "alias": "test-host",
     }
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
+        expected_attrs["__LABEL_cmk/customer"] = "provider"
+        expected_attrs["__LABELSOURCE_cmk/customer"] = "discovered"
 
     assert (
         config_cache.get_host_attributes(
@@ -158,7 +162,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,result",
     [
@@ -215,7 +219,9 @@ def test_get_cmk_passive_service_attributes(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+    check_mk_attrs = core_config.get_service_attributes(
+        config_cache, hostname, "Check_MK", {}, extra_icon=None
+    )
 
     service = ConfiguredService(
         check_plugin_name=CheckPluginName("cpu_loads"),
@@ -223,11 +229,17 @@ def test_get_cmk_passive_service_attributes(
         description="CPU load",
         parameters=TimespecificParameters(),
         discovered_parameters={},
-        service_labels={},
+        discovered_labels={},
+        labels={},
         is_enforced=False,
     )
     service_spec = core_config.get_cmk_passive_service_attributes(
-        config_cache, hostname, service, check_mk_attrs
+        config_cache,
+        hostname,
+        service.description,
+        {},
+        check_mk_attrs,
+        extra_icon=None,
     )
     assert service_spec == result
 
@@ -316,3 +328,34 @@ def test_template_translation(
 )
 def test_get_labels_from_attributes(attributes: dict[str, str], expected: Labels) -> None:
     assert get_labels_from_attributes(list(attributes.items())) == expected
+
+
+@pytest.mark.parametrize(
+    "attributes, expected",
+    [
+        pytest.param(
+            {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__LABEL_ding": "dong",
+                "__LABEL_cmk/site": "NO_SITE",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABELSOURCE_ding": "explicit",
+                "address": "0.0.0.0",
+                "alias": "test-host",
+            },
+            {
+                "piggyback": "auto-piggyback",
+                "site": "unit",
+                "snmp_ds": "no-snmp",
+            },
+        ),
+    ],
+)
+def test_get_tags_with_groups_from_attributes(
+    attributes: dict[str, str], expected: dict[TagGroupID, TagID]
+) -> None:
+    assert get_tags_with_groups_from_attributes(list(attributes.items())) == expected

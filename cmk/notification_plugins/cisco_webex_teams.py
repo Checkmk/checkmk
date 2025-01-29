@@ -8,6 +8,7 @@ Send notification messages to Cisco Webex Teams
 
 Use a Cisco Webex Teams webhook to send notification messages
 """
+
 from cmk.notification_plugins.utils import (
     format_link,
     host_url_from_context,

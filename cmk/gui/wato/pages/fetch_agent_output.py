@@ -8,29 +8,36 @@ import ast
 import os
 from pathlib import Path
 
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
+from pydantic import BaseModel
+
+from livestatus import SiteId
+
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
-from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
+    BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
+    JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -131,12 +138,8 @@ class AgentOutputPage(Page, abc.ABC):
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
 
     @staticmethod
-    def file_name(api_request: FetchAgentOutputRequest) -> str:
-        return "{}-{}-{}.txt".format(
-            api_request.host.site_id(),
-            api_request.host.name(),
-            api_request.agent_type,
-        )
+    def file_name(site_id: SiteId, host_name: HostName, agent_type: str) -> str:
+        return f"{site_id}-{host_name}-{agent_type}.txt"
 
 
 class PageFetchAgentOutput(AgentOutputPage):
@@ -190,7 +193,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if job_status.is_active:
             html.immediate_browser_redirect(0.8, makeuri(request, []))
 
-        job = FetchAgentOutputBackgroundJob(self._request)
+        job = FetchAgentOutputBackgroundJob.from_api_request(self._request)
         JobRenderer.show_job_details(job.get_job_id(), job_status, job.may_stop(), job.may_delete())
 
     def _start_fetch(self) -> None:
@@ -222,7 +225,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
+class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
     def get_request(self) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 
@@ -243,10 +246,17 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
 
 
 def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
-    job = FetchAgentOutputBackgroundJob(api_request)
-    try:
-        job.start(
-            job.fetch_agent_output,
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
+    if (
+        result := job.start(
+            JobTarget(
+                callable=fetch_agent_output_entry_point,
+                args=FetchAgentOutputJobArgs(
+                    site_id=api_request.host.site_id(),
+                    host_name=api_request.host.name(),
+                    agent_type=api_request.agent_type,
+                ),
+            ),
             InitialStatusArgs(
                 title=_("Fetching %s of %s / %s")
                 % (
@@ -257,14 +267,14 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
                 user=str(user.id) if user.id else None,
             ),
         )
-    except BackgroundJobAlreadyRunning:
-        pass
+    ).is_error():
+        raise MKUserError(None, str(result.error))
 
 
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "fetch-agent-output-get-status"
 
     def execute(self, api_request: FetchAgentOutputRequest) -> dict:
@@ -272,8 +282,22 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
 
 
 def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatusSpec:
-    job = FetchAgentOutputBackgroundJob(api_request)
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
     return job.get_status_snapshot().status
+
+
+class FetchAgentOutputJobArgs(BaseModel, frozen=True):
+    site_id: SiteId
+    host_name: HostName
+    agent_type: str
+
+
+def fetch_agent_output_entry_point(
+    job_interface: BackgroundProcessInterface, args: FetchAgentOutputJobArgs
+) -> None:
+    FetchAgentOutputBackgroundJob(args.site_id, args.host_name, args.agent_type).fetch_agent_output(
+        job_interface
+    )
 
 
 class FetchAgentOutputBackgroundJob(BackgroundJob):
@@ -282,29 +306,30 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
     job_prefix = "agent-output-"
 
     @classmethod
+    def from_api_request(
+        cls, api_request: FetchAgentOutputRequest
+    ) -> "FetchAgentOutputBackgroundJob":
+        return cls(api_request.host.site_id(), api_request.host.name(), api_request.agent_type)
+
+    @classmethod
     def gui_title(cls) -> str:
         return _("Fetch agent output")
 
-    def __init__(self, api_request: FetchAgentOutputRequest) -> None:
-        self._request = api_request
-
-        host = self._request.host
-        job_id = "{}{}-{}-{}".format(
-            self.job_prefix,
-            host.site_id(),
-            host.name(),
-            self._request.agent_type,
-        )
+    def __init__(self, site_id: SiteId, host_name: HostName, agent_type: str) -> None:
+        self._site_id = site_id
+        self._host_name = host_name
+        self._agent_type = agent_type
+        job_id = f"{self.job_prefix}{site_id}-{host_name}-{agent_type}"
         super().__init__(job_id)
 
-    def fetch_agent_output(self, job_interface):
-        job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
+    def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
+        with job_interface.gui_context():
+            self._fetch_agent_output(job_interface)
 
-        agent_output_result = get_agent_output(
-            self._request.host.site_id(),
-            self._request.host.name(),
-            self._request.agent_type,
-        )
+    def _fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
+        job_interface.send_progress_update(_("Fetching '%s'...") % self._agent_type)
+
+        agent_output_result = get_agent_output(self._site_id, self._host_name, self._agent_type)
 
         if not agent_output_result.success:
             job_interface.send_progress_update(
@@ -312,7 +337,8 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             )
 
         preview_filepath = os.path.join(
-            job_interface.get_work_dir(), AgentOutputPage.file_name(self._request)
+            job_interface.get_work_dir(),
+            AgentOutputPage.file_name(self._site_id, self._host_name, self._agent_type),
         )
 
         store.save_bytes_to_file(
@@ -322,20 +348,27 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
         download_url = makeuri_contextless(
             request,
-            [("host", self._request.host.name()), ("type", self._request.agent_type)],
+            [("host", self._host_name), ("type", self._agent_type)],
             filename="download_agent_output.py",
         )
 
-        button = html.render_icon_button(download_url, _("Download"), "agent_output")
         job_interface.send_progress_update("Job finished.")
         job_interface.send_result_message(
-            _("%s Click on the icon to download the agent output.") % button
+            _("%s Click on the icon to download the agent output.")
+            % HTMLGenerator.render_icon_button(
+                url=download_url,
+                title=_("Download"),
+                icon="agent_output",
+                theme=make_theme(validate_choices=False),
+            )
         )
 
 
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self) -> None:
-        file_name = self.file_name(self._request)
+        file_name = self.file_name(
+            self._request.host.site_id(), self._request.host.name(), self._request.agent_type
+        )
         file_content = self._get_agent_output_file()
 
         response.set_content_type("text/plain")
@@ -366,8 +399,13 @@ class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
 
 
 def get_fetch_agent_output_file(api_request: FetchAgentOutputRequest) -> bytes:
-    job = FetchAgentOutputBackgroundJob(api_request)
-    filepath = Path(job.get_work_dir(), AgentOutputPage.file_name(api_request))
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
+    filepath = Path(
+        job.get_work_dir(),
+        AgentOutputPage.file_name(
+            api_request.host.site_id(), api_request.host.name(), api_request.agent_type
+        ),
+    )
     # The agent output need to be treated as binary data since each agent section can have an
     # individual encoding
     with filepath.open("rb") as f:

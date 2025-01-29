@@ -7,7 +7,7 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.bi.lib import (
     ABCBICompiledNode,

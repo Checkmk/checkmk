@@ -7,13 +7,14 @@
 import "select2";
 import "element-closest-polyfill";
 
-import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
+import type {EditTagsRuntimeSettings} from "@yaireo/tagify";
+import Tagify from "@yaireo/tagify";
 import $ from "jquery";
 import Swal from "sweetalert2";
 
-import * as ajax from "./ajax";
-import {CMKAjaxReponse, RequireConfirmation} from "./types";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import type {CMKAjaxReponse, RequireConfirmation} from "./types";
+import {add_class, prevent_default_events, remove_class} from "./utils";
 import {
     initialize_autocompleters,
     toggle_label_row_opacity,
@@ -30,12 +31,6 @@ interface TagifyState {
     blockChangeEvent: boolean;
     lastOriginalValueReported: string;
     mainEvents: boolean;
-}
-
-declare global {
-    class Tagify {
-        state: TagifyState;
-    }
 }
 
 interface ConfirmLinkCustomArgs {
@@ -61,7 +56,7 @@ interface CheckMKTagifyData extends Tagify.BaseTagData {
 }
 
 export function enable_dynamic_form_elements(
-    container: HTMLElement | null = null
+    container: HTMLElement | null = null,
 ) {
     enable_select2_dropdowns(container);
     enable_label_input_fields(container);
@@ -88,31 +83,30 @@ export function format_select2_item(item: select2DropdownItem) {
 }
 
 export function enable_select2_dropdowns(
-    container: JQuery<Document> | HTMLElement | HTMLDocument | null
+    container: JQuery<Document> | HTMLElement | HTMLDocument | null,
 ) {
     if (!container) container = $(document);
 
     const elements = $(container)
         .find(".select2-enable")
         .not(".vlof_prototype .select2-enable");
-    const max_wait_seconds = 3; // Let the user wait for max 3 seconds. We can convert ~60-80 selects per second.
-    if (elements.length > 60 * max_wait_seconds) {
-        // If we've got too many of those, we bail out early instead of letting the user wait potentially "forever".
-        return;
-    }
-    elements.select2({
-        dropdownAutoWidth: true,
-        minimumResultsForSearch: 5,
-        templateResult: format_select2_item,
-        templateSelection: format_select2_item,
-    });
+
+    (async () => {
+        elements.select2({
+            dropdownAutoWidth: true,
+            minimumResultsForSearch: 5,
+            templateResult: format_select2_item,
+            templateSelection: format_select2_item,
+        });
+    })();
+
     initialize_autocompleters(container);
 
     // workaround for select2-input not being in focus
     $(document).on("select2:open", e => {
         (
             document.querySelector(
-                ".select2-search__field"
+                ".select2-search__field",
             ) as HTMLSelectElement
         )?.focus();
         if (
@@ -131,12 +125,12 @@ export function enable_select2_dropdowns(
 }
 
 function enable_label_input_fields(
-    container: HTMLElement | HTMLDocument | null
+    container: HTMLElement | HTMLDocument | null,
 ) {
     if (!container) container = document;
 
     const elements = container.querySelectorAll(
-        "input.labels"
+        "input.labels",
     ) as NodeListOf<HTMLInputElement>;
     elements.forEach(element => {
         // Do not tagify objects that are part of a ListOf valuespec template
@@ -177,18 +171,21 @@ function enable_label_input_fields(
                     const existing_tags = document.querySelectorAll(
                         `.tagify.${label_type.replace(
                             " ",
-                            "."
-                        )} .tagify__tag-text`
+                            ".",
+                        )} .tagify__tag-text`,
                     );
                     const existing_keys_array = Array.prototype.map.call(
                         existing_tags,
                         function (x) {
                             return x.textContent.split(":")[0];
-                        }
+                        },
                     );
 
                     if (
                         existing_keys_array.includes(label_key) &&
+                        // 2339: Property 'state' does not exist on type
+                        // 'Tagify<CheckMKTagifyData>'
+                        // @ts-ignore
                         !t.state.editing
                     ) {
                         return key_error_msg;
@@ -197,12 +194,13 @@ function enable_label_input_fields(
                     for (const existing_label of t.value) {
                         // Do not check the current edited value. KEY would be
                         // always present leading to invalid value
+                        // @ts-ignore
                         if (t.state.editing) {
                             continue;
                         }
                         const existing_key = existing_label.value.split(
                             ":",
-                            1
+                            1,
                         )[0];
 
                         if (label_key == existing_key) {
@@ -243,6 +241,7 @@ function enable_label_input_fields(
             const msg = document.createElement("div");
             msg.classList.add("message", "error", "label_error");
 
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             msg.innerHTML = message;
             element.parentNode!.insertBefore(msg, element.nextSibling);
         });
@@ -271,7 +270,7 @@ function enable_label_input_fields(
                         ident: "label",
                         value: value,
                         params: {world: world},
-                    })
+                    }),
                 );
 
             if (g_previous_timeout_id !== null) {
@@ -283,7 +282,7 @@ function enable_label_input_fields(
                     post_data,
                     tagify,
                     value,
-                    element
+                    element,
                 );
             }, 300);
         });
@@ -305,20 +304,20 @@ function ajax_call_autocomplete_labels(
     post_data: string,
     tagify: Tagify<CheckMKTagifyData>,
     value: string,
-    element: HTMLInputElement
+    element: HTMLInputElement,
 ) {
-    g_ajax_obj = ajax.call_ajax("ajax_vs_autocomplete.py", {
+    g_ajax_obj = call_ajax("ajax_vs_autocomplete.py", {
         method: "POST",
         post_data: post_data,
         response_handler: function (
             handler_data: {value: string; tagify: Tagify<CheckMKTagifyData>},
-            ajax_response: string
+            ajax_response: string,
         ) {
             const response: CMKAjaxReponse<AjaxVsAutocomplete> =
                 JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
-                    "Error [" + response.result_code + "]: " + response.result
+                    "Error [" + response.result_code + "]: " + response.result,
                 ); // eslint-disable-line
                 return;
             }
@@ -333,17 +332,17 @@ function ajax_call_autocomplete_labels(
                 //@ts-ignore // result is just a dict with choices filed so length is undefined!?
                 response.result.length,
                 //@ts-ignore // there is no matching function
-                ...result_objects
+                ...result_objects,
             );
             // render the suggestions dropdown
             handler_data.tagify.loading(false);
             handler_data.tagify.dropdown.show.call(
                 handler_data.tagify,
-                handler_data.value
+                handler_data.value,
             );
 
             const tagify__input = element.parentElement!.querySelector(
-                ".tagify__input"
+                ".tagify__input",
             ) as HTMLElement;
             if (tagify__input) {
                 let max = value.length;
@@ -353,7 +352,7 @@ function ajax_call_autocomplete_labels(
                 const fontSize = parseInt(
                     window
                         .getComputedStyle(tagify__input, null)
-                        .getPropertyValue("font-size")
+                        .getPropertyValue("font-size"),
                 );
                 // Minimum width set by tagify
                 const size = Math.max(110, max * (fontSize / 2 + 1));
@@ -372,7 +371,7 @@ function ajax_call_autocomplete_labels(
 // Handle Enter key in textfields
 export function textinput_enter_submit(
     event: KeyboardEvent,
-    submit: string
+    submit: string,
 ): boolean | void {
     const keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
@@ -380,7 +379,7 @@ export function textinput_enter_submit(
             const button = document.getElementById(submit);
             if (button) button.click();
         }
-        return utils.prevent_default_events(event);
+        return prevent_default_events(event);
     }
 }
 
@@ -389,7 +388,7 @@ export function confirm_dialog(
     optional_args: any,
     confirm_handler: null | (() => void),
     cancel_handler: null | (() => void) = null,
-    deny_handler: null | (() => void) = null
+    deny_handler: null | (() => void) = null,
 ) {
     const default_custom_class_args = {
         title: "confirm_title",
@@ -455,13 +454,13 @@ export function confirm_dialog(
 // Makes a form submittable after explicit confirmation
 export function add_confirm_on_submit(
     form: HTMLFormElement,
-    confirmation_args: RequireConfirmation
+    confirmation_args: RequireConfirmation,
 ) {
     form.addEventListener("submit", e => {
         confirm_dialog(confirmation_args, () => {
             form.submit();
         });
-        return utils.prevent_default_events(e!);
+        return prevent_default_events(e!);
     });
 }
 
@@ -469,10 +468,26 @@ export function add_confirm_on_submit(
 export function confirm_link(
     url: string,
     message: string,
-    custom_args: ConfirmLinkCustomArgs
+    custom_args: ConfirmLinkCustomArgs,
 ) {
     confirm_dialog({...custom_args, html: message}, () => {
-        location.href = url;
+        const form = Object.assign(document.createElement("form"), {
+            method: "POST",
+            action: url,
+        });
+        const csrf_token_input = Object.assign(
+            document.createElement("input"),
+            {
+                type: "hidden",
+                name: "_csrf_token",
+                value: global_csrf_token,
+            },
+        );
+
+        form.appendChild(csrf_token_input);
+        document.body.appendChild(form);
+
+        form.submit();
     });
 }
 
@@ -497,20 +512,20 @@ export function remove_label_filter_hidden_fields(varprefix: string) {
     $("#form_filter > input[type='hidden'][name^='" + varprefix + "']").each(
         function () {
             this.remove();
-        }
+        },
     );
 }
 
 export function replace_error_msg_with_confirm_dialog() {
     const dialog = document.getElementsByClassName(
-        "really"
+        "really",
     )[0] as HTMLDivElement;
     const error_msg = document.getElementsByClassName(
-        "error"
+        "error",
     )[0] as HTMLDivElement;
 
     error_msg.replaceWith(dialog);
-    utils.remove_class(dialog, "hidden");
+    remove_class(dialog, "hidden");
 }
 
 export function add_filter_form_error_listener(elem_id: string) {
@@ -521,7 +536,7 @@ export function add_filter_form_error_listener(elem_id: string) {
         // Disable the form submit button if there are any errors
         const errors: HTMLCollection = elem.getElementsByClassName("error");
         const submit_button = document.getElementById(
-            "_apply"
+            "_apply",
         )! as HTMLInputElement;
         if (errors.length > 0) {
             submit_button.disabled = true;
@@ -535,7 +550,7 @@ export function add_filter_form_error_listener(elem_id: string) {
 
 export function enable_submit_buttons_on_nonempty_input(
     input: HTMLInputElement,
-    submit_ids: string[]
+    submit_ids: string[],
 ) {
     for (const submit_id of submit_ids) {
         const submit = document.getElementById(submit_id) as HTMLInputElement;
@@ -543,10 +558,10 @@ export function enable_submit_buttons_on_nonempty_input(
 
         const submit_container = submit.parentNode as HTMLDivElement;
         if (input.value != "") {
-            utils.remove_class(submit, "disabled");
+            remove_class(submit, "disabled");
             submit_container.title = "";
         } else {
-            utils.add_class(submit, "disabled");
+            add_class(submit, "disabled");
             if (submit_container.dataset.title) {
                 submit_container.title = submit_container.dataset.title;
             }

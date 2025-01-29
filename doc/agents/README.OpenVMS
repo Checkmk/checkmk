@@ -11,7 +11,7 @@ OpenVMS Agent for Check_MK
     - It is a good idea to create the login directory for the
       user who invokes the agent outside of the system disk
       (SYS$SYSDEVICE)
-    - Preferrable create a subdirectory [.bin] for using this
+    - Preferable create a subdirectory [.bin] for using this
       agent
 
 2. Using the agent
@@ -23,7 +23,7 @@ OpenVMS Agent for Check_MK
       can test the agent from an 'external box' using rsh
       (rsh <IP_of_OpenVMS_host> -l <VMSuser> @[.bin]check_mk_agent)
     - Hint:
-      If you are playing with rsh from an other host dont't forget to
+      If you are playing with rsh from an other host don't forget to
       have a look on the login directory of the VMSuser - every rsh call
       produces a logFile!
 

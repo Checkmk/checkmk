@@ -15,6 +15,7 @@ import argparse
 import json
 import logging
 import sys
+import traceback
 from collections.abc import Callable, Sequence
 from types import GeneratorType
 from typing import Any
@@ -68,7 +69,7 @@ class SectionManager:
         self._data.clear()
         sys.stdout.flush()
 
-    def writeline(self, line: Any):  # type: ignore[no-untyped-def]
+    def writeline(self, line: Any) -> None:
         sys.stdout.write(str(line))
         sys.stdout.write("\n")
 
@@ -147,12 +148,13 @@ def _special_agent_main_core(
     try:
         return main_fn(args)
     except CannotRecover as exc:
-        print(exc, file=sys.stderr)
+        sys.stderr.write(f"{exc}\n")
     except Exception:
         if args.debug:
             raise
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
+        sys.stderr.write(f"\n\n{traceback.format_exc()}")
     return 1
 
 

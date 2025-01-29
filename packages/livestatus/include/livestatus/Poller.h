@@ -50,19 +50,19 @@ public:
         addFileDescriptor(fd, e);
         const int retval = poll(timeout);
         if (retval == -1) {
-            generic_error ge{"Polling failed"};
+            const generic_error ge{"Polling failed"};
             Error(logger) << ge;
             return false;
         }
         if (retval == 0) {
             errno = ETIMEDOUT;
-            generic_error ge{"Polling failed"};
+            const generic_error ge{"Polling failed"};
             Debug(logger) << ge;
             return false;
         }
         if (!isFileDescriptorSet(fd, e)) {
             errno = EBADF;
-            generic_error ge{"Polling failed"};
+            const generic_error ge{"Polling failed"};
             Error(logger) << ge;
             return false;
         }

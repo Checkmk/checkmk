@@ -4,7 +4,6 @@
 // source code package.
 #include "livestatus/TableHostGroups.h"
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -17,6 +16,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Query.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
 

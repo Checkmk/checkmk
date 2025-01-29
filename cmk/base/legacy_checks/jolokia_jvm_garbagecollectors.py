@@ -8,11 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def parse_jolokia_jvm_garbagecollectors(string_table):
@@ -36,29 +37,15 @@ def discover_jolokia_jvm_garbagecollectors(section):
     )
 
 
-def transform_units(params):
-    """transform 1/min to 1/s and ms/min to %, pre 1.7.0 rules."""
-    if "collection_time" in params:
-        # new params already!
-        return params
-
-    new_params = {}
-    if "CollectionTime" in params:
-        ms_per_min = params["CollectionTime"]
-        new_params["collection_time"] = (ms_per_min[0] / 600.0, ms_per_min[1] / 600.0)
-    if "CollectionCount" in params:
-        count_rate_per_min = params["CollectionCount"]
-        new_params["collection_count"] = (
-            count_rate_per_min[0] / 60.0,
-            count_rate_per_min[1] / 60.0,
-        )
-    return new_params
-
-
 def check_jolokia_jvm_garbagecollectors(item, params, parsed):
+    yield from check_jolokia_jvm_garbagecollectors_testable(
+        item, params, parsed, get_value_store(), time.time()
+    )
+
+
+def check_jolokia_jvm_garbagecollectors_testable(item, params, parsed, value_store, now):
     if not (data := parsed.get(item)):
         return
-    now = time.time()
     try:
         count = data["CollectionCount"]
         ctime = data["CollectionTime"]
@@ -66,11 +53,9 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
         return
 
     try:
-        count_rate = get_rate(get_value_store(), "%s.count" % item, now, count, raise_overflow=True)
+        count_rate = get_rate(value_store, "%s.count" % item, now, count, raise_overflow=True)
     finally:  # initalize 2nd counter!
-        ctime_rate = get_rate(get_value_store(), "%s.time" % item, now, ctime, raise_overflow=True)
-
-    params = transform_units(params)
+        ctime_rate = get_rate(value_store, "%s.time" % item, now, ctime, raise_overflow=True)
 
     yield check_levels(
         count_rate,
@@ -81,7 +66,7 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
     )
 
     yield check_levels(
-        ctime_rate * 10.0,  # ms/s -> %
+        ctime_rate * 0.1,  # ms/s -> %
         "jvm_garbage_collection_time",
         params.get("collection_time"),
         unit="%",
@@ -90,6 +75,7 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
 
 
 check_info["jolokia_jvm_garbagecollectors"] = LegacyCheckDefinition(
+    name="jolokia_jvm_garbagecollectors",
     parse_function=parse_jolokia_jvm_garbagecollectors,
     service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_garbagecollectors,

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Final, Literal
 
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.ccc import store
+
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 
@@ -70,6 +73,14 @@ def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
     return False
 
 
+def is_two_factor_required(user_id: UserId) -> bool:
+    users_roles = roles_of_user(user_id)
+
+    return any(
+        active_config.roles.get(role_id, {}).get("two_factor", False) for role_id in users_roles
+    )
+
+
 def is_user_with_publish_permissions(
     for_type: Literal["visual", "pagetype"],
     user_id: UserId | None,
@@ -104,7 +115,9 @@ def is_user_with_publish_permissions(
     )
 
 
-def roles_of_user(user_id: UserId | None) -> list[str]:
+def roles_of_user(
+    user_id: UserId | None,
+) -> list[str]:
     def existing_role_ids(role_ids):
         return [role_id for role_id in role_ids if role_id in active_config.roles]
 
@@ -116,10 +129,28 @@ def roles_of_user(user_id: UserId | None) -> list[str]:
         return ["guest"]
     if active_config.users is not None and user_id in active_config.users:
         return ["user"]
-    if user_id is not None and AutomationUserSecret(user_id).exists():
+    if user_id is not None and is_automation_user(user_id):
         return ["guest"]  # unknown user with automation account
     if "roles" in active_config.default_user_profile:
         return existing_role_ids(active_config.default_user_profile["roles"])
     if active_config.default_user_role:
         return existing_role_ids([active_config.default_user_role])
     return []
+
+
+def is_automation_user(user_id: UserId) -> bool:
+    return AutomationUserFile(user_id).load()
+
+
+class AutomationUserFile:
+    def __init__(self, user_id: UserId, profile_dir: Path | None = None) -> None:
+        if profile_dir is None:
+            profile_dir = paths.profile_dir
+        self.path = profile_dir / user_id / "automation_user.mk"
+
+    def load(self) -> bool:
+        return store.load_object_from_file(self.path, default=False)
+
+    def save(self, value: bool) -> None:
+        store.mkdir(self.path.parent)
+        store.save_object_to_file(self.path, value)

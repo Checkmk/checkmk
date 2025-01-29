@@ -3,12 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
+
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
+from cmk.gui.config import Config
+from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -722,7 +728,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Host"),
+            "title": _l("Services of host"),
             "topic": "monitoring",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -766,7 +772,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("Services of Host"),
+            "title": _l("Services of host"),
             "owner": UserId.builtin(),
             "name": "host_export",
             "user_sortable": True,
@@ -810,7 +816,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Hosts"),
+            "title": _l("Services of hosts"),
             "user_sortable": True,
             "single_infos": [],
             "context": {"hostregex": {"host_regex": ""}, "svcstate": {}, "siteopt": {}},
@@ -845,7 +851,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("OK Services of host"),
+            "title": _l("OK services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -883,7 +889,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("WARN Services of host"),
+            "title": _l("WARN services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -959,7 +965,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("UNKNOWN Services of host"),
+            "title": _l("UNKNOWN services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -997,7 +1003,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("PENDING Services of host"),
+            "title": _l("PENDING services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -1887,7 +1893,7 @@ builtin_views.update(
             ],
             "public": True,
             "sorters": [],
-            "title": _l("Status of Host"),
+            "title": _l("Status of host"),
             "topic": "monitoring",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -2550,7 +2556,7 @@ builtin_views.update(
             "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
-            "icon": "event",
+            "icon": "history",
             "layout": "table",
             "mustsearch": False,
             "name": "events",
@@ -2577,7 +2583,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Host & service events"),
+            "title": _l("Events of host & services"),
             "topic": "history",
             "sort_index": 10,
             "user_sortable": True,
@@ -2924,7 +2930,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("OK Services of Site"),
+            "title": _l("OK services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -2982,7 +2988,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("WARN Services of Site"),
+            "title": _l("WARN services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3098,7 +3104,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("UNKNOWN Services of Site"),
+            "title": _l("UNKNOWN services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3156,7 +3162,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Pending Services of Site"),
+            "title": _l("Pending services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3214,7 +3220,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Site"),
+            "title": _l("Services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3461,7 +3467,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Matrix of Performance Data"),
+            "title": _l("Matrix of performance data"),
             "user_sortable": True,
             "owner": UserId.builtin(),
             "public": True,
@@ -3490,7 +3496,7 @@ builtin_views.update(
                 "service_labels": {},
             },
             "datasource": "services",
-            "description": _l("A Matrix of performance data values, grouped by hosts and services"),
+            "description": _l("A matrix of performance data values, grouped by hosts and services"),
             "group_painters": [
                 ColumnSpec(
                     name="host",
@@ -4670,7 +4676,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Host & service history"),
+            "title": _l("Notifications of host & services"),
             "topic": "history",
             "sort_index": 20,
             "user_sortable": True,
@@ -5299,7 +5305,7 @@ builtin_views["cmk_servers"] = {
 
 def cmk_sites_painters() -> Sequence[ColumnSpec]:
     service_painters: list[Any] = []
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_cmc"),
             ColumnSpec(name="invcmksites_dcd"),
@@ -5320,7 +5326,7 @@ def cmk_sites_painters() -> Sequence[ColumnSpec]:
         ColumnSpec(name="invcmksites_stunnel"),
     ]
 
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_npcd"),
         ]
@@ -6124,3 +6130,25 @@ builtin_views.update(
         },
     }
 )
+
+
+@dataclass(frozen=True)
+class BuiltinViewExtender:
+    ident: str
+    callable: Callable[
+        [Mapping[ViewName, ViewSpec], DataSourceRegistry, Config], dict[ViewName, ViewSpec]
+    ]
+
+
+class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
+    def plugin_name(self, instance: BuiltinViewExtender) -> str:
+        return instance.ident
+
+
+def noop_builtin_view_extender(
+    views: Mapping[ViewName, ViewSpec], data_source_registry: DataSourceRegistry, config: Config
+) -> dict[ViewName, ViewSpec]:
+    return {**views}
+
+
+builtin_view_extender_registry = BuiltinViewExtenderRegistry()

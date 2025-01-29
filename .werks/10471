@@ -12,6 +12,6 @@ If the plugin mk_logwatch is configured to send context along with found message
 the amount of data can become quite large. This werk adds the option of limiting
 the context given for every warning or critical message to a given number of lines
 befor and after the message. For instance, to limit the context to 3 lines before
-and four lines after the message, set the option "limitcontext=3,4".
+and four lines after the message, set the option "maxcontextlines=3,4".
 
 This option can be configured using the WATO rule "Text logfiles".

@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.casa import DETECT_CASA
+
+check_info = {}
 
 Section = Mapping[str, Mapping[str, object]]
 
@@ -36,18 +37,19 @@ def inventory_casa_cpu_mem(section: Section) -> Iterable[tuple[str, dict]]:
 def check_casa_cpu_mem(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],
-        (mode, (warn, crit)),
+        (mode, levels),
         metric_name="memused",
     )
 
 
 check_info["casa_cpu_mem"] = LegacyCheckDefinition(
+    name="casa_cpu_mem",
     detect=DETECT_CASA,
     fetch=[
         SNMPTree(
@@ -72,4 +74,5 @@ check_info["casa_cpu_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_casa_cpu_mem,
     check_function=check_casa_cpu_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": None},
 )

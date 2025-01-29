@@ -7,26 +7,29 @@
 import enum
 import os
 import subprocess
+import sys
 from collections.abc import Iterable, Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Literal
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+
 import cmk.utils.cleanup
-import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils import ip_lookup, tty
 from cmk.utils.hostaddress import HostName
 
-import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-import cmk.base.obsolete_output as out
-from cmk.base.config import ConfigCache, IPLookup
+from cmk.base import core_config
+from cmk.base.api.agent_based.register import get_previously_loaded_plugins
+from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 
-# suppress "Cannot find module" error from mypy
+from cmk import trace
 
+tracer = trace.get_tracer()
 
 # .
 #   .--Control-------------------------------------------------------------.
@@ -52,7 +55,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     config_cache: ConfigCache,
-    ip_address_of: IPLookup,
+    ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     *,
     all_hosts: Iterable[HostName],
@@ -74,7 +77,7 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
-    ip_address_of: IPLookup,
+    ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     *,
     all_hosts: Iterable[HostName],
@@ -89,6 +92,7 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
+                plugins=get_previously_loaded_plugins(),
                 ip_address_of=ip_address_of,
                 all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
@@ -98,7 +102,7 @@ def do_restart(
             do_core_action(action, monitoring_core=core.name())
 
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         raise MKBailOut("An error occurred: %s" % e)
 
@@ -132,32 +136,44 @@ def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
     raise ValueError(f"Invalid lock mode: {mode}")
 
 
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()
+
+
 def do_core_action(
     action: CoreAction,
     monitoring_core: Literal["nagios", "cmc"],
     quiet: bool = False,
 ) -> None:
-    if not quiet:
-        out.output("%sing monitoring core..." % action.value.title())
-
-    if monitoring_core == "nagios":
-        os.putenv("CORE_NOVERIFY", "yes")
-        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
-    else:
-        command = ["omd", action.value, "cmc"]
-
-    completed_process = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        check=False,
-    )
-    if completed_process.returncode != 0:
+    with tracer.span(
+        f"do_core_action[{action.value}]",
+        attributes={
+            "cmk.core_config.core": monitoring_core,
+        },
+    ):
         if not quiet:
-            out.output("ERROR: %r\n" % completed_process.stdout)
-        raise MKGeneralException(
-            f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
+            print_("%sing monitoring core..." % action.value.title())
+
+        if monitoring_core == "nagios":
+            os.putenv("CORE_NOVERIFY", "yes")
+            command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
+        else:
+            command = ["omd", action.value, "cmc"]
+
+        completed_process = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            check=False,
         )
-    if not quiet:
-        out.output(tty.ok + "\n")
+        if completed_process.returncode != 0:
+            if not quiet:
+                print_("ERROR: %r\n" % completed_process.stdout)
+            raise MKGeneralException(
+                f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
+            )
+        if not quiet:
+            print_(tty.ok + "\n")

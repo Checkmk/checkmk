@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
+
+check_info = {}
 
 # Example output from agent:
 # <<<openvpn_clients:sep(44)>>>
@@ -56,6 +56,7 @@ def parse_openvpn_clients(string_table: StringTable) -> StringTable:
 
 
 check_info["openvpn_clients"] = LegacyCheckDefinition(
+    name="openvpn_clients",
     parse_function=parse_openvpn_clients,
     service_name="OpenVPN Client %s",
     discovery_function=inventory_openvpn_clients,

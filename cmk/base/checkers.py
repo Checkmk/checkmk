@@ -12,26 +12,29 @@ import itertools
 import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Final, Literal
 
 import livestatus
 
-import cmk.utils.debug
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKTimeout, OnError
+
 import cmk.utils.paths
 import cmk.utils.resulttype as result
-import cmk.utils.tty as tty
-from cmk.utils import password_store
+from cmk.utils import password_store, tty
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, PredictionStore
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -59,8 +62,7 @@ from cmk.checkengine.checkresults import (
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
-from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import Parameters, TimespecificParameters
+from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
 from cmk.checkengine.sectionparserutils import (
@@ -73,20 +75,19 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
-from cmk.base import plugin_contexts
 from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
-    ConfiguredIPLookup,
     get_plugin_parameters,
-    handle_ip_lookup_failure,
+    IPLookup,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import (
     FetcherFactory,
     make_parser,
@@ -94,6 +95,7 @@ from cmk.base.sources import (
     ParserFactory,
     SNMPFetcherConfig,
     Source,
+    SpecialAgentSource,
 )
 
 from cmk.agent_based.prediction_backend import (
@@ -101,9 +103,9 @@ from cmk.agent_based.prediction_backend import (
     lookup_predictive_levels,
     PredictionParameters,
 )
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
-from cmk.agent_based.v1 import State
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 __all__ = [
     "CheckPluginMapper",
@@ -115,7 +117,10 @@ __all__ = [
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
+    "SpecialAgentFetcher",
 ]
+
+type _Labels = Mapping[str, str]
 
 
 def _fetch_all(
@@ -127,7 +132,7 @@ def _fetch_all(
         Snapshot,
     ]
 ]:
-    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA\n")
+    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
     return [
         _do_fetch(
             source.source_info(),
@@ -150,8 +155,8 @@ def _do_fetch(
     result.Result[AgentRawData | SNMPRawData, Exception],
     Snapshot,
 ]:
-    console.debug(f"  Source: {source_info}\n")
-    with CPUTracker(lambda msg: console.debug(msg + "\n")) as tracker:
+    console.debug(f"  Source: {source_info}")
+    with CPUTracker(console.debug) as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
     return source_info, raw_data, tracker.duration
 
@@ -161,14 +166,12 @@ class CMKParser:
         self,
         factory: ParserFactory,
         *,
-        checking_sections: Callable[[HostName], Iterable[SectionName]],
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         self.factory: Final = factory
         self.selected_sections: Final = selected_sections
-        self.checking_sections: Final = checking_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
 
@@ -182,7 +185,7 @@ class CMKParser:
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         """Parse fetched data."""
-        console.debug(f"{tty.yellow}+{tty.normal} PARSE FETCHER RESULTS\n")
+        console.debug(f"{tty.yellow}+{tty.normal} PARSE FETCHER RESULTS")
         output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
         section_cache_path = Path(cmk.utils.paths.var_dir)
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
@@ -193,7 +196,6 @@ class CMKParser:
                     self.factory,
                     source.hostname,
                     source.fetcher_type,
-                    checking_sections=self.checking_sections(source.hostname),
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         fetcher_type=source.fetcher_type,
@@ -269,15 +271,64 @@ def _summarize_host_sections(
     )
 
 
+class SpecialAgentFetcher:
+    def __init__(
+        self,
+        factory: FetcherFactory,
+        *,
+        # alphabetically sorted
+        agent_name: str,
+        cmds: Iterator[SpecialAgentCommandLine],
+        file_cache_options: FileCacheOptions,
+    ) -> None:
+        self.factory: Final = factory
+        self.agent_name: Final = agent_name
+        self.cmds: Final = cmds
+        self.file_cache_options: Final = file_cache_options
+
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
+        tuple[
+            SourceInfo,
+            result.Result[AgentRawData | SNMPRawData, Exception],
+            Snapshot,
+        ]
+    ]:
+        max_age = MaxAge.zero()
+        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+
+        return _fetch_all(
+            [
+                SpecialAgentSource(
+                    self.factory,
+                    host_name,
+                    ip_address,
+                    agent_name=self.agent_name,
+                    stdin=cmd.stdin,
+                    cmdline=cmd.cmdline,
+                    max_age=max_age,
+                    file_cache_path=file_cache_path,
+                )
+                for cmd in self.cmds
+            ],
+            simulation=False,
+            file_cache_options=self.file_cache_options,
+            mode=Mode.DISCOVERY,
+        )
+
+
 class CMKFetcher:
     def __init__(
         self,
         config_cache: ConfigCache,
         factory: FetcherFactory,
+        plugins: agent_based_register.AgentBasedPlugins,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
+        ip_address_of: IPLookup,
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,
@@ -288,8 +339,10 @@ class CMKFetcher:
     ) -> None:
         self.config_cache: Final = config_cache
         self.factory: Final = factory
+        self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
+        self.ip_address_of: Final = ip_address_of
         self.mode: Final = mode
         self.on_error: Final = on_error
         self.password_store_file: Final = password_store_file
@@ -298,7 +351,9 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -350,6 +405,7 @@ class CMKFetcher:
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
+                    self.plugins,
                     current_host_name,
                     current_ip_address,
                     current_ip_stack_config,
@@ -395,9 +451,7 @@ class CMKFetcher:
                         current_ip_address,
                         passwords,
                         self.password_store_file,
-                        ip_address_of=ConfiguredIPLookup(
-                            self.config_cache, error_handler=handle_ip_lookup_failure
-                        ),
+                        ip_address_of=self.ip_address_of,
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
                         current_host_name
@@ -415,57 +469,65 @@ class CMKFetcher:
 
 
 class SectionPluginMapper(SectionMap[SectionPlugin]):
-    # We should probably not tap into the private `register._config` module but
-    # the data we need doesn't seem to be available elsewhere.  Anyway, this is
-    # an *immutable* Mapping so we are actually on the safe side.
+    def __init__(
+        self,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> SectionPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return SectionPlugin(
-            supersedes=plugin.supersedes,
-            parse_function=plugin.parse_function,
-            parsed_section_name=plugin.parsed_section_name,
+        plugin = self._sections.get(__key)
+        return (
+            SectionPlugin.trivial(__key)
+            if plugin is None
+            else SectionPlugin(
+                supersedes=plugin.supersedes,
+                parse_function=plugin.parse_function,
+                parsed_section_name=plugin.parsed_section_name,
+            )
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return len(self._sections)
 
 
 class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
-    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        *,
+        ruleset_matcher: RulesetMatcher,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
         super().__init__()
         self.ruleset_matcher: Final = ruleset_matcher
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return HostLabelPlugin(
-            function=plugin.host_label_function,
-            parameters=partial(
-                get_plugin_parameters,
-                matcher=self.ruleset_matcher,
-                default_parameters=plugin.host_label_default_parameters,
-                ruleset_name=plugin.host_label_ruleset_name,
-                ruleset_type=plugin.host_label_ruleset_type,
-                rules_getter_function=agent_based_register.get_host_label_ruleset,
-            ),
+        plugin = self._sections.get(__key)
+        return (
+            HostLabelPlugin(
+                function=plugin.host_label_function,
+                parameters=partial(
+                    get_plugin_parameters,
+                    matcher=self.ruleset_matcher,
+                    default_parameters=plugin.host_label_default_parameters,
+                    ruleset_name=plugin.host_label_ruleset_name,
+                    ruleset_type=plugin.host_label_ruleset_type,
+                    rules_getter_function=agent_based_register.get_host_label_ruleset,
+                ),
+            )
+            if plugin is not None
+            else HostLabelPlugin.trivial()
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return len(self._sections)
 
 
 class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
@@ -502,10 +564,6 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 self.value_store_manager,
                 clusters=self.clusters,
             )
-            # Whatch out. The CMC has to agree on the path.
-            prediction_store = PredictionStore(
-                cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
-            )
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
@@ -517,29 +575,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
-                # In the past the creation of predictions (and the livestatus query needed)
-                # was performed inside the check plugins context.
-                # We should consider moving this side effect even further up the stack
-                injected_p=InjectedParameters(
-                    meta_file_path_template=prediction_store.meta_file_path_template,
-                    predictions=make_updated_predictions(
-                        prediction_store,
-                        partial(
-                            livestatus.get_rrd_data,
-                            livestatus.LocalConnection(),
-                            host_name,
-                            service.description,
-                        ),
-                        time.time(),
-                    ),
-                ),
-                # Most of the following are only needed for individual plugins, actually.
-                # once we have all of them in this place, we might want to consider how
-                # to optimize these computations.
-                only_from=self.config_cache.only_from(host_name),
-                service_level=self.config_cache.effective_service_level(
-                    host_name, service.description
-                ),
+                parameters=_compute_final_check_parameters(host_name, service, self.config_cache),
             )
 
         return CheckPlugin(
@@ -557,6 +593,50 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         return len(_api.registered_check_plugins)
 
 
+def _compute_final_check_parameters(
+    host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
+) -> Parameters:
+    params = service.parameters.evaluate(timeperiod_active)
+    if not _needs_postprocessing(params):
+        return Parameters(params)
+
+    # Most of the following are only needed for individual plugins, actually.
+    # We delay every computation until needed.
+
+    def make_prediction():
+        # Whatch out. The CMC has to agree on the path.
+        prediction_store = PredictionStore(
+            cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
+        )
+        # In the past the creation of predictions (and the livestatus query needed)
+        # was performed inside the check plug-ins context.
+        # We should consider moving this side effect even further up the stack
+        return InjectedParameters(
+            meta_file_path_template=prediction_store.meta_file_path_template,
+            predictions=make_updated_predictions(
+                prediction_store,
+                partial(
+                    livestatus.get_rrd_data,
+                    livestatus.LocalConnection(),
+                    host_name,
+                    service.description,
+                ),
+                time.time(),
+            ),
+        )
+
+    config = PostprocessingConfig(
+        only_from=lambda: config_cache.only_from(host_name),
+        prediction=make_prediction,
+        service_level=lambda: config_cache.effective_service_level(
+            host_name, service.description, service.labels
+        ),
+        host_name=str(host_name),
+        service_name=str(service.description),
+    )
+    return Parameters({k: postprocess_configuration(v, config) for k, v in params.items()})
+
+
 def _get_check_function(
     plugin: CheckPluginAPI,
     config_cache: ConfigCache,
@@ -569,7 +649,9 @@ def _get_check_function(
     assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            *config_cache.get_clustered_service_configuration(
+                host_name, service.description, service.labels
+            ),
             plugin=plugin,
             service_id=service.id(),
             value_store_manager=value_store_manager,
@@ -580,17 +662,16 @@ def _get_check_function(
 
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
-        with (
-            plugin_contexts.current_service(str(service.check_plugin_name), service.description),
-            value_store_manager.namespace(service.id()),
-        ):
+        with value_store_manager.namespace(service.id()):
             return _aggregate_results(consume_check_results(check_function(*args, **kw)))
 
     return __check_function
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[
+        Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]
+    ],
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     ignore_results, metrics, results = subresults
@@ -679,7 +760,7 @@ def _get_monitoring_data_kwargs(
     source_type: SourceType | None = None,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> tuple[Mapping[str, object], UnsubmittableServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
@@ -695,7 +776,7 @@ def _get_monitoring_data_kwargs(
         nodes = _get_clustered_service_node_keys(
             host_name,
             source_type,
-            service.description,
+            service,
             cluster_nodes=cluster_nodes,
             get_effective_host=get_effective_host,
         )
@@ -721,14 +802,18 @@ def _get_monitoring_data_kwargs(
 def _get_clustered_service_node_keys(
     cluster_name: HostName,
     source_type: SourceType,
-    service_descr: ServiceName,
+    service: ConfiguredService,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
     used_nodes = (
-        [nn for nn in cluster_nodes if cluster_name == get_effective_host(nn, service_descr)]
+        [
+            nn
+            for nn in cluster_nodes
+            if cluster_name == get_effective_host(nn, service.description, service.labels)
+        ]
         or cluster_nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
@@ -745,12 +830,10 @@ def get_aggregated_result(
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
-    injected_p: InjectedParameters,
+    parameters: Mapping[str, object],
     rtc_package: AgentRawData | None,
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
-    only_from: None | str | list[str],
-    service_level: int,
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
     #
@@ -808,22 +891,14 @@ def get_aggregated_result(
         )
 
     item_kw = {} if service.item is None else {"item": service.item}
-    params_kw = (
-        {}
-        if plugin.check_default_parameters is None
-        else {
-            "params": _final_read_only_check_parameters(
-                service.parameters, injected_p, only_from, service_level
-            )
-        }
-    )
+    params_kw = {} if plugin.check_default_parameters is None else {"params": parameters}
 
     try:
         check_result = check_function(**item_kw, **params_kw, **section_kws)
     except MKTimeout:
         raise
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         check_result = SubmittableServiceCheckResult(
             3,
@@ -863,32 +938,6 @@ def get_aggregated_result(
     )
 
 
-def _final_read_only_check_parameters(
-    entries: TimespecificParameters | LegacyCheckParameters,
-    injected_p: InjectedParameters,
-    only_from: None | str | list[str],
-    service_level: int,
-) -> Parameters:
-    params = (
-        entries.evaluate(timeperiod_active)
-        if isinstance(entries, TimespecificParameters)
-        else entries
-    )
-    return Parameters(
-        # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
-        # wrap_parameters is a no-op for dictionaries.
-        # For auto-migrated plugins expecting tuples, they will be
-        # unwrapped by a decorator of the original check_function.
-        wrap_parameters(
-            (
-                postprocess_configuration(params, injected_p, only_from, service_level)
-                if _needs_postprocessing(params)
-                else params
-            ),
-        )
-    )
-
-
 def _needs_postprocessing(params: object) -> bool:
     match params:
         case tuple(("cmk_postprocessed", str(), _)):
@@ -902,12 +951,19 @@ def _needs_postprocessing(params: object) -> bool:
     return False
 
 
+@dataclass
+class PostprocessingConfig:
+    only_from: Callable[[], None | str | list[str]]
+    prediction: Callable[[], InjectedParameters]
+    service_level: Callable[[], int]
+    host_name: str
+    service_name: str
+
+
 def postprocess_configuration(
-    params: LegacyCheckParameters | Mapping[str, object],
-    injected_p: InjectedParameters,
-    only_from: None | str | list[str],
-    service_level: int,
-) -> LegacyCheckParameters | Mapping[str, object]:
+    params: object,
+    postprocessing_config: PostprocessingConfig,
+) -> object:
     """Postprocess configuration parameters.
 
     Parameters consisting of a 3-tuple with the first element being
@@ -923,26 +979,26 @@ def postprocess_configuration(
     rid of the recursion).
     """
     match params:
-        case tuple(("cmk_postprocessed", "predictive_levels", value)):
-            return _postprocess_predictive_levels(value, injected_p)
+        case tuple(("cmk_postprocessed", "host_name", _)):
+            return postprocessing_config.host_name
         case tuple(("cmk_postprocessed", "only_from", _)):
-            return only_from
+            return postprocessing_config.only_from()
+        case tuple(("cmk_postprocessed", "predictive_levels", value)):
+            return _postprocess_predictive_levels(value, postprocessing_config.prediction())
         case tuple(("cmk_postprocessed", "service_level", _)):
-            return service_level
+            return postprocessing_config.service_level()
+        case tuple(("cmk_postprocessed", "service_name", _)):
+            return postprocessing_config.service_name
         case tuple():
-            return tuple(
-                postprocess_configuration(v, injected_p, only_from, service_level) for v in params
-            )
+            return tuple(postprocess_configuration(v, postprocessing_config) for v in params)
         case list():
-            return list(
-                postprocess_configuration(v, injected_p, only_from, service_level) for v in params
-            )
+            return list(postprocess_configuration(v, postprocessing_config) for v in params)
         case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
-                    injected_p.model_dump()
+                    postprocessing_config.prediction().model_dump()
                     if k == "__injected__"
-                    else postprocess_configuration(v, injected_p, only_from, service_level)
+                    else postprocess_configuration(v, postprocessing_config)
                 )
                 for k, v in params.items()
             }
@@ -980,7 +1036,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         self.ruleset_matcher: Final = ruleset_matcher
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
-        # `get_check_plugin()` is not an error.  Both check plugins and
+        # `get_check_plugin()` is not an error.  Both check plug-ins and
         # discovery are declared together in the check API.
         plugin = _api.get_check_plugin(__key)
         if plugin is None:
@@ -994,7 +1050,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
                 AutocheckEntry(
                     check_plugin_name=check_plugin_name,
                     item=service.item,
-                    parameters=unwrap_parameters(service.parameters),
+                    parameters=service.parameters,
                     service_labels={label.name: label.value for label in service.labels},
                 )
                 for service in plugin.discovery_function(*args, **kw)
@@ -1004,9 +1060,9 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             sections=plugin.sections,
             service_name=plugin.service_name,
             function=__discovery_function,
-            parameters=partial(
-                get_plugin_parameters,
+            parameters=_make_discovery_parameters_getter(
                 matcher=self.ruleset_matcher,
+                check_plugin_name=plugin.name,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,
@@ -1021,6 +1077,46 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         return len(_api.registered_check_plugins)
 
 
+def _make_discovery_parameters_getter(
+    matcher: RulesetMatcher,
+    check_plugin_name: CheckPluginName,
+    *,
+    default_parameters: ParametersTypeAlias | None,
+    ruleset_name: RuleSetName | None,
+    ruleset_type: Literal["all", "merged"],
+    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
+) -> Callable[[HostName], None | Parameters | list[Parameters]]:
+    def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
+        params = get_plugin_parameters(
+            host_name,
+            matcher,
+            default_parameters=default_parameters,
+            ruleset_name=ruleset_name,
+            ruleset_type=ruleset_type,
+            rules_getter_function=rules_getter_function,
+        )
+
+        #
+        # We have to add an artificial parameter, the host name.
+        # We really should rewrite the logwatch plugins :-(
+        #
+        if str(check_plugin_name) not in {
+            "logwatch_ec",
+            "logwatch_ec_single",
+            "logwatch",
+            "logwatch_groups",
+        }:
+            return params
+
+        if params is None:
+            return Parameters({"host_name": host_name})
+        if isinstance(params, Parameters):  # we don't need this case, but let's be consistent.
+            return Parameters({**params, "host_name": host_name})
+        return [Parameters({**p, "host_name": host_name}) for p in params]
+
+    return get_discovery_parameters
+
+
 class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
     # See comment to SectionPluginMapper.
     def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
@@ -1029,6 +1125,7 @@ class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
             sections=plugin.sections,
             function=plugin.inventory_function,
             ruleset_name=plugin.inventory_ruleset_name,
+            defaults=plugin.inventory_default_parameters,
         )
 
     def __iter__(self) -> Iterator[InventoryPluginName]:

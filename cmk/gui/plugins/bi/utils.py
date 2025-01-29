@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: This module is absolutely useless.
-# pylint: disable=unused-import
+
 
 from cmk.bi.lib import ABCBIAction as ABCBIAction
 from cmk.bi.lib import ABCBIAggregationFunction as ABCBIAggregationFunction

@@ -1,0 +1,168 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+:root {
+  /* Colors */
+  --success: rgb(19, 211, 137);
+  --success-dimmed: rgb(17 188 122);
+  --success-dimmed-2: rgb(13 141 91);
+
+  --white: rgb(255, 255, 255);
+  --white-dimmed: rgba(255, 255, 255, 0.5);
+  --black: rgb(0, 0, 0);
+  --grey-4: rgb(51, 51, 51);
+  --grey-4-dimmed: rgba(51, 51, 51, 0.8);
+  --error-msg-bg-color: rgba(200, 50, 50, 0.15);
+  --form-readonly-error-bg-color: rgb(252, 85, 85);
+  --tag-added-color-light: rgb(6, 103, 193);
+  --tag-color: rgb(0, 168, 181);
+  --tag-discovered-color: rgb(119, 72, 152);
+  --tag-explicit-color: rgba(243, 174, 75);
+  --tag-ruleset-color: rgba(222, 67, 131);
+  --default-help-icon-bg-color: rgb(6, 103, 193);
+  --default-help-icon-bg-color-hover: rgb(56, 133, 205);
+  --scrollbar-color: rgb(78, 93, 105);
+
+  /* Fonts */
+  --font-size-xlarge: 16px;
+  --font-size-large: 14px;
+  --font-size-normal: 12px;
+  --font-weight-default: 400;
+  --font-weight-bold: 700;
+
+  /* Spacings */
+  --spacing: 10px;
+  --spacing-half: 5px;
+
+  /* Borders */
+  --border-radius: 4px;
+
+  /* Icons that are only defined for facelift, so without dark variant */
+  --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
+  --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
+  --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
+  --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
+  --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
+  --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.svg');
+  --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+  --icon-alert-warn: url('~cmk-frontend/src/themes/facelift/images/icon_alert_warn.png');
+  --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
+  --icon-about-checkmk: url('~cmk-frontend/src/themes/facelift/images/icon_about_checkmk.svg');
+  --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
+  --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
+  --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
+
+  /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
+  --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
+  --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');
+  --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
+
+  --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
+}
+
+@layer theme {
+  body[data-theme='facelift'] {
+    /* Base colors */
+    --ux-theme-0: rgb(249, 249, 255);
+    --ux-theme-1: rgb(245, 245, 251);
+    --ux-theme-2: rgb(239, 239, 245);
+    --ux-theme-3: rgb(235, 235, 241);
+    --ux-theme-4: rgb(232, 232, 238);
+    --ux-theme-5: rgb(224, 224, 228);
+    --ux-theme-6: rgb(204, 207, 219);
+
+    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
+
+    /* Fonts */
+    --font-color: var(--grey-4);
+    --font-color-dimmed: var(--grey-4-dimmed);
+
+    /* Icons */
+    --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
+    --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/src/themes/facelift/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/src/themes/facelift/images/icon_drag.svg');
+
+    --icon-info-circle: url('~cmk-frontend/src/themes/facelift/images/icon_info_circle.svg');
+    --icon-tree-closed: url('~cmk-frontend/src/themes/facelift/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action.svg');
+
+    /* Colors */
+    --default-submit-button-border-color: var(--success-dimmed);
+    --default-border-color: rgb(234 234 234);
+    --default-bg-color: var(--ux-theme-0);
+    --default-table-th-color: rgb(232 232 238);
+    --default-form-element-bg-color: var(--ux-theme-5);
+    --default-form-element-bg-color-disabled: var(--ux-theme-6);
+    --default-form-element-border-color: rgb(183, 180, 180);
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+    --default-button-emphasis-color: rgb(13, 141, 91);
+    --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(233, 233, 233);
+    --default-tooltip-background-color: rgb(233, 233, 233);
+    --default-tooltip-text-color: rgb(17, 24, 29);
+    --custom-scroll-bar-thumb-border-color: rgb(234, 234, 234);
+    --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
+    --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
+    --default-component-bg-color: rgb(240, 240, 240);
+    --help-text-bg-color: var(--ux-theme-3);
+    --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
+    --form-element-required-color: var(--success-dimmed-2);
+    --input-hover-bg-color: var(--ux-theme-4);
+  }
+
+  body[data-theme='modern-dark'] {
+    /* Base colors */
+    --ux-theme-0: rgb(17, 24, 29);
+    --ux-theme-1: rgb(28, 34, 40);
+    --ux-theme-2: rgb(32, 39, 46);
+    --ux-theme-3: rgb(38, 47, 56);
+    --ux-theme-4: rgb(38, 45, 52);
+    --ux-theme-5: rgb(48, 57, 70);
+    --ux-theme-6: rgb(53, 63, 74);
+
+    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
+
+    /* Fonts */
+    --font-color: var(--white);
+    --font-color-dimmed: var(--white-dimmed);
+
+    /* Icons */
+    --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
+    --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/src/themes/modern-dark/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/src/themes/modern-dark/images/icon_drag.svg');
+
+    --icon-info-circle: url('~cmk-frontend/src/themes/modern-dark/images/icon_info_circle.svg');
+    --icon-tree-closed: url('~cmk-frontend/src/themes/modern-dark/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/src/themes/modern-dark/images/icon_search_action.svg');
+
+    /* Colors */
+    --default-submit-button-border-color: rgb(8 94 61);
+    --default-border-color: rgb(38 45 52);
+    --default-bg-color: var(--ux-theme-1);
+    --default-table-th-color: var(--ux-theme-2);
+    --default-form-element-bg-color: var(--ux-theme-5);
+    --default-form-element-bg-color-disabled: var(--ux-theme-3);
+    --default-form-element-border-color: rgb(69, 77, 89);
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+    --default-button-emphasis-color: rgb(19, 211, 137);
+    --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(83, 83, 83);
+    --default-tooltip-background-color: rgb(17, 24, 29);
+    --default-tooltip-text-color: var(--white);
+    --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
+    --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
+    --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
+    --default-component-bg-color: rgb(46, 44, 44);
+    --help-text-bg-color: var(--ux-theme-3);
+    --help-text-font-color: var(--white);
+    --form-element-required-color: var(--success);
+    --input-hover-bg-color: var(--ux-theme-4);
+  }
+}

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -43,7 +43,7 @@ def discover_arbor_disk_usage(section: int) -> DiscoveryResult:
 
 
 def check_arbor_disk_usage(item: str, params: Mapping[str, Any], section: int) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section, levels_upper=params["levels"], label="Disk usage", render_func=render.percent
     )
     yield Metric("disk_utilization", float(section) / 100.0)

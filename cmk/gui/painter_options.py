@@ -10,16 +10,16 @@ import time
 from collections.abc import Sequence
 from typing import Any
 
-import cmk.utils.render
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
-import cmk.gui.forms as forms
-import cmk.gui.valuespec as valuespec
+import cmk.utils.render
+
+from cmk.gui import forms, valuespec
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
@@ -254,7 +254,7 @@ def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     return int(start_time), int(end_time)
 
 
-def paint_age_or_never(  # pylint: disable=redefined-outer-name
+def paint_age_or_never(
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
@@ -281,7 +281,7 @@ def paint_age_or_never(  # pylint: disable=redefined-outer-name
     )
 
 
-def paint_age(  # pylint: disable=redefined-outer-name
+def paint_age(
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,

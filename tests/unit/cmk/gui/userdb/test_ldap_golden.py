@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 # Golden Tests for the LDAP connector
 # trying to capture the current behavior of the connector to facilitate refactoring
@@ -16,12 +15,13 @@ import ldap  # type: ignore[import-untyped]
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+
+from cmk.crypto.password import Password
 
 
 @pytest.fixture(name="mock_ldap", autouse=True)
@@ -135,11 +135,11 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
 
 def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     ldap_result = [
-        ("user1", {"uid": ["USER1_ID"]}),
-        ("user2", {"uid": ["USER2_ID#"]}),  # user with invalid user ID
+        ("user1", {"uid": [b"USER1_ID"]}),
+        ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
     ]
     # note that the key is lower-cased due to 'lower_user_ids'
-    expected_result = {"user1_id": {"dn": "user1", "uid": ["USER1_ID"]}}
+    expected_result = {"user1_id": {"dn": ["user1"], "uid": ["USER1_ID"]}}
     add_filter = "my(*)filter"
     expected_filter = f"(&(objectclass=person){add_filter})"
 
@@ -182,10 +182,13 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         UserId("bob"): {"connector": connector.id},
         UserId("david"): {"connector": connector.id, "alias": "dave"},
     }
-    ldap_users = {"carol": {"connector": connector.id}, "david": {"connector": connector.id}}
+    ldap_users = {
+        "carol": {"connector": connector.id},
+        "david": {"connector": connector.id},
+        "alice": {"connector": connector.id},
+    }
 
     def assert_expected_users(users_to_save: Users, _now: datetime.datetime) -> None:
-        # bob is gone, carol is added, davids alias stays the same
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
         assert UserId("bob") not in users_to_save
@@ -194,6 +197,8 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         assert users_to_save[UserId("carol")]["alias"] == "carol"
         assert UserId("david") in users_to_save
         assert users_to_save[UserId("david")]["alias"] == "dave"
+        assert UserId("alice@LDAP_SUFFIX") in users_to_save
+        assert users_to_save[UserId("alice@LDAP_SUFFIX")]["connector"] == connector.id
 
     mocker.patch.object(connector, "get_users", return_value=ldap_users)
     connector.do_sync(
@@ -209,11 +214,11 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
     connector.connect()
     assert connector._ldap_obj
 
-    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
     result = connector.check_credentials(UserId("carol"), Password("hunter2"))
 
     connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
-    assert result == UserId("carol_id@LDAP_SUFFIX")
+    assert result == UserId("carol_id")
 
 
 def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
@@ -221,7 +226,7 @@ def test_check_credentials_invalid(mocker: MockerFixture, request_context: None)
     connector.connect()
     assert connector._ldap_obj
 
-    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
     _mock_simple_bind_s(mocker, connector)
     assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
 
@@ -233,3 +238,42 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
     assert connector.check_credentials(UserId("alice"), Password("hunter2")) is None
+
+
+def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
+    cfg = LDAPUserConnectionConfig(
+        id="test-trailing-dot-server",
+        directory_type=(
+            "openldap",
+            LDAPConnectionConfigFixed(
+                connect_to=(
+                    "fixed_list",
+                    Fixed(
+                        server="lolcathorst.",
+                    ),
+                )
+            ),
+        ),
+        user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+        user_scope="sub",
+        user_id_umlauts="keep",
+        group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
+        group_scope="sub",
+        active_plugins={"email": {}},
+        cache_livetime=300,
+        type="ldap",
+        bind=("bind_dn", ("store", "ldap_golden_unknown_password")),  # not in password_store
+        version=2,
+        connect_timeout=0.1,
+        lower_user_ids=True,
+        suffix="TEST_TRAILING_DOT",
+        disabled=False,
+        description="",
+        comment="",
+        docu_url="",
+    )
+
+    connector = LDAPUserConnector(cfg)
+    connector.connect()
+
+    mock_ldap.assert_called_with("ldap://lolcathorst", trace_level=0, trace_file=None)

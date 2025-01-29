@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
+from cmk.plugins.collection.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
 
 from .checktestlib import Check
 
@@ -192,7 +192,7 @@ def test_parse_allnet_ip_sensoric() -> None:
 
 
 def test_inventory_allnet_ip_sensoric_humidity() -> None:
-    assert Check("allnet_ip_sensoric.humidity").run_discovery(_SECTION) == [
+    assert Check("allnet_ip_sensoric_humidity").run_discovery(_SECTION) == [
         ("Feuchtigkeit Sensor 105", {}),
         ("Serverraum Sensor 113", {}),
         ("Humidity1 Sensor 2", {}),

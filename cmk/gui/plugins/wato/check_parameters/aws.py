@@ -649,15 +649,15 @@ def _vs_limits_vcpu_families():
                 for inst_fam, fam_name in AWSEC2InstFamilies.items()
             ],
         ),
-        title=_("Set limits and levels for running on-demand vCPUs on instance Families"),
+        title=_("Set limits and levels for running on-demand vCPUs on instance families"),
     )
 
 
 def _parameter_valuespec_aws_ec2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP Addresses"), 5)),
-            ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP Addresses"), 5)),
+            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP addresses"), 5)),
+            ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP addresses"), 5)),
             ("vpc_sec_group_rules", vs_aws_limits(_("Rules of VPC security group"), 120)),
             ("vpc_sec_groups", vs_aws_limits(_("VPC security groups"), 2500)),
             (
@@ -1001,7 +1001,7 @@ def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
                 "network_load_balancer_target_groups",
                 vs_aws_limits(_("Network Load Balancer Target Groups"), 3000),
             ),
-            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers Target Groups"), 3000)),
+            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers target groups"), 3000)),
         ]
     )
 
@@ -1541,7 +1541,7 @@ def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
 
 def _parameter_valuespec_aws_dynamodb_capacity() -> Dictionary:
     return Dictionary(
-        title=_("Levels on Read/Write Capacity"),
+        title=_("Levels on read/write capacity"),
         elements=[
             (
                 "levels_read",

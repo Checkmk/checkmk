@@ -13,9 +13,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
-import cmk.utils.debug
+import cmk.ccc.debug
+
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.rulesets import RuleSetName
@@ -62,6 +63,7 @@ __all__ = [
 
 _SDPATH_HARDWARE = (SDNodeName("hardware"),)
 _SDPATH_SOFTWARE = (SDNodeName("software"),)
+_SDPATH_NETWORKING = (SDNodeName("networking"),)
 _SDPATH_SOFTWARE_PACKAGES = (SDNodeName("software"), SDNodeName("packages"))
 _SDPATH_CLUSTER = (
     SDNodeName("software"),
@@ -87,6 +89,7 @@ class InventoryPlugin:
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
+    defaults: Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -94,9 +97,10 @@ class HWSWInventoryParameters:
     hw_changes: int
     sw_changes: int
     sw_missing: int
+    nw_changes: int
 
     # Do not use source states which would overwrite "State when
-    # inventory fails" in the ruleset "Do hardware/software Inventory".
+    # inventory fails" in the ruleset "Do HW/SW Inventory".
     # These are handled by the "Check_MK" service
     fail_status: int
     status_data_inventory: bool
@@ -107,6 +111,7 @@ class HWSWInventoryParameters:
             hw_changes=int(raw_parameters.get("hw-changes", 0)),
             sw_changes=int(raw_parameters.get("sw-changes", 0)),
             sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            nw_changes=int(raw_parameters.get("nw-changes", 0)),
             fail_status=int(raw_parameters.get("inv-fail-status", 1)),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
@@ -116,7 +121,7 @@ class HWSWInventoryParameters:
 class CheckInventoryTreeResult:
     processing_failed: bool
     no_data_or_files: bool
-    check_result: ActiveCheckResult
+    check_results: Sequence[ActiveCheckResult]
     inventory_tree: MutableTree
     update_result: UpdateResult
 
@@ -140,9 +145,9 @@ def inventorize_host(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host)
+    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
 
     providers = make_providers(
         host_sections_by_host,
@@ -180,20 +185,18 @@ def inventorize_host(
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,
         no_data_or_files=no_data_or_files,
-        check_result=ActiveCheckResult.from_subresults(
-            *itertools.chain(
-                _check_fetched_data_or_trees(
-                    parameters=parameters,
-                    inventory_tree=trees.inventory,
-                    status_data_tree=trees.status_data,
-                    previous_tree=previous_tree,
-                    processing_failed=processing_failed,
-                    no_data_or_files=no_data_or_files,
-                ),
-                (r for r in summarizer(host_sections) if r.state != 0),
-                check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
-            )
-        ),
+        check_results=[
+            *_check_fetched_data_or_trees(
+                parameters=parameters,
+                inventory_tree=trees.inventory,
+                status_data_tree=trees.status_data,
+                previous_tree=previous_tree,
+                processing_failed=processing_failed,
+                no_data_or_files=no_data_or_files,
+            ),
+            *(r for r in summarizer(host_sections) if r.state != 0),
+            *check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
+        ],
         inventory_tree=trees.inventory,
         update_result=update_result,
     )
@@ -209,13 +212,13 @@ def inventorize_cluster(
     return CheckInventoryTreeResult(
         processing_failed=False,
         no_data_or_files=False,
-        check_result=ActiveCheckResult.from_subresults(
-            *_check_trees(
+        check_results=list(
+            _check_trees(
                 parameters=parameters,
                 inventory_tree=inventory_tree,
                 status_data_tree=MutableTree(),
                 previous_tree=previous_tree,
-            ),
+            )
         ),
         inventory_tree=inventory_tree,
         update_result=UpdateResult(),
@@ -331,7 +334,7 @@ def _collect_inventory_plugin_items(
                 )
             ):
                 console.debug(
-                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)\n"
+                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)"
                 )
                 continue
 
@@ -352,13 +355,13 @@ def _collect_inventory_plugin_items(
                     for item in inventory_plugin.function(**kwargs)
                 ]
             except Exception as exception:
-                # TODO(ml): What is the `if cmk.utils.debug.enabled()` actually good for?
-                if cmk.utils.debug.enabled():
+                # TODO(ml): What is the `if cmk.ccc.debug.enabled()` actually good for?
+                if cmk.ccc.debug.enabled():
                     raise
 
                 console.warning(
-                    console.format_warning(
-                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}\n"
+                    tty.format_warning(
+                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}"
                     )
                 )
                 continue
@@ -384,7 +387,7 @@ def _collect_inventory_plugin_items(
                 ),
             )
 
-            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
+            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok")
 
 
 _TV = TypeVar("_TV", bound=Attributes | TableRow)
@@ -489,7 +492,7 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
 # longer than their validity period.
 #
 # 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
-#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW inventory
+#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW Inventory
 #     entities'.
 #
 # 2.) Process collected cache infos - handle the following four cases via AttributesUpdater,
@@ -621,7 +624,7 @@ def _check_trees(
 
     yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
 
-    if parameters.sw_missing and inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
+    if parameters.sw_missing and not inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
     if previous_tree.get_tree(_SDPATH_SOFTWARE) != inventory_tree.get_tree(_SDPATH_SOFTWARE):
@@ -629,6 +632,9 @@ def _check_trees(
 
     if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
+
+    if previous_tree.get_tree(_SDPATH_NETWORKING) != inventory_tree.get_tree(_SDPATH_NETWORKING):
+        yield ActiveCheckResult(parameters.nw_changes, "networking changes")
 
     if status_data_tree:
         yield ActiveCheckResult(0, f"Found {len(status_data_tree)} status entries")

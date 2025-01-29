@@ -4,9 +4,27 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as forms from "./forms";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {confirm_dialog} from "./forms";
+import {
+    add_class,
+    add_event_handler,
+    browser,
+    get_button,
+    get_theme,
+    has_class,
+    is_window_active,
+    makeuri,
+    makeuri_contextless,
+    page_height,
+    page_width,
+    prevent_default_events,
+    reload_whole_page,
+    remove_class,
+    update_contents,
+    update_header_timer,
+    update_url_parameter,
+} from "./utils";
 
 interface Dashlet {
     x: number;
@@ -59,27 +77,27 @@ export let dashboard_properties = {} as DashboardPropertiesGlobal;
 
 // Set the dashboard as a start URL for the user
 export function set_start_url(dashboard_name: string) {
-    ajax.call_ajax(
+    call_ajax(
         "ajax_set_dashboard_start_url.py?name=" +
             encodeURIComponent(dashboard_name),
         {
             response_handler: (_handler_data: any, response_body: string) => {
                 const response = JSON.parse(response_body);
                 if (response.result_code === 0) {
-                    utils.reload_whole_page();
+                    reload_whole_page();
                 } else {
-                    forms.confirm_dialog(
+                    confirm_dialog(
                         {
                             text: response.result,
                             confirmButtonText: "OK",
                             showCancelButton: false,
                         },
-                        null
+                        null,
                     );
                 }
             },
             method: "POST",
-        }
+        },
     );
 }
 
@@ -100,6 +118,7 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
 
     const tmp_refresh_dashlets = refresh_dashlets.map<
         [number, number, string | (() => void)]
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
     >(elem => [elem[0], elem[1], eval(elem[2])]);
 
     const tmp_on_resize_dashlets: Record<
@@ -107,6 +126,7 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
         string | undefined | (() => void)
     > = {};
     for (const key in on_resize_dashlets) {
+        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
         tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!);
     }
 
@@ -202,7 +222,7 @@ function size_dashlets() {
                         (
                             (g_resizing as HTMLElement).parentNode!
                                 .parentNode as HTMLElement
-                        ).id.replace("dashlet_", "")
+                        ).id.replace("dashlet_", ""),
                     ) != d_number
                 ) {
                     dashlet_resized(d_number, oDashInner);
@@ -219,7 +239,7 @@ function size_dashlets() {
 }
 
 export function adjust_single_metric_font_size(
-    oTdMetricValue: HTMLTableCellElement
+    oTdMetricValue: HTMLTableCellElement,
 ) {
     const originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
     const oAMetricValue = oTdMetricValue.childNodes[0] as HTMLAnchorElement;
@@ -236,7 +256,7 @@ export function adjust_single_metric_font_size(
 function set_control_size(
     dash_controls: HTMLElement,
     width: number,
-    height: number
+    height: number,
 ) {
     dash_controls.style.width =
         width -
@@ -282,7 +302,7 @@ class Vec {
     make_absolute(size_v: Vec) {
         return new Vec(
             this.x < 0 ? this.x + size_v.x + 1 : this.x - 1,
-            this.y < 0 ? this.y + size_v.y + 1 : this.y - 1
+            this.y < 0 ? this.y + size_v.y + 1 : this.y - 1,
         );
     }
 
@@ -294,13 +314,13 @@ class Vec {
             this.x == dashboard_properties.MAX
                 ? grid_v.x - Math.abs(pos_v.x) + 1
                 : this.x == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[0]
-                : this.x,
+                  ? dashboard_properties.dashlet_min_size[0]
+                  : this.x,
             this.y == dashboard_properties.MAX
                 ? grid_v.y - Math.abs(pos_v.y) + 1
                 : this.y == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[1]
-                : this.y
+                  ? dashboard_properties.dashlet_min_size[1]
+                  : this.y,
         );
     }
 
@@ -311,7 +331,7 @@ class Vec {
     compute_grow_by(size_v: Vec) {
         return new Vec(
             size_v.x != dashboard_properties.GROW ? 0 : this.x < 0 ? -1 : 1,
-            size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1
+            size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1,
         );
     }
 
@@ -385,7 +405,7 @@ function calculate_dashlets() {
         left: number,
         top: number,
         right: number,
-        bottom: number
+        bottom: number,
     ) {
         let x, y;
         // Try if all needed squares are free
@@ -483,8 +503,8 @@ export function calculate_dashboard() {
 
     g_dashboard_top = dashboard_rect.top;
     g_dashboard_left = dashboard_rect.left;
-    g_dashboard_width = utils.page_width() || 0 - g_dashboard_left;
-    g_dashboard_height = utils.page_height() || 0 - g_dashboard_top;
+    g_dashboard_width = (page_width() || 0) - g_dashboard_left;
+    g_dashboard_height = (page_height() || 0) - g_dashboard_top;
     oDash.style.width = g_dashboard_width + "px";
     oDash.style.height = g_dashboard_height + "px";
 
@@ -495,7 +515,7 @@ export function calculate_dashboard() {
 export function execute_dashboard_scheduler(initial: number) {
     // Stop reload of the dashlets in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!utils.is_window_active()) {
+    if (!is_window_active()) {
         setTimeout(function () {
             execute_dashboard_scheduler(initial);
         }, 250);
@@ -518,7 +538,7 @@ export function execute_dashboard_scheduler(initial: number) {
                 if (url.indexOf("?") !== -1)
                     url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else url += "?mtime=" + dashboard_properties.dashboard_mtime;
-                ajax.call_ajax(url, {
+                call_ajax(url, {
                     response_handler: dashboard_update_contents,
                     handler_data: "dashlet_inner_" + nr,
                 });
@@ -530,7 +550,7 @@ export function execute_dashboard_scheduler(initial: number) {
 
     // Update timestamp every minute
     // Required if there are no refresh_dashlets present or all refresh times are > 60sec
-    if (timestamp % 60 == 0) utils.update_header_timer();
+    if (timestamp % 60 == 0) update_header_timer();
 
     setTimeout(function () {
         execute_dashboard_scheduler(0);
@@ -538,10 +558,10 @@ export function execute_dashboard_scheduler(initial: number) {
 }
 
 function dashboard_update_contents(id: string, response_text: string) {
-    utils.update_header_timer();
+    update_header_timer();
 
     // Call the generic function to replace the dashlet inner code
-    utils.update_contents(id, response_text);
+    update_contents(id, response_text);
 }
 
 //
@@ -552,16 +572,16 @@ let g_editing = false;
 
 export function toggle_dashboard_edit(
     edit_text?: string,
-    display_text?: string
+    display_text?: string,
 ) {
     g_editing = !g_editing;
 
     // Toggle the page menu elements
     const toggle_suggestion = document.getElementById(
-        "menu_suggestion_toggle_edit"
+        "menu_suggestion_toggle_edit",
     );
     const toggle_shortcut = document.getElementById(
-        "menu_shortcut_toggle_edit"
+        "menu_shortcut_toggle_edit",
     );
     const toggle_entry = document.getElementById("menu_entry_toggle_edit");
 
@@ -574,11 +594,11 @@ export function toggle_dashboard_edit(
 
     if (g_editing) {
         const icon_disable =
-            "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
+            "themes/" + get_theme() + "/images/emblem_disable.svg";
         if (toggle_suggestion)
             (
                 toggle_suggestion.querySelector(
-                    "img.emblem"
+                    "img.emblem",
                 ) as HTMLImageElement
             ).src = icon_disable;
         (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
@@ -590,7 +610,7 @@ export function toggle_dashboard_edit(
         if (toggle_suggestion)
             (
                 toggle_suggestion.querySelector(
-                    "img.emblem"
+                    "img.emblem",
                 ) as HTMLImageElement
             ).src = icon_trans;
         (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
@@ -600,22 +620,22 @@ export function toggle_dashboard_edit(
     }
 
     const dashlet_divs = document.getElementsByClassName(
-        "dashlet"
+        "dashlet",
     ) as HTMLCollectionOf<HTMLElement>;
     for (let i = 0; i < dashlet_divs.length; i++)
         dashlet_toggle_edit(dashlet_divs[i]);
 
     // Remove/Add edit=1 parameter from URL to make page reload handling correct
-    utils.update_url_parameter("edit", g_editing ? "1" : "0");
+    update_url_parameter("edit", g_editing ? "1" : "0");
 
     toggle_grid();
 }
 
 function toggle_grid() {
     if (!g_editing) {
-        utils.remove_class(document.getElementById("dashboard"), "grid");
+        remove_class(document.getElementById("dashboard"), "grid");
     } else {
-        utils.add_class(document.getElementById("dashboard"), "grid");
+        add_class(document.getElementById("dashboard"), "grid");
     }
 }
 
@@ -644,7 +664,7 @@ function render_sizer(
     nr: number,
     i: number,
     anchor_id: number,
-    size: number
+    size: number,
 ) {
     // 0 ~ X, 1 ~ Y
     const orientation = i ? "height" : "width";
@@ -653,15 +673,18 @@ function render_sizer(
 
     if (size == dashboard_properties.MAX) {
         sizer.className += " max";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "max " + orientation;
         sizer.title = "Use maximum available space in this direction";
     } else if (size == dashboard_properties.GROW) {
         sizer.className += " grow";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "auto " + orientation;
         sizer.title = "Grow in this direction";
     } else {
         sizer.className += " abs";
         sizer.title = "Fixed size (drag border for resize)";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         sizer.innerHTML = "manual " + orientation;
         render_resize_controls(centered_controls.parentNode as HTMLElement, i);
     }
@@ -688,7 +711,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
     let controls: HTMLElement;
     if (edit) {
         // gray out the inner parts of the dashlet
-        utils.add_class(dashlet_obj, "edit");
+        add_class(dashlet_obj, "edit");
 
         // Create the dashlet controls
         controls = document.createElement("div");
@@ -698,7 +721,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         set_control_size(
             controls,
             dashlet_obj.clientWidth,
-            dashlet_obj.clientHeight
+            dashlet_obj.clientHeight,
         );
 
         const d_width = Math.trunc(dashlet_obj.clientWidth);
@@ -710,7 +733,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         controls.appendChild(centered_controls);
 
         // IE < 9: Without this fix the controls container is not working
-        if (utils.browser.is_ie_below_9()) {
+        if (browser.is_ie_below_9()) {
             controls.style.background = "url(about:blank)";
         }
 
@@ -718,7 +741,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         const anchor_id = get_anchor_id(dashlet);
 
         // Create the size / grow indicators and resizer control elements
-        if (utils.has_class(dashlet_obj, "resizable")) {
+        if (has_class(dashlet_obj, "resizable")) {
             render_sizer(centered_controls, nr, 0, anchor_id, dashlet.w);
             render_sizer(centered_controls, nr, 1, anchor_id, dashlet.h);
 
@@ -729,7 +752,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         const create_a_button = function (
             className: string,
             title: string,
-            onclick: () => void
+            onclick: () => void,
         ) {
             const element = document.createElement("a");
             element.className = className;
@@ -743,7 +766,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             const anchor = create_a_button(
                 "anchor anchor" + i,
                 "Click to start growing from here",
-                () => toggle_anchor(nr, i)
+                () => toggle_anchor(nr, i),
             );
             if (anchor_id == i) {
                 anchor.className += " on";
@@ -752,7 +775,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
                 anchor_image.className = "anchor_image";
                 anchor.appendChild(anchor_image);
                 const helper = document.createElement("div");
-                utils.add_class(helper, "anchor_label");
+                add_class(helper, "anchor_label");
                 helper.innerHTML = "Anchor";
                 anchor.appendChild(helper);
             }
@@ -760,18 +783,18 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         }
         const click_actions = function (target: string) {
             return function () {
-                const back_url = utils.makeuri(
+                const back_url = makeuri(
                     {},
                     window.location.href,
-                    "dashboard.py"
+                    "dashboard.py",
                 );
-                location.href = utils.makeuri_contextless(
+                location.href = makeuri_contextless(
                     {
                         name: dashboard_properties.dashboard_name,
                         id: nr,
                         back: back_url,
                     },
-                    target
+                    target,
                 );
             };
         };
@@ -783,8 +806,8 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             create_a_button(
                 "edit",
                 "Edit properties of this element",
-                click_actions("edit_dashlet.py")
-            )
+                click_actions("edit_dashlet.py"),
+            ),
         );
 
         // Add clone dashlet button
@@ -792,18 +815,18 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             create_a_button(
                 "clone",
                 "Clone this element",
-                click_actions("clone_dashlet.py")
-            )
+                click_actions("clone_dashlet.py"),
+            ),
         );
 
         // Add delete dashlet button
         edits.appendChild(
             create_a_button("del", "Delete this element", () =>
-                forms.confirm_dialog(
+                confirm_dialog(
                     {text: "Do you really want to delete this element?"},
-                    click_actions("delete_dashlet.py")
-                )
-            )
+                    click_actions("delete_dashlet.py"),
+                ),
+            ),
         );
 
         const first_control = centered_controls.firstChild;
@@ -814,7 +837,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         }
     } else {
         // make the inner parts visible again
-        utils.remove_class(dashlet_obj, "edit");
+        remove_class(dashlet_obj, "edit");
 
         // Remove all dashlet controls
         controls = document.getElementById("dashlet_controls_" + nr)!;
@@ -904,7 +927,7 @@ function toggle_anchor(nr: number, anchor_id: number) {
 // use the current effective size
 function calculate_relative_dashlet_coords(
     nr: number,
-    anchor_id: number | string | undefined = undefined
+    anchor_id: number | string | undefined = undefined,
 ) {
     const dashlet = dashboard_properties.dashlets[nr];
 
@@ -968,12 +991,12 @@ function drag_dashlet_start(event: MouseEvent) {
     if (!g_editing) return true;
 
     const target = event.target as HTMLElement;
-    const button = utils.get_button(event);
+    const button = get_button(event);
 
     if (
         g_dragging === false &&
         button == "LEFT" &&
-        utils.has_class(target, "controls")
+        has_class(target, "controls")
     ) {
         g_dragging = target.parentNode as HTMLElement;
         const nr = parseInt(g_dragging.id.replace("dashlet_", ""));
@@ -1034,7 +1057,7 @@ function drag_dashlet_start(event: MouseEvent) {
 
         bring_dashlet_to_front(g_dragging);
 
-        utils.prevent_default_events(event);
+        prevent_default_events(event);
         return false;
     }
     return true;
@@ -1118,12 +1141,12 @@ function persist_dashlet_pos(nr: number) {
             "Error: Invalid element coordinates found. Please report " +
                 "this issue (" +
                 JSON.stringify(dashlet) +
-                ")."
+                ").",
         );
         return;
     }
 
-    ajax.call_ajax(
+    call_ajax(
         "ajax_dashlet_pos.py?name=" +
             dashboard_properties.dashboard_name +
             "&id=" +
@@ -1141,7 +1164,7 @@ function persist_dashlet_pos(nr: number) {
             handler_data: null,
             error_handler: undefined,
             add_ajax_id: false,
-        }
+        },
     );
 }
 
@@ -1173,12 +1196,12 @@ function resize_dashlet_start(event: MouseEvent) {
     if (!g_editing) return true;
 
     const target = event.target as HTMLElement;
-    const button = utils.get_button(event);
+    const button = get_button(event);
 
     if (
         g_resizing === false &&
         button == "LEFT" &&
-        utils.has_class(target, "resize")
+        has_class(target, "resize")
     ) {
         const dashlet_obj = target.parentNode!.parentNode as HTMLElement;
 
@@ -1197,40 +1220,40 @@ function resize_dashlet_start(event: MouseEvent) {
 
         bring_dashlet_to_front(dashlet_obj);
 
-        utils.prevent_default_events(event);
+        prevent_default_events(event);
         return false;
     }
     return true;
 }
 
 function get_horizontal_direction(
-    resizer: HTMLElement
+    resizer: HTMLElement,
 ): "left" | "right" | void {
     if (
-        utils.has_class(resizer, "resize0_0") ||
-        utils.has_class(resizer, "resize_corner0") ||
-        utils.has_class(resizer, "resize_corner3")
+        has_class(resizer, "resize0_0") ||
+        has_class(resizer, "resize_corner0") ||
+        has_class(resizer, "resize_corner3")
     )
         return "left";
     else if (
-        utils.has_class(resizer, "resize0_1") ||
-        utils.has_class(resizer, "resize_corner1") ||
-        utils.has_class(resizer, "resize_corner2")
+        has_class(resizer, "resize0_1") ||
+        has_class(resizer, "resize_corner1") ||
+        has_class(resizer, "resize_corner2")
     )
         return "right";
 }
 
 function get_vertical_direction(resizer: HTMLElement): "top" | "bottom" | void {
     if (
-        utils.has_class(resizer, "resize1_0") ||
-        utils.has_class(resizer, "resize_corner0") ||
-        utils.has_class(resizer, "resize_corner1")
+        has_class(resizer, "resize1_0") ||
+        has_class(resizer, "resize_corner0") ||
+        has_class(resizer, "resize_corner1")
     )
         return "top";
     else if (
-        utils.has_class(resizer, "resize1_1") ||
-        utils.has_class(resizer, "resize_corner2") ||
-        utils.has_class(resizer, "resize_corner3")
+        has_class(resizer, "resize1_1") ||
+        has_class(resizer, "resize_corner2") ||
+        has_class(resizer, "resize_corner3")
     )
         return "bottom";
 }
@@ -1322,7 +1345,7 @@ function resize_dashlet(event: MouseEvent): true | void {
     toggle_slim_controls(
         document.getElementById("dashlet_controls_" + nr)!,
         new_width,
-        new_height
+        new_height,
     );
 
     // Calculates new data for the internal coord structure
@@ -1349,7 +1372,7 @@ function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
     if (typeof reload_on_resize[nr] != "undefined") {
         const base_url = reload_on_resize[nr];
         const iframe = document.getElementById(
-            "dashlet_iframe_" + nr
+            "dashlet_iframe_" + nr,
         ) as HTMLFrameElement;
         iframe.src =
             base_url +
@@ -1375,32 +1398,32 @@ export function has_canvas_support() {
  * dialog control and resizing of dashlets
  */
 export function register_event_handlers() {
-    utils.add_event_handler("mousemove", function (e) {
+    add_event_handler("mousemove", function (e) {
         return drag_dashlet(e as MouseEvent) && resize_dashlet(e as MouseEvent);
     });
-    utils.add_event_handler("mousedown", function (e) {
+    add_event_handler("mousedown", function (e) {
         return (
             drag_dashlet_start(e as MouseEvent) &&
             resize_dashlet_start(e as MouseEvent)
         );
     });
-    utils.add_event_handler("mouseup", function (e) {
+    add_event_handler("mouseup", function (e) {
         return drag_dashlet_stop(e) && resize_dashlet_stop(e as MouseEvent);
     });
 
     // Totally disable the context menu for all dashboards
-    utils.add_event_handler("contextmenu", function (e) {
-        utils.prevent_default_events(e);
+    add_event_handler("contextmenu", function (e) {
+        prevent_default_events(e);
         return false;
     });
 
     // Stop dashlet drag and resize whenever the mouse leaves the content area
-    utils.add_event_handler(
+    add_event_handler(
         "mouseleave",
         function (e) {
             return drag_dashlet_stop(e) && resize_dashlet_stop(e);
         },
-        document
+        document,
     );
 }
 
@@ -1410,7 +1433,7 @@ export function chart_pie(
     radius: number,
     color: string | CanvasGradient | CanvasPattern,
     right_side: boolean,
-    pie_diameter: number
+    pie_diameter: number,
 ) {
     let context = (
         document.getElementById(pie_id + "_stats") as HTMLCanvasElement
@@ -1431,7 +1454,7 @@ export function chart_pie(
             (pie_d / 2) * radius,
             1.5 * Math.PI,
             0.5 * Math.PI,
-            false
+            false,
         );
     else
         context.arc(
@@ -1440,7 +1463,7 @@ export function chart_pie(
             (pie_d / 2) * radius,
             0.5 * Math.PI,
             1.5 * Math.PI,
-            false
+            false,
         );
     context.closePath();
     context.fill();
@@ -1451,7 +1474,7 @@ export function chart_pie(
 function toggle_slim_controls(
     controls_obj: HTMLElement,
     width: number,
-    height: number
+    height: number,
 ) {
     const thresholds = {} as Thresholds;
     for (const key in dashboard_properties.slim_editor_thresholds) {
@@ -1463,8 +1486,8 @@ function toggle_slim_controls(
     }
 
     if (width < thresholds.width || height < thresholds.height) {
-        utils.add_class(controls_obj, "slim_controls");
+        add_class(controls_obj, "slim_controls");
     } else {
-        utils.remove_class(controls_obj, "slim_controls");
+        remove_class(controls_obj, "slim_controls");
     }
 }

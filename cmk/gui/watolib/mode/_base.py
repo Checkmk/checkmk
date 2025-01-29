@@ -96,7 +96,7 @@ class WatoMode(abc.ABC):
 
         if parent_cls := self.parent_mode():
             # For some reason pylint does not understand that this is a class type
-            breadcrumb = parent_cls().breadcrumb()  # pylint: disable=not-callable
+            breadcrumb = parent_cls().breadcrumb()
         else:
             breadcrumb = Breadcrumb()
 

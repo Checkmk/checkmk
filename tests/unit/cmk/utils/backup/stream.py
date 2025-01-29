@@ -11,8 +11,9 @@ from unittest import mock
 import pytest
 
 from cmk.utils.backup.stream import BackupStream, MKBackupStream, RestoreStream
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM
-from cmk.utils.crypto.deprecated import certificate_md5_digest
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.deprecated import certificate_md5_digest
 
 BACKUP_KEYS = {
     1: {

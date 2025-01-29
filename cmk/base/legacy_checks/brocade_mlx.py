@@ -9,12 +9,13 @@
 import re
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.brocade import DETECT_MLX
+
+check_info = {}
 
 # TODO refactoring: use parse-function
 
@@ -35,6 +36,7 @@ def parse_brocade_mlx(string_table: Sequence[StringTable]) -> Sequence[StringTab
 
 
 check_info["brocade_mlx"] = LegacyCheckDefinition(
+    name="brocade_mlx",
     parse_function=parse_brocade_mlx,
     detect=DETECT_MLX,
     fetch=[
@@ -48,6 +50,19 @@ check_info["brocade_mlx"] = LegacyCheckDefinition(
         ),
     ],
 )
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def brocade_mlx_get_state(state):
@@ -88,6 +103,7 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 
 check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_status",
     service_name="Status Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module,
@@ -157,14 +173,14 @@ def check_brocade_mlx_module_mem(item, params, info):
     if state_readable.lower() != "running":
         return 3, "Module is not running (Current State: %s)" % state_readable
 
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     try:
         return check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_avail"],
             data["mem_total"],
-            (mode, (warn, crit)),
+            (mode, levels),
             metric_name="mem_used",
         )
     except KeyError:
@@ -172,6 +188,7 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 
 check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_mem",
     service_name="Memory Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_mem,
@@ -195,10 +212,8 @@ def inventory_brocade_mlx_module_cpu(info):
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
-        if (
-            module_state != "0"
-            and module_state != "11"
-            and (module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX"))
+        if module_state not in {"0", "11"} and (
+            module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX")
         ):
             yield brocade_mlx_combine_item(module_id, module_descr), {}
 
@@ -253,6 +268,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 
 check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_cpu",
     service_name="CPU utilization Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_cpu,

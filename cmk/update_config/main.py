@@ -11,27 +11,30 @@ be called manually.
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from itertools import chain
 from pathlib import Path
 from typing import Literal
 
-from cmk.utils import debug, log, paths, tty
+from cmk.ccc import debug
+from cmk.ccc.version import Edition, edition
+
+from cmk.utils import log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
-from cmk.utils.version import edition, Edition
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
@@ -40,6 +43,7 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
@@ -56,9 +60,11 @@ def main(
     if arguments.debug:
         debug.enable()
 
-    logger = _setup_logging(arguments)
+    logger = _setup_logging(arguments.verbose)
+    logger.debug("parsed arguments: %s", arguments)
 
-    ensure_site_is_stopped_callback(logger)
+    if not arguments.site_may_run:
+        ensure_site_is_stopped_callback(logger)
 
     logger.info(
         "%sATTENTION%s\n  Some steps may take a long time depending "
@@ -66,10 +72,11 @@ def main(
         tty.yellow,
         tty.normal,
     )
-    exit_code = main_check_config(logger, arguments.conflict)
-    if exit_code != 0 or arguments.dry_run:
-        return exit_code
-    return main_update_config(logger, arguments.conflict)
+    with _force_automations_cli_interface():
+        exit_code = main_check_config(logger, arguments.conflict)
+        if exit_code != 0 or arguments.dry_run:
+            return exit_code
+        return main_update_config(logger, arguments.conflict)
 
 
 def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
@@ -81,8 +88,7 @@ def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Litera
         if debug.enabled():
             raise
         logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config" '
-            "BEFORE starting the site again."
+            'ERROR: Please repair this and run "cmk-update-config" BEFORE starting the site again.'
         )
         return 1
 
@@ -129,7 +135,8 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         type=ConflictMode,
         help=(
             f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
-            f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"With '{ConflictMode.FORCE}', '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"'{ConflictMode.FORCE}' continues the update even if errors occur during the pre-flight checks. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
     )
@@ -138,33 +145,31 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         action="store_true",
         help="Executes `Verifying Checkmk configuration` only.",
     )
+    p.add_argument(
+        "--site-may-run",
+        action="store_true",
+        help="Execute the command even if the site is running.",
+    )
     return p.parse_args(args)
 
 
-def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
-    level = log.verbosity_to_log_level(arguments.verbose)
-
-    log.setup_console_logging()
-    log.logger.setLevel(level)
+# TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
+def _setup_logging(verbose: int) -> logging.Logger:
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
 
     logger = logging.getLogger("cmk.update_config")
-    logger.setLevel(level)
-    logger.debug("parsed arguments: %s", arguments)
+    logger.setLevel(log.logger.level)
 
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.getLogger().addHandler(handler)
 
-        # Special case for PIL module producing messages like "STREAM b'IHDR'
-        # 16 13" in debug level
-        logging.getLogger("PIL").setLevel(logging.INFO)
+    # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level
+    logging.getLogger("PIL").setLevel(logging.INFO)
 
-    gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
+    # The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our
+    # default corresponds to INFO in cmk.gui, which results in too much logging.
+    gui_logger.setLevel(log.logger.level + 10)
 
     return logger
 
@@ -181,19 +186,12 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
         sys.exit(1)
 
 
-def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
-    """The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our default
-    corresponds to INFO in cmk.gui, which results in too much logging.
-    """
-    return lvl + 10
-
-
 def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
             []
-            if edition() is Edition.CRE
+            if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
     ):
@@ -207,7 +205,7 @@ def _load_pre_plugins() -> None:
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
             []
-            if edition() is Edition.CRE
+            if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
         ),
     ):
@@ -224,6 +222,8 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
     logger.info("Verifying Checkmk configuration...")
+
+    main_modules.load_plugins()
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
@@ -293,10 +293,18 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 def _initialize_base_environment() -> None:
     base_config.load_all_plugins(
-        get_check_api_context,
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )
     # Watch out: always load the plugins before loading the config.
     # The validation step will not be executed otherwise.
     base_config.load()
+
+
+@contextmanager
+def _force_automations_cli_interface() -> Generator[None]:
+    try:
+        os.environ[ENV_VARIABLE_FORCE_CLI_INTERFACE] = "True"
+        yield
+    finally:
+        os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)

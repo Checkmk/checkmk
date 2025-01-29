@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+
+check_info = {}
 
 
 def parse_huawei_switch_cpu(string_table):
@@ -32,6 +33,7 @@ def discover_huawei_switch_cpu(section):
 
 
 check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
+    name="huawei_switch_cpu",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

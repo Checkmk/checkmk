@@ -7,10 +7,11 @@ import abc
 import copy
 from typing import Any
 
-import cmk.utils.plugin_registry as plugin_registry
+from cmk.ccc import plugin_registry
+
 from cmk.utils.statename import short_service_state_name
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -381,7 +382,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                                     "child_with",
                                     _("The found hosts' children (with child filtering)"),
                                     Dictionary(
-                                        title=_("Child Conditions"),
+                                        title=_("Child conditions"),
                                         elements=cls.get_host_conditions(),
                                         optional_keys=[],
                                     ),
@@ -421,17 +422,17 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                     encode_value=False,
                 ),
             ),
-            ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
+            ("host_tags", DictHostTagCondition(title=_("Host tags"), help_txt="")),
             (
                 "host_label_groups",
                 LabelGroups(
                     show_empty_group_by_default=False,
                     add_label=_("Add to condition"),
-                    title=_("Host Labels"),
+                    title=_("Host labels"),
                     help="",
                 ),
             ),
-            ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
+            ("host_choice", _bi_host_choice_vs(_("Filter host"))),
         ]
 
 

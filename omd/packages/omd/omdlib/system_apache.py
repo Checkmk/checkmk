@@ -8,8 +8,8 @@ import os
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
-import omdlib.utils
 from omdlib.console import show_success
 from omdlib.version_info import VersionInfo
 
@@ -23,6 +23,7 @@ __all__ = [
 
 def register_with_system_apache(
     version_info: VersionInfo,
+    apache_config: Path,
     site_name: str,
     site_dir: str,
     apache_tcp_addr: str,
@@ -37,14 +38,16 @@ def register_with_system_apache(
 
     Root permissions are needed to make this work.
     """
-    create_apache_hook(site_name, site_dir, apache_tcp_addr, apache_tcp_port, apache_hook_version())
+    create_apache_hook(
+        apache_config, site_name, site_dir, apache_tcp_addr, apache_tcp_port, apache_hook_version()
+    )
     apply_apache_config(version_info, apache_reload, verbose)
 
 
 def unregister_from_system_apache(
-    version_info: VersionInfo, site_name: str, apache_reload: bool, verbose: bool
+    version_info: VersionInfo, apache_config: Path, apache_reload: bool, verbose: bool
 ) -> None:
-    delete_apache_hook(site_name)
+    delete_apache_hook(apache_config)
     apply_apache_config(version_info, apache_reload, verbose)
 
 
@@ -55,8 +58,8 @@ def apply_apache_config(version_info: VersionInfo, apache_reload: bool, verbose:
         restart_apache(version_info, verbose)
 
 
-def is_apache_hook_up_to_date(site_name: str) -> bool:
-    with open(os.path.join(omdlib.utils.omd_base_path(), f"omd/apache/{site_name}.conf")) as f:
+def is_apache_hook_up_to_date(apache_config: Path) -> bool:
+    with open(apache_config) as f:
         header = f.readline()
         return header == apache_hook_header(apache_hook_version()) + "\n"
 
@@ -70,7 +73,12 @@ def apache_hook_version() -> int:
 
 
 def create_apache_hook(
-    site_name: str, site_dir: str, apache_tcp_addr: str, apache_tcp_port: str, version: int
+    apache_config: Path,
+    site_name: str,
+    site_dir: str,
+    apache_tcp_addr: str,
+    apache_tcp_port: str,
+    version: int,
 ) -> None:
     """
     Note: If you change the content of this file, you will have to increase the
@@ -87,8 +95,7 @@ def create_apache_hook(
     except FileNotFoundError:
         pass
 
-    hook_path = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % site_name)
-    with open(hook_path, "w") as f:
+    with open(apache_config, "w") as f:
         f.write(
             f"""{apache_hook_header(version)}
 # This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
@@ -131,17 +138,16 @@ def create_apache_hook(
 </Location>
 """
         )
-        os.chmod(hook_path, 0o644)  # Ensure the site user can read the files created by root
+        os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
 
 
-def delete_apache_hook(sitename: str) -> None:
-    hook_path = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % sitename)
+def delete_apache_hook(apache_config: Path) -> None:
     try:
-        os.remove(hook_path)
+        os.remove(apache_config)
     except FileNotFoundError:
         return
     except Exception as e:
-        sys.stderr.write(f"Cannot remove apache hook {hook_path}: {e}\n")
+        sys.stderr.write(f"Cannot remove apache hook {apache_config}: {e}\n")
 
 
 def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:

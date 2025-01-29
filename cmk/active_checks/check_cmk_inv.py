@@ -12,21 +12,21 @@ from collections.abc import Sequence
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="check_cmk_inv",
-        description="""Check Checkmk inventory""",
+        description="""Check Checkmk HW/SW Inventory""",
     )
 
     parser.add_argument(
         "hostname",
         type=str,
         metavar="HOSTNAME",
-        help="Host for which the inventory is executed",
+        help="Host for which the HW/SW Inventory is executed",
     )
 
     parser.add_argument(
         "--inv-fail-status",
         type=int,
         default=1,
-        help="State when inventory fails",
+        help="State when HW/SW Inventory fails",
     )
 
     parser.add_argument(
@@ -50,6 +50,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="State when software packages info is missing",
     )
 
+    parser.add_argument(
+        "--nw-changes",
+        type=int,
+        default=0,
+        help="State when networking changes are detected",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -60,6 +67,7 @@ def get_command(args: argparse.Namespace) -> Sequence[str]:
         f"--hw-changes={args.hw_changes}",
         f"--sw-changes={args.sw_changes}",
         f"--sw-missing={args.sw_missing}",
+        f"--nw-changes={args.nw_changes}",
         "--inventory-as-check",
         args.hostname,
     ]
@@ -74,9 +82,9 @@ def main(
     completed_process = subprocess.run(cmd, capture_output=True, encoding="utf8", check=False)
 
     if completed_process.stderr:
-        print(completed_process.stderr, file=sys.stderr)
+        sys.stderr.write(completed_process.stderr + "\n")
 
     if completed_process.stdout:
-        print(completed_process.stdout)
+        sys.stdout.write(completed_process.stdout + "\n")
 
     return completed_process.returncode

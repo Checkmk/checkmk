@@ -1,6 +1,6 @@
 
 ### Bandit config file generated from:
-# 'PIPENV_VENV_IN_PROJECT=true pipenv run bandit-config-generator -o ../bandit.yaml'
+# bandit-config-generator -o ../bandit.yaml'
 
 ### This config may optionally select a subset of tests to run or skip by
 ### filling out the 'tests' and 'skips' lists given below. If no tests are
@@ -94,11 +94,7 @@ skips:
   - B415  # pyghmi is needed by our core
   - B314  # xml_bad_ElementTree consider safe since python 3.6 >= ref: CMK-15194
   - B318  # xml_bad_minidom same as above
-# medium severity tests excluded for now; enable step-by-step
-
-  - B104  # hardcoded_bind_all_interfaces
-  - B302  # marshal
-  - B608  # hardcoded_sql_expressions
+  - B104  # hardcoded_bind_all_interfaces -> high false-positive rate ref: CMK-15199
 
 ### (optional) plugin settings - some test plugins require configuration data
 ### that may be given here, per-plugin. All bandit test plugins have a built in

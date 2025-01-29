@@ -3,79 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
-
 from tests.testlib.site import Site
 
 
 def test_run_omd(site: Site) -> None:
-    p = site.execute(["omd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 1
-    assert stderr == ""
-    assert "Usage" in stdout
-    assert "omd COMMAND -h" in stdout
+    p = site.run(["omd"], check=False)
+    assert p.returncode == 1
+    assert p.stderr == ""
+    assert "Usage" in p.stdout
+    assert "omd COMMAND -h" in p.stdout
 
 
 def test_run_omd_help(site: Site) -> None:
-    p = site.execute(["omd", "help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert "Usage" in stdout
-    assert "omd COMMAND -h" in stdout
+    p = site.run(["omd", "help"])
+    assert p.stderr == ""
+    assert "Usage" in p.stdout
+    assert "omd COMMAND -h" in p.stdout
 
 
 def test_run_omd_version(site: Site) -> None:
-    p = site.execute(["omd", "version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout.endswith("%s\n" % site.version.omd_version())
+    p = site.run(["omd", "version"])
+    assert p.stderr == ""
+    assert p.stdout.endswith("%s\n" % site.version.omd_version())
 
 
 def test_run_omd_version_bare(site: Site) -> None:
-    p = site.execute(["omd", "version", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout.rstrip("\n") == site.version.omd_version()
+    p = site.run(["omd", "version", "-b"])
+    assert p.stderr == ""
+    assert p.stdout.rstrip("\n") == site.version.omd_version()
 
 
 def test_run_omd_versions(site: Site) -> None:
-    p = site.execute(["omd", "versions"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    versions = [v.split(" ", 1)[0] for v in stdout.split("\n")]
+    p = site.run(["omd", "versions"])
+    assert p.stderr == ""
+    versions = [v.split(" ", 1)[0] for v in p.stdout.split("\n")]
     assert len(versions) >= 1
     assert site.version.omd_version() in versions
 
 
 def test_run_omd_versions_bare(site: Site) -> None:
-    p = site.execute(["omd", "versions", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    versions = stdout.split("\n")
+    p = site.run(["omd", "versions", "-b"])
+    assert p.stderr == ""
+    versions = p.stdout.split("\n")
     assert len(versions) >= 1
     assert site.version.omd_version() in versions
 
 
 def test_run_omd_sites(site: Site) -> None:
-    p = site.execute(["omd", "sites"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert site.id in stdout
+    p = site.run(["omd", "sites"])
+    assert p.stderr == ""
+    assert site.id in p.stdout
 
 
 def test_run_omd_sites_bare(site: Site) -> None:
-    p = site.execute(["omd", "sites", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    sites = stdout.split("\n")
+    p = site.run(["omd", "sites", "-b"])
+    assert p.stderr == ""
+    sites = p.stdout.split("\n")
     assert len(sites) >= 1
     assert site.id in sites
 

@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
+
 """This module contains constants and functions for neat output formating
 on ttys while being compatible when the command is not attached to a TTY"""
 
@@ -162,3 +164,9 @@ def _row_template(lengths: list[int], colors: TableColors, indent: str) -> str:
         sep = " "
     fmt += "\n"
     return fmt
+
+
+def format_warning(text: str) -> str:
+    stripped = text.lstrip()
+    indent = text[: len(text) - len(stripped)]
+    return f"{indent}{bold}{yellow}WARNING:{normal} {stripped}"

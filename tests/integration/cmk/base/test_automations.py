@@ -4,59 +4,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import logging
 import re
-import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
 
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
-    print("Applying default config")
-    site.openapi.create_host(
+    logger.info("Applying default config")
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "offline",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "host_with_secondary_ip",
         attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
     )
@@ -77,11 +80,11 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
-    site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
-    icmp_rule_id = site.openapi.create_rule(
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("host_with_secondary_ip")
+    icmp_rule_id = site.openapi.rules.create(
         ruleset_name=RuleGroup.ActiveChecks("icmp"),
         value={"address": "all_ipv4addresses"},
     )
@@ -93,18 +96,18 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         #
         # Cleanup code
         #
-        print("Cleaning up test config")
+        logger.info("Cleaning up test config")
 
         site.delete_dir("var/check_mk/agent_output")
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
-        site.openapi.delete_host("host_with_secondary_ip")
-        site.openapi.delete_rule(icmp_rule_id)
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
+        site.openapi.hosts.delete("host_with_secondary_ip")
+        site.openapi.rules.delete(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -133,24 +136,21 @@ def _execute_automation(
     parse_data: bool = True,
 ) -> object:
     cmdline = ["cmk", "--automation", cmd, *([] if args is None else args)]
-    p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = site.run(cmdline, input=stdin, check=False)
+    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.returncode, p.stdout, p.stderr)
 
-    stdout, stderr = p.communicate(stdin)
-
-    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.wait(), stdout, stderr)
-
-    assert p.wait() == expect_exit_code, error_msg
+    assert p.returncode == expect_exit_code, error_msg
 
     if expect_stderr_pattern:
-        assert re.match(expect_stderr_pattern, stderr) is not None, error_msg
+        assert re.match(expect_stderr_pattern, p.stderr) is not None, error_msg
     else:
-        assert stderr == expect_stderr, error_msg
+        assert p.stderr == expect_stderr, error_msg
 
     if expect_stdout is not None:
-        assert stdout == expect_stdout, error_msg
+        assert p.stdout == expect_stdout, error_msg
 
     if parse_data:
-        return results.result_type_registry[cmd].deserialize(stdout)
+        return results.result_type_registry[cmd].deserialize(p.stdout)
 
     return None
 
@@ -159,31 +159,24 @@ def _execute_automation(
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_inventory_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
-        ["cmk", "--automation", "inventory", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    p = site.run(["cmk", "--automation", "inventory", "@scan", "new"], check=False)
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
+    p = site.run(
         ["cmk", "--automation", "service-discovery", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        check=False,
     )
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 # old alias, drop after 2.2 release
@@ -351,24 +344,6 @@ def test_automation_analyse_service_no_check(site: Site) -> None:
     assert automation_result.label_sources == {}
 
 
-# old alias, drop after 2.2 release
-def test_automation_try_inventory_not_existing_host(site: Site) -> None:
-    _execute_automation(
-        site,
-        "try-inventory",
-        args=["xxx-not-existing-host."],
-        expect_stderr_pattern=(
-            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
-            r"via DNS: (\[Errno -2\] Name or service not known"
-            r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with host name)\n"
-        ),
-        expect_stdout="",
-        expect_exit_code=2,
-        parse_data=False,
-    )
-
-
 def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
@@ -378,28 +353,12 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
             r"Failed to lookup IPv4 address of xxx-not-existing-host. "
             r"via DNS: (\[Errno -2\] Name or service not known"
             r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with host name)\n"
+            r"|\[Errno -5\] No address associated with hostname)\n"
         ),
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,
     )
-
-
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_try_inventory_host(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "try-inventory",
-        args=["modes-test-host"],
-    )
-    assert isinstance(result, results.ServiceDiscoveryPreviewResult)
-    assert isinstance(result.output, str)
-    assert isinstance(result.check_table, list)
-    assert isinstance(result.nodes_check_table, dict)
-    for _h, node_check_table in result.nodes_check_table.items():
-        assert isinstance(node_check_table, list)
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -468,15 +427,72 @@ def test_automation_set_autochecks(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> None:
+def test_automation_set_autochecks_v2(site: Site) -> None:
+    host_name = HostName("blablahost")
+    autochecks_table: MutableMapping[ServiceName, AutocheckEntry] = {
+        "Filesystem xxx": AutocheckEntry(CheckPluginName("df"), "xxx", {}, {"xyz": "123"}),
+        "Uptime": AutocheckEntry(CheckPluginName("uptime"), None, {}, {}),
+    }
+    new_items: SetAutochecksInput = SetAutochecksInput(
+        host_name,
+        autochecks_table,
+        {host_name: autochecks_table},
+    )
+
+    try:
+        assert isinstance(
+            _execute_automation(
+                site,
+                "set-autochecks-v2",
+                args=None,
+                stdin=new_items.serialize(),
+            ),
+            results.SetAutochecksV2Result,
+        )
+
+        autochecks_file = f"var/check_mk/autochecks/{host_name}.mk"
+        assert site.file_exists(autochecks_file)
+
+        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
+        services = [
+            (
+                (str(s.check_plugin_name), s.item),
+                s.parameters,
+                s.service_labels,
+            )
+            for s in data
+        ]
+        assert sorted(services) == [
+            (
+                ("df", "xxx"),
+                {},
+                {"xyz": "123"},
+            ),
+            (
+                ("uptime", None),
+                {},
+                {},
+            ),
+        ]
+
+        assert site.file_exists("var/check_mk/autochecks/%s.mk" % host_name)
+    finally:
+        if site.file_exists("var/check_mk/autochecks/%s.mk" % host_name):
+            site.delete_file("var/check_mk/autochecks/%s.mk" % host_name)
+
+
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_update_dns_cache(site: Site) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
         site.delete_file(cache_path)
 
+    # use .internal. FQDN to avoid false positives in name resolution
+    unknown_host = "update-dns-cache-host.internal."
     try:
-        clients.HostConfig.create(host_name="update-dns-cache-host")
-        clients.HostConfig.create(host_name="localhost")
+        site.openapi.hosts.create(hostname=unknown_host)
+        site.openapi.hosts.create(hostname="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -484,7 +500,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert isinstance(result, results.UpdateDNSCacheResult)
 
         assert result.n_updated > 0
-        assert result.failed_hosts == ["update-dns-cache-host"]
+        assert result.failed_hosts == [unknown_host], (
+            f'Successfully resolved unknown host "{unknown_host}"!'
+        )
 
         assert site.file_exists(cache_path)
 
@@ -493,9 +511,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
-        clients.HostConfig.delete("localhost")
-        clients.HostConfig.delete("update-dns-cache-host")
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+        site.openapi.hosts.delete("localhost")
+        site.openapi.hosts.delete(unknown_host)
+        site.openapi.changes.activate_and_wait_for_completion(timeout=120)
 
 
 # TODO: Test with the different cores
@@ -541,7 +559,7 @@ def test_automation_get_section_information(site: Site) -> None:
 def test_automation_notification_replay(site: Site) -> None:
     site.write_text_file(
         "var/check_mk/notify/backlog.mk",
-        "[{'SERVICEACKCOMMENT': '', 'SERVICE_EC_CONTACT': '', 'PREVIOUSSERVICEHARDSTATEID': '0', 'HOST_ADDRESS_6': '', 'NOTIFICATIONAUTHORNAME': '', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LONGSERVICEOUTPUT': '', 'LASTHOSTPROBLEMID': '0', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'SERVICEDOWNTIME': '0', 'LASTSERVICESTATE': 'OK', 'SERVICEDESC': 'Temperature Zone 0', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICENOTES': '', 'HOSTPERFDATA': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'LASTHOSTSTATEID': '0', 'SERVICENOTESURL': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTSERVICESTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTDOWNTIME': '0', 'SERVICECHECKCOMMAND': 'check_mk-lnx_thermal', 'SERVICEPROBLEMID': '138', 'HOST_SL': '', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'SERVICESTATE': 'WARNING', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': 'temp=75;70;80;;', 'NOTIFICATIONAUTHORALIAS': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'MICROTIME': '1502452826145843', 'SERVICEOUTPUT': 'WARN - 75.0 \xc2\xb0C (warn/crit at 70/80 \xc2\xb0C)', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICECONTACTGROUPNAMES': 'all', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '138', 'HOST_FILENAME': '/wato/hosts.mk', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'CONTACTS': '', 'SERVICEDISPLAYNAME': 'Temperature Zone 0', 'HOSTNAME': 'localhost', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'NOTIFICATIONTYPE': 'PROBLEM', 'SVC_SL': '', 'SERVICESTATEID': '1', 'LASTHOSTSTATE': 'PENDING', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'HOSTADDRESS': '127.0.0.1', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}, {'SERVICEACKCOMMENT': '', 'HOSTPERFDATA': '', 'SERVICEDOWNTIME': '0', 'PREVIOUSSERVICEHARDSTATEID': '0', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'LASTSERVICESTATE': 'OK', 'LONGSERVICEOUTPUT': '', 'NOTIFICATIONTYPE': 'PROBLEM', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'HOSTNAME': 'localhost', 'NOTIFICATIONAUTHORNAME': '', 'SERVICEDESC': 'Check_MK Agent', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICECONTACTGROUPNAMES': 'all', 'SERVICE_EC_CONTACT': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'MICROTIME': '1502452826145283', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTHOSTSTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTADDRESS': '127.0.0.1', 'SERVICEPROBLEMID': '137', 'HOST_SL': '', 'LASTSERVICESTATEID': '0', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'HOST_ADDRESS_6': '', 'SERVICEOUTPUT': 'WARN - error: This host is not registered for deployment(!), last update check: 2017-05-22 10:28:43 (warn at 2 days)(!), last agent update: 2017-05-22 09:28:24', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICENOTES': '', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '137', 'HOST_FILENAME': '/wato/hosts.mk', 'LASTHOSTSTATE': 'PENDING', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'SERVICECHECKCOMMAND': 'check_mk-check_mk.agent_update', 'SERVICEDISPLAYNAME': 'Check_MK Agent', 'CONTACTS': '', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LASTHOSTPROBLEMID': '0', 'SVC_SL': '', 'SERVICESTATEID': '1', 'SERVICESTATE': 'WARNING', 'NOTIFICATIONAUTHORALIAS': '', 'SERVICENOTESURL': '', 'HOSTDOWNTIME': '0', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}]",  # noqa: E501
+        "[{'SERVICEACKCOMMENT': '', 'SERVICE_EC_CONTACT': '', 'PREVIOUSSERVICEHARDSTATEID': '0', 'HOST_ADDRESS_6': '', 'NOTIFICATIONAUTHORNAME': '', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LONGSERVICEOUTPUT': '', 'LASTHOSTPROBLEMID': '0', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'SERVICEDOWNTIME': '0', 'LASTSERVICESTATE': 'OK', 'SERVICEDESC': 'Temperature Zone 0', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICENOTES': '', 'HOSTPERFDATA': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'LASTHOSTSTATEID': '0', 'SERVICENOTESURL': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTSERVICESTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTDOWNTIME': '0', 'SERVICECHECKCOMMAND': 'check_mk-lnx_thermal', 'SERVICEPROBLEMID': '138', 'HOST_SL': '', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'SERVICESTATE': 'WARNING', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': 'temp=75;70;80;;', 'NOTIFICATIONAUTHORALIAS': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'MICROTIME': '1502452826145843', 'SERVICEOUTPUT': 'WARN - 75.0 \xc2\xb0C (warn/crit at 70/80 \xc2\xb0C)', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICECONTACTGROUPNAMES': 'all', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '138', 'HOST_FILENAME': '/wato/hosts.mk', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'CONTACTS': '', 'SERVICEDISPLAYNAME': 'Temperature Zone 0', 'HOSTNAME': 'localhost', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'NOTIFICATIONTYPE': 'PROBLEM', 'SVC_SL': '', 'SERVICESTATEID': '1', 'LASTHOSTSTATE': 'PENDING', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'HOSTADDRESS': '127.0.0.1', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}, {'SERVICEACKCOMMENT': '', 'HOSTPERFDATA': '', 'SERVICEDOWNTIME': '0', 'PREVIOUSSERVICEHARDSTATEID': '0', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'LASTSERVICESTATE': 'OK', 'LONGSERVICEOUTPUT': '', 'NOTIFICATIONTYPE': 'PROBLEM', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'HOSTNAME': 'localhost', 'NOTIFICATIONAUTHORNAME': '', 'SERVICEDESC': 'Check_MK Agent', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICECONTACTGROUPNAMES': 'all', 'SERVICE_EC_CONTACT': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'MICROTIME': '1502452826145283', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTHOSTSTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTADDRESS': '127.0.0.1', 'SERVICEPROBLEMID': '137', 'HOST_SL': '', 'LASTSERVICESTATEID': '0', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'HOST_ADDRESS_6': '', 'SERVICEOUTPUT': 'WARN - error: This host is not registered for deployment(!), last update check: 2017-05-22 10:28:43 (warn at 2 days)(!), last agent update: 2017-05-22 09:28:24', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICENOTES': '', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '137', 'HOST_FILENAME': '/wato/hosts.mk', 'LASTHOSTSTATE': 'PENDING', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'SERVICECHECKCOMMAND': 'check_mk-check_mk.agent_update', 'SERVICEDISPLAYNAME': 'Check_MK Agent', 'CONTACTS': '', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LASTHOSTPROBLEMID': '0', 'SVC_SL': '', 'SERVICESTATEID': '1', 'SERVICESTATE': 'WARNING', 'NOTIFICATIONAUTHORALIAS': '', 'SERVICENOTESURL': '', 'HOSTDOWNTIME': '0', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}]",
     )
     assert isinstance(
         _execute_automation(site, "notification-replay", args=["0"]),
@@ -553,7 +571,7 @@ def test_automation_notification_replay(site: Site) -> None:
 def test_automation_notification_analyse(site: Site) -> None:
     site.write_text_file(
         "var/check_mk/notify/backlog.mk",
-        "[{'SERVICEACKCOMMENT': '', 'SERVICE_EC_CONTACT': '', 'PREVIOUSSERVICEHARDSTATEID': '0', 'HOST_ADDRESS_6': '', 'NOTIFICATIONAUTHORNAME': '', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LONGSERVICEOUTPUT': '', 'LASTHOSTPROBLEMID': '0', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'SERVICEDOWNTIME': '0', 'LASTSERVICESTATE': 'OK', 'SERVICEDESC': 'Temperature Zone 0', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICENOTES': '', 'HOSTPERFDATA': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'LASTHOSTSTATEID': '0', 'SERVICENOTESURL': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTSERVICESTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTDOWNTIME': '0', 'SERVICECHECKCOMMAND': 'check_mk-lnx_thermal', 'SERVICEPROBLEMID': '138', 'HOST_SL': '', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'SERVICESTATE': 'WARNING', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': 'temp=75;70;80;;', 'NOTIFICATIONAUTHORALIAS': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'MICROTIME': '1502452826145843', 'SERVICEOUTPUT': 'WARN - 75.0 \xc2\xb0C (warn/crit at 70/80 \xc2\xb0C)', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICECONTACTGROUPNAMES': 'all', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '138', 'HOST_FILENAME': '/wato/hosts.mk', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'CONTACTS': '', 'SERVICEDISPLAYNAME': 'Temperature Zone 0', 'HOSTNAME': 'localhost', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'NOTIFICATIONTYPE': 'PROBLEM', 'SVC_SL': '', 'SERVICESTATEID': '1', 'LASTHOSTSTATE': 'PENDING', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'HOSTADDRESS': '127.0.0.1', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}, {'SERVICEACKCOMMENT': '', 'HOSTPERFDATA': '', 'SERVICEDOWNTIME': '0', 'PREVIOUSSERVICEHARDSTATEID': '0', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'LASTSERVICESTATE': 'OK', 'LONGSERVICEOUTPUT': '', 'NOTIFICATIONTYPE': 'PROBLEM', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'HOSTNAME': 'localhost', 'NOTIFICATIONAUTHORNAME': '', 'SERVICEDESC': 'Check_MK Agent', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICECONTACTGROUPNAMES': 'all', 'SERVICE_EC_CONTACT': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'MICROTIME': '1502452826145283', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTHOSTSTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTADDRESS': '127.0.0.1', 'SERVICEPROBLEMID': '137', 'HOST_SL': '', 'LASTSERVICESTATEID': '0', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'HOST_ADDRESS_6': '', 'SERVICEOUTPUT': 'WARN - error: This host is not registered for deployment(!), last update check: 2017-05-22 10:28:43 (warn at 2 days)(!), last agent update: 2017-05-22 09:28:24', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICENOTES': '', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '137', 'HOST_FILENAME': '/wato/hosts.mk', 'LASTHOSTSTATE': 'PENDING', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'SERVICECHECKCOMMAND': 'check_mk-check_mk.agent_update', 'SERVICEDISPLAYNAME': 'Check_MK Agent', 'CONTACTS': '', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LASTHOSTPROBLEMID': '0', 'SVC_SL': '', 'SERVICESTATEID': '1', 'SERVICESTATE': 'WARNING', 'NOTIFICATIONAUTHORALIAS': '', 'SERVICENOTESURL': '', 'HOSTDOWNTIME': '0', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}]",  # noqa: E501
+        "[{'SERVICEACKCOMMENT': '', 'SERVICE_EC_CONTACT': '', 'PREVIOUSSERVICEHARDSTATEID': '0', 'HOST_ADDRESS_6': '', 'NOTIFICATIONAUTHORNAME': '', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LONGSERVICEOUTPUT': '', 'LASTHOSTPROBLEMID': '0', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'SERVICEDOWNTIME': '0', 'LASTSERVICESTATE': 'OK', 'SERVICEDESC': 'Temperature Zone 0', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICENOTES': '', 'HOSTPERFDATA': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'LASTHOSTSTATEID': '0', 'SERVICENOTESURL': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTSERVICESTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTDOWNTIME': '0', 'SERVICECHECKCOMMAND': 'check_mk-lnx_thermal', 'SERVICEPROBLEMID': '138', 'HOST_SL': '', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'SERVICESTATE': 'WARNING', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': 'temp=75;70;80;;', 'NOTIFICATIONAUTHORALIAS': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'MICROTIME': '1502452826145843', 'SERVICEOUTPUT': 'WARN - 75.0 \xc2\xb0C (warn/crit at 70/80 \xc2\xb0C)', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICECONTACTGROUPNAMES': 'all', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '138', 'HOST_FILENAME': '/wato/hosts.mk', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'CONTACTS': '', 'SERVICEDISPLAYNAME': 'Temperature Zone 0', 'HOSTNAME': 'localhost', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'NOTIFICATIONTYPE': 'PROBLEM', 'SVC_SL': '', 'SERVICESTATEID': '1', 'LASTHOSTSTATE': 'PENDING', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'HOSTADDRESS': '127.0.0.1', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}, {'SERVICEACKCOMMENT': '', 'HOSTPERFDATA': '', 'SERVICEDOWNTIME': '0', 'PREVIOUSSERVICEHARDSTATEID': '0', 'LASTSERVICESTATECHANGE': '1502452826', 'HOSTGROUPNAMES': 'check_mk', 'LASTSERVICESTATE': 'OK', 'LONGSERVICEOUTPUT': '', 'NOTIFICATIONTYPE': 'PROBLEM', 'HOSTPROBLEMID': '0', 'HOSTNOTIFICATIONNUMBER': '0', 'SERVICE_SL': '', 'HOSTSTATE': 'PENDING', 'HOSTACKCOMMENT': '', 'LONGHOSTOUTPUT': '', 'LASTHOSTSTATECHANGE': '0', 'HOSTOUTPUT': '', 'HOSTNOTESURL': '', 'HOSTATTEMPT': '1', 'HOSTNAME': 'localhost', 'NOTIFICATIONAUTHORNAME': '', 'SERVICEDESC': 'Check_MK Agent', 'NOTIFICATIONAUTHOR': '', 'HOSTALIAS': 'localhost', 'PREVIOUSHOSTHARDSTATEID': '0', 'SERVICECONTACTGROUPNAMES': 'all', 'SERVICE_EC_CONTACT': '', 'SERVICEACKAUTHOR': '', 'SERVICEATTEMPT': '1', 'HOSTTAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'SERVICEGROUPNAMES': '', 'HOSTNOTES': '', 'NOTIFICATIONCOMMENT': '', 'HOST_ADDRESS_FAMILY': '4', 'MICROTIME': '1502452826145283', 'LASTHOSTUP': '0', 'PREVIOUSHOSTHARDSTATE': 'PENDING', 'LASTHOSTSTATEID': '0', 'LASTSERVICEOK': '0', 'HOSTADDRESS': '127.0.0.1', 'SERVICEPROBLEMID': '137', 'HOST_SL': '', 'LASTSERVICESTATEID': '0', 'HOSTCHECKCOMMAND': 'check-mk-host-smart', 'HOSTACKAUTHOR': '', 'SERVICEPERFDATA': '', 'HOST_ADDRESS_4': '127.0.0.1', 'HOSTSTATEID': '0', 'HOST_ADDRESS_6': '', 'SERVICEOUTPUT': 'WARN - error: This host is not registered for deployment(!), last update check: 2017-05-22 10:28:43 (warn at 2 days)(!), last agent update: 2017-05-22 09:28:24', 'HOSTCONTACTGROUPNAMES': 'all', 'HOST_EC_CONTACT': '', 'SERVICENOTES': '', 'MAXSERVICEATTEMPTS': '1', 'LASTSERVICEPROBLEMID': '137', 'HOST_FILENAME': '/wato/hosts.mk', 'LASTHOSTSTATE': 'PENDING', 'PREVIOUSSERVICEHARDSTATE': 'OK', 'SERVICECHECKCOMMAND': 'check_mk-check_mk.agent_update', 'SERVICEDISPLAYNAME': 'Check_MK Agent', 'CONTACTS': '', 'HOST_TAGS': '/wato/ cmk-agent ip-v4 ip-v4-only lan prod site:heute tcp wato', 'LASTHOSTPROBLEMID': '0', 'SVC_SL': '', 'SERVICESTATEID': '1', 'SERVICESTATE': 'WARNING', 'NOTIFICATIONAUTHORALIAS': '', 'SERVICENOTESURL': '', 'HOSTDOWNTIME': '0', 'SERVICENOTIFICATIONNUMBER': '1', 'MAXHOSTATTEMPTS': '1'}]",
     )
     assert isinstance(
         _execute_automation(site, "notification-analyse", args=["0"]),
@@ -618,7 +636,7 @@ def test_automation_active_check_icmp_all_ipv4(site: Site) -> None:
         )
         assert isinstance(result, results.ActiveCheckResult)
         assert result.state == 0
-        assert result.output.startswith("OK - 127.0.0.1: rta")
+        assert result.output.startswith("OK - 127.0.0.1 rta")
 
 
 def test_automation_active_check_unknown_custom(site: Site) -> None:
@@ -692,6 +710,19 @@ def test_automation_create_diagnostics_dump(site: Site) -> None:
     assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
     assert result.tarfile_path.endswith(".tar.gz")
     assert "var/check_mk/diagnostics" in result.tarfile_path
+
+
+def test_automation_restart_with_non_resolvable_host(site: Site) -> None:
+    host = "modes-test-host-unresolvable"
+    site.openapi.hosts.create(host)
+    try:
+        result = _execute_automation(site, "restart", expect_stderr_pattern=".*")
+    finally:
+        site.openapi.hosts.delete(host)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+    assert isinstance(result, results.RestartResult)
+    assert any(f"Failed to lookup IPv4 address of {host}" in w for w in result.config_warnings)
 
 
 # TODO: rename-hosts

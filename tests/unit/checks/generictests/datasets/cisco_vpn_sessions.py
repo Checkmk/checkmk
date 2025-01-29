@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.cisco_vpn_sessions import parse_cisco_vpn_sessions
+from cmk.plugins.collection.agent_based.cisco_vpn_sessions import parse_cisco_vpn_sessions
 
 checkname = "cisco_vpn_sessions"
 

@@ -60,7 +60,10 @@ Store::Store(ICore *mc)
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    return _log_cache.numCachedLogMessages();
+    return _log_cache.apply(
+        [](const LogFiles & /*log_cache*/, size_t num_cached_log_messages) {
+            return num_cached_log_messages;
+        });
 }
 
 bool Store::answerGetRequest(const std::vector<std::string> &lines,

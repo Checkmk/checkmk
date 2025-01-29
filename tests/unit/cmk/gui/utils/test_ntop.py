@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from typing import Any
 
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -23,7 +24,7 @@ from cmk.gui.utils.ntop import (
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    assert is_ntop_available() != (cmk_version.edition() is cmk_version.Edition.CRE)
+    assert is_ntop_available() != (cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE)
 
 
 @pytest.mark.usefixtures("load_config")
@@ -67,7 +68,7 @@ def test_is_ntop_configured_and_reason(
     answer: bool,
     reason: str,
 ) -> None:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         assert not is_ntop_configured()
         assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
     else:

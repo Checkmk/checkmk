@@ -9,10 +9,11 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import assert_never, Literal
 
 from cmk.utils.jsontype import JsonSerializable
-from cmk.utils.log import init_dedicated_logging
+from cmk.utils.paths import log_dir
 
 
 @dataclass
@@ -39,7 +40,7 @@ class SecurityEvent:
 class SiteStartStoppedEvent(SecurityEvent):
     """Indicates a site start/stopped"""
 
-    def __init__(self, *, event: Literal["start", "stop", "restart"]) -> None:
+    def __init__(self, *, event: Literal["start", "stop", "restart"], daemon: str | None) -> None:
         if event == "start":
             summary = "site started"
         elif event == "stop":
@@ -49,22 +50,17 @@ class SiteStartStoppedEvent(SecurityEvent):
         else:
             assert_never(event)
 
-        super().__init__(summary, {}, SecurityEvent.Domain.service)
+        super().__init__(
+            summary,
+            {
+                "daemon": daemon or "all",
+            },
+            SecurityEvent.Domain.service,
+        )
 
 
 def log_security_event(event: SecurityEvent) -> None:
-    """Log a security event"""
-
-    # initialize if not already initialized
-    if not _root_logger().handlers:
-        init_dedicated_logging(
-            logging.INFO,
-            target_logger=_root_logger(),
-            log_file_name="security.log",
-            formatter=logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"),
-        )
-
-    _root_logger().getChild(event.domain.name).info(
+    _get_logger().getChild(event.domain.name).info(
         json.dumps(
             {
                 "summary": event.summary,
@@ -74,5 +70,12 @@ def log_security_event(event: SecurityEvent) -> None:
     )
 
 
-def _root_logger() -> logging.Logger:
-    return logging.getLogger("cmk_security")
+def _get_logger() -> logging.Logger:
+    logger = logging.getLogger("cmk_security")
+    if not logger.handlers:  # delayed logger initialization
+        handler = logging.FileHandler(Path(log_dir, "security.log"), encoding="utf-8")
+        handler.setFormatter(logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"))
+        logger.setLevel(logging.INFO)
+        logger.addHandler(handler)
+        logger.propagate = False
+    return logger

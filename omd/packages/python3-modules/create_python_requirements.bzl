@@ -10,20 +10,11 @@ exports_files(["requirements.bzl"])
 def _create_python_requirements_impl(rctx):
     rctx.file("BUILD.bazel", BUILD_FILE_CONTENTS)
 
-    # Create the requirements from Pipfile.lock
     # At the moment there might be a pitfall, as `python_requirements.bzl`
     # has to be created before any target can be built. So we can not
     # use our own Python.
-    pipfile_path = rctx.path(Label(rctx.attr.requirements))
-    content = rctx.execute(
-        ["pipenv", "requirements", "--hash"],
-        environment = {
-            "PIPENV_PIPFILE": str(pipfile_path),
-        },
-        quiet = False,
-    )
 
-    parsed_requirements_txt = parse_requirements(content.stdout)
+    parsed_requirements_txt = parse_requirements(rctx.read(rctx.path(Label(rctx.attr.requirements_lock))))
 
     packages = {
         name: requirement
@@ -44,7 +35,7 @@ def _create_python_requirements_impl(rctx):
     )
 
 create_python_requirements = repository_rule(
-    attrs = {"requirements": attr.string(mandatory = True), "ignored_modules": attr.string_list()},
+    attrs = {"requirements_lock": attr.string(mandatory = True), "ignored_modules": attr.string_list()},
     doc = """A rule for importing `Pipfile` dependencies into Bazel.""",
     implementation = _create_python_requirements_impl,
 )

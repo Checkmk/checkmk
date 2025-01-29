@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 DELL_IDRAC_FANS_STATE_MAP = {
     "1": (3, "OTHER"),
@@ -53,6 +54,7 @@ def parse_dell_idrac_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_idrac_fans"] = LegacyCheckDefinition(
+    name="dell_idrac_fans",
     parse_function=parse_dell_idrac_fans,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
     fetch=SNMPTree(

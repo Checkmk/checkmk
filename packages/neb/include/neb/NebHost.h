@@ -24,7 +24,8 @@
 
 class NebHost : public IHost {
 public:
-    explicit NebHost(const ::host &host) : host_{host} {}
+    NebHost(const ::host &host, const NebCore &core)
+        : host_{host}, core_{core} {}
 
     [[nodiscard]] const ::host &handle() const { return host_; }
 
@@ -33,6 +34,7 @@ public:
     }
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
         const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
@@ -363,6 +365,7 @@ public:
 
 private:
     const ::host &host_;
+    const NebCore &core_;
 };
 
 #endif  // NebHost_h

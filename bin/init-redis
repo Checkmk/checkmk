@@ -8,7 +8,7 @@ from logging import getLogger
 from cmk.utils.setup_search_index import request_index_rebuild
 
 
-def main():
+def main() -> None:
     logger = getLogger("init-redis")
     try:
         request_index_rebuild()

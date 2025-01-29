@@ -24,11 +24,11 @@ from pathlib import Path
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-from tests.testlib.containers import execute_tests_in_container
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.repo import current_base_branch_name
+from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
@@ -38,7 +38,7 @@ def main(raw_args):
     """Run tests in docker"""
     args, command = _parse_arguments(raw_args)
 
-    distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
+    distro_name = _os_environ_get("DISTRO", "ubuntu-22.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,

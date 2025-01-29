@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+
+check_info = {}
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -24,7 +25,7 @@ from cmk.agent_based.v2 import contains, SNMPTree
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(string_table):  # pylint: disable=too-many-branches
+def parse_icom_repeater(string_table):
     parsed: dict[str, int | dict | float] = {}
     for line in string_table:
         if line[1] == "Temperature":
@@ -107,6 +108,7 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
 
 
 check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
+    name="icom_repeater_ps_volt",
     service_name="Power Supply Voltage",
     sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_ps_volt,
@@ -153,12 +155,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
             warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
 
     infotext = "%.1f V" % voltage
-    levelstext = " (warn/crit below {:.1f}/{:.1f} V and at or above {:.1f}/{:.1f} V)".format(
-        warn_lower,
-        crit_lower,
-        warn,
-        crit,
-    )
+    levelstext = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V and at or above {warn:.1f}/{crit:.1f} V)"
     if voltage < crit_lower or voltage >= crit:
         status = 2
     elif voltage < warn_lower or voltage >= warn:
@@ -174,6 +171,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
 
 
 check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
+    name="icom_repeater_pll_volt",
     service_name="%s PLL Lock Voltage",
     sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_pll_volt,
@@ -211,6 +209,7 @@ def check_icom_repeater_temp(_no_item, params, parsed):
 
 
 check_info["icom_repeater.temp"] = LegacyCheckDefinition(
+    name="icom_repeater_temp",
     service_name="Temperature %s",
     sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_temp,
@@ -254,6 +253,7 @@ def check_icom_repeater(_no_item, _no_params, parsed):
 
 
 check_info["icom_repeater"] = LegacyCheckDefinition(
+    name="icom_repeater",
     detect=contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.8.1",

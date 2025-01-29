@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.lib import cpu_util
-
-pytestmark = pytest.mark.checks
 
 
 def test_check_cpu_util() -> None:
@@ -82,47 +79,88 @@ def test_check_cpu_util_unix() -> None:
     ]
 
 
-def test_cpu_util_time() -> None:
-    value_store: dict[str, Any] = {}
-
-    # over threshold for the first time
+@pytest.mark.parametrize(
+    [
+        "first_timestamp",
+        "second_timestamp",
+        "usage",
+        "threshold",
+        "levels",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            23,
+            30,
+            24,
+            40,
+            (5, 10),
+            [],
+            id="below threshold",
+        ),
+        pytest.param(
+            15,
+            50,
+            100,
+            100,
+            (13, 23),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="my_core is under high load for: 35 seconds (warn/crit at 13 seconds/23 seconds)",
+                ),
+            ],
+            id="at threshold",
+        ),
+        pytest.param(
+            23,
+            30,
+            42,
+            40,
+            (5, 10),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="my_core is under high load for: 7 seconds (warn/crit at 5 seconds/10 seconds)",
+                )
+            ],
+            id="above threshold",
+        ),
+    ],
+)
+def test_cpu_util_time(
+    first_timestamp: float,
+    second_timestamp: float,
+    usage: float,
+    threshold: float,
+    levels: tuple[float, float],
+    expected_result: CheckResult,
+) -> None:
+    value_store: dict[str, object] = {}
+    # fill value store
     assert not list(
-        cpu_util.cpu_util_time(
-            this_time=23.0,
+        cpu_util._cpu_util_time(
+            this_time=first_timestamp,
             core="my_core",
-            perc=42.0,
-            threshold=40.0,
-            levels=(5.0, 10.0),
+            perc=usage,
+            threshold=threshold,
+            levels=levels,
             value_store=value_store,
         )
     )
-
-    # over threshold for more that warn
-    assert list(
-        cpu_util.cpu_util_time(
-            this_time=30.0,
-            core="my_core",
-            perc=42.0,
-            threshold=40.0,
-            levels=(5.0, 10.0),
-            value_store=value_store,
+    # produce result if threshold is exceeded
+    assert (
+        list(
+            cpu_util._cpu_util_time(
+                this_time=second_timestamp,
+                core="my_core",
+                perc=usage,
+                threshold=threshold,
+                levels=levels,
+                value_store=value_store,
+            )
         )
-    ) == [
-        Result(
-            state=State.WARN,
-            summary="my_core is under high load for: 7 seconds (warn/crit at 5 seconds/10 seconds)",
-        ),
-    ]
-
-    assert not list(
-        cpu_util.cpu_util_time(
-            this_time=34.0,
-            core="my_core",
-            perc=39.0,  # <--------- back to OK!
-            threshold=40.0,
-            levels=(5.0, 10.0),
-            value_store=value_store,
-        )
+        == expected_result
     )
 
 

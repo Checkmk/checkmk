@@ -8,6 +8,7 @@ import re
 import jinja2
 
 from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.types import Column
 
 TEMPLATES = {
     "table": """## {{ table.__tablename__.title() }} Table
@@ -53,7 +54,7 @@ def defaults_bold(text: str) -> str:
 
 
 @functools.lru_cache
-def _jinja_env():
+def _jinja_env() -> jinja2.Environment:
     env = jinja2.Environment(  # nosec B701 # BNS:bbfc92
         extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
@@ -73,7 +74,7 @@ HOST_COLUMNS = tables.Hosts.__columns__()
 SERVICE_COLUMNS = tables.Services.__columns__()
 
 
-def is_adjacent_column(column) -> bool:  # type: ignore[no-untyped-def]
+def is_adjacent_column(column: Column) -> bool:
     return (column.name.startswith("host_") and column.name[5:] in HOST_COLUMNS) or (
         column.name.startswith("service_") and column.name[8:] in SERVICE_COLUMNS
     )

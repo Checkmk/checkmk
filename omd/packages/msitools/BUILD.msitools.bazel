@@ -21,7 +21,13 @@ config_setting(
 configure_make(
     name = "msitools",
     args = ["-j4"],
-    env = select(
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    } | select(
         {
             ":omd_libgsf": {
                 "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
@@ -52,6 +58,7 @@ configure_make(
         "msibuild",
         "msiinfo",
     ],
+    visibility = ["//visibility:public"],
     deps = select(
         {
             ":omd_libgsf": ["@libgsf"],

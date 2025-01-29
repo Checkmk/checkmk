@@ -10,8 +10,9 @@ import subprocess
 from contextlib import suppress
 from typing import Final
 
+from cmk.ccc.exceptions import MKFetcherError
+
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 
 from ._abstract import Fetcher, Mode
@@ -74,7 +75,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             # rather than doing it in a preexec_fn. The start_new_session parameter can take
             # the place of a previously common use of preexec_fn to call os.setsid() in the
             # child.
-            self._process = subprocess.Popen(  # nosec
+            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
                 self.cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
@@ -87,7 +88,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(  # nosec # pylint: disable=consider-using-with
+            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
                 self.cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
@@ -128,7 +129,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get data from program")
         if self._process is None:
-            raise MKFetcherError("No process")
+            raise TypeError("no process")
         # ? do they have the default byte type, because in open() none of the "text", "encoding",
         #  "errors", "universal_newlines" were specified?
         stdout, stderr = self._process.communicate(

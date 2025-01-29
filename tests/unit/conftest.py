@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import os
 import shutil
@@ -14,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from fakeredis import FakeRedis
 
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
@@ -22,27 +21,16 @@ from tests.testlib.utils import (
     repo_path,
 )
 
-# Import this fixture to not clutter this file, but it's unused here...
-from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import # noqa: F401
-    fixture_ed25519_private_key,
-    fixture_rsa_private_key,
-    fixture_secp256k1_private_key,
-    fixture_self_signed,
-    fixture_self_signed_ec,
-    fixture_self_signed_ed25519,
-)
-
 import livestatus
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 import cmk.utils.caching
-import cmk.utils.crypto.password_hashing
-import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.redis as redis
-import cmk.utils.store as store
-import cmk.utils.version as cmk_version
-from cmk.utils import tty
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
+from cmk.utils import redis, tty
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -53,17 +41,24 @@ from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.site import omd_site
+
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
+)
+
+import cmk.crypto.password_hashing
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def enable_debug_fixture():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.enable()
+    debug_mode = cmk.ccc.debug.debug_mode
+    cmk.ccc.debug.enable()
     yield
-    cmk.utils.debug.debug_mode = debug_mode
+    cmk.ccc.debug.debug_mode = debug_mode
 
 
 @pytest.fixture
@@ -83,10 +78,10 @@ def as_path(tmp_path: Path) -> Callable[[str], Path]:
 
 @pytest.fixture
 def disable_debug():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.disable()
+    debug_mode = cmk.ccc.debug.debug_mode
+    cmk.ccc.debug.disable()
     yield
-    cmk.utils.debug.debug_mode = debug_mode
+    cmk.ccc.debug.debug_mode = debug_mode
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -153,7 +148,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
     store.makedirs(cmk.utils.paths.local_dashboards_dir)
     store.makedirs(cmk.utils.paths.local_views_dir)
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         # needed for visuals.load()
         store.makedirs(cmk.utils.paths.local_reports_dir)
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
@@ -168,6 +163,7 @@ CONFIG_AGENT_RECEIVER_PORT='8000'
 CONFIG_APACHE_MODE='own'
 CONFIG_APACHE_TCP_ADDR='127.0.0.1'
 CONFIG_APACHE_TCP_PORT='5002'
+CONFIG_AUTOMATION_HELPER='on'
 CONFIG_AUTOSTART='off'
 CONFIG_CORE='cmc'
 CONFIG_LIVEPROXYD='on'
@@ -184,6 +180,16 @@ CONFIG_MULTISITE_COOKIE_AUTH='on'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
+CONFIG_RABBITMQ_PORT='5672'
+CONFIG_RABBITMQ_ONLY_FROM='0.0.0.0 ::'
+CONFIG_RABBITMQ_DIST_PORT='25672'
+CONFIG_TRACE_JAEGER_ADMIN_PORT='14269'
+CONFIG_TRACE_JAEGER_UI_PORT='13333'
+CONFIG_TRACE_RECEIVE='off'
+CONFIG_TRACE_RECEIVE_ADDRESS='[::1]'
+CONFIG_TRACE_RECEIVE_PORT='4321'
+CONFIG_TRACE_SEND='off'
+CONFIG_TRACE_SEND_TARGET='local_site'
 CONFIG_TMPFS='on'""",
     )
     _dump(
@@ -262,72 +268,40 @@ def clear_caches_per_function():
     yield
 
 
-class FixRegister:
-    """Access agent based plugins"""
+@pytest.fixture(scope="session")
+def agent_based_plugins() -> AgentBasedPlugins:
+    # Local import to have faster pytest initialization
+    from cmk.base import (  # pylint: disable=cmk-module-layer-violation
+        config,
+    )
 
-    def __init__(self) -> None:
-        # Local import to have faster pytest initialization
-        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-
-        config._initialize_data_structures()
-        assert not config.check_info
-
-        errors = config.load_all_plugins(
-            check_api.get_check_api_context,
-            local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
-            checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
-        )
-        assert not errors
-
-        self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
-        self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
-        self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
-        self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
-
-    @property
-    def snmp_sections(self):
-        return self._snmp_sections
-
-    @property
-    def agent_sections(self):
-        return self._agent_sections
-
-    @property
-    def check_plugins(self):
-        return self._check_plugins
-
-    @property
-    def inventory_plugins(self):
-        return self._inventory_plugins
+    errors = config.load_all_plugins(
+        local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
+        checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
+    )
+    assert not errors
+    return get_previously_loaded_plugins()
 
 
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
-    def __init__(self, fixed_register: FixRegister) -> None:
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-
-        assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
-
-        self.check_info = {
-            k: v
-            for k, v in config.check_info.items()
-            if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
-        }
-        self.active_check_info = copy.deepcopy(config.active_check_info)
-        self.factory_settings = copy.deepcopy(config.factory_settings)
-
-
-@pytest.fixture(scope="session", name="fix_register")
-def fix_register_fixture() -> Iterator[FixRegister]:
-    yield FixRegister()
+    def __init__(self) -> None:
+        result = discover_legacy_checks(
+            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            FileLoader(
+                precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                local_path="/not_relevant_for_test",
+                makedirs=store.makedirs,
+            ),
+            raise_errors=True,
+        )
+        self.check_info = {p.name: p for p in result.sane_check_info}
 
 
 @pytest.fixture(scope="session")
-def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
-    yield FixPluginLegacy(fix_register)
+def fix_plugin_legacy() -> Iterator[FixPluginLegacy]:
+    yield FixPluginLegacy()
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -385,7 +359,7 @@ def use_fakeredis_client() -> Iterator[None]:
 @pytest.fixture(autouse=True, scope="session")
 def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
-    with patch.object(cmk.utils.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
+    with patch.object(cmk.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
         yield
 
 
@@ -436,4 +410,12 @@ def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatc
     """Don't check if message about license expiration should be shown"""
     monkeypatch_module.setattr(
         "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
+    )
+
+
+@pytest.fixture(name="suppress_license_banner")
+def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    """Don't check if message about license expiration should be shown"""
+    monkeypatch_module.setattr(
+        "cmk.gui.htmllib.top_heading._may_show_license_banner", lambda x: None
     )

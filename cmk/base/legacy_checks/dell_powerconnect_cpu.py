@@ -16,13 +16,13 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
 
+check_info = {}
 
-# Inventory of dell power connect CPU details.
+
+# Discovery of dell power connect CPU details.
 def inventory_dell_powerconnect_cpu(info):
     if info:
         enabled, onesecondperc, _oneminuteperc, _fiveminutesperc = info[0]
@@ -40,25 +40,28 @@ def check_dell_powerconnect_cpu(item, params, info):
     if enabled != 1:
         return
 
-    cpu_util = saveint(onesecondperc)
-    if cpu_util < 0 or cpu_util > 100:
+    if onesecondperc < 0 or onesecondperc > 100:
         return
 
     # Darn. It again happend. Someone mixed up load and utilization.
     # We do *not* rename the performance variables here, in order not
     # to mix up existing RRDs...
     yield check_levels(
-        cpu_util,
+        onesecondperc,
         "util",
         params["levels"],
         human_readable_func=render.percent,
         infoname="CPU utilization",
         boundaries=(0, 100),
     )
-    yield 0, "", [
-        ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
-        ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
-    ]
+    yield (
+        0,
+        "",
+        [
+            ("util1", oneminuteperc, None, None, 0, 100),
+            ("util5", fiveminutesperc, None, None, 0, 100),
+        ],
+    )
 
 
 def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
@@ -66,6 +69,7 @@ def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
+    name="dell_powerconnect_cpu",
     parse_function=parse_dell_powerconnect_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(

@@ -2,19 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-""" Test documentation of supported macros in server side calls
+"""Test documentation of supported macros in server side calls
 
 These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """
+
 from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as base_config
@@ -156,7 +158,19 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     resource_macros = base_config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
 
-    host_config = base_config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of)
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
+    host_config = base_config.get_ssc_host_config(
+        host_name,
+        config_cache.alias(host_name),
+        config_cache.default_address_family(host_name),
+        config_cache.ip_stack_config(host_name),
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        macros,
+        ip_address_of,
+    )
 
     documented = DOCUMENTED_ACTIVE_CHECK_MACROS
 
@@ -174,7 +188,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
         + list(_iter_macros(documented["per_custom_macro"], ["CUSTOM_MACRO"]))
     )
 
-    if cmk_version.edition().short == "cme":
+    if cmk_version.edition(cmk.utils.paths.omd_root).short == "cme":
         expected_macros.extend(documented["CME_only"])
 
     assert sorted(host_config.macros.keys()) == sorted(expected_macros)
@@ -195,7 +209,19 @@ def test_special_agent_macros(
         **base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs),
     }
 
-    host_config = base_config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of)
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
+    host_config = base_config.get_ssc_host_config(
+        host_name,
+        config_cache.alias(host_name),
+        config_cache.default_address_family(host_name),
+        config_cache.ip_stack_config(host_name),
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        macros,
+        ip_address_of,
+    )
 
     documented = DOCUMENTED_SPECIAL_AGENT_MACROS
 
@@ -212,7 +238,7 @@ def test_special_agent_macros(
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
     )
 
-    if cmk_version.edition().short == "cme":
+    if cmk_version.edition(cmk.utils.paths.omd_root).short == "cme":
         expected_macros.extend(documented["CME_only"])
 
     assert sorted(host_config.macros.keys()) == sorted(expected_macros)

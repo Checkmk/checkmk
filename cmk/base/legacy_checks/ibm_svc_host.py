@@ -6,9 +6,11 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_host:sep(58)>>>
@@ -40,7 +42,7 @@ def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branches
+def check_ibm_svc_host(item, params, parsed):
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary
@@ -111,6 +113,7 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
 
 
 check_info["ibm_svc_host"] = LegacyCheckDefinition(
+    name="ibm_svc_host",
     parse_function=parse_ibm_svc_host,
     service_name="Hosts",
     discovery_function=discover_ibm_svc_host,

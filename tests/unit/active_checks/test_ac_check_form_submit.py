@@ -10,7 +10,7 @@ from types import ModuleType
 import pytest
 import vcr  # type: ignore[import-untyped]
 
-from tests.testlib import import_module_hack
+from tests.testlib.unit.utils import import_module_hack
 
 
 @pytest.fixture(name="check_form_submit", scope="module")

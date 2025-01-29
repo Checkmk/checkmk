@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp_proliant import DETECT
+
+check_info = {}
 
 hp_proliant_da_cntlr_cond_map = {
     "1": (3, "other"),
@@ -28,9 +28,23 @@ hp_proliant_da_cntlr_role_map = {
 hp_proliant_da_cntlr_state_map = {
     "1": (3, "other"),
     "2": (0, "ok"),
-    "3": (2, "generalFailure"),
-    "4": (2, "cableProblem"),
-    "5": (2, "poweredOff"),
+    "3": (2, "general failure"),
+    "4": (2, "cable problem"),
+    "5": (2, "powered off"),
+    "6": (1, "cache module missing"),
+    "7": (2, "degraded"),
+    "8": (0, "enabled"),
+    "9": (0, "disabled"),
+    "10": (1, "standby (offline)"),
+    "11": (0, "standby (spare)"),
+    "12": (1, "in test"),
+    "13": (0, "starting"),
+    "14": (2, "absent"),
+    "16": (2, "unavailable (offline)"),
+    "17": (0, "deferring"),
+    "18": (0, "quiesced"),
+    "19": (1, "updating"),
+    "20": (0, "qualified"),
 }
 
 
@@ -76,6 +90,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
 
 
 check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(
+    name="hp_proliant_da_cntlr",
     parse_function=parse_hp_proliant_da_cntlr,
     detect=DETECT,
     fetch=SNMPTree(

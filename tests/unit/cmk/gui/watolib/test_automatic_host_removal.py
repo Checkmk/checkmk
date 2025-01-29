@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import datetime
 from pathlib import Path
@@ -38,11 +37,10 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
 
 
 def test_remove_hosts_no_rules_early_return(
-    mocker: MockerFixture,
     activate_changes_mock: MagicMock,
     request_context: None,
 ) -> None:
-    automatic_host_removal._remove_hosts(mocker.MagicMock())
+    automatic_host_removal.execute_host_removal_job()
     activate_changes_mock.assert_not_called()
 
 
@@ -175,8 +173,7 @@ def fixture_mock_delete_hosts_automation(mocker: MockerFixture) -> MagicMock:
 @pytest.mark.usefixtures("setup_rules")
 @pytest.mark.usefixtures("setup_livestatus_mock")
 @pytest.mark.usefixtures("with_admin_login")
-def test_remove_hosts(
-    mocker: MockerFixture,
+def test_execute_host_removal_job(
     mock_livestatus: MockLiveStatusConnection,
     activate_changes_mock: MagicMock,
     mock_delete_hosts_automation: MagicMock,
@@ -194,7 +191,7 @@ def test_remove_hosts(
                 "ColumnHeaders: off",
             ]
         )
-        automatic_host_removal._remove_hosts(mocker.MagicMock())
+        automatic_host_removal.execute_host_removal_job()
 
     assert sorted(folder_tree().root_folder().all_hosts_recursively()) == [
         "host_crit_keep",

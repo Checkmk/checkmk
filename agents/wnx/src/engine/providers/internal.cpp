@@ -37,10 +37,10 @@ const std::unordered_map<std::string_view, std::chrono::seconds> &
 GetDelaysOnFail() {
     const static std::unordered_map<std::string_view, std::chrono::seconds>
         delays_on_fail = {
-            {kDotNetClrMemory, cfg::G_DefaultDelayOnFail},  //
-            {kWmiWebservices, cfg::G_DefaultDelayOnFail},   //
-            {kWmiCpuLoad, cfg::G_DefaultDelayOnFail},       //
-            {kMsExch, cfg::G_DefaultDelayOnFail},           //
+            {kDotNetClrMemory, 0s},                        //
+            {kWmiWebservices, cfg::G_DefaultDelayOnFail},  //
+            {kWmiCpuLoad, 0s},                             //
+            {kMsExch, cfg::G_DefaultDelayOnFail},          //
             {kOhm, cfg::G_DefaultDelayOnFail},
 
             // end of the real sections
@@ -145,7 +145,8 @@ void Basic::setupDelayOnFail() noexcept {
         const auto &delay_in_seconds = GetDelaysOnFail().at(uniq_name_);
         delay_on_fail_ = delay_in_seconds;
     } catch (const std::out_of_range &) {
-        // do nothing here
+        XLOG::l.crit("Unsupported section name {}", uniq_name_);
+        delay_on_fail_ = std::chrono::seconds(0);
     }
 }
 

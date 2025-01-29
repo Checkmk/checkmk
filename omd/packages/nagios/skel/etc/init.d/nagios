@@ -217,7 +217,7 @@ case "$1" in
              __init_hook $0 $1 post 0
              exit 0
          else
-             echo 'ERROR'
+             echo 'failed'
              __init_hook $0 $1 post 1
              exit 1
          fi
@@ -229,7 +229,7 @@ case "$1" in
              __init_hook $0 $1 post 0
             exit 0
         else
-            echo 'ERROR'
+            echo 'failed'
              __init_hook $0 $1 post 1
             exit 1
         fi
@@ -264,7 +264,7 @@ case "$1" in
             echo 'OK'
             exit 0
         else
-            echo 'ERROR'
+            echo 'failed'
             exit 1
         fi
     ;;

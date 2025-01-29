@@ -6,9 +6,10 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
+
 from typing import NamedTuple
 
-import cmk.gui.message as message
+from cmk.gui import message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -116,11 +117,11 @@ def ajax_message_read():
     response.set_content_type("application/json")
     try:
         message.delete_gui_message(request.get_str_input_mandatory("id"))
-        html.write_text("OK")
+        html.write_text_permissive("OK")
     except Exception:
         if active_config.debug:
             raise
-        html.write_text("ERROR")
+        html.write_text_permissive("ERROR")
 
 
 class PageAjaxSidebarGetMessages(AjaxPage):
@@ -223,7 +224,7 @@ class MegaMenuRenderer:
         html.open_h2()
         html.open_a(
             class_="show_all_topics",
-            href="",
+            href=None,
             onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id,
         )
         html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
@@ -238,10 +239,10 @@ class MegaMenuRenderer:
         for item in sorted(topic.items, key=lambda g: g.sort_index):
             self._show_item(item)
         html.open_li(class_="show_all_items")
-        html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
+        html.open_a(href=None, onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
         if user.get_attribute("icons_per_item"):
             html.icon("trans")
-        html.write_text(_("Show all"))
+        html.write_text_permissive(_("Show all"))
         html.close_a()
         html.close_li()
         html.close_ul()
@@ -262,7 +263,7 @@ class MegaMenuRenderer:
     def _show_item_title(self, item: TopicMenuItem) -> None:
         item_title: HTML | str = item.title
         if not item.button_title:
-            html.write_text(item_title)
+            html.write_text_permissive(item_title)
             return
         html.span(item.title)
         html.button(item.name, item.button_title)

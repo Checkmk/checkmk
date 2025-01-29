@@ -32,10 +32,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_3ware_disks(info):
@@ -60,14 +60,7 @@ def check_3ware_disks(item, _no_params, info):
         size_type = line[4]
         disk_type = line[5]
         model = line[-1]
-        infotext = "{} (unit: {}, size: {},{}, type: {}, model: {})".format(
-            status,
-            unit_type,
-            size,
-            size_type,
-            disk_type,
-            model,
-        )
+        infotext = f"{status} (unit: {unit_type}, size: {size},{size_type}, type: {disk_type}, model: {model})"
         if status in ["OK", "VERIFYING"]:
             return (0, "disk status is " + infotext)
         if status in ["SMART_FAILURE"]:
@@ -85,6 +78,7 @@ def parse_3ware_disks(string_table: StringTable) -> StringTable:
 
 
 check_info["3ware_disks"] = LegacyCheckDefinition(
+    name="3ware_disks",
     parse_function=parse_3ware_disks,
     service_name="RAID 3ware disk %s",
     discovery_function=inventory_3ware_disks,

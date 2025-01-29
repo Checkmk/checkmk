@@ -14,13 +14,6 @@ def main(job_definition_file) {
     load("${checkout_dir}/buildscripts/scripts/utils/common.groovy");
     load("${checkout_dir}/buildscripts/scripts/utils/docker_util.groovy");
 
-    if (currentBuild.number % 10 == 0) {
-        print("Cleanup git clone (git gc)..");
-        dir("${checkout_dir}") {
-            cmd_output("git gc");
-        }
-    }
-
     docker_registry_no_http = DOCKER_REGISTRY.split('://')[1];
 
     /// in order to spoiler spooky effects encountered just
@@ -29,16 +22,33 @@ def main(job_definition_file) {
     // TODO: this should be passed through by trigger-jobs
     build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
 
-    // FIXME: should be defined elsewhere
-    DOCKER_TAG_FOLDER = "master-latest";
+    job_params_from_comments = arguments_from_comments();
+
+    /// map edition short forms to long forms if applicable
+    if ("editions" in job_params_from_comments) {
+        /// Might also be taken from editions.yml - there we also have 'saas' and 'raw' but
+        /// AFAIK there is no way to extract the editions we want to test generically, so we
+        /// hard-code these:
+        job_params_from_comments["editions"] = job_params_from_comments["editions"].collect {
+            [
+                "cee": "enterpise",
+                "cre": "raw",
+                "cme": "managed",
+                "cse": "saas",
+                "cce": "cloud",
+            ].get(it, it)
+        };
+    }
+    print("job_params_from_comments: ${job_params_from_comments}");
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
         load("${checkout_dir}/${job_definition_file}").main();
-    } catch(Exception e) {
+    } catch(Exception exc) {
         dir("${checkout_dir}") {
-            notify.notify_error(e);
+            notify.notify_error(exc);
         }
+        throw exc;
     }
 }
 

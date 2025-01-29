@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container, Iterable
-from typing import TypeVar
+from typing import Literal, TypeVar
 
+from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -21,19 +23,59 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     ListOfStrings,
+    Migrate,
     MigrateNotUpdated,
     NetworkPort,
     TextInput,
+    Transform,
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupVMCloudContainer
+from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
-# TODO agent rule will be migrated to plugins.aws, this will remove the module layer violation
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
+from cmk.rulesets.v1.form_specs import migrate_to_password
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
+
+
+def _unmigrate_password(
+    model: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ],
+) -> object:
+    match model:
+        case "password", password:
+            return "password", password
+        case "store", password_store_id:
+            return "store", password_store_id
+        # already migrated passwords
+        case "cmk_postprocessed", "explicit_password", (str(_password_id), str(password)):
+            return "password", password
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(_password)):
+            return "store", password_store_id
+
+    raise TypeError(f"Could not migrate {model!r} to Password.")
+
+
+def _vs_v1_ssc_password(title: str, allow_empty: bool) -> ValueSpec:
+    """
+    This makes sure we can use the v1 server-side call API within a valuespec.
+    The reason this is necessary is that it has been decided that this rule needs considerable
+    changes to be migrated to FormSpecs. This is a temporary solution to make sure the rule
+    still transmits passwords in a secure way to the agent.
+    """
+    return Migrate(
+        Transform(
+            valuespec=IndividualOrStoredPassword(title=title, allow_empty=allow_empty),
+            back=migrate_to_password,
+            forth=_unmigrate_password,
+        ),
+        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )
 
 
 def _validate_aws_tags(value, varprefix):
@@ -102,7 +144,10 @@ def _vs_element_aws_service_selection():
                 "The overall tags will be ignored for these services."
             ),
             choices=[
-                ("all", _("Gather all service instances and restrict by overall AWS tags")),
+                (
+                    "all",
+                    _("Gather all service instances and restrict by overall AWS tags"),
+                ),
                 (
                     "tags",
                     _("Use explicit AWS service tags and overrule overall AWS tags"),
@@ -213,7 +258,7 @@ class AWSSpecialAgentValuespecBuilder:
                         (
                             "host_assignment",
                             CascadingDropdown(
-                                title=_("Define Host Assignment"),
+                                title=_("Define host assignment"),
                                 help=_(
                                     "Define the host to assign the discovered CloudFront services."
                                     " You can assign them to the AWS host as any other AWS service or"
@@ -461,149 +506,280 @@ class AWSSpecialAgentValuespecBuilder:
         ]
 
 
-def _valuespec_special_agents_aws() -> Dictionary:
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(edition() in (Edition.CME, Edition.CCE))
+def _migrate_auth(value: object) -> dict[str, object]:
+    """
+    migrate to new auth config with explicit auth types
+    """
+
+    assert isinstance(value, dict)
+
+    if "auth" in value:
+        return value
+
+    auth = {}
+    if "access_key_id" in value:
+        auth["access_key_id"] = value["access_key_id"]
+        auth["secret_access_key"] = value["secret_access_key"]
+
+        # values required for migration 2.3->2.4 reuse for 2.5
+        del value["access_key_id"]
+        del value["secret_access_key"]
+
+    if "access" not in value or "role_arn_id" not in value["access"]:
+        value["auth"] = ("access_key", auth)
+    else:
+        auth["role_arn_id"] = value["access"]["role_arn_id"][0]
+
+        if value["access"]["role_arn_id"][1]:
+            auth["external_id"] = value["access"]["role_arn_id"][1]
+
+        # values required for migration 2.3->2.4 reuse for 2.5
+        del value["access"]["role_arn_id"]
+        value["auth"] = ("access_key_sts", auth)
+
+    return value
+
+
+def _valuespec_special_agents_aws() -> Migrate:
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(
+        edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE)
+    )
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]
 
-    return Dictionary(
-        title=_("Amazon Web Services (AWS)"),
-        elements=[
-            (
-                "access_key_id",
-                TextInput(
-                    title=_("The access key ID for your AWS account"),
-                    allow_empty=False,
-                    size=50,
-                ),
-            ),
-            (
-                "secret_access_key",
-                MigrateToIndividualOrStoredPassword(
-                    title=_("The secret access key for your AWS account"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "proxy_details",
-                Dictionary(
-                    title=_("Proxy server details"),
-                    elements=[
-                        ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
-                        ("proxy_port", NetworkPort(title=_("Port"))),
-                        (
-                            "proxy_user",
-                            TextInput(
-                                title=_("Username"),
-                                size=32,
-                            ),
-                        ),
-                        (
-                            "proxy_password",
-                            MigrateToIndividualOrStoredPassword(title=_("Password")),
-                        ),
-                    ],
-                    optional_keys=["proxy_port", "proxy_user", "proxy_password"],
-                ),
-            ),
-            (
-                "access",
-                Dictionary(
-                    title=_("Access to AWS API"),
-                    elements=[
-                        (
-                            "global_service_region",
-                            DropdownChoice(
-                                title=_("Use custom region for global AWS services"),
-                                choices=[
-                                    (None, _("default (all normal AWS regions)")),
-                                ]
-                                + [
-                                    (x, x)
-                                    for x in (
-                                        "us-gov-east-1",
-                                        "us-gov-west-1",
-                                        "cn-north-1",
-                                        "cn-northwest-1",
-                                    )
-                                ],
-                                help=_(
-                                    "us-gov-* or cn-* regions have their own global services and may not reach the default one."
-                                ),
-                                default_value=None,
-                            ),
-                        ),
-                        (
-                            "role_arn_id",
-                            Tuple(
-                                title=_("Use STS AssumeRole to assume a different IAM role"),
-                                elements=[
-                                    TextInput(
-                                        title=_("The ARN of the IAM role to assume"),
-                                        size=50,
-                                        help=_(
-                                            "The Amazon Resource Name (ARN) of the role to assume."
-                                        ),
-                                    ),
-                                    TextInput(
-                                        title=_("External ID (optional)"),
-                                        size=50,
-                                        help=_(
-                                            "A unique identifier that might be required when you assume a role in another "
-                                            "account. If the administrator of the account to which the role belongs provided "
-                                            "you with an external ID, then provide that value in the External ID parameter. "
-                                        ),
-                                    ),
-                                ],
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "global_services",
-                MigrateNotUpdated(
-                    valuespec=Dictionary(
-                        title=_("Global services to monitor"),
-                        elements=global_services,
-                    ),
-                    migrate=lambda p: dict(
-                        valuespec_builder.filter_for_edition(
-                            p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
-                        )
-                    ),
-                ),
-            ),
-            (
-                "regions",
-                ListChoice(
-                    title=_("Regions to monitor"),
-                    choices=aws_region_to_monitor(),
-                ),
-            ),
-            (
-                "services",
-                MigrateNotUpdated(
-                    valuespec=Dictionary(
-                        title=_("Services per region to monitor"),
-                        elements=regional_services,
-                        default_keys=regional_services_default_keys,
-                    ),
-                    migrate=lambda p: dict(
-                        valuespec_builder.filter_for_edition(
-                            p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
-                        )
-                    ),
-                ),
-            ),
-            _vs_element_aws_piggyback_naming_convention(),
-            (
+    return Migrate(
+        Dictionary(
+            title=_("Amazon Web Services (AWS)"),
+            optional_keys=[
                 "overall_tags",
-                _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
-            ),
-        ],
-        optional_keys=["overall_tags", "proxy_details"],
+                "proxy_details",
+            ],
+            elements=[
+                (
+                    "auth",
+                    CascadingDropdown(
+                        title=_("Authentication type"),
+                        help=_(
+                            "Monitoring via an IAM role is recommended, however it requires the monitoring site to be "
+                            "located on an AWS EC2 instance with the according permissions to the accounts to be monitored."
+                        ),
+                        choices=[
+                            (
+                                "access_key",
+                                _("Access key"),
+                                Dictionary(
+                                    title=_("Proxy server details"),
+                                    optional_keys=False,
+                                    elements=[
+                                        (
+                                            "access_key_id",
+                                            TextInput(
+                                                title=_("The access key ID for your AWS account"),
+                                                allow_empty=True,
+                                                size=50,
+                                            ),
+                                        ),
+                                        (
+                                            "secret_access_key",
+                                            _vs_v1_ssc_password(
+                                                title=_(
+                                                    "The secret access key for your AWS account"
+                                                ),
+                                                allow_empty=False,
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "access_key_sts",
+                                _("Access key + IAM role"),
+                                Dictionary(
+                                    title=_("Access key information"),
+                                    optional_keys=["external_id"],
+                                    elements=[
+                                        (
+                                            "access_key_id",
+                                            TextInput(
+                                                title=_("The access key ID for your AWS account"),
+                                                allow_empty=False,
+                                                size=50,
+                                            ),
+                                        ),
+                                        (
+                                            "secret_access_key",
+                                            _vs_v1_ssc_password(
+                                                title=_(
+                                                    "The secret access key for your AWS account"
+                                                ),
+                                                allow_empty=False,
+                                            ),
+                                        ),
+                                        (
+                                            "role_arn_id",
+                                            TextInput(
+                                                title=_("The ARN of the IAM role to assume"),
+                                                size=50,
+                                                allow_empty=False,
+                                                help=_(
+                                                    "The Amazon Resource Name (ARN) of the role to assume."
+                                                ),
+                                            ),
+                                        ),
+                                        (
+                                            "external_id",
+                                            TextInput(
+                                                title=_("External ID"),
+                                                size=50,
+                                                allow_empty=True,
+                                                help=_(
+                                                    "A unique identifier that might be required when you assume a role in another "
+                                                    "account. If the administrator of the account to which the role belongs provided "
+                                                    "you with an external ID, then provide that value in the External ID parameter. "
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "sts",
+                                _("IAM role (on EC2 instance only)"),
+                                Dictionary(
+                                    title=_("Access key information"),
+                                    optional_keys=["external_id"],
+                                    elements=[
+                                        (
+                                            "role_arn_id",
+                                            TextInput(
+                                                title=_("The ARN of the IAM role to assume"),
+                                                size=50,
+                                                allow_empty=False,
+                                                help=_(
+                                                    "The Amazon Resource Name (ARN) of the role to assume."
+                                                ),
+                                            ),
+                                        ),
+                                        (
+                                            "external_id",
+                                            TextInput(
+                                                title=_("External ID"),
+                                                size=50,
+                                                allow_empty=True,
+                                                help=_(
+                                                    "A unique identifier that might be required when you assume a role in another "
+                                                    "account. If the administrator of the account to which the role belongs provided "
+                                                    "you with an external ID, then provide that value in the External ID parameter. "
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "none",
+                                _("None (on EC2 instance only)"),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "proxy_details",
+                    Dictionary(
+                        title=_("Proxy server details"),
+                        elements=[
+                            ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
+                            ("proxy_port", NetworkPort(title=_("Port"))),
+                            (
+                                "proxy_user",
+                                TextInput(
+                                    title=_("Username"),
+                                    size=32,
+                                ),
+                            ),
+                            (
+                                "proxy_password",
+                                _vs_v1_ssc_password(title=_("Password"), allow_empty=True),
+                            ),
+                        ],
+                        optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+                    ),
+                ),
+                (
+                    "access",
+                    Dictionary(
+                        title=_("Access to AWS API"),
+                        elements=[
+                            (
+                                "global_service_region",
+                                DropdownChoice(
+                                    title=_("Use custom region for global AWS services"),
+                                    choices=[
+                                        (None, _("default (all normal AWS regions)")),
+                                    ]
+                                    + [
+                                        (x, x)
+                                        for x in (
+                                            "us-gov-east-1",
+                                            "us-gov-west-1",
+                                            "cn-north-1",
+                                            "cn-northwest-1",
+                                        )
+                                    ],
+                                    help=_(
+                                        "us-gov-* or cn-* regions have their own global services and may not reach the default one."
+                                    ),
+                                    default_value=None,
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "global_services",
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Global services to monitor"),
+                            elements=global_services,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
+                            )
+                        ),
+                    ),
+                ),
+                (
+                    "regions",
+                    ListChoice(
+                        title=_("Regions to monitor"),
+                        choices=aws_region_to_monitor(),
+                    ),
+                ),
+                (
+                    "services",
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Services per region to monitor"),
+                            elements=regional_services,
+                            default_keys=regional_services_default_keys,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
+                            )
+                        ),
+                    ),
+                ),
+                _vs_element_aws_piggyback_naming_convention(),
+                (
+                    "overall_tags",
+                    _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
+                ),
+            ],
+        ),
+        migrate=_migrate_auth,
     )
 
 

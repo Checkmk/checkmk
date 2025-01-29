@@ -89,7 +89,7 @@ def parse_arguments(sys_args):
         bail_out(
             3,
             (
-                " Usage: check_uniserv HOSTNAME PORT SERVICE"
+                "usage: check_uniserv HOSTNAME PORT SERVICE"
                 " (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)"
             ),
         )

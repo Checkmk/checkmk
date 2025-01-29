@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 from flask import session
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
 from cmk.utils.user import UserId
 
@@ -52,9 +53,9 @@ def check_csrf_token(token: str | None = None) -> None:
     if isinstance(session.user, LoggedInNobody):
         return
 
-    csrf_token = token or request.get_str_input("csrf_token")
+    csrf_token = token or request.get_str_input("_csrf_token")
     if csrf_token is None:
-        csrf_token = request.get_request().get("csrf_token")
+        csrf_token = request.get_request().get("_csrf_token")
 
     if csrf_token is None:
         log_security_event(
@@ -74,6 +75,6 @@ def check_csrf_token(token: str | None = None) -> None:
             )
         )
         raise MKGeneralException(
-            _("Invalid CSRF token (%r) for Session (%r)")
+            _("Invalid CSRF token (%r) for session (%r)")
             % (csrf_token, session.session_info.session_id)
         )

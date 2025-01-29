@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as async_progress from "./async_progress";
-import * as utils from "./utils";
+import {hide_msg, monitor, show_error} from "./async_progress";
+import {execute_javascript_by_object, reload_whole_page} from "./utils";
 
 interface BackGroundJobStart {
     status_container_content: string;
@@ -15,7 +15,7 @@ interface BackGroundJobStart {
 }
 
 export function start(update_url: string, job_id: string) {
-    async_progress.monitor({
+    monitor({
         update_url: update_url,
         is_finished_function: response => response.is_finished,
         update_function: update,
@@ -27,7 +27,7 @@ export function start(update_url: string, job_id: string) {
 }
 
 function update(_handler_data: any, response: BackGroundJobStart) {
-    async_progress.hide_msg();
+    hide_msg();
 
     const old_log = document.getElementById("progress_log");
     const scroll_pos = old_log ? old_log.scrollTop : 0;
@@ -37,8 +37,9 @@ function update(_handler_data: any, response: BackGroundJobStart) {
 
     const container = document.getElementById("status_container")!;
     container.style.display = "block";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = response.status_container_content;
-    utils.execute_javascript_by_object(container);
+    execute_javascript_by_object(container);
 
     // Restore the previous scrolling state
     const new_log = document.getElementById("progress_log");
@@ -50,13 +51,13 @@ function update(_handler_data: any, response: BackGroundJobStart) {
 }
 
 function error(response: BackGroundJobStart) {
-    async_progress.show_error(String(response));
+    show_error(String(response));
 }
 
 function finish(response: BackGroundJobStart) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
-        async_progress.show_error(response.message!);
+        show_error(response.message!);
     } else {
-        utils.reload_whole_page();
+        reload_whole_page();
     }
 }

@@ -8,10 +8,11 @@ import itertools
 from collections import Counter
 from collections.abc import Callable, Container, Mapping, Sequence
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, OnError
+
 import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, OnError
+from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
@@ -66,9 +67,9 @@ def commandline_discovery(
         host_sections = parser((f[0], f[1]) for f in fetched)
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-            lambda msg: console.debug(msg + "\n"),
+            console.debug,
         )
-        store_piggybacked_sections(host_sections_by_host)
+        store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
         providers = make_providers(
             host_sections_by_host,
             section_plugins,
@@ -89,7 +90,7 @@ def commandline_discovery(
         )
 
     except Exception as e:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         section.section_error("%s" % e)
     finally:
@@ -144,12 +145,12 @@ def _commandline_discovery_on_host(
     skip = {plugin_name for plugin_name in candidates if ignore_plugin(real_host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
-    console.debug("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+    console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
-        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}\n")
+        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")
 
     try:
         discovered_services = discover_services(
@@ -173,7 +174,7 @@ def _commandline_discovery_on_host(
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
-        console.verbose("%s%3d%s %s\n" % (tty.green + tty.bold, count, tty.normal, name))
+        console.verbose(f"{tty.green}{tty.bold}{count:>3}{tty.normal} {name}")
 
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
@@ -182,4 +183,4 @@ def _commandline_discovery_on_host(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
-            console.warning(console.format_warning(f"{line}\n"))
+            console.warning(tty.format_warning(f"{line}"))

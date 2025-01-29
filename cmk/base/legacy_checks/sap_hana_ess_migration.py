@@ -8,11 +8,11 @@
 
 import datetime
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
-import cmk.plugins.lib.sap_hana as sap_hana
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.lib import sap_hana
+
+check_info = {}
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map = {
@@ -68,6 +68,7 @@ def check_sap_hana_ess_migration(item, params, parsed):
 
 
 check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
+    name="sap_hana_ess_migration",
     parse_function=parse_sap_hana_ess_migration,
     service_name="SAP HANA ESS Migration %s",
     discovery_function=inventory_sap_hana_ess_migration,

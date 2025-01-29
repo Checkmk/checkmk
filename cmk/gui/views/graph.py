@@ -12,23 +12,27 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderOptions,
+)
+from cmk.gui.graphing._graph_templates import get_template_graph_specification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
-from cmk.gui.http import Request, response, Response
+from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
     PainterOption,
     PainterOptionRegistry,
     PainterOptions,
 )
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -40,7 +44,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
@@ -157,7 +160,7 @@ _GRAPH_VIEWS = {
 }
 
 
-def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
+def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     *,
@@ -186,7 +189,7 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
-        **graph_grender_options_from_vs(graph_render_options),
+        GraphRenderOptions.from_graph_render_options_vs(graph_render_options),
     )
 
     now = int(time.time())
@@ -234,10 +237,10 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
         )
 
     return "", render_graphs_from_specification_html(
-        TemplateGraphSpecification(
-            site=row["site"],
+        get_template_graph_specification(
+            site_id=row["site"],
             host_name=row["host_name"],
-            service_description=row.get("service_description", "_HOST_"),
+            service_name=row.get("service_description", "_HOST_"),
         ),
         graph_data_range,
         graph_render_config,
@@ -510,9 +513,7 @@ class PainterHostPnpgraph(Painter):
         raise JSONExportError()
 
 
-def cmk_graph_url(  # pylint: disable=redefined-outer-name
-    row: Row, what: str, *, request: Request
-) -> str:
+def cmk_graph_url(row: Row, what: str, *, request: Request) -> str:
     site_id = row["site"]
 
     urivars = [

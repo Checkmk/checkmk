@@ -3,36 +3,56 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import base64
 import json
 import sys
+from collections.abc import Sequence
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        replace_passwords()
-        sys_argv = sys.argv[1:]
+def main() -> int:
+    return special_agent_main(_parse_arguments, _main)
+
+
+def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "server",
+        help="Hivemanager server address",
+    )
+    parser.add_argument(
+        "user",
+        help="Hivemanager API username",
+    )
+    parser.add_argument(
+        "password",
+        help="Hivemanager API password",
+    )
+    parser.add_argument(
+        "--cert-server-name",
+        metavar="CERT-SERVER-NAME",
+        help="Use this server name for TLS certificate validation",
+    )
+    return parser.parse_args(argv)
+
+
+def _main(args: argparse.Namespace) -> int:
+    session = _session(
+        server=args.server,
+        username=args.user,
+        password=args.password,
+        cert_server_name=args.cert_server_name,
+    )
 
     try:
-        ip = sys_argv[0]
-        user = sys_argv[1]
-        password = sys_argv[2]
-    except IndexError:
-        sys.stderr.write("Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>\n")
-        return 2
-
-    auth = f"{user}:{password}"
-    auth_encoded = base64.encodebytes(auth.encode("utf-8")).decode("utf-8").replace("\n", "")
-    headers = {
-        "Authorization": "Basic %s" % auth_encoded,
-        "Content-Type": "application/json",
-    }
-    try:
-        data = requests.get("https://%s/hm/api/v1/devices" % ip, headers=headers).text  # nosec B113
+        data = session.get(  # nosec B113 # BNS:0b0eac
+            f"https://{args.server}/hm/api/v1/devices",
+        ).text
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         return 2
@@ -54,9 +74,38 @@ def main(sys_argv=None):
         "networkPolicy",
     ]
 
-    print("<<<hivemanager_devices:sep(124)>>>")
+    sys.stdout.write("<<<hivemanager_devices:sep(124)>>>\n")
     for line in json.loads(data):
         if line["upTime"] == "":
             line["upTime"] = "down"
-        print("|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])))
-    return None
+        sys.stdout.write(
+            "|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])) + "\n"
+        )
+    return 0
+
+
+def _session(
+    *,
+    server: str,
+    username: str,
+    password: str,
+    cert_server_name: str | None,
+) -> requests.Session:
+    session = requests.session()
+    session.headers.update(
+        {
+            "Authorization": "Basic %s"
+            % (
+                base64.encodebytes(f"{username}:{password}".encode())
+                .decode("utf-8")
+                .replace("\n", "")
+            ),
+            "Content-Type": "application/json",
+        }
+    )
+    if cert_server_name:
+        session.mount(
+            f"https://{server}",
+            HostnameValidationAdapter(cert_server_name),
+        )
+    return session

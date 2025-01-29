@@ -2,8 +2,8 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module contains helpers to set comments for host and service.
-"""
+"""This module contains helpers to set comments for host and service."""
+
 import datetime as dt
 
 from livestatus import MultiSiteConnection
@@ -67,7 +67,7 @@ def force_schedule_service_check(
             The name of the host where the service is
 
         service_description:
-            The service description for which the forced check should be performed on
+            The service name for which the forced check should be performed on
 
         check_time:
             The time at which this forced check should be performed

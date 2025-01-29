@@ -17,6 +17,7 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_volumes import (
     _generate_volume_metrics,
     _serialize_volumes,
     check_volumes,
+    VolumesCountersSection,
 )
 from cmk.plugins.netapp.models import VolumeCountersModel, VolumeModel
 
@@ -102,7 +103,6 @@ def test_generate_volume_metrics() -> None:
 
 
 def test_serialize_volumes() -> None:
-
     volume_models = [
         VolumeModelFactory.build(
             uuid="volume_uuid",
@@ -130,6 +130,34 @@ def test_serialize_volumes() -> None:
     assert result["svm_name:volume_name"]["fcp_read_latency"] == 1000
     assert result["svm_name:volume_name"]["space_available"] == 500
     assert result["svm_name:volume_name"]["id"] == "node_name:svm_name:volume_name:volume_uuid"
+
+
+def test_serialize_volumes_no_counters() -> None:
+    volume_models = [
+        VolumeModelFactory.build(
+            uuid="volume_uuid",
+            state="OK",
+            name="volume_name",
+            msid=100,
+            svm_name="svm_name",
+            svm_uuid="svm_uuid",
+            space_available=500,
+            space_total=1000,
+            logical_used=500,
+            files_maximum=1000,
+            files_used=500,
+        ),
+    ]
+
+    volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in volume_models}
+    volumes_counters_section: VolumesCountersSection = {}
+
+    result = _serialize_volumes(volumes_section, volumes_counters_section)
+
+    assert "svm_name:volume_name" in result
+    assert "id" not in result["svm_name:volume_name"]
+    assert result["svm_name:volume_name"]["state"] == "OK"
+    assert result["svm_name:volume_name"]["space_available"] == 500
 
 
 def test_check_netapp_ontap_volumes_state_not_online() -> None:
@@ -207,18 +235,17 @@ _VOLUME_MODELS = [
     [
         pytest.param(
             "svm_name:volume_name",
-            16,
+            15,
             id="volume with counters",
         ),
         pytest.param(
             "svm_name:volume_name1",
-            14,
+            13,
             id="volume without counters",
         ),
     ],
 )
 def test_check_netapp_ontap_volumes_state_online(volume_id: str, expected_result_qty: int) -> None:
-
     volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in _VOLUME_MODELS}
     volumes_counters_section = {
         counter_obj.item_name(): counter_obj for counter_obj in _VOLUME_COUNTERS_MODELS

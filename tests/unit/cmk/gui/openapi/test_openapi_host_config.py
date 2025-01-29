@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 import contextlib
 import datetime
 from collections.abc import Iterator, Sequence
@@ -14,28 +14,32 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
 
-from cmk.utils import version
+from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 
-from cmk.automations.results import DeleteHostsResult, RenameHostsResult
+from cmk.automations.results import DeleteHostsResult
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
-    CustomHostAttrSpec,
     save_custom_attrs_to_mk_file,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:
@@ -75,15 +79,6 @@ def test_openapi_cluster_host(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
-@pytest.fixture(name="try_bake_agents_for_hosts")
-def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(
-        bakery,
-        "try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
-    )
-
-
 @pytest.mark.parametrize(
     "bake_agent,called",
     [
@@ -95,15 +90,15 @@ def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
 def test_openapi_add_host_bake_agent_parameter(
     bake_agent: bool | None,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
     clients: ClientRegistry,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
@@ -196,25 +191,25 @@ def test_openapi_bulk_add_hosts_with_attributes(clients: ClientRegistry) -> None
 def test_openapi_add_cluster_bake_agent_parameter(
     bake_agent: bool,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
     clients: ClientRegistry,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
-    try_bake_agents_for_hosts.reset_mock()
+        suppress_bake_agents_in_background.assert_not_called()
+    suppress_bake_agents_in_background.reset_mock()
 
     clients.HostConfig.create_cluster(
         host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
     ).assert_status_code(200)
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["bazfoo"])
+        suppress_bake_agents_in_background.assert_called_once_with(["bazfoo"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -229,7 +224,7 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
     clients: ClientRegistry,
     bake_agent: Literal["0", "1"] | None,
     called: bool,
-    try_bake_agents_for_hosts: MagicMock,
+    suppress_bake_agents_in_background: MagicMock,
 ) -> None:
     resp = clients.HostConfig.bulk_create(
         entries=[
@@ -253,9 +248,9 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
     assert len(resp.json["value"]) == 2
 
     if called:
-        try_bake_agents_for_hosts.assert_called_once_with(["foobar", "sample"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar", "sample"])
     else:
-        try_bake_agents_for_hosts.assert_not_called()
+        suppress_bake_agents_in_background.assert_not_called()
 
 
 def test_openapi_hosts(
@@ -483,7 +478,7 @@ def _custom_host_attribute() -> Iterator[None]:
             "name": "foo",
             "title": "bar",
             "help": "foo",
-            "topic": "topic",
+            "topic": "basic",
             "type": "TextAscii",
             "add_custom_macro": False,
             "show_in_table": False,
@@ -597,7 +592,6 @@ def test_openapi_host_collection(clients: ClientRegistry) -> None:
     for host in resp.json["value"]:
         # Check that all entries are domain objects
         assert "extensions" in host
-        assert "links" in host
         assert "members" in host
         assert "title" in host
         assert "id" in host
@@ -611,33 +605,64 @@ def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -
 
     resp2 = clients.HostConfig.get_all(effective_attributes=False)
     for host in resp2.json["value"]:
-        assert host["extensions"]["effective_attributes"] is None
+        assert "effective_attributes" not in host["extensions"]
 
 
+@pytest.mark.usefixtures("with_host")
+def test_host_collection_fields(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.get_all(fields="(id)")
+    # TODO: update response models to not automatically add fields
+    # assert resp.json == {"id": "host"}, "Expected only the id field to be returned"
+    assert resp.json == {"id": "host", "domainType": "host_config"}
+
+    resp = clients.HostConfig.get_all(fields="!(value~extensions)")
+    assert "value" in resp.json, "Expected the value field to be returned"
+    for host in resp.json["value"]:
+        assert host.get("links"), "Expected the links field to be returned and computed"
+        assert "extensions" not in host, "Expected the extensions field to not be returned"
+
+
+def test_host_collection_invalid_fields(clients: ClientRegistry) -> None:
+    clients.HostConfig.get_all(fields="invalid_filter", expect_ok=False).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_links=True)
+    disabled_response = clients.HostConfig.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all("links" not in value for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_host_rename(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
-    monkeypatch.setattr(
-        "cmk.gui.watolib.host_rename.rename_hosts",
-        lambda *args, **kwargs: RenameHostsResult({}),
-    )
+    automation = mocker.patch("cmk.gui.watolib.host_rename.rename_hosts")
 
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
     )
-    clients.HostConfig.get("foobar")
-    resp = clients.HostConfig.rename(
+    clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobaz",
-        follow_redirects=False,
-    )
-    assert (
-        resp.headers["Location"]
-        == "/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
-    )
+    ).assert_status_code(204)
+    automation.assert_called_once()
+
+
+def test_openapi_host_rename_wait_for_completion_without_job(clients: ClientRegistry) -> None:
+    clients.HostConfig.rename_wait_for_completion(
+        expect_ok=False, follow_redirects=False
+    ).assert_status_code(404)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -675,6 +700,90 @@ def test_openapi_host_rename_on_invalid_hostname(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobar",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_rename_locked_by_quick_setup(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
+
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
+        attributes={
+            "locked_by": {
+                "site_id": "heute",
+                "program_id": PROGRAM_ID_QUICK_SETUP,
+                "instance_id": "some-rule",
+            }
+        },
+    )
+    clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobar123",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_delete_locked_by_quick_setup(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
+        attributes={
+            "locked_by": {
+                "site_id": "heute",
+                "program_id": PROGRAM_ID_QUICK_SETUP,
+                "instance_id": "some-rule",
+            }
+        },
+    )
+    clients.HostConfig.delete(
+        host_name="foobar",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_update_locked_by_quick_setup(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
+        attributes={
+            "tag_address_family": "no-ip",
+            "locked_attributes": ["tag_address_family"],
+            "locked_by": {
+                "site_id": "heute",
+                "program_id": PROGRAM_ID_QUICK_SETUP,
+                "instance_id": "some-rule",
+            },
+        },
+    )
+    clients.HostConfig.edit(
+        host_name="foobar",
+        attributes={"tag_address_family": "no-ip"},  # should fail because we remove the lock
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.edit(
+        host_name="foobar",
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.edit(
+        host_name="foobar",
+        remove_attributes=["tag_address_family"],
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -839,11 +948,38 @@ def test_openapi_host_with_inventory_failed(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
 
 
+@managedtest
+def test_openapi_host_with_waiting_for_discovery(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
+        attributes={
+            "ipaddress": "192.168.0.123",
+            "waiting_for_discovery": True,
+        },
+    )
+    assert resp.json["extensions"]["attributes"]["waiting_for_discovery"] is True
+
+
 def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     clients.HostConfig.create(
         folder="/",
         host_name="example.com",
         attributes={"labels": {"label": ["invalid_label_entry", "another_one"]}},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"label": "va:lue"}},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"la:bel": "value"}},
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -1254,6 +1390,7 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
     assert resp.json["extensions"]["effective_attributes"]["foo"] == "blub"
 
 
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:
@@ -1372,6 +1509,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
         != {
             "additional_ipv4addresses": [],
@@ -1417,6 +1555,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
     )
 
@@ -1510,7 +1649,7 @@ def test_create_host_with_too_long_of_a_name(
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16*'a'+'…'!r}"
+    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16 * 'a' + '…'!r}"
 
 
 @managedtest
@@ -1559,6 +1698,7 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
 @managedtest
 def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="test_host")
+    clients.HostConfig.create(host_name="parent_host", attributes={"parents": ["test_host"]})
     resp = clients.HostConfig.edit(
         host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
     )
@@ -1599,3 +1739,28 @@ def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="host1")
     resp = clients.HostConfig.get_all(include_links=True)
     assert len(resp.json["value"][0]["links"])
+
+
+class TestHostsFilters:
+    """Test cases for filtering hosts by various attributes."""
+
+    def test_openapi_hostnames_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/"},
+                {"host_name": "host2", "folder": "/"},
+                {"host_name": "host3", "folder": "/"},
+            ]
+        )
+
+        resp = clients.HostConfig.get_all(search={"hostnames": ["host1", "host2"]})
+        assert {entry["id"] for entry in resp.json["value"]} == {"host1", "host2"}
+
+    def test_openapi_not_matching_site_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/", "attributes": {"site": "NO_SITE"}},
+            ]
+        )
+        resp = clients.HostConfig.get_all(search={"site": "INVALID_SITE"})
+        assert not resp.json["value"]

@@ -15,7 +15,7 @@ import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import overload, TypedDict, Union
 
-import cmk.utils.man_pages as man_pages
+from cmk.utils import man_pages
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -205,8 +205,7 @@ class ModeCheckPluginTopic(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, topic: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, topic: str) -> str: ...
 
     @overload
     @classmethod
@@ -352,7 +351,7 @@ def _render_manpage_list(
             table.cell(
                 _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
             )
-            table.cell(_("Plugin Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
+            table.cell(_("Plug-in name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
             table.cell(
                 _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
             )
@@ -371,7 +370,7 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "os",
             True,
             _("Operating systems"),
-            _("Plugins for operating systems, things like memory, CPU, filesystems, etc."),
+            _("Plug-ins for operating systems, things like memory, CPU, filesystems, etc."),
         ),
         (
             "app",
@@ -395,13 +394,13 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "agentless",
             False,
             _("Networking checks without agent"),
-            _("Plugins that directly check networking protocols like HTTP or IMAP"),
+            _("Plug-ins that directly check networking protocols like HTTP or IMAP"),
         ),
         (
             "generic",
             False,
             _("Generic check plug-ins"),
-            _("Plugins for local agent extensions or communication with the agent in general"),
+            _("Plug-ins for local agent extensions or communication with the agent in general"),
         ),
         (
             "virtual",
@@ -589,7 +588,7 @@ class ModeCheckManPage(WatoMode):
         if self._check_type == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
-            html.td(HTML(self._service_description.replace("%s", "&#9744;")))
+            html.td(HTML.without_escaping(self._service_description.replace("%s", "&#9744;")))
             html.close_tr()
 
             if discovery := self._manpage.discovery:
@@ -653,6 +652,6 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Default parameters"))
         html.open_td()
-        html.write_html(HTML(paramtext))
+        html.write_html(HTML.with_escaping(paramtext))
         html.close_td()
         html.close_tr()

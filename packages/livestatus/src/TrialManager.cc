@@ -10,7 +10,6 @@
 #include <fstream>
 #include <iterator>
 #include <ranges>
-#include <ratio>
 #include <stdexcept>
 #include <system_error>
 
@@ -49,7 +48,9 @@ std::string TrialManager::state(
 
 namespace {
 uint64_t readle64(std::istream &is) {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     char buffer[8];
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     is.read(buffer, sizeof(buffer));
     uint64_t result{0};
     for (auto ch : buffer | std::views::reverse) {
@@ -60,11 +61,13 @@ uint64_t readle64(std::istream &is) {
 }
 
 void writele64(std::ostream &os, uint64_t value) {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     char buffer[8];
     for (auto &ch : buffer) {
         ch = static_cast<char>(value & 0xFF);
         value >>= 8;
     }
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     os.write(buffer, sizeof(buffer));
 }
 }  // namespace

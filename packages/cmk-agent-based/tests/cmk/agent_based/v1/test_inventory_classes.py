@@ -17,9 +17,9 @@ def test_common_raise_path_type(path: object) -> None:
 
 def test_common_kwarg_only() -> None:
     with pytest.raises(TypeError):
-        _ = Attributes(["a"])  # type: ignore[misc] #pylint: disable= E1125, E1121
+        _ = Attributes(["a"])  # type: ignore[misc]
     with pytest.raises(TypeError):
-        _ = TableRow(["a"], key_columns={"ding": "dong"})  # type: ignore[misc]   #pylint: disable= E1125, E1121
+        _ = TableRow(["a"], key_columns={"ding": "dong"})  # type: ignore[misc]
 
 
 def test_atrributes_wrong_types() -> None:
@@ -61,7 +61,7 @@ def test_attributes_instanciated() -> None:
         status_attributes={"vendor": "camembert"},
         inventory_attributes={"version": "42"},
     )
-    assert attr == attr  # pylint: disable= comparison-with-itself
+    assert attr == attr  # noqa: PLR0124
     assert attr2 != attr
 
 
@@ -111,5 +111,5 @@ def test_tablerow_instanciated() -> None:
         status_columns={"packages": 42},
         inventory_columns={"vendor": "gorgonzola"},
     )
-    assert table_row == table_row  # pylint: disable= comparison-with-itself
+    assert table_row == table_row  # noqa: PLR0124
     assert table_row2 != table_row

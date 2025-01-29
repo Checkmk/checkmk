@@ -8,22 +8,15 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import HTTPUrl, TextInput, ValueSpec
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-
-
-class ConfigVariableGroupSupport(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Support")
-
-    def sort_index(self) -> int:
-        return 80
+from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSupport
 
 
 class ConfigVariableCrashReportURL(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "crash_report_url"
@@ -40,8 +33,8 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "crash_report_target"

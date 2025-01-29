@@ -1,0 +1,23 @@
+[project]
+name = "cmk-crypto"
+version = "0.9.0"
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.package-data]
+"cmk.crypto" = ["py.typed"]
+
+[tool.bandit]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint.isort]
+order-by-type = false

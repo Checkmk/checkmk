@@ -70,7 +70,7 @@ def show_create_view_dialog(next_url: str | None = None) -> None:
     with html.form_context("create_view"):
         html.hidden_field("mode", "create")
 
-        forms.header(_("Select Datasource"))
+        forms.header(_("Select datasource"))
         forms.section(vs_ds.title())
         vs_ds.render_input("ds", ds)
         html.help(vs_ds.help())

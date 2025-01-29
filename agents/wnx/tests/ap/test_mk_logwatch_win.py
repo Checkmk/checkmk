@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# pylint: disable=protected-access,redefined-outer-name
 
 import locale
 import os
@@ -93,19 +92,21 @@ CLUSTER empty
 
 
 @pytest.fixture(name="parsed_config", scope="module")
-def _get_parsed_config() -> tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]:
+def _get_parsed_config() -> (
+    tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
+):
     return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
 
 
 def text_type():
     if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable
+        return unicode  # noqa: F821
     return str
 
 
 def binary_type():
     if sys.version_info[0] == 2:
-        return str  # pylint: disable=undefined-variable
+        return str
     return bytes
 
 
@@ -127,31 +128,44 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
 
 def test_options_defaults() -> None:
     opt = lw.Options()
-    for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
-                      'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize',
-                      'skipconsecutiveduplicated'):
+    for attribute in (
+        'encoding',
+        'maxfilesize',
+        'maxlines',
+        'maxtime',
+        'maxlinesize',
+        'regex',
+        'overflow',
+        'nocontext',
+        'maxcontextlines',
+        'maxoutputsize',
+        'skipconsecutiveduplicated',
+    ):
         assert getattr(opt, attribute) == lw.Options.DEFAULTS[attribute]
 
 
-@pytest.mark.parametrize("option_string, key, expected_value", [
-    ("encoding=utf8", 'encoding', 'utf8'),
-    ("maxfilesize=42", 'maxfilesize', 42),
-    ("maxlines=23", 'maxlines', 23),
-    ("maxlinesize=13", 'maxlinesize', 13),
-    ("maxtime=0.25", 'maxtime', 0.25),
-    ("overflow=I", 'overflow', 'I'),
-    ("nocontext=tRuE", 'nocontext', True),
-    ("nocontext=FALse", 'nocontext', False),
-    ("maxcontextlines=17,23", 'maxcontextlines', (17, 23)),
-    ("fromstart=1", 'fromstart', True),
-    ("fromstart=yEs", 'fromstart', True),
-    ("fromstart=0", 'fromstart', False),
-    ("fromstart=no", 'fromstart', False),
-    ("maxoutputsize=1024", 'maxoutputsize', 1024),
-    ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
-    ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
-])
-def test_options_setter(option_string:str, key:str, expected_value:object) -> None:
+@pytest.mark.parametrize(
+    "option_string, key, expected_value",
+    [
+        ("encoding=utf8", 'encoding', 'utf8'),
+        ("maxfilesize=42", 'maxfilesize', 42),
+        ("maxlines=23", 'maxlines', 23),
+        ("maxlinesize=13", 'maxlinesize', 13),
+        ("maxtime=0.25", 'maxtime', 0.25),
+        ("overflow=I", 'overflow', 'I'),
+        ("nocontext=tRuE", 'nocontext', True),
+        ("nocontext=FALse", 'nocontext', False),
+        ("maxcontextlines=17,23", 'maxcontextlines', (17, 23)),
+        ("fromstart=1", 'fromstart', True),
+        ("fromstart=yEs", 'fromstart', True),
+        ("fromstart=0", 'fromstart', False),
+        ("fromstart=no", 'fromstart', False),
+        ("maxoutputsize=1024", 'maxoutputsize', 1024),
+        ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
+        ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
+    ],
+)
+def test_options_setter(option_string: str, key: str, expected_value: object) -> None:
     opt = lw.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
@@ -159,19 +173,23 @@ def test_options_setter(option_string:str, key:str, expected_value:object) -> No
     assert actual_value == expected_value
 
 
-@pytest.mark.parametrize("option_string, expected_pattern, expected_flags", [
-    ("regex=foobar", 'foobar', re.UNICODE),
-    ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
-])
-def test_options_setter_regex(option_string: str, expected_pattern: str,
-                              expected_flags: int) -> None:
+@pytest.mark.parametrize(
+    "option_string, expected_pattern, expected_flags",
+    [
+        ("regex=foobar", 'foobar', re.UNICODE),
+        ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
+    ],
+)
+def test_options_setter_regex(
+    option_string: str, expected_pattern: str, expected_flags: int
+) -> None:
     opt = lw.Options()
     opt.set_opt(option_string)
     assert opt.regex.pattern == expected_pattern
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(tmpdir:str) -> None:
+def test_get_config_files(tmpdir: str) -> None:
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
@@ -181,7 +199,7 @@ def test_get_config_files(tmpdir:str) -> None:
     with open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w"):
         expected = [
             str(os.path.join(fake_config_dir, "logwatch.cfg")),
-            str(os.path.join(fake_config_dir, "logwatch.d", "custom.cfg"))
+            str(os.path.join(fake_config_dir, "logwatch.d", "custom.cfg")),
         ]
 
     assert lw.get_config_files(str(fake_config_dir)) == expected
@@ -197,14 +215,22 @@ def test_raise_no_config_lines() -> None:
     lw.read_config([], files=[], debug=False)
 
 
-def test_read_global_options(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
+def test_read_global_options(
+    parsed_config: tuple[
+        lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]
+    ]
+) -> None:
     global_options, _logfile_config, _cluster_config = parsed_config
 
     assert isinstance(global_options, lw.GlobalOptions)
     assert global_options.retention_period == 42
 
 
-def test_read_config_cluster(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
+def test_read_config_cluster(
+    parsed_config: tuple[
+        lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]
+    ]
+) -> None:
     """checks if the agent plugin parses the configuration appropriately."""
     _global_options, _logfile_config, c_config = parsed_config
 
@@ -218,7 +244,11 @@ def test_read_config_cluster(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.
     assert not c_config[1].ips_or_subnets
 
 
-def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
+def test_read_config_logfiles(
+    parsed_config: tuple[
+        lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]
+    ]
+) -> None:
     """checks if the agent plugin parses the configuration appropriately."""
 
     _global_options, l_config, _cluster_config = parsed_config
@@ -245,19 +275,18 @@ def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw
     assert l_config[2].patterns == [('W', 'sshd.*Corrupted MAC on input', [], [])]
 
     assert l_config[3].files == ['c:\\a path\\with spaces', 'd:\\another path\\with spaces']
-    assert l_config[3].patterns == [('I', 'registered panic notifier', [], []),
-                                    ('C', 'panic', [], []),
-                                    ('C', 'Oops', [], []),
-                                    ('W', 'generic protection rip', [], []),
-                                    ('W', '.*Unrecovered read error - auto reallocate failed', [],
-                                     []),
-                                    ]
+    assert l_config[3].patterns == [
+        ('I', 'registered panic notifier', [], []),
+        ('C', 'panic', [], []),
+        ('C', 'Oops', [], []),
+        ('W', 'generic protection rip', [], []),
+        ('W', '.*Unrecovered read error - auto reallocate failed', [], []),
+    ]
 
     assert l_config[4].files == ['{}'.format(os.path.join(_SEP_U, "var", "log", "äumlaut.log"))]
     assert l_config[4].patterns == [('W', 'sshd.*Corrupted MAC on input', [], [])]
 
-    assert l_config[5].files == [
-        '{}'.format(os.path.join(os.sep, "var", "log", "test_append.log"))]
+    assert l_config[5].files == ['{}'.format(os.path.join(os.sep, "var", "log", "test_append.log"))]
     assert l_config[5].patterns == [
         ('C', '.*Error.*', ['.*more information.*', '.*also important.*'], [])
     ]
@@ -269,16 +298,24 @@ def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw
         ("192.168.2.1", os.path.join("/path/to/config", "logwatch.state.192.168.2.1")),
         (
             "::ffff:192.168.2.1",
-            os.path.join("/path/to/config", "logwatch.state.__ffff_192.168.2.1")),
+            os.path.join("/path/to/config", "logwatch.state.__ffff_192.168.2.1"),
+        ),
         ("192.168.1.4", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
-        ("1262:0:0:0:0:B03:1:AF18",
-         os.path.join("/path/to/config", "logwatch.state.1262_0_0_0_0_B03_1_AF18")),
-        ("1762:0:0:0:0:B03:1:AF18",
-         os.path.join("/path/to/config", "logwatch.state.another_cluster")),
+        (
+            "1262:0:0:0:0:B03:1:AF18",
+            os.path.join("/path/to/config", "logwatch.state.1262_0_0_0_0_B03_1_AF18"),
+        ),
+        (
+            "1762:0:0:0:0:B03:1:AF18",
+            os.path.join("/path/to/config", "logwatch.state.another_cluster"),
+        ),
         ("local", os.path.join("/path/to/config", "logwatch.state.local")),
         ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
-    ])
-def test_get_status_filename(env_var:str, expected_status_filename:str|bytes, monkeypatch:pytest.MonkeyPatch) -> None:
+    ],
+)
+def test_get_status_filename(
+    env_var: str, expected_status_filename: str | bytes, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -294,61 +331,82 @@ def test_get_status_filename(env_var:str, expected_status_filename:str|bytes, mo
     assert lw.get_status_filename(fake_config, env_var) == expected_status_filename
 
 
-@pytest.mark.parametrize("state_data, state_dict", [
-    (("/var/log/messages|7767698|32455445\n"
-      "/var/foo|42\n"
-      "/var/test/x12134.log|12345"), {
-         '/var/log/messages': {
-             "file": "/var/log/messages",
-             "offset": 7767698,
-             "inode": 32455445,
-         },
-         '/var/foo': {
-             "file": "/var/foo",
-             "offset": 42,
-             "inode": -1,
-         },
-         '/var/test/x12134.log': {
-             "file": "/var/test/x12134.log",
-             "offset": 12345,
-             "inode": -1,
-         }
-     }),
-    (("{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
-      "{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
-      "{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"), {
-         '/var/log/messages': {
-             "file": "/var/log/messages",
-             "offset": 7767698,
-             "inode": 32455445,
-         },
-         '/var/foo': {
-             "file": "/var/foo",
-             "offset": 42,
-             "inode": -1,
-         },
-         '/var/test/x12134.log': {
-             "file": "/var/test/x12134.log",
-             "offset": 12345,
-             "inode": -1,
-         }
-     }),
-    ("{'file': 'I/am/a/byte/\\x89', 'offset': 23, 'inode': 42}\n", {
-        'I/am/a/byte/\x89': {
-            "file": "I/am/a/byte/\x89",
-            "offset": 23,
-            "inode": 42,
-        },
-    }),
-    ("{'file': u'I/am/unicode\\u203d', 'offset': 23, 'inode': 42}\n", {
-        'I/am/unicode\u203d': {
-            "file": "I/am/unicode‽",
-            "offset": 23,
-            "inode": 42,
-        },
-    }),
-])
-def test_state_load(tmpdir:str|bytes, state_data:str, state_dict:Mapping[str,Mapping[str,object]]) -> None:
+@pytest.mark.parametrize(
+    "state_data, state_dict",
+    [
+        (
+            (
+                "/var/log/messages|7767698|32455445\n"  #
+                "/var/foo|42\n"  #
+                "/var/test/x12134.log|12345"
+            ),
+            {
+                '/var/log/messages': {
+                    "file": "/var/log/messages",
+                    "offset": 7767698,
+                    "inode": 32455445,
+                },
+                '/var/foo': {
+                    "file": "/var/foo",
+                    "offset": 42,
+                    "inode": -1,
+                },
+                '/var/test/x12134.log': {
+                    "file": "/var/test/x12134.log",
+                    "offset": 12345,
+                    "inode": -1,
+                },
+            },
+        ),
+        (
+            (
+                "{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
+                "{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
+                "{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"
+            ),
+            {
+                '/var/log/messages': {
+                    "file": "/var/log/messages",
+                    "offset": 7767698,
+                    "inode": 32455445,
+                },
+                '/var/foo': {
+                    "file": "/var/foo",
+                    "offset": 42,
+                    "inode": -1,
+                },
+                '/var/test/x12134.log': {
+                    "file": "/var/test/x12134.log",
+                    "offset": 12345,
+                    "inode": -1,
+                },
+            },
+        ),
+        (
+            "{'file': 'I/am/a/byte/\\x89', 'offset': 23, 'inode': 42}\n",
+            {
+                'I/am/a/byte/\x89': {
+                    "file": "I/am/a/byte/\x89",
+                    "offset": 23,
+                    "inode": 42,
+                },
+            },
+        ),
+        (
+            "{'file': u'I/am/unicode\\u203d', 'offset': 23, 'inode': 42}\n",
+            {
+                'I/am/unicode\u203d': {
+                    "file": "I/am/unicode‽",
+                    "offset": 23,
+                    "inode": 42,
+                },
+            },
+        ),
+    ],
+)
+def test_state_load(
+    tmpdir: str | bytes, state_data: str, state_dict: Mapping[str, Mapping[str, object]]
+) -> None:
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
@@ -364,30 +422,33 @@ def test_state_load(tmpdir:str|bytes, state_data:str, state_dict:Mapping[str,Map
     assert state._data == state_dict
     for expected_data in state_dict.values():
         key = expected_data['file']
-        assert isinstance(key,str)
+        assert isinstance(key, str)
         assert state.get(key) == expected_data
 
 
-@pytest.mark.parametrize("state_dict", [
-    {
-        '/var/log/messages': {
-            "file": "/var/log/messages",
-            "offset": 7767698,
-            "inode": 32455445,
+@pytest.mark.parametrize(
+    "state_dict",
+    [
+        {
+            '/var/log/messages': {
+                "file": "/var/log/messages",
+                "offset": 7767698,
+                "inode": 32455445,
+            },
+            '/var/foo': {
+                "file": "/var/foo",
+                "offset": 42,
+                "inode": -1,
+            },
+            '/var/test/x12134.log': {
+                "file": "/var/test/x12134.log",
+                "offset": 12345,
+                "inode": -1,
+            },
         },
-        '/var/foo': {
-            "file": "/var/foo",
-            "offset": 42,
-            "inode": -1,
-        },
-        '/var/test/x12134.log': {
-            "file": "/var/test/x12134.log",
-            "offset": 12345,
-            "inode": -1,
-        }
-    },
-])
-def test_state_write(tmpdir:str|bytes, state_dict:Mapping[str,Mapping[str,object]]) -> None:
+    ],
+)
+def test_state_write(tmpdir: str | bytes, state_dict: Mapping[str, Mapping[str, object]]) -> None:
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = lw.State(file_path)
@@ -396,7 +457,7 @@ def test_state_write(tmpdir:str|bytes, state_dict:Mapping[str,Mapping[str,object
     # writing
     for data in state_dict.values():
         key = data['file']
-        assert isinstance(key,str)
+        assert isinstance(key, str)
         filestate = state.get(key)
         # should work w/o setting 'file'
         filestate['offset'] = data['offset']
@@ -429,7 +490,7 @@ def _cvt(path):
 
 
 # NOTE: helper for mypy
-def _end_with(actual:str|bytes, *, expected:str|bytes) -> bool:
+def _end_with(actual: str | bytes, *, expected: str | bytes) -> bool:
     if isinstance(actual, str):
         assert isinstance(expected, str)
         return actual.endswith(expected)
@@ -437,15 +498,21 @@ def _end_with(actual:str|bytes, *, expected:str|bytes) -> bool:
     return actual.endswith(expected)
 
 
-@pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    ("/*", _fix_for_os(STAR_FILES)),
-    ("/**", _fix_for_os(STAR_FILES)),
-    ("/subdir/*", [(b"/subdir/symlink_to_file.log", "/subdir/symlink_to_file.log")]),
-    ("/symlink_to_dir/*", [
-        (b"/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")
-    ]),
-])
-def test_find_matching_logfiles(fake_filesystem:str, pattern_suffix:str, file_suffixes:Sequence[tuple[bytes,str]]) -> None:
+@pytest.mark.parametrize(
+    "pattern_suffix, file_suffixes",
+    [
+        ("/*", _fix_for_os(STAR_FILES)),
+        ("/**", _fix_for_os(STAR_FILES)),
+        ("/subdir/*", [(b"/subdir/symlink_to_file.log", "/subdir/symlink_to_file.log")]),
+        (
+            "/symlink_to_dir/*",
+            [(b"/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")],
+        ),
+    ],
+)
+def test_find_matching_logfiles(
+    fake_filesystem: str, pattern_suffix: str, file_suffixes: Sequence[tuple[bytes, str]]
+) -> None:
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
     files = lw.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
@@ -464,18 +531,27 @@ def test_find_matching_logfiles(fake_filesystem:str, pattern_suffix:str, file_su
 def test_ip_in_subnetwork() -> None:
     assert lw.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
     assert lw.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
-    assert lw.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",
-                               "1762:0000:0000:0000:0000:0000:0000:0000/64") is True
-    assert lw.ip_in_subnetwork("1760:0:0:0:0:B03:1:AF18",
-                               "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
+    assert (
+        lw.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18", "1762:0000:0000:0000:0000:0000:0000:0000/64")
+        is True
+    )
+    assert (
+        lw.ip_in_subnetwork("1760:0:0:0:0:B03:1:AF18", "1762:0000:0000:0000:0000:0000:0000:0000/64")
+        is False
+    )
 
 
-@pytest.mark.parametrize("buff,encoding,position", [
-    (b'\xFE\xFF', 'utf_16_be', 2),
-    (b'\xFF\xFE', 'utf_16', 2),
-    (b'no encoding in this file!', locale.getpreferredencoding(), 0),
-])
-def test_log_lines_iter_encoding(monkeypatch:pytest.MonkeyPatch, buff:bytes, encoding:str, position:int) -> None:
+@pytest.mark.parametrize(
+    "buff,encoding,position",
+    [
+        (b'\xFE\xFF', 'utf_16_be', 2),
+        (b'\xFF\xFE', 'utf_16', 2),
+        (b'no encoding in this file!', locale.getpreferredencoding(), 0),
+    ],
+)
+def test_log_lines_iter_encoding(
+    monkeypatch: pytest.MonkeyPatch, buff: bytes, encoding: str, position: int
+) -> None:
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
@@ -493,7 +569,10 @@ def test_log_lines_iter() -> None:
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
-        assert line == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
+        assert (
+            line
+            == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
+        )
         assert log_iter.get_position() == 207
 
         log_iter.push_back_line('Täke this!')
@@ -513,38 +592,52 @@ def _latin_1_encoding():
     "use_specific_encoding,lines,expected_result",
     [
         # UTF-8 encoding works by default in Linux and must be selected in Windows
-        ("utf-8" if os.name == "nt" else None, [
-            b"abc1",
-            "äbc2".encode(),
-            b"abc3",
-        ], [
-             "abc1\n",
-             "äbc2\n",
-             "abc3\n",
-         ]),
+        (
+            "utf-8" if os.name == "nt" else None,
+            [
+                b"abc1",
+                "äbc2".encode(),
+                b"abc3",
+            ],
+            [
+                "abc1\n",
+                "äbc2\n",
+                "abc3\n",
+            ],
+        ),
         # Replace characters that can not be decoded
-        ("utf-8" if os.name == "nt" else None, [
-            b"abc1",
-            "äbc2".encode(_latin_1_encoding()),
-            b"abc3",
-        ], [
-             "abc1\n",
-             "\ufffdbc2\n",
-             "abc3\n",
-         ]),
+        (
+            "utf-8" if os.name == "nt" else None,
+            [
+                b"abc1",
+                "äbc2".encode(_latin_1_encoding()),
+                b"abc3",
+            ],
+            [
+                "abc1\n",
+                "\ufffdbc2\n",
+                "abc3\n",
+            ],
+        ),
         # Set custom encoding
-        (_latin_1_encoding(), [
-            b"abc1",
-            "äbc2".encode(_latin_1_encoding()),
-            b"abc3",
-        ], [
-             "abc1\n",
-             "äbc2\n",
-             "abc3\n",
-         ]),
-    ])
-def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, lines,
-                                   expected_result):
+        (
+            _latin_1_encoding(),
+            [
+                b"abc1",
+                "äbc2".encode(_latin_1_encoding()),
+                b"abc3",
+            ],
+            [
+                "abc1\n",
+                "äbc2\n",
+                "abc3\n",
+            ],
+        ),
+    ],
+)
+def test_non_ascii_line_processing(
+    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
+):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
     with open(log_path, "wb") as f:
@@ -566,12 +659,7 @@ def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, l
 
 
 def _linux_dataset_path(filename):
-    return os.path.join(
-        os.path.dirname(__file__),
-        "datasets",
-        "mk_logwatch",
-        filename
-    )
+    return os.path.join(os.path.dirname(__file__), "datasets", "mk_logwatch", filename)
 
 
 def _windows_dataset_path(filename):
@@ -590,11 +678,14 @@ def _windows_dataset_path(filename):
 
 
 def _path_to_testfile(filename):
-    return _linux_dataset_path(filename) if os.path.exists(
-        _linux_dataset_path(filename)) else _windows_dataset_path(filename)
+    return (
+        _linux_dataset_path(filename)
+        if os.path.exists(_linux_dataset_path(filename))
+        else _windows_dataset_path(filename)
+    )
 
 
-class MockStdout:  # pylint: disable=useless-object-inheritance
+class MockStdout:
     def isatty(self):
         return False
 
@@ -608,15 +699,13 @@ class MockStdout:  # pylint: disable=useless-object-inheritance
                 ('W', re.compile('^[^u]*W.*I mätch önly mysélf 🧚', re.UNICODE), [], []),
                 ('I', re.compile('.*', re.UNICODE), [], []),
             ],
-            {
-                'nocontext': True
-            },
+            {'nocontext': True},
             {
                 'offset': 0,
             },
             [
                 "[[[%s]]]\n" % __file__,
-                "W                 ('W', re.compile('^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
+                "W                 ('W', re.compile('^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n",
             ],
         ),
         (
@@ -649,9 +738,7 @@ class MockStdout:  # pylint: disable=useless-object-inheritance
                 ('C', re.compile('🐉', re.UNICODE), [], []),
                 ('I', re.compile('.*', re.UNICODE), [], []),
             ],
-            {
-                'nocontext': True
-            },
+            {'nocontext': True},
             {
                 'offset': 0,
             },
@@ -674,20 +761,18 @@ class MockStdout:  # pylint: disable=useless-object-inheritance
                     [],
                 ),
             ],
-            {
-                'nocontext': True
-            },
+            {'nocontext': True},
             {
                 'offset': 0,
             },
             [
                 '[[[%s]]]\n' % _path_to_testfile("test_append.log"),
                 'C Error: Everything down!\x01more information: very useful\x01also important: please inform admins\n',
-            ]
+            ],
         ),
-    ])
-def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
-                         expected_output):
+    ],
+)
+def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expected_output):
 
     section = lw.LogfileSection((logfile, logfile))
     section.options.values.update(opt_raw)
@@ -707,36 +792,51 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
             assert state['offset'] >= 15000  # about the size of this file
 
 
-@pytest.mark.parametrize("input_lines, before, after, expected_output",
-                         [([], 2, 3, []),
-                          (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
-                            ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
-                          (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
-def test_filter_maxcontextlines(input_lines: list[str], before: int, after: int,
-                                expected_output: list[str]) -> None:
+@pytest.mark.parametrize(
+    "input_lines, before, after, expected_output",
+    [
+        ([], 2, 3, []),
+        (
+            ["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"],
+            2,
+            3,
+            ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"],
+        ),
+        (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"]),
+    ],
+)
+def test_filter_maxcontextlines(
+    input_lines: list[str], before: int, after: int, expected_output: list[str]
+) -> None:
     assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))
 
 
-@pytest.mark.parametrize("input_lines, nocontext, expected_output",
-                         [([], False, []),
-                          ([], True, []),
-                          (["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"],
-                           True,
-                           ["ln", "ln2", "ln3", "ln"]),
-                          (["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"],
-                           False,
-                           ["ln", "ln2", ". [the above message was repeated 2 times]\n",
-                            "ln3", ". [the above message was repeated 1 times]\n", "ln"]),
-                          (["ln", "ln"],
-                           False,
-                           ["ln", ". [the above message was repeated 1 times]\n"]),
-                          ((str(i) for i in range(3)),
-                           False,
-                           ["0", "1", "2"])])
-def test_filter_consecutive_duplicates(input_lines:Sequence[str], nocontext:bool, expected_output:Sequence[str]) -> None:
-    assert expected_output == list(
-        lw._filter_consecutive_duplicates(input_lines, nocontext)
-    )
+@pytest.mark.parametrize(
+    "input_lines, nocontext, expected_output",
+    [
+        ([], False, []),
+        ([], True, []),
+        (["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"], True, ["ln", "ln2", "ln3", "ln"]),
+        (
+            ["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"],
+            False,
+            [
+                "ln",
+                "ln2",
+                ". [the above message was repeated 2 times]\n",
+                "ln3",
+                ". [the above message was repeated 1 times]\n",
+                "ln",
+            ],
+        ),
+        (["ln", "ln"], False, ["ln", ". [the above message was repeated 1 times]\n"]),
+        ((str(i) for i in range(3)), False, ["0", "1", "2"]),
+    ],
+)
+def test_filter_consecutive_duplicates(
+    input_lines: Sequence[str], nocontext: bool, expected_output: Sequence[str]
+) -> None:
+    assert expected_output == list(lw._filter_consecutive_duplicates(input_lines, nocontext))
 
 
 @pytest.fixture
@@ -747,16 +847,28 @@ def fake_filesystem(tmpdir):
         (_WAT_BAD, "file", None),
         (_OH_NO, "file", None),
         ("symlink_to_file.log", "symlink", "symlinked_file.log"),
-        ("subdir", "dir", [
-            ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),
-            ("subsubdir", "dir", [
-                ("yaf.log", "file", None),
-            ]),
-        ]),
+        (
+            "subdir",
+            "dir",
+            [
+                ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),
+                (
+                    "subsubdir",
+                    "dir",
+                    [
+                        ("yaf.log", "file", None),
+                    ],
+                ),
+            ],
+        ),
         ("symlink_to_dir", "symlink", "symlinked_dir"),
-        ("symlinked_dir", "dir", [
-            ("yet_another_file.log", "file", None),
-        ]),
+        (
+            "symlinked_dir",
+            "dir",
+            [
+                ("yet_another_file.log", "file", None),
+            ],
+        ),
         ("hard_linked_file.log", "file", None),
         ("hard_link_to_file.log", "hardlink", "hard_linked_file.log"),
     ]
@@ -790,23 +902,20 @@ def fake_filesystem(tmpdir):
 def test_process_batches(tmpdir, mocker):
     mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
     lw.process_batches(
-        [
-            lw.ensure_text_type(l) for l in [
-            "line1",
-            "line2"
-        ]
-        ],
+        [lw.ensure_text_type(l) for l in ["line1", "line2"]],
         "batch_id",
         "::remote",
         123,
         456,
     )
-    assert os.path.isfile(os.path.join(
-        str(tmpdir),
-        "logwatch-batches",
-        "__remote" if os.name == "nt" else "::remote",
-        "logwatch-batch-file-batch_id",
-    ))
+    assert os.path.isfile(
+        os.path.join(
+            str(tmpdir),
+            "logwatch-batches",
+            "__remote" if os.name == "nt" else "::remote",
+            "logwatch-batch-file-batch_id",
+        )
+    )
 
 
 def _get_file_info(tmp_path, file_name):
@@ -821,9 +930,12 @@ def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
 
 
 def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
-    info = [_get_file_info(tmpdir, f) for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log" )]
-    assert {s for(_, s) in info} == {0}
-    assert len({i for(i, _) in info}) == 2
+    info = [
+        _get_file_info(tmpdir, f)
+        for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")
+    ]
+    assert {s for (_, s) in info} == {0}
+    assert len({i for (i, _) in info}) == 2
     assert info[0][0] != info[1][0]
     assert info[1][0] == info[2][0]
 

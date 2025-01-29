@@ -23,8 +23,12 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
-import cmk.utils.render as render
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import omd_site
+
+from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
 from cmk.utils.backup.targets import TargetId
@@ -46,16 +50,10 @@ from cmk.utils.backup.targets.remote_interface import (
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
-from cmk.utils.crypto.keys import WrongPasswordError
-from cmk.utils.crypto.password import Password as PasswordType
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
-from cmk.utils.site import omd_site
 
-import cmk.gui.forms as forms
-import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -74,6 +72,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -103,6 +102,9 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.wato import IndividualOrStoredPassword
+
+from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 def register() -> None:
@@ -532,13 +534,13 @@ class PageBackup:
         show_key_download_warning(self.key_store.load())
         self._show_job_list()
 
-    def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
+    def _show_job_list(self) -> None:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 state = job.state()
                 job_state = state.state
@@ -614,11 +616,15 @@ class PageBackup:
 
                 table.cell(_("Runtime"))
                 if state.started:
-                    html.write_text(_("Started at %s") % render.date_and_time(state.started))
+                    html.write_text_permissive(
+                        _("Started at %s") % render.date_and_time(state.started)
+                    )
                     duration = time.time() - state.started
                     if job_state == "finished":
                         assert state.finished is not None
-                        html.write_text(", Finished at %s" % render.date_and_time(state.finished))
+                        html.write_text_permissive(
+                            ", Finished at %s" % render.date_and_time(state.finished)
+                        )
                         duration = state.finished - state.started
 
                     if state.size is not None:
@@ -627,7 +633,7 @@ class PageBackup:
                         size_txt = ""
 
                     assert state.bytes_per_second is not None
-                    html.write_text(
+                    html.write_text_permissive(
                         _(" (Duration: %s, %sIO: %s/s)")
                         % (
                             render.timespan(duration),
@@ -639,10 +645,10 @@ class PageBackup:
                 table.cell(_("Next run"))
                 schedule = job.schedule()
                 if not schedule:
-                    html.write_text(_("Only execute manually"))
+                    html.write_text_permissive(_("Only execute manually"))
 
                 elif schedule["disabled"]:
-                    html.write_text(_("Disabled"))
+                    html.write_text_permissive(_("Disabled"))
 
                 elif schedule["timeofday"]:
                     # find the next time of all configured times
@@ -650,7 +656,9 @@ class PageBackup:
                     for timespec in schedule["timeofday"]:
                         times.append(next_scheduled_time(schedule["period"], timespec))
 
-                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
+                    html.write_text_permissive(
+                        time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times)))
+                    )
 
 
 class PageEditBackupJob:
@@ -867,6 +875,8 @@ class PageEditBackupJob:
         ]
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
@@ -959,14 +969,14 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         html.td(_("Runtime"), class_="left")
         html.open_td()
         if state.started:
-            html.write_text(_("Started at %s") % render.date_and_time(state.started))
+            html.write_text_permissive(_("Started at %s") % render.date_and_time(state.started))
             duration = time.time() - state.started
             if state.state == "finished":
                 assert state.finished is not None
-                html.write_text(", Finished at %s" % render.date_and_time(state.started))
+                html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
                 duration = state.finished - state.started
 
-            html.write_text(_(" (Duration: %s)") % render.timespan(duration))
+            html.write_text_permissive(_(" (Duration: %s)") % render.timespan(duration))
         html.close_td()
         html.close_tr()
 
@@ -1501,9 +1511,9 @@ class Target:
                 table.cell(_("Size"), render.fmt_bytes(info.size))
                 table.cell(_("Encrypted"))
                 if (encrypt := info.config["encrypt"]) is not None:
-                    html.write_text(encrypt)
+                    html.write_text_permissive(encrypt)
                 else:
-                    html.write_text(_("No"))
+                    html.write_text_permissive(_("No"))
 
     def backups(self) -> Mapping[str, SiteBackupInfo]:
         return self._target_type().backups()
@@ -1541,7 +1551,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(
                 request,
@@ -1747,6 +1757,8 @@ class PageEditBackupTarget:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
@@ -2118,7 +2130,7 @@ class PageBackupRestore:
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except (ValueError, WrongPasswordError):
+                    except (PEMDecodingError, ValueError):
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction()  # invalidate transid

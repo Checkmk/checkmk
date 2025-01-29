@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.apc_rackpdu_power import parse_apc_rackpdu_power
+from cmk.plugins.collection.agent_based.apc_rackpdu_power import parse_apc_rackpdu_power
 
 checkname = "apc_rackpdu_power"
 

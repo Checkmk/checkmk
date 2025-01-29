@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.store as store
-import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
 
-import cmk.gui.watolib.read_only as read_only
+from cmk.utils import paths
+from cmk.utils.paths import configuration_lockfile
+
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
@@ -19,6 +21,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
@@ -68,7 +71,7 @@ def page_handler() -> None:
     # chance to configure a backup for remote sites.
     # config.current_customer can not be checked with CRE repos
     if (
-        cmk_version.edition() is cmk_version.Edition.CME
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
         and not customer_api().is_provider(active_config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
@@ -84,7 +87,7 @@ def page_handler() -> None:
 
     # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             _wato_page_handler(current_mode, mode_instance)
     else:
         _wato_page_handler(current_mode, mode_instance)
@@ -140,7 +143,11 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
 
     # Show outcome of previous page (that redirected to this one)
     for message in get_flashed_messages(with_categories=True):
-        html.show_message_by_msg_type(message.msg, message.msg_type)
+        html.show_message_by_msg_type(
+            msg=message.msg,
+            msg_type=message.msg_type,
+            flashed=True,
+        )
 
     # Show content
     mode.handle_page()

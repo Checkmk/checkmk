@@ -17,8 +17,8 @@ from cmk.server_side_calls.v1 import (
 )
 
 
-def _to_text_args(pairs: Sequence[tuple[str, str]]) -> list[str]:
-    return [f"{name}:{key}" for name, key in pairs]
+def _to_text_args(pairs: Sequence[dict[str, str]]) -> list[str]:
+    return [f"{pair['name']}:{pair['key']}" for pair in pairs]
 
 
 class Instance(BaseModel):
@@ -33,22 +33,22 @@ class Monitors(BaseModel):
 
 
 class Events(BaseModel):
-    max_age: int
+    max_age: float
     tags: list[str] = Field(default_factory=list)
     tags_to_show: list[str] = Field(default_factory=list)
-    syslog_facility: int
-    syslog_priority: int
-    service_level: int
-    add_text: bool
+    syslog_facility: tuple[str, int]
+    syslog_priority: tuple[str, int]
+    service_level: tuple[str, int]
+    add_text: str
 
 
 class LogsConfig(BaseModel):
-    max_age: int
+    max_age: float
     query: str
     indexes: list[str]
-    text: list[tuple[str, str]] = Field(default_factory=list)
-    syslog_facility: int
-    service_level: int
+    text: list[dict[str, str]] = Field(default_factory=list)
+    syslog_facility: tuple[str, int]
+    service_level: tuple[str, int]
 
 
 class Params(BaseModel):
@@ -63,7 +63,6 @@ def agent_datadog_arguments(
     params: Params,
     host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
-
     args: list[str | Secret] = [
         host_config.name,
         params.instance.api_key.unsafe(),
@@ -92,25 +91,25 @@ def agent_datadog_arguments(
         sections.append("events")
         args += [
             "--event_max_age",
-            str(params.events.max_age),
+            str(int(params.events.max_age)),
             "--event_tags",
             *params.events.tags,
             "--event_tags_show",
             *params.events.tags_to_show,
             "--event_syslog_facility",
-            str(params.events.syslog_facility),
+            str(params.events.syslog_facility[1]),
             "--event_syslog_priority",
-            str(params.events.syslog_priority),
+            str(params.events.syslog_priority[1]),
             "--event_service_level",
-            str(params.events.service_level),
-            *(["--event_add_text"] if params.events.add_text else []),
+            str(params.events.service_level[1]),
+            *(["--event_add_text"] if params.events.add_text == "add_text" else []),
         ]
 
     if params.logs:
         sections.append("logs")
         args += [
             "--log_max_age",
-            str(params.logs.max_age),
+            str(int(params.logs.max_age)),
             "--log_query",
             params.logs.query,
             "--log_indexes",
@@ -118,9 +117,9 @@ def agent_datadog_arguments(
             "--log_text",
             *_to_text_args(params.logs.text),
             "--log_syslog_facility",
-            str(params.logs.syslog_facility),
+            str(params.logs.syslog_facility[1]),
             "--log_service_level",
-            str(params.logs.service_level),
+            str(params.logs.service_level[1]),
         ]
     args += ["--sections"] + sections
 

@@ -7,10 +7,10 @@
 # List of Objects, else Empty
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_symantec_av_quarantine(info):
@@ -29,6 +29,7 @@ def parse_symantec_av_quarantine(string_table: StringTable) -> StringTable:
 
 
 check_info["symantec_av_quarantine"] = LegacyCheckDefinition(
+    name="symantec_av_quarantine",
     parse_function=parse_symantec_av_quarantine,
     service_name="AV Quarantine",
     discovery_function=inventory_symantec_av_quarantine,

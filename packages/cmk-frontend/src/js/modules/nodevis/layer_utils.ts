@@ -4,13 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {
+import type {
     d3SelectionDiv,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
 } from "./type_defs";
-import {AbstractClassRegistry, TypeWithName} from "./utils";
+import type {TypeWithName} from "./utils";
+import {AbstractClassRegistry} from "./utils";
 
 export interface LayerSelections {
     div: d3SelectionDiv;
@@ -154,5 +155,5 @@ export type AbstractNodeVisConstructor<Type extends TypeWithName> = new (
     a?: any,
     b?: any,
     c?: any,
-    d?: any
+    d?: any,
 ) => Type;

@@ -6,10 +6,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def hex2ip(hexstr):
@@ -45,11 +45,8 @@ def check_keepalived(item, params, info):
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is {}. IP Address: {}".format(
-                map_state[str(entry[1])],
-                hex2ip(hexaddr),
-            )
-    yield int(status), infotext
+            infotext = f"This node is {map_state[str(entry[1])]}. IP Address: {hex2ip(hexaddr)}"
+    yield status, infotext
 
 
 def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
@@ -57,6 +54,7 @@ def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["keepalived"] = LegacyCheckDefinition(
+    name="keepalived",
     parse_function=parse_keepalived,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
     fetch=[
@@ -74,10 +72,10 @@ check_info["keepalived"] = LegacyCheckDefinition(
     check_function=check_keepalived,
     check_ruleset_name="keepalived",
     check_default_parameters={
-        "master": "0",
-        "unknown": "3",
-        "init": "0",
-        "backup": "0",
-        "fault": "2",
+        "master": 0,
+        "unknown": 3,
+        "init": 0,
+        "backup": 0,
+        "fault": 2,
     },
 )

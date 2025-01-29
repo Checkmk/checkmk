@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
+
 import dataclasses
 import json
 import pprint
@@ -13,18 +14,19 @@ from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Version
+
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
-from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
-from cmk.utils.version import __version__, Version
 
 from cmk.checkengine.discovery import CheckPreviewEntry
 
@@ -146,8 +148,6 @@ class ModeDiscovery(WatoMode):
         self._host = folder_from_request(
             request.var("folder"), request.get_ascii_input("host")
         ).load_host(request.get_validated_type_input_mandatory(HostName, "host"))
-        if not self._host:
-            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         self._host.permissions.need_permission("read")
 
@@ -215,7 +215,7 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
     raise_errors: bool
 
 
-class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
+class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
     """Fetch the service discovery background job snapshot on a remote site"""
 
     def command_name(self) -> str:
@@ -233,7 +233,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return json.dumps(job_snapshot)
 
 
-class AutomationServiceDiscoveryJob(AutomationCommand):
+class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscoveryRequest]):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -324,11 +324,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 update_services, discovery_options.show_checkboxes
             ),
             raise_errors=not discovery_options.ignore_errors,
-        )
-        discovery_result = discovery_result._replace(
-            check_table=tuple(
-                self._reclassify_changed_discovery_parameters_services(discovery_result.check_table)
-            )
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -438,7 +433,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 | DiscoveryAction.BULK_UPDATE
                 | DiscoveryAction.UPDATE_SERVICES
                 | DiscoveryAction.UPDATE_SERVICE_LABELS
-                | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                | DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS
+                | DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
             ):
                 discovery_result = perform_service_discovery(
                     action=action,
@@ -463,38 +459,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result
-
-    def _reclassify_changed_discovery_parameters_services(
-        self, check_table: Iterable[CheckPreviewEntry]
-    ) -> Iterable[CheckPreviewEntry]:
-        # Currently services with changed discovery parameters are classified as changed by
-        # the backend. At the moment we have no convenient way to display the information
-        # provided by discovery parameters. Therefore, they are reclassified as unchanged.
-        for entry in check_table:
-            if (
-                entry.check_source == DiscoveryState.CHANGED
-                and entry.old_discovered_parameters != entry.new_discovered_parameters
-                and entry.old_labels == entry.new_labels
-            ):
-                yield CheckPreviewEntry(
-                    check_source=DiscoveryState.MONITORED,
-                    check_plugin_name=entry.check_plugin_name,
-                    ruleset_name=entry.ruleset_name,
-                    discovery_ruleset_name=entry.discovery_ruleset_name,
-                    item=entry.item,
-                    old_discovered_parameters=entry.old_discovered_parameters,
-                    new_discovered_parameters=entry.new_discovered_parameters,
-                    effective_parameters=entry.effective_parameters,
-                    description=entry.description,
-                    state=entry.state,
-                    output=entry.output,
-                    metrics=entry.metrics,
-                    old_labels=entry.old_labels,
-                    new_labels=entry.new_labels,
-                    found_on_nodes=entry.found_on_nodes,
-                )
-                continue
-            yield entry
 
     @staticmethod
     def _resolve_selected_services(
@@ -670,7 +634,7 @@ class DiscoveryPageRenderer:
             for state, output in sources.values():
                 html.open_tr()
                 html.open_td()
-                html.write_html(HTML(get_html_state_marker(state)))
+                html.write_html(HTML.without_escaping(get_html_state_marker(state)))
                 html.close_td()
                 # Make sure not to show long output
                 html.td(
@@ -711,7 +675,7 @@ class DiscoveryPageRenderer:
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value
-            # of the host label are used the values are seperated with an arrow (\u279c)
+            # of the host label are used the values are separated with an arrow (\u279c)
             if label_id in discovery_result.changed_labels:
                 changed_host_labels.setdefault(
                     label_id,
@@ -770,8 +734,8 @@ class DiscoveryPageRenderer:
             table.cell(_("Host labels"), labels_html, css=["expanding"])
             return
 
-        plugin_names = HTML("")
-        labels_html = HTML("")
+        plugin_names = HTML.empty()
+        labels_html = HTML.empty()
         for label_id, label in host_labels.items():
             plugin_names += HTMLWriter.render_p(label["plugin_name"])
             labels_html += render_labels(
@@ -794,7 +758,7 @@ class DiscoveryPageRenderer:
 
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
-        # html.write_text("Using discovery information from %s" % cmk.utils.render.date_and_time(
+        # html.write_text_permissive("Using discovery information from %s" % cmk.utils.render.date_and_time(
         #    discovery_result.check_table_created))
 
         by_group = self._group_check_table_by_state(discovery_result.check_table)
@@ -987,6 +951,7 @@ class DiscoveryPageRenderer:
 
         if has_changed_services:
             enable_page_menu_entry(html, "update_service_labels")
+            enable_page_menu_entry(html, "update_discovery_parameters")
 
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
@@ -1077,6 +1042,30 @@ class DiscoveryPageRenderer:
             table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
+        unchanged_labels: Labels = {}
+        changed_labels: Labels = {}
+        added_labels: Labels = {}
+        removed_labels: Labels = {}
+        if entry.check_source == DiscoveryState.CHANGED:
+            unchanged_labels, changed_labels, added_labels, removed_labels = (
+                self._calculate_changes(entry.old_labels, entry.new_labels)
+            )
+            _unchanged_parameters, changed_parameters, added_parameters, removed_parameters = (
+                self._calculate_changes(
+                    entry.old_discovered_parameters, entry.new_discovered_parameters
+                )
+            )
+
+            table.cell(_("Discovered changes"))
+            self._show_discovered_changes(
+                changed_labels,
+                added_labels,
+                removed_labels,
+                changed_parameters,
+                added_parameters,
+                removed_parameters,
+            )
+
         if self._options.show_discovered_labels:
             table.cell(
                 _("Previously discovered")
@@ -1084,27 +1073,8 @@ class DiscoveryPageRenderer:
                 else _("Discovered service labels")
             )
             self._show_discovered_labels(entry.old_labels)
+
             if entry.check_source == DiscoveryState.CHANGED:
-                unchanged_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value == entry.old_labels[label]
-                }
-                changed_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value != entry.old_labels[label]
-                }
-                added_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label not in entry.old_labels
-                }
-                removed_labels = {
-                    label: value
-                    for label, value in entry.old_labels.items()
-                    if label not in entry.new_labels
-                }
                 table.cell(_("Newly discovered"))
                 self._show_discovered_labels(unchanged_labels)
                 self._show_discovered_labels(changed_labels, override_label_render_type="changed")
@@ -1118,6 +1088,77 @@ class DiscoveryPageRenderer:
                 css=["plugins"],
             )
 
+    @staticmethod
+    def _calculate_changes(
+        old: Mapping[str, Any], new: Mapping[str, Any]
+    ) -> tuple[Mapping[str, Any], Mapping[str, Any], Mapping[str, Any], Mapping[str, Any]]:
+        unchanged = {}
+        changed = {}
+        added = {}
+        removed = {}
+        for key, value in new.items():
+            if key in old and value == old[key]:
+                unchanged[key] = value
+            if key in old and value != old[key]:
+                changed[key] = value
+            if key not in old:
+                added[key] = value
+        for key, value in old.items():
+            if key not in new:
+                removed[key] = value
+        return unchanged, changed, added, removed
+
+    def _show_discovered_changes(
+        self,
+        changed_labels: Labels,
+        added_labels: Labels,
+        removed_labels: Labels,
+        changed_parameters: Mapping[str, Any],
+        added_parameters: Mapping[str, Any],
+        removed_parameters: Mapping[str, Any],
+    ) -> None:
+        if changed_labels:
+            html.p(
+                ungettext("%d changed label", "%d changed labels", len(changed_labels))
+                % len(changed_labels)
+            )
+        if added_labels:
+            html.p(
+                ungettext("%d new label", "%d new labels", len(added_labels)) % len(added_labels)
+            )
+        if removed_labels:
+            html.p(
+                ungettext("%d removed label", "%d removed labels", len(removed_labels))
+                % len(removed_labels)
+            )
+        if changed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter changed",
+                    "%d discovery parameters changed",
+                    len(changed_parameters),
+                )
+                % len(changed_parameters)
+            )
+        if added_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter added",
+                    "%d discovery parameters added",
+                    len(added_parameters),
+                )
+                % len(added_parameters)
+            )
+        if removed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter removed",
+                    "%d discovery parameters removed",
+                    len(removed_parameters),
+                )
+                % len(removed_parameters)
+            )
+
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:
         if entry.check_source not in [
             DiscoveryState.CUSTOM,
@@ -1129,12 +1170,10 @@ class DiscoveryPageRenderer:
             output, *_details = entry.output.split("\n", 1)
             if output:
                 html.write_html(
-                    HTML(
-                        format_plugin_output(
-                            output,
-                            request=request,
-                            shall_escape=active_config.escape_plugin_output,
-                        )
+                    format_plugin_output(
+                        output,
+                        request=request,
+                        shall_escape=active_config.escape_plugin_output,
                     )
                 )
             return
@@ -1167,7 +1206,7 @@ class DiscoveryPageRenderer:
         rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
-                html.write_text(
+                html.write_text_permissive(
                     _("Timespecific parameters computed at %s")
                     % cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"])
                 )
@@ -1176,7 +1215,7 @@ class DiscoveryPageRenderer:
             rulespec.valuespec.validate_datatype(params, "")
             rulespec.valuespec.validate_value(params, "")
             paramtext = rulespec.valuespec.value_to_html(params)
-            html.write_html(HTML(paramtext))
+            html.write_html(HTML.with_escaping(paramtext))
         except Exception as e:
             if active_config.debug:
                 err = traceback.format_exc()
@@ -1186,7 +1225,7 @@ class DiscoveryPageRenderer:
             paramtext += "{}: <tt>{}</tt><br>".format(_("Variable"), varname)
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
-            html.write_text(paramtext)
+            html.write_text_permissive(paramtext)
 
     def _show_discovered_labels(
         self,
@@ -1241,7 +1280,7 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(  # pylint: disable=too-many-branches
+    def _show_actions(
         self,
         table: Table,
         discovery_result: DiscoveryResult,
@@ -1267,13 +1306,13 @@ class DiscoveryPageRenderer:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(
                         url="",
-                        title=_("Update service labels"),
-                        icon="update_service_labels",
+                        title=_("Accept service properties"),
+                        icon="accept",
                         class_=button_classes,
                         onclick=_start_js_call(
                             self._host,
                             self._options._replace(
-                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
                             ),
                             request_vars={
                                 "update_target": DiscoveryState.MONITORED,
@@ -1616,8 +1655,8 @@ class DiscoveryPageRenderer:
                 title=_("Active checks"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call classical check plugins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Checkmk."
+                    "call classical check plug-ins. They have been added by a rule in the section "
+                    "<i>Active checks</i> or implicitly by Checkmk."
                 ),
             ),
             TableGroupEntry(
@@ -1635,7 +1674,7 @@ class DiscoveryPageRenderer:
                 title=_("Custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself."
+                    "call a classical check plug-in that you have installed yourself."
                 ),
             ),
             TableGroupEntry(
@@ -1682,7 +1721,7 @@ class DiscoveryPageRenderer:
                 title=_("Disabled active checks"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call classical check plugins. They have been added by a rule in the section "
+                    "call classical check plug-ins. They have been added by a rule in the section "
                     "<i>Active checks</i> or implicitely by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
@@ -1694,7 +1733,7 @@ class DiscoveryPageRenderer:
                 title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
-                    "call a classical check plugin, that you have installed yourself. "
+                    "call a classical check plug-in that you have installed yourself. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),
@@ -1755,7 +1794,7 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("Services"),
+                        title=_("On selected services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -1972,6 +2011,17 @@ def _page_menu_service_configuration_entries(
     )
 
     yield PageMenuEntry(
+        title=_("Remove all and find new"),
+        icon_name="services_tabula_rasa",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
+        ),
+        name="tabula_rasa",
+        is_enabled=False,
+        css_classes=["action"],
+    )
+
+    yield PageMenuEntry(
         title=_("Rescan"),
         icon_name="services_refresh",
         item=make_javascript_link(
@@ -1980,17 +2030,6 @@ def _page_menu_service_configuration_entries(
         name="refresh",
         is_enabled=False,
         is_shortcut=True,
-        css_classes=["action"],
-    )
-
-    yield PageMenuEntry(
-        title=_("Remove all and find new"),
-        icon_name="services_tabula_rasa",
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
-        ),
-        name="tabula_rasa",
-        is_enabled=False,
         css_classes=["action"],
     )
 
@@ -2133,6 +2172,24 @@ def _page_menu_selected_services_entries(
         is_shortcut=False,
         css_classes=["action"],
     )
+    yield PageMenuEntry(
+        title=_("Update discovery parameters"),
+        icon_name="update_discovery_parameters",
+        item=make_javascript_link(
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS),
+                request_vars={
+                    "update_target": DiscoveryState.MONITORED,
+                    "update_source": DiscoveryState.CHANGED,
+                },
+            )
+        ),
+        name="update_discovery_parameters",
+        is_enabled=False,
+        is_shortcut=False,
+        css_classes=["action"],
+    )
 
 
 def _page_menu_host_labels_entries(
@@ -2153,26 +2210,20 @@ def _page_menu_host_labels_entries(
 
 
 def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | None = None) -> str:
-    return "cmk.service_discovery.start({}, {}, {}, {}, {})".format(
-        json.dumps(host.name()),
-        json.dumps(host.folder().path()),
-        json.dumps(options._asdict()),
-        json.dumps(transactions.get()),
-        json.dumps(request_vars),
-    )
+    return f"cmk.service_discovery.start({json.dumps(host.name())}, {json.dumps(host.folder().path())}, {json.dumps(options._asdict())}, {json.dumps(transactions.get())}, {json.dumps(request_vars)})"
 
 
 def ajax_popup_service_action_menu() -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
-    if checkbox_name is None or hostname is None or not entry:
+    if checkbox_name is None or hostname is None:
         html.show_error(_("Cannot render dropdown: Missing required information"))
         return
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
     html.icon("rulesets")
-    html.write_text(_("View and edit the parameters for this service"))
+    html.write_text_permissive(_("View and edit the parameters for this service"))
     html.close_a()
 
     check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(entry, hostname)
@@ -2180,5 +2231,5 @@ def ajax_popup_service_action_menu() -> None:
         return
     html.open_a(href=check_parameters_url)
     html.icon("check_parameters")
-    html.write_text(_("Edit and analyse the check parameters for this service"))
+    html.write_text_permissive(_("Edit and analyse the check parameters for this service"))
     html.close_a()

@@ -20,17 +20,20 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
 
-from cmk.utils.crypto.secrets import AuthenticationSecret
-from cmk.utils.site import omd_site
+from cmk.ccc.site import omd_site
+
+from cmk.utils.local_secrets import AuthenticationSecret
 from cmk.utils.user import UserId
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
+
+from ._two_factor import is_two_factor_login_enabled
 
 auth_logger = gui_logger.getChild("auth")
 
@@ -47,7 +50,7 @@ def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
     return (
         AuthenticationSecret()
-        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode("utf-8"))
+        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode())
         .hex()
     )
 
@@ -67,7 +70,8 @@ def _load_serial(username: UserId) -> int:
 def on_succeeded_login(username: UserId, now: datetime) -> None:
     ensure_user_can_init_session(username, now)
     # Set failed login counter to 0
-    save_custom_attr(username, "num_failed_logins", 0)
+    if not is_two_factor_login_enabled(username):
+        save_custom_attr(username, "num_failed_logins", 0)
     if active_config.single_user_session is not None:
         # In single user session mode there is only one session allowed at a time. Once we
         # reach this place, we can be sure that we are allowed to remove all existing ones.
@@ -81,6 +85,8 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     if (session_timeout := active_config.single_user_session) is None:
         return  # No login session limitation enabled, no validation
     for session_info in load_session_infos(username).values():
+        if session_info.logged_out:
+            continue
         idle_time = now.timestamp() - session_info.last_activity
         if idle_time <= session_timeout:
             auth_logger.debug(

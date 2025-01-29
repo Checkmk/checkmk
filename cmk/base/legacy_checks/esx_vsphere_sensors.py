@@ -14,10 +14,10 @@
 # Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_esx_vsphere_sensors(info):
@@ -62,6 +62,7 @@ def parse_esx_vsphere_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    name="esx_vsphere_sensors",
     parse_function=parse_esx_vsphere_sensors,
     service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,

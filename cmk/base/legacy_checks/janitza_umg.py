@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, render, SNMPTree
+
+check_info = {}
 
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
@@ -104,6 +105,7 @@ def inventory_janitza_umg_inphase(parsed):
 
 
 check_info["janitza_umg"] = LegacyCheckDefinition(
+    name="janitza_umg",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.8.6"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.1"),
@@ -176,6 +178,7 @@ def check_janitza_umg_freq(item, params, parsed):
 
 
 check_info["janitza_umg.freq"] = LegacyCheckDefinition(
+    name="janitza_umg_freq",
     service_name="Frequency %s",
     sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_freq,
@@ -203,6 +206,7 @@ def check_janitza_umg_temp(item, params, parsed):
 
 
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(
+    name="janitza_umg_temp",
     service_name="Temperature External %s",
     sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_temp,

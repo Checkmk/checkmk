@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result
 from cmk.plugins.kube.schemata.section import (
@@ -33,7 +32,7 @@ def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
     >>> parse_performance_usage([['{"resource": {"type_": "cpu", "usage": 0.9}}']])
     PerformanceUsage(resource=Cpu(type_='cpu', usage=0.9))
     """
-    return PerformanceUsage(**json.loads(string_table[0][0]))
+    return PerformanceUsage.model_validate_json(string_table[0][0])
 
 
 def count_overview(resources: Resources, requirement: RequirementType) -> str:
@@ -57,11 +56,11 @@ def parse_resources(string_table: StringTable) -> Resources:
     ... '"count_total": 1}']])
     Resources(request=209715200.0, limit=104857600.0, count_unspecified_requests=0, count_unspecified_limits=0, count_zeroed_limits=1, count_total=1)
     """
-    return Resources(**json.loads(string_table[0][0]))
+    return Resources.model_validate_json(string_table[0][0])
 
 
 def parse_hard_requirements(string_table: StringTable) -> HardResourceRequirement:
-    return HardResourceRequirement(**json.loads(string_table[0][0]))
+    return HardResourceRequirement.model_validate_json(string_table[0][0])
 
 
 def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource:
@@ -71,7 +70,7 @@ def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource
     >>> parse_allocatable_resource([['{"context": "cluster", "value": 6.0}']])
     AllocatableResource(context='cluster', value=6.0)
     """
-    return AllocatableResource(**json.loads(string_table[0][0]))
+    return AllocatableResource.model_validate_json(string_table[0][0])
 
 
 Param = Literal["no_levels"] | tuple[Literal["levels"], tuple[float, float]]
@@ -150,7 +149,7 @@ def check_with_utilization(
         metric_name = f"kube_{resource_type}_{kubernetes_object}_{requirement_type}_utilization"
         param = params[kubernetes_object]
         title = utilization_title[kubernetes_object]
-    result, metric = check_levels(
+    result, metric = check_levels_v1(
         utilization,
         levels_upper=param[1] if param != "no_levels" else None,
         levels_lower=_get_request_lower_levels(params, requirement_type),
@@ -189,7 +188,7 @@ def check_resource(
 ) -> CheckResult:
     if resource_usage is not None:
         usage = resource_usage.resource.usage
-        yield from check_levels(
+        yield from check_levels_v1(
             usage,
             label="Usage",
             levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
@@ -212,7 +211,7 @@ def check_resource(
             )
             yield Metric(f"kube_{resource_type}_{requirement_type}", requirement)
         else:  # requirements with no usage
-            result, metric = check_levels(
+            result, metric = check_levels_v1(
                 requirement,
                 label=absolute_title[requirement_type],
                 metric_name=f"kube_{resource_type}_{requirement_type}",
@@ -247,7 +246,7 @@ def check_resource_quota_resource(
     """
     usage = resource_usage.resource.usage if resource_usage is not None else None
     if usage is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             usage,
             label="Usage",
             levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
@@ -279,7 +278,7 @@ def check_resource_quota_resource(
                 render_func=render_func,
             )
         else:  # requirements with no usage
-            yield from check_levels(
+            yield from check_levels_v1(
                 requirement_value,
                 label=absolute_title[requirement_type],
                 metric_name=f"kube_{resource_type}_{requirement_type}",
@@ -307,7 +306,7 @@ def performance_cpu(
     if (timestamped_usage := host_value_store.get(value_store_key)) is not None:
         timestamp, usage = timestamped_usage
         if current_timestamp - timestamp <= 60:
-            return PerformanceUsage(**json.loads(usage))
+            return PerformanceUsage.model_validate_json(usage)
         # remove the stored value if older than 60 seconds
         host_value_store.pop(value_store_key)
 

@@ -7,13 +7,15 @@ import functools
 import re
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
+from logging import Logger
 from pathlib import Path
 
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.utils.log import console
+from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
+
+from cmk.utils import tty
 from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
+from cmk.utils.tty import format_warning
 
 from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
 
@@ -47,7 +49,7 @@ def gather_available_raw_section_names(
         if scan_config.on_error is OnError.RAISE:
             raise
         if scan_config.on_error is OnError.WARN:
-            console.error(f"SNMP scan failed: {e}\n")
+            backend.logger.error(f"SNMP scan failed: {e}")
 
     return frozenset()
 
@@ -65,10 +67,10 @@ def _snmp_scan(
     snmp_cache.initialize_single_oid_cache(
         backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
-    console.debug("  SNMP scan:\n")
+    backend.logger.debug("  SNMP scan:")
 
     if scan_config.missing_sys_description:
-        _fake_description_object()
+        _fake_description_object(backend.logger)
     else:
         _prefetch_description_object(backend=backend)
 
@@ -77,7 +79,7 @@ def _snmp_scan(
         on_error=scan_config.on_error,
         backend=backend,
     )
-    _output_snmp_check_plugins("SNMP scan found", found_sections)
+    _output_snmp_check_plugins("SNMP scan found", found_sections, backend.logger)
     snmp_cache.write_single_oid_cache(
         backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
@@ -94,7 +96,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
                 oid,
                 single_oid_cache=snmp_cache.single_oid_cache(),
                 backend=backend,
-                log=lambda msg: console.debug(msg + "\n"),
+                log=backend.logger.debug,
             )
             is None
         ):
@@ -105,10 +107,10 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
             )
 
 
-def _fake_description_object() -> None:
+def _fake_description_object(logger: Logger) -> None:
     """Fake OID values to prevent issues with a lot of scan functions"""
-    console.debug(
-        f'       Skipping system description OID (Set {OID_SYS_DESCR} and {OID_SYS_OBJ} to "")\n'
+    logger.debug(
+        f'       Skipping system description OID (Set {OID_SYS_DESCR} and {OID_SYS_OBJ} to "")'
     )
     snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
     snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""
@@ -127,7 +129,7 @@ def _find_sections(
             section_name=name,
             single_oid_cache=snmp_cache.single_oid_cache(),
             backend=backend,
-            log=lambda msg: console.debug(msg + "\n"),
+            log=backend.logger.debug,
         )
         try:
             if _evaluate_snmp_detection(
@@ -145,8 +147,8 @@ def _find_sections(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
-                console.warning(
-                    console.format_warning(f"   Exception in SNMP scan function of {name}\n")
+                backend.logger.warning(
+                    format_warning(f"   Exception in SNMP scan function of {name}")
                 )
     return frozenset(found_sections)
 
@@ -179,15 +181,11 @@ def _evaluate_snmp_detection(
 
 
 def _output_snmp_check_plugins(
-    title: str,
-    collection: Iterable[SectionName],
+    title: str, collection: Collection[SectionName], logger: Logger
 ) -> None:
-    if collection:
-        collection_out = " ".join(str(n) for n in sorted(collection))
-    else:
-        collection_out = "-"
-    console.debug(
-        "   %-35s%s%s%s%s\n"
+    collection_out = " ".join(str(n) for n in sorted(collection)) if collection else "-"
+    logger.debug(
+        "   %-35s%s%s%s%s"
         % (
             title,
             tty.bold,

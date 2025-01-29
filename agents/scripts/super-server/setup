@@ -3,7 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-CONFIG="/etc/check_mk/super-server.cfg"
+: "${MK_INSTALLDIR:=""}"
+: "${MK_CONFDIR:="/etc/check_mk"}"
+
+if [ -n "${MK_INSTALLDIR}" ]; then
+    CONFIG="${MK_INSTALLDIR}/package/config/super-server.cfg"
+else
+    CONFIG="${MK_CONFDIR}/super-server.cfg"
+fi
 
 MODULES_DIR="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
 
@@ -12,7 +19,7 @@ usage() {
 Usage ${0} deploy|cleanup|purge|trigger|getdeployed
 
 Commands:
-  deploy       Deploy the files for the (first available) conifgured
+  deploy       Deploy the files for the (first available) configured
                super server.
   cleanup      Cleanup all super server files
   purge        Cleanup all super server files that may remain from old agent installations

@@ -22,9 +22,9 @@ from ._utils import (
 )
 
 
-def entry_point_prefixes() -> (
-    Mapping[type[ActiveCheckConfig[Any]] | type[SpecialAgentConfig[Any]], str]
-):
+def entry_point_prefixes() -> Mapping[
+    type[ActiveCheckConfig[Any]] | type[SpecialAgentConfig[Any]], str
+]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     These types can be used to create plug-ins that can be discovered by Checkmk.

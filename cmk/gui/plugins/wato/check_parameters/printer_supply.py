@@ -102,7 +102,7 @@ def _parameter_valuespec_printer_supply() -> Migrate:
                         title=_("Upturn toner levels"),
                         label=_("Printer sends <i>used</i> material instead of <i>remaining</i>"),
                         help=_(
-                            "Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                            "Some Printers (e.g. Konica for Drum Cartdiges) returning the available"
                             " fuel instead of what is left. In this case it's possible"
                             " to upturn the levels to handle this behavior"
                         ),

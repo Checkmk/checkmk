@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # Lists all domains configured in plesk
 #
@@ -14,7 +14,7 @@ __version__ = "2.4.0b1"
 import sys
 
 try:
-    import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
+    import MySQLdb  # type: ignore[import-untyped]
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e

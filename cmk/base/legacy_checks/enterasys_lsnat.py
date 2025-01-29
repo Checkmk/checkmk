@@ -4,10 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_enterasys_lsnat(info):
@@ -16,24 +29,17 @@ def inventory_enterasys_lsnat(info):
 
 def check_enterasys_lsnat(_no_item, params, info):
     if not info:
-        return 3, "LSNAT bindings info is missing"
+        return
 
     lsnat_bindings = saveint(info[0][0])
-    warn, crit = params.get("current_bindings", (None, None))
 
-    state = 0
-    state_info = ""
-    if warn:
-        if lsnat_bindings > crit:
-            state = 2
-            state_info = state_markers[state]
-        elif lsnat_bindings > warn:
-            state = 1
-            state_info = state_markers[state]
-
-    perfdata = [("current_bindings", lsnat_bindings, warn, crit)]
-
-    return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
+    yield check_levels(
+        lsnat_bindings,
+        "current_bindings",
+        params.get("current_bindings"),
+        infoname="Current bindings",
+        human_readable_func=str,
+    )
 
 
 def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
@@ -41,6 +47,7 @@ def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
 
 
 check_info["enterasys_lsnat"] = LegacyCheckDefinition(
+    name="enterasys_lsnat",
     parse_function=parse_enterasys_lsnat,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.1"),
@@ -54,4 +61,7 @@ check_info["enterasys_lsnat"] = LegacyCheckDefinition(
     discovery_function=inventory_enterasys_lsnat,
     check_function=check_enterasys_lsnat,
     check_ruleset_name="lsnat",
+    check_default_parameters={
+        "current_bindings": None,
+    },
 )

@@ -30,6 +30,14 @@ def test_hooks(site: Site) -> None:
         "MULTISITE_COOKIE_AUTH",
         "PNP4NAGIOS",
         "TMPFS",
+        "TRACE_SEND",
+        "TRACE_SEND_TARGET",
+        "TRACE_SERVICE_NAMESPACE",
+        "RABBITMQ_PORT",
+        "RABBITMQ_ONLY_FROM",
+        "RABBITMQ_MANAGEMENT_PORT",
+        "RABBITMQ_DIST_PORT",
+        "AUTOMATION_HELPER",
     ]
 
     if not site.version.is_raw_edition():
@@ -37,6 +45,21 @@ def test_hooks(site: Site) -> None:
             "LIVEPROXYD",
         ]
 
-    installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))
+    if not site.version.is_saas_edition():
+        hooks += [
+            "TRACE_RECEIVE",
+            "TRACE_RECEIVE_ADDRESS",
+            "TRACE_RECEIVE_PORT",
+            "TRACE_JAEGER_UI_PORT",
+            "TRACE_JAEGER_ADMIN_PORT",
+        ]
+
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+        hooks += [
+            "OPENTELEMETRY_COLLECTOR",
+            "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
+        ]
+
+    installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)

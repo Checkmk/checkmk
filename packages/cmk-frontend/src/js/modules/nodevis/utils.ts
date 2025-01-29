@@ -4,12 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import type {BaseType, Selection} from "d3";
+import {select} from "d3";
 
-import {AbstractNodeVisConstructor} from "./layer_utils";
-import {StyleMatcherConditions} from "./layout_utils";
-import * as texts from "./texts";
-import {
+import type {AbstractNodeVisConstructor} from "./layer_utils";
+import type {StyleMatcherConditions} from "./layout_utils";
+import {get} from "./texts";
+import type {
     BoundingRect,
     Coords,
     d3Selection,
@@ -20,7 +21,7 @@ import {
     Quickinfo,
     Tooltip,
 } from "./type_defs";
-import {Viewport} from "./viewport";
+import type {Viewport} from "./viewport";
 
 // TODO: remove or fix logging
 export function log(level: number, ...args: any[]) {
@@ -32,8 +33,8 @@ export class DefaultTransition {
         return 500;
     }
 
-    static add_transition<GType extends d3.BaseType, Data>(
-        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    static add_transition<GType extends BaseType, Data>(
+        selection: Selection<GType, Data, BaseType, unknown>,
     ) {
         return selection.transition().duration(DefaultTransition.duration());
     }
@@ -95,7 +96,7 @@ export class NodeMatcher {
 
     _match_by_bi_rule(
         matcher: StyleMatcherConditions,
-        node: NodevisNode
+        node: NodevisNode,
     ): boolean {
         // List matches
         const list_elements = ["aggr_path_name", "aggr_path_id"] as const;
@@ -127,7 +128,7 @@ export class NodeMatcher {
 
     _match_by_generic_attr(
         matcher: StyleMatcherConditions,
-        node: NodevisNode
+        node: NodevisNode,
     ): boolean {
         const match_type = "id";
         if (matcher[match_type] && !matcher[match_type]!.disabled) {
@@ -176,7 +177,7 @@ export function get_bounding_rect(list_of_coords: Coords[]): BoundingRect {
 
 export function get_bounding_rect_of_rotated_vertices(
     vertices: Coords[],
-    rotation_in_rad: number
+    rotation_in_rad: number,
 ): BoundingRect {
     // TODO: check this
     // Vertices with less than 3 elements will fail
@@ -215,7 +216,7 @@ export class SearchFilters {
     _root_node: d3SelectionDiv;
     constructor(root_node_selector: string | null = null) {
         if (root_node_selector == null) root_node_selector = "#form_filter";
-        this._root_node = d3.select(root_node_selector);
+        this._root_node = select(root_node_selector);
     }
 
     add_hosts_to_host_regex(add_hosts: Set<string>) {
@@ -275,7 +276,7 @@ export class SearchFilters {
     }
     get_filter_params() {
         const inputs = this._root_node.selectAll<HTMLInputElement, null>(
-            "input,select"
+            "input,select",
         );
         const params: Record<string, string> = {};
         inputs.each((_d, idx, nodes) => {
@@ -291,7 +292,7 @@ export class SearchFilters {
 
 export class LiveSearch {
     _root_node: d3SelectionDiv;
-    _search_button: d3.Selection<HTMLInputElement, null, any, unknown>;
+    _search_button: Selection<HTMLInputElement, null, any, unknown>;
     _update_handler: () => void;
     _last_body = "";
     _sent_last_body = "";
@@ -304,7 +305,7 @@ export class LiveSearch {
     _original_submit_handler: string;
     constructor(root_node_selector: string, update_handler: () => void) {
         // root_node_selector should point to a <form> tag
-        this._root_node = d3.select(root_node_selector);
+        this._root_node = select(root_node_selector);
         this._search_button =
             this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
@@ -317,14 +318,14 @@ export class LiveSearch {
         this._root_node
             .select<HTMLInputElement>("input#_reset")
             .style("display", "none");
-        this._search_button.property("value", texts.get("live_search"));
-        this._search_button.attr("title", texts.get("live_search_help"));
+        this._search_button.property("value", get("live_search"));
+        this._search_button.attr("title", get("live_search_help"));
         this._search_button.style("pointer-events", "hover");
         this._initialize_last_body();
         // @ts-ignore
         this._interval_id = setInterval(
             () => this._check_update(),
-            this._check_interval
+            this._check_interval,
         );
         this._root_node.attr("onsubmit", "return false");
     }
@@ -418,7 +419,7 @@ export function render_input_range(
     parent: d3Selection,
     range_options: InputRangeOptions,
     value: number,
-    option_changed_callback: (option_id: string, new_value: number) => void
+    option_changed_callback: (option_id: string, new_value: number) => void,
 ) {
     parent
         .selectAll("td.text." + range_options.id)
@@ -435,7 +436,7 @@ export function render_input_range(
             : parseFloat(new_value);
         new_value = Math.min(
             Math.max(new_value, range_options.min),
-            range_options.max
+            range_options.max,
         );
         return new_value;
     }
@@ -458,13 +459,13 @@ export function render_input_range(
                 .on("input", event => {
                     option_changed_callback(
                         range_options.id,
-                        parseFloat(event.target.value)
+                        parseFloat(event.target.value),
                     );
                     render_input_range(
                         parent,
                         range_options,
                         event.target.value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
                 })
                 .on("wheel", event => {
@@ -478,9 +479,9 @@ export function render_input_range(
                         parent,
                         range_options,
                         new_value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
-                })
+                }),
         )
         .property("value", value);
 
@@ -494,7 +495,7 @@ export function render_input_range(
                 .classed(
                     "range_input manual_input ignored_in_livesearch " +
                         range_options.id,
-                    true
+                    true,
                 )
                 .on("change", event => {
                     event.stopPropagation();
@@ -505,9 +506,9 @@ export function render_input_range(
                         parent,
                         range_options,
                         new_value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
-                })
+                }),
         )
         .property("value", value);
 }
@@ -527,7 +528,7 @@ export function render_radio_group(
     group_ident: string,
     options: RadioGroupOption[],
     active_option: string,
-    option_changed_callback: (new_option: string) => void
+    option_changed_callback: (new_option: string) => void,
 ): void {
     const div = selection
         .selectAll("div.radio_group")
@@ -546,7 +547,7 @@ export function render_radio_group(
         .selectAll<HTMLTableElement, string>("table.radio_group tr")
         .data([group_ident], d => d)
         .join(enter =>
-            enter.append("table").classed("radio_group", true).append("tr")
+            enter.append("table").classed("radio_group", true).append("tr"),
         );
 
     const option_cells = row
@@ -567,7 +568,7 @@ export function render_radio_group(
             return option.ident == active_option ? true : null;
         })
         .on("change", (_event, option) =>
-            option_changed_callback(option.ident)
+            option_changed_callback(option.ident),
         );
 
     option_cells
@@ -581,7 +582,7 @@ export function render_radio_group(
 
 export function render_save_delete(
     selection: d3SelectionDiv,
-    buttons: [string, string, string, () => void][]
+    buttons: [string, string, string, () => void][],
 ) {
     const div_save_delete = selection
         .selectAll<HTMLDivElement, null>("div#save_delete")
@@ -589,7 +590,7 @@ export function render_save_delete(
         .join(enter => enter.append("div").attr("id", "save_delete"));
     div_save_delete
         .selectAll<HTMLInputElement, [string, string, () => void]>(
-            "input.save_delete"
+            "input.save_delete",
         )
         .data(buttons)
         .enter()
@@ -614,7 +615,7 @@ export function bound_monitoring_host(node: NodevisNode): string | null {
 
 export function add_basic_quickinfo(
     into_selection: d3SelectionDiv,
-    quickinfo: Quickinfo
+    quickinfo: Quickinfo,
 ): void {
     const table = into_selection
         .selectAll<HTMLTableSectionElement, string>("body table tbody")
@@ -625,7 +626,7 @@ export function add_basic_quickinfo(
                 .append("table")
                 .classed("data", true)
                 .classed("single", true)
-                .append("tbody")
+                .append("tbody"),
         );
 
     let even = "even";
@@ -640,7 +641,7 @@ export function add_basic_quickinfo(
     rows.append("td")
         .text(d => d.value)
         .each((d, idx, tds) => {
-            const td = d3.select(tds[idx]);
+            const td = select(tds[idx]);
             if (d.css_styles)
                 for (const [key, value] of Object.entries(d.css_styles)) {
                     td.style(key, value);
@@ -651,16 +652,14 @@ export function add_basic_quickinfo(
 export function show_tooltip(
     event: {layerX: number; layerY: number},
     tooltip: Tooltip,
-    viewport: Viewport
+    viewport: Viewport,
 ) {
     const viewport_size = viewport.get_size();
 
     let info = "";
     if (tooltip.html) info = tooltip.html;
     if (tooltip.quickinfo) {
-        const div = d3.select<HTMLDivElement, null>(
-            document.createElement("div")
-        );
+        const div = select<HTMLDivElement, null>(document.createElement("div"));
         add_basic_quickinfo(div, tooltip.quickinfo);
         info += div.html();
     }
@@ -675,7 +674,7 @@ export function show_tooltip(
                 .append("label")
                 .classed("link_info", true)
                 .html(d => d)
-                .style("position", "absolute")
+                .style("position", "absolute"),
         )
         .style("left", event.layerX + 10 + "px")
         .style("bottom", viewport_size.height - event.layerY + 30 + "px");

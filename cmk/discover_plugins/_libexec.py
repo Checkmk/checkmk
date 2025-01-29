@@ -32,4 +32,6 @@ def family_libexec_dir(module_name: str) -> Path:
     if (file := import_module(module_name).__file__) is None:
         # should never happen: we know we loaded this from a file.
         raise TypeError(f"module does not have a __file__ attrbute: {module_name}")
-    return Path(file).parent.parent / LIBEXEC_FOLDER
+    if (file_path := Path(file)).name == "__init__.py":
+        return file_path.parent.parent.parent / LIBEXEC_FOLDER
+    return file_path.parent.parent / LIBEXEC_FOLDER

@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.plugins.lib.docker as docker
+from cmk.plugins.lib import docker
 
 pytestmark = pytest.mark.checks
 

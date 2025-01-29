@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""cmk-piggyback
+
+Debugging and testing tool for piggyback related functionality.
+
+THIS DOES NOT PROVIDE A STABLE INTERFACE FOR SCRIPTING.
+"""
+
+import argparse
+import sys
+import time
+from collections.abc import Callable
+
+from livestatus import LocalConnection, MKLivestatusSocketError, Query
+
+from cmk.utils.livestatus_helpers.queries import Query as LQuery
+from cmk.utils.livestatus_helpers.tables import Hosts as HostsLTable
+from cmk.utils.paths import omd_root
+
+from cmk.piggyback.backend import get_piggybacked_host_with_sources, watch_new_messages
+
+_SECTION_TEMPLATE = '<<<<{host}>>>>\n<<<local>>>\n0 "{service}" - Agent data created at {time}'
+
+
+def _get_monitored_hosts() -> set[str]:
+    # this seems to be the only way to create a valid query without relying on "magic strings"
+    query_raw = str(LQuery([HostsLTable.name, HostsLTable.address]))
+    try:
+        return {host for row in LocalConnection().do_query(Query(query_raw)) for host in row}
+    except MKLivestatusSocketError:
+        raise RuntimeError("Could not connect to livestatus. Site not running?")
+
+
+def _args_list(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("type", choices=("sources", "piggybacked", "orphans"))
+
+
+def _command_list(
+    args: argparse.Namespace,
+) -> int:
+    """Show hosts of the specified type.
+
+    `sources`: hosts that deliver piggyback data.
+    `piggybacked`: hosts for which piggyback sections are sent.
+    `orphans`: piggybacked hosts that are not (yet) in the monitoring.
+    """
+    messages = get_piggybacked_host_with_sources(omd_root)
+
+    if args.type == "sources":
+        sources = {pmd.source for datasets in messages.values() for pmd in datasets}
+        _write(f"{' '.join(sorted(sources))}\n")
+        return 0
+
+    piggybacked = {str(h) for h in messages}
+
+    if args.type == "piggybacked":
+        _write(f"{' '.join(sorted(piggybacked))}\n")
+        return 0
+
+    known_hosts = _get_monitored_hosts()
+    _write(f"{' '.join(sorted(piggybacked - known_hosts))}\n")
+    return 0
+
+
+def _args_sections(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("service")
+    subparser.add_argument("piggybacked", nargs="+")
+
+
+def _command_sections(
+    args: argparse.Namespace,
+) -> int:
+    """Create piggyback sections for the specified hosts.
+
+    The command will print sections suited to be used as agent output.
+    In that case they will create one service with the specified
+    name for each specified host. You can use something like
+    `cmk-piggyback create-sections "Hi from $HOSTNAME$" my-piggybacked-host`
+    to create piggyback sections for testing purposes
+    (for example in the ruleset "Individual program call instead of agent access").
+    """
+    now = int(time.time())
+    for host in args.piggybacked:
+        _write(f"{_SECTION_TEMPLATE.format(host=host, service=args.service, time=now)}\n")
+    return 0
+
+
+def _args_track(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    pass
+
+
+def _write(message: str) -> None:
+    """We need to immediately flush, to be able to read the output in real-time."""
+    sys.stdout.write(message)
+    sys.stdout.flush()
+
+
+def _command_track(
+    _args: argparse.Namespace,
+) -> int:
+    """Track incoming piggyback messages.
+
+    This command will print information about incoming piggyback messages to the console.
+    The format is `source -> piggybacked: size`.
+    One message is printed for each incoming message (these are the same events that trigger
+    the piggyback-hub).
+    """
+    _write("Tracking incoming messages\n")
+    try:
+        for message in watch_new_messages(omd_root):
+            _write(
+                f"{message.meta.source} -> {message.meta.piggybacked}: {len(message.raw_data)} bytes\n"
+            )
+    except KeyboardInterrupt:
+        _write("\nStopped tracking\n")
+    return 0
+
+
+def _parse_arguments(argv: list[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", 1)
+    parser = argparse.ArgumentParser(
+        prog=prog,
+        description=description,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="See the commands `--help` for more information.",
+    )
+    parser.add_argument("--debug", "-d", action="store_true")
+    subparsers = parser.add_subparsers(required=True, title="available commands")
+
+    _add_command(subparsers, "list", _args_list, _command_list)
+    _add_command(subparsers, "create-sections", _args_sections, _command_sections)
+    _add_command(subparsers, "track", _args_track, _command_track)
+    return parser.parse_args(argv)
+
+
+def _add_command(
+    subparsers: argparse._SubParsersAction,  # type: ignore[type-arg]  # providing one will crash
+    cmd: str,
+    args_adder: Callable[[argparse.ArgumentParser], None],
+    handler: Callable[[argparse.Namespace], int],
+) -> None:
+    assert handler.__doc__
+    subparser = subparsers.add_parser(
+        cmd, help=handler.__doc__.split("\n", 1)[0], description=handler.__doc__
+    )
+    args_adder(subparser)
+    subparser.set_defaults(handler=handler)
+
+
+def main(
+    argv: list[str],
+) -> int:
+    args = _parse_arguments(argv)
+
+    try:
+        return int(args.handler(args))
+    except Exception as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"{exc}\n")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

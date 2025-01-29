@@ -10,14 +10,15 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
+
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any, assert_never
 from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, DiscoverySettings
+from cmk.checkengine.discovery import DiscoverySettings
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
@@ -30,15 +31,10 @@ from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
     DiscoveryBackgroundJobStatusObject,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
-from cmk.gui.openapi.restful_objects.constructors import (
-    collection_href,
-    domain_object,
-    link_rel,
-    object_property,
-)
+from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
@@ -56,8 +52,8 @@ from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
-    DiscoveryOptions,
     DiscoveryResult,
+    DiscoveryState,
     get_check_table,
     has_discovery_action_specific_permissions,
     perform_fix_all,
@@ -85,21 +81,21 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
 )
 
 SERVICE_DISCOVERY_PHASES = {
-    "undecided": "new",
-    "vanished": "vanished",
-    "monitored": "unchanged",
-    "changed": "changed",
-    "ignored": "ignored",
-    "removed": "removed",
-    "manual": "manual",
-    "active": "active",
-    "custom": "custom",
-    "clustered_monitored": "clustered_old",
-    "clustered_undecided": "clustered_new",
-    "clustered_vanished": "clustered_vanished",
-    "clustered_ignored": "clustered_ignored",
-    "active_ignored": "active_ignored",
-    "custom_ignored": "custom_ignored",
+    "undecided": DiscoveryState.UNDECIDED,
+    "vanished": DiscoveryState.VANISHED,
+    "monitored": DiscoveryState.MONITORED,
+    "changed": DiscoveryState.CHANGED,
+    "ignored": DiscoveryState.IGNORED,
+    "removed": DiscoveryState.REMOVED,
+    "manual": DiscoveryState.MANUAL,
+    "active": DiscoveryState.ACTIVE,
+    "ignored_active": DiscoveryState.ACTIVE_IGNORED,
+    "custom": DiscoveryState.CUSTOM,
+    "ignored_custom": DiscoveryState.CUSTOM_IGNORED,
+    "clustered_monitored": DiscoveryState.CLUSTERED_OLD,
+    "clustered_undecided": DiscoveryState.CLUSTERED_NEW,
+    "clustered_vanished": DiscoveryState.CLUSTERED_VANISHED,
+    "clustered_ignored": DiscoveryState.CLUSTERED_IGNORED,
     "legacy": "legacy",
     "legacy_ignored": "legacy_ignored",
 }
@@ -111,22 +107,23 @@ class APIDiscoveryAction(enum.Enum):
     fix_all = "fix_all"
     refresh = "refresh"
     only_host_labels = "only_host_labels"
+    only_service_labels = "only_service_labels"
     tabula_rasa = "tabula_rasa"
 
 
-def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
+def _discovery_mode(default_mode: str) -> fields.String:
     # TODO: documentation should be separated for bulk discovery
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
         labels. Those services and host labels can be added or removed accordingly with the
-        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove'
-        and 'only_host_labels' modes give you more granular control. Both the 'tabula_rasa' and
-        'refresh' modes will start a background job and the endpoint will return a redirect to
-        the 'wait-for-completion' endpoint. All other modes will return an immediate result instead.
-        Keep in mind that the non background job modes only work with scanned data, so you may need
-        to run "refresh" first. The corresponding user interface option for each discovery mode is
-        shown below.
+        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove',
+        'only_host_labels' and 'only_service_labels' modes give you more granular control. Both the
+        'tabula_rasa' and 'refresh' modes will start a background job and the endpoint will return
+        a redirect to the 'wait-for-completion' endpoint. All other modes will return an immediate
+        result instead. Keep in mind that the non background job modes only work with scanned data,
+        so you may need to run "refresh" first. The corresponding user interface option for each
+        discovery mode is shown below.
 
  * `new` - Monitor undecided services
  * `remove` - Remove vanished services
@@ -134,6 +131,7 @@ def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
  * `tabula_rasa` - Remove all and find new
  * `refresh` - Rescan
  * `only_host_labels` - Update host labels
+ * `only_service_labels` - Update service labels
     """,
         enum=[a.value for a in APIDiscoveryAction],
         example="refresh",
@@ -147,6 +145,7 @@ DISCOVERY_ACTION = {
     "fix_all": DiscoveryAction.FIX_ALL,
     "refresh": DiscoveryAction.REFRESH,
     "only_host_labels": DiscoveryAction.UPDATE_HOST_LABELS,
+    "only_service_labels": DiscoveryAction.UPDATE_SERVICE_LABELS,
     "tabula_rasa": DiscoveryAction.TABULA_RASA,
 }
 
@@ -182,40 +181,6 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
         )
 
     return serve_json(serialize_discovery_result(host, discovery_result))
-
-
-@Endpoint(
-    collection_href("service", "services"),
-    ".../collection",
-    method="get",
-    response_schema=response_schemas.DomainObject,
-    tag_group="Setup",
-    query_params=[
-        {
-            "host_name": gui_fields.HostField(
-                description="The host of the discovered services.",
-                example="example.com",
-                required=True,
-            ),
-            "discovery_phase": fields.String(
-                description="The discovery phase of the services.",
-                enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
-                example="monitored",
-                required=True,
-            ),
-        }
-    ],
-    deprecated_urls={"/domain-types/service/collections/services": 14537},
-)
-def show_services(params: Mapping[str, Any]) -> Response:
-    """Show all services of specific phase"""
-    host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
-    return _serve_services(
-        host,
-        discovery_result.check_table,
-        [params["discovery_phase"]],
-    )
 
 
 class UpdateDiscoveryPhase(BaseSchema):
@@ -301,7 +266,7 @@ def _update_single_service_phase(
         action=action,
         update_target=target_phase,
         selected_services=((check_type, service_item),),
-    ).do_discovery(get_check_table(host, action, raise_errors=False))
+    ).do_discovery(get_check_table(host, action, raise_errors=False), host.name())
 
 
 @Endpoint(
@@ -371,10 +336,6 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     return Response(status=204)
 
 
-class DiscoverServicesDeprecated(BaseSchema):
-    mode = _discovery_mode(default_mode="fix_all")
-
-
 class DiscoverServices(BaseSchema):
     host_name = gui_fields.HostField(
         description="The host of the service which shall be updated.",
@@ -389,11 +350,11 @@ class DiscoverServices(BaseSchema):
     method="post",
     tag_group="Setup",
     status_descriptions={
-        302: "The service discovery background job has been initialized. Redirecting to the "
+        303: "The service discovery background job has been initialized. Redirecting to the "
         "'Wait for service discovery completion' endpoint.",
         409: "A service discovery background job is currently running",
     },
-    additional_status_codes=[302, 409],
+    additional_status_codes=[303, 409],
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
     permissions_required=DISCOVERY_PERMISSIONS,
@@ -403,35 +364,6 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     body = params["body"]
     host = Host.load_host(body["host_name"])
-    discovery_action = APIDiscoveryAction(body["mode"])
-    return _execute_service_discovery(discovery_action, host)
-
-
-@Endpoint(
-    constructors.object_action_href("host", "{host_name}", "discover_services"),
-    ".../update",
-    method="post",
-    tag_group="Setup",
-    status_descriptions={
-        302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Wait for service discovery completion' endpoint.",
-        404: "Host could not be found",
-        409: "A service discovery background job is currently running",
-    },
-    additional_status_codes=[302, 409],
-    path_params=[HOST_NAME],
-    request_schema=DiscoverServicesDeprecated,
-    response_schema=response_schemas.DomainObject,
-    permissions_required=DISCOVERY_PERMISSIONS,
-    deprecated_urls={
-        "/objects/host/{host_name}/actions/discover_services/invoke": 14538,
-    },
-)
-def execute(params: Mapping[str, Any]) -> Response:
-    """Execute a service discovery on a host"""
-    user.need_permission("wato.edit")
-    host = Host.load_host(params["host_name"])
-    body = params["body"]
     discovery_action = APIDiscoveryAction(body["mode"])
     return _execute_service_discovery(discovery_action, host)
 
@@ -478,7 +410,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
-            response = Response(status=302)
+            response = Response(status=303)
             response.location = urlparse(discovery_run["href"]).path
             return response
         case APIDiscoveryAction.only_host_labels:
@@ -488,6 +420,17 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 raise_errors=False,
             )
+        case APIDiscoveryAction.only_service_labels:
+            discovery_result = perform_service_discovery(
+                action=discovery_action,
+                discovery_result=discovery_result,
+                update_source="changed",
+                update_target="unchanged",
+                host=host,
+                selected_services=EVERYTHING,
+                raise_errors=False,
+            )
+
         case _:
             assert_never(api_discovery_action)
 
@@ -502,13 +445,6 @@ def _discovery_wait_for_completion_link(host_name: str) -> LinkType:
     )
 
 
-def _in_phase(phase_to_check: str, discovery_phases: list[str]) -> bool:
-    for phase in list(discovery_phases):
-        if SERVICE_DISCOVERY_PHASES[phase] == phase_to_check:
-            return True
-    return False
-
-
 def _lookup_phase_name(internal_phase_name: str) -> str:
     for key, value in SERVICE_DISCOVERY_PHASES.items():
         if value == internal_phase_name:
@@ -516,10 +452,10 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(  # type: ignore[no-untyped-def]
+def serialize_discovery_result(
     host: Host,
     discovery_result: DiscoveryResult,
-):
+) -> DomainObject:
     services = {}
     host_name = host.name()
     for entry in discovery_result.check_table:
@@ -655,7 +591,7 @@ class BulkDiscovery(BaseSchema):
     )
     ignore_errors = fields.Boolean(
         required=False,
-        description="The option whether to ignore errors in single check plugins.",
+        description="The option whether to ignore errors in single check plug-ins.",
         example=True,
         load_default=True,
     )
@@ -733,17 +669,6 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
     return fetch_service_discovery_background_job_status(host.site_id(), host.name())
 
 
-def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:
-    return DiscoveryOptions(
-        action=action_mode,
-        show_checkboxes=False,
-        show_parameters=False,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=True,
-    )
-
-
 def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
     job_id = job.get_job_id()
     status_details = bulk_discovery_job_status(job)
@@ -763,87 +688,11 @@ def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
     )
 
 
-def _serve_services(
-    host: Host,
-    discovered_services: Sequence[CheckPreviewEntry],
-    discovery_phases: list[str],
-) -> Response:
-    members = {}
-    host_name = host.name()
-    for entry in discovered_services:
-        if _in_phase(entry.check_source, discovery_phases):
-            service_phase = _lookup_phase_name(entry.check_source)
-            members[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
-                name=entry.description,
-                title=f"The service is currently {service_phase!r}",
-                value=service_phase,
-                prop_format="string",
-                linkable=False,
-                extensions={
-                    "host_name": host_name,
-                    "check_plugin_name": entry.check_plugin_name,
-                    "service_name": entry.description,
-                    "service_item": entry.item,
-                    "service_phase": service_phase,
-                },
-                base="",
-                links=[
-                    link_rel(
-                        rel="cmk/service.move-monitored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "monitored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to monitored",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-undecided",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "undecided",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to undecided",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-ignored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "ignored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to ignored",
-                    ),
-                ],
-            )
-
-    return serve_json(
-        domain_object(
-            domain_type="service_discovery",
-            identifier=f"{host_name}-services-wato",
-            title="Services discovery",
-            members=members,
-            editable=False,
-            deletable=False,
-            extensions={},
-        )
-    )
-
-
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service_discovery_result)
-    endpoint_registry.register(show_services)
     endpoint_registry.register(update_service_phase)
     endpoint_registry.register(show_service_discovery_run)
     endpoint_registry.register(service_discovery_run_wait_for_completion)
     endpoint_registry.register(execute_service_discovery)
-    endpoint_registry.register(execute)
     endpoint_registry.register(execute_bulk_discovery)
     endpoint_registry.register(show_bulk_discovery_status)

@@ -4,7 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._checking import check_host_services, check_plugins_missing_data, execute_checkmk_checks
-from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
+from ._plugin import (
+    AggregatedResult,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    merge_enforced_services,
+    ServiceConfigurer,
+    ServiceID,
+)
 from ._timing import make_timing_results
 
 __all__ = [
@@ -16,5 +24,7 @@ __all__ = [
     "ConfiguredService",
     "execute_checkmk_checks",
     "make_timing_results",
+    "ServiceConfigurer",
+    "merge_enforced_services",
     "ServiceID",
 ]

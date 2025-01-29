@@ -10,44 +10,36 @@ import string
 import pytest
 from pytest import FixtureRequest
 
-from tests.testlib.rest_api_client import (
-    ClientRegistry,
-    ContactGroupClient,
-    GroupConfig,
-    HostGroupClient,
-    ServiceGroupClient,
-)
+from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import version
-from cmk.utils.user import UserId
+from cmk.ccc import version
 
-managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
+from cmk.utils import paths
+
+from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
+
+managedtest = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+)
 
 ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
 
 
-@pytest.fixture
-def host(clients: ClientRegistry) -> HostGroupClient:
-    return clients.HostGroup
+@pytest.fixture(name="group_type", params=["host", "contact", "service"])
+def fixture_group_type(request: FixtureRequest) -> str:
+    return request.param
 
 
-@pytest.fixture
-def contact(clients: ClientRegistry) -> ContactGroupClient:
-    return clients.ContactGroup
-
-
-@pytest.fixture
-def service(clients: ClientRegistry) -> ServiceGroupClient:
-    return clients.ServiceGroup
+@pytest.fixture(name="group_client")
+def fixture_group_client(clients: ClientRegistry, group_type: str) -> GroupConfig:
+    return getattr(clients, f"{group_type.title()}Group")
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_required_alias_field_create(group_type: str, request: FixtureRequest) -> None:
-    client = request.getfixturevalue(group_type)
-    client.create(name="RandleMcMurphy", alias=None, expect_ok=False).assert_status_code(400)
+def test_required_alias_field_create(group_client: GroupConfig) -> None:
+    group_client.create(name="RandleMcMurphy", alias="", expect_ok=False).assert_status_code(400)
 
 
 @managedtest
@@ -293,42 +285,17 @@ def test_openapi_groups_with_customer(
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_group_values_are_links(
-    group_type: str, wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str], base: str
-) -> None:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_group_values_are_links(group_client: GroupConfig, group_type: str) -> None:
+    response = group_client.list()
+    assert len(response.json["value"]) == 0
 
-    collection_url = f"{base}/domain-types/{group_type}_group_config/collections/all"
-    response = wsgi_app.call_method(
-        url=collection_url,
-        method="GET",
-        headers={"Accept": "application/json"},
-    )
-    json_data = response.json
-    assert len(json_data["value"]) == 0
-
-    group = {
-        "name": f"{group_type}_foo_bar",
-        "alias": f"{group_type} foo bar",
-        "customer": "global",
-    }
-    _response = wsgi_app.call_method(
-        "post",
-        base + f"/domain-types/{group_type}_group_config/collections/all",
-        params=json.dumps(group),
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
+    group_client.create(
+        name=f"{group_type}_foo_bar",
+        alias=f"{group_type} foo bar",
+        customer="global",
     )
 
-    response = wsgi_app.call_method(
-        url=collection_url,
-        method="GET",
-        headers={"Accept": "application/json"},
-    )
-    assert response.status_code == 200
+    response = group_client.list()
 
     assert len(response.json["value"]) == 1
     assert response.json["value"][0]["links"][0]["domainType"] == "link"
@@ -512,15 +479,12 @@ def test_service_group_id_with_newline(
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "service", "contact"])
 def test_group_attributes_required(
-    request: FixtureRequest,
-    group_type: str,
+    group_client: GroupConfig,
 ) -> None:
-    client: GroupConfig = request.getfixturevalue(group_type)
     group_name = "test_name"
-    client.create(name=group_name, alias="test_alias")
-    resp = client.bulk_edit(
+    group_client.create(name=group_name, alias="test_alias")
+    resp = group_client.bulk_edit(
         groups=({"name": group_name},),
         expect_ok=False,
     )
@@ -578,3 +542,45 @@ def test_contact_group_dot_names(
     assert service_group_double_dot_response.status_code == 400
     assert "name" in service_group_double_dot_response.json["fields"]
     assert "name" in service_group_double_dot_response.json["detail"]
+
+
+@pytest.mark.parametrize(
+    "inventory_paths",
+    [
+        {
+            "type": "allow_all",
+        },
+        {
+            "type": "forbid_all",
+        },
+        {
+            "type": "specific_paths",
+            "paths": [
+                {
+                    "path": "path1",
+                },
+                {
+                    "path": "path2",
+                    "attributes": {"type": "restrict_all"},
+                    "columns": {"type": "restrict_values", "values": ["col1", "col2"]},
+                    "nodes": {"type": "no_restriction"},
+                },
+            ],
+        },
+    ],
+)
+def test_contact_group_inventory_paths(
+    clients: ClientRegistry, inventory_paths: APIInventoryPaths
+) -> None:
+    group = clients.ContactGroup.create(
+        name="test_group",
+        alias="test_alias",
+        inventory_paths=inventory_paths,
+    )
+    if inventory_paths["type"] == "specific_paths":
+        for path in inventory_paths["paths"]:
+            path.setdefault("attributes", {"type": "no_restriction"})
+            path.setdefault("columns", {"type": "no_restriction"})
+            path.setdefault("nodes", {"type": "no_restriction"})
+
+    assert group.json["extensions"]["inventory_paths"] == inventory_paths

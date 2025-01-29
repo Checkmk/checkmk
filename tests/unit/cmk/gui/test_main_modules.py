@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import importlib
 import sys
@@ -23,7 +22,6 @@ def _plugin_path(main_module_name: str) -> Path:
 @pytest.fixture(
     name="main_module_name",
     params=[
-        "cron",
         "dashboard",
         "metrics",
         "sidebar",
@@ -78,7 +76,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "main_modules",
         "dashboard",
         "visuals",
-        "cron",
         "config",
         "bi",
         "views",

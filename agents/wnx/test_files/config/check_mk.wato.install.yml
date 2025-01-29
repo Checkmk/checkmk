@@ -1,5 +1,5 @@
 # Created by Check_MK Agent Bakery.
-# This file is managed via WATO, do not edit manually or you 
+# This file is managed via WATO, do not edit manually or you
 # lose your changes next time when you update the agent.
 global:
   enabled: yes

@@ -33,7 +33,7 @@ def _valuespec_winperf_msx_queues_inventory() -> Dictionary:
                                 title=_("Offset"),
                                 help=_(
                                     "The offset of the information relative to counter base."
-                                    " You can get a detailed list of available counters in a windows shell with the command 'lodctr /s:counters.txt'."
+                                    " You can get a detailed list of available counters in a Windows shell with the command 'lodctr /s:counters.txt'."
                                 ),
                             ),
                         ],
@@ -71,15 +71,15 @@ def _item_spec_msx_queues():
 
 def _parameter_valuespec_msx_queues() -> Dictionary:
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "levels",
                 Tuple(
-                    title=_("Maximum Number of E-Mails in Queue"),
+                    title=_("Maximum number of emails in queue"),
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("E-Mails")),
-                        Integer(title=_("Critical at"), unit=_("E-Mails")),
+                        Integer(title=_("Warning at"), unit=_("Emails")),
+                        Integer(title=_("Critical at"), unit=_("Emails")),
                     ],
                 ),
             ),

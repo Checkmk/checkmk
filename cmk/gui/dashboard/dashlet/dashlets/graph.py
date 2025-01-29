@@ -6,34 +6,41 @@
 import abc
 import json
 from collections.abc import Iterable, Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 import livestatus
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
 from cmk.utils.user import UserId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
-from cmk.gui.graphing._graph_specification import GraphSpecification
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._html_render import GraphDestinations
-from cmk.gui.graphing._utils import (
-    get_graph_template_choices,
-    metric_title,
-    MKCombinedGraphLimitExceededError,
+from cmk.gui.graphing._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderOptions,
 )
+from cmk.gui.graphing._graph_specification import GraphSpecification
+from cmk.gui.graphing._graph_templates import (
+    get_graph_template_choices,
+    get_template_graph_specification,
+    graph_and_single_metric_templates_choices_for_context,
+    GraphTemplateChoice,
+    TemplateGraphSpecification,
+)
+from cmk.gui.graphing._html_render import GraphDestinations
+from cmk.gui.graphing._metrics import get_metric_spec
+from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -42,18 +49,22 @@ from cmk.gui.valuespec import (
     Timerange,
     ValueSpec,
 )
-from cmk.gui.visuals import get_only_sites_from_context, get_singlecontext_vars
+from cmk.gui.visuals import (
+    get_only_sites_from_context,
+    get_singlecontext_vars,
+)
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from ..base import Dashlet
 from .status_helpers import make_mk_missing_data_error
 
+GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
+
 
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all graph templates"""
 
-    ident = "available_graphs"
     _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
 
     def __init__(self, **kwargs: Any) -> None:
@@ -71,7 +82,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 "of the element in the dashboard.",
             ),
             "autocompleter": ContextAutocompleterConfig(
-                ident=self.ident,
+                ident=GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
                 strict=True,
                 show_independent_of_context=True,
                 dynamic_params_callback_name="host_and_service_hinted_autocompleter",
@@ -89,17 +100,13 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             return list(self.choices())
         return [
             next(
-                (
-                    (graph_id, graph_title)
-                    for graph_id, graph_title in get_graph_template_choices()
-                    if graph_id == value
-                ),
+                ((c.id, c.title) for c in get_graph_template_choices() if c.id == value),
                 (
                     value,
                     (
                         _("Deprecated choice, please re-select")
                         if value == self._MARKER_DEPRECATED_CHOICE
-                        else metric_title(value)
+                        else str(get_metric_spec(value).title)
                     ),
                 ),
             )
@@ -289,7 +296,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             GraphRenderConfig.from_user_context_and_options(
                 user,
                 theme.get(),
-                **graph_grender_options_from_vs(
+                GraphRenderOptions.from_graph_render_options_vs(
                     default_dashlet_graph_render_options()
                     # Something is wrong with the typing here. self._dashlet_spec is a subclass of
                     # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
@@ -332,7 +339,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
 
     @classmethod
@@ -373,18 +380,18 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         # handle this here
         raw_source = self._dashlet_spec["source"]
         if isinstance(raw_source, int):
-            return TemplateGraphSpecification(
-                site=site_id,
+            return get_template_graph_specification(
+                site_id=site_id,
                 host_name=host,
-                service_description=service,
+                service_name=service,
                 graph_index=raw_source - 1,
                 destination=GraphDestinations.dashlet,
             )
 
-        return TemplateGraphSpecification(
-            site=site_id,
+        return get_template_graph_specification(
+            site_id=site_id,
             host_name=host,
-            service_description=service,
+            service_name=service,
             graph_id=raw_source,
             destination=GraphDestinations.dashlet,
         )
@@ -420,3 +427,43 @@ def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
         resizable=False,
         show_time_range_previews=False,
     )
+
+
+def graph_templates_autocompleter(value_entered_by_user: str, params: dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the
+    completions_params to get the list of choices"""
+    if not params.get("context") and params.get("show_independent_of_context") is True:
+        _sorted_matching_graph_template_choices(
+            value_entered_by_user,
+            get_graph_template_choices(),
+        )
+
+    graph_template_choices, single_metric_template_choices = (
+        graph_and_single_metric_templates_choices_for_context(params["context"])
+    )
+    return _sorted_matching_graph_template_choices(
+        value_entered_by_user,
+        graph_template_choices,
+    ) + _sorted_matching_graph_template_choices(
+        value_entered_by_user,
+        single_metric_template_choices,
+    )
+
+
+def _sorted_matching_graph_template_choices(
+    value_entered_by_user: str,
+    all_choices: Iterable[GraphTemplateChoice],
+) -> Choices:
+    return [
+        (graph_template_choice.id, graph_template_choice.title)
+        for graph_template_choice in sorted(
+            (
+                graph_template_choice
+                for graph_template_choice in all_choices
+                if value_entered_by_user.lower() in graph_template_choice.id.lower()
+                or value_entered_by_user.lower() in graph_template_choice.title.lower()
+            ),
+            key=lambda graph_template_choice: graph_template_choice.title,
+        )
+    ]

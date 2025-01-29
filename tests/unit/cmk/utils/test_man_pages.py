@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import os
 from collections.abc import Mapping, Sequence
@@ -11,16 +10,17 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
-from tests.unit.conftest import FixPluginLegacy, FixRegister
+from tests.unit.conftest import FixPluginLegacy
 
-import cmk.utils.man_pages as man_pages
+from cmk.utils import man_pages
 
-from cmk.base.server_side_calls import load_active_checks
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -162,34 +162,38 @@ def test_cmk_plugins_families_manpages() -> None:
     check_plugins = discover_plugins(
         PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
     )
-    for location, plugin in check_plugins.plugins.items():
-        family_path_segment = os.path.join(*location.module.split(".")[:3])
-        assert family_path_segment in str(man_page_path_map[plugin.name])
+    assert not {
+        (location, plugin.name, expected, actual)
+        for location, plugin in check_plugins.plugins.items()
+        if (
+            (expected := os.path.join(*location.module.split(".")[:3]))
+            not in (actual := str(man_page_path_map.get(plugin.name, "")))
+        )
+    }
 
 
 def test_man_page_consistency(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     fix_plugin_legacy: FixPluginLegacy,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     """Make sure we have one man page per plugin, and no additional ones"""
     expected_man_pages = (
-        {str(plugin_name) for plugin_name in fix_register.check_plugins}
-        | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
+        {str(plugin_name) for plugin_name in agent_based_plugins.check_plugins}
+        | {f"check_{plugin.name}" for plugin in load_active_checks(raise_errors=False).values()}
         | {"check-mk", "check-mk-inventory"}
     )
     assert set(all_pages) == expected_man_pages
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     missing_cluster_description: set[str] = set()
     unexpected_cluster_description: set[str] = set()
 
-    for plugin in fix_register.check_plugins.values():
+    for plugin in agent_based_plugins.check_plugins.values():
         man_page = all_pages[str(plugin.name)]
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
@@ -197,9 +201,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
             (
                 missing_cluster_description,
                 unexpected_cluster_description,
-            )[
-                has_cluster_doc
-            ].add(str(plugin.name))
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description
@@ -209,12 +211,9 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
     for category, entries in catalog.items():
         has_entries = bool(entries)
         has_categories = bool(man_pages._manpage_catalog_subtree_names(catalog, category))
-        assert (
-            has_entries != has_categories
-        ), "A category must only have entries or categories, not both"
-
-
-# TODO: print_man_page_browser()
+        assert has_entries != has_categories, (
+            "A category must only have entries or categories, not both"
+        )
 
 
 def test_print_man_page_nowiki_content() -> None:
@@ -224,6 +223,7 @@ def test_print_man_page_nowiki_content() -> None:
     assert "License:" in content
 
 
+@pytest.mark.usefixtures("capsys")
 def test_print_man_page() -> None:
     rendered = man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).render_page()
     assert rendered.startswith(" if64    ")

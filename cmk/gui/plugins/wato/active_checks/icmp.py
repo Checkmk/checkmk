@@ -6,6 +6,7 @@
 
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import check_icmp_params, HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
@@ -21,12 +22,18 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import RulespecGroupActiveChecks
 
 
+def _validate_ip_index(value: int, varprefix: str) -> None:
+    if value >= 1:
+        return
+    raise MKUserError(varprefix, _("The index must be greater or equal to 1."))
+
+
 def _valuespec_active_checks_icmp() -> ValueSpec:
     elements: list[DictionaryEntry] = [
         (
             "description",
             TextInput(
-                title=_("Service Description"),
+                title=_("Service description"),
                 allow_empty=False,
                 default_value="PING",
             ),
@@ -59,13 +66,13 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
                     ("additional_ipv6addresses", _("Ping additional IPv6 addresses")),
                     (
                         "indexed_ipv4address",
-                        _("Ping IPv4 address identified by its index"),
-                        Integer(default_value=1),
+                        _("Ping IPv4 address identified by its index (starting at 1)"),
+                        Integer(default_value=1, validate=_validate_ip_index),
                     ),
                     (
                         "indexed_ipv6address",
-                        _("Ping IPv6 address identified by its index"),
-                        Integer(default_value=1),
+                        _("Ping IPv6 address identified by its index (starting at 1)"),
+                        Integer(default_value=1, validate=_validate_ip_index),
                     ),
                 ],
             ),

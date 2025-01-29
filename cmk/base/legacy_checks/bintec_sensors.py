@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def parse_bintec_sensors(string_table: StringTable) -> StringTable:
@@ -19,6 +20,7 @@ def parse_bintec_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["bintec_sensors"] = LegacyCheckDefinition(
+    name="bintec_sensors",
     parse_function=parse_bintec_sensors,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
     fetch=SNMPTree(
@@ -53,6 +55,7 @@ def check_bintec_sensors_fan(item, params, info):
 
 
 check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
+    name="bintec_sensors_fan",
     service_name="%s",
     sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_fan,
@@ -89,6 +92,7 @@ def check_bintec_sensors_temp(item, params, info):
 
 
 check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
+    name="bintec_sensors_temp",
     service_name="Temperature %s",
     sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_temp,
@@ -130,6 +134,7 @@ def check_bintec_sensors_voltage(item, _no_params, info):
 
 
 check_info["bintec_sensors.voltage"] = LegacyCheckDefinition(
+    name="bintec_sensors_voltage",
     service_name="Voltage %s",
     sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_voltage,

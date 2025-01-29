@@ -14,9 +14,9 @@ description:
 item:
  There are three allowed ways to specify an interface: its index, its description
  and its alias. Here, the index is built from the interface ID as a three-digit
- number prefixed with the ID of the ClusterNode, eg. 1002 for interface 2 on
+ number prefixed with the ID of the ClusterNode, e.g. 1002 for interface 2 on
  ClusterNode 1. The description and the alias are given by the interface and the
- ClusterNode ID separated by a dot, eg. 1.2 for interface 2 on ClusterNode 1.
+ ClusterNode ID separated by a dot, e.g. 1.2 for interface 2 on ClusterNode 1.
 
 discovery:
  One service is created for each interface that fulfills configurable conditions

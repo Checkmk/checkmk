@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains the "Endpoint Registry".
 
-This registry has multiple jobs:
-
- 1. store the endpoint for potential SPEC generation via "make openapi"
- 2. interlinking between endpoints without having to know the specific URL.
+This registry does interlinking between endpoints without having to know the specific URL.
 
 """
+
 from collections.abc import Iterator
 from typing import TypedDict
 

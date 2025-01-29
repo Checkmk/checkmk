@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.df import EXCLUDED_MOUNTPOINTS
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
+
+check_info = {}
 
 
 def inventory_emc_datadomain_fs(info):
@@ -37,6 +38,7 @@ def parse_emc_datadomain_fs(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
+    name="emc_datadomain_fs",
     parse_function=parse_emc_datadomain_fs,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

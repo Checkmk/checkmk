@@ -5,23 +5,27 @@
 """Check_MK base specific code of the crash reporting"""
 
 import traceback
-from collections.abc import Mapping
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
-import cmk.utils.crash_reporting as crash_reporting
-import cmk.utils.debug
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import crash_reporting
+from cmk.ccc.crash_reporting import CrashInfo
+
 import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.piggyback import get_source_hostnames
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.piggyback.backend import get_messages_for
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -30,7 +34,7 @@ def create_section_crash_dump(
     *,
     operation: str,
     section_name: SectionName,
-    section_content: object,
+    section_content: Sequence[object],
     host_name: HostName,
     rtc_package: AgentRawData | None,
 ) -> str:
@@ -38,23 +42,23 @@ def create_section_crash_dump(
 
     text = f"{operation.title()} of section {section_name} failed"
     try:
-        crash = SectionCrashReport.from_exception(
-            details={
-                "section_name": str(section_name),
-                "section_content": section_content,
-                "host_name": host_name,
-            },
-            type_specific_attributes={
-                "snmp_info": _read_snmp_info(host_name),
-                "agent_output": (
-                    _read_agent_output(host_name) if rtc_package is None else rtc_package
-                ),
-            },
+        crash = SectionCrashReport(
+            cmk.utils.paths.crash_dir,
+            SectionCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                details={
+                    "section_name": str(section_name),
+                    "section_content": section_content,
+                    "host_name": host_name,
+                },
+            ),
+            snmp_info=_read_snmp_info(host_name),
+            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return f"{text} - failed to create a crash report: {traceback.format_exc()}"
 
@@ -64,7 +68,7 @@ def create_check_crash_dump(
     service_name: ServiceName,
     *,
     plugin_name: str | CheckPluginName,
-    plugin_kwargs: Mapping[str, Any],
+    plugin_kwargs: dict[str, Any],
     is_cluster: bool,
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
@@ -78,41 +82,43 @@ def create_check_crash_dump(
     """
     text = "check failed - please submit a crash report!"
     try:
-        crash = CheckCrashReport.from_exception(
-            details={
-                "check_output": text,
-                "host": host_name,
-                "is_cluster": is_cluster,
-                "description": service_name,
-                "check_type": str(plugin_name),
-                "inline_snmp": snmp_backend is SNMPBackendEnum.INLINE,
-                "enforced_service": is_enforced,
-                **plugin_kwargs,
-            },
-            type_specific_attributes={
-                "snmp_info": _read_snmp_info(host_name),
-                "agent_output": (
-                    _read_agent_output(host_name) if rtc_package is None else rtc_package
+        crash = CheckCrashReport(
+            cmk.utils.paths.crash_dir,
+            CheckCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                CheckDetails(
+                    check_output=text,
+                    host=host_name,
+                    is_cluster=is_cluster,
+                    description=service_name,
+                    check_type=str(plugin_name),
+                    inline_snmp=snmp_backend is SNMPBackendEnum.INLINE,
+                    enforced_service=is_enforced,
+                    # TODO: Change CheckDetails to use extra_items=True in Python 3.13 (PEP 728)
+                    **plugin_kwargs,  # type: ignore[typeddict-item]
                 ),
-            },
+            ),
+            snmp_info=_read_snmp_info(host_name),
+            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
-class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
+class CrashReportWithAgentOutput[T](crash_reporting.ABCCrashReport[T]):
     def __init__(
         self,
-        crash_info: dict,
+        crashdir: Path,
+        crash_info: CrashInfo,
         snmp_info: bytes | None = None,
         agent_output: bytes | None = None,
     ) -> None:
-        super().__init__(crash_info)
+        super().__init__(crashdir, crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
@@ -130,15 +136,35 @@ class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
         return attributes
 
 
+class SectionDetails(TypedDict):
+    host_name: str
+    section_name: str
+    section_content: Sequence[object]
+
+
 @crash_reporting.crash_report_registry.register
-class SectionCrashReport(CrashReportWithAgentOutput):
+class SectionCrashReport(CrashReportWithAgentOutput[SectionDetails]):
     @staticmethod
     def type() -> Literal["section"]:
         return "section"
 
 
+class CheckDetails(TypedDict):
+    check_output: str
+    item: str
+    host: str
+    check_type: str
+    params: dict[str, Any]
+    is_cluster: bool
+    manual_check: bool
+    enforced_service: bool
+    uses_snmp: bool
+    inline_snmp: bool
+    description: str
+
+
 @crash_reporting.crash_report_registry.register
-class CheckCrashReport(CrashReportWithAgentOutput):
+class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @staticmethod
     def type() -> Literal["check"]:
         return "check"
@@ -155,18 +181,16 @@ def _read_snmp_info(hostname: str) -> bytes | None:
 
 
 def _read_agent_output(hostname: HostName) -> AgentRawData | None:
-    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
-    piggyback_cache_path = Path(cmk.utils.paths.piggyback_dir, hostname)
-    cache_paths = [cache_path] + [
-        piggyback_cache_path / source_hostname for source_hostname in get_source_hostnames(hostname)
-    ]
     agent_outputs = []
-    for cache_path in cache_paths:
-        try:
-            with cache_path.open(mode="rb") as f:
-                agent_outputs.append(f.read())
-        except OSError:
-            pass
+
+    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
+    try:
+        agent_outputs.append(cache_path.read_bytes())
+    except OSError:
+        pass
+
+    # Note: this is not quite what the fetcher does :(
+    agent_outputs.extend(r.raw_data for r in get_messages_for(hostname, cmk.utils.paths.omd_root))
 
     if agent_outputs:
         return AgentRawData(b"\n".join(agent_outputs))

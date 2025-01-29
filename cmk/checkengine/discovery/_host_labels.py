@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
 
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
@@ -37,6 +39,10 @@ __all__ = [
 class HostLabelPlugin:
     function: Callable[..., Iterator[HostLabel]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
+
+    @classmethod
+    def trivial(cls) -> HostLabelPlugin:
+        return cls(function=lambda *a, **kw: iter(()), parameters=lambda _: None)
 
 
 def analyse_cluster_labels(
@@ -124,10 +130,8 @@ def _discover_host_labels_for_source_type(
     try:
         parsed_results = _all_parsing_results(host_key, providers)
 
-        console.debug(
-            "Trying host label discovery with: %s\n"
-            % ", ".join(str(r.section_name) for r in parsed_results)
-        )
+        names = ", ".join(str(r.section_name) for r in parsed_results)
+        console.debug(f"Trying host label discovery with: {names}")
         for section_name, section_data, _cache_info in _sort_sections_by_label_priority(
             parsed_results
         ):
@@ -140,7 +144,7 @@ def _discover_host_labels_for_source_type(
 
             try:
                 for label in host_label_plugin.function(**kwargs):
-                    console.debug(f"  {label.name}: {label.value} ({section_name})\n")
+                    console.debug(f"  {label.name}: {label.value} ({section_name})")
                     host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise
@@ -148,7 +152,10 @@ def _discover_host_labels_for_source_type(
                 if on_error is OnError.RAISE:
                     raise
                 if on_error is OnError.WARN:
-                    console.error(f"Host label discovery of '{section_name}' failed: {exc}\n")
+                    console.error(
+                        f"Host label discovery of '{section_name}' failed: {exc}",
+                        file=sys.stderr,
+                    )
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

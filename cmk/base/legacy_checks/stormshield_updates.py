@@ -4,28 +4,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
+
+STATE_MAP = {
+    "Not Available": 1,
+    "Broken": 2,
+    "Uptodate": 0,
+    "Disabled": 1,
+    "Never started": 0,
+    "Running": 0,
+    "Failed": 2,
+}
 
 
 def inventory_stormshield_updates(info):
     for subsystem, state, lastrun in info:
         if state == "Failed" and lastrun == "":
             pass
-        elif not state in ["Not Available", "Never started"]:
+        elif state not in ["Not Available", "Never started"]:
             yield subsystem, {}
 
 
-def check_stormshield_updates(item, params, info):
+def check_stormshield_updates(item, _no_params, info):
     for subsystem, state, lastrun in info:
         if item == subsystem:
             if lastrun == "":
                 lastrun = "Never"
             infotext = f"Subsystem {subsystem} is {state}, last update: {lastrun}"
-            monitoringstate = params.get(state, 3)
+            monitoringstate = STATE_MAP.get(state, 3)
             yield monitoringstate, infotext
 
 
@@ -34,6 +44,7 @@ def parse_stormshield_updates(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_updates"] = LegacyCheckDefinition(
+    name="stormshield_updates",
     parse_function=parse_stormshield_updates,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
@@ -43,14 +54,4 @@ check_info["stormshield_updates"] = LegacyCheckDefinition(
     service_name="Autoupdate %s",
     discovery_function=inventory_stormshield_updates,
     check_function=check_stormshield_updates,
-    check_ruleset_name="stormshield_updates",
-    check_default_parameters={
-        "Not Available": 1,
-        "Broken": 2,
-        "Uptodate": 0,
-        "Disabled": 1,
-        "Never started": 0,
-        "Running": 0,
-        "Failed": 2,
-    },
 )

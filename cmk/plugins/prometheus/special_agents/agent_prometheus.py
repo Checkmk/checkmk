@@ -5,6 +5,7 @@
 """
 Special agent for monitoring Prometheus with Checkmk.
 """
+
 import argparse
 import ast
 import json
@@ -17,15 +18,14 @@ from typing import Any
 
 import requests
 
-from cmk.plugins.lib.node_exporter import (  # pylint: disable=cmk-module-layer-violation
-    NodeExporter,
-    PromQLMetric,
-    SectionStr,
-)
-from cmk.plugins.lib.prometheus import (  # pylint: disable=cmk-module-layer-violation
-    extract_connection_args,
+from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
+from cmk.plugins.lib.prometheus import (
+    add_authentication_args,
+    authentication_from_args,
     generate_api_session,
+    get_api_url,
 )
+from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -36,39 +36,23 @@ def parse_arguments(argv):
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="""Verbose mode (for even more output use -vvv)""",
-    )
-    parser.add_argument(
-        "--timeout",
-        default=10,
-        type=int,
-        help="""Timeout for individual processes in seconds (default 10)""",
-    )
-    parser.add_argument(
         "--config",
-        type=str,
+        required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-
+    add_authentication_args(parser)
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
+        "--disable-cert-verification",
+        action="store_true",
+        help="Do not verify TLS certificate.",
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Expect this as the server name in the TLS certificate.",
+    )
     args = parser.parse_args(argv)
     return args
-
-
-def setup_logging(verbosity):
-    if verbosity >= 3:
-        lvl = logging.DEBUG
-    elif verbosity == 2:
-        lvl = logging.INFO
-    elif verbosity == 1:
-        lvl = logging.WARN
-    else:
-        logging.disable(logging.CRITICAL)
-        lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> str:
@@ -80,7 +64,7 @@ def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> s
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client, options) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, api_client: "PrometheusAPI", options: dict) -> None:
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
         self.pod_containers: dict = {}
@@ -192,7 +176,7 @@ class CAdvisorExporter:
     def _retrieve_pods_memory_summary(
         self, memory_info: list[tuple[str, str]]
     ) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
-        result: dict[str, dict[str, str | dict[str, str]]] = {}
+        result: dict[str, dict[str, str | dict[str, Any]]] = {}
         associations = {}
         for memory_stat, promql_query in memory_info:
             promql_query = promql_query.replace("{namespace_filter}", self._namespace_query_part())
@@ -400,8 +384,8 @@ class PromQLResult:
         self.labels = raw_response["metric"]
         self.internal_values = raw_response["value"]
 
-    def label_value(self, key: str, default=None) -> str:  # type: ignore[no-untyped-def]
-        return self.labels.get(key, default)
+    def label_value(self, key: str) -> str:
+        return self.labels.get(key)
 
     def value(self, default_value: float | int | None = None, as_string: bool = False) -> float:
         try:
@@ -563,7 +547,7 @@ class PrometheusAPI:
     Realizes communication with the Prometheus API
     """
 
-    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, session: ApiSession) -> None:
         self.session = session
 
     def perform_specified_promql_queries(
@@ -672,11 +656,10 @@ class Section:
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
+            elif isinstance(value, dict):
+                self._content[key].update(value)
             else:
-                if isinstance(value, dict):
-                    self._content[key].update(value)
-                else:
-                    raise ValueError("Key %s is already present and cannot be merged" % key)
+                raise ValueError("Key %s is already present and cannot be merged" % key)
 
     def output(self) -> str:
         return json.dumps(self._content)
@@ -738,7 +721,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client, exporter_options) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, api_client: "PrometheusAPI", exporter_options: dict) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:
@@ -747,7 +730,10 @@ class ApiData:
         if "node_exporter" in exporter_options:
 
             def get_promql(promql_expression: str) -> list[PromQLMetric]:
-                return api_client.perform_multi_result_promql(promql_expression).promql_metrics
+                result = api_client.perform_multi_result_promql(promql_expression)
+                if result is None:
+                    raise ApiError("Missing PromQL result for %s" % promql_expression)
+                return result.promql_metrics
 
             self.node_exporter = NodeExporter(get_promql)
 
@@ -779,7 +765,7 @@ class ApiData:
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
             "df": self.cadvisor_exporter.df_summary,
-            "if": self.cadvisor_exporter.if_summary,
+            "interfaces": self.cadvisor_exporter.if_summary,
             "memory_pod": self.cadvisor_exporter.memory_pod_summary,
             "memory_container": self.cadvisor_exporter.memory_container_summary,
         }
@@ -802,9 +788,9 @@ class ApiData:
             yield from self._output_cadvisor_summary(
                 "cadvisor_df", cadvisor_summaries["df"], grouping_option[cadvisor_grouping]
             )
-        if "if" in entities:
+        if "interfaces" in entities:
             yield from self._output_cadvisor_summary(
-                "cadvisor_if", cadvisor_summaries["if"], grouping_option[cadvisor_grouping]
+                "cadvisor_if", cadvisor_summaries["interfaces"], grouping_option[cadvisor_grouping]
             )
 
         if "memory" in entities:
@@ -922,18 +908,24 @@ def main(argv=None):
     try:
         config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)
-        session = generate_api_session(extract_connection_args(config))
+        session = generate_api_session(
+            get_api_url(config["connection"], config["protocol"]),
+            authentication_from_args(args),
+            args.cert_server_name or not args.disable_cert_verification,
+        )
         exporter_options = config_args["exporter_options"]
         # default cases always must be there
         api_client = PrometheusAPI(session)
         api_data = ApiData(api_client, exporter_options)
-        print(api_data.prometheus_build_section())
-        print(api_data.promql_section(config_args["custom_services"]))
+        sys.stdout.write(api_data.prometheus_build_section() + "\n")
+        sys.stdout.write(api_data.promql_section(config_args["custom_services"]) + "\n")
         if "cadvisor" in exporter_options:
-            print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])), sep="\n")
+            sys.stdout.write(
+                "\n".join(api_data.cadvisor_section(exporter_options["cadvisor"])) + "\n"
+            )
         if "node_exporter" in exporter_options:
-            print(
-                *list(api_data.node_exporter_section(exporter_options["node_exporter"])), sep="\n"
+            sys.stdout.write(
+                "\n".join(api_data.node_exporter_section(exporter_options["node_exporter"])) + "\n"
             )
 
     except Exception as e:

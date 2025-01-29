@@ -1,0 +1,16 @@
+title: Cisco SMA DNS files and sockets
+agents: snmp
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of threads of the mail transfer process on
+ Cisco Security Management Appliance (SMA).
+
+ The check creates a metric that is measured against configurable levels. 
+
+ The check utilizes the following OID from ASYNCOS-MAIL-MIB
+ mailTransferThreads 1.3.6.1.4.1.15497.1.1.1.20
+
+discovery:
+ One service is created.

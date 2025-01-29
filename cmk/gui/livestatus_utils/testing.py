@@ -5,18 +5,18 @@
 
 import contextlib
 import os
-import sys
 from collections.abc import Iterator
 from unittest import mock
 
 from livestatus import MultiSiteConnection
+
+from cmk.ccc.site import omd_site
 
 from cmk.utils.livestatus_helpers.testing import (
     MatchType,
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.site import omd_site
 
 from cmk.gui import sites
 from cmk.gui.session import SuperUserContext
@@ -35,14 +35,8 @@ def mock_livestatus() -> Iterator[MockLiveStatusConnection]:
         yield mock_live
 
 
-def running_in_pytest():
-    assert "pytest" in sys.modules, "This code should never be run. This is a bug, please report."
-    return True
-
-
 @contextlib.contextmanager
 def mock_site() -> Iterator[None]:
-    assert running_in_pytest()
     env_vars = {"OMD_ROOT": "/", "OMD_SITE": os.environ.get("OMD_SITE", "NO_SITE")}
     with mock.patch.dict(os.environ, env_vars):
         # We don't want to be polluted by other tests.

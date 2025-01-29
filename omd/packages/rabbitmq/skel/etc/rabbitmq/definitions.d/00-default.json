@@ -1,0 +1,53 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "users": [
+    {
+      "name": "###SITE###",
+      "tags": []
+    }
+  ],
+  "permissions": [
+    {
+      "user": "###SITE###",
+      "vhost": "/",
+      "configure": "^cmk\\.app\\..*",
+      "write": "^cmk\\..*",
+      "read": "^cmk\\.(local|intersite|app).*"
+    }
+  ],
+  "policies": [],
+  "exchanges": [
+    {
+      "name": "cmk.local",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "cmk.intersite",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "cmk.intersite",
+      "vhost": "/",
+      "destination": "cmk.local",
+      "destination_type": "exchange",
+      "routing_key": "###SITE###.#",
+      "arguments": {}
+    }
+  ]
+}

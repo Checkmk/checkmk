@@ -27,6 +27,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
+from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -56,7 +57,7 @@ from ._store import (
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(  # pylint: disable=too-many-branches
+def page_list(
     what: VisualTypeName,
     title: str,
     visuals: dict[tuple[UserId, VisualName], TVisual],
@@ -128,6 +129,9 @@ def page_list(  # pylint: disable=too-many-branches
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
+            user_profile_async_replication_page(
+                back_url=request.get_url_input("back", visual_type.show_url)
+            )
             flash(_("Your %s has been deleted.") % visual_type.title)
             html.reload_whole_page()
         except MKUserError as e:
@@ -242,7 +246,7 @@ def page_list(  # pylint: disable=too-many-branches
                         target="_blank" if what_s == "report" else None,
                     )
                 else:
-                    html.write_text(title2)
+                    html.write_text_permissive(title2)
                 html.help(_u(str(visual["description"])))
 
                 # Custom cols

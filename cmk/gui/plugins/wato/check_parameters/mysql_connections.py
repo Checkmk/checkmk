@@ -16,7 +16,7 @@ def _item_spec_mysql_connections():
     return TextInput(
         title=_("Instance"),
         default_value="mysql",
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
+        help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
@@ -67,6 +67,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_connections,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_connections,
-        title=lambda: _("MySQL Connections"),
+        title=lambda: _("MySQL connections"),
     )
 )

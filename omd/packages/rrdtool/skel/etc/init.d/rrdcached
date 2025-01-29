@@ -5,8 +5,8 @@
 
 ### BEGIN INIT INFO
 # Provides:       rrdcached
-# Required-Start: 
-# Required-Stop:  
+# Required-Start:
+# Required-Stop:
 # Default-Start:  2 3 5
 # Default-Stop:
 # Description:    Start RRD cache daemon
@@ -14,7 +14,7 @@
 
 # Start only if PNP is enabled
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_PNP4NAGIOS" = off -o "$CONFIG_CORE" = none ] ; then
+if [ "$CONFIG_PNP4NAGIOS" = off ] || [ "$CONFIG_CORE" = none ]; then
     exit 5
 fi
 
@@ -25,19 +25,21 @@ FLUSH_TIMEOUT=7200
 WRITE_THREADS=4
 
 # Read in tuning configuration of admin
-CONFFILE=$OMD_ROOT/etc/rrdcached.conf
-if [ -e "$CONFFILE" ] ; then 
-    . $CONFFILE
+CONFFILE="$OMD_ROOT/etc/rrdcached.conf"
+if [ -e "$CONFFILE" ]; then
+    # shellcheck disable=SC1090
+    . "$CONFFILE"
 fi
 
 CONFDIR=$OMD_ROOT/etc/rrdcached.d
-if [ -d $CONFDIR ]; then
-  for i in $CONFDIR/*.conf; do
-    if [ -r $i ]; then
-      . $i
-    fi
-  done
-  unset i
+if [ -d "$CONFDIR" ]; then
+    for i in "$CONFDIR"/*.conf; do
+        if [ -r "$i" ]; then
+            # shellcheck disable=SC1090
+            . "$i"
+        fi
+    done
+    unset i
 fi
 
 # Please do not touch the code below
@@ -53,74 +55,80 @@ DAEMON="###ROOT###/bin/rrdcached"
 
 case "$1" in
     start)
- 	echo -n 'Starting rrdcached...'
-	if [ -e "$PIDFILE" ] ; then
-	    PID=$(cat $PIDFILE)
-	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "Already running."
-		exit 0
-	    fi
-	    echo "removing stale pid file..."
-	    rm -f $PIDFILE
-	fi
-
-	# make sure, directories are there (ramdisk!)
-	mkdir -p $CACHE_DIR $RRD_DIR && 
-	$DAEMON $OPTS &&
-	echo OK || echo Error
-    ;;
-    stop)
-	echo -n 'Stopping rrdcached...'
-        PID=$(cat $PIDFILE 2>/dev/null)
-        if [ -z "$PID" ] ; then
-	    echo "not running."
-        elif kill "$PID" ; then
-            echo -n 'waiting for termination..'
-	    N=0
-	    while [ -d /proc/$PID ] ; do
-		sleep 0.05
-                if [ $((N % 20)) -eq 0 ]; then
-		    echo -n .
-                fi
-		N=$((N+1))
-		if [ $N -ge 400 ] ; then
-		    echo "still running after 20 secs!"
-		    exit 1
-                fi
-	    done    
-	    echo "OK"
-        else
-	    echo "Failed"
+        echo -n 'Starting rrdcached...'
+        if [ -e "$PIDFILE" ]; then
+            PID=$(cat $PIDFILE)
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
+                echo "Already running."
+                exit 0
+            fi
+            echo "removing stale pid file..."
+            rm -f $PIDFILE
         fi
-    ;;
-    restart|reload)
-	$0 stop
-	$0 start
-    ;;
+
+        # make sure, directories are there (ramdisk!)
+        # shellcheck disable=SC2086
+        mkdir -p "$CACHE_DIR" &&
+            "$DAEMON" $OPTS &&
+            echo OK || echo Error
+        ;;
+
+    stop)
+        echo -n 'Stopping rrdcached...'
+        PID=$(cat $PIDFILE 2>/dev/null)
+        if [ -z "$PID" ]; then
+            echo "not running."
+        elif kill "$PID"; then
+            echo -n 'waiting for termination..'
+            N=0
+            while [ -d "/proc/$PID" ]; do
+                sleep 0.05
+                if [ $((N % 20)) -eq 0 ]; then
+                    echo -n .
+                fi
+                N=$((N + 1))
+                if [ $N -ge 400 ]; then
+                    echo "still running after 20 secs!"
+                    exit 1
+                fi
+            done
+            echo "OK"
+        else
+            echo "Failed"
+        fi
+        ;;
+
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+
     status)
-	echo -n 'Checking status of rrdcached...'
-	if [ -e "$PIDFILE" ] ; then
-	    PID=$(cat $PIDFILE)
-	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "running"
-		exit 0
-	    fi
-	fi
-	echo "stopped"
-	exit 1
-    ;;
+        echo -n 'Checking status of rrdcached...'
+        if [ -e "$PIDFILE" ]; then
+            PID=$(cat $PIDFILE)
+            if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
+                echo "running"
+                exit 0
+            fi
+        fi
+        echo "stopped"
+        exit 1
+        ;;
+
     flush)
         echo -n 'Triggering global flush of rrdcached...'
         result=$(echo 'FLUSHALL' | unixcat ~/tmp/run/rrdcached.sock)
-        if [ "$result" = "0 Started flush." ] ; then
+        if [ "$result" = "0 Started flush." ]; then
             echo "OK"
             exit 0
         else
-            echo Failed: $result
+            echo "failed: $result"
             exit 1
         fi
-    ;;
+        ;;
+
     *)
-	echo "Usage: $0 {start|stop|restart|reload|status}"
-    ;;
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        ;;
 esac

@@ -7,8 +7,10 @@ import abc
 from collections.abc import Callable, Sequence
 from typing import Generic, Literal, TypeVar
 
+from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -235,8 +237,8 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                 CheckPluginSelection(
                     title=_("Match check types"),
                     help_=_(
-                        "Only apply the rule if the notification originates from certain types of check plugins. "
-                        "Note: Host notifications never match this rule if this option is being used."
+                        "Only apply the rule if the notification originates from certain types of check plug-ins. "
+                        "Note: Host notifications never match this rule, if this option is being used."
                     ),
                 ),
             ),
@@ -290,7 +292,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
 
     @classmethod
     def _match_service_level_elements(cls) -> list[DictionaryEntry]:
-        if edition() is Edition.CSE:  # disabled in CSE
+        if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
             return []
         return [
             (

@@ -7,8 +7,9 @@ import copy
 from collections.abc import Iterator
 from typing import NamedTuple
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.hostaddress import HostName
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
 from cmk.bi.data_fetcher import BIStatusFetcher

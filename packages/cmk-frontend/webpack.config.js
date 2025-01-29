@@ -51,9 +51,9 @@ module.exports = {
         mobile: "./src/js/mobile.ts",
         tracking_entry: "./src/js/tracking_entry.ts",
         side: "./src/js/side_index.ts",
+        fonts_lato: "./src/themes/facelift/fonts_inter.scss",
         facelift: "./src/themes/facelift/theme.scss",
         modern_dark: "./src/themes/modern-dark/theme.scss",
-        // cma: "./src/themes/facelift/cma_facelift.scss", TODO: fork this into cma repo, see CMK-16648
     },
     output: {
         filename: "js/[name]_min.js",
@@ -109,7 +109,6 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            additionalData: "$ENTERPRISE: " + process.env.ENTERPRISE + ";",
                             sassOptions: {
                                 // Hand over build options from webpack to SASS
                                 includePaths: ["node_modules"],
@@ -117,6 +116,10 @@ module.exports = {
                                 // https://github.com/sass/dart-sass#javascript-api
                                 outputStyle: "expanded",
                                 precision: 10,
+                                // https://sass-lang.com/blog/import-is-deprecated/
+                                // we have to adjust our themes implementation first
+                                // CMK-20712
+                                silenceDeprecations: ["import"],
                             },
                         },
                     },
@@ -126,7 +129,6 @@ module.exports = {
     },
     plugins: [
         new RemoveEmptyScriptsPlugin(),
-        new webpack.EnvironmentPlugin(["ENTERPRISE"]),
         new WarningsToErrors(),
         new FileManagerPlugin({
             events: {
@@ -140,6 +142,10 @@ module.exports = {
                         {
                             source: "src/themes/facelift/images",
                             destination: "dist/themes/facelift/images",
+                        },
+                        {
+                            source: "src/themes/facelift/fonts",
+                            destination: "dist/themes/facelift/fonts",
                         },
                         {
                             source: "src/themes/facelift/theme.json",
@@ -187,20 +193,16 @@ let babel_loader = {
     },
 };
 
-if (process.env.WEBPACK_MODE === "quick") {
-    babel_loader["test"] = /\.ts?$/;
-} else {
-    babel_loader["test"] = /\.(ts|js)?$/;
-    babel_loader["use"]["options"]["presets"].unshift([
-        "@babel/preset-env",
-        {
-            //debug: true,
-            // This adds polyfills when needed. Requires core-js dependency.
-            // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
-            useBuiltIns: "usage",
-            corejs: 3,
-        },
-    ]);
-}
+babel_loader["test"] = /\.(ts|js)?$/;
+babel_loader["use"]["options"]["presets"].unshift([
+    "@babel/preset-env",
+    {
+        //debug: true,
+        // This adds polyfills when needed. Requires core-js dependency.
+        // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+        useBuiltIns: "usage",
+        corejs: 3,
+    },
+]);
 
 module.exports.module.rules.unshift(babel_loader);

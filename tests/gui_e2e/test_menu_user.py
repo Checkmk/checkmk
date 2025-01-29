@@ -3,100 +3,105 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.change_password import ChangePassword
+from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.login import LoginPage
 
 
-def test_user_color_theme(logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
+def test_user_color_theme(dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
     # Open user menu and locate `color theme button`.
-    _loc = logged_in_page.main_menu.user_color_theme_button
+    _loc = dashboard_page.main_menu.user_color_theme_button
     default_label = str(_loc.get_attribute("value"))
-    default_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
+    default_value = str(dashboard_page.page.locator("body").get_attribute("data-theme"))
     # Click on color theme button
     _loc.click()
     # User menu closes; theme changes
     expect(_loc).not_to_have_value(default_label)
     changed_label = str(_loc.get_attribute("value"))
-    changed_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
+    changed_value = str(dashboard_page.page.locator("body").get_attribute("data-theme"))
     assert default_label != changed_label, "Changed color theme is not properly displayed!"
     assert default_value != changed_value, "Changed color theme is not properly reflected!"
 
     # logging out and logging in to make sure the value is saved
-    logged_in_page.logout()
-    logged_in_page.login(credentials)
+    dashboard_page.main_menu.logout()
+    login_page = LoginPage(dashboard_page.page, navigate_to_page=False)
+    login_page.login(credentials)
     saved_label = _loc.get_attribute("value")
-    saved_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
+    saved_value = str(dashboard_page.page.locator("body").get_attribute("data-theme"))
     assert saved_label == changed_label, "Saved color theme is not properly displayed!"
     assert saved_value == changed_value, "Saved color theme is not properly reflected!"
 
     # Open user menu and click on `color theme button`.
-    logged_in_page.main_menu.user_color_theme_button.click()
+    dashboard_page.main_menu.user_color_theme_button.click()
     expect(_loc).not_to_have_value(saved_label)
     reverted_label = _loc.get_attribute("value")
-    reverted_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
+    reverted_value = str(dashboard_page.page.locator("body").get_attribute("data-theme"))
     assert reverted_label == default_label, "Reverted color theme is not properly displayed!"
     assert reverted_value == default_value, "Reverted color theme is not properly reflected!"
 
 
-def test_user_sidebar_position(logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
+def test_user_sidebar_position(dashboard_page: Dashboard, credentials: CmkCredentials) -> None:
     # Open user menu and locate `sidebar position button`.
-    _loc = logged_in_page.main_menu.user_sidebar_position_button
+    _loc = dashboard_page.main_menu.user_sidebar_position_button
     default_label = str(_loc.get_attribute("value"))
-    default_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
+    default_value = str(dashboard_page.sidebar.locator().get_attribute("class"))
     # Click on sidebar position button
     _loc.click()
     # User menu closes; Sidebar position changes
     expect(_loc).not_to_have_value(default_label)
     changed_label = _loc.get_attribute("value")
-    changed_value = logged_in_page.sidebar.locator().get_attribute("class")
+    changed_value = dashboard_page.sidebar.locator().get_attribute("class")
     assert default_label != changed_label, "Changed sidebar position is not properly displayed!"
     assert default_value != changed_value, "Changed sidebar position is not properly reflected!"
 
     # logging out and logging in to make sure the value is saved
-    logged_in_page.logout()
-    logged_in_page.login(credentials)
+    dashboard_page.main_menu.logout()
+    login_page = LoginPage(dashboard_page.page, navigate_to_page=False)
+    login_page.login(credentials)
     saved_label = str(_loc.get_attribute("value"))
-    saved_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
+    saved_value = str(dashboard_page.sidebar.locator().get_attribute("class"))
     assert saved_label == changed_label, "Saved sidebar position is not properly displayed!"
     assert saved_value == changed_value, "Saved sidebar position is not properly reflected!"
 
     # Open user menu and click on `sidebar position button`.
-    logged_in_page.main_menu.user_sidebar_position_button.click()
+    dashboard_page.main_menu.user_sidebar_position_button.click()
     expect(_loc).not_to_have_value(saved_label)
     reverted_label = str(_loc.get_attribute("value"))
-    reverted_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
+    reverted_value = str(dashboard_page.sidebar.locator().get_attribute("class"))
     assert reverted_label == default_label, "Reverted sidebar position is not properly displayed!"
     assert reverted_value == default_value, "Reverted sidebar position is not properly reflected!"
 
 
-def test_user_edit_profile(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(logged_in_page.main_menu.user_edit_profile.get_attribute("href"))
-    assert response and response.ok
+def test_user_edit_profile(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.user_edit_profile.click()
+    dashboard_page.page.wait_for_url(url=re.compile("user_profile.py$"), wait_until="load")
+    dashboard_page.main_area.check_page_title("Edit profile")
 
 
-def test_user_notification_rules(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_notification_rules.get_attribute("href")
+def test_user_notification_rules(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.user_notification_rules.click()
+    dashboard_page.page.wait_for_url(url=re.compile("user_notifications_p$"), wait_until="load")
+    dashboard_page.main_area.check_page_title("Your personal notification rules")
+
+
+def test_user_change_password(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.user_change_password.click()
+    _ = ChangePassword(dashboard_page.page, navigate_to_page=False)
+
+
+def test_user_two_factor_authentication(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.user_two_factor_authentication.click()
+    dashboard_page.page.wait_for_url(
+        url=re.compile("user_two_factor_overview.py$"), wait_until="load"
     )
-    assert response and response.ok
+    dashboard_page.main_area.check_page_title("Two-factor authentication")
 
 
-def test_user_change_password(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_change_password.get_attribute("href")
-    )
-    assert response and response.ok
-
-
-def test_user_two_factor_authentication(logged_in_page: LoginPage) -> None:
-    response = logged_in_page.go(
-        logged_in_page.main_menu.user_two_factor_authentication.get_attribute("href")
-    )
-    assert response and response.ok
-
-
-def test_user_logout(logged_in_page: LoginPage) -> None:
-    logged_in_page.main_menu.user_logout.click()
-    expect(logged_in_page.page.locator("#login_window")).to_be_visible()
+def test_user_logout(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.logout()
+    _ = LoginPage(dashboard_page.page, navigate_to_page=False)

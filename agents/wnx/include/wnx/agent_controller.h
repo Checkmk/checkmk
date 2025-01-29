@@ -19,7 +19,7 @@ namespace cma::ac {
 // Should be synchronized with Rust code of controller
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
 constexpr std::string_view kControllerFlagFile{"controller-flag"};
-constexpr std::string_view kCmkAgentUnistall{"cmk_agent_uninstall.txt"};
+constexpr std::string_view kCmkAgentUninstall{"cmk_agent_uninstall.txt"};
 // keep old definition here!
 constexpr std::string_view kCmkAgentMarkerNewDeprecated{
     "Check MK monitoring and management Service - "};  // Keep!
@@ -29,7 +29,7 @@ constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
 constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineVersion{"-V"};
-constexpr std::string_view kCmdLineStatus{"status --json"};
+constexpr std::string_view kCmdLineStatus{"status --json --no-query-remote"};
 
 constexpr std::string_view kCmdMailSlotPrefix{"ms"};
 constexpr std::string_view kCmdIpPrefix{"ip"};

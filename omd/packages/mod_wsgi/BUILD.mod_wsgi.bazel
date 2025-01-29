@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -14,13 +14,18 @@ configure_make(
     args = ["-j4"],
     configure_in_place = True,
     configure_options = [
-        "--with-python=${EXT_BUILD_DEPS}/python/bin/python3",
-        "--with-apxs=$(which apxs2 || which apxs)",
+        "--with-python=$${EXT_BUILD_DEPS}/python/bin/python3",
+        "--with-apxs=$$(command -v apxs2 || command -v apxs)",
     ],
     copts = [
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "CFLAGS": "-I$${EXT_BUILD_DEPS}/python/include/python%s/" % PYTHON_MAJOR_DOT_MINOR,
         "LDFLAGS": "-L$${EXT_BUILD_DEPS}/python/lib -Wl,--strip-debug",
@@ -34,5 +39,6 @@ configure_make(
         cp src/server/.libs/mod_wsgi.so $INSTALLDIR/lib
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )

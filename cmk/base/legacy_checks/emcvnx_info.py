@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<emcvnx_info>>>
@@ -127,10 +129,13 @@ def check_emcvnx_info(item, _no_params, parsed):
     output, errors = parsed
 
     if errors:
-        yield 2, (
-            "Error(s) while parsing the output. This may effect the "
-            "discovery of other emcvnx services. Please check your naviseccli "
-            "configuration. Errors are: %s" % (" ".join(errors))
+        yield (
+            2,
+            (
+                "Error(s) while parsing the output. This may effect the "
+                "discovery of other emcvnx services. Please check your naviseccli "
+                "configuration. Errors are: %s" % (" ".join(errors))
+            ),
         )
 
     for key, value in output["info"]:
@@ -145,6 +150,7 @@ def discover_emcvnx_info(x):
 
 
 check_info["emcvnx_info"] = LegacyCheckDefinition(
+    name="emcvnx_info",
     parse_function=parse_emcvnx_info,
     service_name="EMC VNX Info",
     discovery_function=discover_emcvnx_info,
@@ -172,6 +178,7 @@ def discover_emcvnx_info_storage(x):
 
 
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
+    name="emcvnx_info_storage",
     service_name="EMC VNX Storage Processor",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_storage,
@@ -202,6 +209,7 @@ def discover_emcvnx_info_link(x):
 
 
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
+    name="emcvnx_info_link",
     service_name="EMC VNX Link",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_link,
@@ -229,6 +237,7 @@ def discover_emcvnx_info_config(x):
 
 
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
+    name="emcvnx_info_config",
     service_name="EMC VNX Config",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_config,
@@ -259,6 +268,7 @@ def discover_emcvnx_info_io(x):
 
 
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(
+    name="emcvnx_info_io",
     service_name="EMC VNX IO",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_io,

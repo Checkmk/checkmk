@@ -7,7 +7,10 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -18,10 +21,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
-from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
@@ -37,8 +40,14 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, Host,
 DialogIdent = Literal["host", "cluster", "folder", "host_search", "bulk"]
 
 
+def _get_single_host(hosts: Mapping[str, object]) -> Host | None:
+    if len(hosts) == 1 and (host := next(iter(hosts.values()))) and isinstance(host, Host):
+        return host
+    return None
+
+
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(  # pylint: disable=too-many-branches
+def configure_attributes(
     new: bool,
     hosts: Mapping[str, Host | Folder | None],
     for_what: DialogIdent,
@@ -74,11 +83,13 @@ def configure_attributes(  # pylint: disable=too-many-branches
     show_more_mode: bool = False
 
     show_more_mode = user.show_mode != "default_show_less"
-    is_cse = cmk_version.edition() == cmk_version.Edition.CSE
+    is_cse = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
 
     for topic_id, topic_title in get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
         topic_attributes = get_sorted_host_attributes_by_topic(topic_id)
+
+        single_edit_host = _get_single_host(hosts)
 
         forms.header(
             topic_title,
@@ -154,12 +165,6 @@ def configure_attributes(  # pylint: disable=too-many-branches
             # one and have the same value
             unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
 
-            if for_what in ["host", "cluster", "folder"]:
-                if hosts:
-                    host: Host | Folder | None = list(hosts.values())[0]
-                else:
-                    host = None
-
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
             # This does not apply in "host_search" mode.
@@ -179,9 +184,9 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     if attrname in container.attributes:
                         assert not isinstance(container, SearchFolder)
                         url = container.edit_url()
-                        inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
-                            container.title(), href=url
-                        )
+                        inherited_from = HTML.with_escaping(
+                            _("Inherited from ")
+                        ) + HTMLWriter.render_a(container.title(), href=url)
 
                         # Mypy can not help here with the dynamic key
                         inherited_value = container.attributes[attrname]  # type: ignore[literal-required]
@@ -193,7 +198,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = escape_to_html(_("Default value"))
+                inherited_from = HTML.with_escaping(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -239,8 +244,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:
                 active = attrname in myself.attributes
-            elif for_what in ["host", "cluster"] and host:  # "host"
-                active = attrname in host.attributes
+            elif for_what in ["host", "cluster"] and single_edit_host:
+                active = attrname in single_edit_host.attributes
             else:
                 active = False
 
@@ -319,14 +324,15 @@ def configure_attributes(  # pylint: disable=too-many-branches
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation: HTML = HTML("")
+            explanation: HTML = HTML.empty()
+            value: object = None
             if for_what == "bulk":
                 if num_haveit == 0:
                     assert inherited_from is not None
-                    explanation = HTML(" (") + inherited_from + HTML(")")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
-                    explanation = escape_to_html(
+                    explanation = HTML.with_escaping(
                         _("This value differs between the selected hosts.")
                     )
                 else:
@@ -347,15 +353,30 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write_text(content)
+                    html.write_text_permissive(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 
-            html.write_text(explanation)
+            html.write_text_permissive(explanation)
             html.close_div()
+
+        # if host is managed by a config bundle, show the source (which is not a real attribute)
+        if (
+            topic_id == "basic"
+            and single_edit_host
+            and (locked_by := single_edit_host.locked_by())
+            and is_locked_by_quick_setup(locked_by)
+        ):
+            vs = FixedValue(
+                value=locked_by["instance_id"],
+                title=_u("Source"),
+                totext=quick_setup_render_link(locked_by),
+            )
+            forms.section(vs.title())
+            vs.render_input("_internal_source", locked_by["instance_id"])
 
         if topic_is_volatile:
             volatile_topics.append(topic_id)

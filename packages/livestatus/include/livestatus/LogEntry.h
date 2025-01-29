@@ -83,17 +83,36 @@ enum class LogEntryParam {
 class LogEntry {
 public:
     // NOTE: We have to keep this enum in sync with the table in
-    // cmk.gui.plugins.visuals.filters.FilterLogClass on the Python side.
+    // cmk.gui.query_filters.log_class_options() on the Python side.
     enum class Class {
-        info = 0,             // all messages not in any other class
-        alert = 1,            // alerts: the change service/host state
-        program = 2,          // important program events (restart, ...)
-        hs_notification = 3,  // host/service notifications
-        passivecheck = 4,     // passive checks
-        ext_command = 5,      // external commands
-        state = 6,            // initial or current states
-        // text = 7,          // specific text passages, seems to be unused
-        alert_handlers = 8,  // Started and stopped alert handlers
+        // all messages not in any other class
+        info = 0,
+
+        // {HOST,SERVICE}{, DOWNTIME, ACKNOWLEDGE, FLAPPING} ALERT
+        alert = 1,
+
+        // LOG VERSION: 2.0*, logging in{,t}itial states*,
+        // *starting...*, *active mode...*,
+        // *shutting down...*, *Bailing out*, *standby mode...*
+        program = 2,
+
+        // {HOST,SERVICE} NOTIFICATION{, RESULT, PROGRESS}
+        hs_notification = 3,
+
+        // PASSIVE {HOST,SERVICE} CHECK
+        passivecheck = 4,
+
+        // EXTERNAL COMMAND
+        ext_command = 5,
+
+        // {INITIAL,CURRENT} {HOST,SERVICE} STATE, TIMEPERIOD TRANSITION
+        state = 6,
+
+        // specific text passages, seems to be unused
+        // text = 7
+
+        // {HOST,SERVICE} ALERT HANDLER {STARTED,STOPPED}
+        alert_handlers = 8,
     };
 
     /// Constructed by Logfile::processLogLine(). All instances owned by

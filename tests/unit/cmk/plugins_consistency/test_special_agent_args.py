@@ -12,13 +12,16 @@ import pytest
 
 from cmk.utils import password_store
 
-from cmk.base.server_side_calls import load_special_agents
-
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
+from cmk.plugins.kube.special_agents import agent_kube
+from cmk.plugins.prometheus.special_agents import agent_prometheus
+from cmk.plugins.redfish.special_agents import agent_redfish, agent_redfish_power
+from cmk.server_side_calls_backend import load_special_agents
 from cmk.special_agents import (
     agent_activemq,
     agent_allnet_ip_sensoric,
@@ -26,6 +29,7 @@ from cmk.special_agents import (
     agent_aws_status,
     agent_azure,
     agent_azure_status,
+    agent_bi,
     agent_cisco_meraki,
     agent_cisco_prime,
     agent_couchbase,
@@ -37,7 +41,6 @@ from cmk.special_agents import (
     agent_jira,
     agent_mobileiron,
     agent_mqtt,
-    agent_netapp,
     agent_netapp_ontap,
     agent_proxmox_ve,
     agent_pure_storage_fa,
@@ -46,6 +49,15 @@ from cmk.special_agents import (
     agent_splunk,
     agent_storeonce4x,
 )
+
+agent_otel: ModuleType | None = None
+try:
+    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+        agent_otel,
+    )
+except ImportError:
+    pass
+
 
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "three_par": None,
@@ -59,7 +71,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "azure": agent_azure,
     "azure_status": agent_azure_status,
     "bazel_cache": agent_bazel,
-    "bi": None,
+    "bi": agent_bi,
     "cisco_meraki": agent_cisco_meraki,
     "cisco_prime": agent_cisco_prime,
     "couchbase": agent_couchbase,
@@ -70,6 +82,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
+    "gerrit": agent_gerrit,
     "graylog": agent_graylog,
     "hivemanager": None,
     "hivemanager_ng": agent_hivemanager_ng,
@@ -82,13 +95,15 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "jolokia": None,
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
-    "netapp": agent_netapp,
     "netapp_ontap": agent_netapp_ontap,
+    **({} if agent_otel is None else {"otel": agent_otel}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,
     "rabbitmq": agent_rabbitmq,
     "random": None,
+    "redfish": agent_redfish,
+    "redfish_power": agent_redfish_power,
     "ruckus_spot": None,
     "salesforce": None,
     "siemens_plc": None,
@@ -100,50 +115,14 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "ucs_bladecenter": None,
     "vnx_quotas": None,
     "zerto": None,
-}
-
-UNMIGRATED = {
-    "acme_sbc",
-    "activemq",
-    "alertmanager",
-    "allnet_ip_sensoric",
-    "appdynamics",
-    "aws",
-    "aws_status",
-    "azure",
-    "couchbase",
-    "ddn_s2a",
-    "emcvnx",
-    "gcp_status",
-    "graylog",
-    "hivemanager",
-    "hivemanager_ng",
-    "hp_msa",
-    "ibmsvc",
-    "innovaphone",
-    "ipmi_sensors",
-    "jira",
-    "jolokia",
-    "mqtt",
-    "netapp",
-    "rabbitmq",
-    "random",
-    "ruckus_spot",
-    "salesforce",
-    "siemens_plc",
-    "smb_share",
-    "splunk",
-    "storeonce",
-    "storeonce4x",
-    "tinkerforge",
-    "ucs_bladecenter",
-    "vnx_quotas",
-    "zerto",
+    "prometheus": agent_prometheus,
+    "vsphere": None,
+    "kube": agent_kube,
 }
 
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
-    "alertmanager": [],
+    "alertmanager": ["--config", "{}"],
     "allnet_ip_sensoric": ["HOSTNAME"],
     "aws": [
         "--access-key-id",
@@ -167,9 +146,11 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--secret",
         "SECRET",
     ],
+    "bi": [],
     "couchbase": ["HOSTNAME"],
     "elasticsearch": ["HOSTNAME"],
     "fritzbox": ["HOSTNAME"],
+    "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["HOSTNAME"],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [
@@ -195,7 +176,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--kubernetes-cluster-hostname",
         "host",
     ],
-    "prometheus": [],
+    "prometheus": ["--config", "{}"],
     "rabbitmq": [
         "-P",
         "PROTOCOL",
@@ -208,6 +189,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--hostname",
         "HOSTNAME",
     ],
+    "redfish": ["--user", "USER", "--password", "sw0rdfis4", "HOSTNAME"],
+    "redfish_power": ["--user", "USER", "--password", "sw0rdfis4", "HOSTNAME"],
     "splunk": ["HOSTNAME"],
     "vsphere": ["HOSTNAME"],
     "proxmox_ve": ["HOSTNAME"],
@@ -219,7 +202,6 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "MyPass",
         "Hostname",
     ],
-    "netapp": ["address", "user", "password"],
     "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
     "activemq": ["server", "1234"],
     "datadog": [
@@ -243,20 +225,20 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--piggy-back-prefix",
         "a",
     ],
-    "cisco_meraki": ["HOSTNAME", "API_KEY"],
+    "cisco_meraki": ["HOSTNAME", "--apikey-reference", "API_KEY"],
     "azure_status": ["REGION1 REGION2"],
     "aws_status": [],
     "gcp_status": [],
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
+    "otel": ["HOSTNAME"],
 }
 
 
-def test_all_agents_tested() -> None:
-    _errors, agents = load_special_agents()
-    migrated = {agent.name for agent in agents.values()}
-    assert not migrated & UNMIGRATED
-    assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)
+def test_all_agents_considered() -> None:
+    assert set(TESTED_SA_MODULES) == {
+        plugin.name for plugin in load_special_agents(raise_errors=True).values()
+    }
 
 
 @pytest.mark.parametrize(

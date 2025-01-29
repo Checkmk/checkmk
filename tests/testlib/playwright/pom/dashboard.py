@@ -2,106 +2,138 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 import re
-from typing import Literal, override
-from urllib.parse import parse_qs, urljoin, urlparse
+from re import Pattern
+from typing import override
 
-from playwright.sync_api import expect, Page, Response
+from playwright.sync_api import expect, Locator
 
-from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.navigation import CmkPage
+from tests.testlib.playwright.helpers import DropdownListNameToID
+from tests.testlib.playwright.pom.page import CmkPage
+
+logger = logging.getLogger(__name__)
 
 
-class LoginPage(CmkPage):
-    """Represents the login page of Checkmk GUI."""
+class Dashboard(CmkPage):
+    """Represent the page `Main dashboard`."""
 
-    def __init__(
-        self,
-        page: Page,
-        site_url: str,  # URL to one of the pages on Checkmk GUI
-        mobile_device: bool = False,
-        timeout_assertions: int | None = None,
-        timeout_navigation: int | None = None,
-    ) -> None:
-        self.site_url = site_url
-        self._mobile_device: bool = mobile_device
-        self._logged_in: bool = False
-        super().__init__(page, timeout_assertions, timeout_navigation)
+    page_title: str = "Main dashboard"
+
+    default_dashlets_list: list[str] = [
+        "Host statistics",
+        "Service statistics",
+        "Problem notifications",
+        "Host overview",
+        "Total host problems",
+        "Total service problems",
+        "Percentage of total service problems",
+        "Top alerters (last 7 days)",
+    ]
+
+    icons_list: list[str] = [
+        "Main dashboard",
+        "Problem dashboard",
+        "Checkmk dashboard",
+        "Filter",
+    ]
+
+    dropdown_buttons: list[str] = ["Dashboard", "Add", "Dashboards", "Display", "Help"]
+
+    def navigate(self) -> None:
+        logger.info("Navigate to 'Main dashboard' page")
+        self.main_menu.main_page.click()
+        self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
+        self._validate_page()
+
+    def _validate_page(self) -> None:
+        logger.info("Validate that current page is 'Main dashboard' page")
+        self.main_area.check_page_title(self.page_title)
+        expect(self.dashlet("Host statistics")).to_be_visible()
+        expect(self.menu_icon("Filter")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    def menu_icon(self, icon_title: str) -> Locator:
+        return self.main_area.locator().get_by_title(icon_title)
+
+    def dashlet(self, dashlet_name: str) -> Locator:
+        return self.main_area.locator(
+            f'div[class*="dashlet "]:has(text:text-is("{dashlet_name}")), '
+            f'div[class*="dashlet "]:has(a:text-is("{dashlet_name}"))'
+        )
+
+    def dashlet_svg(self, dashlet_name: str) -> Locator:
+        return self.dashlet(dashlet_name).locator("svg")
+
+
+class DashboardMobile(CmkPage):
+    page_title: str = r"Checkmk Mobile"
+
+    links: list[str] = [
+        r"Host Search",
+        r"Service Search",
+        r"Host problems (all)",
+        r"Host problems (unhandled)",
+        r"Service problems (all)",
+        r"Service problems (unhandled)",
+        # "Events" - TODO: confirm why there are two Events.
+        r"Classical web GUI",
+        "History",
+        "Logout",
+    ]
+
+    def navigate(self) -> None:
+        """TODO: add navigation"""
+
+    def _validate_page(self) -> None:
+        expect(self.page.get_by_role(role="heading", name=self.page_title)).to_have_count(1)
+        expect(self.classical_web_gui).to_be_visible()
+        expect(self.logout).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     @override
-    def navigate(self) -> str:
-        """Navigate to login page, like a Checkmk GUI user.
+    def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
+        return self.page.get_by_role(role="link", name=name, exact=exact)
 
-        Works ONLY when the user is logged out.
-        Navigate to the `site_url` provided to `LoginPage`.
-        `site_url` can refer to any Checkmk GUI page.
-        Returns the URL of login page. Returns an empty-string when user is already logged in.
-        """
-        if not self._logged_in:
-            self.page.goto(self.site_url, wait_until="load")
-            expect(self.page).to_have_url(re.compile(r"login.py"))
-            self._validate_credential_elements_on_page()
-            return self.page.url
-        return ""
+    @property
+    def classical_web_gui(self) -> Locator:
+        return self.get_link(r"Classical web GUI")
 
-    def login(self, credentials: CmkCredentials) -> None:
-        """Login to Checkmk GUI.
+    @property
+    def logout(self) -> Locator:
+        return self.get_link("Logout")
 
-        By default, the credentials provided to `LoginPage` are used.
-        """
-        if not self._logged_in:
-            self.page.locator("#input_user").fill(credentials.username)
-            self.page.locator("#input_pass").fill(credentials.password)
-            self.page.locator("#_login").click()
-            _url_pattern = re.escape(self._target_page())
-            self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-            self._logged_in = True
 
-    def _target_page(self) -> str:
-        """Returns the URL of the page to be navigated after successful login.
+class ProblemDashboard(CmkPage):
+    """Represent the page `Problem dashboard`.
 
-        This URL is embedded within the login page's URL.
-        """
+    `Problem dashboard` is a default dashboard page for cmk monitoring user.
+    #TODO: create a common base class for 'Main dashboard' and 'Problem dashboard', see CMK-19521
+    """
 
-        def _target_url_at(param: str, query: str) -> list[str]:
-            queries = parse_qs(query)
-            assert (
-                len(queries.get(param, [])) <= 1
-            ), f"Multiple instances of parameter: {param} found in {query}!"
-            return queries.get(param, [])
+    page_title: str = "Problem dashboard"
 
-        _url = "mobile.py" if self._mobile_device else "index.py"
-        try:
-            # parse target url within the query
-            _url = _target_url_at("_origtarget", urlparse(self._url).query)[-1]
-        except IndexError:
-            # empty list: no query found
-            return _url
-        if self._mobile_device:
-            # parse target url within the "nested" query
-            _url = _target_url_at("start_url", urlparse(_url).query)[-1]
-        return _url
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page", self.page_title)
+        self.main_menu.main_page.click()
+        self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
+        self._validate_page()
 
-    def logout(self) -> None:
-        if self._logged_in:
-            self.main_menu.user_logout.click()
-            self.page.wait_for_url(url=re.compile("login.py$"), wait_until="load")
-            self._validate_credential_elements_on_page()
-            self._logged_in = False
+    def _validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        self.main_area.check_page_title(self.page_title)
+        expect(self.dashlet("Host statistics")).to_be_visible()
+        expect(self.dashlet("Events of recent 4 hours")).to_be_visible()
 
-    def _validate_credential_elements_on_page(self) -> None:
-        expect(self.page.locator("#input_user")).to_be_visible()
-        expect(self.page.locator("#input_user")).to_be_empty()
-        expect(self.page.locator("#input_pass")).to_be_visible()
-        expect(self.page.locator("#input_pass")).to_be_empty()
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
-    @override
-    def go(
-        self,
-        url: str | None = None,
-        wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None = None,
-        referer: str | None = None,
-    ) -> Response | None:
-        """calls page.goto() but will accept relative urls"""
-        return self.page.goto(urljoin(self.site_url, url), wait_until=wait_until, referer=referer)
+    def dashlet(self, dashlet_name: str) -> Locator:
+        return self.main_area.locator(
+            f'div[class*="dashlet "]:has(text:text-is("{dashlet_name}")), '
+            f'div[class*="dashlet "]:has(a:text-is("{dashlet_name}"))'
+        )

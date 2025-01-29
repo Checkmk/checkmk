@@ -7,12 +7,13 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS, DETECT_JUNIPER_TRPZ
+
+check_info = {}
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ def check_juniper_mem_generic(
 
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
+    name="juniper_trpz_mem",
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
@@ -73,6 +75,7 @@ def parse_juniper_screenos_mem(string_table):
 
 
 check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
+    name="juniper_screenos_mem",
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.16.2",

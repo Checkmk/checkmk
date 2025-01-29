@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
@@ -71,9 +71,9 @@ from cmk.plugins.lib.esx_vsphere import Section
     ],
 )
 def test_check_esx_vsphere_hostsystem_multipath(
-    fix_register: FixRegister, section: Section, item: str, check_results: CheckResult
+    agent_based_plugins: AgentBasedPlugins, section: Section, item: str, check_results: CheckResult
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
+    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
     assert (
         list(check.check_function(item=item, params={"levels_map": {}}, section=section))
         == check_results

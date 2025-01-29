@@ -69,21 +69,23 @@ RULE_ID: Mapping[str, fields.String] = {
 }
 
 
-class MoveToFolder(base.BaseSchema):
+class _BaseMoveTo(base.BaseSchema):
     cast_to_dict = True
 
     position = fields.String(
-        description="The type of position to move to.", example="top_of_folder"
+        description="""The type of position to move to.
+        Note that you cannot move rules before rules managed by a Quick setup. In the case of
+        `top_of_folder` your rule will instead be after all managed rules. If you specify a managed
+        rule in `after_specific_rule` or `before_specific_rule` you will receive an error.""",
+        example="top_of_folder",
     )
+
+
+class MoveToFolder(_BaseMoveTo):
     folder = gui_fields.FolderField(example="/")
 
 
-class MoveToSpecificRule(base.BaseSchema):
-    cast_to_dict = True
-
-    position = fields.String(
-        description="The type of position to move to.", example="after_specific_rule"
-    )
+class MoveToSpecificRule(_BaseMoveTo):
     rule_id = fields.String(
         description="The UUID of the rule to move after/before.",
         example="f8b74720-a454-4242-99c4-62994ef0f2bf",
@@ -580,7 +582,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         else:
             raise ValidationError(f"Unknown type: {data['match_on']!r}.")
 
-        if data["operator"] == "one_of":  # pylint: disable=no-else-return
+        if data["operator"] == "one_of":
             return match_on
         elif data["operator"] == "none_of":
             return {"$nor": match_on}
@@ -745,7 +747,7 @@ class Conditions(base.BaseSchema):
             " * The pattern is matched from the beginning.\n"
             " * The match is performed case sensitive.\n"
             "BE AWARE: Depending on the service ruleset the service_description of "
-            "the rules is only a check item or a full service description. For "
+            "the rules is only a check item or a full service name. For "
             "example the check parameters rulesets only use the item, and other "
             "service rulesets like disabled services ruleset use full service"
             "descriptions."
@@ -1092,7 +1094,7 @@ def _scalar_value(
     if not isinstance(value, str):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "is":  # pylint: disable=no-else-return
+    if operator == "is":
         return value
     elif operator == "is_not":
         return {"$ne": TagID(value)}
@@ -1130,7 +1132,7 @@ def _collection_value(
     if not isinstance(value, list):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "one_of":  # pylint: disable=no-else-return
+    if operator == "one_of":
         return {"$or": [TagID(v) for v in value]}
     elif operator == "none_of":
         return {"$nor": [TagID(v) for v in value]}
@@ -1146,7 +1148,7 @@ class RuleSearchOptions(base.BaseSchema):
     )
 
 
-def _unpack_operator(v) -> ApiOperator:  # type: ignore[no-untyped-def]
+def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
     """Unpacks the operator from a condition value
 
     Examples:
@@ -1175,7 +1177,7 @@ def _unpack_operator(v) -> ApiOperator:  # type: ignore[no-untyped-def]
         _key = next(iter(v.keys()))
         # Thank you pylint, but these things need to be returned like this,
         # because otherwise mypy won't recognize the Literal values.
-        if _key == "$ne":  # pylint: disable=no-else-return
+        if _key == "$ne":
             return "is_not"
         elif _key == "$or":
             return "one_of"

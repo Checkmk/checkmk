@@ -4,8 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import type {FunctionSpec} from "./utils";
+import {
+    add_class,
+    get_row_info,
+    has_row_info,
+    querySelectorAllByClassName,
+    remove_class,
+    update_row_info,
+} from "./utils";
 
 interface SelectionProperties {
     page_id: null | string;
@@ -39,7 +47,7 @@ export function get_selection_id() {
 export function init_rowselect(properties: SelectionProperties) {
     selection_properties = properties;
 
-    const tables = utils.querySelectorAllByClassName("data");
+    const tables = querySelectorAllByClassName("data");
     for (let i = 0; i < tables.length; i++)
         if (tables[i].tagName === "TABLE") table_init_rowselect(tables[i]);
 }
@@ -75,7 +83,7 @@ function table_init_rowselect(oTable: HTMLElement) {
 // Container is an DOM element to search below or a list of DOM elements
 // to search below
 function get_all_checkboxes(
-    container: HTMLElement | HTMLElement[] | HTMLDocument
+    container: HTMLElement | HTMLElement[] | HTMLDocument,
 ) {
     const checkboxes: HTMLInputElement[] = [];
     let childs;
@@ -120,7 +128,7 @@ function toggle_box(_e: Event, elem: HTMLInputElement) {
 // function for each cell
 function iter_cells(
     checkbox: HTMLInputElement,
-    func: (elem: HTMLElement) => void
+    func: (elem: HTMLElement) => void,
 ) {
     let num_columns = parseInt(checkbox.value);
     // Now loop the next N cells to call the func for each cell
@@ -189,8 +197,8 @@ function find_checkbox(oTd: HTMLElement): null | HTMLInputElement {
 }
 
 function highlight_elem(elem: HTMLElement, on: boolean) {
-    if (on) utils.add_class(elem, "checkbox_hover");
-    else utils.remove_class(elem, "checkbox_hover");
+    if (on) add_class(elem, "checkbox_hover");
+    else remove_class(elem, "checkbox_hover");
 }
 
 function toggle_row(e: Event, elem: HTMLElement) {
@@ -238,9 +246,9 @@ function toggle_row(e: Event, elem: HTMLElement) {
 function set_rowselection(
     action: string,
     rows: string[],
-    post_selection_functions: utils.FunctionSpec[] = []
+    post_selection_functions: FunctionSpec[] = [],
 ) {
-    ajax.call_ajax("ajax_set_rowselection.py", {
+    call_ajax("ajax_set_rowselection.py", {
         method: "POST",
         post_data:
             "id=" +
@@ -253,7 +261,7 @@ function set_rowselection(
             rows.join(","),
         response_handler: function (_data: unknown, _response: unknown) {
             post_selection_functions.forEach(f_spec =>
-                f_spec.function(...f_spec.arguments)
+                f_spec.function(...f_spec.arguments),
             );
         },
     });
@@ -261,10 +269,10 @@ function set_rowselection(
 
 // Update the header information (how many rows selected)
 function update_row_selection_information() {
-    if (!utils.has_row_info()) return; // Nothing to update
+    if (!has_row_info()) return; // Nothing to update
 
     const count = selection_properties.selected_rows.length;
-    let current_text = utils.get_row_info();
+    let current_text = get_row_info();
 
     // First remove the text added by previous calls to this functions
     if (current_text.indexOf("/") != -1) {
@@ -272,7 +280,7 @@ function update_row_selection_information() {
         current_text = parts[1];
     }
 
-    utils.update_row_info(count + "/" + current_text);
+    update_row_info(count + "/" + current_text);
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally
@@ -301,7 +309,7 @@ export function toggle_all_rows(obj?: HTMLElement | HTMLElement[]) {
     }
 
     const entry = document.getElementById(
-        "menu_entry_checkbox_selection"
+        "menu_entry_checkbox_selection",
     ) as HTMLDivElement;
     const img: HTMLImageElement | null = entry
         ? entry.getElementsByTagName("img")[0]
@@ -322,7 +330,7 @@ function remove_selected_rows(elems: HTMLInputElement[]) {
     for (let i = 0; i < elems.length; i++) {
         elems[i].checked = false;
         const row_pos = selection_properties.selected_rows.indexOf(
-            elems[i].name
+            elems[i].name,
         );
         if (row_pos > -1) selection_properties.selected_rows.splice(row_pos, 1);
     }
@@ -395,7 +403,7 @@ export function toggle_group_rows(checkbox: HTMLInputElement) {
 
 export function update_bulk_moveto(val: string) {
     const fields = document.getElementsByClassName(
-        "bulk_moveto"
+        "bulk_moveto",
     ) as HTMLCollectionOf<HTMLSelectElement>;
     for (let i = 0; i < fields.length; i++)
         for (let a = 0; a < fields[i].options.length; a++)
@@ -406,7 +414,7 @@ export function update_bulk_moveto(val: string) {
 export function execute_bulk_action_for_single_host(
     elem: HTMLElement,
     action_fct: () => void,
-    action_args: any[]
+    action_args: any[],
 ) {
     const td =
         elem.tagName === "TD"
@@ -414,7 +422,7 @@ export function execute_bulk_action_for_single_host(
             : (elem.closest("td")! as HTMLTableCellElement);
     const checkbox: HTMLInputElement = find_checkbox(td)!;
 
-    const post_selection_fct: utils.FunctionSpec = {
+    const post_selection_fct: FunctionSpec = {
         function: action_fct,
         arguments: action_args,
     };

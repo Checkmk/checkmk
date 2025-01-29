@@ -4,12 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_apc_humidity(info):
@@ -30,6 +44,7 @@ def parse_apc_humidity(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_humidity"] = LegacyCheckDefinition(
+    name="apc_humidity",
     parse_function=parse_apc_humidity,
     detect=DETECT,
     fetch=SNMPTree(
@@ -41,7 +56,7 @@ check_info["apc_humidity"] = LegacyCheckDefinition(
     check_function=check_apc_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={
-        "levels": (40.0, 35.0),
-        "levels_lower": (60.0, 65.0),
+        "levels": (60.0, 65.0),
+        "levels_lower": (40.0, 35.0),
     },
 )

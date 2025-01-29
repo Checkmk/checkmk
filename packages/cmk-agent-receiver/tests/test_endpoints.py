@@ -45,7 +45,7 @@ def _symlink_push_host(
 
 @pytest.fixture(name="serialized_csr")
 def fixture_serialized_csr(uuid: UUID4) -> str:
-    _key, csr = generate_csr_pair(str(uuid), 512)
+    _key, csr = generate_csr_pair(str(uuid), 1024)
     return serialize_to_pem(csr)
 
 
@@ -56,9 +56,7 @@ def test_register_existing_ok(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    def rest_api_register_mock(
-        *args: object, **kwargs: object  # pylint: disable=unused-argument
-    ) -> RegisterResponse:
+    def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
         _symlink_push_host(tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
@@ -372,7 +370,6 @@ def _test_register_new(
     assert set(response.json()) == {"root_cert"}
 
     triggered_r4r = R4R.read(uuid)
-    assert triggered_r4r
     assert triggered_r4r.status is R4RStatus.NEW
     assert triggered_r4r.request.uuid == uuid
     assert triggered_r4r.request.username == "monitoring"
@@ -888,7 +885,7 @@ def test_renew_certificate_uuid_csr_mismatch(
     uuid: UUID4,
     registration_status_headers: MutableMapping[str, str],
 ) -> None:
-    _key, wrong_csr = generate_csr_pair(str(uuid4()), 512)
+    _key, wrong_csr = generate_csr_pair(str(uuid4()), 1024)
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=registration_status_headers,

@@ -31,7 +31,7 @@ Section = Sequence[models.AlertModel]
 
 def parse_netapp_api_status(string_table: StringTable) -> Section:
     return [
-        alert for line in string_table if (alert := models.AlertModel.model_validate_json(line[0]))
+        alert for line in string_table for alert in [models.AlertModel.model_validate_json(line[0])]
     ]
 
 

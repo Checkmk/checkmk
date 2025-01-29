@@ -3,28 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 import pytest
 
-from cmk.utils.plugin_registry import Registry
+from tests.testlib.unit.utils import reset_registries
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.permissions import permission_registry, permission_section_registry
 
 
-@pytest.fixture(name="registry_list", scope="module")
-def fixture_registry_list() -> list[Registry]:
-    """Returns 'permission_registry' and 'permission_section_registry'.
-
-    Registries are to be reset after test-case execution.
-    """
-    return [permission_registry, permission_section_registry]
+@pytest.fixture(name="reset_permission_registries")
+def fixture_reset_permission_registries() -> Iterator[None]:
+    """Fixture to reset registries to its default entries."""
+    with reset_registries([permission_registry, permission_section_registry]):
+        yield
 
 
-def test_declare_permission_section(
-    reset_gui_registries: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
+@pytest.mark.usefixtures("reset_permission_registries")
+def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -38,7 +35,8 @@ def test_declare_permission_section(
     assert section.do_sort is False
 
 
-def test_declare_permission(reset_gui_registries: None, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("reset_permission_registries")
+def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import os
@@ -16,9 +16,10 @@ import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from pytest import MonkeyPatch
 
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
+
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
@@ -483,7 +484,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -503,8 +503,8 @@ class TestSNMPFetcherFetch:
         )
 
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: {SectionName("pim")},
         )
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
@@ -520,7 +520,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -545,11 +544,6 @@ class TestSNMPFetcherFetch:
 
     def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [])
-        monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
-            lambda *_, **__: {SectionName("pam")},
-        )
         file_cache = SNMPFileCache(
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
@@ -558,32 +552,38 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         fetcher = self.create_fetcher(path=tmp_path)
+        monkeypatch.setattr(
+            fetcher,
+            "_detect",
+            lambda *_, **__: {SectionName("pam")},
+        )
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
             {SectionName("pam"): [[]]}
         )
 
-    @pytest.fixture(name="set_sections")
-    def _set_sections(self, monkeypatch: MonkeyPatch) -> list[list[str]]:
-        table = [["1"]]
-        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: table)
-        monkeypatch.setattr(
-            SNMPFetcher, "disabled_sections", property(lambda self: {SectionName("pam")})
-        )
+    def test_mode_inventory_do_status_data_inventory(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
         monkeypatch.setattr(
             SNMPFetcher,
             "inventory_sections",
             property(lambda self: {SectionName("pim"), SectionName("pam")}),
         )
-        return table
-
-    def test_mode_inventory_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
-    ) -> None:
-        table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                )
+            },
+            do_status_data_inventory=True,
+        )
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
@@ -594,17 +594,31 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_inventory_not_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path)
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            SNMPFetcher,
+            "inventory_sections",
+            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+        )
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                )
+            },
+        )
+        monkeypatch.setattr(
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
@@ -615,17 +629,32 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_checking_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            SNMPFetcher,
+            "inventory_sections",
+            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+        )
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                )
+            },
+            do_status_data_inventory=True,
+        )
+        monkeypatch.setattr(
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(
@@ -636,7 +665,7 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_checking_not_do_status_data_inventory(
@@ -644,8 +673,8 @@ class TestSNMPFetcherFetch:
     ) -> None:
         fetcher = self.create_fetcher(path=tmp_path)
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(
@@ -658,10 +687,14 @@ class TestSNMPFetcherFetch:
         assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK({})
 
 
+class SNMPFetcherStub(SNMPFetcher):
+    def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
+        return {SectionName("section"): [[b"fetched"]]}
+
+
 class TestSNMPFetcherFetchCache:
-    @pytest.fixture
-    def fetcher(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SNMPFetcher:
-        fetcher = SNMPFetcher(
+    def test_fetch_reading_cache_in_discovery_mode(self, tmp_path: Path) -> None:
+        fetcher = SNMPFetcherStub(
             sections={},
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
@@ -688,14 +721,6 @@ class TestSNMPFetcherFetchCache:
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )
-        monkeypatch.setattr(
-            fetcher,
-            "_fetch_from_io",
-            lambda mode: {SectionName("section"): [[b"fetched"]]},
-        )
-        return fetcher
-
-    def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
         file_cache = StubFileCache[SNMPRawData](
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
@@ -714,8 +739,8 @@ class TestSNMPSectionMeta:
     @pytest.mark.parametrize(
         "meta",
         [
-            SNMPSectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
-            SNMPSectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
+            SNMPSectionMeta(checking=False, disabled=False, redetect=False),
+            SNMPSectionMeta(checking=True, disabled=False, redetect=False),
         ],
     )
     def test_serialize(self, meta: SNMPSectionMeta) -> None:

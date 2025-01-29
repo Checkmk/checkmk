@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import hashlib
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.gui.type_defs import Row
 

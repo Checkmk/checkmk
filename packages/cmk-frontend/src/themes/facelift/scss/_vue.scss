@@ -6,3 +6,36 @@
 table.nform select.cascading_dropdown {
   margin: 0 5px 5px 0;
 }
+
+div.vue_help {
+  display: none;
+  div.info_icon {
+    img.icon {
+      content: url("images/icon_info.svg");
+    }
+  }
+}
+
+body.show_help {
+  div.vue_help {
+    display: flex;
+  }
+}
+
+img.vue.treeangle {
+  content: url("images/tree_closed.svg");
+}
+
+img.vue.icon_close {
+  content: url("images/icon_close.svg");
+}
+
+img.vue.icon_plus {
+  content: url("images/icon_plus.svg");
+  vertical-align: middle;
+}
+
+span.vue.add_element_text {
+  font-weight: 700;
+  vertical-align: middle;
+}

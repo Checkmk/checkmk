@@ -6,12 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.plugins.lib import docker
 
-import cmk.plugins.lib.docker as docker
-from cmk.agent_based.v2 import render
+check_info = {}
 
 
 def parse_docker_node_disk_usage(string_table):
@@ -48,6 +47,7 @@ def discover_docker_node_disk_usage(section):
 
 
 check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
+    name="docker_node_disk_usage",
     parse_function=parse_docker_node_disk_usage,
     service_name="Docker disk usage - %s",
     discovery_function=discover_docker_node_disk_usage,

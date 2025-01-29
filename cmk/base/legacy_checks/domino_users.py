@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.domino import DETECT
+
+check_info = {}
 
 
 def inventory_domino_users(info):
@@ -32,6 +32,7 @@ def parse_domino_users(string_table: StringTable) -> StringTable:
 
 
 check_info["domino_users"] = LegacyCheckDefinition(
+    name="domino_users",
     parse_function=parse_domino_users,
     detect=DETECT,
     fetch=SNMPTree(

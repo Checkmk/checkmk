@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Users"""
+
 import datetime as dt
 import time
 from collections.abc import Mapping
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -20,6 +20,7 @@ from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollectio
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import (
@@ -31,7 +32,14 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
-from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
+from cmk.gui.watolib.users import (
+    delete_users,
+    edit_users,
+    user_features_registry,
+    verify_password_policy,
+)
+
+from cmk.crypto.password import Password
 
 TIMESTAMP_RANGE = tuple[float, float]
 
@@ -97,11 +105,7 @@ def show_user(params: Mapping[str, Any]) -> Response:
 def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
-    users = []
-    for user_id, attrs in load_users(False).items():
-        user_attributes = _internal_to_api_format(attrs)
-        users.append(serialize_user(user_id, complement_customer(user_attributes)))
-
+    users = [serialize_user(user_id, spec) for user_id, spec in load_users(False).items()]
     return serve_json(constructors.collection_object(domain_type="user_config", value=users))
 
 
@@ -140,7 +144,8 @@ def create_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": True,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 
@@ -156,7 +161,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
 def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
-    delete_users([username])
+    delete_users([username], user_features_registry.features().sites)
     return Response(status=204)
 
 
@@ -181,6 +186,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     api_attrs = params["body"]
 
     current_attrs = _load_user(username)
+    constructors.require_etag(constructors.hash_of_dict(current_attrs))
     internal_attrs = _api_to_internal_format(current_attrs, api_attrs)
 
     if connector_id := internal_attrs.get("connector"):
@@ -201,7 +207,8 @@ def edit_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": False,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 
@@ -216,18 +223,20 @@ def _identify_modified_attrs(initial_attrs: UserSpec, new_attrs: dict) -> set[st
 
 
 def serve_user(user_id):
-    user_attributes_internal = _load_user(user_id)
-    user_attributes = _internal_to_api_format(user_attributes_internal)
-    response = serve_json(serialize_user(user_id, complement_customer(user_attributes)))
-    return constructors.response_with_etag_created_from_dict(response, user_attributes)
+    user_spec = _load_user(user_id)
+    response = serve_json(serialize_user(user_id, user_spec))
+    return constructors.response_with_etag_created_from_dict(response, user_spec)
 
 
-def serialize_user(user_id, attributes):
+def serialize_user(
+    user_id: UserId,
+    user_spec: UserSpec,
+) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_config",
         identifier=user_id,
-        title=attributes["fullname"],
-        extensions=attributes,
+        title=user_spec["alias"],
+        extensions=complement_customer(_internal_to_api_format(user_spec)),
     )
 
 
@@ -278,7 +287,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
     return attrs
 
 
-def _internal_to_api_format(  # pylint: disable=too-many-branches
+def _internal_to_api_format(
     internal_attrs: UserSpec,
 ) -> dict[str, Any]:
     api_attrs: dict[str, Any] = {}
@@ -296,7 +305,7 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
     if "icons_per_item" in internal_attrs:
         iia["icons_per_item"] = internal_attrs["icons_per_item"]
     if "show_mode" in internal_attrs:
-        iia["show_mode"] = internal_attrs["show_mode"]  # type: ignore[typeddict-item]
+        iia["show_mode"] = internal_attrs["show_mode"]
     if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 
@@ -354,32 +363,31 @@ def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict
 class APIAuthOption(TypedDict, total=False):
     # TODO: this should be adapted with the introduction of an enum
     auth_type: Literal["automation", "password", "saml2", "ldap"]
+    store_automation_secret: NotRequired[bool]
     enforce_password_change: bool
 
 
 def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
-    result: APIAuthOption = {}
-
     # TODO: the default ConnectorType.HTPASSWD is currently a bug #CMK-12723 but not wrong
     connector = internal_attributes.get("connector", ConnectorType.HTPASSWD)
     if connector == ConnectorType.HTPASSWD:
-        if "automation_secret" in internal_attributes:
-            result["auth_type"] = "automation"
+        if internal_attributes.get("is_automation_user", False):
+            return APIAuthOption(
+                auth_type="automation",
+                store_automation_secret=internal_attributes.get("store_automation_secret", False),
+            )
         elif "password" in internal_attributes:
-            result["auth_type"] = "password"
-            if (
-                "enforce_pw_change" in internal_attributes
-                and (enforce_password_change := internal_attributes["enforce_pw_change"])
-                is not None
-            ):
-                result["enforce_password_change"] = enforce_password_change
-        return result
+            return APIAuthOption(
+                auth_type="password",
+                enforce_password_change=bool(internal_attributes.get("enforce_pw_change", False)),
+            )
 
     for connection in load_connection_config():
         if connection["id"] == connector:
-            result["auth_type"] = connection["type"]
+            return APIAuthOption(auth_type=connection["type"])
 
-    return result
+    # We probably should raise?
+    return APIAuthOption()
 
 
 def _contact_options_to_api_format(internal_attributes):
@@ -412,9 +420,9 @@ class ContactOptions(TypedDict, total=False):
     fallback_contact: bool
 
 
-def _contact_options_to_internal_format(  # type: ignore[no-untyped-def]
+def _contact_options_to_internal_format(
     contact_options: ContactOptions, current_email: str | None = None
-):
+) -> dict[str, str | bool]:
     updated_details: dict[str, str | bool] = {}
     if not contact_options:
         return updated_details
@@ -464,7 +472,9 @@ def _update_auth_options(
 
     if auth_options.get("auth_type") == "remove":
         internal_attrs.pop("automation_secret", None)
+        internal_attrs.pop("store_automation_secret", None)
         internal_attrs.pop("password", None)
+        internal_attrs["is_automation_user"] = False
         internal_attrs["serial"] = 1
     else:
         internal_auth_attrs = _auth_options_to_internal_format(auth_options)
@@ -507,7 +517,7 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
         >>> _auth_options_to_internal_format(
         ...     {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"}
         ... )  # doctest:+ELLIPSIS
-        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'last_pw_change': ...}
+        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'store_automation_secret': False, 'is_automation_user': True, 'last_pw_change': ...}
 
     Enforcing password change without changing the password:
 
@@ -553,9 +563,14 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
 
         if auth_type == "password":
             verify_password_policy(password)
+            internal_options["is_automation_user"] = False
 
         if auth_type == "automation":
             internal_options["automation_secret"] = password.raw
+            internal_options["store_automation_secret"] = bool(
+                auth_details.get("store_automation_secret", False)
+            )
+            internal_options["is_automation_user"] = True
 
         # In contrast to enforce_pw_change, the maximum password age is enforced for automation
         # users as well. So set this for both kinds of users.
@@ -574,7 +589,9 @@ class IdleDetails(TypedDict, total=False):
     duration: int
 
 
-def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type: ignore[no-untyped-def]
+def _update_idle_options(
+    internal_attrs: dict[str, Any], idle_details: IdleDetails
+) -> dict[str, Any]:
     if not idle_details:
         return internal_attrs
 
@@ -678,9 +695,9 @@ class NotificationDetails(TypedDict, total=False):
     disable: bool
 
 
-def _update_notification_options(  # type: ignore[no-untyped-def]
-    internal_attrs, notification_options: NotificationDetails
-):
+def _update_notification_options(
+    internal_attrs: dict[str, Any], notification_options: NotificationDetails
+) -> dict[str, Any]:
     internal_attrs["disable_notifications"] = _notification_options_to_internal_format(
         internal_attrs.get("disable_notifications", {}), notification_options
     )

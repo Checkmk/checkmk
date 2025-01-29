@@ -13,7 +13,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.userdb import user_attribute_registry
+from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk import fields
@@ -30,6 +30,12 @@ AUTH_SECRET = fields.String(
     description="For accounts used by automation processes (such as fetching data from views "
     "for further procession). This is the automation secret",
     example="DEYQEQQPYCFFBYH@AVMC",
+)
+AUTH_SECRET_STORE = fields.Boolean(
+    required=False,
+    description="If set to True, the secret will be stored unhashed in order to reuse it in rules.",
+    example=False,
+    load_default=False,
 )
 
 AUTH_CREATE_TYPE = fields.String(
@@ -50,6 +56,7 @@ AUTH_UPDATE_TYPE = fields.String(
 class AuthSecret(BaseSchema):
     auth_type = AUTH_CREATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthPassword(BaseSchema):
@@ -67,6 +74,7 @@ class AuthPassword(BaseSchema):
 class AuthUpdateSecret(BaseSchema):
     auth_type = AUTH_UPDATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthUpdatePassword(BaseSchema):
@@ -223,7 +231,7 @@ class CustomUserAttributes(BaseSchema):
             original_data.pop(field, None)
 
         for name, value in original_data.items():
-            attribute = user_attribute_registry.get(name)
+            attribute = dict(all_user_attributes()).get(name)
             if attribute is None:
                 raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
             if not attribute.is_custom():

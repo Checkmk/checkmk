@@ -17,13 +17,13 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |branch_name:....................(local)  │${branch_name}│
+        |safe_branch_name:...............(local)  │${safe_branch_name}│
         |branch_version:.................(local)  │${branch_version}│
         |===================================================
         """.stripMargin());
@@ -41,19 +41,16 @@ def main() {
             " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
             " --build-arg CI=1"
         );
-        // no support for 20.04, sorry
-        // python2 would be required, and the system Python does not support typing in "strip_binaries"
-        def ubuntu_versions = ["22.04", "23.04"];
+        def ubuntu_versions = ["22.04", "24.04"];
 
         dir("${checkout_dir}") {
             sh("""
                 cp \
                     .bazelversion \
                     defines.make \
-                    omd/strip_binaries \
+                    omd/strip_binaries.sh \
                     omd/distros/*.mk \
                     package_versions.bzl \
-                    static_variables.bzl \
                 buildscripts/infrastructure/build-nodes/scripts
             """);
         }
@@ -69,7 +66,7 @@ def main() {
                         );
                         print(THIS_DOCKER_ARGS);
 
-                        docker.build("test-install-development:${branch_name}-latest", THIS_DOCKER_ARGS);
+                        docker.build("test-install-development:${safe_branch_name}-latest", THIS_DOCKER_ARGS);
                     }
                 }];
             }

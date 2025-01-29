@@ -57,7 +57,7 @@ class Subject(BaseModel):
     organization: str | None = None
     org_unit: str | None = None
     pubkey_algorithm: PubKey | None = None
-    pubkey_size: str | None = None
+    pubkeysize: str | None = None
 
 
 class Certificate(BaseModel):
@@ -129,11 +129,11 @@ def generate_cert_services(
         endpoint.address = replace_macros(endpoint.address, macros)
         yield ActiveCheckCommand(
             service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
-            command_arguments=list(_command_arguments(endpoint)),
+            command_arguments=list(_command_arguments(endpoint, host_config)),
         )
 
 
-def _command_arguments(endpoint: CertEndpoint) -> Iterator[str]:
+def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str]:
     yield "--url"
     yield endpoint.address
 
@@ -149,15 +149,15 @@ def _command_arguments(endpoint: CertEndpoint) -> Iterator[str]:
     if (validity := settings.validity) is not None:
         yield from _validity_args(validity)
     if (cert_details := settings.cert_details) is not None:
-        yield from _cert_details_args(cert_details)
+        yield from _cert_details_args(cert_details, host_config)
 
 
 def _response_time_args(response_time: FloatLevels) -> Iterator[str]:
     match response_time:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time"
-            yield f"{int(warn * _MILLISECOND)}"
-            yield f"{int(crit * _MILLISECOND)}"
+            yield f"{round(warn, 3)}"
+            yield f"{round(crit, 3)}"
 
 
 def _validity_args(validity: Certificate) -> Iterator[str]:
@@ -174,24 +174,24 @@ def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
     match remaining:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
-            yield f"{round(warn / _DAY)}"
-            yield f"{round(crit / _DAY)}"
+            yield f"{int(round(warn))}"
+            yield f"{int(round(crit))}"
 
 
-def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:
+def _cert_details_args(cert_details: CertificateDetails, host_config: HostConfig) -> Iterator[str]:
     if (serialnumber := cert_details.serialnumber) is not None:
         yield "--serial"
         yield serialnumber
     if (signature_algorithm := cert_details.signature_algorithm) is not None:
         yield from _signature_algorithm_args(signature_algorithm)
     if (issuer := cert_details.issuer) is not None:
-        yield from _issuer_args(issuer)
+        yield from _issuer_args(issuer, host_config)
     if (subject := cert_details.subject) is not None:
-        yield from _subject_args(subject)
+        yield from _subject_args(subject, host_config)
     if (alt_names := cert_details.altnames) is not None:
         for alt_name in alt_names:
             yield "--subject-alt-names"
-            yield alt_name
+            yield replace_macros(alt_name, host_config.macros)
 
 
 def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterator[str]:
@@ -200,40 +200,40 @@ def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterat
     yield encryption_algorithm
 
 
-def _issuer_args(issuer: Issuer) -> Iterator[str]:
+def _issuer_args(issuer: Issuer, host_config: HostConfig) -> Iterator[str]:
     if (common_name := issuer.common_name) is not None:
         yield "--issuer-cn"
-        yield common_name
+        yield replace_macros(common_name, host_config.macros)
     if (org := issuer.organization) is not None:
         yield "--issuer-o"
-        yield org
+        yield replace_macros(org, host_config.macros)
     if (org_unit := issuer.org_unit) is not None:
         yield "--issuer-ou"
-        yield org_unit
+        yield replace_macros(org_unit, host_config.macros)
     if (state := issuer.state) is not None:
         yield "--issuer-st"
-        yield state
+        yield replace_macros(state, host_config.macros)
     if (country := issuer.country) is not None:
         yield "--issuer-c"
-        yield country
+        yield replace_macros(country, host_config.macros)
 
 
-def _subject_args(subject: Subject) -> Iterator[str]:
+def _subject_args(subject: Subject, host_config: HostConfig) -> Iterator[str]:
     if (common_name := subject.common_name) is not None:
         yield "--subject-cn"
-        yield common_name
+        yield replace_macros(common_name, host_config.macros)
     if (org := subject.organization) is not None:
         yield "--subject-o"
-        yield org
+        yield replace_macros(org, host_config.macros)
     if (org_unit := subject.org_unit) is not None:
         yield "--subject-ou"
-        yield org_unit
+        yield replace_macros(org_unit, host_config.macros)
     if (pubkey := subject.pubkey_algorithm) is not None:
         yield "--pubkey-algorithm"
         yield pubkey[0]
-    if (pubkey_size := subject.pubkey_size) is not None:
+    if (pubkey_size := subject.pubkeysize) is not None:
         yield "--pubkey-size"
-        yield pubkey_size
+        yield replace_macros(pubkey_size, host_config.macros)
 
 
 active_check_cert = ActiveCheckConfig(

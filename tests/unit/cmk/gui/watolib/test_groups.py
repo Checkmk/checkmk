@@ -82,6 +82,7 @@ multisite_contactgroups = {
             "service": {
                 "all_services": {
                     "alias": "All s\xe4rvices",
+                    "unknown": "field",
                 }
             },
             "contact": {
@@ -102,6 +103,7 @@ multisite_contactgroups = {
         assert groups_io.load_service_group_information() == {
             "all_services": {
                 "alias": "All s\xe4rvices",
+                "unknown": "field",
             }
         }
 

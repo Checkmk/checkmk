@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Checkmk agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns
@@ -201,6 +201,14 @@ CONFIGURATION CUSTOM SQLS:
 
                         By default the <item> is "<sid>|<sql-name>".
                         Can be set globally or within a section definition.
+                        If \$SQLS_MAX_CACHE_AGE is set and the section name is 'oracle_sql'
+                        then the cache information is appended to the instance header, ie.:
+
+                            <<<oracle_sql:sep(58)>>>
+                            [[[<item-1>|cached(<MTIME-1>,<MAX_AGE-1>)]]]
+                            ...
+                            [[[<item-2>|cached(<MTIME-2>,<MAX_AGE-2>)]]]
+                            ...
 
   SQLS_SECTION_SEP="<sep>"
                         Only useful if SQLS_SECTION_NAME is not 'oracle_sql'.
@@ -837,7 +845,7 @@ DECLARE
     l_vc_value  VARCHAR2(200);
     l_vc_unit   VARCHAR2(20);
     l_vc_sql    VARCHAR2(200);
-    l_vc_step   VARCHAR2(20);
+    l_vc_step   VARCHAR2(137);
 BEGIN
     dbms_output.enable(200000);
     l_i_cursor_id := dbms_sql.open_cursor(security_level => 2);
@@ -1711,7 +1719,7 @@ sql_version() {
 }
 
 sql_systemparameter() {
-    # TODO In the future, all data needed for HW/SW inventory, should
+    # TODO In the future, all data needed for HW/SW Inventory, should
     # implement a "persist:$UNTIL" to reduce amount of data transmission
     echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
     echo "select upper(i.instance_name)
@@ -2275,7 +2283,7 @@ do_custom_sqls() {
                 output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
                 handle_custom_sql_errors "$output"
             else
-                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
+                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}" "$section_name"
             fi
         fi
     done
@@ -2482,11 +2490,17 @@ run_cached() {
         return
     fi
 
-    NAME="oracle_${MK_SID}${3}"
     MAXAGE="${1}"
     # Attention: CMD will contain the shell function to be executed. Make sure to export all needed functions during
     # that execution (see e.g. export -f logging)
     CMD="${2}"
+    IDENTIFIER="${3}"
+    SECTION_NAME="${4}"
+    if [ "${SECTION_NAME}" = "oracle_sql" ]; then
+        NAME="oracle_${MK_SID}${IDENTIFIER}_${MAXAGE}"
+    else
+        NAME="oracle_${MK_SID}${IDENTIFIER}"
+    fi
 
     CREATION_TIMEOUT=$((MAXAGE * 2))
     OUTPUT_TIMEOUT=$((MAXAGE * 3))
@@ -2503,7 +2517,9 @@ run_cached() {
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
-        if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
+        if [ "${SECTION_NAME}" = "oracle_sql" ]; then
+            sed -e "s/^\[\[\[\(.*\)\]\]\]$/[[[\1|${CACHE_INFO}]]]/g" "${CACHEFILE}"
+        elif [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
             sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
@@ -2812,7 +2828,7 @@ EOM
         # we can not read sqlnet.ora!
         # set_ora_env already checked that the file exists
         # and we want to transport a meaningful error message to the ui and in logging
-        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! Either use 'sqlnet.ora permission group' bakery rule, or directly modify permissions of the file."
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! If you use the bakery to roll out the agent use 'sqlnet.ora permission group' setting of the 'Oracle databases' agent rule or directly modify permissions of the file (use 'mk_oracle --no-spool -t' for instructions)."
         logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
 
         echo '<<<oracle_instance:sep(124)>>>'
@@ -3211,7 +3227,7 @@ main_queries() {
     # => Ignore a running ASM-Instance!
     # shellcheck disable=SC2016
     SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |
-        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |
+        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_|^db_pmon_' |
         cut -d"_" -f3- | sort)
 
     # Load config AFTER we got the SIDS since we allow users to use this variable in their config

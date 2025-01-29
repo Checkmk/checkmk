@@ -15,9 +15,12 @@ from cmk.gui.utils.html import HTML
 
 def text_with_links_to_user_translated_html(
     elements: Iterable[tuple[str, str | None]],
-    separator: str = "",
+    separator: HTML | None = None,
 ) -> HTML:
-    return HTML(separator).join(
+    if separator is None:
+        separator = HTML.empty()
+
+    return separator.join(
         (
             HTMLWriter.render_a(user_translation, href=url, title=user_translation)
             if url

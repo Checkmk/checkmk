@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
-
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -105,7 +103,7 @@ def get_dynamodb_sections() -> DynamobSections:
     ) -> DynamobSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)

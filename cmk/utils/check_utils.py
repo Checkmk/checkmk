@@ -63,35 +63,3 @@ def maincheckify(subcheck_name: str) -> str:
     return subcheck_name.replace(".", "_").replace(  # subchecks don't exist anymore
         "-", "_"
     )  # "sap.value-groups"
-
-
-# (un)wrap_parameters:
-#
-# The old "API" allowed for check plugins to discover and use all kinds of parameters:
-# None, str, tuple, dict, int, ...
-# The new API will only allow None and a dictionary. Since this is enforced by the API,
-# we need some wrapper functions to wrap the parameters of legacy functions into a
-# dictionary to pass validation. Since the merging of check parameters is quite convoluted
-# (in particular if dict and non-dict values are merged), we unwrap the parameters once
-# they have passed validation.
-# In a brighter future all parameters ever encountered will be dicts, and these functions
-# may be dropped.
-
-_PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
-
-
-def wrap_parameters(parameters: Any) -> ParametersTypeAlias:
-    """wrap the passed data structure in a dictionary, if it isn't one itself"""
-    if isinstance(parameters, dict):
-        return parameters
-    return {_PARAMS_WRAPPER_KEY: parameters}
-
-
-def unwrap_parameters(parameters: ParametersTypeAlias) -> Any:
-    if set(parameters) == {_PARAMS_WRAPPER_KEY}:
-        return parameters[_PARAMS_WRAPPER_KEY]
-    # Note: having *both* the wrapper key and other keys can only happen, if we
-    # merge wrapped (non dict) legacy parameters with newer configured (dict) parameters.
-    # In this case the the plug-in can deal with dicts, and will ignore the wrapper key anyway.
-    # Still: cleaning it up here is less confusing.
-    return {k: v for k, v in parameters.items() if k != _PARAMS_WRAPPER_KEY}

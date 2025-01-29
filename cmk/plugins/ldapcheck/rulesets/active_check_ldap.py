@@ -47,7 +47,7 @@ def _make_parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This check uses <tt>check_ldap</tt> from the standard "
-            "Nagios plugins in order to try the response of an LDAP "
+            "Nagios plug-ins in order to try the response of an LDAP "
             "server."
         ),
         elements={
@@ -55,8 +55,8 @@ def _make_parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Name"),
                     help_text=Help(
-                        "The service description will be <b>LDAP</b> plus this name. If the name starts with "
-                        "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>."
+                        "The service name will be <b>LDAP</b> plus this name. If the name starts with "
+                        "a caret (<tt>^</tt>), the service name will not be prefixed with <tt>LDAP</tt>."
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
                     macro_support=True,
@@ -133,7 +133,7 @@ def _make_parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Alternative host name"),
                     help_text=Help(
-                        "Use a alternative field as host name in case of SSL Certificate Problems (eg. the Hostalias )"
+                        "Use a alternative field as host name in case of SSL Certificate Problems (e.g. the Hostalias )"
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
                     prefill=DefaultValue("$HOSTALIAS$"),

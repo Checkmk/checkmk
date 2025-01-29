@@ -13,6 +13,7 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
+
 import datetime
 from collections.abc import Sequence
 from typing import Any, Literal
@@ -199,9 +200,9 @@ class LunModel(BaseModel):
 
     name: str
     space_size: int
-    space_used: int
+    space_used: int | None = None
     enabled: bool
-    read_only: bool
+    read_only: bool | None = None
     svm_name: str
     volume_name: str
 
@@ -209,6 +210,8 @@ class LunModel(BaseModel):
         return self.space_size / MEGA
 
     def free_space(self) -> float:
+        if self.space_used is None:
+            raise ValueError("space_used must be available to calculate free space")
         return (self.space_size - self.space_used) / MEGA
 
     def item_name(self) -> str:
@@ -484,8 +487,6 @@ class ShelfFanModel(ShelfObjectModel):
     ============
     """
 
-    rpm: int
-
 
 class ShelfTemperatureModel(ShelfObjectModel):
     """
@@ -511,7 +512,8 @@ class ShelfTemperatureModel(ShelfObjectModel):
     ============
     """
 
-    temperature: int
+    temperature: int | None
+    state: Literal["ok", "error"]
     ambient: bool
 
     low_warning: int | None = None
@@ -609,12 +611,11 @@ class QtreeQuotaModel(BaseModel):
     ============
     """
 
-    type_: str
-    name: str
+    name: str | None = None
     volume: str
     hard_limit: int | None = None
     used_total: int | None = None
-    users: str | None = None
+    users: Sequence[str]
 
 
 class SnapMirrorModel(BaseModel):

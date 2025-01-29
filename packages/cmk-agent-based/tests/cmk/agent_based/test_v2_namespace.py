@@ -13,8 +13,6 @@
 +---------------------------------------------------------+
 """
 
-# pylint: disable=duplicate-code
-
 from types import ModuleType
 
 from cmk.agent_based import v2

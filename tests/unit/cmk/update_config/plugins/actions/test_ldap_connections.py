@@ -85,7 +85,7 @@ def test_update_ldap_connection_directory_type() -> None:
         "type": "ldap",
     }
     with gui_context():
-        UserConnectionConfigFile().save_without_validation([connection])
+        UserConnectionConfigFile().save([connection])  # type: ignore[list-item]
 
         UpdateLDAPConnections(
             name="update_ldap_connections",
@@ -121,7 +121,7 @@ def test_update_ldap_connection_separate_server_and_directory_type() -> None:
         "type": "ldap",
     }
     with gui_context():
-        UserConnectionConfigFile().save_without_validation([connection])
+        UserConnectionConfigFile().save([connection])  # type: ignore[list-item]
 
         UpdateLDAPConnections(
             name="update_ldap_connections",

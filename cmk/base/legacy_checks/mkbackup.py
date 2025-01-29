@@ -35,10 +35,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_mkbackup(string_table):
@@ -114,7 +114,8 @@ def check_mkbackup(job_state):
             yield 1, "Schedule is currently disabled"
 
         elif next_run is not None:
-            if next_run < time.time():
+            # add a 30 seconds buffer to prevent a critical when the backup is about to start
+            if next_run < time.time() + 30:
                 state = 2
             else:
                 state = 0
@@ -135,6 +136,7 @@ def check_mkbackup_system(item, _no_params, parsed):
 
 
 check_info["mkbackup"] = LegacyCheckDefinition(
+    name="mkbackup",
     parse_function=parse_mkbackup,
     service_name="Backup %s",
     discovery_function=inventory_mkbackup_system,
@@ -158,6 +160,7 @@ def check_mkbackup_site(item, _no_params, parsed):
 
 
 check_info["mkbackup.site"] = LegacyCheckDefinition(
+    name="mkbackup_site",
     service_name="OMD %s",
     sections=["mkbackup"],
     discovery_function=inventory_mkbackup_site,

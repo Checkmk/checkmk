@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
+
 from ._cisco_webex_teams import NotificationParameterCiscoWebexTeams
 from ._ilert import NotificationParameterILert
 from ._jira_issues import NotificationParameterJiraIssues
@@ -11,7 +13,6 @@ from ._ms_teams import NotificationParameterMsTeams
 from ._opsgenie_issues import NotificationParameterOpsgenie
 from ._pagerduty import NotificationParameterPagerDuty
 from ._pushover import NotificationParameterPushover
-from ._registry import NotificationParameterRegistry
 from ._servicenow import NotificationParameterServiceNow
 from ._signl4 import NotificationParameterSIGNL4
 from ._slack import NotificationParameterSlack

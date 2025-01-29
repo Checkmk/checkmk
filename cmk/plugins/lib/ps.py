@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from html import escape
 from typing import Any, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -170,14 +170,14 @@ def replace_service_description(service_description, match_groups, pattern):
         description_template = description_template.replace("%s", "{%d}" % number, 1)
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
-    # then the service description. In that case only the first
+    # then the service name. In that case only the first
     # subexpressions are used as item.
     try:
         # First argument is None, because format is zero indexed
         return description_template.format(None, *(g or "" for g in match_groups))
     except IndexError:
         raise ValueError(
-            "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
+            "Invalid entry in inventory_processes_rules: service name '%s' contains %d "
             "replaceable elements, but regular expression %r contains only %d subexpression(s)."
             % (service_description, total_replacements_count, pattern, len(match_groups))
         )
@@ -327,7 +327,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, cpu_cores: int, params: Mapping[str, Any]) -> None:
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
@@ -353,7 +353,7 @@ class ProcessAggregator:
         self.processes.append(process)
 
     def core_weight(self, is_win):
-        cpu_rescale_max = self.params.get("cpu_rescale_max")
+        cpu_rescale_max = self.params["cpu_rescale_max"]
 
         if any(
             (
@@ -370,22 +370,18 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(  # type: ignore[no-untyped-def]
-        self, process_info, process: _Process, ps_time: int
-    ):
+    def lifetimes(self, process_info: PsInfo, process: _Process, ps_time: int) -> None:
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
-        if "/" in process_info.cputime:
+        if process_info.cputime is not None and "/" in process_info.cputime:
             elapsed_text = process_info.cputime.split("/")[1]
+        # uptime is a windows only value, introduced in Werk 4029. For future consistency should be
+        # moved to the cputime entry and separated by a /
+        elif process_info.uptime:
+            elapsed_text = process_info.uptime
         else:
-            # uptime is a windows only value, introduced in Werk 4029. For
-            # future consistency should be moved to the cputime entry and
-            # separated by a /
-            if process_info.uptime:
-                elapsed_text = process_info.uptime
-            else:
-                elapsed_text = None
+            elapsed_text = None
 
         if elapsed_text:
             elapsed = parse_ps_time(elapsed_text)
@@ -401,9 +397,15 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(  # type: ignore[no-untyped-def]
-        self, value_store, process_info, process: _Process, ps_time: int
-    ):
+    def cpu_usage(
+        self,
+        value_store: MutableMapping[str, Any],
+        process_info: PsInfo,
+        process: _Process,
+        ps_time: int,
+    ) -> None:
+        if process_info.cputime is None:
+            raise ValueError("cputime is None")
         pcpu_text = process_info.cputime.split("/")[0]
 
         if ":" in pcpu_text:  # In linux is a time
@@ -412,7 +414,8 @@ class ProcessAggregator:
             cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, ps_time, total_seconds)
 
             pcpu = cputime * 100 * self.core_weight(is_win=False)
-            process.append(("pid", (pid, "")))
+            if pid is not None:
+                process.append(("pid", (pid, "")))
 
         # windows cpu times
         elif process_info.usermode_time and process_info.kernelmode_time:
@@ -435,11 +438,12 @@ class ProcessAggregator:
             pcpu = user_perc + kernel_perc
             process.append(("cpu usage (user space)", (user_perc, "%")))
             process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
-            process.append(("pid", (pid, "")))
+            if pid is not None:
+                process.append(("pid", (pid, "")))
 
         else:  # Solaris, BSD, aix cpu times
             if pcpu_text == "-":  # Solaris defunct
-                pcpu_text = 0.0
+                pcpu_text = "0.0"
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
             if (pid := process_info.process_id) is not None:
                 process.append(("pid", (pid, "")))
@@ -616,7 +620,7 @@ def count_check(
     info_name: str,
 ) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
-    yield from check_levels(
+    yield from check_levels_v1(
         processes.count,
         metric_name="count",
         levels_lower=(okmin, warnmin),
@@ -725,7 +729,7 @@ def check_averageable_metric(
     else:
         infotext = metric_name
 
-    yield from check_levels(
+    yield from check_levels_v1(
         metric_value,
         levels_upper=levels,
         render_func=render_fn,
@@ -808,7 +812,7 @@ def individual_process_check(
             if levels is None or metric_value is None:
                 continue
 
-            check_result, *_ = check_levels(
+            check_result, *_ = check_levels_v1(
                 metric_value,
                 levels_upper=levels,
                 render_func=render_fn,
@@ -829,7 +833,7 @@ def uptime_check(
 ) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
-        yield from check_levels(
+        yield from check_levels_v1(
             min_elapsed,
             levels_lower=params.get("min_age"),
             levels_upper=params.get("max_age"),
@@ -846,14 +850,14 @@ def uptime_check(
             levels=params.get("max_age"),
         )
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             min_elapsed,
             metric_name="age_youngest",
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
         )
-        yield from check_levels(
+        yield from check_levels_v1(
             max_elapsed,
             metric_name="age_oldest",
             levels_upper=params.get("max_age"),
@@ -866,7 +870,7 @@ def handle_count_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         processes.handle_count,
         metric_name="process_handles",
         levels_upper=params.get("handle_count"),

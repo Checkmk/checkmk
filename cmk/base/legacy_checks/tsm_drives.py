@@ -32,10 +32,10 @@
 # POLLING?
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_tsm_drives(info):
@@ -84,6 +84,7 @@ def parse_tsm_drives(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_drives"] = LegacyCheckDefinition(
+    name="tsm_drives",
     parse_function=parse_tsm_drives,
     service_name="TSM Drive %s",
     discovery_function=inventory_tsm_drives,

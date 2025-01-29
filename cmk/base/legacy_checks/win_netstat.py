@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netstat import check_netstat_generic
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent (German Windows XP)
 # <<<win_netstat>>>
@@ -68,6 +70,7 @@ def parse_win_netstat(string_table):
 
 
 check_info["win_netstat"] = LegacyCheckDefinition(
+    name="win_netstat",
     parse_function=parse_win_netstat,
     service_name="TCP Connection %s",
     check_function=check_netstat_generic,

@@ -9,10 +9,10 @@ from typing import Final
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 
-import cmk.utils.msi_engine as msi_engine
+from cmk.utils import msi_engine
 
 MSI_LOCATION: Final = "share/check_mk/agents/windows"
 EXPECTED_EXECUTABLES: Final = ["msiinfo", "msibuild", "lcab"]
@@ -28,12 +28,12 @@ TEST_MSI_FILE: Final = Path(
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
 def test_executables(site: Site, executable: Path) -> None:
-    p = Path(site.path("bin")) / executable
+    p = site.path("bin") / executable
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 
 
 def _get_msi_file_path_standard(site: Site) -> Path:
-    return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
+    return site.path(MSI_LOCATION) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
 # check the export with site/bin tools

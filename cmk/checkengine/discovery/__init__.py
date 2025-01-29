@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._active_check import execute_check_discovery
 from ._autochecks import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksManager,
     AutochecksStore,
+    merge_cluster_autochecks,
     remove_autochecks_of_host,
+    set_autochecks_for_effective_host,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
@@ -22,7 +25,6 @@ from ._commandline import commandline_discovery
 from ._discovery import DiscoveryPlugin
 from ._filters import RediscoveryParameters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._impl import execute_check_discovery
 from ._params import DiscoveryCheckParameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
@@ -58,4 +60,6 @@ __all__ = [
     "remove_autochecks_of_host",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
+    "set_autochecks_for_effective_host",
+    "merge_cluster_autochecks",
 ]

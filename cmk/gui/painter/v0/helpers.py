@@ -78,13 +78,11 @@ def render_cache_info(what: str, row: Row) -> str:
 
 
 def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) -> CellSpec:
-    return "", HTML(
-        ", ".join(
-            get_host_list_links(
-                site,
-                [str(host) for host in hosts],
-                request=request,
-            )
+    return "", HTML.without_escaping(", ").join(
+        get_host_list_links(
+            site,
+            [str(host) for host in hosts],
+            request=request,
         )
     )
 
@@ -129,7 +127,7 @@ class RenderLink:
         request: http.Request,
         response: http.Response,
         display_options: DisplayOptions,
-    ):  # pylint: disable=redefined-outer-name
+    ):
         self.request = request
         self.response = response
         self.display_options = display_options
@@ -142,7 +140,7 @@ class RenderLink:
         **attributes: HTMLTagAttributeValue,
     ) -> HTML:
         if self.display_options.disabled(self.display_options.I):
-            return HTML()
+            return HTML.empty()
 
         return HTMLWriter.render_a(html_text, href=url, **attributes)
 

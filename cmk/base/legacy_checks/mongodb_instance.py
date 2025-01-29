@@ -8,10 +8,10 @@
 # address 10.1.2.4
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_mongodb_instance(info):
@@ -31,6 +31,7 @@ def parse_mongodb_instance(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_instance"] = LegacyCheckDefinition(
+    name="mongodb_instance",
     parse_function=parse_mongodb_instance,
     service_name="MongoDB Instance",
     discovery_function=inventory_mongodb_instance,

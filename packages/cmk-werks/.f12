@@ -11,7 +11,7 @@ SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-pipenv run pip wheel --no-deps --wheel-dir build .
+../../scripts/run-bazel.sh build ":wheel"
 
 # pip installs the package in the user directory in case of missing permissions
 # this might be surprising and hard to spot, so we force the global installation
@@ -23,7 +23,7 @@ export PYTHONNOUSERSITE=1
     --upgrade \
     --force-reinstall \
     --isolated \
-    ./build/*-*-py3-none-any.whl
+    "$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")"
 
 if [ -z "$ONLY_COPY" ]; then
     sudo --login -u "$SITE" -- bash -c "omd reload apache"

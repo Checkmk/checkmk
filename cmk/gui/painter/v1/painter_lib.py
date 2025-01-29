@@ -6,8 +6,9 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
+import cmk.ccc.plugin_registry
+
 import cmk.utils
-import cmk.utils.plugin_registry
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
@@ -27,7 +28,7 @@ class PainterConfiguration:
 
 
 def strip_css_from_cell_spec(
-    html_formatter: Callable[[T, PainterConfiguration], CellSpec]
+    html_formatter: Callable[[T, PainterConfiguration], CellSpec],
 ) -> Callable[[T, PainterConfiguration], str]:
     def css_remover(painter_data: T, painter_configuration: PainterConfiguration) -> str:
         return str(html_formatter(painter_data, painter_configuration)[1])
@@ -88,7 +89,7 @@ class Painter(Generic[T]):
         return self.ident
 
 
-class ExperimentalPainterRegistry(cmk.utils.plugin_registry.Registry[Painter]):
+class ExperimentalPainterRegistry(cmk.ccc.plugin_registry.Registry[Painter]):
     def plugin_name(self, instance):
         return instance.ident
 

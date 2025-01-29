@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/* eslint-disable import/no-namespace -- Needed for exports */
 import * as forms from "./modules/forms";
 import * as graphs from "./modules/graphs";
 

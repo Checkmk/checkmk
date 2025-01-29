@@ -1,0 +1,24 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+filegroup(
+    name = "mailxsrc",
+    srcs = glob([
+        "**",
+    ]),
+)
+
+make(
+    name = "heirloom-mailx",
+    args = ["UCBINSTALL=install"],  # We need this in order to override the install command of heirloom's Makefile
+    lib_source = ":mailxsrc",
+    out_bin_dir = "",
+    out_binaries = [
+        "bin/mailx",
+        "share/man/man1/mailx.1",
+    ],
+    targets = [
+        "all",
+        "install",
+    ],
+    visibility = ["//visibility:public"],
+)

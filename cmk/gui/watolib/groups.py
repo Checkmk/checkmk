@@ -8,22 +8,18 @@ import re
 from collections.abc import Callable
 from typing import Any, Literal
 
-import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import (
-    AllGroupSpecs,
-    GroupName,
-    GroupSpec,
-    GroupSpecs,
-    GroupType,
-)
-from cmk.utils.notify_types import EventRule
-from cmk.utils.plugin_registry import Registry
-from cmk.utils.regex import GROUP_NAME_PATTERN
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_spec_alias
+import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
 
-import cmk.gui.hooks as hooks
+from cmk.utils import paths
+from cmk.utils.notify_types import EventRule
+from cmk.utils.regex import GROUP_NAME_PATTERN
+from cmk.utils.timeperiod import timeperiod_spec_alias
+
+from cmk.gui import hooks
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -50,6 +46,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 
@@ -98,7 +95,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
 
     _set_group(all_groups, group_type, name, extra_info)
     customer = customer_api()
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         old_customer = customer.get_customer_id(old_group_backup)
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:
@@ -278,17 +275,17 @@ def is_alias_used(
 
     # Timeperiods
     timeperiods = load_timeperiods()
-    for key, value in timeperiods.items():
-        if timeperiod_spec_alias(value) == my_alias and (
-            my_what != "timeperiods" or my_name != key
+    for timeperiod_id, timeperiod_spec in timeperiods.items():
+        if timeperiod_spec_alias(timeperiod_spec) == my_alias and (
+            my_what != "timeperiods" or my_name != timeperiod_id
         ):
-            return False, _("This alias is already used in time period %s.") % key
+            return False, _("This alias is already used in time period %s.") % timeperiod_id
 
     # Roles
     roles = load_roles()
-    for key, value in roles.items():
-        if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
-            return False, _("This alias is already used in the role %s.") % key
+    for role_id, role_spec in roles.items():
+        if role_spec.get("alias") == my_alias and (my_what != "roles" or my_name != role_id):
+            return False, _("This alias is already used in the role %s.") % role_id
 
     return True, None
 
@@ -370,7 +367,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                         ),
                     )
                 )
-        result: HTML = HTML(", ").join(texts)
+        result: HTML = HTML.without_escaping(", ").join(texts)
         if texts and value["use"]:
             result += HTMLWriter.render_span(
                 HTMLWriter.render_b("*"),

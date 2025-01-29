@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for Setup internals and the Setup plugins"""
 
+# ruff: noqa: F401
+
 # TODO: More feature related splitting up would be better
 
 import abc
@@ -14,20 +16,18 @@ from typing import Any, cast, Literal
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
-import cmk.utils.plugin_registry
-import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.plugin_registry
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.gui.forms as forms
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.rulespecs as _rulespecs
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, hooks, userdb, weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -40,7 +40,6 @@ from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.site_config import is_wato_slave_site as is_wato_slave_site
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.transaction_manager import transactions as transactions
 from cmk.gui.utils.urls import make_confirm_link as make_confirm_link

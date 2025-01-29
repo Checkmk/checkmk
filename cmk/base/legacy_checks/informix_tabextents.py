@@ -8,8 +8,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_informix_tabextents(string_table):
@@ -65,6 +66,7 @@ def check_informix_tabextents(item, params, parsed):
 
 
 check_info["informix_tabextents"] = LegacyCheckDefinition(
+    name="informix_tabextents",
     parse_function=parse_informix_tabextents,
     service_name="Informix Table Extents %s",
     discovery_function=inventory_informix_tabextents,

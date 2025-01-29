@@ -41,7 +41,7 @@ def _valuespec_inventory_multipath_rules():
             ),
         ],
         help=_(
-            "This rule controls whether the UUID or the alias is used in the service description during "
+            "This rule controls whether the UUID or the alias is used in the service name during "
             "discovery of Multipath devices on Linux."
         ),
     )

@@ -6,20 +6,17 @@
 #
 # 2017 comNET GmbH, Bjoern Mueller
 
-
-# mypy: disable-error-code="no-untyped-def"
-
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.kentix import DETECT_KENTIX
+
+check_info = {}
 
 
 @dataclass(frozen=True)
@@ -48,7 +45,10 @@ def inventory_kentix_motion(section: Section) -> Iterable[tuple[str, dict]]:
 def check_kentix_motion(
     item: str, params: Mapping[str, Any], section: Section
 ) -> Iterable[tuple[int, str, list]]:
-    def test_in_period(time_tuple, periods) -> bool:
+    def test_in_period(
+        time_tuple: tuple[int, int],
+        periods: Sequence[tuple[tuple[int, int], tuple[int, int]]],
+    ) -> bool:
         time_mins = time_tuple[0] * 60 + time_tuple[1]
         for per in periods:
             per_mins_low = per[0][0] * 60 + per[0][1]
@@ -83,6 +83,7 @@ def check_kentix_motion(
 
 
 check_info["kentix_motion"] = LegacyCheckDefinition(
+    name="kentix_motion",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(

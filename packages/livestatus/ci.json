@@ -1,9 +1,4 @@
 {
-    "command_line": "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ./run --clean --all",
-    "maintainers": ["team-main@checkmk.com"],
-    "dependencies": [
-        "third_party/asio/",
-        "third_party/googletest/",
-        "third_party/re2/"
-    ]
+    "command_line": "BAZEL_CMD=../../scripts/run-bazel.sh ./run --clean --all",
+    "maintainers": ["team-main@checkmk.com"]
 }

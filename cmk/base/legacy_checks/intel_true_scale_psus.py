@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+
+check_info = {}
 
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.2.1 Power Supply 201 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.2.1
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.3.2 Power Supply 202 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.3.2
@@ -80,14 +81,16 @@ def inventory_intel_true_scale_psus(parsed):
 def check_intel_true_scale_psus(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        yield state, "Operational status: {}, Source: {}".format(
-            state_readable, parsed[item]["source"]
+        yield (
+            state,
+            "Operational status: {}, Source: {}".format(state_readable, parsed[item]["source"]),
         )
 
         yield from check_elphase(item, params, parsed)
 
 
 check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
+    name="intel_true_scale_psus",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.4.7.1",

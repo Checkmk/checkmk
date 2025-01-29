@@ -178,7 +178,7 @@ class ObjectCollectionMember(ObjectMemberBase):
     value = fields.List(fields.Nested(LinkSchema()))
     name = fields.String(example="important_values")
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
 
 
@@ -198,7 +198,7 @@ class ObjectPropertyMember(ObjectMemberBase):
     name = fields.String(example="important")
     value = fields.String(example="the value")
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
 
 
@@ -207,7 +207,7 @@ class ObjectActionMember(ObjectMemberBase):
     parameters = fields.Dict()
     name = fields.String(example="frobnicate_foo")
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
 
 
@@ -287,7 +287,7 @@ class DomainObjectBase(BaseSchema):
         description="The unique identifier for this domain-object type.",
     )
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
     members: gui_fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
@@ -354,7 +354,7 @@ class DomainObjectBaseCollection(BaseSchema):
         description="The domain type of the objects in the collection."
     )
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
     value: gui_fields.Field = fields.Nested(
         CollectionItem,
@@ -375,7 +375,7 @@ class VersionCapabilities(BaseSchema):
     deleteObjects = fields.Boolean(
         required=False,
         description=(
-            "deletion of persisted objects through the DELETE Object resource C14.3," " see A3.5"
+            "deletion of persisted objects through the DELETE Object resource C14.3, see A3.5"
         ),
     )
     domainModel = fields.String(
@@ -456,4 +456,32 @@ class BackgroundJobStatus(BaseSchema):
         required=True,
         description="Logs related to the background job.",
         example={"result": ["result1"], "progress": ["progress1"]},
+    )
+
+
+class VerificationRequest(BaseSchema):
+    """License verification request"""
+
+    VERSION = fields.String(required=True, description="The version of the request", example="3.0")
+    request_id = fields.String(
+        required=True,
+        description="The ID of the request",
+        example="df17e557-0daf-4b78-b9f2-f3550252a8b5",
+    )
+    instance_id = fields.String(
+        required=True,
+        description="The ID of the instance the request is for",
+        example="6b9e78d1-de99-46ef-9644-32ee33a2b489",
+    )
+    created_at = fields.Integer(
+        required=True, description="The creation timestamp", example=1690379907
+    )
+    upload_origin = fields.String(
+        required=True, description="How the request was uploaded", example="manual"
+    )
+    raw_reports = fields.List(
+        fields.Dict,
+        required=True,
+        description="The license usage reports",
+        example=[{}],
     )

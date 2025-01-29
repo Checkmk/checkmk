@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3 -P
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -6,10 +6,11 @@
 import sys
 from typing import Final
 
+import cmk.ccc.store
+from cmk.ccc.version import __version__, parse_check_mk_version
+
 import cmk.utils.paths
-import cmk.utils.store
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import __version__, parse_check_mk_version
 from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -20,7 +21,7 @@ from cmk.mkp_tool import (
     make_post_package_change_actions,
     PackageStore,
     PathConfig,
-    reload_apache,
+    reload_services_affected_by_mkp_changes,
 )
 
 _PATH_CONFIG = PathConfig(
@@ -56,7 +57,11 @@ _SITE_CONTEXT: Final = cli.SiteContext(
     ),
     callbacks=ec.mkp_callbacks(),
     post_package_change_actions=make_post_package_change_actions(
-        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
+        on_any_change=(
+            reload_services_affected_by_mkp_changes,
+            invalidate_visuals_cache,
+            request_index_rebuild,
+        )
     ),
     version=__version__,
     parse_version=parse_check_mk_version,
@@ -69,6 +74,6 @@ if __name__ == "__main__":
             sys.argv[1:] or ["--help"],
             _PATH_CONFIG,
             _SITE_CONTEXT,
-            cmk.utils.store.save_bytes_to_file,
+            cmk.ccc.store.save_bytes_to_file,
         )
     )

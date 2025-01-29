@@ -34,8 +34,10 @@ In general, we follow the standard GitHub workflow which roughly works like this
  5. Submit a **Pull request** (PR) so that we can review your changes
  6. Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@checkmk.com ([further information](./doc/cla/cla_readme.md)).
 
- ⚠ Please reply when asked for more information or to update your PR in case in didn't meet the requirements (e.g. failed checks).
-If there's no response from the author for a longer period of time, we will close the PR (after giving you a heads up).
+ ⚠ Please reply when asked for more information or update your PR in case in didn't meet the requirements (e.g. failed checks).
+If there is no response from the author or the checks do not pass within 14 days, the PR will be considered stale.
+If there is still no response or the checks are not passing after 60 days, the PR will be closed.
+You will be notified in both cases.
 
 If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/).
 You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
@@ -160,7 +162,7 @@ Once done, you are ready for the next chapter.
 
     On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
 
-    The Travis CI bot will start testing your commits for issues.
+    The Github Actions CI bot will start testing your commits for issues.
     In case there are issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
 
 ### Help: I have a conflict
@@ -185,7 +187,7 @@ $ git pull --rebase upstream master
 
 ### Help: I need to change my commits
 
-In case Travis notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
+In case Github Actions notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
 Be sure, we don't want to upset you :-).
 
 There are several ways to update your changes in Git.
@@ -195,32 +197,29 @@ This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-
 
 ## How to execute tests
 
-The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Travis CI.
-Each time a Pull request is submitted, Travis will have a look at the changes.
+The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Github Actions CI.
+Each time a Pull request is submitted, Github Actions will have a look at the changes.
 
-**⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
+**⚠ Important:** We only review PRs that are confirmed to be OK by Github Actions.
 If a check failed, please fix it and update the PR.
-PRs will be closed if the author didn't respond for at least 14 days.
+PRs will be considered stale if the author didn't respond for at least 14 days.
+It will be automatically closed after 60 days, if there is still no reply.
 
 It is recommended to run all tests locally before submitting a PR.
 If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
 
 ```console
-$ make -C tests test-pylint
+$ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
 $ make -C tests test-format-python
 $ make -C tests test-mypy-raw
 ```
 
-Some of these commands take several minutes, for example the command `test-format-python` because it tests the formatting of the whole code base.
-Normally you only change a small set of files in your commits.
-If you execute `black [filename]` to format the changed code, this should be enough and you don't need to execute the formatting test at all.
-
-> We highly recommend integrating black, isort, pylint and mypy into the editor you work with.
+> We highly recommend integrating ruff and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
-You could also push your changes to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
+You could also push your changes to your forked repository and wait for Github Actions to execute the tests for you, but that takes several minutes for each try.
 
 ## Style guide
 
@@ -460,53 +459,38 @@ def worst_service_state(*states: int, default: int) -> int:
 
 * We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
-* We use Black for automatic formatting of the Python code.
+* We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-* We use isort for automatic sorting of imports in Python code.
+* We use also `ruff` for automatic sorting of imports in Python code.
 
-### Automatic formatting with black and isort
+### Automatic formatting/sorting with ruff
 
-The black configuration file, `pyproject.toml`, lives in the root directory of the project repository, where Black picks it up automatically.
-Black itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python-black` or `scripts/run-pipenv run black`.
+The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
+`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format-python`.
 
-The imports are also sorted with isort.
-Configuration is in `pyproject.toml` file in the root directory of the project repository.
-If you have isort installed in you virtualenv you can run it with `make format-python-isort`
+This make target will then format your code base as well as sort the import statements.
 
-#### Manual black invocation: Single file
+*NOTE*: You will also find other `pyproject.toml` files in our code base (at the time of writing, e.g. under `packges/cmk-*`).
+Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
+
+#### Manual ruff formatting invocation: Single file
 
 ```console
-black [the_file.py]
+ruff format [the_file.py]
 ```
 
-#### Manual isort invocation: Single file
+#### Manual ruff import sorting invocation: Single file
 
 ```console
-$ isort [the_file.py]
+$ run ruff check --select I --fix [the_file.py]
 
 # or with pre-commit installed
-$ pre-commit run isort
-```
-
-#### Manual black invocation: Whole code base
-
-If you want to black format all Python files in the repository, you can run:
-
-```console
-$ make format-python-black
-```
-
-#### Manual isort invocation: Whole code base
-
-If you want to isort format all Python files in the repository, you can run:
-
-```console
-$ make format-python-isort
+$ pre-commit run ruff
 ```
 
 #### Integration with CI
 
-Our CI executes black and isort formatting test on the whole code base:
+Our CI executes `ruff` formatting/sorting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python
@@ -514,9 +498,9 @@ $ make -C tests test-format-python
 
 Our review tests jobs prevent un-formatted code from being added to the repository.
 
-#### Editor integration with black:
+#### Editor integration with ruff:
 
-[Black editor integration](https://black.readthedocs.io/en/stable/integrations/editors.html)
+[Ruff editor integration](https://docs.astral.sh/ruff/editors/)
 
 ### Type checking: mypy
 
@@ -950,8 +934,8 @@ Some of them are:
 
 ### Consistency
 
-Be consistent in the terms you use for a thing.
-E.g. in case for a server one could say something like "host", "system", "server" or "device".
+Be consistent in the terms you use for a thing,
+e.g. in case of a server one could say something like "host", "system", "server" or "device".
 Decide to use one name for one thing and use it consistently in all translations.
 
 ## Copyright and Licensing

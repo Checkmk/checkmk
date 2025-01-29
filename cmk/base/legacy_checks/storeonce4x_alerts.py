@@ -8,8 +8,9 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[Literal["alerts"], Sequence[Mapping[str, Any]]]
 
@@ -56,6 +57,7 @@ def check_storeonce4x_alerts(_item, _param, parsed):
 
 
 check_info["storeonce4x_alerts"] = LegacyCheckDefinition(
+    name="storeonce4x_alerts",
     parse_function=parse_storeonce4x_alerts,
     service_name="Alerts",
     discovery_function=discover_storeonce4x_alerts,

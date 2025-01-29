@@ -6,12 +6,13 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 
@@ -25,14 +26,14 @@ def discover_couchbase_buckets_mem(section: Section) -> DiscoveryResult:
 def check_couchbase_bucket_mem(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     try:
         yield check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_free"],
             data["mem_total"],
-            (mode, (warn, crit)),
+            (mode, levels),
             metric_name="memused_couchbase_bucket",
         )
     except (KeyError, TypeError):
@@ -60,9 +61,11 @@ def check_couchbase_bucket_mem(item, params, parsed):
 
 
 check_info["couchbase_buckets_mem"] = LegacyCheckDefinition(
+    name="couchbase_buckets_mem",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase Bucket %s Memory",
     discovery_function=discover_couchbase_buckets_mem,
     check_function=check_couchbase_bucket_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": None},
 )

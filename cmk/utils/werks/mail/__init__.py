@@ -9,6 +9,7 @@ import difflib
 import json
 import logging
 import re
+import sys
 import textwrap
 from collections.abc import Sequence
 from email.headerregistry import Address
@@ -22,13 +23,13 @@ from git.objects.commit import Commit
 from git.repo import Repo
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined, Template
 
+from cmk.ccc.version import Version
+
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
-from cmk.utils.version import Version
 
 from cmk.werks import load_werk
 from cmk.werks.models import Class, Level, Werk
-
-from ..werk import WerkTranslator
+from cmk.werks.utils import WerkTranslator
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +131,10 @@ class File(NamedTuple):
     content: str
 
     @classmethod
-    def new(cls, path: str, blob: Blob) -> "File":
+    def new(cls, path: str | None, blob: Blob | None) -> "File":
+        # TODO: Fix None handling at call sites
+        assert path is not None
+        assert blob is not None
         return File(
             name=Path(path).name,
             path=path,
@@ -228,6 +232,9 @@ def get_change(commit: Commit) -> WerkCommit | None:
                     yield WerkAdded(File.new(diff.b_path, diff.b_blob))
             else:
                 assert diff.b_path == diff.a_path
+                # TODO: Fix None handling for real
+                assert diff.a_blob is not None
+                assert diff.b_blob is not None
                 werk_diff = "\n".join(
                     difflib.ndiff(
                         diff.a_blob.data_stream.read().decode("utf-8").split("\n"),
@@ -389,7 +396,9 @@ def send_mail(
         if args.do_send_mail:
             send_mail_sendmail(mail, MailString(str(mail_address)), MailString(""))
         else:
-            print(textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True))
+            sys.stdout.write(
+                textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True) + "\n"
+            )
 
 
 def main(argparse_args: argparse.Namespace) -> None:
@@ -449,7 +458,7 @@ def main(argparse_args: argparse.Namespace) -> None:
         if args.do_add_notes:
             add_note(repo, werk_commit.commit, args)
         else:
-            print(f"DRY RUN: add note to commit {werk_commit.commit}")
+            sys.stdout.write(f"DRY RUN: add note to commit {werk_commit.commit}\n")
 
         for change, werk in change_with_werk:
             send_mail(werk, change, template, translator, args)

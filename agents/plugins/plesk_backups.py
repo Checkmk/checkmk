@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # Monitors FTP backup spaces of plesk domains.
 # Data format
@@ -18,12 +18,12 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 
 try:
-    import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
+    import MySQLdb  # type: ignore[import-untyped]
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e
@@ -55,8 +55,8 @@ def get_domains():
     domain_collection = {}
     for this_domain_id, this_domain in cursor.fetchall():
         cursor2.execute(
-            "SELECT param, value FROM BackupsSettings "
-            "WHERE id = %d AND type = 'domain'" % this_domain_id
+            "SELECT param, value FROM BackupsSettings WHERE id = %s AND type = 'domain'",
+            (int(this_domain_id),),
         )
         params = dict(cursor2.fetchall())
         domain_collection[this_domain] = params
@@ -128,7 +128,6 @@ for domain, p in domains.items():
 
             size = 0
             if not l or l[0] == "d":
-                # pylint: disable=cell-var-from-loop
                 subdir = "/" + l.split()[-1] if l else ""
                 dir_files = []  # type: list[str]
                 ftp_conn.retrlines("LIST %s%s" % (base_dir, subdir), callback=dir_files.append)

@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def heirloommailx(version_str, sha256):
+def heirloommailx_workspace():
+    version_str = "12.5"
     filename = "heirloom-mailx_" + version_str + ".orig.tar.gz"
     http_archive(
         name = "heirloom-mailx",
@@ -9,8 +10,8 @@ def heirloommailx(version_str, sha256):
             "https://ftp.nl.debian.org/debian-archive/debian/pool/main/h/heirloom-mailx/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
-        build_file = "@omd_packages//omd/packages/heirloom-mailx:BUILD.bazel",
+        sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+        build_file = "@omd_packages//omd/packages/heirloom-mailx:BUILD.heirloom-mailx.bazel",
         patches = [
             "//omd/packages/heirloom-mailx/patches:0001-nail-11.25-config.dif",
             "//omd/packages/heirloom-mailx/patches:0002-mailx-12.3-pager.dif",

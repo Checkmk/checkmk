@@ -26,12 +26,13 @@ from pysnmp.hlapi import (  # type: ignore[import-untyped]
     UdpTransportTarget,
 )
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
-import cmk.utils.debug as debug
-import cmk.utils.log as log
+from cmk.ccc import debug
+
+from cmk.utils import log
 
 from cmk.snmplib import SNMPBackendEnum
 
@@ -192,12 +193,14 @@ def _is_listening(process_def: ProcessDef) -> bool:
     exitcode = p.poll()
     snmpsimd_died = exitcode is not None
     if snmpsimd_died:
-        print("=============================================snmpsimd dead from the beginning")
+        logger.error(
+            "=============================================snmpsimd dead from the beginning"
+        )
     process = _snmpsimd_process(process_def)
     snmpsimd_proc_found = process is not None
 
     if not snmpsimd_proc_found:
-        logger.debug("Did not detect actual snmpsim-command process")
+        logger.error("Did not detect actual snmpsim-command process")
         return False
 
     if not snmpsimd_died:
@@ -205,7 +208,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
         # Wait for snmpsimd to initialize the UDP sockets
         num_sockets = 0
         try:
-            print("============================================= %d" % pid)
+            logger.debug("============================================= %d", pid)
             os.system("ls -al /proc/%d/fd" % pid)
             os.system("ps -ef | grep %d" % pid)
             for e in os.listdir("/proc/%d/fd" % pid):
@@ -219,7 +222,9 @@ def _is_listening(process_def: ProcessDef) -> bool:
             if exitcode is None:
                 raise
             snmpsimd_died = True
-            print(f"====================================snmpsimd dead OSError try-except {e}")
+            logger.error(
+                "====================================snmpsimd dead OSError try-except %s", e
+            )
 
     if snmpsimd_died:
         # assert p.stdout is not None

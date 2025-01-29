@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 def _item_spec_mysql_sessions():
     return TextInput(
         title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
+        help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
@@ -68,6 +68,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_sessions,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_sessions,
-        title=lambda: _("MySQL Sessions & Connections"),
+        title=lambda: _("MySQL sessions & connections"),
     )
 )

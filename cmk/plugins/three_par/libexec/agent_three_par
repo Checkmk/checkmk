@@ -8,4 +8,4 @@ import sys
 from cmk.plugins.three_par.lib.special_agent import main
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main())  # type: ignore[no-untyped-call]

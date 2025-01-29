@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 
 def discover_hitachi_hnas_fpga(string_table: StringTable) -> DiscoveryResult:
@@ -42,6 +42,7 @@ def parse_hitachi_hnas_fpga(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_fpga"] = LegacyCheckDefinition(
+    name="hitachi_hnas_fpga",
     parse_function=parse_hitachi_hnas_fpga,
     detect=DETECT,
     fetch=SNMPTree(

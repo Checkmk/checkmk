@@ -4,17 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import crossfilter, {Crossfilter} from "crossfilter2";
-import * as d3 from "d3";
+import type {Crossfilter} from "crossfilter2";
+import crossfilter from "crossfilter2";
+import type {BaseType, Selection} from "d3";
+import {json, select} from "d3";
 
-import {CMKAjaxReponse} from "../types";
-import * as utils from "../utils";
+import type {CMKAjaxReponse} from "@/modules/types";
+import {get_computed_style} from "@/modules/utils";
+
 import {
     add_scheduler_debugging,
     plot_render_function,
     svg_text_overflow_ellipsis,
 } from "./cmk_figures_utils";
-import {
+import type {
     ElementMargin,
     ElementSize,
     FigureBaseDashletSpec,
@@ -32,12 +35,12 @@ import {Scheduler} from "./multi_data_fetcher";
 
 export abstract class FigureBase<
     T extends FigureData,
-    DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
+    DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec,
 > {
     _div_selector: string;
-    _div_selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
-    svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown> | null;
-    plot: d3.Selection<SVGGElement, unknown, any, any>;
+    _div_selection: Selection<HTMLDivElement, unknown, BaseType, unknown>;
+    svg: Selection<SVGSVGElement, unknown, BaseType, unknown> | null;
+    plot: Selection<SVGGElement, unknown, any, any>;
     _fixed_size: ElementSize | null;
     margin: ElementMargin;
     _fetch_start: number;
@@ -66,7 +69,7 @@ export abstract class FigureBase<
 
     constructor(div_selector: string, fixed_size: ElementSize | null = null) {
         this._div_selector = div_selector; // The main container
-        this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
+        this._div_selection = select(this._div_selector); // The d3-seletion of the main container
 
         this.svg = null; // The svg representing the figure
         // @ts-ignore
@@ -105,7 +108,7 @@ export abstract class FigureBase<
         this._crossfilter = crossfilter();
         this.scheduler = new Scheduler(
             () => this._fetch_data(),
-            this.get_update_interval()
+            this.get_update_interval(),
         );
     }
 
@@ -183,7 +186,7 @@ export abstract class FigureBase<
         if (!post_settings.url) return;
 
         this._fetch_start = Math.floor(new Date().getTime() / 1000);
-        d3.json(encodeURI(post_settings.url), {
+        json(encodeURI(post_settings.url), {
             credentials: "include",
             method: "POST",
             body: post_settings.body,
@@ -193,8 +196,8 @@ export abstract class FigureBase<
         })
             .then(json_data =>
                 this._process_api_response(
-                    json_data as CMKAjaxReponse<{figure_response: T}>
-                )
+                    json_data as CMKAjaxReponse<{figure_response: T}>,
+                ),
             )
             .catch(() => {
                 this._show_error_info("Error fetching data", "error");
@@ -213,7 +216,7 @@ export abstract class FigureBase<
         if (api_response.result_code != 0) {
             this._show_error_info(
                 String(api_response.result),
-                api_response.severity
+                api_response.severity,
             );
             return;
         }
@@ -316,13 +319,13 @@ export abstract class FigureBase<
             .attr("text-anchor", "middle");
 
         let title_padding_left = 0;
-        const title_padding_left_raw = utils.get_computed_style(
-            d3.select("div.dashlet div.title").node() as HTMLElement,
-            "padding-left"
+        const title_padding_left_raw = get_computed_style(
+            select("div.dashlet div.title").node() as HTMLElement,
+            "padding-left",
         );
         if (title_padding_left_raw) {
             title_padding_left = parseInt(
-                title_padding_left_raw.replace("px", "")
+                title_padding_left_raw.replace("px", ""),
             );
         }
 
@@ -330,7 +333,7 @@ export abstract class FigureBase<
             svg_text_overflow_ellipsis(
                 nodes[idx],
                 this.figure_size.width,
-                title_padding_left
+                title_padding_left,
             );
         });
     }
@@ -352,7 +355,7 @@ export interface TextFigureData<D = any, P = any> extends FigureData<D, P> {
 }
 
 export abstract class TextFigure<
-    T extends TextFigureData = TextFigureData
+    T extends TextFigureData = TextFigureData,
 > extends FigureBase<T> {
     constructor(div_selector: string, fixed_size: ElementSize | null) {
         super(div_selector, fixed_size);
@@ -372,11 +375,11 @@ export abstract class TextFigure<
         FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
-            this.figure_size.height
+            this.figure_size.height,
         );
         this.plot.attr(
             "transform",
-            "translate(" + this.margin.left + "," + this.margin.top + ")"
+            "translate(" + this.margin.left + "," + this.margin.top + ")",
         );
     }
 
@@ -388,7 +391,7 @@ export abstract class TextFigure<
 
 // Base class for dc.js based figures (using crossfilter)
 export abstract class DCFigureBase<
-    DCFigureData extends FigureData
+    DCFigureData extends FigureData,
 > extends FigureBase<DCFigureData> {
     _graph_group: any;
     _dc_chart: any;
@@ -418,14 +421,14 @@ export class FigureRegistry<T extends FigureData> {
     register(
         figure_class: new (
             div_selector: string,
-            fixed_size?: any
-        ) => FigureBase<T>
+            fixed_size?: any,
+        ) => FigureBase<T>,
     ): void {
         this._figures[figure_class.prototype.ident()] = figure_class;
     }
 
     get_figure(
-        ident: string
+        ident: string,
     ): new (div_selector: string, fixed_size?: any) => FigureBase<T> {
         return this._figures[ident];
     }

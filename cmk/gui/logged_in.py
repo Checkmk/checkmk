@@ -14,16 +14,13 @@ from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 
-import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.store.host_storage import ContactgroupName
-from cmk.utils.user import UserId
-from cmk.utils.version import __version__, Version
+from cmk.ccc import store
+from cmk.ccc.version import __version__, Edition, edition, Version
 
-import cmk.gui.permissions as permissions
-import cmk.gui.site_config as site_config
-from cmk.gui import hooks
+import cmk.utils.paths
+from cmk.utils.user import UserId
+
+from cmk.gui import hooks, permissions, site_config
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
@@ -33,6 +30,7 @@ from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 _logger = logging.getLogger(__name__)
+_ContactgroupName = str
 
 
 class LoggedInUser:
@@ -49,7 +47,7 @@ class LoggedInUser:
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
         self.id = user_id
-        self.transactions = TransactionManager(self.transids, self.save_transids)
+        self.transactions = TransactionManager(user_id, self.transids, self.save_transids)
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
@@ -118,8 +116,13 @@ class LoggedInUser:
     def reset_language(self) -> None:
         self._unset_attribute("language")
 
-    def is_automation_user(self) -> bool:
-        return AutomationUserSecret(self.ident).exists()
+    @property
+    def automation_user(self) -> bool:
+        return self.load_file("automation_user", False)
+
+    @automation_user.setter
+    def automation_user(self, value: bool) -> None:
+        self.save_file("automation_user", value)
 
     @property
     def show_mode(self) -> str:
@@ -134,8 +137,8 @@ class LoggedInUser:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> Sequence[ContactgroupName]:
-        return [ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
+    def contact_groups(self) -> Sequence[_ContactgroupName]:
+        return [_ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
 
     @property
     def start_url(self) -> str | None:
@@ -425,11 +428,13 @@ class LoggedInUser:
             return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version.from_str(__version__).version_base
-        version = version if version != "" else "master"
-        return "https://docs.checkmk.com/{}/{}".format(
-            version, "de" if self.language == "de" else "en"
+        version = (
+            "saas"
+            if edition(cmk.utils.paths.omd_root) == Edition.CSE
+            else Version.from_str(__version__).version_base or "master"
         )
+        language = "de" if self.language == "de" else "en"
+        return f"https://docs.checkmk.com/{version}/{language}"
 
 
 # Login a user that has all permissions. This is needed for making
@@ -446,6 +451,20 @@ class LoggedInSuperUser(LoggedInUser):
 
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
+
+
+class LoggedInRemoteSite(LoggedInUser):
+    def __init__(self, *, site_name: str) -> None:
+        super().__init__(None)
+        self.alias = f"Remote site {site_name}"
+        self.email = "?"
+        self.site_name = site_name
+
+    def _gather_roles(self, _user_id: UserId | None) -> list[str]:
+        return ["no_permissions"]
+
+    def save_file(self, name: str, content: Any) -> None:
+        raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
 
 
 class LoggedInNobody(LoggedInUser):

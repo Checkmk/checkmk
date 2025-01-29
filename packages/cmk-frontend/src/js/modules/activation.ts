@@ -4,11 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as async_progress from "./async_progress";
-import * as page_menu from "./page_menu";
-import {CMKAjaxReponse} from "./types";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {monitor, show_error, show_info} from "./async_progress";
+import {enable_menu_entry} from "./page_menu";
+import type {CMKAjaxReponse} from "./types";
+import {
+    add_class,
+    makeuri,
+    reload_whole_page,
+    remove_class,
+    remove_classes_by_prefix,
+    schedule_reload,
+    time,
+} from "./utils";
 
 //#.
 //#   .-Activation---------------------------------------------------------.
@@ -35,7 +43,7 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
 
     if (mode == "selected") {
         const checkboxes = document.getElementsByClassName(
-            "site_checkbox"
+            "site_checkbox",
         ) as HTMLCollectionOf<HTMLInputElement>;
         for (let i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
@@ -45,7 +53,7 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
         }
 
         if (sites.length == 0) {
-            async_progress.show_error("You have to select a site.");
+            show_error("You have to select a site.");
             return;
         }
     } else if (mode == "site") {
@@ -53,20 +61,20 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
     }
 
     const activate_until = document.getElementById(
-        "activate_until"
+        "activate_until",
     ) as HTMLInputElement | null;
     if (!activate_until) return;
 
     let comment = "";
     const comment_field = document.getElementsByName(
-        "activate_p_comment"
+        "activate_p_comment",
     )[0] as HTMLInputElement | null;
     if (comment_field && comment_field.value != "")
         comment = comment_field.value;
 
     let activate_foreign: 0 | 1 = 0;
     const foreign_checkbox = document.getElementsByName(
-        "activate_p_foreign"
+        "activate_p_foreign",
     )[0] as HTMLInputElement | null;
     if (foreign_checkbox && foreign_checkbox.checked) activate_foreign = 1;
 
@@ -78,9 +86,9 @@ function start_activation(
     sites: string[],
     activate_until: string,
     comment: string,
-    activate_foreign: 0 | 1
+    activate_foreign: 0 | 1,
 ) {
-    async_progress.show_info("Initializing activation...");
+    show_info("Initializing activation...");
 
     const post_data =
         "activate_until=" +
@@ -92,7 +100,7 @@ function start_activation(
         "&activate_foreign=" +
         encodeURIComponent(activate_foreign);
 
-    ajax.call_ajax("ajax_start_activation.py", {
+    call_ajax("ajax_start_activation.py", {
         response_handler: handle_start_activation,
         error_handler: handle_start_activation_error,
         method: "POST",
@@ -107,20 +115,20 @@ function handle_start_activation(_unused: unknown, response_json: string) {
         JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        async_progress.show_error(String(response.result));
+        show_error(String(response.result));
         lock_activation_controls(false);
     } else {
-        async_progress.show_info("Activating...");
-        async_progress.monitor({
+        show_info("Activating...");
+        monitor({
             update_url:
                 "ajax_activation_state.py?activation_id=" +
                 encodeURIComponent(response.result.activation_id),
-            start_time: utils.time(),
+            start_time: time(),
             update_function: update_activation_state,
             is_finished_function: is_activation_progress_finished,
             finish_function: finish_activation,
             error_function: function (response) {
-                async_progress.show_error(response);
+                show_error(response);
             },
             post_data: "",
         });
@@ -130,10 +138,10 @@ function handle_start_activation(_unused: unknown, response_json: string) {
 function handle_start_activation_error(
     _unused: unknown,
     status_code: number,
-    error_msg: string
+    error_msg: string,
 ) {
-    async_progress.show_error(
-        "Failed to start activation [" + status_code + "]: " + error_msg
+    show_error(
+        "Failed to start activation [" + status_code + "]: " + error_msg,
     );
 }
 
@@ -143,33 +151,33 @@ function lock_activation_controls(lock: boolean) {
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByName("activate_p_comment"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("site_checkbox"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("activate_site"),
-            0
-        )
+            0,
+        ),
     );
 
     for (let i = 0; i < elements.length; i++) {
         if (!elements[i]) continue;
 
-        if (lock) utils.add_class(elements[i], "disabled");
-        else utils.remove_class(elements[i], "disabled");
+        if (lock) add_class(elements[i], "disabled");
+        else remove_class(elements[i], "disabled");
 
         (elements[i] as HTMLButtonElement).disabled = Boolean(lock);
     }
 
-    page_menu.enable_menu_entry("activate_selected", !lock);
-    page_menu.enable_menu_entry("discard_changes", !lock);
+    enable_menu_entry("activate_selected", !lock);
+    enable_menu_entry("discard_changes", !lock);
 }
 
 function is_activation_progress_finished(response: {
@@ -190,7 +198,7 @@ function is_activation_progress_finished(response: {
 function initialize_site_progresses(sites: string[]) {
     for (const site_id of sites) {
         const progress = document.getElementById(
-            "site_" + site_id + "_progress"
+            "site_" + site_id + "_progress",
         );
         // Temporarily disable the transition for the reset
         if (!progress) throw new Error("progress shouldn't be null!");
@@ -202,7 +210,7 @@ function initialize_site_progresses(sites: string[]) {
 
 function update_activation_state(
     _unused_handler_data: unknown,
-    response: {sites: Record<string, any>}
+    response: {sites: Record<string, any>},
 ) {
     for (const site_id in response["sites"]) {
         // skip loop if the property is from prototype
@@ -231,23 +239,24 @@ function update_activation_state(
 export function update_site_activation_state(site_state: Record<string, any>) {
     // Show status text (overlay text on the progress bar)
     const msg = document.getElementById(
-        "site_" + site_state["_site_id"] + "_status"
+        "site_" + site_state["_site_id"] + "_status",
     );
     if (!msg) throw new Error("msg shouldn't be null!");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
-        utils.remove_class(msg, "in_progress");
-        utils.add_class(msg, "state_" + site_state["_state"]);
+        remove_class(msg, "in_progress");
+        add_class(msg, "state_" + site_state["_state"]);
     } else {
-        utils.remove_classes_by_prefix(msg, "state_");
-        utils.add_class(msg, "in_progress");
+        remove_classes_by_prefix(msg, "state_");
+        add_class(msg, "in_progress");
     }
 
     // Show status details
     if (site_state["_status_details"]) {
         const details = document.getElementById(
-            "site_" + site_state["_site_id"] + "_details"
+            "site_" + site_state["_site_id"] + "_details",
         );
         if (!details) throw new Error("details shouldn't be null!");
         let detail_content = site_state["_status_details"];
@@ -263,6 +272,7 @@ export function update_site_activation_state(site_state: Record<string, any>) {
                 "</div>";
         }
 
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         details.innerHTML = detail_content;
     }
 
@@ -273,19 +283,19 @@ function update_site_progress(site_state: Record<string, any>) {
     const max_width = 160;
 
     const progress = document.getElementById(
-        "site_" + site_state["_site_id"] + "_progress"
+        "site_" + site_state["_site_id"] + "_progress",
     );
     if (!progress) throw new Error("progress shouldn't be null!");
 
     if (site_state["_phase"] == "done") {
         progress.style.width = max_width + "px";
 
-        utils.remove_class(progress, "in_progress");
-        utils.add_class(progress, "state_" + site_state["_state"]);
+        remove_class(progress, "in_progress");
+        add_class(progress, "state_" + site_state["_state"]);
         return;
     } else {
-        utils.remove_classes_by_prefix(progress, "state_");
-        utils.add_class(progress, "in_progress");
+        remove_classes_by_prefix(progress, "state_");
+        add_class(progress, "in_progress");
     }
 
     // TODO: Visualize overdue
@@ -294,7 +304,7 @@ function update_site_progress(site_state: Record<string, any>) {
         return; // Do not update width in case it was not started yet
     }
 
-    const duration = utils.time() - site_state["_time_started"];
+    const duration = time() - site_state["_time_started"];
 
     const expected_duration = site_state["_expected_duration"];
     const duration_percent = (duration * 100.0) / expected_duration;
@@ -306,7 +316,7 @@ function update_site_progress(site_state: Record<string, any>) {
 }
 
 function finish_activation(result: {sites: Record<string, any>}) {
-    utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
+    schedule_reload(makeuri({_finished: "1"}), 1000);
 
     // Handle special state "Locked" with a timeout to show the message to the
     // user. We can only determine this state via warning state for now
@@ -322,9 +332,9 @@ function finish_activation(result: {sites: Record<string, any>}) {
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
     if (is_warning) {
         setTimeout(function () {
-            utils.reload_whole_page();
+            reload_whole_page();
         }, 1000);
     } else {
-        utils.reload_whole_page();
+        reload_whole_page();
     }
 }

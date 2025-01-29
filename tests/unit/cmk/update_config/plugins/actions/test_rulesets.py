@@ -8,9 +8,11 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
@@ -63,7 +65,7 @@ def _instantiate_ruleset(
                 },
                 **(
                     {}
-                    if edition() is Edition.CRE
+                    if edition(paths.omd_root) is Edition.CRE
                     else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },

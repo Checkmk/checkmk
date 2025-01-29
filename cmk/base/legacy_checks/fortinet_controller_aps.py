@@ -17,10 +17,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, render, SNMPTree
+
+check_info = {}
 
 
 def parse_fortinet_controller_aps(string_table):
@@ -102,10 +102,14 @@ def check_fortinet_controller_aps(item, params, parsed):
 
     client_count_24 = data["clients_count_24"]
     client_count_5 = data["clients_count_5"]
-    yield 0, f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}", [
-        ("5ghz_clients", client_count_5),
-        ("24ghz_clients", client_count_24),
-    ]
+    yield (
+        0,
+        f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}",
+        [
+            ("5ghz_clients", client_count_5),
+            ("24ghz_clients", client_count_24),
+        ],
+    )
 
     uptime = data["uptime"]
     if uptime:
@@ -117,6 +121,7 @@ def check_fortinet_controller_aps(item, params, parsed):
 
 
 check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
+    name="fortinet_controller_aps",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
     fetch=[
         SNMPTree(

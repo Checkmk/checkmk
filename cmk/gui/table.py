@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -15,8 +14,7 @@ from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, ContextManager, Final, Literal, NamedTuple
 
-import cmk.gui.utils.escaping as escaping
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -27,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -89,7 +88,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,
     css: str | None = None,
     isopen: bool = True,
 ) -> Iterator[Table]:
@@ -152,7 +151,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
         css: str | None = None,
         isopen: bool = True,
     ):
@@ -281,7 +280,7 @@ class Table:
                 str(text) if not isinstance(text, str) else text, escape_links=False
             )
 
-        htmlcode: HTML = content + HTML(output_funnel.drain())
+        htmlcode: HTML = content + HTML.without_escaping(output_funnel.drain())
 
         if isinstance(title, HTML):
             header_title = title
@@ -311,7 +310,7 @@ class Table:
         """
         self.next_header = title
 
-    def _end(self) -> None:  # pylint: disable=too-many-branches
+    def _end(self) -> None:
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -444,7 +443,7 @@ class Table:
     def _get_sort_column(self, table_opts: dict[str, Any]) -> str | None:
         return request.get_ascii_input("_%s_sort" % self.id, table_opts.get("sort"))
 
-    def _write_table(  # pylint: disable=too-many-branches
+    def _write_table(
         self,
         rows: TableRows,
         num_rows_unlimited: int,
@@ -590,7 +589,7 @@ class Table:
 
         response.set_data("".join(resp))
 
-    def _render_headers(  # pylint: disable=too-many-branches
+    def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]
     ) -> None:
         if self.options["omit_headers"]:
@@ -642,7 +641,9 @@ class Table:
                 first_col = False
                 if actions_enabled:
                     if not header_title:
-                        header_title = HTML("&nbsp;")  # Fixes layout problem with white triangle
+                        header_title = (
+                            HTMLWriter.render_nbsp()
+                        )  # Fixes layout problem with white triangle
 
                     if actions_visible:
                         state = "0"
@@ -663,9 +664,9 @@ class Table:
                     html.span(header_title)
                     html.close_div()
                 else:
-                    html.write_text(header_title)
+                    html.write_text_permissive(header_title)
             else:
-                html.write_text(header_title)
+                html.write_text_permissive(header_title)
 
             html.close_th()
         html.close_tr()

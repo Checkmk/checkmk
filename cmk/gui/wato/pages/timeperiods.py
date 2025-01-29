@@ -3,30 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """Modes for managing timeperiod definitions for the core"""
 
 import logging
 import time
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
+from typing import Any, cast
 
 import recurring_ical_events  # type: ignore[import-untyped]
 from icalendar import Calendar, Event  # type: ignore[import-untyped]
 from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
 
-import cmk.utils.dateutils as dateutils
+from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
     builtin_timeperiods,
-    load_timeperiods,
     timeperiod_spec_alias,
     TimeperiodName,
     TimeperiodSpec,
 )
 
-import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
-import cmk.gui.watolib.groups as groups
+from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
@@ -44,14 +42,17 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DictionaryModel,
     FileUpload,
     FileUploadModel,
     FixedValue,
+    Integer,
     ListChoice,
     ListOf,
     ListOfTimeRanges,
@@ -59,15 +60,15 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 logger = logging.getLogger(__name__)
 
 TimeperiodUsage = tuple[str, str]
-
-from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -375,21 +376,20 @@ class ModeTimeperiodImportICal(WatoMode):
                         validate=self._validate_ical_file,
                     ),
                 ),
-                # TODO: Should be added back once CMK-14051 is completed.
-                # (
-                #     "horizon",
-                #     Integer(
-                #         title=_("Time horizon for repeated events"),
-                #         help=_(
-                #             "When the iCalendar file contains definitions of repeating events, these repeating "
-                #             "events will be resolved to single events for the number of years you specify here."
-                #         ),
-                #         minvalue=0,
-                #         maxvalue=50,
-                #         default_value=10,
-                #         unit=_("years"),
-                #     ),
-                # ),
+                (
+                    "horizon",
+                    Integer(
+                        title=_("Time horizon for repeated events"),
+                        help=_(
+                            "When the iCalendar file contains definitions of repeating events, these repeating "
+                            "events will be resolved to single events for the number of years you specify here."
+                        ),
+                        minvalue=0,
+                        maxvalue=50,
+                        default_value=10,
+                        unit=_("years"),
+                    ),
+                ),
             ],
         )
 
@@ -442,14 +442,10 @@ class ModeTimeperiodImportICal(WatoMode):
         filename, _ty, content = ical["file"]
         cal_obj: Calendar = Calendar.from_ical(content)
 
-        # TODO: The time horizon should be taken into account for recurring events,
-        # but currently more than 75 events is too many and causes an ISE. See CMK-14051.
-        # For now, we are limiting events to only the current calendar year.
-
         exception_map: dict[str, list[TimeperiodUsage]] = {}
-
+        now = datetime.now()
         for e in recurring_ical_events.of(cal_obj).between(
-            date.today(), date(date.today().year + 1, 1, 1)
+            now, now + timedelta(days=365 * ical["horizon"])
         ):
             ice = ICalEvent(e)
             if ice.dtstart_dt is None:
@@ -463,9 +459,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 exception_map[dt] = [timerange]
 
         # If a time period exception has the full day, we can ignore the others (if available)
-        for exception in exception_map:
-            if ("00:00", "24:00") in exception_map[exception]:
-                exception_map[exception] = [("00:00", "24:00")]
+        for timeranges in exception_map.values():
+            if ("00:00", "24:00") in timeranges:
+                timeranges[:] = [("00:00", "24:00")]
 
         get_vars = {
             "timeperiod_p_alias": str(
@@ -525,14 +521,15 @@ class ModeEditTimeperiod(WatoMode):
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
-                self._timeperiod = {}
+                self._timeperiod: TimeperiodSpec = {"alias": request.var("timeperiod_p_alias", "")}
             elif clone_name:
                 self._name = clone_name
-
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
                 # initialize with 24x7 config
-                self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
+                self._timeperiod = {"alias": ""}
+                for day in dateutils.weekday_ids():
+                    self._timeperiod[day] = [("00:00", "24:00")]
         else:
             assert self._name is not None
             self._timeperiod = self._get_timeperiod(self._name)
@@ -733,6 +730,8 @@ class ModeEditTimeperiod(WatoMode):
         return False
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 
@@ -825,8 +824,8 @@ class ModeEditTimeperiod(WatoMode):
         e.g. "00:30" -> (0, 30)"""
         return tuple(map(int, time_str.split(":")))
 
-    def _from_valuespec(self, vs_spec):
-        tp_spec = {
+    def _from_valuespec(self, vs_spec: DictionaryModel) -> TimeperiodSpec:
+        tp_spec: dict[str, Any] = {
             "alias": vs_spec["alias"],
         }
 
@@ -835,16 +834,16 @@ class ModeEditTimeperiod(WatoMode):
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))
         tp_spec.update(self._time_exceptions_from_valuespec(vs_spec))
-        return tp_spec
+        return cast(TimeperiodSpec, tp_spec)
 
-    def _exceptions_from_valuespec(self, vs_spec):
+    def _exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         tp_spec = {}
         for exception_name, time_ranges in vs_spec["exceptions"]:
             if time_ranges:
                 tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
-    def _time_exceptions_from_valuespec(self, vs_spec):
+    def _time_exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         # TODO: time exceptions is either a list of tuples or a dictionary for
         period_type, exceptions_details = vs_spec["weekdays"]
 

@@ -14,7 +14,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 CONFIG_FILE="${MK_CONFDIR}/lnx_container_host_if.cfg"
 
 __read_network_interface_files() {
@@ -62,8 +62,10 @@ section_lnx_container_host_if() {
 
     for if_path in "${interface_filepath}"/*; do
 
-        # Directory does not exist or is empty
-        [ -e "${if_path}" ] || continue
+        # Check if Path is a directory, if not continue
+        [ -d "${if_path}" ] || continue
+        # Check if directory is empty, if true continue
+        [ -n "$(ls -A "${if_path}")" ] || continue
 
         printf "name\v%s\t" "$(basename "${if_path}")"
         __read_network_interface_files "${if_path}" "${network_interface_metadata}"

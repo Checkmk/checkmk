@@ -6,68 +6,39 @@
 #ifndef NebComment_h
 #define NebComment_h
 
+#include <chrono>
+#include <cstdint>
+#include <string>
+
 #include "livestatus/Interface.h"
-#include "neb/Comment.h"
-#include "neb/NebHost.h"
-#include "neb/NebService.h"
+
+class Comment;
 
 class NebComment : public IComment {
 public:
-    explicit NebComment(const Comment &comment)
-        : comment_{comment}
-        , host_{NebHost{*comment._host}}
-        , service_{comment_._service == nullptr
-                       ? nullptr
-                       : std::make_unique<NebService>(*comment_._service)} {}
+    NebComment(const Comment &comment, const IHost &host,
+               const IService *service)
+        : comment_{comment}, host_{host}, service_{service} {}
 
-    [[nodiscard]] int32_t id() const override { return comment_._id; }
-
-    [[nodiscard]] std::string author() const override {
-        return comment_._author;
-    }
-
-    [[nodiscard]] std::string comment() const override {
-        return comment_._comment;
-    }
-
-    [[nodiscard]] CommentType entry_type() const override {
-        return comment_._entry_type;
-    }
-
+    [[nodiscard]] int32_t id() const override;
+    [[nodiscard]] std::string author() const override;
+    [[nodiscard]] std::string comment() const override;
+    [[nodiscard]] CommentType entry_type() const override;
     [[nodiscard]] std::chrono::system_clock::time_point entry_time()
-        const override {
-        return comment_._entry_time;
-    }
-
-    [[nodiscard]] bool isService() const override {
-        return comment_._is_service;
-    }
-
-    [[nodiscard]] bool persistent() const override {
-        return comment_._persistent;
-    }
-
-    [[nodiscard]] CommentSource source() const override {
-        return comment_._source;
-    }
-
-    [[nodiscard]] bool expires() const override { return comment_._expires; }
-
+        const override;
+    [[nodiscard]] bool isService() const override;
+    [[nodiscard]] bool persistent() const override;
+    [[nodiscard]] CommentSource source() const override;
+    [[nodiscard]] bool expires() const override;
     [[nodiscard]] std::chrono::system_clock::time_point expire_time()
-        const override {
-        return comment_._expire_time;
-    }
-
+        const override;
     [[nodiscard]] const IHost &host() const override { return host_; }
-
-    [[nodiscard]] const IService *service() const override {
-        return service_ ? service_.get() : nullptr;
-    }
+    [[nodiscard]] const IService *service() const override { return service_; }
 
 private:
     const Comment &comment_;
-    const NebHost host_;
-    const std::unique_ptr<const IService> service_;
+    const IHost &host_;
+    const IService *service_;
 };
 
 #endif  // NebComment_h

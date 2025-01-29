@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
 
 
 def _migrate_quadruple(
-    p: Mapping[str, tuple] | tuple[float, float, float, float]
+    p: Mapping[str, tuple] | tuple[float, float, float, float],
 ) -> Mapping[str, tuple]:
     if isinstance(p, dict):
         return p
@@ -26,7 +26,7 @@ def _migrate_quadruple(
 def _parameter_valuespec_single_humidity():
     return Migrate(
         valuespec=Dictionary(
-            help=_("This Ruleset sets the threshold limits for humidity sensors"),
+            help=_("This ruleset sets the threshold limits for humidity sensors"),
             elements=[
                 (
                     "levels_lower",
@@ -59,6 +59,6 @@ rulespec_registry.register(
         check_group_name="single_humidity",
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_single_humidity,
-        title=lambda: _("Humidity Levels for devices with a single sensor"),
+        title=lambda: _("Humidity levels for devices with a single sensor"),
     )
 )

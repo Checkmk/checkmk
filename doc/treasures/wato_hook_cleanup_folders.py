@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-from cmk.utils.site import omd_site
+
+from cmk.ccc.site import omd_site
 
 
 # put this script into local/share/check_mk/web/plugins/wato

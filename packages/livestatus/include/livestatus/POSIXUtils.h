@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    sem_t _semaphore;
+    sem_t _semaphore{};
 };
 
 // a POSIX-only variant of boost::interprocess::file_lock
@@ -81,7 +81,7 @@ public:
 
     ~file_lock();
 
-    void swap(file_lock &other) { std::swap(fd_, other.fd_); }
+    void swap(file_lock &other) noexcept { std::swap(fd_, other.fd_); }
 
     void lock() { fcntl_impl(F_WRLCK, F_SETLKW, "lock"); }
 

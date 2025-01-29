@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 
 import json
 import os
@@ -15,9 +14,9 @@ import pymongo
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_mongodb_2 as mk_mongodb  # pylint: disable=syntax-error
+    import agents.plugins.mk_mongodb_2 as mk_mongodb
 else:
-    import agents.plugins.mk_mongodb as mk_mongodb
+    from agents.plugins import mk_mongodb
 
 
 def read_dataset(filename):
@@ -337,7 +336,7 @@ def test_transform_config(
     pymongo_version: Tuple[int, int, int], pymongo_config: Mapping[str, Union[str, bool]]
 ) -> None:
     class DummyConfig(mk_mongodb.Config):
-        def __init__(self) -> None:  # pylint: disable=super-init-not-called
+        def __init__(self) -> None:
             self.tls_enable = True
             self.tls_verify = None
             self.tls_ca_file = None

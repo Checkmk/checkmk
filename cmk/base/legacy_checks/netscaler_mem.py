@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 #
 # Example Output:
@@ -41,6 +42,7 @@ def parse_netscaler_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_mem"] = LegacyCheckDefinition(
+    name="netscaler_mem",
     parse_function=parse_netscaler_mem,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

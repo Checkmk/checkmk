@@ -6,7 +6,9 @@
 #include "livestatus/AndingFilter.h"
 
 #include <algorithm>
+#include <bitset>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <vector>
 
@@ -33,17 +35,16 @@ std::unique_ptr<Filter> AndingFilter::make(Kind kind,
 
 bool AndingFilter::accepts(Row row, const User &user,
                            std::chrono::seconds timezone_offset) const {
-    return std::all_of(_subfilters.cbegin(), _subfilters.cend(),
-                       [&](const auto &filter) {
-                           return filter->accepts(row, user, timezone_offset);
-                       });
+    return std::ranges::all_of(_subfilters, [&](const auto &filter) {
+        return filter->accepts(row, user, timezone_offset);
+    });
 }
 
 std::unique_ptr<Filter> AndingFilter::partialFilter(
     columnNamePredicate predicate) const {
     Filters filters;
-    std::transform(
-        _subfilters.cbegin(), _subfilters.cend(), std::back_inserter(filters),
+    std::ranges::transform(
+        _subfilters, std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
     return make(kind(), filters);
 }
@@ -98,14 +99,14 @@ std::optional<std::bitset<32>> AndingFilter::valueSetLeastUpperBoundFor(
 }
 
 std::unique_ptr<Filter> AndingFilter::copy() const {
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
     return make(kind(), conjuncts());
 }
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
     Filters filters;
-    std::transform(_subfilters.cbegin(), _subfilters.cend(),
-                   std::back_inserter(filters),
-                   [](const auto &filter) { return filter->negate(); });
+    std::ranges::transform(_subfilters, std::back_inserter(filters),
+                           [](const auto &filter) { return filter->negate(); });
     return OringFilter::make(kind(), filters);
 }
 
@@ -121,9 +122,8 @@ Filters AndingFilter::disjuncts() const {
 
 Filters AndingFilter::conjuncts() const {
     Filters filters;
-    std::transform(_subfilters.cbegin(), _subfilters.cend(),
-                   std::back_inserter(filters),
-                   [](const auto &filter) { return filter->copy(); });
+    std::ranges::transform(_subfilters, std::back_inserter(filters),
+                           [](const auto &filter) { return filter->copy(); });
     return filters;
 }
 

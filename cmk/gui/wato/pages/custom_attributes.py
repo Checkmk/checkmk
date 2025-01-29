@@ -10,8 +10,8 @@ from collections.abc import Collection, Iterable
 from datetime import datetime
 from typing import Generic, TypeVar
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -27,13 +27,17 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
-from cmk.gui.watolib.custom_attributes import (
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    PermissionName,
+)
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
@@ -42,7 +46,7 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
+from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -224,7 +228,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 html.text_input("name", self._attr["name"], size=61)
                 html.set_focus("name")
             else:
-                html.write_text(self._name)
+                html.write_text_permissive(self._name)
                 html.set_focus("title")
 
             forms.section(_("Title") + "<sup>*</sup>", is_required=True)
@@ -235,7 +239,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             html.help(_("The attribute is added to this section in the edit dialog."))
             html.dropdown("topic", self._topics, deflt=self._attr["topic"])
 
-            forms.section(_("Help Text") + "<sup>*</sup>")
+            forms.section(_("Help text") + "<sup>*</sup>")
             html.help(_("You might want to add some helpful description for the attribute."))
             html.text_area("help", self._attr["help"])
 
@@ -244,7 +248,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             if self._new:
                 html.dropdown("type", custom_attr_types(), deflt=self._attr["type"])
             else:
-                html.write_text(dict(custom_attr_types())[self._attr["type"]])
+                html.write_text_permissive(dict(custom_attr_types())[self._attr["type"]])
 
             self._add_extra_form_sections()
             self._show_in_table_option()
@@ -289,7 +293,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
             ("ident", _("Identity")),
             ("security", _("Security")),
             ("notify", _("Notifications")),
-            ("personal", _("Personal Settings")),
+            ("personal", _("Personal settings")),
         ]
 
     @property
@@ -494,17 +498,19 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if not request.var("_delete"):
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         delname = request.get_ascii_input_mandatory("_delete")
         for index, attr in enumerate(self._attrs):
             if attr["name"] == delname:
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
-        remove_custom_attribute_from_all_users(delname)
+        remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
         self._update_config()
         _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())
@@ -518,7 +524,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(

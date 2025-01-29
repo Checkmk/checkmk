@@ -33,8 +33,7 @@ def _vsphere_esx_hostsystem_cluster_elements():
                 ),
                 title=_("Clusters: node specific CPU utilization"),
                 help=_(
-                    "Configure thresholds that apply to clusters based on how many nodes "
-                    "they have."
+                    "Configure thresholds that apply to clusters based on how many nodes they have."
                 ),
             ),
         ),

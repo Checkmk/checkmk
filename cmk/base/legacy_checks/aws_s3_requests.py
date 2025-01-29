@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -12,11 +11,14 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     get_data_or_go_stale,
     inventory_aws_generic,
+    MetricInfo,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_s3(string_table):
@@ -72,9 +74,11 @@ def check_aws_s3_requests(item, params, section):
     ]:
         requests_rate = metrics.get(key, 0)
 
-        yield 0, f"{title}: {aws_get_counts_rate_human_readable(requests_rate)}", [
-            (perf_key, requests_rate)
-        ]
+        yield (
+            0,
+            f"{title}: {aws_get_counts_rate_human_readable(requests_rate)}",
+            [(perf_key, requests_rate)],
+        )
 
         try:
             requests_perc = 100.0 * requests_rate / all_requests_rate
@@ -95,6 +99,7 @@ def discover_aws_s3_requests(p):
 
 
 check_info["aws_s3_requests"] = LegacyCheckDefinition(
+    name="aws_s3_requests",
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Requests %s",
     discovery_function=discover_aws_s3_requests,
@@ -129,6 +134,7 @@ def discover_aws_s3_requests_http_errors(p):
 
 
 check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
+    name="aws_s3_requests_http_errors",
     service_name="AWS/S3 HTTP Errors %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_http_errors,
@@ -166,13 +172,13 @@ def check_aws_s3_latency(item, params, section):
                 levels = tuple(level * 1e-3 for level in levels)
 
         metric_infos.append(
-            {
-                "metric_val": metric_val,
-                "metric_name": perf_key,
-                "levels": levels,
-                "info_name": title,
-                "human_readable_func": render.time_offset,
-            }
+            MetricInfo(
+                metric_val=metric_val,
+                metric_name=perf_key,
+                levels=levels,
+                info_name=title,
+                human_readable_func=render.time_offset,
+            )
         )
 
     return check_aws_metrics(metric_infos)
@@ -183,6 +189,7 @@ def discover_aws_s3_requests_latency(p):
 
 
 check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
+    name="aws_s3_requests_latency",
     service_name="AWS/S3 Latency %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_latency,
@@ -205,12 +212,12 @@ def check_aws_s3_traffic_stats(item, params, section):
     metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
-            {
-                "metric_val": metrics.get(key),
-                "metric_name": perf_key,
-                "info_name": title,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=metrics.get(key),
+                metric_name=perf_key,
+                info_name=title,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for key, title, perf_key in [
                 ("BytesDownloaded", "Downloads", "aws_s3_downloads"),
                 ("BytesUploaded", "Uploads", "aws_s3_uploads"),
@@ -224,6 +231,7 @@ def discover_aws_s3_requests_traffic_stats(p):
 
 
 check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
+    name="aws_s3_requests_traffic_stats",
     service_name="AWS/S3 Traffic Stats %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_traffic_stats,
@@ -245,12 +253,12 @@ def check_aws_s3_select_object(item, params, section):
     metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
-            {
-                "metric_val": metrics.get(key),
-                "metric_name": perf_key,
-                "info_name": title,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=metrics.get(key),
+                metric_name=perf_key,
+                info_name=title,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for key, title, perf_key in [
                 ("SelectBytesScanned", "Scanned", "aws_s3_select_object_scanned"),
                 ("SelectBytesReturned", "Returned", "aws_s3_select_object_returned"),
@@ -264,6 +272,7 @@ def discover_aws_s3_requests_select_object(p):
 
 
 check_info["aws_s3_requests.select_object"] = LegacyCheckDefinition(
+    name="aws_s3_requests_select_object",
     service_name="AWS/S3 SELECT Object %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_select_object,

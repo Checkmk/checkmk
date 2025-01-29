@@ -4,17 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
-import {Simulation} from "d3";
-
-import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
+import type {Simulation} from "d3";
 import {
-    compute_node_positions_from_list_of_nodes,
-    StyleOptionValues,
-} from "./layout_utils";
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX as d3_forceX,
+    forceY as d3_forceY,
+} from "d3";
+
+import type {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
+import type {StyleOptionValues} from "./layout_utils";
+import {compute_node_positions_from_list_of_nodes} from "./layout_utils";
 import {compute_link_id} from "./link_utils";
-import {NodevisLink, NodevisNode} from "./type_defs";
-import {Viewport} from "./viewport";
+import type {NodevisLink, NodevisNode} from "./type_defs";
+import type {Viewport} from "./viewport";
 
 export class ForceSimulation {
     _simulation: Simulation<NodevisNode, NodevisLink>;
@@ -26,7 +31,7 @@ export class ForceSimulation {
 
     constructor(viewport: Viewport, force_config_class: typeof ForceConfig) {
         this._viewport = viewport;
-        this._simulation = d3.forceSimulation<NodevisNode>();
+        this._simulation = forceSimulation<NodevisNode>();
         this._simulation.stop();
         this._simulation.alpha(0);
         this._simulation.alphaMin(0.1);
@@ -56,10 +61,10 @@ export class ForceSimulation {
                 this._force_config.changed_options(options),
             () => {
                 this._force_config.changed_options(
-                    this._force_config.get_default_options()
+                    this._force_config.get_default_options(),
                 );
                 this.show_force_config();
-            }
+            },
         );
     }
 
@@ -108,10 +113,10 @@ export class ForceSimulation {
                 style.force_style_translation();
                 style.translate_coords();
                 compute_node_positions_from_list_of_nodes(
-                    style.filtered_descendants
+                    style.filtered_descendants,
                 );
                 style.filtered_descendants.forEach(
-                    node => (node.use_transition = false)
+                    node => (node.use_transition = false),
                 );
             }
         }
@@ -124,7 +129,7 @@ export class ForceSimulation {
 
     update_nodes_and_links(
         all_nodes: NodevisNode[],
-        all_links: NodevisLink[]
+        all_links: NodevisLink[],
     ): void {
         this._all_nodes = all_nodes;
         this._all_links = all_links;
@@ -149,7 +154,7 @@ export class ForceSimulation {
 
     _compute_link_force(
         link: NodevisLink,
-        force_name: SimulationForce
+        force_name: SimulationForce,
     ): number {
         const link_instance =
             this._viewport.get_nodes_layer().link_instances[
@@ -160,8 +165,7 @@ export class ForceSimulation {
     }
 
     _update_charge_force(): void {
-        const charge_force = d3
-            .forceManyBody<NodevisNode>()
+        const charge_force = forceManyBody<NodevisNode>()
             .strength(node => {
                 return this._compute_force(node, "charge");
             })
@@ -170,7 +174,7 @@ export class ForceSimulation {
     }
 
     _update_collision_force(): void {
-        const collide_force = d3.forceCollide<NodevisNode>(node => {
+        const collide_force = forceCollide<NodevisNode>(node => {
             return this._compute_force(node, "collide");
         });
         this._simulation.force("collide", collide_force);
@@ -180,29 +184,24 @@ export class ForceSimulation {
         const size = this._viewport.get_size();
         const half_width = size.width / 2;
         const half_height = size.height / 2;
-        const forceX = d3
-            .forceX<NodevisNode>(_d => {
-                // X Position is currently fixed
-                return half_width;
-            })
-            .strength(d => {
-                return this._compute_force(d, "center");
-            });
+        const forceX = d3_forceX<NodevisNode>(_d => {
+            // X Position is currently fixed
+            return half_width;
+        }).strength(d => {
+            return this._compute_force(d, "center");
+        });
 
-        const forceY = d3
-            .forceY<NodevisNode>(_d => {
-                return half_height;
-            })
-            .strength(d => {
-                return this._compute_force(d, "center");
-            });
+        const forceY = d3_forceY<NodevisNode>(_d => {
+            return half_height;
+        }).strength(d => {
+            return this._compute_force(d, "center");
+        });
         this._simulation.force("x", forceX);
         this._simulation.force("y", forceY);
     }
 
     _update_link_force(): void {
-        const link_force = d3
-            .forceLink<NodevisNode, NodevisLink>(this._all_links)
+        const link_force = forceLink<NodevisNode, NodevisLink>(this._all_links)
             .id(function (d) {
                 return d.data.id;
             })

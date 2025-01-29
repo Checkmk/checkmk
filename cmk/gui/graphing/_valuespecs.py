@@ -6,13 +6,15 @@
 import json
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, TypedDict
+from dataclasses import dataclass
+from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.utils.metrics import MetricName as MetricName_
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
@@ -38,28 +40,34 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals import livestatus_query_bare
 
 from ..config import active_config
+from ._formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
+from ._from_api import metrics_from_api
 from ._graph_render_config import GraphRenderConfigBase
-from ._loader import registered_units
-from ._utils import (
-    get_extended_metric_info,
+from ._legacy import check_metrics, unit_info, UnitInfo
+from ._metrics import get_metric_spec, registered_metrics
+from ._translated_metrics import (
+    find_matching_translation,
+    lookup_metric_translations_for_check_command,
     parse_perf_data,
-    perfvar_translation,
-    registered_metrics,
+)
+from ._unit import (
+    ConvertibleUnitSpecification,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    IECNotation,
+    SINotation,
+    StandardScientificNotation,
+    TimeNotation,
+    user_specific_unit,
 )
 
 
 def migrate_graph_render_options_title_format(
     p: (
-        Literal["plain"]
-        | Literal["add_host_name"]
-        | Literal["add_host_alias"]
+        Literal["plain", "add_host_name", "add_host_alias"]
         | tuple[
-            Literal["add_title_infos"],
-            list[
-                Literal["add_host_name"]
-                | Literal["add_host_alias"]
-                | Literal["add_service_description"]
-            ],
+            Literal["add_title_infos", "plain"],
+            list[Literal["add_host_name", "add_host_alias", "add_service_description"]],
         ]
         | Sequence[GraphTitleFormatVS]
     ),
@@ -80,6 +88,7 @@ def migrate_graph_render_options_title_format(
             return infos
         if p[0] == "plain":
             return ["plain"]
+        raise ValueError(f"invalid graph title format {p}")
 
     # Because the spec could come from a JSON request CMK-6339
     if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
@@ -115,7 +124,7 @@ def _vs_title_infos() -> ListChoice:
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
         ("add_host_alias", _("Host alias")),
-        ("add_service_description", _("Service description")),
+        ("add_service_description", _("Service name")),
     ]
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
@@ -252,24 +261,40 @@ class ValueWithUnitElement(TypedDict):
 
 
 class ValuesWithUnits(CascadingDropdown):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         vs_name: str,
         metric_vs_name: str,
-        elements: list[ValueWithUnitElement],
-        validate_value_elemets: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
+        elements: Sequence[ValueWithUnitElement],
+        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
-        super().__init__(choices=self._unit_choices, help=help)
+        super().__init__(
+            choices=[
+                (
+                    choice.id,
+                    choice.title,
+                    self._unit_vs(
+                        choice.vs_type,
+                        choice.symbol,
+                        elements,
+                        validate_value_elements,
+                    ),
+                )
+                for choice in _sorted_unit_choices()
+            ],
+            help=help,
+            sorted=False,
+        )
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
-        self._elements = elements
-        self._validate_value_elements = validate_value_elemets
 
     def _unit_vs(
         self,
         vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
         symbol: str,
+        elements: Sequence[ValueWithUnitElement],
+        validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None,
     ) -> Tuple:
         def set_vs(vs, title, default):
             if vs.__name__ in ["Float", "Integer"]:
@@ -277,37 +302,9 @@ class ValuesWithUnits(CascadingDropdown):
             return vs(title=title, default_value=default)
 
         return Tuple(
-            elements=[set_vs(vs, elem["title"], elem["default"]) for elem in self._elements],
-            validate=self._validate_value_elements,
+            elements=[set_vs(vs, elem["title"], elem["default"]) for elem in elements],
+            validate=validate_value_elements,
         )
-
-    def _unit_choices(self) -> Sequence[tuple[str, str, Tuple]]:
-        return [
-            (
-                registered_unit.name,
-                registered_unit.description or registered_unit.title,
-                self._unit_vs(registered_unit.valuespec, registered_unit.symbol),
-            )
-            for registered_unit in registered_units()
-        ]
-
-    @staticmethod
-    def resolve_units(metric_name: MetricName_ | None) -> PageResult:
-        # This relies on python3.8 dictionaries being always ordered
-        # Otherwise it is not possible to mach the unit name to value
-        # CascadingDropdowns enumerate the options instead of using keys
-        if metric_name:
-            required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
-        else:
-            required_unit = ""
-
-        known_units = [registered_unit.name for registered_unit in registered_units()]
-        try:
-            index = known_units.index(required_unit)
-        except ValueError:
-            index = known_units.index("")
-
-        return {"unit": required_unit, "option_place": index}
 
     def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
         super().render_input(varprefix, value)
@@ -319,9 +316,144 @@ class ValuesWithUnits(CascadingDropdown):
         )
 
 
+@dataclass(frozen=True)
+class _UnitChoice:
+    id: str
+    title: str
+    symbol: str
+    vs_type: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+
+_FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
+    notation=DecimalNotation(symbol=""),
+    precision=AutoPrecision(digits=2),
+)
+
+
+def _sorted_unit_choices() -> list[_UnitChoice]:
+    return _sorted_api_and_fallback_unit_choices() + sorted(
+        (
+            _unit_choice_from_unit_info(registered_unit_info)
+            for _id, registered_unit_info in unit_info.items()
+        ),
+        key=lambda choice: choice.title,
+    )
+
+
+def _sorted_api_and_fallback_unit_choices() -> list[_UnitChoice]:
+    return sorted(
+        {_unit_choice_from_unit_spec(metric.unit_spec) for metric in metrics_from_api.values()}
+        | {_unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)},
+        key=lambda choice: choice.title,
+    )
+
+
+def _unit_choice_from_unit_spec(
+    unit_spec: ConvertibleUnitSpecification,
+) -> _UnitChoice:
+    unit_for_current_user = user_specific_unit(
+        unit_spec,
+        user,
+        active_config,
+    )
+    return _UnitChoice(
+        id=_id_from_unit_spec(unit_spec),
+        title=_title_from_formatter(unit_for_current_user.formatter),
+        symbol=unit_for_current_user.formatter.symbol,
+        vs_type=_vs_type_from_formatter(unit_for_current_user.formatter),
+    )
+
+
+def _id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
+    # Explicitly don't use eg. `unit_spec.notation.__class__.__name__` to be resilient against
+    # renamings
+    match unit_spec.notation:
+        case DecimalNotation():
+            notation_id = "DecimalNotation"
+        case SINotation():
+            notation_id = "SINotation"
+        case IECNotation():
+            notation_id = "IECNotation"
+        case StandardScientificNotation():
+            notation_id = "StandardScientificNotation"
+        case EngineeringScientificNotation():
+            notation_id = "EngineeringScientificNotation"
+        case TimeNotation():
+            notation_id = "TimeNotation"
+    match unit_spec.precision:
+        case AutoPrecision():
+            precision_id = "AutoPrecision"
+        case StrictPrecision():
+            precision_id = "StrictPrecision"
+    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"
+
+
+def _title_from_formatter(formatter: NotationFormatter) -> str:
+    match formatter.precision:
+        case AutoPrecision(digits=digits):
+            precision_title = f"auto precision, {digits} digits"
+        case StrictPrecision(digits=digits):
+            precision_title = f"strict precision, {digits} digits"
+        case _:
+            assert_never(formatter.precision)
+    return " ".join(
+        [
+            formatter.symbol or "no symbol",
+            f"({formatter.ident()}, {precision_title})",
+        ]
+    )
+
+
+def _vs_type_from_formatter(
+    formatter: NotationFormatter,
+) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
+    if isinstance(formatter, TimeFormatter):
+        return Age
+    if formatter.symbol.startswith("%"):
+        return Percentage
+    if formatter.precision.digits == 0:
+        return Integer
+    return Float
+
+
+def _unit_choice_from_unit_info(unit_info_: UnitInfo) -> _UnitChoice:
+    return _UnitChoice(
+        id=unit_info_.id,
+        title=unit_info_.description or unit_info_.title,
+        symbol=unit_info_.symbol,
+        vs_type=unit_info_.valuespec or Float,
+    )
+
+
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
-        return ValuesWithUnits.resolve_units(self.webapi_request()["metric"])
+        if metric_name := self.webapi_request()["metric"]:
+            metric_spec = get_metric_spec(metric_name)
+            unit_choice_for_metric = (
+                _unit_choice_from_unit_spec(metric_spec.unit_spec)
+                if isinstance(metric_spec.unit_spec, ConvertibleUnitSpecification)
+                else _unit_choice_from_unit_info(metric_spec.unit_spec)
+            )
+        else:
+            unit_choice_for_metric = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)
+
+        for idx, choice in enumerate(_sorted_unit_choices()):
+            if choice == unit_choice_for_metric:
+                return {
+                    "unit_choice_index": idx,
+                }
+
+        fallback_choice = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)
+        for idx, choice in enumerate(_sorted_unit_choices()):
+            if choice == fallback_choice:
+                return {
+                    "unit_choice_index": idx,
+                }
+
+        raise RuntimeError("This should never happen")
 
 
 class MetricName(DropdownChoiceWithHostAndServiceHints):
@@ -376,8 +508,11 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
-        metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, str(get_extended_metric_info(metric_name)["title"])
+        metric_name = find_matching_translation(
+            MetricName_(perfvar),
+            lookup_metric_translations_for_check_command(check_metrics, check_command),
+        ).name
+        yield metric_name, get_metric_spec(metric_name).title
 
 
 def metrics_of_query(

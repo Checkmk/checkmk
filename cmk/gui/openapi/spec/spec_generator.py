@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """
 # Introduction
 
@@ -390,6 +390,7 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
+
 import enum
 import hashlib
 import http.client
@@ -408,8 +409,8 @@ from werkzeug.utils import import_string
 
 from livestatus import SiteId
 
-from cmk.utils import store
-from cmk.utils.site import omd_site
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
 
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
@@ -458,7 +459,7 @@ Ident = tuple[str, str]
 __version__ = "1.0"
 
 
-def main(args: Sequence[str]) -> int:
+def main() -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")
@@ -489,7 +490,7 @@ def _generate_spec(
     seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
     for endpoint in sorted(endpoint_registry, key=sort_key):
-        if target in endpoint.blacklist_in:
+        if target in endpoint.blacklist_in or endpoint.tag_group == "Undocumented Endpoint":
             continue
 
         for path, operation_dict in _operation_dicts(spec, endpoint):
@@ -622,6 +623,7 @@ def _redoc_spec() -> ReDocSpec:
             {"name": "Monitoring", "tags": []},
             {"name": "Setup", "tags": []},
             {"name": "Checkmk Internal", "tags": []},
+            {"name": "Undocumented Endpoint", "tags": []},
         ],
         "x-ignoredHeaderParameters": [
             "User-Agent",
@@ -719,7 +721,7 @@ DEFAULT_STATUS_CODE_SCHEMAS = {
 }
 
 
-def _to_operation_dict(  # pylint: disable=too-many-branches
+def _to_operation_dict(
     spec: APISpec,
     endpoint: Endpoint,
     werk_id: int | None = None,
@@ -788,6 +790,9 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
 
     if 302 in endpoint.expected_status_codes:
         responses["302"] = _path_item(endpoint, 302, DefaultStatusCodeDescription.Code302.value)
+
+    if 303 in endpoint.expected_status_codes:
+        responses["303"] = _path_item(endpoint, 303, DefaultStatusCodeDescription.Code302.value)
 
     if 400 in endpoint.expected_status_codes:
         responses["400"] = _error_response_path_item(
@@ -990,7 +995,7 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     return description
 
 
-def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
+def _schema_name(schema_name: str) -> str:
     """Remove the suffix 'Schema' from a schema-name.
 
     Examples:
@@ -1012,7 +1017,7 @@ def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
     return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
 
 
-def _schema_definition(schema_name: str):  # type: ignore[no-untyped-def]
+def _schema_definition(schema_name: str) -> str:
     ref = f"#/components/schemas/{_schema_name(schema_name)}"
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 
@@ -1084,9 +1089,7 @@ def _permission_descriptions(
     def _count_perms(_perms):
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
-    def _add_desc(  # pylint: disable=too-many-branches
-        permission: permissions.BasePerm, indent: int, desc_list: list[str]
-    ) -> None:
+    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         if isinstance(permission, permissions.Undocumented):
             # Don't render
             return
@@ -1279,7 +1282,7 @@ def _docstring_name(docstring: str | None) -> str:
     Returns:
         A string or nothing.
 
-    """ ""
+    """
     if not docstring:
         raise ValueError("No name for the module defined. Please add a docstring!")
 

@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable
 from functools import partial
 
-import cmk.gui.query_filters as query_filters
+from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
@@ -25,7 +25,7 @@ from cmk.gui.visuals.filter import (
     InputTextFilter,
 )
 
-from ._inventory_path import InventoryPath
+from ._tree import InventoryPath
 
 
 class FilterInvtableText(InputTextFilter):
@@ -181,10 +181,10 @@ class FilterInvtableVersion(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("Min.&nbsp;Version:"))
+        html.write_text_permissive(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
-        html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Version:"))
+        html.write_text_permissive(" &nbsp; ")
+        html.write_text_permissive(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
@@ -364,14 +364,14 @@ class FilterInvHasSoftwarePackage(Filter):
         )
         html.br()
         html.open_span(class_="min_max_row")
-        html.write_text(_("Min.&nbsp;Version: "))
+        html.write_text_permissive(_("Min.&nbsp;Version: "))
         html.text_input(
             self._varprefix + "version_from",
             default_value=value.get(self._varprefix + "version_from", ""),
             size=9,
         )
-        html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Vers.: "))
+        html.write_text_permissive(" &nbsp; ")
+        html.write_text_permissive(_("Max.&nbsp;Vers.: "))
         html.text_input(
             self._varprefix + "version_to",
             default_value=value.get(self._varprefix + "version_from", ""),
@@ -421,9 +421,8 @@ class FilterInvHasSoftwarePackage(Filter):
             if isinstance(name, str):
                 if package["name"] != name:
                     continue
-            else:
-                if not name.search(package["name"]):
-                    continue
+            elif not name.search(package["name"]):
+                continue
             if not from_version and not to_version:
                 return True  # version not relevant
             version = package["version"]

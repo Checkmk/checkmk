@@ -19,12 +19,12 @@ from collections.abc import Collection
 
 from livestatus import SiteConfigurations, SiteId
 
-import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
 
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
+import cmk.utils.paths
+
+from cmk.gui import log
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -44,6 +44,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils import escaping
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
@@ -167,7 +168,7 @@ class ModeAnalyzeConfig(WatoMode):
                 for test_id, row_data in sorted(results_by_test.items(), key=lambda x: x[1].title):
                     self._show_test_row(table, test_id, row_data, site_ids)
 
-    def _show_test_row(  # pylint: disable=too-many-branches
+    def _show_test_row(
         self,
         table: Table,
         test_id: str,
@@ -215,7 +216,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         # assume all have the same test meta information (title, help, ...)
         table.cell(_("Title"), css=["title"] + ["stale"] if is_test_disabled else [])
-        html.write_text(row_data.title)
+        html.write_text_permissive(row_data.title)
 
         # Now loop all sites to display their results
         for site_id in site_ids:
@@ -274,13 +275,13 @@ class ModeAnalyzeConfig(WatoMode):
                         "acknowledge_test",
                     )
             else:
-                html.write_text("")
+                html.write_text_permissive("")
 
         # Add toggleable notitication context
         table.row(css=["ac_test_details", "hidden"], id_="test_result_details_%s" % test_id)
         table.cell(colspan=2 + 2 * len(site_ids))
 
-        html.write_text(row_data.help)
+        html.write_text_permissive(row_data.help)
 
         if not is_test_disabled:
             html.open_table()
@@ -410,7 +411,8 @@ class ModeAnalyzeConfig(WatoMode):
 
             if site_is_local(active_config, site_id):
                 automation = AutomationCheckAnalyzeConfig()
-                results_data = automation.execute(automation.get_request())
+                # NOTE: The mypy people are too stubborn to fix this, see https://github.com/python/mypy/issues/6549
+                results_data = automation.execute(automation.get_request())  # type: ignore[func-returns-value]
 
             else:
                 raw_results_data = do_remote_automation(

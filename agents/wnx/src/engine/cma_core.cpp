@@ -66,21 +66,6 @@ std::wstring FindPowershellExe() noexcept {
     return {};
 }
 
-namespace security {
-void ProtectFiles(const fs::path &root, std::vector<std::wstring> &commands) {
-    for (const auto &p : {root / cfg::kAppDataAppName}) {
-        wtools::ProtectPathFromUserAccess(p, commands);
-    }
-}
-
-void ProtectAll(const fs::path &root, std::vector<std::wstring> &commands) {
-    wtools::ProtectPathFromUserWrite(root, commands);
-
-    ProtectFiles(root, commands);
-}
-
-}  // namespace security
-
 // we are counting threads in to have control exit/stop/wait
 std::atomic<int> PluginEntry::g_tread_count = 0;
 

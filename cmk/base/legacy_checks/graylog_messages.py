@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<graylog_messages>>>
 # {"events": 1268586}
@@ -28,6 +30,7 @@ def check_graylog_messages(_no_item, params, parsed):
 
 
 check_info["graylog_messages"] = LegacyCheckDefinition(
+    name="graylog_messages",
     parse_function=parse_graylog_agent_data,
     service_name="Graylog Messages",
     discovery_function=inventory_graylog_messages,

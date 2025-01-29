@@ -9,8 +9,10 @@ This folder collects individual endpoints not fitting into the other endpoint fo
 
 import sys
 
-import cmk.utils.version as cmk_version
-from cmk.utils.site import omd_site
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site
+
+from cmk.utils import paths
 
 from cmk.gui.http import request
 from cmk.gui.openapi.endpoints.version.response_schemas import InstalledVersions
@@ -39,12 +41,12 @@ def search(param):
             },
             "versions": {
                 "apache": request.environ.get("apache.version", "unknown"),
-                "checkmk": cmk_version.omd_version(),
+                "checkmk": cmk_version.omd_version(paths.omd_root),
                 "python": sys.version,
                 "mod_wsgi": request.environ.get("mod_wsgi.version", "unknown"),
                 "wsgi": request.environ["wsgi.version"],
             },
-            "edition": cmk_version.edition().short,
+            "edition": cmk_version.edition(paths.omd_root).short,
             "demo": False,
         }
     )

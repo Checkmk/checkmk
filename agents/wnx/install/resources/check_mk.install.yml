@@ -3,4 +3,3 @@
 global:
   enabled: yes
   install: no   # skip this file during installation, no - for packaged MSI
-

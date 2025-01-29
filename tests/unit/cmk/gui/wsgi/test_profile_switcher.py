@@ -9,13 +9,12 @@ import werkzeug.test
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-from cmk.utils.profile_switcher import (
+from cmk.gui.config import active_config
+from cmk.gui.wsgi.applications.profile_switcher import (
     LazyImportProfilingMiddleware,
     ProfileConfigLoader,
     ProfileSetting,
 )
-
-from cmk.gui.config import active_config
 
 
 @pytest.mark.parametrize(

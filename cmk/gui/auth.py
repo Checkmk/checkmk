@@ -19,11 +19,8 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.utils import deprecation_warnings
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.secrets import AutomationUserSecret, Secret, SiteInternalSecret
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -31,32 +28,26 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import AuthenticationFailureEvent, logger
+from cmk.gui.log import logger
+from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType
 from cmk.gui.userdb.session import generate_auth_hash
+from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.gui.utils.urls import requested_file_name
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
+from cmk.crypto.secrets import Secret
 
 auth_logger = logger.getChild("auth")
 
 
-class SiteInternalPseudoUser:
-    """Alternative type for UserIds
-
-    If one component talks to another it usually has to authenticate itself against the called
-    component. We used to use the automation user for this but that has several caveats:
-    - It can be misconfigured
-    - We need the password for this user so we store it in plaintext
-    - It might be synchronized among many sites in a distributed setup
-
-    So the idea is to have this pseudo user that is site specific and makes it possible to
-    authenticate one component to another without a username and without the danger that this might
-    get misconfigured."""
+AuthFunction = Callable[[], UserId | PseudoUserId | None]
 
 
-AuthFunction = Callable[[], UserId | SiteInternalPseudoUser | None]
-
-
-def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
+def check_auth() -> tuple[UserId | PseudoUserId, AuthType]:
     """Try to authenticate a user from the current request.
 
     This will attempt to authenticate the user via all possible authentication types.
@@ -74,11 +65,12 @@ def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
         (_check_auth_by_basic_header, "basic_auth"),
         (_check_auth_by_bearer_header, "bearer"),
         (_check_internal_token, "internal_token"),
+        (_check_remote_site, "remote_site"),
         # Automation authentication via _username and _secret overrules everything else.
         (_check_auth_by_automation_credentials_in_request_values, "automation"),
     ]
 
-    selected: tuple[UserId | SiteInternalPseudoUser, AuthType] | None = None
+    selected: tuple[UserId | PseudoUserId, AuthType] | None = None
     user_id = None
     for auth_method, auth_type in auth_methods:
         # NOTE: It's important for these methods to always raise an exception whenever something
@@ -102,7 +94,7 @@ def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
     if not selected:
         raise MKAuthException("Couldn't log in.")
 
-    if not isinstance(selected[0], SiteInternalPseudoUser):
+    if not isinstance(selected[0], PseudoUserId):
         _check_cme_login(selected[0])
 
     return selected
@@ -310,6 +302,24 @@ def _check_internal_token() -> SiteInternalPseudoUser | None:
     return None
 
 
+def _check_remote_site() -> RemoteSitePseudoUser | None:
+    if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith("RemoteSite "):
+        return None
+
+    _tokenname, token = auth_header.split("RemoteSite ", maxsplit=1)
+
+    if (page_name := requested_file_name(request)) != "register_agent":
+        raise MKAuthException(f"RemoteSite auth for invalid page: {page_name}")
+
+    with contextlib.suppress(binascii.Error):  # base64 decoding failure
+        for enabled_site in enabled_sites().values():
+            if "secret" not in enabled_site:
+                continue
+            if Secret.from_b64(token).compare(Secret(enabled_site["secret"].encode())):
+                return RemoteSitePseudoUser(enabled_site["id"])
+    raise MKAuthException("RemoteSite auth for unknown remote site")
+
+
 def _parse_bearer_token(token: str) -> tuple[str, str]:
     """Read username and password from a Bearer token ("<username> <password>").
 
@@ -407,9 +417,7 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
         secret != ""
         and password_hash is not None
         and not password_hash.startswith("!")  # user is locked
-        and (stored_secret := AutomationUserSecret(user_id)).exists()
         and password_hashing.matches(Password(secret), password_hash)
-        and stored_secret.check(secret)
     )
 
 

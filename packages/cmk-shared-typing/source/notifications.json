@@ -1,0 +1,257 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "title": "Notification Type Defs",
+    "properties": {
+        "notifications": {
+            "type": "object",
+            "$ref": "#/$defs/notifications"
+        },
+        "notification_parameters_overview": {
+            "type": "object",
+            "$ref": "#/$defs/notification_parameters_overview"
+        }
+    },
+    "$defs": {
+        "notifications": {
+            "type": "object",
+            "properties": {
+                "overview_title_i18n": {
+                    "type": "string"
+                },
+                "fallback_warning": {
+                    "type": "object",
+                    "$ref": "#/$defs/fallback_warning"
+                },
+                "notification_stats": {
+                    "type": "object",
+                    "$ref": "#/$defs/notification_stats"
+                },
+                "core_stats": {
+                    "type": "object",
+                    "$ref": "#/$defs/core_stats"
+                },
+                "rule_sections": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/$defs/rule_section"
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "overview_title_i18n",
+                "notification_stats",
+                "core_stats",
+                "rule_sections",
+                "user_id"
+            ]
+        },
+        "notification_parameters_overview": {
+            "type": "object",
+            "properties": {
+                "parameters": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/$defs/rule_section"
+                    }
+                },
+                "i18n": {
+                    "type": "object",
+                    "no_parameter_match": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": ["parameters", "i18n"]
+        },
+        "fallback_warning": {
+            "type": "object",
+            "properties": {
+                "i18n": {
+                    "type": "object",
+                    "$ref": "#/$defs/fallback_warning_i18n"
+                },
+                "setup_link": {
+                    "type": "string"
+                },
+                "do_not_show_again_link": {
+                    "type": "string"
+                }
+            },
+            "required": ["i18n", "setup_link", "do_not_show_again_link"]
+        },
+        "fallback_warning_i18n": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "setup_link_title": {
+                    "type": "string"
+                },
+                "do_not_show_again_title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "message",
+                "setup_link_title",
+                "do_not_show_again_title"
+            ]
+        },
+        "notification_stats": {
+            "type": "object",
+            "properties": {
+                "num_sent_notifications": {
+                    "type": "integer"
+                },
+                "num_failed_notifications": {
+                    "type": "integer"
+                },
+                "sent_notification_link": {
+                    "type": "string"
+                },
+                "failed_notification_link": {
+                    "type": "string"
+                },
+                "i18n": {
+                    "type": "object",
+                    "$ref": "#/$defs/notification_stats_i18n"
+                }
+            },
+            "required": [
+                "num_sent_notifications",
+                "num_failed_notifications",
+                "sent_notification_link",
+                "failed_notification_link",
+                "i18n"
+            ]
+        },
+        "notification_stats_i18n": {
+            "type": "object",
+            "properties": {
+                "sent_notifications": {
+                    "type": "string"
+                },
+                "failed_notifications": {
+                    "type": "string"
+                },
+                "sent_notifications_link_title": {
+                    "type": "string"
+                },
+                "failed_notifications_link_title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "sent_notifications",
+                "failed_notifications",
+                "sent_notifications_link_title",
+                "failed_notifications_link_title"
+            ]
+        },
+        "core_stats": {
+            "type": "object",
+            "properties": {
+                "sites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "i18n": {
+                    "type": "object",
+                    "$ref": "#/$defs/core_stats_i18n"
+                }
+            },
+            "required": ["sites", "i18n"]
+        },
+        "core_stats_i18n": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "sites_column_title": {
+                    "type": "string"
+                },
+                "status_column_title": {
+                    "type": "string"
+                },
+                "ok_msg": {
+                    "type": "string"
+                },
+                "warning_msg": {
+                    "type": "string"
+                },
+                "disabled_msg": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "sites_column_title",
+                "status_column_title",
+                "ok_msg",
+                "warning_msg",
+                "disabled_msg"
+            ]
+        },
+        "rule_section": {
+            "type": "object",
+            "properties": {
+                "i18n": {
+                    "type": "string"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/$defs/rule_topic"
+                    }
+                }
+            },
+            "required": ["i18n", "topics"]
+        },
+        "rule_topic": {
+            "type": "object",
+            "properties": {
+                "i18n": {
+                    "type": "string"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/$defs/rule"
+                    }
+                }
+            },
+            "required": ["rules"]
+        },
+        "rule": {
+            "type": "object",
+            "properties": {
+                "i18n": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                }
+            },
+            "required": ["i18n", "count", "link"]
+        }
+    }
+}

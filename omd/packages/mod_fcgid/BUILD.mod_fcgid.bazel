@@ -17,6 +17,11 @@ configure_make(
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "APXS": "$$(which apxs2 || which apxs)",
         "CPATH": "/usr/include/apache2-worker",
@@ -29,6 +34,7 @@ configure_make(
         cp modules/fcgid/.libs/mod_fcgid.so $INSTALLDIR/lib
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Final
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 

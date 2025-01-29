@@ -5,23 +5,29 @@
 import contextlib
 import http.client
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
-from cmk.utils import version
-from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupSpecs, GroupType
+from cmk.ccc import version
+from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.customer import customer_api, CustomerIdOrGlobal
 from cmk.gui.exceptions import MKHTTPException
+from cmk.gui.groups import GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors
-from cmk.gui.openapi.restful_objects.type_defs import CollectionObject
-from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
+from cmk.gui.openapi.utils import (
+    GeneralRestAPIException,
+    ProblemException,
+    RestAPIRequestDataValidationException,
+)
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -32,7 +38,7 @@ GroupDomainType = Literal[
 
 
 def complement_customer(details):
-    if edition() is not Edition.CME:
+    if edition(paths.omd_root) is not Edition.CME:
         return details
 
     if "customer" in details:
@@ -43,12 +49,16 @@ def complement_customer(details):
     return details
 
 
-def serve_group(group, serializer) -> Response:  # type: ignore[no-untyped-def]
+def serve_group(group: GroupSpec, serializer: Callable[[GroupSpec], DomainObject]) -> Response:
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
         response.set_content_type("application/json")
     return constructors.response_with_etag_created_from_dict(response, group)
+
+
+def build_group_list(groups: GroupSpecs) -> list[GroupSpec]:
+    return [group | {"id": key} for key, group in groups.items()]
 
 
 def serialize_group_list(
@@ -62,6 +72,9 @@ def serialize_group_list(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],
+                extensions=complement_customer(
+                    {key: value for key, value in group.items() if key not in ("id", "alias")}
+                ),
             )
             for group in collection
         ],
@@ -69,30 +82,24 @@ def serialize_group_list(
     )
 
 
-def serialize_group(name: GroupDomainType) -> Any:
-    def _serializer(group: dict[str, str]) -> Any:
+def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject]:
+    def _serializer(group: GroupSpec) -> Any:
         ident = group["id"]
-        extensions = {}
-        if "customer" in group:
-            customer_id = group["customer"]
-            extensions["customer"] = "global" if customer_id is None else customer_id
-        elif edition() is Edition.CME:
-            extensions["customer"] = customer_api().default_customer_id()
-
-        extensions["alias"] = group["alias"]
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
             title=group["alias"] or ident,
-            extensions=extensions,
+            extensions=complement_customer(
+                {  # TODO: remove alias in v2
+                    key: value for key, value in group.items() if key != "id"
+                }
+            ),
         )
 
     return _serializer
 
 
-def update_groups(  # type: ignore[no-untyped-def]
-    group_type: GroupType, entries: list[dict[str, Any]]
-):
+def update_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> list[GroupSpec]:
     groups = []
     for details in entries:
         name = details["name"]
@@ -114,7 +121,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
             already_existing.append(name)
             continue
         group_details: GroupSpec = {"alias": details["alias"]}
-        if version.edition() is version.Edition.CME:
+        if version.edition(paths.omd_root) is version.Edition.CME:
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
@@ -171,10 +178,10 @@ def _retrieve_group(
 
 
 @contextlib.contextmanager
-def may_fail(  # type: ignore[no-untyped-def]
+def may_fail(
     exc_type: type[Exception] | tuple[type[Exception], ...],
     status: int | None = None,
-):
+) -> Iterator[None]:
     """Context manager to make Exceptions REST-API safe
 
         Examples:
@@ -207,7 +214,7 @@ def may_fail(  # type: ignore[no-untyped-def]
 
     """
 
-    def _get_message(e):
+    def _get_message(e: Exception) -> str:
         if hasattr(e, "message"):
             return e.message
 
@@ -253,7 +260,7 @@ def update_customer_info(
 def group_edit_details(body: GroupSpec) -> GroupSpec:
     group_details: GroupSpec = {k: v for k, v in body.items() if k != "customer"}
 
-    if version.edition() is version.Edition.CME and "customer" in body:
+    if version.edition(paths.omd_root) is version.Edition.CME and "customer" in body:
         group_details = update_customer_info(group_details, body["customer"])
     return group_details
 
@@ -298,3 +305,54 @@ def folder_slug(folder: Folder) -> str:
 def get_site_id_for_host(connection: MultiSiteConnection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
         return Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(conn)
+
+
+def mutually_exclusive_fields[T](
+    expected_type: type[T], params: Mapping[str, Any], *fields: str, default: T | None = None
+) -> T | None:
+    """
+    Check that at most one of the fields is set and return its value.
+
+    Args:
+        expected_type:
+            The expected type of the field. If the type does not match, an HTTP 500 error is raised.
+        params:
+            The parameters to check. Field names will be looked up in this dictionary.
+        fields:
+            The field names to check.
+        default:
+            The default value to return if no field is set.
+
+    Examples:
+        >>> mutually_exclusive_fields(int, {"a": 1, "b": 2}, "a", "b")
+        Traceback (most recent call last):
+        ...
+        cmk.gui.openapi.utils.RestAPIRequestDataValidationException: 400 Bad Request: Invalid request
+        >>> mutually_exclusive_fields(int, {"a": 1}, "a", "b")
+        1
+        >>> mutually_exclusive_fields(int, {"b": 2}, "a", "b")
+        2
+        >>> mutually_exclusive_fields(int, {}, "a", "b")
+        >>> mutually_exclusive_fields(int, {}, "a", "b", default=42)
+        42
+    """
+    values = [(field, params[field]) for field in fields if field in params]
+    if len(values) > 1:
+        fields_str = ", ".join(f"`{field}`" for field in fields[:-1]) + f" and `{fields[-1]}`"
+        raise RestAPIRequestDataValidationException(
+            title="Invalid request",
+            detail=f"Only one of the fields {fields_str} is allowed, but multiple were provided.",
+        )
+
+    if values:
+        field, value = values[0]
+        if isinstance(value, expected_type):
+            return value
+
+        raise GeneralRestAPIException(
+            status=500,
+            title="Internal error",
+            detail=f"Field `{field}` must be of type `{expected_type.__name__}`, but got `{type(value).__name__}`",
+        )
+
+    return default

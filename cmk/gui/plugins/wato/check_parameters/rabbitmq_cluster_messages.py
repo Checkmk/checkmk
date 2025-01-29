@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Float, Integer, Migrate, Tuple
 
 
 class MessageType(enum.StrEnum):
-    """Watch out! The values must match the check plugin!
+    """Watch out! The values must match the check plug-in!
 
     For now copy'n'paste. Should go to cmk/plugins/rabbitmq sometay (TM).
     """

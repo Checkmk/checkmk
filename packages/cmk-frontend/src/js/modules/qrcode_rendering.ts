@@ -8,7 +8,7 @@ import QRCode from "qrcode";
 
 export async function render_qr_code(
     qr_div: HTMLElement,
-    options: {[key: string]: string}
+    options: {[key: string]: string},
 ) {
     const canvas = document.createElement("canvas");
     const data = options.qrcode;
@@ -18,8 +18,8 @@ export async function render_qr_code(
             console.error(error);
             qr_div.appendChild(
                 document.createTextNode(
-                    `Could not render qrcode because an internal error occurred: ${error}. The data shown in the qrcode would be: ${data}.`
-                )
+                    `Could not render qrcode because an internal error occurred: ${error}. The data shown in the qrcode would be: ${data}.`,
+                ),
             );
         }
     });

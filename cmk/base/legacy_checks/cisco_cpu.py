@@ -8,9 +8,7 @@
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -22,6 +20,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def inventory_cisco_cpu(info):
@@ -56,6 +56,7 @@ def parse_cisco_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_cpu"] = LegacyCheckDefinition(
+    name="cisco_cpu",
     parse_function=parse_cisco_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),

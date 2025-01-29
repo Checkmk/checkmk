@@ -7,7 +7,6 @@ import base64
 from collections.abc import Callable
 from typing import NamedTuple
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
@@ -17,8 +16,9 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 g_header_open = False
 g_section_open = False
@@ -114,7 +114,7 @@ def _table_head(
     else:
         html.open_td(id_=f"nform.{treename}.{id_}", colspan=2)
 
-    html.write_text(title)
+    html.write_text_permissive(title)
     html.help(help_text)
     if show_more_toggle:
         html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
@@ -173,13 +173,13 @@ def section(
                 class_=["title"] + (["withcheckbox"] if checkbox else []),
                 title=escaping.strip_tags(title),
             )
-            html.write_text(title)
+            html.write_text_permissive(title)
             html.span("." * 200, class_=["dots"] + (["required"] if is_required else []))
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
             if isinstance(checkbox, (str, HTML)):
-                html.write_text(checkbox)
+                html.write_text_permissive(checkbox)
             else:
                 name, active, attrname = checkbox
                 html.checkbox(

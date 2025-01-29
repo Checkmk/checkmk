@@ -3,29 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import inspect
 from dataclasses import replace
 
 from pytest import MonkeyPatch
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
+from cmk.base.api.agent_based.register import check_plugins_legacy
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
 
 
-def dummy_generator(section):  # pylint: disable=unused-argument
+def dummy_generator(section):
     yield from ()
 
 
 MINIMAL_CHECK_INFO = LegacyCheckDefinition(
+    name="norris",
     service_name="Norris Device",
     discovery_function=dummy_generator,
     check_function=dummy_generator,
@@ -47,7 +48,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        LegacyCheckDefinition(discovery_function=insane_discovery),
+        LegacyCheckDefinition(name="test_plugin", discovery_function=insane_discovery),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -79,6 +80,7 @@ def test_create_check_function() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -126,6 +128,7 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -158,6 +161,7 @@ def test_create_check_function_without_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -186,6 +190,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -202,10 +207,12 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
     ]
 
 
-def test_create_check_plugin_from_legacy_wo_params() -> None:
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        MINIMAL_CHECK_INFO,
+def test_convert_legacy_check_plugins_wo_params() -> None:
+    _errors, (plugin,) = check_plugins_legacy.convert_legacy_check_plugins(
+        (MINIMAL_CHECK_INFO,),
+        {"norris": "blah/norris.py"},
+        validate_creation_kwargs=True,
+        raise_errors=True,
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -218,18 +225,21 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function is None
+    assert plugin.location == LegacyPluginLocation("blah/norris.py")
 
 
-def test_create_check_plugin_from_legacy_with_params() -> None:
-    check_info_element = replace(
-        MINIMAL_CHECK_INFO,
-        check_ruleset_name="norris_rule",
-        check_default_parameters={"levels": (23, 42)},
-    )
-
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        check_info_element,
+def test_convert_legacy_check_plugins_with_params() -> None:
+    _errors, (plugin,) = check_plugins_legacy.convert_legacy_check_plugins(
+        (
+            replace(
+                MINIMAL_CHECK_INFO,
+                check_ruleset_name="norris_rule",
+                check_default_parameters={"levels": (23, 42)},
+            ),
+        ),
+        {"norris": "blah/norris.py"},
+        validate_creation_kwargs=True,
+        raise_errors=True,
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -244,3 +254,4 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function is None
+    assert plugin.location == LegacyPluginLocation("blah/norris.py")

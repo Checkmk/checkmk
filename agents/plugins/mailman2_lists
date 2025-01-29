@@ -7,7 +7,7 @@
 Monitor Mailman 2 mailing lists.
 """
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # This Checkmk-Agent plugin gathers information about mailinglists hosted
 # by the local mailman instance.
@@ -22,7 +22,7 @@ sys.path.append("/usr/lib/mailman")
 # Set to True to filter out all "hidden" mailinglists
 only_advertised = True
 
-from Mailman import MailList, Utils  # type: ignore[import] # pylint: disable=import-error
+from Mailman import MailList, Utils  # type: ignore[import]
 
 # 1. list memberships
 sys.stdout.write("<<<mailman_lists>>>\n")

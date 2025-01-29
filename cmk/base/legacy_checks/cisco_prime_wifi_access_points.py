@@ -8,15 +8,15 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html
 """
 
-
 import collections
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 Section = Mapping
 
@@ -48,6 +48,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
 
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
+    name="cisco_prime_wifi_access_points",
     parse_function=parse_cisco_prime_wifi_access_points,
     service_name="Cisco Prime WiFi Access Points",
     discovery_function=discover_cisco_prime_wifi_access_points,

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import time
 from collections.abc import Iterable, Mapping
@@ -12,17 +11,17 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
-import cmk.base.checkers as checkers
-import cmk.base.config as config
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base import checkers, config
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -30,12 +29,19 @@ from cmk.agent_based.prediction_backend import (
     PredictionParameters,
 )
 from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v2 import CheckResult
 
 
 def make_timespecific_params_list(
     entries: Iterable[Mapping[str, object]],
 ) -> TimespecificParameters:
     return TimespecificParameters([TimespecificParameterSet.from_parameters(e) for e in entries])
+
+
+def make_service(desription: ServiceName) -> ConfiguredService:
+    return ConfiguredService(
+        CheckPluginName("dummy"), None, desription, TimespecificParameters(), {}, {}, {}, False
+    )
 
 
 @pytest.mark.parametrize(
@@ -95,7 +101,7 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
     assert [] == checkers._get_clustered_service_node_keys(
         HostName("cluster.test"),
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -117,7 +123,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     assert [] == checkers._get_clustered_service_node_keys(
         HostName("node1.test"),
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -129,7 +135,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     ] == checkers._get_clustered_service_node_keys(
         cluster_test,
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=[HostName("node1.test"), HostName("node2.test")],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
@@ -163,7 +169,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     assert checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
-        "Test Service",
+        make_service("Test Service"),
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     ) == [
@@ -181,20 +187,26 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ] == checkers._get_clustered_service_node_keys(
         cluster,
         SourceType.HOST,
-        "Test Unclustered",
+        make_service("Test Unclustered"),
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
 
 
 def test_only_from_injection() -> None:
-    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: ["1.2.3.4"],
+        prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
+        service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
+    )
     p: dict[str, object] = {
         "outer": {
             "inner": ("cmk_postprocessed", "only_from", None),
         },
     }
-    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "outer": {
             "inner": ["1.2.3.4"],
         },
@@ -202,7 +214,13 @@ def test_only_from_injection() -> None:
 
 
 def test_prediction_injection_legacy() -> None:
-    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: ["1.2.3.4"],
+        prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
+        service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
+    )
     p: dict[str, object] = {
         "pagefile": (
             "predictive",
@@ -214,11 +232,11 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "pagefile": (
             "predictive",
             {
-                "__injected__": inject.model_dump(),
+                "__injected__": p_config.prediction().model_dump(),
                 "period": "day",
                 "horizon": 60,
                 "levels_upper": ("absolute", (0.5, 1.0)),
@@ -238,8 +256,15 @@ def test_prediction_injection() -> None:
     metric = "my_reference_metric"
     prediction = (42.0, (50.0, 60.0))
 
-    inject = InjectedParameters(
-        meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: [],
+        prediction=lambda: InjectedParameters(
+            meta_file_path_template="",
+            predictions={_make_hash(params, "upper", metric): prediction},
+        ),
+        service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
     )
     p: dict[str, object] = {
         "levels_upper": (
@@ -254,7 +279,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

@@ -4,10 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, savefloat
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+
+check_info = {}
+
+
+def savefloat(f: str) -> float:
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
+    try:
+        return float(f)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def discover_innovaphone_licenses(string_table: StringTable) -> DiscoveryResult:
@@ -36,6 +49,7 @@ def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+    name="innovaphone_licenses",
     parse_function=parse_innovaphone_licenses,
     service_name="Licenses",
     discovery_function=discover_innovaphone_licenses,

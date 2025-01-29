@@ -4,20 +4,40 @@
         "browser": true,
         "commonjs": true
     },
-    "extends": ["eslint:recommended", "plugin:compat/recommended", "prettier", "plugin:@typescript-eslint/recommended"],
+    "extends": [
+        "eslint:recommended",
+        "plugin:compat/recommended",
+        "plugin:import/recommended",
+        "prettier",
+        "plugin:@typescript-eslint/recommended"
+    ],
     "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module"
+    },
+    "settings": {
+        "import/resolver": {
+            "typescript": {}
+        }
     },
     "plugins": [
         "compat",
         "prettier",
         "simple-import-sort",
-        "license-header"],
+        "license-header",
+        "no-unsanitized"
+    ],
     "rules": {
+        "no-restricted-imports": ["error", { "patterns": ["../"] }],
+        "import/no-namespace": "error",
         "simple-import-sort/exports": "error",
         "simple-import-sort/imports": "error",
+        "no-eval": "error",
+        "no-implied-eval": "error",
+        "no-unsanitized/method": "error",
+        "no-unsanitized/property": "error",
         "license-header/header": [ "error", "./resources/license-header.js" ],
+        "@typescript-eslint/consistent-type-imports": "error",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": "off",
@@ -48,15 +68,5 @@
     },
     "ignorePatterns": [
         "*_min.js"
-    ],
-    "overrides": [
-        {
-            "files": [
-                "src/js/modules/cee/**/*.ts"
-            ],
-            "rules": {
-                "license-header/header": [ "error", "./resources/enterprise-license-header.js" ]
-            }
-        }
     ]
 }

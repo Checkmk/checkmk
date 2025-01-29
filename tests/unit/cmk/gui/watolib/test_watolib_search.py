@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -11,6 +10,7 @@ from contextlib import contextmanager
 import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 from redis import Redis
 
 from cmk.utils.hostaddress import HostName
@@ -36,15 +36,13 @@ from cmk.gui.watolib.search import (
     IndexNotFoundException,
     IndexSearcher,
     is_url_permitted,
-)
-from cmk.gui.watolib.search import (
-    match_item_generator_registry as real_match_item_generator_registry,
-)
-from cmk.gui.watolib.search import (
     MatchItem,
     MatchItemGeneratorRegistry,
     MatchItems,
     PermissionsHandler,
+)
+from cmk.gui.watolib.search import (
+    match_item_generator_registry as real_match_item_generator_registry,
 )
 
 
@@ -356,10 +354,15 @@ class TestPermissionHandler:
 
 
 class TestIndexSearcher:
-    @pytest.mark.usefixtures("with_admin_login")
-    def test_search_no_index(self, clean_redis_client: "Redis[str]") -> None:
+    @pytest.mark.usefixtures("with_admin_login", "inline_background_jobs")
+    def test_search_no_index(self, clean_redis_client: "Redis[str]", mocker: MockerFixture) -> None:
+        get_config = mocker.patch(
+            "cmk.gui.wato.pages.global_settings.ABCConfigDomain.get_all_default_globals"
+        )
+
         with pytest.raises(IndexNotFoundException):
             list(IndexSearcher(clean_redis_client, PermissionsHandler()).search("change_dep"))
+        get_config.assert_called()
 
     def test_sort_search_results(self) -> None:
         def fake_permissions_check(_url: str) -> bool:

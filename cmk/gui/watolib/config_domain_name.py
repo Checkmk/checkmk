@@ -8,15 +8,16 @@ from __future__ import annotations
 import abc
 import os
 import pprint
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final
 
-import cmk.utils.plugin_registry
-import cmk.utils.store as store
+import cmk.ccc.plugin_registry
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.hooks import request_memoize
@@ -72,7 +73,7 @@ class ABCConfigDomain(abc.ABC):
     def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
-    def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:
+    def enabled_domains(cls) -> Sequence[ABCConfigDomain]:
         return [d for d in config_domain_registry.values() if d.enabled()]
 
     @abc.abstractmethod
@@ -80,27 +81,25 @@ class ABCConfigDomain(abc.ABC):
         raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
 
     @classmethod
-    def get_class(cls, ident: str) -> type[ABCConfigDomain]:
-        return config_domain_registry[ident]
-
-    @classmethod
-    def enabled(cls) -> Literal[True]:
+    def enabled(cls) -> bool:
         return True
 
     @classmethod
-    def get_all_default_globals(cls) -> Mapping[str, Any]:
+    def get_all_default_globals(cls) -> GlobalSettings:
         return _get_all_default_globals()
 
     @abc.abstractmethod
-    def config_dir(self):
+    def config_dir(self) -> str:
         raise NotImplementedError()
 
-    def config_file(self, site_specific):
+    def config_file(self, site_specific: bool) -> str:
         if site_specific:
             return os.path.join(self.config_dir(), "sitespecific.mk")
         return os.path.join(self.config_dir(), "global.mk")
 
-    def load_full_config(self, site_specific=False, custom_site_path=None):
+    def load_full_config(
+        self, site_specific: bool = False, custom_site_path: str | None = None
+    ) -> GlobalSettings:
         filename = Path(self.config_file(site_specific))
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
@@ -119,13 +118,20 @@ class ABCConfigDomain(abc.ABC):
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
-    def load(self, site_specific=False, custom_site_path=None):
+    def load(
+        self, site_specific: bool = False, custom_site_path: str | None = None
+    ) -> GlobalSettings:
         return filter_unknown_settings(self.load_full_config(site_specific, custom_site_path))
 
-    def load_site_globals(self, custom_site_path=None):
+    def load_site_globals(self, custom_site_path: str | None = None) -> GlobalSettings:
         return self.load(site_specific=True, custom_site_path=custom_site_path)
 
-    def save(self, settings, site_specific=False, custom_site_path=None):
+    def save(
+        self,
+        settings: GlobalSettings,
+        site_specific: bool = False,
+        custom_site_path: str | None = None,
+    ) -> None:
         filename = self.config_file(site_specific)
         if custom_site_path:
             filename = os.path.join(
@@ -139,11 +145,13 @@ class ABCConfigDomain(abc.ABC):
         store.makedirs(os.path.dirname(filename))
         store.save_text_to_file(filename, output)
 
-    def save_site_globals(self, settings, custom_site_path=None):
+    def save_site_globals(
+        self, settings: GlobalSettings, custom_site_path: str | None = None
+    ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
     @abc.abstractmethod
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self) -> GlobalSettings:
         """Returns a dictionary that contains the default settings
         of all configuration variables of this config domain."""
         raise NotImplementedError()
@@ -154,7 +162,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v().domain() == self.__class__
+            if v().domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -167,30 +175,30 @@ class ABCConfigDomain(abc.ABC):
 
 
 @request_memoize()
-def _get_all_default_globals() -> dict[str, Any]:
+def _get_all_default_globals() -> GlobalSettings:
     settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
-        settings.update(domain().default_globals())
+        settings.update(domain.default_globals())
     return settings
 
 
-def get_config_domain(domain_ident: ConfigDomainName) -> type[ABCConfigDomain]:
+def get_config_domain(domain_ident: ConfigDomainName) -> ABCConfigDomain:
     return config_domain_registry[domain_ident]
 
 
-def get_always_activate_domains() -> Sequence[type[ABCConfigDomain]]:
+def get_always_activate_domains() -> Sequence[ABCConfigDomain]:
     return [d for d in config_domain_registry.values() if d.always_activate]
 
 
-class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[type[ABCConfigDomain]]):
-    def plugin_name(self, instance: type[ABCConfigDomain]) -> str:
+class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[ABCConfigDomain]):
+    def plugin_name(self, instance: ABCConfigDomain) -> str:
         return instance.ident()
 
 
 config_domain_registry = ConfigDomainRegistry()
 
 
-def generate_hosts_to_update_settings(hostnames: Iterable[HostName]) -> SerializedSettings:
+def generate_hosts_to_update_settings(hostnames: Sequence[HostName]) -> SerializedSettings:
     return {"hosts_to_update": hostnames}
 
 
@@ -212,9 +220,7 @@ class SampleConfigGenerator(abc.ABC):
         raise NotImplementedError()
 
 
-class SampleConfigGeneratorRegistry(
-    cmk.utils.plugin_registry.Registry[type[SampleConfigGenerator]]
-):
+class SampleConfigGeneratorRegistry(cmk.ccc.plugin_registry.Registry[type[SampleConfigGenerator]]):
     def plugin_name(self, instance):
         return instance.ident()
 
@@ -268,7 +274,7 @@ class ConfigVariableGroup:
         return None
 
 
-class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):
+class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariableGroup]]):
     def plugin_name(self, instance):
         return instance().ident()
 
@@ -289,8 +295,8 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         raise NotImplementedError()
 
-    def domain(self) -> type[ABCConfigDomain]:
-        """Returns the class of the config domain this configuration variable belongs to"""
+    def domain(self) -> ABCConfigDomain:
+        """Returns the config domain this configuration variable belongs to"""
         return config_domain_registry["check_mk"]
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
@@ -302,6 +308,10 @@ class ConfigVariable:
         """Whether or not a change to this setting enforces a "restart" during activate changes instead of just a synchronization"""
         return None
 
+    def need_apache_reload(self) -> bool:
+        """Whether a change to this setting enforces an apache reload, this currently only works when using the ConfigDomainGUI"""
+        return False
+
     # TODO: Investigate: Which use cases do we have here? Can this be dropped?
     def allow_reset(self) -> bool:
         """Whether or not the user is allowed to change this setting to factory settings"""
@@ -312,10 +322,10 @@ class ConfigVariable:
         return True
 
     def hint(self) -> HTML:
-        return HTML()
+        return HTML.empty()
 
 
-class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariable]]):
+class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariable]]):
     def plugin_name(self, instance):
         return instance().ident()
 

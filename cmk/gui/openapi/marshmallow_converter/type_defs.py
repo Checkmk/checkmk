@@ -46,3 +46,41 @@ class ValuespecToValueMatchDict(typing.Protocol[V_c]):
     ) -> None: ...
 
     def get(self, item: type[V_c] | type[None]) -> ValuespecToValueMatchEntry[V_c] | None: ...
+
+
+T = typing.TypeVar("T")
+
+
+@typing.overload
+def maybe_lazy(entry: typing.Callable[[], typing.Iterable[T]]) -> typing.Iterable[T]: ...
+
+
+@typing.overload
+def maybe_lazy(entry: typing.Iterable[T]) -> typing.Iterable[T]: ...
+
+
+def maybe_lazy(
+    entry: typing.Iterable[T] | typing.Callable[[], typing.Iterable[T]],
+) -> typing.Iterable[T]:
+    """Return the iterable unchanged, but invoking the parameter if it's a callable.
+
+    Takes either an iterable or a callable that returns an iterable as input. If the input is a
+    callable, it is called to obtain the iterable.
+
+    Args:
+        entry: The iterable or callable returning an iterable to process.
+
+    Returns:
+        The resulting iterable. Returns the input directly if it's already an iterable, or the
+        result of calling it if it's a callable.
+
+    Examples:
+        >>> maybe_lazy([1, 2, 3])
+        [1, 2, 3]
+
+        >>> maybe_lazy(lambda: [1, 2, 3])
+        [1, 2, 3]
+    """
+    if callable(entry):
+        return entry()
+    return entry

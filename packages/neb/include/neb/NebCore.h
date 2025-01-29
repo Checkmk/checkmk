@@ -93,19 +93,19 @@ public:
             NagiosAuthorization authorization, Encoding data_encoding,
             std::string edition,
             std::chrono::system_clock::time_point state_file_created);
+    void dump_infos() const;
 
-    // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
     const IHostGroup *ihostgroup(const ::hostgroup *handle) const;
-
     const IService *iservice(const ::service *handle) const;
     const IServiceGroup *iservicegroup(const ::servicegroup *handle) const;
+    const IContactGroup *icontactgroup(const ::contactgroup *handle) const;
 
     [[nodiscard]] const IHost *find_host(
         const std::string &name) const override;
     [[nodiscard]] const IHostGroup *find_hostgroup(
         const std::string &name) const override;
-    [[nodiscard]] std::unique_ptr<const IHost> getHostByDesignation(
+    [[nodiscard]] const IHost *getHostByDesignation(
         const std::string &designation) const override;
     bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const override;
@@ -268,15 +268,18 @@ private:
         iservicegroups_by_handle_;
     // host is never nullptr
 
-    std::unordered_map<const ::contact *, std::unique_ptr<IContact>> icontacts_;
+    std::unordered_map<const ::contact *, std::unique_ptr<IContact>>
+        icontacts_by_handle_;
     std::unordered_map<const ::contactgroup *, std::unique_ptr<IContactGroup>>
-        icontactgroups_;
+        icontactgroups_by_handle_;
     Triggers _triggers;
 
     // Nagios is not thread-safe, so this mutex protects calls to
     // process_external_command1 / submit_external_command.
     std::mutex _command_mutex;
 
+    // TODO(sp): Avoid the suppression below.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     void *implInternal() const override { return const_cast<NebCore *>(this); }
 
     void logRequest(const std::string &line,

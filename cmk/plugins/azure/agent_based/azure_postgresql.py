@@ -12,14 +12,16 @@ from cmk.plugins.lib.azure import (
     check_cpu,
     check_memory,
     check_network,
-    check_storage,
     create_check_metrics_function,
     create_discover_by_metrics_function,
     MetricData,
     Section,
 )
 
-DB_POSTGRESQL_RESOURCE_NAME = "Microsoft.DBforPostgreSQL/servers"
+DB_POSTGRESQL_RESOURCE_TYPES = [
+    "Microsoft.DBforPostgreSQL/servers",
+    "Microsoft.DBforPostgreSQL/flexibleServers",
+]
 
 
 check_plugin_azure_postgresql_memory = CheckPlugin(
@@ -27,7 +29,7 @@ check_plugin_azure_postgresql_memory = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Memory",
     discovery_function=create_discover_by_metrics_function(
-        "average_memory_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "average_memory_percent", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
     ),
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
@@ -40,7 +42,7 @@ check_plugin_azure_postgresql_cpu = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s CPU",
     discovery_function=create_discover_by_metrics_function(
-        "average_cpu_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "average_cpu_percent", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
     ),
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization_with_item",
@@ -52,12 +54,19 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return create_check_metrics_function(
         [
             MetricData(
-                "maximum_pg_replica_log_delay_in_seconds",
+                "maximum_pg_replica_log_delay_in_seconds",  # single server metric name
                 "replication_lag",
                 "Replication lag",
                 render.timespan,
                 upper_levels_param="levels",
-            )
+            ),
+            MetricData(
+                "maximum_physical_replication_delay_in_seconds",  # flexible server metric name
+                "replication_lag",
+                "Replication lag",
+                render.timespan,
+                upper_levels_param="levels",
+            ),
         ]
     )
 
@@ -67,7 +76,9 @@ check_plugin_azure_postgresql_replication = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Replication",
     discovery_function=create_discover_by_metrics_function(
-        "maximum_pg_replica_log_delay_in_seconds", resource_type=DB_POSTGRESQL_RESOURCE_NAME
+        "maximum_pg_flexible_physical_replication_delay_in_seconds",  # single server metric name
+        "maximum_physical_replication_delay_in_seconds",  # flexible server metric name
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
@@ -82,7 +93,7 @@ check_plugin_azure_postgresql_connections = CheckPlugin(
     discovery_function=create_discover_by_metrics_function(
         "average_active_connections",
         "total_connections_failed",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_connections(),
     check_ruleset_name="database_connections",
@@ -97,7 +108,7 @@ check_plugin_azure_postgresql_network = CheckPlugin(
     discovery_function=create_discover_by_metrics_function(
         "total_network_bytes_ingress",
         "total_network_bytes_egress",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_network(),
     check_ruleset_name="network_io",
@@ -105,15 +116,51 @@ check_plugin_azure_postgresql_network = CheckPlugin(
 )
 
 
+def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return create_check_metrics_function(
+        [
+            MetricData(
+                "average_io_consumption_percent",  # single server metric name
+                "io_consumption_percent",
+                "IO",
+                render.percent,
+                upper_levels_param="io_consumption",
+            ),
+            MetricData(
+                "average_disk_iops_consumed_percentage",  # flexible server metric name
+                "io_consumption_percent",
+                "IO",
+                render.percent,
+                upper_levels_param="io_consumption",
+            ),
+            MetricData(
+                "average_storage_percent",
+                "storage_percent",
+                "Storage",
+                render.percent,
+                upper_levels_param="storage",
+            ),
+            MetricData(
+                "average_serverlog_storage_percent",  # single server metric name
+                "serverlog_storage_percent",
+                "Server log storage",
+                render.percent,
+                upper_levels_param="serverlog_storage",
+            ),
+        ]
+    )
+
+
 check_plugin_azure_postgresql_storage = CheckPlugin(
     name="azure_postgresql_storage",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Storage",
     discovery_function=create_discover_by_metrics_function(
-        "average_io_consumption_percent",
-        "average_serverlog_storage_percent",
+        "average_io_consumption_percent",  # single server metric name
+        "average_disk_iops_consumed_percentage",  # flexible server metric name
+        "average_serverlog_storage_percent",  # single server metric name
         "average_storage_percent",
-        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_storage(),
     check_ruleset_name="azure_db_storage",

@@ -9,8 +9,9 @@ from typing import Any, Literal
 
 from livestatus import OnlySites, SiteId
 
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
@@ -18,33 +19,33 @@ from cmk.utils.statename import short_service_state_name
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
+    BIAggrTreeState,
+    BILeafTreeState,
     FoldableTreeRendererBottomUp,
     FoldableTreeRendererBoxes,
     FoldableTreeRendererTopDown,
     FoldableTreeRendererTree,
+    is_aggr,
 )
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.command import (
     Command,
-    command_group_registry,
-    command_registry,
     CommandActionResult,
     CommandGroup,
     CommandSpec,
@@ -477,7 +478,7 @@ class PainterAggrIcons(Painter):
                     "outof_serviceperiod",
                     _("This aggregation is currently out of its service period."),
                 )
-            code = HTML(output_funnel.drain())
+            code = HTML.without_escaping(output_funnel.drain())
         return "buttons", code
 
 
@@ -617,7 +618,7 @@ class PainterAggrGroup(Painter):
         return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", escape_attribute(row["aggr_group"])
+        return "", HTML.with_escaping(row["aggr_group"])
 
 
 class PainterAggrName(Painter):
@@ -659,13 +660,16 @@ class PainterAggrOutput(Painter):
 
 
 def paint_aggr_hosts(
-    row: Row, link_to_view: str, *, request: Request  # pylint: disable=redefined-outer-name
+    row: Row,
+    link_to_view: str,
+    *,
+    request: Request,
 ) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
         h.append(HTMLWriter.render_a(host, url))
-    return "", HTML(" ").join(h)
+    return "", HTML.without_escaping(" ").join(h)
 
 
 class PainterAggrHosts(Painter):
@@ -1011,7 +1015,7 @@ class PainterAggrTreestateBoxed(Painter):
         return render_tree_json(row, user=self.user, request=self.request)
 
 
-def render_tree_json(  # pylint: disable=redefined-outer-name
+def render_tree_json(
     row: typing.Mapping[str, typing.Any],
     *,
     user: LoggedInUser,
@@ -1024,7 +1028,9 @@ def render_tree_json(  # pylint: disable=redefined-outer-name
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    def render_node_json(
+        tree: BIAggrTreeState | BILeafTreeState, show_host: bool
+    ) -> dict[str, Any]:
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -1061,17 +1067,18 @@ def render_tree_json(  # pylint: disable=redefined-outer-name
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    def render_subtree_json(
+        node: BIAggrTreeState | BILeafTreeState, path: Sequence[str], show_host: bool
+    ) -> dict[str, Any]:
         json_node = render_node_json(node, show_host)
 
-        is_leaf = len(node) == 3
         is_next_level_open = len(path) <= expansion_level
 
-        if not is_leaf and is_next_level_open:
+        if is_aggr(node) and is_next_level_open:
             json_node["nodes"] = []
             for child_node in node[3]:
                 if not child_node[2].get("hidden"):
-                    new_path = path + [child_node[2]["title"]]
+                    new_path = [*path, child_node[2]["title"]]
                     json_node["nodes"].append(render_subtree_json(child_node, new_path, show_host))
 
         return json_node
@@ -1118,95 +1125,74 @@ class CommandGroupAggregations(CommandGroup):
         return 10
 
 
-class CommandFreezeAggregation(Command):
-    @property
-    def ident(self) -> str:
-        return "freeze_aggregation"
+def command_freeze_aggregation_render(what: str) -> None:
+    html.open_div(class_="group")
+    html.button(_button_name(), _("Freeze selected"), cssclass="hot")
+    html.button("_cancel", _("Cancel"))
+    html.close_div()
 
-    @property
-    def title(self) -> str:
-        return _("Freeze aggregations")
 
-    @property
-    def confirm_title(self) -> str:
-        return _("Freeze aggregation?")
-
-    @property
-    def confirm_button(self) -> LazyString:
-        return _l("Freeze")
-
-    @property
-    def icon_name(self):
-        return "bi_freeze"
-
-    @property
-    def is_shortcut(self) -> bool:
-        return True
-
-    @property
-    def is_suggested(self) -> bool:
-        return True
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionFreezeAggregation
-
-    @property
-    def group(self) -> type[CommandGroup]:
-        return CommandGroupAggregations
-
-    @property
-    def tables(self) -> list[str]:
-        return ["aggr"]
-
-    @property
-    def only_view(self) -> str | None:
-        """View name to show a view exclusive command for"""
-        return "aggr_frozen_diff"
-
-    def render(self, what: str) -> None:
-        html.open_div(class_="group")
-        html.button(self._button_name, _("Freeze selected"), cssclass="hot")
-        html.button("_cancel", _("Cancel"))
-        html.close_div()
-
-    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
-            _("Affected %s: %s")
-            % (
-                ungettext(
-                    "aggregation",
-                    "aggregations",
-                    len_action_rows,
-                ),
+def command_freeze_aggregation_affected(
+    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+) -> HTML:
+    return HTML.without_escaping(
+        _("Affected %s: %s")
+        % (
+            ungettext(
+                "aggregation",
+                "aggregations",
                 len_action_rows,
-            )
+            ),
+            len_action_rows,
         )
+    )
 
-    @property
-    def _button_name(self) -> str:
-        return "_freeze_aggregations"
 
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
-    ) -> CommandActionResult:
-        if not request.has_var(self._button_name):
-            return None
+def _button_name() -> str:
+    return "_freeze_aggregations"
 
-        if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
-            if compiled_aggregation.frozen_info:
-                return (
-                    [compiled_aggregation.frozen_info.based_on_branch_title],
-                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
-                )
 
+def command_freeze_aggregation_action(
+    command: Command,
+    cmdtag: Literal["HOST", "SVC"],
+    spec: str,
+    row: Row,
+    row_index: int,
+    action_rows: Rows,
+) -> CommandActionResult:
+    if not request.has_var(_button_name()):
         return None
 
-    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        """Function that is called to execute this action"""
-        assert isinstance(command, CommandSpecWithoutSite)
-        (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
+    if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
+        if compiled_aggregation.frozen_info:
+            return (
+                [compiled_aggregation.frozen_info.based_on_branch_title],
+                command.confirm_dialog_options(cmdtag, row, action_rows),
+            )
+
+    return None
 
 
-command_group_registry.register(CommandGroupAggregations)
-command_registry.register(CommandFreezeAggregation)
+def command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
+    """Function that is called to execute this action"""
+    assert isinstance(command, CommandSpecWithoutSite)
+    (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
+
+
+CommandFreezeAggregation = Command(
+    ident="freeze_aggregation",
+    title=_l("Freeze aggregations"),
+    confirm_title=_l("Freeze aggregation?"),
+    confirm_button=_l("Freeze"),
+    icon_name="bi_freeze",
+    is_shortcut=True,
+    is_suggested=True,
+    permission=PermissionFreezeAggregation,
+    group=CommandGroupAggregations,
+    tables=["aggr"],
+    only_view="aggr_frozen_diff",
+    render=command_freeze_aggregation_render,
+    action=command_freeze_aggregation_action,
+    affected_output_cb=command_freeze_aggregation_affected,
+    executor=command_freeze_aggregation_executor,
+)

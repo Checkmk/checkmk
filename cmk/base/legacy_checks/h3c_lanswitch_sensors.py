@@ -5,10 +5,10 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
+
+check_info = {}
 
 Section = Mapping[str, str]
 
@@ -42,6 +42,7 @@ def check_h3c_lanswitch_sensors(
 
 
 check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
+    name="h3c_lanswitch_sensors",
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     fetch=[
         SNMPTree(

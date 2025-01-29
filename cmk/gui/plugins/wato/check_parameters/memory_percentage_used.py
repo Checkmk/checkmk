@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Percentage
 
 
 def _parameter_valuespec_memory_percentage_levels():
@@ -17,18 +18,11 @@ def _parameter_valuespec_memory_percentage_levels():
         elements=[
             (
                 "levels",
-                Tuple(
+                SimpleLevels(
                     title=_("Levels"),
-                    elements=[
-                        Percentage(
-                            title=_("Warning at"),
-                            default_value=70.0,
-                        ),
-                        Percentage(
-                            title=_("Critical at"),
-                            default_value=80.0,
-                        ),
-                    ],
+                    spec=Percentage,
+                    default_value=(70.0, 80.0),
+                    unit=_("%"),
                 ),
             ),
         ],

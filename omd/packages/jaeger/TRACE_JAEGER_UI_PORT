@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Alias: Jaeger UI port
+# Menu: Addons
+# Description:
+#  If receiving traces is configured, you can customize the UI port here.
+
+case "$1" in
+    default)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_UI_PORT 16686)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "@{NETWORK_PORT}"
+        ;;
+    set)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_UI_PORT "$2")
+
+        if [ "$PORT" != "$2" ]; then
+            echo "The port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/apache.conf
+# Written by TRACE_JAEGER_UI_PORT hook
+LoadModule proxy_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy.so
+LoadModule proxy_http_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy_http.so
+
+ProxyPass "/$OMD_SITE/jaeger" "http://[::1]:$PORT/$OMD_SITE/jaeger" retry=0 timeout=120
+ProxyPassReverse "/$OMD_SITE/jaeger"  "http://[::1]:$PORT/$OMD_SITE/jaeger"
+EOF
+
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-query-port.yaml
+# Written by TRACE_JAEGER_UI_PORT hook
+---
+extensions:
+    jaeger_query:
+        http:
+            endpoint: "[::1]:$PORT"
+EOF
+        ;;
+    depends)
+        [ "$CONFIG_TRACE_RECEIVE" = on ]
+        ;;
+esac

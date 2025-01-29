@@ -11,12 +11,13 @@
 
 set -e
 
-: "${REFERENCE_IMAGE_DISTRO:="ubuntu-20.04"}"
+: "${REFERENCE_IMAGE_DISTRO:="ubuntu-22.04"}"
 : "${BUILD_IMAGE_TAG:="master-latest"}"
 : "${DOCKER_REGISTRY:="artifacts.lan.tribe29.com:4000"}"
-: "${DOCKER_REGISTRY_NO_HTTP:="$(echo ${DOCKER_REGISTRY} | sed -e "s/^https*:\/\///")"}"
+: "${DOCKER_REGISTRY_NO_HTTP:="$(echo "${DOCKER_REGISTRY}" | sed -e "s/^https*:\/\///")"}"
 : "${BASE_BUILD_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}:${BUILD_IMAGE_TAG}"}"
 : "${CACHE_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}-reference:cache"}"
+: "${LOCK_FILE:="${HOME}/docker-build-mutex"}"
 
 CHECKOUT_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev/null 2>&1 && pwd)"
 TEMP_CONTEXT_DIR=$(mktemp -d)
@@ -45,6 +46,7 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - BUILD_IMAGE_TAG:........... '${BUILD_IMAGE_TAG}'"
     echo >&2 " - DOCKER_REGISTRY_NO_HTTP:... '${DOCKER_REGISTRY_NO_HTTP}'"
     echo >&2 " - PULL_BASE_IMAGE:........... '${PULL_BASE_IMAGE}'"
+    echo >&2 " - PULL_CACHE_IMAGE:.......... '${PULL_CACHE_IMAGE}'"
     echo >&2 " - POPULATE_BUILD_CACHE:...... '${POPULATE_BUILD_CACHE}'"
     echo >&2 " - NO_CACHE:.................. '${NO_CACHE}'"
     echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
@@ -56,26 +58,65 @@ else
     DECENT_OUTPUT_TIMEOUT=2
 fi
 
-# Pre-fetch caching image. This is not required but was reported to solve some
-# issues and keeps fetching and building more transparent
-"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
-    docker pull \
-    "${CACHE_IMAGE}" \
-    1>&2 || true
+if [ -n "${PULL_CACHE_IMAGE}" ]; then
+    # Pre-fetch caching image. This is not required but was reported to solve some
+    # issues and keeps fetching and building more transparent
+    "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+        docker pull \
+        "${CACHE_IMAGE}" \
+        1>&2 || true
+fi
 
 # Copy over stuff we need for the build process but is located in folders we
 # cannot use as build context
 "${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
 
+run_optionally_exclusive() {
+    # We've encountered strange Docker related errors, likely related to concurrent
+    # invocations of `docker build`. So this function provides a way to avoid
+    # concurrent invocations (at least for the 'reference image') by locking
+    # a global file.
+    # In case this file does not exist, the lock will not be obtained, making
+    # the lock-file itself a switch for turning locking on/off (by existence)
+    # see https://jira.lan.tribe29.com/browse/CMK-17651
+
+    # also we re-try to build the image a couple of times, since locking alone
+    # didn't seem to help at all
+    for i in {3..0}; do
+        if [ -f "${LOCK_FILE}" ]; then
+            [ -n "${VERBOSE}" ] && echo >&2 "lock ${LOCK_FILE} and execute $*"
+            flock "${LOCK_FILE}" "$@" 2>&1 | tee docker-build.log
+        else
+            [ -n "${VERBOSE}" ] && echo >&2 "execute without lock (${LOCK_FILE} does not exist): $*"
+            "$@" 2>&1 | tee docker-build.log
+        fi
+
+        RESULT="${PIPESTATUS[0]}"
+        if [ "$RESULT" -eq 0 ]; then
+            break
+        fi
+
+        if ! grep -E "error reading from server: EOF|fatal error: concurrent map read and map write" docker-build.log; then
+            echo >&2 "We got some random error from 'docker build' - don't retry."
+            exit "$RESULT"
+        fi
+        if [ "$i" -eq 0 ]; then
+            echo >&2 "Tried too often, give up!"
+            exit "$RESULT"
+        fi
+        # print error message and give dockerd some time to recover before we retry
+        echo >&2 "Trying to run $* resulted in errors (try $i), retry in a couple of seconds.."
+        sleep 20
+    done
+}
+
 # shellcheck disable=SC2086
-"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+run_optionally_exclusive "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
     docker buildx build \
     ${EXTRA_ARGS} \
     --iidfile "${IIDFILE}" \
     --cache-from type=registry,ref="${CACHE_IMAGE}" \
     --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
-    --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \
-    --build-context dev_images="${CHECKOUT_ROOT}/defines/dev-images" \
     -f "${CHECKOUT_ROOT}/defines/dev-images/reference/Dockerfile" \
     "${TEMP_CONTEXT_DIR}" \
     1>&2

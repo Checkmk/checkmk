@@ -5,6 +5,7 @@
 
 #include "livestatus/InputBuffer.h"
 
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -72,6 +73,7 @@ InputBuffer::InputBuffer(int fd, std::function<bool()> should_terminate,
     , _logger(logger) {}
 
 // read in data enough for one complete request (and maybe more).
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 InputBuffer::Result InputBuffer::readRequest() {
     // Remember when we started waiting for a request. This is needed for the
     // idle_timeout. A connection may not be idle longer than that value.
@@ -195,8 +197,10 @@ InputBuffer::Result InputBuffer::readRequest() {
 
             }  // non-empty line: belongs to current request
             size_t length = r - _read_index;
-            for (size_t end = r; end > _read_index &&
-                                 (isspace(_readahead_buffer[--end]) != 0);) {
+            for (size_t end = r;
+                 end > _read_index &&
+                 // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
+                 (isspace(_readahead_buffer[--end]) != 0);) {
                 length--;
             }
             if (length > 0) {

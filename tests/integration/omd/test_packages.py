@@ -2,7 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -14,19 +16,31 @@ from tests.testlib.site import Site
 StreamType = Literal["stderr", "stdout"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MonitoringPlugin:
     binary_name: str
-    stream: StreamType = "stdout"
+    path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.3.3"
-
-    def __post_init__(self):
-        self.path = f"lib/nagios/plugins/{self.binary_name}"
+    expected: str = "v2.4.0"
 
 
-# Not all plugins have the same cmd_line options nor using the same stream...
-MONITORING_PLUGINS = (
+@dataclass(frozen=True)
+class CheckmkActiveCheck:
+    binary_name: str
+    path: str = "lib/nagios/plugins"
+
+    @property
+    def cmd_line_option(self) -> str:
+        return "-h"
+
+    @property
+    def expected(self) -> str:
+        return f"usage: {self.binary_name} "
+
+
+Plugin = MonitoringPlugin | CheckmkActiveCheck
+
+MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_apt"),
     MonitoringPlugin("check_breeze"),
     MonitoringPlugin("check_by_ssh"),
@@ -46,7 +60,6 @@ MONITORING_PLUGINS = (
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
-    MonitoringPlugin("check_ircd"),
     MonitoringPlugin("check_jabber"),
     MonitoringPlugin("check_ldap"),
     MonitoringPlugin("check_ldaps"),
@@ -88,32 +101,21 @@ MONITORING_PLUGINS = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
-    MonitoringPlugin(
-        "check_sftp",
-        stream="stderr",
-        cmd_line_option="-h",
-        expected="USAGE: check_sftp",
-    ),
-    MonitoringPlugin(
+    CheckmkActiveCheck("check_always_crit"),
+    CheckmkActiveCheck("check_sftp"),
+    CheckmkActiveCheck(
         "check_mail",
-        cmd_line_option="-h",
-        expected="usage: check_mail",
+        path="lib/check_mk/plugins/emailchecks/libexec",
     ),
-    MonitoringPlugin(
+    CheckmkActiveCheck(
         "check_mailboxes",
-        cmd_line_option="-h",
-        expected="usage: check_mailboxes",
+        path="lib/check_mk/plugins/emailchecks/libexec",
     ),
-    MonitoringPlugin(
+    CheckmkActiveCheck(
         "check_mail_loop",
-        cmd_line_option="-h",
-        expected="usage: check_mail_loop",
+        path="lib/check_mk/plugins/emailchecks/libexec",
     ),
-    MonitoringPlugin(
-        "check_form_submit",
-        cmd_line_option="-h",
-        expected="usage: check_form_submit",
-    ),
+    CheckmkActiveCheck("check_form_submit"),
     MonitoringPlugin(
         "check_mkevents",
         cmd_line_option="",
@@ -123,68 +125,36 @@ MONITORING_PLUGINS = (
         "check_nrpe",
         expected="Version: 3.2.1",
     ),
-    MonitoringPlugin(
-        "check_sql",
-        cmd_line_option="-h",
-        expected="usage: check_sql",
-    ),
-    MonitoringPlugin(
-        "check_snmp",
-        cmd_line_option="-h",
-    ),
-    MonitoringPlugin(
-        "check_notify_count",
-        stream="stderr",
-        cmd_line_option="-h",
-        expected="USAGE: check_notify_count",
-    ),
-    MonitoringPlugin(
-        "check_traceroute",
-        cmd_line_option="-h",
-        expected="check_traceroute",
-    ),
-    MonitoringPlugin(
+    CheckmkActiveCheck("check_sql"),
+    MonitoringPlugin("check_snmp"),
+    CheckmkActiveCheck("check_notify_count"),
+    CheckmkActiveCheck("check_traceroute"),
+    CheckmkActiveCheck(
         "check_disk_smb",
-        cmd_line_option="-h",
-        expected="usage: check_disk_smb",
+        path="lib/check_mk/plugins/smb/libexec",
     ),
-    MonitoringPlugin(
-        "check_uniserv",
-        cmd_line_option="-h",
-        expected="Usage: check_uniserv",
-    ),
-    MonitoringPlugin(
-        "check_bi_aggr",
-        stream="stderr",
-        cmd_line_option="-h",
-        expected="USAGE: check_bi_aggr",
-    ),
+    CheckmkActiveCheck("check_uniserv"),
+    CheckmkActiveCheck("check_bi_aggr"),
 )
 
 
 @pytest.mark.parametrize(
-    "cmd_line,stream_type,expected",
-    (
-        pytest.param([p.path, p.cmd_line_option], p.stream, p.expected, id=f"{p.binary_name}")
-        for p in MONITORING_PLUGINS
-    ),
+    "plugin",
+    (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
 )
-def test_monitoring_plugins_can_be_executed(
-    cmd_line: list[str],
-    expected: str,
-    stream_type: StreamType,
-    site: Site,
-) -> None:
-    abort_if_not_containerized("check_mysql" in cmd_line[0])
+def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
+    abort_if_not_containerized(
+        plugin.binary_name == "check_mysql"
+    )  # What? Why? Is printing the version dangerous?
 
-    cmd_line[0] = f"{site.root}/{cmd_line[0]}"
+    cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert p.stdout and p.stderr  # for mypy
 
-    stream = {"stdout": p.stdout, "stderr": p.stderr}[stream_type]
+    assert plugin.expected in p.stdout.read()
 
-    actual = stream.read() if stream else ""
-    assert expected in actual
+    assert not p.stderr.read()
 
 
 def test_heirloommailx(site: Site) -> None:

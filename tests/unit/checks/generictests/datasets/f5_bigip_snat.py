@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
+
 checkname = "f5_bigip_snat"
 
 mock_item_state = {
     "": {
-        "connections_rate.0" : (0, 7),
+        "connections_rate.0": (0, 7),
         "if_in_pkts.0": (0, 10),
         "if_out_pkts.0": (0, 712),
         "if_in_octets.0": (0, 5),
         "if_out_octets.0": (0, 236),
-        #"packet_velocity_asic.0": (0, 0),
+        # "packet_velocity_asic.0": (0, 0),
     },
 }
 

@@ -28,10 +28,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 
 def inventory_sylo(info):
@@ -78,12 +78,7 @@ def check_sylo(item, params, info):
         value_store = get_value_store()
         in_rate = get_rate(value_store, "sylo.in", mtime, inOffset, raise_overflow=True)
         out_rate = get_rate(value_store, "sylo.out", mtime, outOffset, raise_overflow=True)
-        msg += "Silo is filled {:.1f}MB ({:.1f}%), in {:.1f} B/s, out {:.1f} B/s".format(
-            bytesUsed / (1024 * 1024.0),
-            percUsed,
-            in_rate,
-            out_rate,
-        )
+        msg += f"Silo is filled {bytesUsed / (1024 * 1024.0):.1f}MB ({percUsed:.1f}%), in {in_rate:.1f} B/s, out {out_rate:.1f} B/s"
 
         status = 0
         if percUsed >= usage_crit_perc and status < 2:
@@ -109,6 +104,7 @@ def parse_sylo(string_table: StringTable) -> StringTable:
 
 
 check_info["sylo"] = LegacyCheckDefinition(
+    name="sylo",
     parse_function=parse_sylo,
     service_name="Sylo",
     discovery_function=inventory_sylo,

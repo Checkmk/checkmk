@@ -99,7 +99,7 @@ def run_subprocess(cmd):
         return p.returncode, stdout, stderr
 
 
-def run_agent(cmd):  # pylint: disable=consider-using-with
+def run_agent(cmd):
     return subprocess.Popen([cmd, "exec"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
@@ -153,11 +153,8 @@ def local_test(
         #    print('DEBUG: expected output\r\n', '\r\n'.join(expected))
         # print("EXPECTED: %r\n ACTUAL  : %r\n" % (expected, actual))
 
-        assert (
-            expected == actual or re.match(expected, actual) is not None
-        ), "\nExpected '{!r}'\nActual   '{!r}'".format(
-            expected,
-            actual,
+        assert expected == actual or re.match(expected, actual) is not None, (
+            f"\nExpected '{expected!r}'\nActual   '{actual!r}'"
         )
     try:
         assert len(actual_output_from_agent) >= len(expected_output_from_agent), (

@@ -21,10 +21,12 @@
 
 using namespace std::chrono_literals;
 
+namespace {
 // This class is just a workaround for encoding bugs in googletest where
 // test_details.xml might end up containing invalid XML.
 struct Blob {
     std::string contents;
+    auto operator<=>(const Blob &) const = default;
 };
 
 std::ostream &operator<<(std::ostream &os, const Blob &blob) {
@@ -39,12 +41,6 @@ std::ostream &operator<<(std::ostream &os, const Blob &blob) {
     }
     return os;
 }
-
-bool operator==(const Blob &lhs, const Blob &rhs) {
-    return lhs.contents == rhs.contents;
-}
-
-bool operator!=(const Blob &lhs, const Blob &rhs) { return !(lhs == rhs); }
 
 struct Param {
     OutputFormat format;
@@ -65,6 +61,7 @@ std::ostream &operator<<(std::ostream &os, const Param &p) {
               << p.dict << ", " << p.null << ", " << p.blob << ", " << p.string
               << "}";
 }
+};  // namespace
 
 class Fixture : public ::testing::TestWithParam<Param> {
     std::ostringstream out_;

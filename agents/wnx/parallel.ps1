@@ -19,7 +19,7 @@ if ( "$msbuild_exe" -eq "" ) {
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
-$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\cmk-agent-ctl"
+$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\host\cmk-agent-ctl"
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 

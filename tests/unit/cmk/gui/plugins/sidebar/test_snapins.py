@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.sidebar import snapin_registry
 
@@ -31,13 +33,13 @@ def test_registered_snapins() -> None:
         "wato_foldertree",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_snapins += [
             "cmc_stats",
             "reports",
         ]
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         expected_snapins += [
             "customers",
         ]
@@ -57,7 +59,7 @@ def test_refresh_snapins() -> None:
         "time",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_refresh_snapins += [
             "cmc_stats",
         ]

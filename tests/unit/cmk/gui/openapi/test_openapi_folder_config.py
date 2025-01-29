@@ -13,11 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import paths, version
+from cmk.ccc import version
+
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
@@ -266,13 +268,8 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_hosts_in_folder(clients: ClientRegistry) -> None:
+    clients.Folder.get_hosts("~")
 
 
 def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
@@ -311,15 +308,17 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=200,
     )
     hosts_ = resp.json["value"][0]["members"]["hosts"]["value"]
     assert len(hosts_) == 2
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert "hosts" not in resp.json["value"][0]["members"]
@@ -348,6 +347,7 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     )
 
 
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_create_folder_with_network_scan(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
@@ -358,7 +358,7 @@ def test_openapi_create_folder_with_network_scan(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=json.dumps(
             {
-                "name": "my_folder_name",
+                "name": "folder-1",
                 "title": "some title",
                 "parent": "~",
                 "attributes": {
@@ -392,7 +392,7 @@ def test_openapi_create_folder_with_network_scan(
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
-    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/folder-1/.wato"
     with path.open() as fo:
         result = literal_eval(fo.read())
     assert user == result["attributes"]["network_scan"].pop("run_as")
@@ -412,11 +412,12 @@ def test_openapi_create_folder_with_network_scan(
     }
 
 
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_show_folder_with_network_scan_result(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
     _create_criticality_tag(aut_user_auth_wsgi_app)
-    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/folder-2/.wato"
     path.parent.mkdir(parents=True, exist_ok=True)
     user, _ = with_automation_user
     with path.open("w") as fo:
@@ -461,11 +462,11 @@ def test_openapi_show_folder_with_network_scan_result(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert resp.json["value"][0]["extensions"] == {
-        "path": "/my_folder_name",
+        "path": "/folder-2",
         "attributes": {
             "network_scan": {
                 "addresses": [
@@ -518,7 +519,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -528,7 +529,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -653,7 +654,7 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _ = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
         status=200,
     )
@@ -707,7 +708,7 @@ def test_openapi_folder_config_collections_recursive_list(
     response = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"parent": "~I", "recursive": "True"},
+        query_string={"parent": "~I", "recursive": "True"},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -717,7 +718,7 @@ def test_openapi_folder_config_collections_recursive_list(
 
 
 @pytest.mark.skipif(
-    version.edition() is version.Edition.CRE, reason="Tested Attribute is not in RAW"
+    version.edition(paths.omd_root) is version.Edition.CRE, reason="Tested Attribute is not in RAW"
 )
 def test_bake_agent_package_attribute_regression(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK

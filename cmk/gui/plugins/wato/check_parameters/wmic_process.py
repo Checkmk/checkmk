@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Integer, Percentage, TextInput, Tuple
 
 def _item_spec_wmic_process():
     return TextInput(
-        title=_("Process name for usage in the Nagios service description"),
+        title=_("Process name for usage in the Nagios service name"),
         allow_empty=False,
     )
 

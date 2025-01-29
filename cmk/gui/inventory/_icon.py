@@ -25,7 +25,7 @@ class InventoryIcon(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("HW/SW inventory")
+        return _("HW/SW Inventory")
 
     def host_columns(self) -> list[str]:
         return ["name"]
@@ -48,7 +48,7 @@ class InventoryIcon(Icon):
             assert v is not None
             return (
                 "inventory",
-                _("Show Hardware/Software Inventory of this host"),
+                _("Show HW/SW Inventory of this host"),
                 v,
             )
         return None

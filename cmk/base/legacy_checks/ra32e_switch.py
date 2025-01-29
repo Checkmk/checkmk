@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ra32e import DETECT_RA32E
+
+check_info = {}
 
 
 def inventory_ra32e_switch(info):
@@ -23,7 +23,7 @@ def check_ra32e_switch(item, params, info):
         return 3, "unknown status"
 
     state, infotext = 0, switch_state
-    if params and params.get("state", "") != "ignore" and switch_state != params.get("state"):
+    if params["state"] != "ignore" and switch_state != params["state"]:
         state = 2
         infotext += " (expected %s)" % params["state"]
 
@@ -35,6 +35,7 @@ def parse_ra32e_switch(string_table: StringTable) -> StringTable | None:
 
 
 check_info["ra32e_switch"] = LegacyCheckDefinition(
+    name="ra32e_switch",
     parse_function=parse_ra32e_switch,
     detect=DETECT_RA32E,
     fetch=SNMPTree(
@@ -62,4 +63,5 @@ check_info["ra32e_switch"] = LegacyCheckDefinition(
     discovery_function=inventory_ra32e_switch,
     check_function=check_ra32e_switch,
     check_ruleset_name="switch_contact",
+    check_default_parameters={"state": "ignore"},
 )

@@ -21,17 +21,15 @@ from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
 from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.response_schemas import BackgroundJobStatus
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.openapi.utils import serve_json
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,
     ParentScanSettings,
     start_parent_scan,
     WhereChoices,
 )
-
-from cmk import fields
 
 
 @Endpoint(
@@ -65,7 +63,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
 
     parent_scan_job = ParentScanBackgroundJob()
     start_parent_scan(
-        hosts=body["host_names"],
+        hosts=[Host.load_host(name) for name in body["host_names"]],
         job=parent_scan_job,
         settings=ParentScanSettings(
             where=where,

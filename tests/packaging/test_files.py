@@ -67,7 +67,14 @@ def _get_file_from_package(package_path: str, cmk_version: str, version_rel_path
         )
 
     if package_path.endswith(".tar.gz"):
-        raise NotImplementedError()
+        return subprocess.check_output(
+            [
+                "tar",
+                "xOzf",
+                package_path,
+                f"{Path(package_path).name.removesuffix('.tar.gz')}/{version_rel_path}",
+            ]
+        )
 
     raise NotImplementedError()
 
@@ -91,11 +98,8 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
         pytest.skip("only testing enterprise packages")
 
     size = os.stat(package_path).st_size
-    assert min_size <= size <= max_size, "Package {} size {} not between {} and {} bytes.".format(
-        package_path,
-        size,
-        min_size,
-        max_size,
+    assert min_size <= size <= max_size, (
+        f"Package {package_path} size {size} not between {min_size} and {max_size} bytes."
     )
 
 
@@ -265,6 +269,18 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     assert not managed_files
     assert not cloud_files
     assert not saas_files
+
+
+def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) -> None:
+    commit = _get_file_from_package(
+        package_path,
+        cmk_version,
+        version_rel_path="COMMIT" if package_path.endswith(".tar.gz") else "share/doc/COMMIT",
+    )
+    assert (
+        subprocess.check_output(["git", "rev-parse", "HEAD"], encoding="utf-8").strip()
+        == commit.strip().decode()
+    )
 
 
 def test_monitoring_cores_packaging(package_path: str, cmk_version: str) -> None:

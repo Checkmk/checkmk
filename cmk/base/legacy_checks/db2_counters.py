@@ -13,7 +13,7 @@
 # db2taddm:CMDBS6 deadlocks 99
 # db2taddm:CMDBS6 lockwaits 91
 # db2taddm:CMDBS6 sortoverflows 237
-#### Example for database in DPF mode
+# Example for database in DPF mode ##
 # TIMESTAMP 1439976757
 # db2ifa:DDST1 node 0 iasv0091 0
 # db2ifa:DDST1 node 1 iasv0091 1
@@ -37,10 +37,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError
+
+check_info = {}
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -119,6 +119,7 @@ def check_db2_counters(item, params, parsed):
 
 
 check_info["db2_counters"] = LegacyCheckDefinition(
+    name="db2_counters",
     parse_function=parse_db2_counters,
     service_name="DB2 Counters %s",
     discovery_function=inventory_db2_counters,

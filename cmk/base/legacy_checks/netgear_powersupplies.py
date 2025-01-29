@@ -11,11 +11,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.netgear import DETECT_NETGEAR
+
+check_info = {}
 
 
 def parse_netgear_powersupplies(string_table):
@@ -44,6 +44,7 @@ def check_netgear_powersupplies(item, params, parsed):
 
 
 check_info["netgear_powersupplies"] = LegacyCheckDefinition(
+    name="netgear_powersupplies",
     detect=DETECT_NETGEAR,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4526.10.43.1.7.1",

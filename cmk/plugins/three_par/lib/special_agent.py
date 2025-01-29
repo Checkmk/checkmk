@@ -63,7 +63,7 @@ def parse_arguments(argv):
         "--values",
         required=True,
         type=_get_values_list,
-        help=f"Comma seperated list of values to fetch from 3par system. Choose from: {', '.join(VALID_VALUES)}",
+        help=f"Comma separated list of values to fetch from 3par system. Choose from: {', '.join(VALID_VALUES)}",
     )
     parser.add_argument("host", help="Host name or IP address of 3par system")
     args = parser.parse_args(argv)
@@ -119,12 +119,12 @@ def main(argv=None):
     # to get better performance in the checkplugin if less data is needed.
 
     for value in args.values:
-        print("<<<3par_%s:sep(0)>>>" % value)
+        sys.stdout.write("<<<3par_%s:sep(0)>>>\n" % value)
         req = requests.get(
             f"{url}/{value}", headers=headers, timeout=10, verify=not args.no_cert_check
         )
         value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
-        print(value_data)
+        sys.stdout.write(value_data + "\n")
 
     # Perform a proper disconnect. The Connection is closed if the session key
     # is deleted. The standard timeout for a session would be 15 minutes.

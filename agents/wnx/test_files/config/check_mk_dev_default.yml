@@ -35,7 +35,7 @@ global:
 
     # Restrict the following configuration variables
     # in [global] to the following hosts
-    host: 
+    host:
     #    - zab???ad
 
     # Just output certain sections
@@ -56,15 +56,15 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
-        # enable/disable encryption of regular agent output (default: disabled) 
+        # enable/disable encryption of regular agent output (default: disabled)
         # yes or no
         encrypted: no
         # passphrase for encrypted communication.
-        passphrase: 
+        passphrase:
         # which sections are realtime
         run:
-        #    - mem 
-        #    - df 
+        #    - mem
+        #    - df
         #    - winperf_processor
 
     # by default the agent flushes the socket for each agent section.
@@ -73,18 +73,17 @@ global:
     # Disabling this may (very) slightly reduce network traffic.
     section_flush: no
 
-    # -------------------------------------------------------------- 
+    # --------------------------------------------------------------
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
         # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
-        location: 
+        location:
         # name of file log, default is check_mk.log
-        file : 
+        file :
         # log in file also internal debug messages, recommended when we have problems
         debug: no
         # you may send logging messages in realtime in windows debug sink, default is yes
         windbg: yes
         # you may disable your eventlog ability
         eventlog: yes
-

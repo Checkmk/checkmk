@@ -5,8 +5,9 @@
  */
 
 import $ from "jquery";
+import Swal, {type SweetAlertOptions} from "sweetalert2";
 
-import * as utils from "./utils";
+import {add_class, copy_to_clipboard, has_class, remove_class} from "./utils";
 
 // ----------------------------------------------------------------------------
 // General functions for WATO
@@ -145,7 +146,7 @@ export function fix_visibility() {
                     if (
                         hide_topics.indexOf(
                             myFormTableRow.childNodes[0].childNodes[0]
-                                .textContent!
+                                .textContent!,
                         ) > -1
                     )
                         myFormTableRow.style.display = "none";
@@ -160,7 +161,7 @@ export function fix_visibility() {
 /* Make attributes visible or not when clicked on a checkbox */
 export function toggle_attribute(
     oCheckbox: HTMLInputElement,
-    attrname: string
+    attrname: string,
 ) {
     const oEntry = document.getElementById("attr_entry_" + attrname);
     const oDefault = document.getElementById("attr_default_" + attrname);
@@ -184,7 +185,7 @@ function get_containers() {
     return document
         .getElementById("form_edit_host")
         ?.querySelectorAll(
-            "table.nform"
+            "table.nform",
         ) as NodeListOf<HTMLTableSectionElement>;
 }
 
@@ -201,7 +202,7 @@ function get_effective_tags() {
             let add_tag_id;
             if (row.tagName == "TR") {
                 const legend_cell = row.cells[0];
-                if (!utils.has_class(legend_cell, "legend")) {
+                if (!has_class(legend_cell, "legend")) {
                     continue;
                 }
                 const content_cell = row.cells[1];
@@ -254,7 +255,7 @@ function get_effective_tags() {
             current_tags.push(add_tag_id);
             if (dialog_properties.aux_tags_by_tag[add_tag_id]) {
                 current_tags = current_tags.concat(
-                    dialog_properties.aux_tags_by_tag[add_tag_id]
+                    dialog_properties.aux_tags_by_tag[add_tag_id],
                 );
             }
         }
@@ -262,22 +263,17 @@ function get_effective_tags() {
     return current_tags;
 }
 
-export function randomize_secret(id: string, len: number, message: string) {
-    let secret = "";
-    for (let i = 0; i < len; i++) {
-        const c = parseInt(String(26 * Math.random() + 64));
-        secret += String.fromCharCode(c);
-    }
+export function randomize_secret(id: string, message: string) {
+    const secret = window.crypto.randomUUID();
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
-
-    utils.copy_to_clipboard(secret, message);
+    copy_to_clipboard(secret, message);
 }
 
 export function toggle_container(id: string) {
     const obj = document.getElementById(id);
-    if (utils.has_class(obj, "hidden")) utils.remove_class(obj, "hidden");
-    else utils.add_class(obj, "hidden");
+    if (has_class(obj, "hidden")) remove_class(obj, "hidden");
+    else add_class(obj, "hidden");
 }
 
 // ----------------------------------------------------------------------------
@@ -286,7 +282,7 @@ export function toggle_container(id: string) {
 
 export function open_folder(
     event: Event | undefined,
-    link: string
+    link: string,
 ): false | void {
     const target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
@@ -300,7 +296,7 @@ export function open_folder(
 export function toggle_folder(
     _event: Event | undefined,
     oDiv: HTMLElement,
-    on: boolean
+    on: boolean,
 ) {
     const obj = oDiv.parentNode as HTMLElement;
     const id = obj.id.substr(7);
@@ -318,9 +314,9 @@ export function toggle_folder(
     }
 
     if (on) {
-        utils.add_class(obj, "open");
+        add_class(obj, "open");
     } else {
-        utils.remove_class(obj, "open");
+        remove_class(obj, "open");
 
         // Hide the eventual open move dialog
         const move_dialog = document.getElementById("move_dialog_" + id);
@@ -340,19 +336,19 @@ export function toggle_rule_condition_type(select_id: string) {
 export function toggle_test_notification_visibility(
     source: string,
     target: string,
-    hide_options: boolean
+    hide_options: boolean,
 ) {
     const source_element = document.getElementsByClassName(
-        source
+        source,
     )[0] as HTMLInputElement;
     const target_element = document.getElementsByClassName(
-        target
+        target,
     )[0] as HTMLInputElement;
     if (source_element && target_element) {
-        if (utils.has_class(target_element, "active")) {
-            utils.remove_class(target_element, "active");
+        if (has_class(target_element, "active")) {
+            remove_class(target_element, "active");
         }
-        utils.add_class(source_element, "active");
+        add_class(source_element, "active");
     }
     toggle_test_notification_options(hide_options);
     toggle_test_notification_submit(hide_options);
@@ -360,13 +356,13 @@ export function toggle_test_notification_visibility(
 
 function toggle_test_notification_options(hide_options: boolean) {
     const service_choice = document.getElementById(
-        "general_opts_d_on_service_hint"
+        "general_opts_d_on_service_hint",
     ) as HTMLDivElement;
     const service_states = document.getElementById(
-        "general_opts_p_simulation_mode_1_d_svc_states"
+        "general_opts_p_simulation_mode_1_d_svc_states",
     ) as HTMLDivElement;
     const host_states = document.getElementById(
-        "general_opts_p_simulation_mode_1_d_host_states"
+        "general_opts_p_simulation_mode_1_d_host_states",
     ) as HTMLDivElement;
     if (service_choice && service_states && host_states) {
         const service_choice_tr = service_choice.parentNode!
@@ -380,20 +376,20 @@ function toggle_test_notification_options(hide_options: boolean) {
         }
 
         if (hide_options) {
-            utils.add_class(service_choice_tr, "hidden");
-            utils.add_class(service_states_tr, "hidden");
-            utils.remove_class(host_states_tr, "hidden");
+            add_class(service_choice_tr, "hidden");
+            add_class(service_states_tr, "hidden");
+            remove_class(host_states_tr, "hidden");
         } else {
-            utils.remove_class(service_choice_tr, "hidden");
-            utils.remove_class(service_states_tr, "hidden");
-            utils.add_class(host_states_tr, "hidden");
+            remove_class(service_choice_tr, "hidden");
+            remove_class(service_states_tr, "hidden");
+            add_class(host_states_tr, "hidden");
         }
     }
 }
 
 function toggle_test_notification_submit(hide_options: boolean) {
     const submit_button = document.getElementById(
-        "_test_host_notifications"
+        "_test_host_notifications",
     ) as HTMLDivElement;
     if (submit_button) {
         if (hide_options) {
@@ -402,4 +398,64 @@ function toggle_test_notification_submit(hide_options: boolean) {
             submit_button.setAttribute("name", "_test_service_notifications");
         }
     }
+}
+
+type MessageType = "crit" | "warn" | "info" | "success";
+
+export function message(
+    message_text: string,
+    message_type: MessageType,
+    del_var: string,
+) {
+    const iconFilenames = {
+        crit: "icon_alert.crit.svg",
+        warn: "icon_problem.svg",
+        info: "icon_message.svg",
+        success: "icon_checkmark.svg",
+    };
+
+    const filename = iconFilenames[message_type] ?? iconFilenames["info"];
+
+    const args: SweetAlertOptions = {
+        // https://sweetalert2.github.io/#configuration
+        target: "#page_menu_popups",
+        text: message_text,
+        animation: false,
+        position: "top-start",
+        grow: "row",
+        allowOutsideClick: false,
+        backdrop: false,
+        buttonsStyling: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        iconHtml: `<img src="themes/lala/images/${filename}">`,
+        didOpen: () => {
+            // Remove focus on CloseButton
+            const closeButton = document.querySelector(
+                ".swal2-close",
+            ) as HTMLButtonElement;
+            if (closeButton) {
+                closeButton.blur();
+            }
+        },
+        customClass: {
+            container: "message_container",
+            popup: "message_popup",
+            htmlContainer: "message_content",
+            icon: `confirm_icon message_${message_type}`,
+            closeButton: "message_close",
+        },
+    };
+
+    Swal.fire(args);
+
+    // Remove the var to not get the message twice on reload
+    const params = new URLSearchParams(window.location.search);
+    params.delete(del_var);
+    // And update the URL without reloading the page
+    window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + "?" + params.toString(),
+    );
 }

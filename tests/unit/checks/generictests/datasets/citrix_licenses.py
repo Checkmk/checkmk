@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 
@@ -59,7 +58,7 @@ checks = {
         ),
         (
             "PVS_STD_CCS",
-            {"levels":("absolute", (5, 0))},
+            {"levels": ("absolute", (5, 0))},
             [
                 (
                     1,
@@ -68,7 +67,11 @@ checks = {
                 )
             ],
         ),
-        ("XDS_ENT_CCS", {"levels": ("crit_on_all", None)}, [(0, "used 0 out of 22 licenses", [("licenses", 0, 22, 22, 0, 22)])]),
+        (
+            "XDS_ENT_CCS",
+            {"levels": ("crit_on_all", None)},
+            [(0, "used 0 out of 22 licenses", [("licenses", 0, 22, 22, 0, 22)])],
+        ),
         (
             "XDT_ENT_UD",
             {"levels": ("crit_on_all", None)},

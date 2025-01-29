@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  The check executes the {lparstat} command on a logical partition (LPAR) under
- AIX and reports the CPU utilization extracted from it's output.
+ AIX and reports the CPU utilization extracted from its output.
 
  The CPU utilization is always calculated with respect to the allocated number
  of CPUs and never exceeds 100%.

@@ -16,8 +16,8 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 
 
 class InnovaphoneConnection:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, *, host, protocol, user, password, verify_ssl
+    def __init__(
+        self, *, host: str, protocol: str, user: str, password: str, verify_ssl: bool
     ) -> None:
         self._base_url = f"{protocol}://{host}"
         self._user = user
@@ -27,7 +27,7 @@ class InnovaphoneConnection:
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = verify_ssl
 
-    def get(self, endpoint):
+    def get(self, endpoint: str) -> str | None:
         try:
             # we must provide the verify keyword to every individual request call!
             url = urllib.parse.urljoin(self._base_url, endpoint)
@@ -47,9 +47,9 @@ class InnovaphoneConnection:
         return response.text
 
 
-def get_informations(  # type: ignore[no-untyped-def]
-    connection: InnovaphoneConnection, name, xml_id, org_name
-):
+def get_informations(
+    connection: InnovaphoneConnection, name: str, xml_id: str, org_name: str
+) -> None:
     url = "LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=%s" % (xml_id)
     response = connection.get(url)
     if response is None:
@@ -64,8 +64,8 @@ def get_informations(  # type: ignore[no-untyped-def]
             if child.get("c"):
                 c = child.get("c")
     if c:
-        print("<<<%s>>>" % name)
-        print(org_name + " " + c)
+        sys.stdout.write("<<<%s>>>\n" % name)
+        sys.stdout.write(org_name + " " + c + "\n")
 
 
 def pri_channels_section(
@@ -162,7 +162,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def main(sys_argv=None):
+def main(sys_argv: Sequence[str] | None = None) -> int:
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
@@ -189,9 +189,9 @@ def main(sys_argv=None):
         informations[n] = x
 
     for what in ["CPU", "MEM", "TEMP"]:
-        if informations.get(what):
+        if x := informations.get(what):
             section_name = "innovaphone_" + what.lower()
-            get_informations(connection, section_name, informations[what], what)
+            get_informations(connection, section_name, x, what)
 
     sys.stdout.writelines(
         f"{line}\n"
@@ -203,7 +203,7 @@ def main(sys_argv=None):
     )
 
     sys.stdout.writelines(f"{line}\n" for line in licenses_section(connection))
-    return None
+    return 0
 
 
 if __name__ == "__main__":

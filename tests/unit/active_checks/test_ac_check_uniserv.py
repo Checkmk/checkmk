@@ -6,10 +6,9 @@
 from collections.abc import Mapping, Sequence
 from types import ModuleType
 
-# pylint: disable=protected-access
 import pytest
 
-from tests.testlib import import_module_hack
+from tests.testlib.unit.utils import import_module_hack
 
 
 @pytest.fixture(name="check_uniserv", scope="module")
@@ -40,7 +39,7 @@ def test_ac_check_uniserv_broken_arguments(
     out, _err = capsys.readouterr()
     assert (
         out
-        == " Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n"
+        == "usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n"
     )
 
 

@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+
 import pytest
 
-from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
 
 import cmk.gui.watolib.host_attributes as attrs
+from cmk.gui.config import active_config, Config
+from cmk.gui.watolib.host_attributes import all_host_attributes
 
 expected_attributes = {
     "additional_ipv4addresses": {
@@ -191,7 +193,7 @@ expected_attributes = {
         "show_in_host_search": False,
         "show_in_table": False,
         "show_inherited_value": False,
-        "topic": "Network Scan",
+        "topic": "Network scan",
     },
     "network_scan_result": {
         "class_name": "NetworkScanResultAttribute",
@@ -204,7 +206,7 @@ expected_attributes = {
         "show_in_host_search": False,
         "show_in_table": False,
         "show_inherited_value": False,
-        "topic": "Network Scan",
+        "topic": "Network scan",
     },
     "parents": {
         "class_name": "ParentsAttribute",
@@ -353,16 +355,27 @@ expected_attributes = {
         "show_inherited_value": False,
         "topic": "Creation / Locking",
     },
+    "waiting_for_discovery": {
+        "depends_on_roles": [],
+        "depends_on_tags": [],
+        "editable": False,
+        "from_config": False,
+        "show_in_folder": False,
+        "show_in_form": False,
+        "show_in_host_search": False,
+        "show_in_table": False,
+        "show_inherited_value": False,
+        "topic": "Custom attributes",
+    },
 }
 
 
 @pytest.mark.usefixtures("load_config")
 def test_registered_host_attributes() -> None:
-    names = attrs.host_attribute_registry.keys()
+    names = all_host_attributes(active_config).keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
-    for attr_class in attrs.host_attribute_registry.values():
-        attr = attr_class()
+    for attr in all_host_attributes(active_config).values():
         spec = expected_attributes[attr.name()]
 
         # assert spec["class_name"] == attr_class.__name__
@@ -370,7 +383,7 @@ def test_registered_host_attributes() -> None:
         attr_topic_class = attr.topic()
         assert spec["topic"] == attr_topic_class().title, attr.name()
         assert spec["show_in_table"] == attr.show_in_table()
-        assert spec["show_in_folder"] == attr.show_in_folder(), attr_class
+        assert spec["show_in_folder"] == attr.show_in_folder()
         assert spec["show_in_host_search"] == attr.show_in_host_search()
         assert spec["show_in_form"] == attr.show_in_form()
         assert spec["show_inherited_value"] == attr.show_inherited_value()
@@ -385,7 +398,7 @@ def test_legacy_register_rulegroup_with_defaults(
 ) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
-    assert "lat" not in attrs.host_attribute_registry
+    assert "lat" not in all_host_attributes(config := Config())
 
     attrs.declare_host_attribute(
         attrs.NagiosTextAttribute(
@@ -396,7 +409,7 @@ def test_legacy_register_rulegroup_with_defaults(
         ),
     )
 
-    attr = attrs.host_attribute_registry["lat"]()
+    attr = all_host_attributes(config)["lat"]
     assert isinstance(attr, attrs.ABCHostAttributeNagiosText)
     assert attr.show_in_table() is True
     assert attr.show_in_folder() is True
@@ -416,7 +429,7 @@ def test_legacy_register_rulegroup_without_defaults(
 ) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
-    assert "lat" not in attrs.host_attribute_registry
+    assert "lat" not in all_host_attributes(config := Config())
 
     attrs.declare_host_attribute(
         attrs.NagiosTextAttribute(
@@ -442,7 +455,7 @@ def test_legacy_register_rulegroup_without_defaults(
     assert topic.title == "Xyz"
     assert topic.sort_index == 80
 
-    attr = attrs.host_attribute_registry["lat"]()
+    attr = all_host_attributes(config)["lat"]
     assert isinstance(attr, attrs.ABCHostAttributeNagiosText)
     assert attr.show_in_table() is False
     assert attr.show_in_folder() is False
@@ -456,33 +469,6 @@ def test_legacy_register_rulegroup_without_defaults(
     assert attr.show_inherited_value() is False
     assert attr.may_edit() is False
     assert attr.from_config() is True
-
-
-@pytest.mark.parametrize(
-    "old,new",
-    [
-        ("Basic settings", "basic"),
-        ("Management board", "management_board"),
-        ("Custom attributes", "custom_attributes"),
-        ("Eigene Attribute", "custom_attributes"),
-        ("xyz_unknown", "custom_attributes"),
-    ],
-)
-def test_custom_host_attribute_transform(old: str, new: str) -> None:
-    attributes = [
-        {
-            "add_custom_macro": True,
-            "help": "",
-            "name": "attr1",
-            "show_in_table": True,
-            "title": "Attribute 1",
-            "topic": old,
-            "type": "TextAscii",
-        }
-    ]
-
-    transformed_attributes = attrs.transform_pre_16_host_topics(attributes)
-    assert transformed_attributes[0]["topic"] == new
 
 
 @pytest.mark.usefixtures("load_config")
@@ -513,7 +499,7 @@ def test_host_attribute_topics_for_folders() -> None:
         ("address", "Network address"),
         ("monitoring_agents", "Monitoring agents"),
         ("custom_attributes", "Custom attributes"),
-        ("network_scan", "Network Scan"),
+        ("network_scan", "Network scan"),
         ("management_board", "Management board"),
         ("meta_data", "Creation / Locking"),
     ]
@@ -567,6 +553,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         ],
         "custom_attributes": [
             "labels",
+            "waiting_for_discovery",
         ],
     }
 

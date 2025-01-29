@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 def _item_spec_msexch_copyqueue():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_("The database name on the Mailbox Server."),
     )
 
@@ -33,7 +33,7 @@ def _parameter_valuespec_msexch_copyqueue():
                     "levels",
                     SimpleLevels(
                         spec=Integer,
-                        title=_("Upper Levels for CopyQueue Length"),
+                        title=_("Upper levels for CopyQueue length"),
                     ),
                 ),
             ],

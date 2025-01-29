@@ -5,8 +5,8 @@
 
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.v2 import render
 
 _RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
     "%": (
@@ -34,7 +34,7 @@ _RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
+def check_elphase(item, params, parsed):
     if item not in parsed:
         return  # Item not found in SNMP data
 

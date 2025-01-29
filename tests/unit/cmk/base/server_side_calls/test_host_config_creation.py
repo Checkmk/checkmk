@@ -8,10 +8,10 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils import ip_lookup
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
-import cmk.base.ip_lookup as ip_lookup
 
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config
 
@@ -59,9 +59,17 @@ def test_get_host_config_macros_stringified() -> None:
         family=socket.AddressFamily.AF_INET,
     )
 
+    host_name = HostName("host_name")
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(  # type: ignore[attr-defined]
+        host_name
+    )
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"),
-        config_cache,  # type: ignore[arg-type]
+        host_name,
+        config_cache.alias(host_name),  # type: ignore[attr-defined]
+        config_cache.default_address_family(host_name),  # type: ignore[attr-defined]
+        config_cache.ip_stack_config(host_name),  # type: ignore[attr-defined]
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
         {"$HOST_EC_SL$": 30},
         mock_ip_address_of,
     )
@@ -80,9 +88,17 @@ def test_get_host_config_no_ip() -> None:
         family=socket.AddressFamily.AF_INET6,
     )
 
+    host_name = HostName("host_name")
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(  # type: ignore[attr-defined]
+        host_name
+    )
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"),
-        config_cache,  # type: ignore[arg-type]
+        host_name,
+        config_cache.alias(host_name),  # type: ignore[attr-defined]
+        config_cache.default_address_family(host_name),  # type: ignore[attr-defined]
+        config_cache.ip_stack_config(host_name),  # type: ignore[attr-defined]
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
         {},
         mock_ip_address_of,
     )
@@ -102,8 +118,19 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET,
     )
 
+    host_name = HostName("host_name")
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(  # type: ignore[attr-defined]
+        host_name
+    )
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
+        host_name,
+        config_cache.alias(host_name),  # type: ignore[attr-defined]
+        config_cache.default_address_family(host_name),  # type: ignore[attr-defined]
+        config_cache.ip_stack_config(host_name),  # type: ignore[attr-defined]
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        {},
+        mock_ip_address_of,
     )
 
     assert host_config == HostConfig(
@@ -125,8 +152,19 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET6,
     )
 
+    host_name = HostName("host_name")
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(  # type: ignore[attr-defined]
+        host_name
+    )
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
+        host_name,
+        config_cache.alias(host_name),  # type: ignore[attr-defined]
+        config_cache.default_address_family(host_name),  # type: ignore[attr-defined]
+        config_cache.ip_stack_config(host_name),  # type: ignore[attr-defined]
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        {},
+        mock_ip_address_of,
     )
 
     assert host_config == HostConfig(
@@ -148,8 +186,19 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET6,
     )
 
+    host_name = HostName("host_name")
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(  # type: ignore[attr-defined]
+        host_name
+    )
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
+        host_name,
+        config_cache.alias(host_name),  # type: ignore[attr-defined]
+        config_cache.default_address_family(host_name),  # type: ignore[attr-defined]
+        config_cache.ip_stack_config(host_name),  # type: ignore[attr-defined]
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        {},
+        mock_ip_address_of,
     )
 
     assert host_config == HostConfig(

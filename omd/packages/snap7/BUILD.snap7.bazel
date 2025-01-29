@@ -23,4 +23,5 @@ make(
     out_shared_libs = [
         "libsnap7.so",
     ],
+    visibility = ["//visibility:public"],
 )

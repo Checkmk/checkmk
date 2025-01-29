@@ -6,13 +6,11 @@ import traceback
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.utils.debug import enabled as debug_enabled
+from cmk.ccc.debug import enabled as debug_enabled
 
-from cmk.gui.form_specs.vue.vue_lib import form_spec_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
@@ -36,6 +34,8 @@ def load_plugins() -> None:
 def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
     for loaded_rule_spec in loaded_rule_specs:
         try:
+            from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+
             legacy_rulespec = convert_to_legacy_rulespec(
                 loaded_rule_spec.rule_spec, loaded_rule_spec.edition_only, _
             )
@@ -44,9 +44,6 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
                     "Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name
                 )
                 continue
-            # This isn't actually a "real" registry
-            # Just some lookup for the experimental formspec rendering
-            form_spec_registry[loaded_rule_spec.rule_spec.name] = loaded_rule_spec
 
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:

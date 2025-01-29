@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
+from collections.abc import Iterable
+from typing import get_args, Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -16,12 +18,11 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 
-_allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
+_Schemes = Literal["http", "https", "socks4", "socks4a", "socks5", "socks5h"]
+_allowed_schemes = frozenset(get_args(_Schemes))
 
 
-def HTTPProxyReference(  # type: ignore[no-untyped-def]
-    allowed_schemes=_allowed_schemes,
-) -> ValueSpec:
+def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -> ValueSpec:
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
 
@@ -76,10 +77,10 @@ def HTTPProxyReference(  # type: ignore[no-untyped-def]
     )
 
 
-def HTTPProxyInput(allowed_schemes=_allowed_schemes):
+def HTTPProxyInput(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -> Url:
     """Use this valuespec in case you want the user to input a HTTP proxy setting"""
     return Url(
         title=_("Proxy URL"),
         default_scheme="http",
-        allowed_schemes=allowed_schemes,
+        allowed_schemes=[str(s) for s in allowed_schemes],
     )

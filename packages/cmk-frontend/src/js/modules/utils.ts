@@ -7,8 +7,8 @@
 import SimpleBar from "simplebar";
 import Swal from "sweetalert2";
 
-import * as ajax from "./ajax";
-import * as selection from "./selection";
+import {call_ajax} from "./ajax";
+import {get_selection_id, is_selection_enabled} from "./selection";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;
@@ -39,6 +39,7 @@ export function prevent_default_events(event: Event) {
 export function update_contents(id: string, code: string) {
     const obj = document.getElementById(id);
     if (obj) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         obj.innerHTML = code;
         execute_javascript_by_object(obj);
     }
@@ -56,11 +57,12 @@ export function execute_javascript_by_object(obj: HTMLElement) {
         } else {
             try {
                 current_script = aScripts[i];
+                /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
                 eval(aScripts[i].text);
                 current_script = null;
             } catch (e) {
                 console.error(
-                    aScripts[i].text + "\nError:" + (e as any).message
+                    aScripts[i].text + "\nError:" + (e as any).message,
                 );
             }
         }
@@ -132,7 +134,7 @@ export function toggle_class(o: Nullable<HTMLElement>, a: string, b: string) {
 export function add_event_handler(
     type: string,
     func: (e: Event) => void,
-    obj?: EventTarget
+    obj?: EventTarget,
 ) {
     obj = typeof obj === "undefined" ? window : obj;
     obj.addEventListener(type, func, false);
@@ -141,7 +143,7 @@ export function add_event_handler(
 export function del_event_handler(
     type: string,
     func: (e?: Event) => void,
-    obj?: any
+    obj?: any,
 ) {
     obj = typeof obj === "undefined" ? window : obj;
 
@@ -159,8 +161,8 @@ export function get_button(event: MouseEvent) {
         return event.button < 2
             ? "LEFT"
             : event.button == 4
-            ? "MIDDLE"
-            : "RIGHT";
+              ? "MIDDLE"
+              : "RIGHT";
     /* All others */ else
         return event.which < 2 ? "LEFT" : event.which == 2 ? "MIDDLE" : "RIGHT";
 }
@@ -201,17 +203,17 @@ export function content_wrapper_size() {
 
     const vert_paddings =
         parseInt(
-            get_computed_style(container, "padding-top")!.replace("px", "")
+            get_computed_style(container, "padding-top")!.replace("px", ""),
         ) +
         parseInt(
-            get_computed_style(container, "padding-bottom")!.replace("px", "")
+            get_computed_style(container, "padding-bottom")!.replace("px", ""),
         );
     const hor_paddings =
         parseInt(
-            get_computed_style(container, "padding-right")!.replace("px", "")
+            get_computed_style(container, "padding-right")!.replace("px", ""),
         ) +
         parseInt(
-            get_computed_style(container, "padding-left")!.replace("px", "")
+            get_computed_style(container, "padding-left")!.replace("px", ""),
         );
 
     return {
@@ -263,6 +265,7 @@ export function update_header_timer() {
     let min: string = t.getMinutes().toString();
     if (parseInt(min) < 10) min = "0" + min;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = hours + ":" + min;
 
     const date = document.getElementById("headerdate");
@@ -272,6 +275,7 @@ export function update_header_timer() {
     const month = ("0" + (t.getMonth() + 1)).slice(-2);
     const year = t.getFullYear().toString();
     const date_format = date.getAttribute("format");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     date.innerHTML = date_format!
         .replace(/yyyy/, year)
         .replace(/mm/, month)
@@ -289,6 +293,7 @@ export function get_row_info() {
 export function update_row_info(text: string) {
     const container = document.getElementById("row_info");
     if (container) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         container.innerHTML = text;
     }
 }
@@ -297,7 +302,7 @@ export function set_inpage_search_result_info(text: string) {
     // First, check if result line is already shown, e.g. on hosts page for folder search.
     // If so, just update the result number
     const result_with_row_info: HTMLElement | null = document.getElementById(
-        "inpage_search_result_info"
+        "inpage_search_result_info",
     );
     if (result_with_row_info) {
         const [new_text, new_count] = text.split(":");
@@ -309,6 +314,7 @@ export function set_inpage_search_result_info(text: string) {
 
         // No results before
         if (!old_count) {
+            /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             result_with_row_info.innerHTML = text;
             return;
         }
@@ -317,6 +323,7 @@ export function set_inpage_search_result_info(text: string) {
         if (!new_count) return;
 
         // Results before and after
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         result_with_row_info.innerHTML =
             new_text + ": " + (Number(old_count) + Number(new_count));
 
@@ -330,6 +337,7 @@ export function set_inpage_search_result_info(text: string) {
     if (row_info_div || page_menu_popups_div) {
         const result_div: HTMLElement = document.createElement("div");
         result_div.id = "inpage_search_result_info";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         result_div.innerHTML = text;
         if (row_info_div) {
             result_div.className = "result_with_row_info";
@@ -345,7 +353,7 @@ export function set_inpage_search_result_info(text: string) {
 // Function gets the value of the given url parameter
 export function get_url_param(
     name: string,
-    url: string | undefined = undefined
+    url: string | undefined = undefined,
 ) {
     name = name.replace("[", "\\[").replace("]", "\\]");
     url = typeof url === "undefined" ? window.location.toString() : url;
@@ -364,7 +372,7 @@ export function get_url_param(
 export function makeuri(
     addvars: any,
     url: string | undefined = undefined,
-    filename: string | undefined = undefined
+    filename: string | undefined = undefined,
 ) {
     url = typeof url === "undefined" ? window.location.href : url;
 
@@ -407,7 +415,7 @@ export function makeuri(
     // Add new params
     for (const key in addvars) {
         params.push(
-            encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key])
+            encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key]),
         );
     }
 
@@ -419,7 +427,7 @@ export function makeuri_contextless(vars: any, filename: string) {
     // Add new params
     for (const key in vars) {
         params.push(
-            encodeURIComponent(key) + "=" + encodeURIComponent(vars[key])
+            encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]),
         );
     }
 
@@ -469,7 +477,7 @@ export function reload_whole_page(url: string | null = null) {
 }
 
 export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
-    ajax.call_ajax("ajax_delete_user_message.py", {
+    call_ajax("ajax_delete_user_message.py", {
         method: "POST",
         post_data: "id=" + msg_id,
     });
@@ -478,7 +486,7 @@ export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
 }
 
 export function add_height_to_simple_bar_content_of_iframe(
-    target_iframe: string
+    target_iframe: string,
 ) {
     const iframe = document.getElementById(target_iframe);
     if (!iframe) return;
@@ -526,7 +534,7 @@ export function set_reload(secs: number, url?: string) {
 // running, this timer is terminated and replaced by the new one.
 export function schedule_reload(
     url: string | undefined = undefined,
-    remaining_ms: number | undefined = undefined
+    remaining_ms: number | undefined = undefined,
 ) {
     if (typeof url === "undefined") url = ""; // reload current page (or just the content)
 
@@ -661,7 +669,7 @@ function do_reload(url: string) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(
                     opts[i].toUpperCase(),
-                    opts[i]
+                    opts[i],
                 );
             else display_options += opts[i];
         }
@@ -677,10 +685,9 @@ function do_reload(url: string) {
         if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
             params["_reload"] = "1";
 
-        if (selection.is_selection_enabled())
-            params["selection"] = selection.get_selection_id();
+        if (is_selection_enabled()) params["selection"] = get_selection_id();
 
-        ajax.call_ajax(makeuri(params), {
+        call_ajax(makeuri(params), {
             response_handler: handle_content_reload,
             error_handler: handle_content_reload_error,
             method: "GET",
@@ -691,6 +698,7 @@ function do_reload(url: string) {
 function handle_content_reload(_unused: any, code: string) {
     g_reload_error = false;
     const o = document.getElementById("data_container")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     o.innerHTML = code;
     execute_javascript_by_object(o);
 
@@ -702,10 +710,11 @@ function handle_content_reload(_unused: any, code: string) {
 
 function handle_content_reload_error(
     _unused: any,
-    status_code: number | string
+    status_code: number | string,
 ) {
     if (!g_reload_error) {
         const o = document.getElementById("data_container")!;
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         o.innerHTML =
             "<div class=error>Update failed (" +
             status_code +
@@ -745,8 +754,8 @@ export function wheel_event_delta(event) {
     return event.deltaY
         ? event.deltaY
         : event.detail
-        ? event.detail * -120
-        : event.wheelDelta;
+          ? event.detail * -120
+          : event.wheelDelta;
 }
 
 export function wheel_event_name() {
@@ -758,7 +767,7 @@ export function wheel_event_name() {
 export function toggle_more(
     trigger: HTMLElement,
     toggle_id: string,
-    dom_levels_up: number
+    dom_levels_up: number,
 ) {
     event!.stopPropagation();
     let container: HTMLElement | ParentNode | null = trigger;
@@ -781,23 +790,23 @@ export function toggle_more(
         state = "on";
     }
 
-    ajax.call_ajax(
+    call_ajax(
         "tree_openclose.py?tree=more_buttons" +
             "&name=" +
             encodeURIComponent(toggle_id) +
             "&state=" +
-            encodeURIComponent(state)
+            encodeURIComponent(state),
     );
 }
 
 export function add_simplebar_scrollbar(scrollable_id: string) {
     return add_simplebar_scrollbar_to_object(
-        document.getElementById(scrollable_id)
+        document.getElementById(scrollable_id),
     );
 }
 
 export function add_simplebar_scrollbar_to_object(
-    obj: Nullable<HTMLElement>
+    obj: Nullable<HTMLElement>,
 ): SimpleBar | undefined {
     if (obj) {
         return new SimpleBar(obj);
@@ -807,15 +816,29 @@ export function add_simplebar_scrollbar_to_object(
 }
 
 export function content_scrollbar(scrollable_id: string) {
-    if (g_content_scrollbar === null)
+    if (g_content_scrollbar === null) {
+        const element = document.getElementById(scrollable_id);
+        const current_position = element!.scrollTop;
         g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
+        if (current_position) {
+            const scrollElement = g_content_scrollbar!.getScrollElement();
+            if (scrollElement) {
+                scrollElement.scrollTop = current_position;
+            }
+        }
+    }
     return g_content_scrollbar;
 }
 
-export function set_focus_by_name(form_name: string, field_name: number) {
+export function set_focus_by_name(
+    form_name: string | undefined,
+    field_name: number,
+) {
+    if (form_name === null) return;
+
     set_focus(
         (document.getElementById("form_" + form_name) as HTMLFormElement)
-            .elements[field_name] as HTMLElement | null
+            .elements[field_name] as HTMLElement | null,
     );
 }
 
@@ -835,7 +858,7 @@ function set_focus(focus_obj) {
 
 export function update_pending_changes(
     changes_info: Nullable<string>,
-    changes_tooltip: string
+    changes_tooltip: string,
 ) {
     if (!changes_info) {
         return;
@@ -843,7 +866,7 @@ export function update_pending_changes(
 
     // Update container div CSS class and tooltip
     const page_state_div = document.getElementsByClassName(
-        "page_state"
+        "page_state",
     )[0] as HTMLElement;
     change_class(page_state_div, "no_changes", "pending_changes");
     page_state_div.title = changes_tooltip;
@@ -856,8 +879,10 @@ export function update_pending_changes(
             text_container.getElementsByClassName("changes_number")[0];
         const changes_str_span =
             text_container.getElementsByClassName("changes_str")[0];
+        /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
         changes_number_span.innerHTML = changes_number;
         changes_str_span.innerHTML = changes_str;
+        /* eslint-enable no-unsanitized/property */
     }
 
     // Update changes icon
@@ -878,7 +903,7 @@ export function update_pending_changes(
 
 export function get_computed_style(
     object: null | undefined | Element,
-    property: string
+    property: string,
 ) {
     return object
         ? window.getComputedStyle(object).getPropertyValue(property)
@@ -907,7 +932,7 @@ function fallbackCopyToClipboard(secret: string) {
 
 export function copy_to_clipboard(
     text: string,
-    success_msg: string | null = null
+    success_msg: string | null = null,
 ) {
     try {
         if (navigator.clipboard) {
@@ -936,7 +961,7 @@ export function copy_to_clipboard(
 
 export function copy_dom_element_content_to_clipboard(
     node_id: string,
-    success_msg = ""
+    success_msg = "",
 ) {
     const node = document.getElementById(node_id);
     if (!node) {
@@ -947,7 +972,7 @@ export function copy_dom_element_content_to_clipboard(
         console.warn(
             "Copy to clipboard failed due to an unsupported browser. " +
                 "Could not select text in DOM element:",
-            node
+            node,
         );
         return;
     }
@@ -960,7 +985,7 @@ export function querySelectorID<T extends HTMLElement>(id: string): T | null {
 }
 
 export function querySelectorAllByClassName<T extends HTMLElement>(
-    className: string
+    className: string,
 ) {
     return document.querySelectorAll<T>(`.${className}`);
 }

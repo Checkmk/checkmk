@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 # this is currently here only to prevent error messages when upgrading
 
@@ -51,6 +52,7 @@ def parse_adva_fsp_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["adva_fsp_temp"] = LegacyCheckDefinition(
+    name="adva_fsp_temp",
     parse_function=parse_adva_fsp_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     fetch=SNMPTree(

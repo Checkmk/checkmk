@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.bluecat import DETECT_BLUECAT
+
+check_info = {}
 
 
 def inventory_bluecat_command_server(info):
@@ -37,6 +37,7 @@ def parse_bluecat_command_server(string_table: StringTable) -> StringTable | Non
 
 
 check_info["bluecat_command_server"] = LegacyCheckDefinition(
+    name="bluecat_command_server",
     parse_function=parse_bluecat_command_server,
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(

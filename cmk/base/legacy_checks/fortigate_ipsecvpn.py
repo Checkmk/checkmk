@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
+
+check_info = {}
 
 
 def inventory_fortigate_ipsecvpn(info):
@@ -18,10 +18,7 @@ def inventory_fortigate_ipsecvpn(info):
 
 
 def check_fortigate_ipsecvpn(item, params, info):
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
-    tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
+    tunnels_ignore_levels = params["tunnels_ignore_levels"]
 
     tunnels_down = set()
     tunnels_ignored = set()
@@ -58,9 +55,9 @@ def check_fortigate_ipsecvpn(item, params, info):
 
     long_output = []
     for title, tunnels in [
-        ("Down and not ignored", set(tunnels_down) - set(tunnels_ignored)),
-        ("Down", tunnels_down),
-        ("Ignored", tunnels_ignored),
+        ("Down and not ignored", sorted(set(tunnels_down) - set(tunnels_ignored))),
+        ("Down", sorted(tunnels_down)),
+        ("Ignored", sorted(tunnels_ignored)),
     ]:
         if tunnels:
             long_output.append("%s:" % title)
@@ -74,6 +71,7 @@ def parse_fortigate_ipsecvpn(string_table: StringTable) -> StringTable:
 
 
 check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
+    name="fortigate_ipsecvpn",
     parse_function=parse_fortigate_ipsecvpn,
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
@@ -85,6 +83,7 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
     check_function=check_fortigate_ipsecvpn,
     check_ruleset_name="ipsecvpn",
     check_default_parameters={
+        "tunnels_ignore_levels": [],
         "levels": (1, 2),
     },
 )

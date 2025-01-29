@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, StringTable
+
+check_info = {}
 
 # <<<oracle_logswitches>>>
 # pengt  15
@@ -65,6 +66,7 @@ def parse_oracle_logswitches(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_logswitches"] = LegacyCheckDefinition(
+    name="oracle_logswitches",
     parse_function=parse_oracle_logswitches,
     service_name="ORA %s Logswitches",
     discovery_function=inventory_oracle_logswitches,

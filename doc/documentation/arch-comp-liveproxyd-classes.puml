@@ -30,7 +30,7 @@ note bottom of HeartbeatClient
   Check if remote is still there.
 end note
 note bottom of InventoryUpdateClient
-  Fetches HW/SW inventory information
+  Fetches HW/SW Inventory information
   from remote site and stores it centrally
   for the UI.
 end note

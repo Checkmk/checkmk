@@ -50,11 +50,12 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
 
     parsed: dict[str, Any] = {}
     attributes: dict[str, Any] = {}
+    qmname = ""  # TODO: Find some way to avoid setting this dummy value.
     for (line,), has_more in lookahead(string_table):
         intro_line = RE_INTRO.match(line)
         if intro_line:
             if attributes:
-                record_group(qmname, attributes, parsed)  # type: ignore[has-type]  # noqa: F821 (undefined name)
+                record_group(qmname, attributes, parsed)
                 attributes.clear()
             qmname = intro_line.group(1)
             qmstatus = intro_line.group(2)
@@ -63,7 +64,7 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
             continue
         if RE_GROUP.match(line) or not has_more:
             if attributes:
-                record_group(qmname, attributes, parsed)  # noqa: F821 (undefined name)
+                record_group(qmname, attributes, parsed)
                 attributes.clear()
             continue
         if RE_KEY.match(line):

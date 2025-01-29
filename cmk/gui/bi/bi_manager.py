@@ -8,8 +8,9 @@ from pathlib import Path
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.paths import default_config_dir
 
 from cmk.gui import sites

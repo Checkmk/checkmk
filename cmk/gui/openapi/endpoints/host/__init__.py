@@ -37,6 +37,7 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+
 import ast
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
@@ -75,6 +76,7 @@ class HostParameters(BaseSchema):
         gui_fields.SiteField(),
         description="Restrict the query to this particular site.",
         load_default=[],
+        example=["heute"],
     )
     query = gui_fields.query_field(Hosts, required=False)
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
@@ -97,18 +99,7 @@ PERMISSIONS = permissions.Undocumented(
 )
 
 
-@Endpoint(
-    constructors.collection_href("host"),
-    ".../collection",
-    method="get",
-    tag_group="Monitoring",
-    blacklist_in=["swagger-ui"],
-    query_params=[HostParameters],
-    response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
-)
-def list_hosts(params: Mapping[str, Any]) -> Response:
-    """Show hosts of specific condition"""
+def _list_hosts(params: Mapping[str, Any]) -> Response:
     live = sites.live()
     sites_to_query = params["sites"]
     if sites_to_query:
@@ -123,7 +114,7 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
 
     result = q.iterate(live)
 
-    # We have to special case the inventory column, as they as dicts stored as bytes in livestatus
+    # We have to special case the inventory column, as it is a dict stored as bytes in livestatus
     if contains_an_inventory_colum(columns):
         result = fixup_inventory_column(result)
 
@@ -133,6 +124,39 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
             value=[_host_object(entry["name"], entry) for entry in result],
         )
     )
+
+
+# TODO: DEPRECATED(17003) - remove in 2.5
+@Endpoint(
+    constructors.collection_href("host"),
+    ".../collection",
+    method="get",
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    query_params=[HostParameters],
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    deprecated_urls={"/domain-types/host/collections/all": 17003},
+)
+def list_hosts_deprecated(params: Mapping[str, Any]) -> Response:
+    """Show hosts of specific condition"""
+    return _list_hosts(params)
+
+
+@Endpoint(
+    constructors.collection_href("host"),
+    "cmk/list",
+    method="post",
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    request_schema=HostParameters,
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    update_config_generation=False,
+)
+def list_hosts(params: Mapping[str, Any]) -> Response:
+    """Show hosts of specific condition"""
+    return _list_hosts(params["body"])
 
 
 @Endpoint(
@@ -195,7 +219,7 @@ def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
 
 
 def fixup_inventory_column(
-    result: Generator[ResultRow, None, None]
+    result: Generator[ResultRow, None, None],
 ) -> Generator[ResultRow, None, None]:
     for row in result:
         if inventory_data := row.get(INVENTORY_COLUMN):
@@ -207,5 +231,6 @@ def fixup_inventory_column(
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(list_hosts_deprecated)
     endpoint_registry.register(list_hosts)
     endpoint_registry.register(show_host)

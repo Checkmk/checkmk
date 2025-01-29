@@ -7,9 +7,8 @@
 from collections.abc import Collection
 
 import cmk.utils.paths
-from cmk.utils.crypto.password import Password
 
-import cmk.gui.backup.handler as handler
+from cmk.gui.backup import handler
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -17,6 +16,8 @@ from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -114,7 +115,7 @@ class PageAjaxBackupJobState(AjaxPage):
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
             page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()

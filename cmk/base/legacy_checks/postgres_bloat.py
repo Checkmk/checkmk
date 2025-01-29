@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.lib import postgres
+
+check_info = {}
 
 # <<<postgres_bloat>>>
 # [databases_start]
@@ -37,7 +37,7 @@ def inventory_postgres_bloat(parsed):
     return [(entry, {}) for entry, values in parsed.items() if values]
 
 
-def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-branches
+def check_postgres_bloat(item, params, parsed):
     database = parsed.get(item)
     if not database:
         # In case of missing information we assume that the login into
@@ -86,17 +86,23 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             if "%s_bloat_abs" % what in params:
                 warn, crit = params["%s_bloat_abs" % what]
                 if wasted >= crit:
-                    yield 2, "{} wasted {} bytes: {} (too high)".format(
-                        line["tablename"],
-                        what,
-                        render.bytes(wasted),
+                    yield (
+                        2,
+                        "{} wasted {} bytes: {} (too high)".format(
+                            line["tablename"],
+                            what,
+                            render.bytes(wasted),
+                        ),
                     )
                     show_levels = True
                 elif wasted >= warn:
-                    yield 1, "{} wasted {} bytes: {} (too high)".format(
-                        line["tablename"],
-                        what,
-                        render.bytes(wasted),
+                    yield (
+                        1,
+                        "{} wasted {} bytes: {} (too high)".format(
+                            line["tablename"],
+                            what,
+                            render.bytes(wasted),
+                        ),
                     )
                     show_levels = True
 
@@ -122,15 +128,21 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             ("table", table_perc_max, table_abs_max),
             ("index", index_perc_max, index_abs_max),
         ]:
-            yield 0, "Maximum {} bloat at {}: {}".format(
-                what,
-                perc_max["tablename"],
-                render.percent(float(perc_max["%sbloat" % what[0]])),
+            yield (
+                0,
+                "Maximum {} bloat at {}: {}".format(
+                    what,
+                    perc_max["tablename"],
+                    render.percent(float(perc_max["%sbloat" % what[0]])),
+                ),
             )
-            yield 0, "Maximum wasted {}space at {}: {}".format(
-                what,
-                abs_max["tablename"],
-                render.bytes(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])),
+            yield (
+                0,
+                "Maximum wasted {}space at {}: {}".format(
+                    what,
+                    abs_max["tablename"],
+                    render.bytes(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])),
+                ),
             )
 
     # Summary information
@@ -144,6 +156,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 
 
 check_info["postgres_bloat"] = LegacyCheckDefinition(
+    name="postgres_bloat",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Bloat %s",
     discovery_function=inventory_postgres_bloat,

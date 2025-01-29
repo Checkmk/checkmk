@@ -29,6 +29,7 @@ v returned data rows, includes end y
         |---------------|
       x---v---v---v---v---y
 """
+
 import ast
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -43,7 +44,7 @@ def fixture_rrd_database(site: Site) -> Path:
     "Create rrd database for integration test"
     with site.python_helper("helper_rrd_database.py").execute() as p:
         assert p.wait() == 0
-    return Path(site.path("test.rrd"))
+    return site.path("test.rrd")
 
 
 @pytest.mark.parametrize(

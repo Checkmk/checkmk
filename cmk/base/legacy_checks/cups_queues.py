@@ -30,8 +30,9 @@ import time
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 class _Data(TypedDict):
@@ -53,7 +54,7 @@ def parse_cups_queues(string_table: list[list[str]]) -> Section:
                 "output": " ".join(line[2:]),
                 "jobs": [],
             }
-            if len(string_table) > num + 1 and not string_table[num + 1][0] in ["printer", "---"]:
+            if len(string_table) > num + 1 and string_table[num + 1][0] not in ["printer", "---"]:
                 parsed[line[1]]["output"] += " (%s)" % " ".join(string_table[num + 1])
         elif line[0] == "---":
             break
@@ -126,6 +127,7 @@ def check_cups_queues(item, params, parsed):
 
 
 check_info["cups_queues"] = LegacyCheckDefinition(
+    name="cups_queues",
     parse_function=parse_cups_queues,
     service_name="CUPS Queue %s",
     discovery_function=inventory_cups_queues,

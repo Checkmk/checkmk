@@ -8,6 +8,7 @@
 
 #include <type_traits>
 
+// NOLINTBEGIN(modernize-use-constraints)
 namespace mk {
 // Return the enumerator's value as a compile-time constant, see Scott Meyer's
 // "Effective Modern C++", item 10.
@@ -38,22 +39,22 @@ constexpr bool is_bit_mask_v = is_bit_mask<T>::value;
 }  // namespace mk
 
 template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
-inline constexpr Enum operator&(Enum x, Enum y) {
+constexpr Enum operator&(Enum x, Enum y) {
     return x &= y;
 }
 
 template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
-inline constexpr Enum operator|(Enum x, Enum y) {
+constexpr Enum operator|(Enum x, Enum y) {
     return x |= y;
 }
 
 template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
-inline constexpr Enum operator^(Enum x, Enum y) {
+constexpr Enum operator^(Enum x, Enum y) {
     return x ^= y;
 }
 
 template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
-inline constexpr Enum operator~(Enum x) {
+constexpr Enum operator~(Enum x) {
     return Enum(~mk::toUType(x));
 }
 
@@ -76,5 +77,6 @@ template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
 inline bool is_empty_bit_mask(Enum x) {
     return x == Enum(0);
 }
+// NOLINTEND(modernize-use-constraints)
 
 #endif  // BitMask_h

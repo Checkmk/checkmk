@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import re
 import subprocess
 from collections.abc import Callable, Iterator
@@ -13,31 +14,33 @@ import pytest
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
-    print("Applying default config")
-    site.openapi.create_host(
+    logger.info("Applying default config")
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -61,9 +64,9 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
 
     try:
         site.activate_changes_and_wait_for_core_reload()
@@ -72,16 +75,16 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         #
         # Cleanup code
         #
-        print("Cleaning up test config")
+        logger.info("Cleaning up test config")
 
         site.delete_dir("var/check_mk/agent_output")
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
 
         site.activate_changes_and_wait_for_core_reload()
 
@@ -312,17 +315,6 @@ def test_dump_agent(execute: Execute) -> None:
 # TODO: --cleanup-piggyback
 
 # .
-#   .--scan-parents--------------------------------------------------------.
-#   |                                                         _            |
-#   |    ___  ___ __ _ _ __        _ __   __ _ _ __ ___ _ __ | |_ ___      |
-#   |   / __|/ __/ _` | '_ \ _____| '_ \ / _` | '__/ _ \ '_ \| __/ __|     |
-#   |   \__ \ (_| (_| | | | |_____| |_) | (_| | | |  __/ | | | |_\__ \     |
-#   |   |___/\___\__,_|_| |_|     | .__/ \__,_|_|  \___|_| |_|\__|___/     |
-#   |                             |_|                                      |
-#   '----------------------------------------------------------------------'
-# TODO
-
-# .
 #   .--snmptranslate-------------------------------------------------------.
 #   |                            _                       _       _         |
 #   |  ___ _ __  _ __ ___  _ __ | |_ _ __ __ _ _ __  ___| | __ _| |_ ___   |
@@ -475,7 +467,7 @@ def test_inventory_verbose(execute: Execute) -> None:
         p = execute(["cmk", "-v", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
         assert p.stderr == ""
-        assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
+        assert p.stdout.startswith("Doing HW/SW Inventory on: modes-test-host\n")
         stdout_words = p.stdout.split()
         for expected_word in ("check_mk:", "lnx_if:", "mem:"):
             assert expected_word in stdout_words

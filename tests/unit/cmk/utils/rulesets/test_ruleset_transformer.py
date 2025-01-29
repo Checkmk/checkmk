@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 

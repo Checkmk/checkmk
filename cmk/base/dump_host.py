@@ -4,16 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+import sys
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import Literal
+
+from cmk.ccc.exceptions import OnError
 
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import OnError
+from cmk.utils import ip_lookup, tty
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -36,9 +40,8 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.obsolete_output as out
-import cmk.base.sources as sources
+from cmk.base import sources
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
@@ -46,11 +49,10 @@ from cmk.base.config import (
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
 
 
-def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
+def dump_source(source: Source) -> str:
     fetcher = source.fetcher()
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
@@ -117,14 +119,20 @@ def _agent_description(cds: ComputedDataSources) -> str:
     return "No agent"
 
 
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()
+
+
 def dump_host(
     config_cache: ConfigCache,
+    plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
     simulation_mode: bool,
 ) -> None:
-    # pylint: disable=too-many-branches
-    out.output("\n")
+    print_("\n")
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -133,7 +141,7 @@ def dump_host(
     else:
         color = tty.bgblue
         add_txt = ""
-    out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    print_("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
     ipaddress = (
@@ -169,7 +177,7 @@ def dump_host(
         else:
             addresses += " (Primary: IPv4)"
 
-    out.output(
+    print_(
         tty.yellow
         + "Addresses:              "
         + tty.normal
@@ -179,10 +187,10 @@ def dump_host(
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
     tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
-    out.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+    print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
-    out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+    print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
         parents_list = config_cache.nodes(hostname)
@@ -190,17 +198,17 @@ def dump_host(
         parents_list = config_cache.parents(hostname)
 
     if parents_list:
-        out.output(
+        print_(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
         )
-    out.output(
+    print_(
         tty.yellow
         + "Host groups:            "
         + tty.normal
         + ", ".join(config_cache.hostgroups(hostname))
         + "\n"
     )
-    out.output(
+    print_(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
@@ -223,6 +231,7 @@ def dump_host(
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
+            plugins,
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
@@ -268,17 +277,17 @@ def dump_host(
     if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")
 
-    out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
+    print_(tty.yellow + "Agent mode:             " + tty.normal)
+    print_(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
 
-    out.output(tty.yellow + "Type of agent:          " + tty.normal)
+    print_(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:
-        out.output(agenttypes[0] + "\n")
+        print_(agenttypes[0] + "\n")
     else:
-        out.output("\n  ")
-        out.output("\n  ".join(agenttypes) + "\n")
+        print_("\n  ")
+        print_("\n  ".join(agenttypes) + "\n")
 
-    out.output(tty.yellow + "Services:" + tty.normal + "\n")
+    print_(tty.yellow + "Services:" + tty.normal + "\n")
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
@@ -291,7 +300,11 @@ def dump_host(
                 str(service.item),
                 _evaluate_params(service.parameters),
                 service.description,
-                ",".join(config_cache.servicegroups_of_service(hostname, service.description)),
+                ",".join(
+                    config_cache.servicegroups_of_service(
+                        hostname, service.description, service.labels
+                    )
+                ),
             ]
         )
 
@@ -302,10 +315,7 @@ def _evaluate_params(params: TimespecificParameters) -> str:
     return (
         repr(params.evaluate(timeperiod_active))
         if params.is_constant()
-        else "Timespecific parameters at {}: {!r}".format(
-            cmk.utils.render.date_and_time(time.time()),
-            params.evaluate(timeperiod_active),
-        )
+        else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active)!r}"
     )
 
 

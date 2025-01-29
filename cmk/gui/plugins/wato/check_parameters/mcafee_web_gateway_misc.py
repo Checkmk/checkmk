@@ -7,14 +7,15 @@ The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its
 Where possibile the "McAfee" string has been removed in favor of more generic therms.
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    simple_levels,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer
 
 
@@ -23,7 +24,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
         elements=[
             (
                 "clients",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for clients"),
                     default_levels=(0, 0),
@@ -32,7 +33,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "network_sockets",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for open network sockets"),
                     default_levels=(0, 0),
@@ -41,7 +42,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_to_resolve_dns",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for time to resolve DNS"),
                     default_levels=(1500, 2000),
@@ -51,7 +52,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_consumed_by_rule_engine",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for time consumed by rule engine"),
                     default_levels=(1500, 2000),

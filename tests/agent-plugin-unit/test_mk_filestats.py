@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import ast
 import collections
@@ -16,26 +15,26 @@ from typing import Mapping, Optional, Sequence, Tuple
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
+    import agents.plugins.mk_filestats_2 as mk_filestats
 else:
-    import agents.plugins.mk_filestats as mk_filestats
+    from agents.plugins import mk_filestats
 
 
-MYLAZYFILE = mk_filestats.FileStat.from_path(__file__)
+MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)
 # Overwrite the path to be reproducable...
-MYLAZYFILE.writeable_path = mk_filestats.ensure_str("test_mk_filestats.py")
+MYLAZYFILE.file_path = mk_filestats.ensure_str("test_mk_filestats.py")
 MYLAZYFILE.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
 
 
 def test_lazy_file() -> None:
-    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt")
-    assert lfile.writeable_path == "/bla/no such file.txt"
+    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt", "/bla/no such file.txt")
+    assert lfile.file_path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
-    lfile = mk_filestats.FileStat.from_path(__file__)  # this should exist...
-    assert lfile.writeable_path == __file__
+    lfile = mk_filestats.FileStat.from_path(__file__, __file__)  # this should exist...
+    assert lfile.file_path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert isinstance(lfile.age, int)
@@ -103,8 +102,7 @@ def test_numeric_filter_raises(invalid_arg: str) -> None:
 def test_path_filter(reg_pat: str, paths: Sequence[str], results: Sequence[bool]) -> None:
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        lazy_file = mk_filestats.FileStat.from_path(path)
-        assert result == path_filter.matches(lazy_file)
+        assert result == path_filter.matches(mk_filestats._sanitize_path(path))
 
 
 @pytest.mark.parametrize(
@@ -160,7 +158,7 @@ def test_output_aggregator_single_file_servicename(group_name: str, expected: st
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):  # pylint: disable=arguments-differ
+    def read(self, cfg_file):  # type: ignore[override]
         pass
 
 
@@ -330,14 +328,13 @@ def test_grouping_multiple_groups(
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert (
-                single_file.writeable_path
-                == expected_results_list[results_idx][1][files_idx].writeable_path
+                single_file.file_path == expected_results_list[results_idx][1][files_idx].file_path
             )
 
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    FilestatFake = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
         "FilestatFake", ["size", "age", "stat_status"]
     )
     filestat = FilestatFake(val, val, "file vanished")
@@ -413,3 +410,91 @@ def test_output_aggregator_extremes_only(files, expected_header, expected_dicts)
     assert result[0] == expected_header
     for result_dict_repr, expected_dict in zip(result[1:], expected_dicts):
         assert ast.literal_eval(result_dict_repr) == expected_dict
+
+
+_TEST_DIR_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "datasets",
+        "mk_filestats",
+    )
+)
+
+
+@pytest.mark.parametrize(
+    ["pattern_list", "filters", "expected_result"],
+    [
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [mk_filestats.RegexFilter(".*html")],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [mk_filestats.RegexFilter(".*txt")],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [
+                mk_filestats.RegexFilter(".*testfile.*"),
+                mk_filestats.InverseRegexFilter(".*html"),
+            ],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [mk_filestats.RegexFilter(".*txt")],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [mk_filestats.RegexFilter(".*html")],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [
+                mk_filestats.RegexFilter(".*testfile.*"),
+                mk_filestats.InverseRegexFilter(".*txt"),
+            ],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+    ],
+)
+def test_pattern_iterator(pattern_list, filters, expected_result):
+    assert sorted(
+        file_stat.file_path
+        for file_stat in mk_filestats.PatternIterator(
+            pattern_list,
+            filters,
+        )
+    ) == sorted(expected_result)

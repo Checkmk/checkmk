@@ -1,0 +1,22 @@
+---
+rules:
+    - id: disallow-print
+      pattern-either:
+          - pattern: print(...)
+          - pattern: pprint(...)
+          # - pattern: pprint.pprint(...)
+      message: Found call to print, which may be some left over debug output.
+      languages: [python]
+      severity: ERROR
+      paths:
+          # TODO: Make this an exclude list
+          include:
+              - "bin"
+              - "cmk"
+              - "packages"
+              - "notifications"
+              - "active_checks"
+              # TODO: Update all agent plugins to use sys.stdout.write instead of print
+              - "agents/plugins"
+          exclude:
+              - "doc/treasures"

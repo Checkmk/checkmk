@@ -3,36 +3,63 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TypedDict
 
-from cmk.utils import store
-from cmk.utils.config_validation_layer.user_roles import validate_userroles
+from cmk.ccc import store
 
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import RoleName
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
+
+
+class BuiltInUserRoleValues(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
+    GUEST = "guest"
+    AGENT_REGISTRATION = "agent_registration"
+    NO_PERMISSIONS = "no_permissions"
+
+
+class UserRoleBase(TypedDict):
+    alias: str
+    permissions: dict[str, bool]
+
+
+class CustomUserRole(UserRoleBase):
+    builtin: Literal[False]
+    basedon: BuiltInUserRoleValues
+
+
+class BuiltInUserRole(UserRoleBase):
+    builtin: Literal[True]
+
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
 
 
-def _get_builtin_roles() -> Roles:
+def _get_builtin_roles() -> dict[RoleName, BuiltInUserRole]:
     """Returns a role dictionary containing the bultin default roles"""
     builtin_role_names = {
         "admin": _("Administrator"),
         "user": _("Normal monitoring user"),
         "guest": _("Guest user"),
         "agent_registration": _("Agent registration user"),
+        "no_permission": _("Empty template for least privilege roles"),
     }
+
     return {
-        rid: {
-            "alias": builtin_role_names.get(rid, rid),
-            "permissions": {},  # use default everywhere
-            "builtin": True,
-        }
+        rid: BuiltInUserRole(
+            alias=builtin_role_names.get(rid, rid),
+            permissions={},
+            builtin=True,
+        )
         for rid in builtin_role_ids
     }
 
@@ -44,6 +71,7 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
         super().__init__(
             config_file_path=Path(multisite_dir()) / "roles.mk",
             config_variable="roles",
+            spec_class=dict[RoleName, CustomUserRole | BuiltInUserRole],
         )
 
     def _load_file(self, lock: bool = False) -> Roles:
@@ -62,11 +90,15 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
                     del role["permissions"][pname]
                     role["permissions"]["general." + pname] = pvalue
 
-        validate_userroles(cfg)
         return cfg
 
+    def read_file_and_validate(self) -> None:
+        cfg = self._load_file(lock=False)
+        for role in cfg.values():
+            if "basedon" in role and role["basedon"] in builtin_role_ids:
+                role["basedon"] = BuiltInUserRoleValues(role["basedon"])
+
     def save(self, cfg: Roles) -> None:
-        validate_userroles(cfg)
         active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)
         super().save(cfg)
@@ -85,3 +117,30 @@ def load_roles() -> Roles:
 
 def register_userroles_config_file(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(UserRolesConfigFile())
+
+
+@dataclass
+class UserRole:
+    name: str
+    alias: str
+    builtin: bool = False
+    permissions: dict[str, bool] = field(default_factory=dict)
+    two_factor: bool = False
+    basedon: str | None = None
+
+    def to_dict(self) -> dict[str, str | dict | bool]:
+        if self.basedon is None:
+            return {
+                "alias": self.alias,
+                "permissions": self.permissions,
+                "builtin": True,
+                "two_factor": self.two_factor,
+            }
+
+        return {
+            "alias": self.alias,
+            "permissions": self.permissions,
+            "builtin": False,
+            "two_factor": self.two_factor,
+            "basedon": self.basedon,
+        }

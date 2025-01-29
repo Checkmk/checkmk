@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
+
 import functools
 from collections.abc import Callable, Collection, Container, Iterator
 
@@ -16,8 +17,8 @@ from cmk.utils.servicename import Item
 
 from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 
-import cmk.gui.forms as forms
 import cmk.gui.view_utils
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -182,9 +183,6 @@ class ModeObjectParameters(WatoMode):
             self._host.site_id(),
             self._hostname,
         )
-        if not host_info:
-            return
-
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
@@ -238,7 +236,7 @@ class ModeObjectParameters(WatoMode):
             "",
             "",
             True,
-            _("This check is not configurable via WATO"),
+            _("This check is not configurable via Setup"),
         )
         if not checkgroup or checkgroup == "None":
             not_configurable_render()
@@ -322,7 +320,7 @@ class ModeObjectParameters(WatoMode):
         if rulespec is None or (
             rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)
         ):
-            html.write_text(_("This check is not configurable via WATO"))
+            html.write_text_permissive(_("This check is not configurable via Setup"))
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
@@ -344,7 +342,9 @@ class ModeObjectParameters(WatoMode):
             service_result=service_result,
         )
         assert isinstance(rulespec.valuespec, Tuple)
-        html.write_text(rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]))
+        html.write_text_permissive(
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
+        )
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -421,7 +421,7 @@ class ModeObjectParameters(WatoMode):
         if "command_line" in serviceinfo:
             html.tt(serviceinfo["command_line"])
         else:
-            html.write_text(_("(no command line, passive check)"))
+            html.write_text_permissive(_("(no command line, passive check)"))
         html.close_td()
 
         html.close_tr()
@@ -495,7 +495,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
+    def _output_analysed_ruleset(
         self,
         all_rulesets: AllRulesets,
         rulespec: Rulespec,
@@ -568,7 +568,7 @@ class ModeObjectParameters(WatoMode):
 
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
-            html.write_text(
+            html.write_text_permissive(
                 _("Timespecific parameters computed at %s")
                 % cmk.utils.render.date_and_time(computed_at)
             )
@@ -588,60 +588,38 @@ class ModeObjectParameters(WatoMode):
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
-                html.write_text(valuespec.value_to_html(known_settings))
+                html.write_text_permissive(valuespec.value_to_html(known_settings))
             except Exception as e:
                 if active_config.debug:
                     raise
-                html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))
+                html.write_text_permissive(_("Invalid parameter %r: %s") % (known_settings, e))
 
-        else:
-            # For match type "dict" it can be the case the rule define some of the keys
-            # while other keys are taken from the factory defaults. We need to show the
-            # complete outcoming value here.
-            if rules and ruleset.match_type() == "dict":
-                if (
-                    rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT
-                    and rulespec.factory_default is not Rulespec.FACTORY_DEFAULT_UNUSED
-                ):
-                    fd = rulespec.factory_default.copy()
-                    fd.update(setting)
-                    setting = fd
+        elif not rules:  # show the default value
+            if rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
+                # If there is a factory default then show that one
+                setting = rulespec.factory_default
+                html.write_text_permissive(valuespec.value_to_html(setting))
 
-            if valuespec and not rules:  # show the default value
-                if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
-                    # Some rulesets are ineffective if they are empty
-                    html.write_text(_("(unused)"))
+            elif ruleset.match_type() in ("all", "list"):
+                # Rulesets that build lists are empty if no rule matches
+                html.write_text_permissive(_("(no entry)"))
 
-                elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
-                    # If there is a factory default then show that one
-                    setting = rulespec.factory_default
-                    html.write_text(valuespec.value_to_html(setting))
-
-                elif ruleset.match_type() in ("all", "list"):
-                    # Rulesets that build lists are empty if no rule matches
-                    html.write_text(_("(no entry)"))
-
-                else:
-                    # Else we use the default value of the valuespec
-                    html.write_text(valuespec.value_to_html(valuespec.default_value()))
-
-            # We have a setting
-            elif valuespec:
-                if ruleset.match_type() == "all":
-                    if not isinstance(setting, list):
-                        raise ValueError(f"Expected list, got {setting}")
-                    html.write_text(
-                        HTML(", ").join([valuespec.value_to_html(value) for value in setting])
-                    )
-                else:
-                    html.write_text(valuespec.value_to_html(setting))
-
-            # Binary rule, no valuespec, outcome is True or False
             else:
-                icon_name = "rule_{}{}".format(
-                    "yes" if setting else "no", "_off" if not rules else ""
+                # Else we use the default value of the valuespec
+                html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
+
+        # We have a setting
+        elif ruleset.match_type() == "all":
+            if not isinstance(setting, list):
+                raise ValueError(f"Expected list, got {setting}")
+            html.write_html(
+                HTML.without_escaping(", ").join(
+                    [valuespec.value_to_html(value) for value in setting]
                 )
-                html.icon(icon_name, title=_("yes") if setting else _("no"))
+            )
+        else:
+            html.write_text_permissive(valuespec.value_to_html(setting))
+
         html.close_td()
         html.close_tr()
         html.close_table()

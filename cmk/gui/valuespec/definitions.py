@@ -57,31 +57,25 @@ from typing import (
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from six import ensure_str
 
 from livestatus import SiteId
 
-import cmk.utils.crypto.certificate as certificate
-import cmk.utils.crypto.keys as keys
-import cmk.utils.dateutils as dateutils
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Version
+
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.plugin_registry
 import cmk.utils.regex
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils import dateutils
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
-from cmk.utils.version import Version
 
-import cmk.gui.forms as forms
-import cmk.gui.site_config as site_config
-import cmk.gui.user_sites as user_sites
-import cmk.gui.utils as utils
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -91,6 +85,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -100,6 +95,7 @@ from cmk.gui.type_defs import (
     GroupedChoices,
     Icon,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML
@@ -115,9 +111,11 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
+
+from cmk.crypto import certificate, keys
+from cmk.crypto.hash import HashAlgorithm
 
 seconds_per_day = 86400
 
@@ -212,7 +210,7 @@ class ValueSpec(abc.ABC, Generic[T]):
     """Abstract base class of all value declaration classes"""
 
     # TODO: Cleanup help argument redefined-builtin
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         title: str | None = None,
         label: str | None = None,
@@ -371,10 +369,10 @@ class ValueSpec(abc.ABC, Generic[T]):
 class FixedValue(ValueSpec[T]):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         value: T,
-        totext: str | None = None,
+        totext: str | HTML | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,
@@ -419,7 +417,7 @@ class FixedValue(ValueSpec[T]):
 class Age(ValueSpec[int]):
     """Time in seconds"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         label: str | None = None,
         footer: str | None = None,
@@ -470,7 +468,7 @@ class Age(ValueSpec[int]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(val), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -519,7 +517,7 @@ class Age(ValueSpec[int]):
 class TimeSpan(ValueSpec[float]):
     """Time in float seconds"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         label: str | None = None,
         footer: str | None = None,
@@ -578,7 +576,7 @@ class TimeSpan(ValueSpec[float]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(round(val)), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -674,7 +672,7 @@ class NumericRenderer:
 class Integer(ValueSpec[int]):
     """Editor for a single integer"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         size: int | None = None,
         minvalue: int | None = None,
@@ -817,7 +815,7 @@ class LegacyBinaryUnit(Enum):
 class LegacyDataSize(Integer):
     """A variant of the Filesize valuespec that allows the configuration of the selectable units"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         units: Sequence[LegacyBinaryUnit] | None = None,
         label: str | None = None,
@@ -897,7 +895,7 @@ class LegacyDataSize(Integer):
 class TextInput(ValueSpec[str]):
     """Editor for a line of text"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         label: str | None = None,
         size: int | Literal["max"] = 25,
@@ -913,7 +911,7 @@ class TextInput(ValueSpec[str]):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -949,8 +947,8 @@ class TextInput(ValueSpec[str]):
         self._minlen = minlen
         self._maxlen = maxlen
         self._oninput = oninput
-        self._autocomplete = autocomplete
         self._placeholder = placeholder
+        self._autocomplete = autocomplete
 
     def allow_empty(self) -> bool:
         return self._allow_empty
@@ -970,7 +968,7 @@ class TextInput(ValueSpec[str]):
             read_only=self._read_only,
             cssclass=self._cssclass,
             type_="text",
-            autocomplete="off" if not self._autocomplete else None,
+            autocomplete=self._autocomplete,
             oninput=self._oninput if self._oninput else None,
             placeholder=self._placeholder,
         )
@@ -1022,8 +1020,7 @@ class TextInput(ValueSpec[str]):
                 self._empty_text or _("An empty value is not allowed here."),
             )
         if value and self._regex:
-            # ? removing ensure_str causes an error in unit tests despite the type of value being str in the function typization
-            if not self._regex.match(ensure_str(value)):  # pylint: disable= six-ensure-str-bin-call
+            if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:
@@ -1059,7 +1056,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # pylint: disable=redefined-builtin
+def ID(
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1072,7 +1069,7 @@ def ID(  # pylint: disable=redefined-builtin
     minlen: int | None = None,
     maxlen: int | None = None,
     oninput: str | None = None,
-    autocomplete: bool = True,
+    autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
@@ -1081,6 +1078,10 @@ def ID(  # pylint: disable=redefined-builtin
     validate: ValueSpecValidateFunc[str] | None = None,
 ) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
+    regex_requirement_message = _(
+        "An identifier must only consist of letters, digits, dash and "
+        "underscore and it must start with a letter or underscore."
+    )
     return TextInput(
         label=label,
         size=size,
@@ -1092,23 +1093,20 @@ def ID(  # pylint: disable=redefined-builtin
         read_only=read_only,
         forbidden_chars=forbidden_chars,
         regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII),
-        regex_error=_(
-            "An identifier must only consist of letters, digits, dash and "
-            "underscore and it must start with a letter or underscore."
-        ),
+        regex_error=regex_requirement_message,
         minlen=minlen,
         maxlen=maxlen,
         oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
-        help=help,
+        help=help or regex_requirement_message,
         default_value=default_value,
         validate=validate,
     )
 
 
-def UserID(  # pylint: disable=redefined-builtin
+def UserID(
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1121,7 +1119,7 @@ def UserID(  # pylint: disable=redefined-builtin
     minlen: int | None = None,
     maxlen: int | None = None,
     oninput: str | None = None,
-    autocomplete: bool = True,
+    autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
     title: str | None = None,
@@ -1172,7 +1170,7 @@ class RegExp(TextInput):
     prefix: Literal["prefix"] = "prefix"
     complete: Literal["complete"] = "complete"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         mode: Literal["infix", "prefix", "complete"],
         case_sensitive: bool = True,
@@ -1193,7 +1191,7 @@ class RegExp(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # From ValueSpec
         title: str | None = None,
@@ -1323,7 +1321,7 @@ RegExpUnicode = RegExp  # alias added in 2.1.0 for compatibility
 
 
 class EmailAddress(TextInput):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         make_clickable: bool = False,
         # TextInput
@@ -1340,7 +1338,7 @@ class EmailAddress(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1407,7 +1405,7 @@ class EmailAddress(TextInput):
         return value
 
 
-def IPNetwork(  # pylint: disable=redefined-builtin
+def IPNetwork(
     ip_class: None | type[ipaddress.IPv4Network] | type[ipaddress.IPv6Network] = None,
     # TextInput
     allow_empty: bool = True,
@@ -1440,9 +1438,8 @@ def IPNetwork(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Network):
             if (e4 := _try(ipaddress.IPv4Network, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Network, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Network, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -1454,14 +1451,12 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     )
 
 
-def IPv4Network(  # pylint: disable=redefined-builtin
-    title: str | None = None, help: ValueSpecHelp | None = None
-) -> TextInput:
+def IPv4Network(title: str | None = None, help: ValueSpecHelp | None = None) -> TextInput:
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
     return IPNetwork(ip_class=ipaddress.IPv4Network, size=18, title=title, help=help)
 
 
-def IPAddress(  # pylint: disable=redefined-builtin
+def IPAddress(
     ip_class: type[ipaddress.IPv4Address] | type[ipaddress.IPv6Address] | None = None,
     size: int | Literal["max"] = 34,
     title: str | None = None,
@@ -1492,9 +1487,8 @@ def IPAddress(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Address):
             if (e4 := _try(ipaddress.IPv4Address, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Address, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Address, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -1506,7 +1500,7 @@ def IPAddress(  # pylint: disable=redefined-builtin
     )
 
 
-def IPv4Address(  # pylint: disable=redefined-builtin
+def IPv4Address(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
@@ -1533,7 +1527,7 @@ def _validate_hostname(text: str | None, varprefix: str) -> None:
         ) from exception
 
 
-def Hostname(  # pylint: disable=redefined-builtin
+def Hostname(
     # TextInput
     allow_empty: bool = False,
     # ValueSpec
@@ -1556,7 +1550,7 @@ def Hostname(  # pylint: disable=redefined-builtin
 class HostAddress(TextInput):
     """Use this for all host / ip address input fields!"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         allow_host_name: bool = True,
         allow_ipv4_address: bool = True,
@@ -1576,7 +1570,7 @@ class HostAddress(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1684,7 +1678,7 @@ class HostAddress(TextInput):
         return allowed
 
 
-def AbsoluteDirname(  # pylint: disable=redefined-builtin
+def AbsoluteDirname(
     # TextInput
     allow_empty: bool = True,
     size: int | Literal["max"] = 25,
@@ -1707,7 +1701,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
 
 
 class Url(TextInput):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         default_scheme: str,
         allowed_schemes: Collection[str],
@@ -1728,7 +1722,7 @@ class Url(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -1780,6 +1774,8 @@ class Url(TextInput):
                 varprefix,
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes),
             )
+        if not is_allowed_url(value, cross_domain=True, schemes=self._allowed_schemes):
+            raise MKUserError(varprefix, _("Invalid URL given"))
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
@@ -1809,7 +1805,7 @@ class Url(TextInput):
         return value
 
 
-def HTTPUrl(  # pylint: disable=redefined-builtin
+def HTTPUrl(
     show_as_link: bool = True,
     # Url
     regex: None | str | Pattern[str] = None,
@@ -1821,6 +1817,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
+    validate: ValueSpecValidateFunc[str] | None = None,
 ) -> Url:
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1834,10 +1831,11 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
         title=title,
         help=help,
         default_value=default_value,
+        validate=validate,
     )
 
 
-def HTTPSUrl(  # pylint: disable=redefined-builtin
+def HTTPSUrl(
     show_as_link: bool = True,
     # Url
     regex: None | str | Pattern[str] = None,
@@ -1878,7 +1876,7 @@ class CheckmkVersionInput(TextInput):
 
 
 class TextAreaUnicode(TextInput):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         cols: int = 60,
         rows: int | Literal["auto"] = 20,
@@ -1899,7 +1897,7 @@ class TextAreaUnicode(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1935,7 +1933,7 @@ class TextAreaUnicode(TextInput):
 
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            return HTMLWriter.render_pre(HTML(value), class_="ve_textarea")
+            return HTMLWriter.render_pre(value, class_="ve_textarea")
         return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: str | None) -> None:
@@ -1974,7 +1972,7 @@ class Filename(TextInput):
     """A variant of TextInput() that validates a path to a filename that lies in an existing directory."""
 
     # TODO: Cleanup default / default_value?
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         default: str = "/tmp/foo",  # nosec B108 # BNS:13b2c8
         trans_func: Callable[[str], str] | None = None,
@@ -1993,7 +1991,7 @@ class Filename(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -2060,7 +2058,7 @@ class Filename(TextInput):
 
 
 class ListOfStrings(ValueSpec[Sequence[str]]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # ListOfStrings
         valuespec: ValueSpec[str] | None = None,
@@ -2142,7 +2140,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             self._valuespec.render_input(varprefix + "_%d" % nr, s)  # type: ignore[arg-type]
             if not self._vertical and self._separator:
                 html.nbsp()
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
                 html.nbsp()
             html.close_div()
         html.close_div()
@@ -2168,8 +2166,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             ]
-            return HTMLWriter.render_table(HTML().join(s))
-        return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
+            return HTMLWriter.render_table(HTML.empty().join(s))
+        return HTML.without_escaping(", ").join(self._valuespec.value_to_html(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
         list_prefix = varprefix + "_"
@@ -2204,9 +2202,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 _("You can specify at most %d entries") % self._max_entries,
             )
 
-        if self._valuespec:
-            for nr, s in enumerate(value):
-                self._valuespec.validate_value(s, varprefix + "_%d" % nr)
+        for nr, s in enumerate(value):
+            self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
@@ -2224,7 +2221,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         return [self._valuespec.transform_value(v) for v in value]
 
 
-def NetworkPort(  # pylint: disable=redefined-builtin
+def NetworkPort(
     title: str | None = None,
     size: int | None = None,
     help: str | None = None,
@@ -2263,7 +2260,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         REGULAR = "regular"
         FLOATING = "floating"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         magic: str = "@!@",
@@ -2384,11 +2381,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix: str) -> None:
-        onclick: str = "cmk.valuespecs.listof_add({}, {}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(self._magic),
-            json.dumps(self._style.value),
-        )
+        onclick: str = f"cmk.valuespecs.listof_add({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._style.value)})"
         if self._add_icon:
             html.open_a(
                 id_=varprefix + "_add",
@@ -2528,7 +2521,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             return self._text_if_empty
 
         return HTMLWriter.render_table(
-            HTML().join(
+            HTML.empty().join(
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             )
@@ -2600,7 +2593,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
     Each sub-valuespec can be added only once
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         choices: GroupedListOfMultipleChoices | ListOfMultipleChoices,
         choice_page_name: str,
@@ -2639,10 +2632,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
-        js = "cmk.valuespecs.listofmultiple_del({}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(ident),
-        )
+        js = f"cmk.valuespecs.listofmultiple_del({json.dumps(varprefix)}, {json.dumps(ident)})"
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
@@ -2742,7 +2732,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return {ident: self._choice_dict[ident].mask(val) for ident, val in value.items()}
 
     def value_to_html(self, value: ListOfMultipleModel) -> ValueSpecText:
-        table_content = HTML()
+        table_content = HTML.empty()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
             table_content += HTMLWriter.render_tr(
@@ -2786,7 +2776,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 class Float(ValueSpec[float]):
     """Same as Integer, but for floating point values"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         decimal_separator: str = ".",
         allow_int: bool = False,
@@ -2859,12 +2849,12 @@ class Float(ValueSpec[float]):
             % (value, type_name(value), _(" or int") if self._allow_int else ""),
         )
 
-    def validate_value(self, value: float, varprefix: str) -> None:
+    def _validate_value(self, value: float, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
 
 class Percentage(Float):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # Float
         decimal_separator: str = ".",
@@ -2915,7 +2905,7 @@ class Percentage(Float):
 
 
 class Checkbox(ValueSpec[bool]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         label: str | None = None,
         true_label: str | None = None,
@@ -2986,7 +2976,7 @@ class DropdownChoice(ValueSpec[T | None]):
     can by dynamically computed"""
 
     # TODO: Cleanup redefined builtin sorted
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # DropdownChoice
         choices: DropdownChoices,
@@ -3087,11 +3077,11 @@ class DropdownChoice(ValueSpec[T | None]):
             )
 
         if value is None and not options:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         if len(options) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         html.dropdown(
@@ -3200,7 +3190,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
     ident = ""
     # TODO: completely remove ident from this class! should only be defined in autocompleter!
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         regex: None | str | Pattern[str] = None,
         regex_error: str | None = None,
@@ -3270,7 +3260,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
 
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
-            html.write_text(self._label)
+            html.write_text_permissive(self._label)
 
         clean_choices = [(value, value)] if value else self.choices()
 
@@ -3305,7 +3295,7 @@ class MonitoredHostname(AjaxDropdownChoice):
 
     ident = "monitored_hostname"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         strict: Literal["True", "False"] = "False",
         # DropdownChoice
@@ -3337,14 +3327,14 @@ class MonitoredHostname(AjaxDropdownChoice):
 class MonitoredServiceDescription(AjaxDropdownChoice):
     """Unfiltered Service Descriptions for input with dropdown completion
 
-    Renders an input field for entering a service description while providing an auto completion dropdown field.
+    Renders an input field for entering a service name while providing an auto completion dropdown field.
     Fetching the choices from the current live config via livestatus"""
 
     ident = "monitored_service_description"
 
 
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         css_spec: Sequence[str],
         hint_label: str,
@@ -3422,7 +3412,7 @@ MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # pylint: disable=redefined-builtin
+def MonitoringState(
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3477,7 +3467,7 @@ HostStateValue = Literal[0, 1, 2]
 
 
 class HostState(DropdownChoice):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # DropdownChoice
         sorted: bool = False,
@@ -3587,7 +3577,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         normal = "normal"
         foldable = "foldable"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         choices: CascadingDropdownChoices,
         label: str | None = None,
@@ -3684,7 +3674,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         return value, vs
 
-    def render_input(  # pylint: disable=too-many-branches
+    def render_input(
         self,
         varprefix: str,
         value: CascadingDropdownChoiceValue,
@@ -3693,7 +3683,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         options: Choices = []
         choices = self.choices()
         if not choices:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         for nr, (val, title, vs) in enumerate(choices):
@@ -3740,19 +3730,17 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     except MKUserError:
                         pass  # Fallback to default value here
 
-            else:
-                # Form painted the first time
-                if nr == int(def_val):
-                    # This choice is the one choosen by the given value
-                    if isinstance(value, tuple) and len(value) == 2:
-                        def_val_2 = value[1]
-                    else:
-                        def_val_2 = vs.default_value()
-
-                    show = True
+            elif nr == int(def_val):
+                # This choice is the one choosen by the given value
+                if isinstance(value, tuple) and len(value) == 2:
+                    def_val_2 = value[1]
                 else:
                     def_val_2 = vs.default_value()
-                    show = False
+
+                show = True
+            else:
+                def_val_2 = vs.default_value()
+                show = False
 
             if not self._render_sub_vs_page_name or show:
                 html.open_span(id_="%s_sub" % vp, style="display:%s;" % ("" if show else "none"))
@@ -3844,12 +3832,12 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     indent=False,
                 ),
             ):
-                html.write_text(rendered_value)
-            return HTML(output_funnel.drain())
+                html.write_text_permissive(rendered_value)
+            return HTML.without_escaping(output_funnel.drain())
 
         return (
-            HTML(escaping.escape_text(choice.title))
-            + HTML(escaping.escape_text(self._separator))
+            HTML.without_escaping(escaping.escape_text(choice.title))
+            + HTML.without_escaping(escaping.escape_text(self._separator))
             + rendered_value
         )
 
@@ -3939,7 +3927,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
             for (type_id, type_name) in sorted(choices.items())
         ]
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # ListChoice
         # TODO: This None works together with get_elements which are implemented in the specific sub
@@ -3967,7 +3955,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         self._empty_text = empty_text if empty_text is not None else _("(nothing selected)")
         self._loaded_at: int | None = None
         self._render_function = (
-            render_function if render_function is not None else (lambda id, val: val)
+            render_function if render_function is not None else (lambda _id, val: val)
         )
         self._toggle_all = toggle_all
         self._render_orientation = render_orientation
@@ -4023,7 +4011,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         self._draw_listchoice(varprefix, value)
@@ -4094,7 +4082,7 @@ class DualListChoice(ListChoice):
     fix this and make it this compatible to DropdownChoice()
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # DualListChoice
         autoheight: bool = False,
@@ -4158,14 +4146,14 @@ class DualListChoice(ListChoice):
             else _("%%d locked elements")
         )
 
-    def render_input(  # pylint: disable=too-many-branches
+    def render_input(
         self,
         varprefix: str,
         value: ListChoiceModel,
     ) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(_("There are no elements for selection."))
+            html.write_text_permissive(_("There are no elements for selection."))
             return
 
         # Use values from HTTP request in complain mode (value is empty or None)
@@ -4207,13 +4195,13 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td(class_="head")
-        html.write_text(_("Available"))
+        html.write_text_permissive(_("Available"))
         if not self._instant_add:
             html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
         html.close_td()
 
         html.open_td(class_="head")
-        html.write_text(_("Selected"))
+        html.write_text_permissive(_("Selected"))
         if not self._instant_add:
             html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
         html.close_td()
@@ -4226,10 +4214,7 @@ class DualListChoice(ListChoice):
         ]:
             onchange_func = select_func if self._instant_add else ""
             if self._enlarge_active:
-                onchange_func = "cmk.valuespecs.duallist_enlarge({}, {});".format(
-                    json.dumps(suffix),
-                    json.dumps(varprefix),
-                )
+                onchange_func = f"cmk.valuespecs.duallist_enlarge({json.dumps(suffix)}, {json.dumps(varprefix)});"
 
             html.open_td()
             html.dropdown(
@@ -4298,7 +4283,7 @@ class OptionalDropdownChoice(DropdownChoice[T]):
     opens a further value spec for entering an alternative
     Value."""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         explicit: ValueSpec,
         choices: DropdownChoices,
@@ -4426,7 +4411,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # pylint: disable=redefined-builtin
+def Weekday(
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4477,7 +4462,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
     Useful for example for alarms. The date is represented by a UNIX timestamp
     where the seconds are silently ignored."""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         default_days: int = 0,
         # DropdownChoice
@@ -4576,7 +4561,7 @@ class AbsoluteDate(ValueSpec[None | float]):
     zero (or will be ignored if non-zero), as long as include_time is not set
     to True"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         show_titles: bool = True,
         label: str | None = None,
@@ -4642,7 +4627,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, lt.tm_min, lt.tm_sec
 
-    def render_input(  # pylint: disable=too-many-branches
+    def render_input(
         self,
         varprefix: str,
         value: float | None,
@@ -4697,7 +4682,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         else:
             for count, val in enumerate(values):
                 if count > 0:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
                 if val is None:
                     html.nbsp()
                 else:
@@ -4817,7 +4802,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
     the user does not enter a time the vs will return None.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         allow_24_00: bool = False,
         allow_empty: bool = True,
@@ -4924,7 +4909,7 @@ TimeofdayRangeValue = None | tuple[tuple[int, int], tuple[int, int]]
 class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
     """Range like 00:15 - 18:30"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         allow_empty: bool = True,
         # ValueSpec
@@ -4951,7 +4936,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
     def render_input(self, varprefix: str, value: TimeofdayRangeValue) -> None:
         self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
-        html.write_text("-")
+        html.write_text_permissive("-")
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
@@ -5074,7 +5059,7 @@ class ComputedTimerange(NamedTuple):
 
 
 class Timerange(CascadingDropdown):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         include_time: bool = False,
         choices: CascadingDropdownChoices | None = None,
@@ -5223,7 +5208,7 @@ class Timerange(CascadingDropdown):
         return value
 
     @staticmethod
-    def compute_range(  # pylint: disable=too-many-branches
+    def compute_range(
         rangespec: TimerangeValue,
     ) -> ComputedTimerange:
         def _date_span(from_time: float, until_time: float) -> str:
@@ -5359,7 +5344,7 @@ class Timerange(CascadingDropdown):
         return ComputedTimerange((int(prev_time), int(from_time)), titles[1] or prev_time_str)
 
 
-def DateFormat(  # pylint: disable=redefined-builtin
+def DateFormat(
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -5411,7 +5396,7 @@ def DateFormat(  # pylint: disable=redefined-builtin
     )
 
 
-def TimeFormat(  # pylint: disable=redefined-builtin
+def TimeFormat(
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -5469,7 +5454,7 @@ class Optional(ValueSpec[None | T]):
     The user has a checkbox for activating the option. Example:
     debug_log: it is either None or set to a filename."""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         label: str | None = None,
@@ -5536,7 +5521,7 @@ class Optional(ValueSpec[None | T]):
             value = self._valuespec.default_value()
         if self._valuespec.title():
             the_title = self._valuespec.title()
-            html.write_text(("???" if the_title is None else the_title) + " ")
+            html.write_text_permissive(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
 
@@ -5598,7 +5583,7 @@ class Alternative(ValueSpec[AlternativeModel]):
     The different alternatives must have different data types that can
     be distinguished with validate_datatype."""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         elements: Sequence[ValueSpec[AlternativeModel]],
         match: Callable[[AlternativeModel], int] | None = None,
@@ -5712,9 +5697,9 @@ class Alternative(ValueSpec[AlternativeModel]):
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
         vs = self._matching_alternative(value)
         if vs:
-            output = HTML()
+            output = HTML.empty()
             if self._show_alternative_title and (title := vs.title()):
-                output = escaping.escape_to_html(title) + HTMLWriter.render_br()
+                output = HTML.with_escaping(title) + HTMLWriter.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
@@ -5777,7 +5762,7 @@ class Tuple(ValueSpec[TT]):
     # https://github.com/python/mypy/issues/12840
     """Edit a n-tuple (with fixed size) of values"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         elements: Sequence[ValueSpec],
         show_titles: bool = True,
@@ -5805,7 +5790,7 @@ class Tuple(ValueSpec[TT]):
     def default_value(self) -> TT:
         return tuple(x.default_value() for x in self._elements)  # type: ignore[return-value]
 
-    def render_input(self, varprefix: str, value: Any) -> None:  # pylint: disable=too-many-branches
+    def render_input(self, varprefix: str, value: Any) -> None:
         if self._orientation != "float":
             html.open_table(class_=["valuespec_tuple", self._orientation])
             if self._orientation == "horizontal":
@@ -5820,7 +5805,7 @@ class Tuple(ValueSpec[TT]):
             if self._orientation == "vertical":
                 html.open_tr()
             elif self._orientation == "float":
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
 
             title = ""
             if self._show_titles:
@@ -5841,13 +5826,12 @@ class Tuple(ValueSpec[TT]):
                     if self._title_br and title:
                         html.br()
                     else:
-                        html.write_text(" ")
+                        html.write_text_permissive(" ")
                 else:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
 
-            else:
-                if self._orientation == "horizontal":
-                    html.open_td(class_="tuple_td")
+            elif self._orientation == "horizontal":
+                html.open_td(class_="tuple_td")
 
             if self._orientation == "vertical":
                 html.open_td(class_="tuple_right" + (" has_title" if title else ""))
@@ -5874,7 +5858,9 @@ class Tuple(ValueSpec[TT]):
         return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
-        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
+        return HTML.without_escaping(", ").join(
+            el.value_to_html(val) for _, el, val in self._iter_value(value)
+        )
 
     def value_to_json(self, value: TT) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
@@ -5917,7 +5903,7 @@ DictionaryModel = dict[str, Any]
 
 class Dictionary(ValueSpec[DictionaryModel]):
     # TODO: Cleanup ancient "migrate"
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         elements: DictionaryElementsRaw,
         empty_text: str | None = None,
@@ -5932,9 +5918,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: None | (
-            Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]
-        ) = None,
+        headers: None
+        | (Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]) = None,
         migrate: Callable[[tuple], dict] | None = None,
         indent: bool = True,
         horizontal: bool = False,
@@ -6066,8 +6051,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         else:
             visible = True
             if label:
-                html.write_text(" ")
-                html.write_text(label)
+                html.write_text_permissive(" ")
+                html.write_text_permissive(label)
             # two_columns are used for space efficiency in very few places like e.g. filters
             # where it is clear from the context if values are required or not. Therefore, we
             # dont add a required label in this case.
@@ -6082,7 +6067,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         if not is_required_plain_checkbox:
             if two_columns:
                 if label and not colon_printed:
-                    html.write_text(":")
+                    html.write_text_permissive(":")
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
@@ -6139,7 +6124,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
     @staticmethod
     def _normalize_header(
-        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]],
     ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
@@ -6244,7 +6229,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         return self._value_to_html_multiline(elem, value)
 
     def _value_to_html_multiline(self, elem: DictionaryElements, value: DictionaryModel) -> HTML:
-        s = HTML()
+        s = HTML.empty()
         for param, vs in elem:
             if param in value:
                 if vs.title():
@@ -6349,7 +6334,7 @@ class ElementSelection(ValueSpec[None | str]):
     a function get_elements() that returns a dictionary
     from element keys to element titles."""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         label: str | None = None,
         empty_text: str | None = None,
@@ -6392,7 +6377,7 @@ class ElementSelection(ValueSpec[None | str]):
     def render_input(self, varprefix: str, value: str | None) -> None:
         self.load_elements()
         if len(self._elements) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
         else:
             if self._label:
                 html.span(self._label, class_="vs_floating_text")
@@ -6452,7 +6437,7 @@ class AutoTimestamp(FixedValue[float]):
 class Foldable(ValueSpec[T]):
     """Fully transparant VS encapsulating a vs in a foldable container"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         title_function: Callable[[Any], str] | None = None,
@@ -6557,7 +6542,7 @@ class Transform(ValueSpec[T]):
       and forth each time we load or save the value.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         *,
@@ -6640,7 +6625,7 @@ class Migrate(Transform[T]):
              ValueSpec (e.g. for rendering).
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         *,
@@ -6670,7 +6655,7 @@ class MigrateNotUpdated(Migrate[T]):
 class Transparent(Transform[T]):
     """Transparenly changes the title or the help of a wrapped ValueSpec"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec[T],
         *,
@@ -6691,7 +6676,7 @@ class Transparent(Transform[T]):
 
 
 class LDAPDistinguishedName(TextInput):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         enforce_suffix: str | None = None,
         # TextInput
@@ -6709,7 +6694,7 @@ class LDAPDistinguishedName(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = True,
+        autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -6772,7 +6757,7 @@ class Password(TextInput):
     the algorithm at any time.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         is_stored_plain: bool = True,
         encrypt_value: bool = True,
@@ -6792,7 +6777,7 @@ class Password(TextInput):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = False,  # NOTE: Different!
+        autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -6861,7 +6846,7 @@ class Password(TextInput):
             varprefix,
             default_value=default_value,
             size=self._size,
-            autocomplete="new-password" if self._autocomplete is False else None,
+            autocomplete=self._autocomplete,
             placeholder="******" if value else "",
         )
         if self.password_meter:
@@ -6901,7 +6886,7 @@ class Password(TextInput):
 
 
 class PasswordSpec(Password):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         pwlen: int = 8,
         # Password
@@ -6921,7 +6906,7 @@ class PasswordSpec(Password):
         minlen: int | None = None,
         maxlen: int | None = None,
         oninput: str | None = None,
-        autocomplete: bool = False,  # NOTE: Different!
+        autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -6966,7 +6951,7 @@ class PasswordSpec(Password):
             )
         html.icon_button(
             "#",
-            _("Show/Hide password"),
+            _("Show/hide password"),
             "showhide",
             onclick="cmk.valuespecs.toggle_hidden(this);",
         )
@@ -6979,7 +6964,7 @@ FileUploadModel = bytes | UploadedFile | None
 
 
 class FileUpload(ValueSpec[FileUploadModel]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         allow_empty: bool = False,
         allowed_extensions: Iterable[str] | None = None,
@@ -7049,11 +7034,15 @@ class FileUpload(ValueSpec[FileUploadModel]):
         return json_value
 
     def value_to_html(self, value: FileUploadModel) -> ValueSpecText:
-        raise NotImplementedError()  # FIXME! Violates LSP!
+        match value:
+            case (str(file_name), str(_), bytes(_)):
+                return _("Chosen file: %s") % file_name
+            case other:
+                raise TypeError(other)
 
 
 class ImageUpload(FileUpload):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         max_size: tuple[int, int] | None = None,
         show_current_image: bool = False,
@@ -7129,7 +7118,7 @@ class ImageUpload(FileUpload):
 
 
 class UploadOrPasteTextFile(Alternative):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         file_title: str | None = None,
         allow_empty: bool = False,
@@ -7192,7 +7181,7 @@ class UploadOrPasteTextFile(Alternative):
 
 
 class TextOrRegExp(Alternative):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         text_valuespec: ValueSpec | None = None,
         allow_empty: bool = True,
@@ -7259,7 +7248,7 @@ class Labels(ValueSpec[LabelsModel]):
         RULESET = "ruleset"
         DISCOVERED = "discovered"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         world: "Labels.World",
         # https://github.com/python/cpython/issues/90015
@@ -7362,7 +7351,7 @@ ListOfAndOrNotDropdownValue = Sequence[AndOrNotDropdownValue]
 
 
 class AndOrNotDropdown(DropdownChoice):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         valuespec: ValueSpec,
         choices: DropdownChoices | None = None,
@@ -7431,7 +7420,7 @@ class AndOrNotDropdown(DropdownChoice):
 class _SingleLabel(AjaxDropdownChoice):
     ident: str = "label"
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         world: Labels.World,
         label_source: Labels.Source | None = None,
@@ -7464,7 +7453,7 @@ class LabelGroup(ListOf):
     _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
     _magic: str = "@:@"  # Used by ListOf class to count through entries
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         show_empty_group_by_default: bool = True,
         # ListOf
@@ -7532,7 +7521,7 @@ class LabelGroups(LabelGroup):
     _sub_vs: ValueSpec = LabelGroup()
     _magic: str = "@!@"  # Used by ListOf class to count through entries
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         show_empty_group_by_default: bool = True,
         # ListOf
@@ -7585,7 +7574,7 @@ IconSelectorModel = None | Icon
 
 
 class IconSelector(ValueSpec[IconSelectorModel]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         allow_empty: bool = True,
         empty_img: str = "empty",
@@ -7718,7 +7707,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         if id_.endswith("_emblem_img"):
             icon_tag = html.render_emblem(icon, title=title, id_=id_)
-            html.write_text(" + ")
+            html.write_text_permissive(" + ")
         else:
             icon_tag = html.render_icon(icon, title=title, id_=id_)
 
@@ -7755,7 +7744,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             selection_text = _("Choose another %s") % ("Emblem" if is_emblem else "Icon")
             content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
         else:
-            content = escaping.escape_to_html(_("Select an Icon"))
+            content = HTML.with_escaping(_("Select an Icon"))
 
         html.popup_trigger(
             content,
@@ -7882,9 +7871,9 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return json_value
 
     def validate_datatype(self, value: IconSelectorModel, varprefix: str) -> None:
-        if self._with_emblem and not isinstance(value, (str, dict)):
+        if value is not None and self._with_emblem and not isinstance(value, (str, dict)):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
-        if not self._with_emblem and not isinstance(value, str):
+        if value is not None and not self._with_emblem and not isinstance(value, str):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
 
         icon_dict = self._transform_icon_str(value)
@@ -7910,7 +7899,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
-def ListOfTimeRanges(  # pylint: disable=redefined-builtin
+def ListOfTimeRanges(
     # ListOf
     totext: str | None = None,
     text_if_empty: str | None = None,
@@ -7942,7 +7931,7 @@ def ListOfTimeRanges(  # pylint: disable=redefined-builtin
     )
 
 
-def Fontsize(  # pylint: disable=redefined-builtin
+def Fontsize(
     # Float
     decimal_separator: str = ".",
     allow_int: bool = False,
@@ -7976,7 +7965,7 @@ def Fontsize(  # pylint: disable=redefined-builtin
 
 
 class Color(ValueSpec[None | str]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         on_change: str | None = None,
         allow_empty: bool = True,
@@ -8097,10 +8086,10 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
 
     def render_input(self, varprefix: str, value: SSHKeyPairValue | None) -> None:
         if value:
-            html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
+            html.write_text_permissive(_("Fingerprint: %s") % self.value_to_html(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
-            html.write_text(_("Key pair will be generated when you save."))
+            html.write_text_permissive(_("Key pair will be generated when you save."))
 
     def canonical_value(self) -> SSHKeyPairValue | None:
         return None
@@ -8157,7 +8146,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # pylint: disable=redefined-builtin
+def SchedulePeriod(
     from_end: bool = True,
     # CascadingDropdown
     label: str | None = None,
@@ -8260,7 +8249,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
         return (address, port, content)
 
 
-def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
+def CertificateWithPrivateKey(
     *,
     title: str | None = None,
     help: ValueSpecHelp | None = None,
@@ -8301,7 +8290,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
 
 
 class _CAorCAChain(UploadOrPasteTextFile):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # UploadOrPasteTextFile
         file_title: str | None = None,
@@ -8341,41 +8330,17 @@ class _CAorCAChain(UploadOrPasteTextFile):
         )
 
     @staticmethod
-    def _analyse_cert(cert: certificate.Certificate) -> dict[str, dict[str, str]]:
+    def _analyse_cert(cert: certificate.Certificate) -> dict[str, str]:
         """
         Inspect the certificate and place selected info in a dict.
-
-        Depending on which info is specified in the certificate, the resulting dict may contain
-        - common name; organization name; locality name; state or province name; country name
-        and will look something like this:
-        {
-            "issuer": {
-                "Common Name": ...,
-                "Organization Name": ...,
-                ...
-            },
-            "subject": {
-                "Common Name": ...,
-                "Organization Name": ...,
-                ...
-            },
-        }
         """
-        attributes = {
-            certificate.X509NameOid.COUNTRY_NAME: _("Country"),
-            certificate.X509NameOid.STATE_OR_PROVINCE_NAME: _("State or Province Name"),
-            certificate.X509NameOid.LOCALITY_NAME: _("Locality Name"),
-            certificate.X509NameOid.ORGANIZATION_NAME: _("Organization Name"),
-            certificate.X509NameOid.COMMON_NAME: _("Common Name"),
-        }
 
         return {
-            entity: {
-                attributes[attr_name]: attr_value
-                for attr_name in attributes
-                if (attr_value := info.get_single_name_attribute(attr_name)) is not None
-            }
-            for (entity, info) in [("issuer", cert.issuer), ("subject", cert.subject)]
+            "issuer": cert.issuer.rfc4514_string(),
+            "subject": cert.subject.rfc4514_string(),
+            "creation": cert.not_valid_before.date().isoformat(),
+            "expiration": cert.not_valid_after.date().isoformat(),
+            "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
         }
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
@@ -8391,26 +8356,33 @@ class _CAorCAChain(UploadOrPasteTextFile):
         cert_info = self._analyse_cert(
             certificate.Certificate.load_pem(certificate.CertificatePEM(value))
         )
-
+        show_info = {k: HTML.with_escaping(cert_info[k]) for k in ("issuer", "subject")}
+        show_info["fingerprint"] = HTMLWriter.render_span(
+            cert_info["fingerprint"][:41], title=cert_info["fingerprint"]
+        )
+        show_info["validity"] = HTML.without_escaping(
+            _("Not Before: %s - Not After: %s")
+            % (
+                cert_info["creation"],
+                cert_info["expiration"],
+            )
+        )
         rows = []
         for what, title in [
             ("issuer", _("Issuer")),
             ("subject", _("Subject")),
+            ("validity", _("Validity")),
+            ("fingerprint", _("Fingerprint")),
         ]:
             rows.append(
                 HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:" % title)
-                    + HTMLWriter.render_td(
-                        HTML().join(
-                            f"{title1}: {val}" for title1, val in sorted(cert_info[what].items())
-                        )
-                    )
+                    HTMLWriter.render_td("%s:" % title) + HTMLWriter.render_td(show_info[what])
                 )
             )
-        return HTMLWriter.render_table(HTML().join(rows))
+        return HTMLWriter.render_table(HTML.empty().join(rows))
 
 
-def ListOfCAs(  # pylint: disable=redefined-builtin
+def ListOfCAs(
     # ListOf
     magic: str = "@!@",
     add_label: str | None = None,
@@ -8468,7 +8440,7 @@ class SetupSiteChoice(DropdownChoice):
     from this list.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         # DropdownChoice
         sorted: bool = False,
@@ -8538,7 +8510,8 @@ def MonitoringSiteChoice() -> DropdownChoice:
     )
 
 
-def LogLevelChoice(  # pylint: disable=redefined-builtin
+def LogLevelChoice(
+    with_verbose: bool = True,
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -8561,14 +8534,24 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[int] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
-        choices=[
-            (logging.CRITICAL, _("Critical")),
-            (logging.ERROR, _("Error")),
-            (logging.WARNING, _("Warning")),
-            (logging.INFO, _("Informational")),
-            (cmk.utils.log.VERBOSE, _("Verbose")),
-            (logging.DEBUG, _("Debug")),
-        ],
+        choices=(
+            [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (cmk.utils.log.VERBOSE, _("Verbose")),
+                (logging.DEBUG, _("Debug")),
+            ]
+            if with_verbose
+            else [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (logging.DEBUG, _("Debug")),
+            ]
+        ),
         sorted=sorted,
         label=label,
         help_separator=help_separator,
@@ -8596,7 +8579,11 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
             "description",
             TextInput(
                 title=_("Description"),
-                help=_("Add a title or describe this rule"),
+                autocomplete="one-time-code",
+                help=_(
+                    "This field is intended for a brief description of the rule's purpose. "
+                    "This description will be visible on the overview page of this rule set."
+                ),
                 size=80,
             ),
         ),
@@ -8610,8 +8597,8 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
                 Checkbox(
                     title=_("Rule activation"),
                     help=_(
-                        "Selecting this option will disable the rule, but it "
-                        "will remain in the configuration."
+                        "A deactivated rule is not effective. However, it remains "
+                        "in place so that it can be reactivated later, for example."
                     ),
                     label=_("do not apply this rule"),
                 ),
@@ -8625,10 +8612,9 @@ class RuleComment(TextAreaUnicode):
         super().__init__(
             title=_("Comment"),
             help=_(
-                "Optionally, add a comment to explain the purpose of this "
-                "object. The comment is only visible in this dialog and can help "
-                "other users to understand the intentions of the configured "
-                "attributes."
+                "This field is intended for additional information that may help other "
+                "users (and your future self) to understand the rule's purpose and the "
+                "configured attributes. This comment is only visible in this dialog."
             ),
             rows=4,
             cols=80,
@@ -8644,7 +8630,7 @@ class RuleComment(TextAreaUnicode):
         html.nbsp()
         html.icon_button(
             None,
-            title=_("Prefix date and your name to the comment"),
+            title=_("Prefix the comment with the current date and your user name."),
             icon="insertdate",
             onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user,
         )
@@ -8662,14 +8648,20 @@ def DocumentationURL() -> TextInput:
 
     return TextInput(
         title=_("Documentation URL"),
-        help=HTML(
+        autocomplete="one-time-code",
+        help=HTML.without_escaping(
             _(
-                "Optionally, add a URL linking to a documentation or any other "
-                "page. An icon links to the page and opens in a new tab when "
-                "clicked. You can use either global URLs (starting with "
-                "<tt>http://</tt>), absolute local URLs (starting with "
-                "<tt>/</tt>) or relative URLs (relative to "
-                "<tt>check_mk/</tt>)."
+                "In this field you can add a URL linking to a page with related, "
+                "useful information. You can use:<br>"
+                "<ul>"
+                "<li>an absolute URL starting with the protocol (<tt>http(s)://</tt>)</li>"
+                "<li>or a relative URL either starting with a slash (<tt>/something</tt> "
+                "will be resolved to <tt>https://mycheckmkserver/something</tt>) or without "
+                "a slash (<tt>somethingelse</tt> will be resolved to "
+                "<tt>https://mycheckmkserver/mysite/check_mk/somethingelse</tt>)</li>"
+                "</ul>"
+                "The link will be displayed as an icon in the description on the "
+                "overview page of the related rule set."
             )
             % html.render_icon("url")
         ),
@@ -8686,7 +8678,7 @@ def type_name(v):
 
 
 class DatePicker(ValueSpec[str]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         title: str | None = None,
         label: str | None = None,
@@ -8738,7 +8730,7 @@ class DatePicker(ValueSpec[str]):
 
 
 class TimePicker(ValueSpec[str]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         title: str | None = None,
         help: ValueSpecHelp | None = None,

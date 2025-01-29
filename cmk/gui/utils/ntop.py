@@ -7,7 +7,6 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -62,6 +61,10 @@ def is_ntop_configured() -> bool:
         if isinstance(custom_attribute_name, str)
         else not custom_attribute_name
     )
+
+
+def use_ntopng_host_filter() -> bool:
+    return get_ntop_connection_mandatory().get("is_host_filter_activated", True)
 
 
 def get_ntop_misconfiguration_reason() -> str:

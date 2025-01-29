@@ -17,9 +17,9 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: 
-        - 127.0.0.1 
-        - 192.168.56.0/24 
+    only_from:
+        - 127.0.0.1
+        - 192.168.56.0/24
         - ::1
 
     # Change port where the agent is listening ( default 6556 )
@@ -60,27 +60,27 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
-        # enable/disable encryption of regular agent output (default: disabled) 
+        # enable/disable encryption of regular agent output (default: disabled)
         # yes or no
         encrypted: default
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime
         run:
-            - mem 
-            - df 
+            - mem
+            - df
             - winperf_processor
 
     # Write a logfile for tackling down crashes of the agent
     debug:
         crash: yes
         # you may specify name of log file
-        file: 
+        file:
     trace:
         # you may trace agent in realtime using DbgView or WinDbg
         debugger: no
         file: 'c:\windows\logs\win_agent.log'
-        
+
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow
     # to respond.
@@ -94,7 +94,7 @@ winperf:
     # id is OS is
     # name is check mk name
     counters:
-        - id: 10332 
+        - id: 10332
           name: msx_queues
         - id: 638
           name: tcp_conn
@@ -109,7 +109,7 @@ logfiles:
           observe:
               - 'C:\tmp': # this is folder
                   # below list of file to view on location
-                  - 'logfiles\message_*.log' 
+                  - 'logfiles\message_*.log'
                   - 'logfile\my*.log'
               - 'D:\log': #this is folder
                   - 'sample1.txt'
@@ -121,32 +121,32 @@ logfiles:
               - warn:   'Unable to contact*'
               - ignore: 'Backup * saved'
         - name: My special logs
-          observe: 
+          observe:
                 - 'C:\tmp\memo.udf'
           patterns:
                 - ok:     '*mail sent*'
                 - warn:   '*overdue*'
         - name: My interesting logs
-          description: > 
-                this is my description which I can add to almost any iten 
+          description: >
+                this is my description which I can add to almost any iten
                 item ib the config file and see it in the log
-          observe: 
+          observe:
               - 'C:\tmp\memo.crit':
                     # below is default
-                    rotated: no     
-                    context: yes      
+                    rotated: no
+                    context: yes
                     from_start: no
           patterns:
               - ok:     '*mail sent*'
               - warn:   '*overdue*'
-                
+
 
     # # handling of the log can be customized through tags prepended to the name
     # #
     # # don't send context lines around relevant lines
     # textfile = nocontext d:\log\sample.txt
     # # read new files from the first line. Otherwise the agent will start at the
-    # # last line at the time the agent first sees the file 
+    # # last line at the time the agent first sees the file
     # textfile = from_start d:\log\sample*.txt
     # # treat the file as a rotated log (one where in certain intervals a new file is
     # # created and the previous file is at some point moved away).
@@ -171,17 +171,17 @@ logwatch:
 
     logs:
         # From application log send only critical messages
-        application: 
+        application:
             level:crit
 
         # From system log send only warning/critical messages,
         # but suppress any context messages
-        system: 
+        system:
             level: warn
             context: no
         # Switch all other logfiles off. Default is warn:
         # send messages of type warn or crit
-        other: 
+        other:
             level: off
 
         # below is detailed by app
@@ -191,7 +191,7 @@ logwatch:
             # wildcards only work with standard logs that are found in Windows registry.
             # To find the correct name for a log, right-click on the log in
             # event-viewer -> Properties and use the name from "Full Name"
-            - Microsoft-Windows-GroupPolicy/Operational: 
+            - Microsoft-Windows-GroupPolicy/Operational:
                 level: warn
                 context: yes
 
@@ -265,16 +265,16 @@ plugins:
     # default value, you may dsiable all scripts in local with no
     run: yes
     # folder: default or 'c:\myfolder\'  or whatever your want
-    folder: 
-        - default   # special keyword to use default location 
-        - c:\mydlx  # 
-        - c:\zx     # 
+    folder:
+        - default   # special keyword to use default location
+        - c:\mydlx  #
+        - c:\zx     #
     # example: the windows_updates.vbs
     # plugin is executed asynchronous
     # and is only updated every 3600 seconds
     # it may fail (timeout / error) up to 3 times before the last known data is discarded
     execution:
-        # execution pattern for  windows-updates.vbs:   
+        # execution pattern for  windows-updates.vbs:
         - pattern     : windows_updates.vbs
           async       : yes
           timeout     : 120
@@ -282,13 +282,13 @@ plugins:
           retry_count : 3
           description : Update!!!!
 
-        
+
         - pattern     : ps_perf.ps1
           timeout     : 20
-        
+
         - pattern     : '*.ps1'
           timeout     : 10
-        
+
         - pattern     : '*'
           timeout     : 30
     # When using the Check_MK Inventory plugin, it is a good idea to make the

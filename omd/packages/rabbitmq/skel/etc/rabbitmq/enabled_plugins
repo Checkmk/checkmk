@@ -1,0 +1,6 @@
+[
+    rabbitmq_shovel,
+    rabbitmq_auth_mechanism_ssl,
+    rabbitmq_shovel_management,
+    rabbitmq_management
+].

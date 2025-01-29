@@ -3,12 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -21,6 +21,7 @@ namespace {
 template <typename T>
 using table = std::vector<std::tuple<std::string, T>>;
 
+// NOLINTBEGIN(cert-err58-cpp)
 const table<HostState> host_states{{"UP", HostState::up},
                                    {"DOWN", HostState::down},
                                    {"UNREACHABLE", HostState::unreachable}};
@@ -51,6 +52,7 @@ const strings acknowledge_state_types{"STARTED", "EXPIRED", "CANCELLED", "END"};
 const strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
                       "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
                       "FLAPPINGSTOP"};
+// NOLINTEND(cert-err58-cpp)
 
 std::string parens(const std::string &f, const std::string &arg) {
     return f + " (" + arg + ")";
@@ -90,6 +92,7 @@ TEST(LogEntry, Encode) {
     EXPECT_EQ("\nfoo\nbar\n", LogEntry::encode("\\nfoo\\nbar\\n"));
 }
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST(LogEntry, InitialHostState) {
     // The host state string is directly taken from a log line field.
     for (const auto &[state_name, state] : host_states) {
@@ -1274,3 +1277,4 @@ TEST(LogEntry, ServiceNotificationProgressSwapped) {
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
+// NOLINTEND(readability-function-cognitive-complexity)

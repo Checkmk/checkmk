@@ -21,8 +21,9 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
+from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
 
+from cmk.update_config.plugins.actions.tag_conditions import get_tag_config, transform_host_tags
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
@@ -71,7 +72,7 @@ def _update_site_specific_global_settings(logger: Logger) -> None:
 
 def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     """Update the site specific global settings in the central site configuration"""
-    site_mgmt = SiteManagementFactory().factory()
+    site_mgmt = site_management_registry["site_management"]
     configured_sites = site_mgmt.load_sites()
     for site_id, site_spec in configured_sites.items():
         if site_globals_editable(site_id, site_spec):
@@ -115,8 +116,39 @@ def _update_renamed_global_config_vars(
     return filter_unknown_settings(
         {
             **global_config_updated,
+            **_convert_agent_deployment_match_hosttags(logger, global_config_updated),
         }
     )
+
+
+def _convert_agent_deployment_match_hosttags(
+    logger: Logger,
+    global_config: GlobalSettings,
+) -> dict:
+    """
+    Tag conditions changed from list to dict in 2.4.
+    Can be removed in 2.5
+    """
+    # Factory setting if not explicitly set
+    if (
+        agent_deployment_host_selection := global_config.get("agent_deployment_host_selection")
+    ) is None:
+        return {}
+
+    if (
+        hosttags := agent_deployment_host_selection.get("match_hosttags")
+    ) is not None and isinstance(hosttags, list):
+        logger.log(
+            VERBOSE, "Converting global setting 'agent_deployment_host_selection' to new format"
+        )
+        tag_groups, aux_tag_list = get_tag_config()
+        agent_deployment_host_selection["match_hosttags"] = transform_host_tags(
+            hosttags,
+            tag_groups,
+            aux_tag_list,
+        )
+
+    return {"agent_deployment_host_selection": agent_deployment_host_selection}
 
 
 def _remove_options(

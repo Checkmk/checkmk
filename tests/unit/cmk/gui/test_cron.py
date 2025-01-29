@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
 
-import cmk.gui.cron as cron
+from cmk.utils import paths
+
+from cmk.gui import cron
 
 
 def test_registered_jobs() -> None:
@@ -16,17 +18,17 @@ def test_registered_jobs() -> None:
         "execute_userdb_job",
         "execute_user_profile_cleanup_job",
         "execute_network_scan_job",
-        "execute_activation_cleanup_background_job",
+        "execute_activation_cleanup_job",
         "execute_sync_remote_sites",
-        "execute_host_removal_background_job",
+        "execute_host_removal_job",
         "cleanup_topology_layouts",
         "execute_autodiscovery",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
-            "execute_host_registration_background_job",
-            "execute_discover_registered_hosts_background_job",
+            "execute_host_registration_job",
+            "execute_discover_registered_hosts_job",
             "cleanup_stored_reports",
             "do_scheduled_reports",
             "ntop_instance_check",
@@ -35,5 +37,5 @@ def test_registered_jobs() -> None:
             "replace_builtin_signature_cert",
         ]
 
-    found_jobs = sorted([f.__name__ for f in cron.multisite_cronjobs])
+    found_jobs = sorted([f.name for f in cron.cron_job_registry.values()])
     assert found_jobs == sorted(expected)

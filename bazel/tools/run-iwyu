@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# HACK: We really need to inject this via a toolchain.
+if test -x /opt/bin/include-what-you-use -a "$(id --user --name)" = jenkins; then
+    exec /opt/bin/include-what-you-use "$@" --gcc-toolchain=/opt/gcc-13.2.0
+else
+    exec include-what-you-use "$@"
+fi

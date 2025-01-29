@@ -1,0 +1,7 @@
+---
+rules:
+    - id: disallow-html-debug
+      pattern: html.debug(...)
+      message: Found html.debug call
+      languages: [python]
+      severity: ERROR

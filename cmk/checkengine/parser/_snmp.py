@@ -31,14 +31,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataElem],
         *,
-        check_intervals: SectionMap[int | None],
+        persist_periods: SectionMap[int | None],
         host_check_interval: float,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
-        self.check_intervals: Final = check_intervals
+        self.persist_periods: Final = persist_periods
         self.host_check_interval: Final = host_check_interval
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
@@ -56,7 +56,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
         now = int(time.time())
 
         def lookup_persist(section_name: SectionName) -> tuple[int, int] | None:
-            if (interval := self.check_intervals.get(section_name)) is not None:
+            if (interval := self.persist_periods.get(section_name)) is not None:
                 return now, now + interval
             return None
 

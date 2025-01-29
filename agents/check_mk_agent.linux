@@ -7,6 +7,15 @@
 # BEGIN COMMON AGENT CODE
 #
 
+###
+# Note on agent package deployment modes:
+# (Only relevant when deploying a Checkmk agent package manually)
+# Agent paths (MK_LIBDIR, MK_CONFDIR, MK_VARDIR, MK_LOGDIR, MK_BIN)
+# can be configured implicitly by setting MK_INSTALLDIR in function "set_up_single_directory()"
+# or by setting the path variables explicitly under "set_default_paths()".
+# Please refer to the official documentation for more details.
+###
+
 usage() {
     cat <<HERE
 Usage: ${0} [OPTION...]
@@ -26,6 +35,14 @@ inpath() {
     # replace "if type [somecmd]" idiom
     # 'command -v' tends to be more robust vs 'which' and 'type' based tests
     command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
 }
 
 get_file_atime() {
@@ -99,46 +116,25 @@ set_up_current_shell() {
     CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
+set_up_single_directory() {
+    # Set this path when deploying the Checkmk agent installation
+    # under a single directory.
+    : "${MK_INSTALLDIR:=""}"
+}
+
 #
 # END COMMON AGENT CODE
 #
 
-set_variable_defaults() {
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
-
-    # WATCH OUT: These 5 lines are searched for and replaced by the
-    # agent bakery!
-    # TODO: CMK-8339 (proper configuration)
+set_default_paths() {
+    # Set/edit these paths when deploying the Checkmk agent installation
+    # under multiple directories.
+    # Will be ignored if MK_INSTALLDIR is already set and not empty.
     : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
     : "${MK_CONFDIR:="/etc/check_mk"}"
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
     : "${MK_BIN:="/usr/bin"}"
-
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-    export MK_LOGDIR
-    export MK_BIN
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
-    # All executables in PLUGINSDIR will simply be executed and their
-    # ouput appended to the output of the agent. Plugins define their own
-    # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR=${MK_LIBDIR}/plugins
-
-    # All executables in LOCALDIR will by executabled and their
-    # output inserted into the section <<<local>>>. Please
-    # refer to online documentation for details about local checks.
-    LOCALDIR=${MK_LIBDIR}/local
-
-    # All files in SPOOLDIR will simply appended to the agent
-    # output if they are not outdated (see below)
-    SPOOLDIR=${MK_VARDIR}/spool
 }
 
 set_up_path() {
@@ -173,6 +169,55 @@ announce_remote() {
 #
 # BEGIN COMMON AGENT CODE
 #
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    # If MK_INSTALLDIR is set, this will always win over separately set agent paths
+    [ -n "${MK_INSTALLDIR}" ] && {
+        MK_LIBDIR="${MK_INSTALLDIR}/package"
+        MK_CONFDIR="${MK_INSTALLDIR}/package/config"
+        MK_VARDIR="${MK_INSTALLDIR}/runtime"
+        MK_LOGDIR="${MK_INSTALLDIR}/runtime/log"
+        MK_BIN="${MK_INSTALLDIR}/package/bin"
+    }
+
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=${MK_LIBDIR}/plugins
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
+
+    # JOBDIR contains subfolders with snippets of agent output
+    # coming from the mk-job executable.
+    # These snippets will be used to create the <<<job>>> section.
+    JOBDIR=${MK_VARDIR}/job
+
+    # Cache directory for agent output from asynchonous parts of the agent and plugins.
+    # Handled in a sophisticated way by our caching mechanism.
+    CACHEDIR=${MK_VARDIR}/cache
+}
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -241,10 +286,6 @@ unset_locale() {
     export LC_ALL
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 read_python_version() {
     if inpath "${1}"; then
         version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -283,6 +324,10 @@ detect_python() {
         WRONG_PYTHON_COMMAND=true
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 detect_container_environment() {
     if [ -f /.dockerenv ]; then
@@ -464,7 +509,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.4.0b1
+Version: 2.5.0b1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -829,11 +874,20 @@ section_diskstat() {
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
-            dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+            sudo_as_root dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
         fi
         if [ -d /dev/vx/dsk ]; then
             echo '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
+        fi
+        if [ -d /dev/disk/by-id ]; then
+            echo '[device_wwn]'
+            for F in /dev/disk/by-id/*; do
+                if echo "${F}" | grep -E "nvme-eui|wwn" >/dev/null; then
+                    echo "${F##*/} $(readlink -f "${F}")"
+                fi
+            done
+
         fi
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
@@ -933,9 +987,15 @@ section_cfggen() {
 
 section_storcli() {
     if inpath storcli; then
-        _storcli() { storcli "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli "$@"
+        ); }
     elif inpath storcli64; then
-        _storcli() { storcli64 "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli64 "$@"
+        ); }
     else
         return 1
     fi
@@ -1123,7 +1183,7 @@ section_mailqueue() {
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
     # Check status of qmail mailqueue
@@ -1154,6 +1214,13 @@ section_omd() {
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
+
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            for script in "${sitedir}"/bin/cmk-monitor-*; do
+                [ -e "${script}" ] && su - "${site}" -c "${script}"
+            done
+        done
 
         echo '<<<mknotifyd:sep(0)>>>'
         get_epoch
@@ -1475,7 +1542,7 @@ section_job() {
     }
 
     (
-        cd "${MK_VARDIR}/job" 2>/dev/null || return
+        cd "${JOBDIR}" 2>/dev/null || return
         printf "<<<job>>>\n"
         for user in *; do
             (
@@ -1755,8 +1822,8 @@ _run_cached_internal() {
         return
     fi
 
-    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
-    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
+    [ -d "${CACHEDIR}" ] || mkdir -p "${CACHEDIR}"
+    CACHEFILE="${CACHEDIR}/${NAME}.cache"
     FAIL_REPORT_FILE="${SPOOLDIR}/${NAME}.cachefail"
 
     NOW="$(get_epoch)"
@@ -2205,11 +2272,17 @@ main_setup() {
         exec 2>/dev/null
     fi
 
+    init_sudo
+
     set_up_get_epoch
 
     set_up_current_shell
 
-    set_variable_defaults
+    determine_sync_async
+
+    set_up_single_directory
+    set_default_paths
+    provide_agent_paths
 
     announce_remote # needs MK_VARDIR!
 

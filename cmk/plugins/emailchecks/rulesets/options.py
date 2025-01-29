@@ -17,8 +17,11 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
+    migrate_to_password,
     Password,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 
@@ -89,7 +92,9 @@ def smtp() -> Dictionary:
                         ),
                         "password": DictElement(
                             required=True,
-                            parameter_form=Password(title=Title("Password")),
+                            parameter_form=Password(
+                                title=Title("Password"), migrate=migrate_to_password
+                            ),
                         ),
                     },
                     migrate=_tuple_do_dict_with_keys("username", "password"),
@@ -116,7 +121,9 @@ def _oauth2_options() -> tuple[Sequence[CascadingSingleChoiceElement], Mapping[s
                         ),
                         "client_secret": DictElement(
                             required=True,
-                            parameter_form=Password(title=Title("Client Secret")),
+                            parameter_form=Password(
+                                title=Title("Client Secret"), migrate=migrate_to_password
+                            ),
                         ),
                         "tenant_id": DictElement(
                             required=True,
@@ -210,7 +217,9 @@ def common(protocol: str, port_defaults: str) -> Dictionary:
                                     ),
                                     "password": DictElement(
                                         required=True,
-                                        parameter_form=Password(title=Title("Password")),
+                                        parameter_form=Password(
+                                            title=Title("Password"), migrate=migrate_to_password
+                                        ),
                                     ),
                                 },
                                 migrate=_tuple_do_dict_with_keys("username", "password"),
@@ -250,7 +259,7 @@ def sending() -> CascadingSingleChoice:
 
 
 def fetching(
-    supported_protocols: Container[Literal["IMAP", "POP3", "EWS"]]
+    supported_protocols: Container[Literal["IMAP", "POP3", "EWS"]],
 ) -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Mail receiving"),
@@ -271,4 +280,14 @@ def fetching(
             ]
             if e.name in supported_protocols
         ],
+    )
+
+
+def timeout() -> TimeSpan:
+    return TimeSpan(
+        title=Title("Connect timeout"),
+        custom_validate=(validators.NumberInRange(min_value=1),),
+        prefill=DefaultValue(10.0),
+        displayed_magnitudes=(TimeMagnitude.SECOND,),
+        migrate=float,  # type: ignore[arg-type] # wrong type, right behaviour
     )

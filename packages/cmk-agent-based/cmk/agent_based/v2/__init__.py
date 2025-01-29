@@ -40,7 +40,7 @@ To realize this, we introduced four new classes:
 
 * :class:`AgentSection` replacing :func:`register.agent_section`
 * :class:`SimpleSNMPSection` and :class:`SNMPSection` replacing :func:`register.snmp_section`
-* :class:`Checkplugin` replacing :func:`register.check_plugin`
+* :class:`CheckPlugin` replacing :func:`register.check_plugin`
 * :class:`InventoryPlugin` replacing :func:`register.inventory_plugin`
 
 The arguments of these have barely changed (see next paragraph), resulting
@@ -51,7 +51,7 @@ for instance).
 Changed arguments and validation for Agent and SNMP sections
 ************************************************************
 
-We slightly adopted the arguments to the above mentioned `Section` classes.
+We slightly adopted the arguments to the above-mentioned `Section` classes.
 We now favor type annotations over runtime validation.
 To get slightly easier type annotations, `parse_function` is no longer optional.
 
@@ -67,7 +67,6 @@ Added rendering function :func:`time_offset`
 On popular demand we add a function to render a number of seconds that might be negative.
 
 """
-# pylint: disable=duplicate-code
 
 from cmk.agent_based.v1 import (
     all_of,

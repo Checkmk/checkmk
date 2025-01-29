@@ -48,6 +48,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_efreq,
         parameter_valuespec=_parameter_valuespec_efreq,
-        title=lambda: _("Nominal Frequencies"),
+        title=lambda: _("Nominal frequencies"),
     )
 )

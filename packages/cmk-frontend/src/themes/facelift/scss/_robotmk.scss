@@ -1,0 +1,36 @@
+@charset "UTF-8";
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+div.robotmk_banner {
+  display: flex;
+  margin: 8px 0;
+  width: 100%;
+
+  div.robotmk_banner_icon {
+    display: flex;
+    align-items: center;
+    background-color: $help-icon-bg-color;
+    border-radius: $border-radius-left;
+
+    img {
+      padding: 0.4 * $spacing;
+    }
+  }
+
+  div.help_text {
+    flex-grow: 1;
+    padding: $spacing;
+    background-color: $help-bg-color;
+    border-radius: $border-radius-right;
+
+    span {
+      display: block;
+
+      &.bold {
+        font-weight: $font-weight-bold;
+      }
+    }
+  }
+}

@@ -9,9 +9,10 @@ import abc
 import logging
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
-from typing import final, Final, NamedTuple
+from typing import Final, final, NamedTuple
 
-import cmk.utils.debug
+import cmk.ccc.debug
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import MutableSectionMap, SectionName
@@ -262,7 +263,7 @@ class ParserState(abc.ABC):
                 )
             return self.do_action(line)
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             return self.to_error(line)
 

@@ -1,0 +1,16 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+@layer quick-setup {
+  body[data-theme='facelift'] {
+    /* Colors */
+    --qs-stage-line-color: rgb(232, 232, 238);
+  }
+
+  body[data-theme='modern-dark'] {
+    /* Colors */
+    --qs-stage-line-color: var(--white);
+  }
+}

@@ -4,9 +4,11 @@ catalog: app/cmk
 license: GPLv2
 distribution: check_mk
 description:
+ This check is deprecated, please use mknotifyd_connection_v2.
+
  This check checks the status of indiviual TCP connections from a
  Checkmk Notification Spooler to a remote spooler. For each incoming
- and outoing TCP connection one service will be created the goes
+ and outoing TCP connection one service will be created. The state goes
  critical if the connection is not up.
 
 item:

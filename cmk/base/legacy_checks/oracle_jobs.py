@@ -31,10 +31,10 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_jobs(info):
@@ -49,7 +49,7 @@ def inventory_oracle_jobs(info):
             yield f"{line[0]}.{line[1]}.{line[2]}.{line[3]}", {}
 
 
-def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
+def check_oracle_jobs(item, params, info):
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
 
@@ -228,31 +228,30 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
     # STOPPED
     if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":
         txt = "Job is running forever"
+    elif job_last_state == "":
+        # no information from job log (outer join in SQL is empty)
+        txt = " no log information found"
+
+        if missinglog == 0:
+            txt += " (ignored)"
+        elif missinglog == 1:
+            txt += "(!)"
+        elif missinglog == 2:
+            txt += "(!!)"
+        elif missinglog == 3:
+            txt += "(?)"
+        output.append(txt)
+
+        state = max(state, missinglog)
+
     else:
-        if job_last_state == "":
-            # no information from job log (outer join in SQL is empty)
-            txt = " no log information found"
+        txt = "Last Run Status: %s" % (job_last_state)
 
-            if missinglog == 0:
-                txt += " (ignored)"
-            elif missinglog == 1:
-                txt += "(!)"
-            elif missinglog == 2:
-                txt += "(!!)"
-            elif missinglog == 3:
-                txt += "(?)"
-            output.append(txt)
-
-            state = max(state, missinglog)
-
+        if job_enabled == "TRUE" and job_last_state != "SUCCEEDED":
+            state = max(state, 2)
         else:
-            txt = "Last Run Status: %s" % (job_last_state)
-
-            if job_enabled == "TRUE" and job_last_state != "SUCCEEDED":
-                state = max(state, 2)
-            else:
-                txt += " (ignored disabled Job)"
-            output.append(txt)
+            txt += " (ignored disabled Job)"
+        output.append(txt)
 
     if job_state == "DISABLED" and "status_disabled_jobs" in params:
         state = params["status_disabled_jobs"]
@@ -265,6 +264,7 @@ def parse_oracle_jobs(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_jobs"] = LegacyCheckDefinition(
+    name="oracle_jobs",
     parse_function=parse_oracle_jobs,
     service_name="ORA %s Job",
     discovery_function=inventory_oracle_jobs,

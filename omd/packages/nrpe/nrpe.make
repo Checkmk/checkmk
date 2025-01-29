@@ -9,7 +9,7 @@ NRPE_BUILD_DIR := $(BAZEL_BIN_EXT)/$(NRPE)/$(NRPE)
 .PHONY: $(NRPE_BUILD)
 $(NRPE_BUILD):
 	# run the Bazel build process which does all the dependency stuff
-	$(BAZEL_BUILD) @$(NRPE)//:$(NRPE)
+	$(BAZEL_CMD) build @$(NRPE)//:$(NRPE)
 
 .PHONY: $(NRPE_INSTALL)
 $(NRPE_INSTALL): $(NRPE_BUILD)

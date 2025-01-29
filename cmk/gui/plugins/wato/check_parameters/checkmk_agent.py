@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.version import parse_check_mk_version
+from cmk.ccc.version import parse_check_mk_version
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -33,7 +33,7 @@ def _validate_version(value: str, varprefix: str) -> None:
 
 
 def _migrate_version_spec(
-    param: str | tuple[str, str] | tuple[str, dict[str, str]]
+    param: str | tuple[str, str] | tuple[str, dict[str, str]],
 ) -> tuple[str, dict[str, str]]:
     """
     >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))
@@ -268,7 +268,7 @@ def _parameter_valuespec_checkmk_agent():
                     title=_("Agent plug-ins: Regular expression to exclude plugins"),
                     mode=RegExp.infix,
                     help=_(
-                        "Plugins matching this pattern will be excluded from the comparison with "
+                        "Plug-ins matching this pattern will be excluded from the comparison with "
                         "the required versions specified in '%s' and from the duplicates check."
                     )
                     % _("Agent plug-ins: versions"),

@@ -18,7 +18,7 @@ def _item_spec_plugs() -> TextInput:
     return TextInput(
         title=_("Plug item number or name"),
         help=_(
-            "Whether you need the number or the name depends on the check. Just take a look to the service description."
+            "Whether you need the number or the name depends on the check. Just take a look to the service name."
         ),
         allow_empty=True,
     )
@@ -50,6 +50,7 @@ def _parameter_valuespec_plugs() -> Dictionary:
                     choices=[
                         ("on", _("Plug is ON")),
                         ("off", _("Plug is OFF")),
+                        (None, _("State found during service discovery")),
                     ],
                     default_value="on",
                 ),

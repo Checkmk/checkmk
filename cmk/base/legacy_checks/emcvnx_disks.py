@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import get_rate, get_value_store, render
+
+check_info = {}
 
 # Example output from agent:
 # <<<emcvnx_disks>>>
@@ -100,6 +100,19 @@ from cmk.agent_based.v2 import get_rate, get_value_store, render
 # }
 
 
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
+
 def parse_emcvnx_disks(string_table):
     parsed = {}
     for line in string_table:
@@ -143,7 +156,7 @@ def check_emcvnx_disks(item, params, parsed):
         nagstate = 0
     elif diskstate == "Rebuilding":
         nagstate = params.get("state_rebuilding", 1)
-        message += " %s" % state_markers[nagstate]
+        message += " %s" % STATE_MARKERS[nagstate]
     else:
         nagstate = 2
         message += " (!!)"
@@ -154,13 +167,13 @@ def check_emcvnx_disks(item, params, parsed):
     message += ", Hard Read Errors: %s" % read_errors
     if read_errors >= params["state_read_error"][1]:
         nagstate = params["state_read_error"][0]
-        message += " %s" % state_markers[nagstate]
+        message += " %s" % STATE_MARKERS[nagstate]
 
     write_errors = data["Hard Write Errors"]
     message += ", Hard Write Errors: %s" % write_errors
     if write_errors >= params["state_write_error"][1]:
         nagstate = params["state_write_error"][0]
-        message += " %s" % state_markers[nagstate]
+        message += " %s" % STATE_MARKERS[nagstate]
 
     read_bytes = data["Kbytes Read"] * 1024
     write_bytes = parsed[item]["Kbytes Written"] * 1024
@@ -183,6 +196,7 @@ def check_emcvnx_disks(item, params, parsed):
 
 
 check_info["emcvnx_disks"] = LegacyCheckDefinition(
+    name="emcvnx_disks",
     parse_function=parse_emcvnx_disks,
     service_name="Enclosure %s",
     discovery_function=inventory_emcvnx_disks,

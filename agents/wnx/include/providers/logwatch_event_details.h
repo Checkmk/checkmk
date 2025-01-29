@@ -3,16 +3,14 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef LOGWATCH_EVENT_DETAILS_H
 #define LOGWATCH_EVENT_DETAILS_H
 
 #include <string>
 
-#include "wnx/cma_core.h"
 #include "providers/logwatch_event.h"
+#include "wnx/cma_core.h"
 
 namespace cma::provider::details {
 State ParseStateLine(const std::string &line);

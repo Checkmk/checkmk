@@ -11,6 +11,7 @@
 #include "livestatus/Logger.h"
 
 namespace {
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::regex label_regex{
     R"(\s+<LABEL>(.+)</LABEL>)",
     std::regex_constants::ECMAScript | std::regex_constants::icase};

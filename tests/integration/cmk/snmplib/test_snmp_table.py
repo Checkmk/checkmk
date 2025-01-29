@@ -15,6 +15,8 @@ from cmk.utils.hostaddress import HostAddress
 
 from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
+from .snmp_helpers import default_config, get_single_oid, get_snmp_table
+
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
     oids=[
@@ -23,8 +25,6 @@ INFO_TREE = BackendSNMPTree(
         BackendOIDSpec("5.0", "string", False),
     ],
 )
-
-from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 
 
 # Missing in currently used dump:
@@ -68,7 +68,9 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = dataclasses.replace(default_config(backend_type), ipaddress=HostAddress("bla.local"))
+    config = dataclasses.replace(
+        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+    )
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:

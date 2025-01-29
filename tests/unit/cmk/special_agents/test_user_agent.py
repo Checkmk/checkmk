@@ -5,16 +5,15 @@
 
 import pytest
 
-from cmk.utils import version
+from cmk.ccc import version
 
-from cmk.special_agents import agent_jolokia, agent_netapp, agent_vsphere
+from cmk.special_agents import agent_jolokia, agent_vsphere
 
 
 @pytest.mark.parametrize(
     "user_agent",
     [
         agent_jolokia.USER_AGENT,
-        agent_netapp.USER_AGENT,
         agent_vsphere.USER_AGENT,
     ],
 )

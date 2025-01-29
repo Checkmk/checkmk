@@ -5,105 +5,110 @@
 
 #include "livestatus/LogCache.h"
 
-#include <algorithm>
-#include <compare>
-#include <iterator>
-#include <ranges>
+#include <iostream>
+#include <optional>
+#include <string>
 #include <system_error>
+#include <utility>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Query.h"
 
 namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
-LogCache::LogCache(ICore *mc)
-    : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {}
+// Figure out the time interval for the query: In queries for the monitoring
+// history, there should always be a time range in the form of one or two filter
+// expressions for "time"". We use that to limit the number of log files we need
+// to scan and to find the optimal entry point into the log file. Note that we
+// use a half-open interval, but the bounds are inclusive, so we need to add 1
+// to the LUB.
+// static
+LogPeriod LogPeriod ::make(const Query &query) {
+    using sc = std::chrono::system_clock;
+    auto now = sc::to_time_t(sc::now());
+    return {
+        .since =
+            sc::from_time_t(query.greatestLowerBoundFor("time").value_or(0)),
+        .until =
+            sc::from_time_t(query.leastUpperBoundFor("time").value_or(now) + 1),
+    };
+}
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p) {
+    return os << "[" << FormattedTimePoint(p.since) << ", "
+              << FormattedTimePoint(p.until) << ")";
+}
+
+LogCache::LogCache(ICore *core)
+    : core_{core}, num_cached_log_messages_{0}, num_at_last_check_{0} {}
 
 void LogCache::update() {
-    if (!_logfiles.empty() &&
-        _mc->last_logfile_rotation() <= _last_index_update) {
+    if (!log_files_.empty() &&
+        core_->last_logfile_rotation() <= last_index_update_) {
         return;
     }
 
-    Informational(logger()) << "updating log file index";
+    Informational{logger()} << "updating log file index";
 
-    _logfiles.clear();
-    _num_cached_log_messages = 0;
+    log_files_.clear();
+    num_cached_log_messages_ = 0;
 
-    _last_index_update = std::chrono::system_clock::now();
-    // We need to find all relevant logfiles. This includes directory, the
+    last_index_update_ = std::chrono::system_clock::now();
+    // We need to find all relevant log files. This includes directory, the
     // current nagios.log and all files in the archive.
-    const auto paths = _mc->paths();
-    addToIndex(
-        std::make_unique<Logfile>(logger(), this, paths->history_file(), true));
+    const auto paths = core_->paths();
+    addToIndex(paths->history_file(), true);
 
     const std::filesystem::path dirpath = paths->history_archive_directory();
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
-            addToIndex(
-                std::make_unique<Logfile>(logger(), this, entry.path(), false));
+            addToIndex(entry.path(), false);
         }
     } catch (const std::filesystem::filesystem_error &e) {
         if (e.code() != std::errc::no_such_file_or_directory) {
-            Warning(logger()) << "updating log file index: " << e.what();
+            Warning{logger()} << "updating log file index: " << e.what();
         }
     }
 
-    if (_logfiles.empty()) {
-        Notice(logger()) << "no log file found, not even "
+    if (log_files_.empty()) {
+        Notice{logger()} << "no log file found, not even "
                          << paths->history_file();
     }
 }
 
-void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    auto since = logfile->since();
-    if (since == decltype(since){}) {  // TODO(sp) Simulating std::optional?
-        return;
-    }
-    // make sure that no entry with that 'since' is existing yet.  Under normal
-    // circumstances this never happens, but the user might have copied files
-    // around.
-    if (_logfiles.find(since) != _logfiles.end()) {
-        Warning(logger()) << "ignoring duplicate log file " << logfile->path();
-        return;
-    }
-
-    _logfiles.emplace(since, std::move(logfile));
-}
-
-std::pair<std::vector<std::filesystem::path>,
-          std::optional<std::filesystem::path>>
-LogCache::pathsSince(std::chrono::system_clock::time_point since) {
-    const std::lock_guard<std::mutex> lg(_lock);
-    update();
-    std::vector<std::filesystem::path> paths;
-    bool horizon_reached{false};
-    for (const auto &[unused, log_file] :
-         std::ranges::reverse_view(_logfiles)) {
-        if (horizon_reached) {
-            return {paths, log_file->path()};
+void LogCache::addToIndex(const std::filesystem::path &path, bool watch) {
+    try {
+        auto log_file = std::make_unique<Logfile>(logger(), this, path, watch);
+        auto since = log_file->since();
+        if (!log_files_.emplace(since, std::move(log_file)).second) {
+            // Complain if an entry with that 'since' already exists. Under
+            // normal circumstances this never happens, but the user might have
+            // copied files around by hand.
+            Warning{logger()} << "ignoring duplicate log file " << path;
         }
-        paths.push_back(log_file->path());
-        // NOTE: We really need "<" below, "<=" is not enough: Lines at the end
-        // of one log file might have the same timestamp as the lines at the
-        // beginning of the next log file.
-        horizon_reached = log_file->since() < since;
+    } catch (generic_error &e) {
+        Warning{logger()} << e;
+        return;
     }
-    return {paths, {}};
 }
 
 // This method is called each time a log message is loaded into memory. If the
 // number of messages loaded in memory is too large, memory will be freed by
-// flushing logfiles and message not needed by the current query.
+// flushing log files and message not needed by the current query.
 //
 // The parameters to this method reflect the current query, not the messages
 // that have just been loaded.
-void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
-    if (++_num_cached_log_messages <= _mc->maxCachedMessages()) {
+void LogCache::logLineHasBeenAdded(Logfile *log_file,
+                                   LogEntryClasses log_entry_classes_to_keep) {
+    const unsigned log_classes =
+        log_entry_classes_to_keep.to_ulong();  // TODO(sp)
+    if (++num_cached_log_messages_ <= core_->maxCachedMessages()) {
         return;  // current message count still allowed, everything ok
     }
 
@@ -112,108 +117,67 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     // a sitation where no memory can be freed. We do this by suppressing the
     // check when the number of messages loaded into memory has not grown by at
     // least check_mem_cycle messages.
-    if (_num_cached_log_messages < _num_at_last_check + check_mem_cycle) {
+    if (num_cached_log_messages_ < num_at_last_check_ + check_mem_cycle) {
         return;  // Do not check this time
     }
 
-    // [1] Delete old logfiles: Begin deleting with the oldest logfile available
-    auto it{_logfiles.begin()};
-    for (; it != _logfiles.end(); ++it) {
-        if (it->second.get() == logfile) {
-            break;  // Do not touch the logfile the Query is currently accessing
+    // [1] Delete old log files: Begin deleting with the oldest log file
+    // available
+    auto it{log_files_.begin()};
+    for (; it != log_files_.end(); ++it) {
+        if (it->second.get() == log_file) {
+            break;  // Do not touch the log file the Query is currently
+                    // accessing
         }
         if (it->second->size() > 0) {
-            _num_cached_log_messages -= it->second->freeMessages(~0);
-            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
-                _num_at_last_check = _num_cached_log_messages;
+            num_cached_log_messages_ -= it->second->freeMessages(~0);
+            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+                num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
         }
     }
-    // The end of this loop must be reached by 'break'. At least one logfile
-    // must be the current logfile. So now 'it' points to the current logfile.
+    // The end of this loop must be reached by 'break'. At least one log file
+    // must be the current log file. So now 'it' points to the current log file.
     // We save that pointer for later.
     auto queryit = it;
 
     // [2] Delete message classes irrelevent to current query: Starting from the
-    // current logfile (we broke out of the previous loop just when 'it' pointed
-    // to that)
-    for (; it != _logfiles.end(); ++it) {
+    // current log file (we broke out of the previous loop just when 'it'
+    // pointed to that)
+    for (; it != log_files_.end(); ++it) {
         if (it->second->size() > 0 &&
-            (it->second->classesRead() & ~logclasses) != 0) {
-            Debug(logger()) << "freeing classes " << ~logclasses << " of file "
+            (it->second->classesRead() & ~log_classes) != 0) {
+            Debug{logger()} << "freeing classes " << ~log_classes << " of file "
                             << it->second->path();
-            _num_cached_log_messages -= it->second->freeMessages(~logclasses);
-            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
-                _num_at_last_check = _num_cached_log_messages;
+            num_cached_log_messages_ -= it->second->freeMessages(~log_classes);
+            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+                num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
         }
     }
 
-    // [3] Flush newest logfiles: If there are still too many messages loaded,
-    // continue flushing logfiles from the oldest to the newest starting at the
-    // file just after (i.e. newer than) the current logfile
-    for (it = ++queryit; it != _logfiles.end(); ++it) {
+    // [3] Flush newest log files: If there are still too many messages loaded,
+    // continue flushing log files from the oldest to the newest starting at the
+    // file just after (i.e. newer than) the current log file
+    for (it = ++queryit; it != log_files_.end(); ++it) {
         if (it->second->size() > 0) {
-            Debug(logger()) << "flush newer log, " << it->second->size()
+            Debug{logger()} << "flush newer log, " << it->second->size()
                             << " number of entries";
-            _num_cached_log_messages -= it->second->freeMessages(~0);
-            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
-                _num_at_last_check = _num_cached_log_messages;
+            num_cached_log_messages_ -= it->second->freeMessages(~0);
+            if (num_cached_log_messages_ <= core_->maxCachedMessages()) {
+                num_at_last_check_ = num_cached_log_messages_;
                 return;
             }
         }
     }
-    // If we reach this point, no more logfiles can be unloaded, despite the
+    // If we reach this point, no more log files can be unloaded, despite the
     // fact that there are still too many messages loaded.
-    _num_at_last_check = _num_cached_log_messages;
-    Debug(logger()) << "cannot unload more messages, still "
-                    << _num_cached_log_messages << " loaded (max is "
-                    << _mc->maxCachedMessages() << ")";
+    num_at_last_check_ = num_cached_log_messages_;
+    Debug{logger()} << "cannot unload more messages, still "
+                    << num_cached_log_messages_ << " loaded (max is "
+                    << core_->maxCachedMessages() << ")";
 }
 
-Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
-
-void LogCache::for_each(
-    const LogFilter &log_filter,
-    const std::function<bool(const LogEntry &)> &process_log_entry) {
-    const std::lock_guard<std::mutex> lg(_lock);
-    update();
-
-    if (_logfiles.begin() == _logfiles.end()) {
-        return;
-    }
-    auto it = _logfiles.end();  // it now points beyond last log file
-    --it;                       // switch to last logfile (we have at least one)
-
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it != _logfiles.begin() && it->second->since() > log_filter.until) {
-        // while logfiles are too new go back in history
-        --it;
-    }
-    if (it->second->since() > log_filter.until) {
-        return;  // all logfiles are too new
-    }
-
-    while (true) {
-        const auto *entries = it->second->getEntriesFor(
-            log_filter.max_lines_per_logfile, log_filter.classmask);
-        if (!Logfile::processLogEntries(process_log_entry, entries,
-                                        log_filter)) {
-            break;  // end of time range found
-        }
-        if (it == _logfiles.begin()) {
-            break;  // this was the oldest one
-        }
-        --it;
-    }
-}
-
-size_t LogCache::numCachedLogMessages() {
-    const std::lock_guard<std::mutex> lg(_lock);
-    update();
-    return _num_cached_log_messages;
-}
+Logger *LogCache::logger() const { return core_->loggerLivestatus(); }

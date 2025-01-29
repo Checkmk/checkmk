@@ -20,12 +20,13 @@
 //#   |                                       |___/                        |
 //#   +--------------------------------------------------------------------+
 
-import * as d3 from "d3";
+import {json} from "d3";
 
-import {CMKAjaxReponse} from "../types";
-import * as utils from "../utils";
-import {SerializedNodevisLayout} from "./layout_utils";
-import {
+import type {CMKAjaxReponse} from "@/modules/types";
+import {is_window_active} from "@/modules/utils";
+
+import type {SerializedNodevisLayout} from "./layout_utils";
+import type {
     DatasourceCallback,
     SerializedNodeConfig,
     TopologyFrontendConfig,
@@ -64,7 +65,7 @@ export class DatasourceManager {
     }
 
     schedule(enforce = false): void {
-        if (!utils.is_window_active()) return;
+        if (!is_window_active()) return;
         const now = Math.floor(new Date().getTime() / 1000);
         for (const idx in this.datasources) {
             const datasource = this.datasources[idx];
@@ -143,7 +144,7 @@ export class AbstractDatasource extends Object {
 
     _fetch(): void {
         if (!this._fetch_url) return;
-        d3.json(encodeURI(this._fetch_url), {
+        json(encodeURI(this._fetch_url), {
             credentials: "include",
             method: "POST",
             body: this._fetch_params,
@@ -178,7 +179,7 @@ export class AbstractDatasource extends Object {
 
     _inform_subscribers(): void {
         this._new_data_subscribers.forEach(subscriber =>
-            subscriber(this._data)
+            subscriber(this._data),
         );
     }
 }
@@ -195,7 +196,7 @@ export class AggregationsDatasource extends AbstractDatasource {
 
     fetch_aggregations(
         list_of_aggregations: string[],
-        use_layout_id: string
+        use_layout_id: string,
     ): void {
         const fetch_params: Record<string, string> = {
             aggregations: JSON.stringify(list_of_aggregations),
@@ -203,7 +204,7 @@ export class AggregationsDatasource extends AbstractDatasource {
         if (use_layout_id) fetch_params["layout_id"] = use_layout_id;
         this.fetch(
             "ajax_fetch_aggregation_data.py",
-            new URLSearchParams(fetch_params).toString()
+            new URLSearchParams(fetch_params).toString(),
         );
     }
 }
@@ -224,7 +225,7 @@ export class TopologyDatasource extends AbstractDatasource {
         fetch_params["query_hash"] = this._waiting_for_hash;
         this.fetch(
             "ajax_fetch_topology.py",
-            new URLSearchParams(fetch_params).toString()
+            new URLSearchParams(fetch_params).toString(),
         );
     }
 }

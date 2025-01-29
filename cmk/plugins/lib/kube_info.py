@@ -4,17 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
-from typing import Any, Literal, NewType, Protocol
+from typing import Any, Literal, NewType
 
 from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator, render, Result, State
-from cmk.plugins.kube.schemata.api import Labels
-from cmk.plugins.kube.schemata.section import ControlChain, FilteredAnnotations
+from cmk.plugins.kube.schemata.section import (
+    ControlChain,
+    DaemonSetInfo,
+    DeploymentInfo,
+    StatefulSetInfo,
+)
 from cmk.plugins.lib.kube import kube_annotations_to_cmk_labels, kube_labels_to_cmk_labels
 
 
-def result_simple(  # type: ignore[no-untyped-def]
-    display_name: str, notice_only=False
-) -> Callable[[object], Result]:
+def result_simple(display_name: str, notice_only: bool = False) -> Callable[[object], Result]:
     key = "notice" if notice_only else "summary"
 
     def result_func(value: object) -> Result:
@@ -91,19 +93,12 @@ def check_info(info: Mapping[InfoTypes, Any]) -> CheckResult:
             yield function(info[info_type])
 
 
-class Info(Protocol):
-    cluster: str
-    namespace: str
-    name: str
-    kubernetes_cluster_hostname: str
-    annotations: FilteredAnnotations
-    labels: Labels
-
-
 def host_labels(
-    object_type: Literal["deployment", "daemonset", "statefulset"]
-) -> Callable[[Info], HostLabelGenerator]:
-    def _host_labels(section: Info) -> HostLabelGenerator:
+    object_type: Literal["deployment", "daemonset", "statefulset"],
+) -> Callable[[DaemonSetInfo | DeploymentInfo | StatefulSetInfo], HostLabelGenerator]:
+    def _host_labels(
+        section: DaemonSetInfo | DeploymentInfo | StatefulSetInfo,
+    ) -> HostLabelGenerator:
         """Host label function.
 
         Labels:

@@ -6,7 +6,7 @@
 
 import $ from "jquery";
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 
 interface AjaxJsonResponse<Result = any> {
     result_code: number;
@@ -17,10 +17,11 @@ interface AjaxJsonResponse<Result = any> {
 interface SiteState {
     livestatus: string;
     replication: string;
+    message_broker: string;
 }
 
 export function fetch_site_status() {
-    ajax.call_ajax("wato_ajax_fetch_site_status.py", {
+    call_ajax("wato_ajax_fetch_site_status.py", {
         response_handler: function (_handler_data: any, response_json: string) {
             const response: AjaxJsonResponse<Record<string, SiteState>> =
                 JSON.parse(response_json);
@@ -34,27 +35,35 @@ export function fetch_site_status() {
 
             for (const [site_id, site_status] of Object.entries(site_states)) {
                 const livestatus_container = document.getElementById(
-                    "livestatus_status_" + site_id
+                    "livestatus_status_" + site_id,
                 )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 livestatus_container.innerHTML = site_status.livestatus;
 
                 const replication_container = document.getElementById(
-                    "replication_status_" + site_id
+                    "replication_status_" + site_id,
                 )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 replication_container.innerHTML = site_status.replication;
+
+                const message_broker_container = document.getElementById(
+                    "message_broker_status_" + site_id,
+                )!;
+                /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+                message_broker_container.innerHTML = site_status.message_broker;
             }
         },
         error_handler: function (
             _handler_data: any,
             status_code: number,
-            error_msg: string
+            error_msg: string,
         ) {
             if (status_code != 0) {
                 show_error(
                     "Site status update failed [" +
                         status_code +
                         "]: " +
-                        error_msg
+                        error_msg,
                 );
             }
         },
@@ -65,6 +74,7 @@ export function fetch_site_status() {
 
 function show_error(msg: string) {
     const o = document.getElementById("message_container");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     o!.innerHTML = "<div class=error>" + msg + "</div>";
 
     // Remove all loading icons

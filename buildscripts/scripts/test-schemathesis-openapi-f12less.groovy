@@ -6,7 +6,7 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
-        // "DOCKER_TAG_BUILD", // test base image tag (todo)
+        // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);
 
@@ -16,20 +16,18 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    //def safe_branch_name = versioning.safe_branch_name(scm);  // todo: this returns rubbish if CUSTOM_GIT_REF is set
-    def safe_branch_name = "master";
-
+    def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
     def docker_tag = versioning.select_docker_tag(
-        safe_branch_name,  // 'branch'
         "",                // 'build tag'
-        "",                // 'folder tag'
+        safe_branch_name,  // 'branch'
     )
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
     def make_target = "test-schemathesis-openapi-docker";
+    def download_dir = "package_download";
 
     currentBuild.description += (
         """
@@ -75,6 +73,9 @@ def main() {
                 // runs somehow affecting the current run.
                 sh("rm -rf ${WORKSPACE}/test-results");
 
+                /// remove downloaded packages since they consume dozens of MiB
+                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
+
                 // Initialize our virtual environment before parallelization
                 sh("make .venv");
 
@@ -88,7 +89,7 @@ def main() {
                             EDITION: edition,
                             DISTRO: distro,
                         ],
-                        dest: "package_download",
+                        dest: download_dir,
                     );
                 }
                 try {

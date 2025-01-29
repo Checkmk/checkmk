@@ -17,7 +17,7 @@ from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import TreeStore
+from cmk.utils.structured_data import make_meta, TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
@@ -46,6 +46,8 @@ from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredS
 
 __all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
 
+type _Labels = Mapping[str, str]
+
 
 def execute_checkmk_checks(
     *,
@@ -64,7 +66,7 @@ def execute_checkmk_checks(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
-    get_check_period: Callable[[ServiceName], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
@@ -73,9 +75,9 @@ def execute_checkmk_checks(
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host)
+    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,
@@ -140,7 +142,11 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree:
-        tree_store.save(host_name=host_name, tree=status_data_tree)
+        tree_store.save(
+            host_name=host_name,
+            tree=status_data_tree,
+            meta=make_meta(do_archive=False),
+        )
 
 
 class PluginState(NamedTuple):
@@ -194,14 +200,16 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
-    get_check_period: Callable[[ServiceName], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
         s
         for s in services
         if s.check_plugin_name in run_plugin_names
-        and not service_outside_check_period(s.description, get_check_period(s.description))
+        and not service_outside_check_period(
+            s.description, get_check_period(s.description, s.labels)
+        )
     ):
         if service.check_plugin_name not in check_plugins:
             yield AggregatedResult(
@@ -219,7 +227,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     if period is None:
         return False
     if check_timeperiod(period):
-        console.debug(f"Service {description}: time period {period} is currently active.\n")
+        console.debug(f"Service {description}: time period {period} is currently active.")
         return False
-    console.verbose(f"Skipping service {description}: currently not in time period {period}.\n")
+    console.verbose(f"Skipping service {description}: currently not in time period {period}.")
     return True

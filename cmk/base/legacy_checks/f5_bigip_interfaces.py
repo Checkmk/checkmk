@@ -8,9 +8,7 @@ import dataclasses
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
     equals,
@@ -20,6 +18,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate
@@ -96,6 +96,7 @@ def check_f5_bigip_interfaces(item, _no_params, section):
 
 
 check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
+    name="f5_bigip_interfaces",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.10"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.20"),

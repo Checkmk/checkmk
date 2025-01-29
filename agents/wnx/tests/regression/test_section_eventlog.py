@@ -8,11 +8,11 @@ import math
 import os
 import platform
 import re
-import winreg  # pylint: disable=import-error
+import winreg
 from itertools import chain, repeat
 
 import pytest
-import win32evtlog  # type: ignore[import-not-found]  # pylint: disable=import-error
+import win32evtlog  # type: ignore[import-not-found]
 
 from .local import assert_subprocess, host, local_test, user_dir
 
@@ -35,7 +35,8 @@ class Globals:
 def generate_logs():
     if platform.system() == "Windows":
         with winreg.OpenKey(  # type: ignore[attr-defined]
-            winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Eventlog"  # type: ignore[attr-defined]
+            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
+            "SYSTEM\\CurrentControlSet\\Services\\Eventlog",
         ) as key:
             index = 0
             while True:
@@ -55,22 +56,18 @@ logs = list(l for l in generate_logs() if l not in ["Security", "System"])
 
 @contextlib.contextmanager
 def eventlog(logtype):
-    handle = win32evtlog.OpenEventLog(host, logtype)  # pylint: disable=c-extension-no-member
+    handle = win32evtlog.OpenEventLog(host, logtype)
     try:
         yield handle
     finally:
-        win32evtlog.CloseEventLog(handle)  # pylint: disable=c-extension-no-member
+        win32evtlog.CloseEventLog(handle)
 
 
 def get_last_record(logtype):
     try:
         with eventlog(logtype) as log_handle:
-            oldest = win32evtlog.GetOldestEventLogRecord(
-                log_handle
-            )  # pylint: disable=c-extension-no-member
-            total = win32evtlog.GetNumberOfEventLogRecords(
-                log_handle
-            )  # pylint: disable=c-extension-no-member
+            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)
+            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)
             result = oldest + total - 1
             return result if result >= 0 else 0
     except Exception:
@@ -214,13 +211,15 @@ def verify_eventstate():
         ):
             assert expected_log == actual_log
             state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
-            assert (
-                math.fabs(expected_state - actual_state) <= state_tolerance
-            ), "expected state for log '%s' is %d, actual state %d, " "state_tolerance %d" % (
-                expected_log,
-                expected_state,
-                actual_state,
-                state_tolerance,
+            assert math.fabs(expected_state - actual_state) <= state_tolerance, (
+                "expected state for log '%s' is %d, actual state %d, "
+                "state_tolerance %d"
+                % (
+                    expected_log,
+                    expected_state,
+                    actual_state,
+                    state_tolerance,
+                )
             )
 
 

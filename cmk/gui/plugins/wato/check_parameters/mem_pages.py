@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mem_pages,
-        title=lambda: _("Memory Pages Statistics"),
+        title=lambda: _("Memory pages statistics"),
     )
 )

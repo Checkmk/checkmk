@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, OIDEnd, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_atto_fibrebridge_fcport(info):
@@ -40,6 +40,7 @@ def parse_atto_fibrebridge_fcport(string_table: StringTable) -> StringTable:
 
 
 check_info["atto_fibrebridge_fcport"] = LegacyCheckDefinition(
+    name="atto_fibrebridge_fcport",
     parse_function=parse_atto_fibrebridge_fcport,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
     fetch=SNMPTree(

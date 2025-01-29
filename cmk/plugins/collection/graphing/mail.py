@@ -6,7 +6,6 @@
 from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
-UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
 metric_mail_queue_active_length = metrics.Metric(
@@ -63,12 +62,6 @@ metric_mail_queue_z1_messenger = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_CYAN,
 )
-metric_mail_latency = metrics.Metric(
-    name="mail_latency",
-    title=Title("Mail latency"),
-    unit=UNIT_TIME,
-    color=metrics.Color.BROWN,
-)
 
 perfometer_mail_queue_active_length_mail_queue_deferred_length = perfometers.Stacked(
     name="mail_queue_length",
@@ -96,14 +89,6 @@ perfometer_mail_queue_deferred_length = perfometers.Perfometer(
         perfometers.Open(20000),
     ),
     segments=["mail_queue_deferred_length"],
-)
-perfometer_mail_latency = perfometers.Perfometer(
-    name="mail_latency",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(8),
-    ),
-    segments=["mail_latency"],
 )
 
 graph_amount_of_mails_in_queues = graphs.Graph(

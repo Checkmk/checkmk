@@ -27,10 +27,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def inventory_jar_signature(info):
@@ -42,7 +42,7 @@ def inventory_jar_signature(info):
     return inventory
 
 
-def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-branches
+def check_jar_signature(item, _no_params, info):
     in_block = False
     details = []
     in_cert = False
@@ -87,26 +87,21 @@ def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-bra
 
     state = 0
     if expired_since >= 0:
-        status_text = "Certificate expired on {} ({} ago) ".format(
-            expiry_date_text,
-            render.timespan(expired_since),
+        status_text = (
+            f"Certificate expired on {expiry_date_text} ({render.timespan(expired_since)} ago) "
         )
         state = 2
 
     else:
-        status_text = "Certificate will expire on {} (in {})".format(
-            expiry_date_text,
-            render.timespan(-expired_since),
+        status_text = (
+            f"Certificate will expire on {expiry_date_text} (in {render.timespan(-expired_since)})"
         )
         if -expired_since <= crit:
             state = 2
         elif -expired_since <= warn:
             state = 1
         if state:
-            status_text += " (warn/crit below {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            status_text += f" (warn/crit below {render.timespan(warn)}/{render.timespan(crit)})"
 
     return state, status_text
 
@@ -116,6 +111,7 @@ def parse_jar_signature(string_table: StringTable) -> StringTable:
 
 
 check_info["jar_signature"] = LegacyCheckDefinition(
+    name="jar_signature",
     parse_function=parse_jar_signature,
     service_name="Jar-Signature %s",
     discovery_function=inventory_jar_signature,

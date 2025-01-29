@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
 
 
 def parse_stormshield_disk(string_table):
@@ -42,24 +42,22 @@ def check_stormshield_disk(item, params, parsed):
     for disk in parsed:
         clusterindex, index, name, selftest, israid, raidstatus, position = disk
         if item == clusterindex:
-            infotext = "Device Index {}, Selftest: {}, Device Mount Point Name: {}".format(
-                index,
-                selftest,
-                name,
+            infotext = (
+                f"Device Index {index}, Selftest: {selftest}, Device Mount Point Name: {name}"
             )
             if selftest != "PASSED":
                 status = 1
             else:
                 status = 0
             if israid != "0":
-                infotext = infotext + ", Raid active, Raid Status {}, Disk Position {}".format(
-                    raidstatus,
-                    position,
+                infotext = (
+                    infotext + f", Raid active, Raid Status {raidstatus}, Disk Position {position}"
                 )
             yield status, infotext
 
 
 check_info["stormshield_disk"] = LegacyCheckDefinition(
+    name="stormshield_disk",
     detect=DETECT_STORMSHIELD,
     fetch=[
         SNMPTree(

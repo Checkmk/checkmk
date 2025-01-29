@@ -5,28 +5,25 @@
 from __future__ import annotations
 
 import functools
-import typing
+from wsgiref.types import WSGIApplication
 
 import flask
 import werkzeug
 from flask import Blueprint, current_app, redirect, Response
-from flask.blueprints import BlueprintSetupState
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import safe_join
 
-from cmk.utils import store
+from cmk.ccc import store
 
-from cmk.gui import hooks, main_modules, sites
+from cmk.gui import hooks, sites
 from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.wsgi.applications import CheckmkApp
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import PatchJsonMiddleware
 
-if typing.TYPE_CHECKING:
-    from _typeshed.wsgi import WSGIApplication
-
 ResponseTypes = flask.Response | werkzeug.Response
+
 
 checkmk = Blueprint(
     "checkmk",
@@ -39,12 +36,6 @@ checkmk = Blueprint(
 @checkmk.before_app_request
 def before_app_request() -> None:
     set_global_vars()
-
-
-@checkmk.record_once
-def first_request(state: BlueprintSetupState) -> None:
-    # Will be called once on setup-time.
-    main_modules.load_plugins()
 
 
 @checkmk.before_request

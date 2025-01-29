@@ -21,7 +21,7 @@ how `buildscripts/scripts/build-build-images.groovy` does it:
 export NEXUS_USERNAME=frans.fuerst
 export NEXUS_PASSWORD=...
 (defines/dev-images/populate-build-context.sh build-context-dir \
-&& DISTRO=ubuntu-20.04 BRANCH_VERSION=2.4.0 bash -c 'time \
+&& DISTRO=ubuntu-22.04 BRANCH_VERSION=2.4.0 bash -c 'time \
   docker build \
     -t local-build-image-${DISTRO} \
     --build-context scripts=buildscripts/infrastructure/build-nodes/scripts \
@@ -83,7 +83,7 @@ Total:          10.91GB
 * [ ] remove unneeded packages
 * [ ] provide tests for build/reference images
 * [ ] make validate changes locally executable
-* [ ] share pre-built reference image / 
+* [ ] share pre-built reference image /
 * [ ] activate docker build cache
     - https://stackoverflow.com/questions/77516243/reuse-docker-cache-from-another-machine
 * [ ] move context relevant files to `defines`

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Alias: TCP port number for traces
+# Menu: Addons
+# Description:
+#  If receiving traces is configured, you can configure the listen port here.
+
+# Load other config options. This hook needs TRACE_RECEIVE_PORT.
+if [ -f "$OMD_ROOT/etc/omd/site.conf" ]; then
+    # shellcheck source=/dev/null
+    . "$OMD_ROOT/etc/omd/site.conf"
+else
+    CONFIG_TRACE_RECEIVE_ADDRESS=${CONFIG_TRACE_RECEIVE_ADDRESS:-0}
+fi
+
+case "$1" in
+    default)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_RECEIVE_PORT 4317)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "@{NETWORK_PORT}"
+        ;;
+    set)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_RECEIVE_PORT "$2")
+
+        if [ "$PORT" != "$2" ]; then
+            echo "Trace receiving port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
+---
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: "$CONFIG_TRACE_RECEIVE_ADDRESS:$PORT"
+EOF
+        ;;
+    depends)
+        [ "$CONFIG_TRACE_RECEIVE" = on ]
+        ;;
+esac

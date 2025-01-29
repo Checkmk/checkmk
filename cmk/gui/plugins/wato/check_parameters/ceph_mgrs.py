@@ -30,6 +30,7 @@ def ceph_epoch_element(title):
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
+        is_deprecated=True,
         check_group_name="ceph_mgrs",
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",

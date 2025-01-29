@@ -8,10 +8,10 @@
 # .1.3.6.1.4.1.232.2.2.2.1.0  "GB8851CPPH
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_proliant_general(info):
@@ -40,6 +40,7 @@ def parse_hp_proliant(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_proliant"] = LegacyCheckDefinition(
+    name="hp_proliant",
     parse_function=parse_hp_proliant,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", "8072.3.2.10"),

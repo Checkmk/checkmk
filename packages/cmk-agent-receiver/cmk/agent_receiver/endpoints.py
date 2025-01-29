@@ -73,9 +73,6 @@ from .utils import (
     uuid_from_pem_csr,
 )
 
-# pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
-# pylint: disable=too-many-function-args
-
 security = HTTPBasic()
 
 

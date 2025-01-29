@@ -21,20 +21,27 @@ from .utils_inventory import sort_inventory_result
     [
         (
             [],
-            {},
+            {
+                "include_patterns": [],
+                "exclude_patterns": [],
+            },
             [],
         ),
         (
             [
                 ["abi.vsyscall32", "=", "1"],
             ],
-            {},
+            {
+                "include_patterns": [],
+                "exclude_patterns": [],
+            },
             [],
         ),
         (
             [],
             {
                 "include_patterns": [".*"],
+                "exclude_patterns": [],
             },
             [],
         ),

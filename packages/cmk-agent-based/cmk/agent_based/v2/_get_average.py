@@ -31,9 +31,9 @@ def get_average(
 
            = (1-w) ∑ᵢ₌₀ⁿ wⁱxₙ₋ᵢ
 
-    This results in a so called "exponential moving average".
+    This results in a so-called "exponential moving average".
 
-    The weight is chosen such that for long running timeseries the "backlog"
+    The weight is chosen such that for long-running timeseries the "backlog"
     (all recorded values in the last n minutes) will make up 50% of the
     weighted average.
 
@@ -46,7 +46,7 @@ def get_average(
     the time passed since starting to average. This:
 
         * Avoids giving undue weight to the first value
-        * Helps arriving at a meaningful average more quickly
+        * Helps to arrive at a meaningful average more quickly
 
     Returns:
 

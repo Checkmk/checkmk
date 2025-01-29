@@ -123,6 +123,8 @@ fi
 if [ -e /etc/os-release ]; then
     . /etc/os-release
     echo "${NAME}${SEP}${VERSION/-/}"
+    exit 0
 fi
 
+echo >&2 "ERROR: Cannot determine Linux distribution!"
 exit 1

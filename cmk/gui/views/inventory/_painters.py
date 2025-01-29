@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from typing import Callable, TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from typing import TypedDict
 
 from livestatus import SiteId
 
@@ -18,23 +18,32 @@ from cmk.utils.structured_data import (
     SDRawDeltaTree,
     SDRawTree,
     SDValue,
+    serialize_delta_tree,
+    serialize_tree,
 )
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
-from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, NodeDisplayHint
-from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
+from ._display_hints import (
+    AttributeDisplayHint,
+    ColumnDisplayHint,
+    inv_display_hints,
+    NodeDisplayHint,
+)
+from ._tree_renderer import SDItem, TreeRenderer
+from .registry import PaintFunction
 
 
 @request_memoize()
@@ -89,7 +98,7 @@ class PainterInventoryTree(Painter):
         return "inventory_tree"
 
     def title(self, cell):
-        return _("Inventory Tree")
+        return _("Inventory tree")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -118,23 +127,26 @@ class PainterInventoryTree(Painter):
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
-            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
+            inv_display_hints,
+            theme,
+            self.request,
+            self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, self.request)
-            code = HTML(output_funnel.drain())
+            tree_renderer.show(tree)
+            code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
 
 class PainterInvhistTime(Painter):
@@ -143,10 +155,10 @@ class PainterInvhistTime(Painter):
         return "invhist_time"
 
     def title(self, cell: Cell) -> str:
-        return _("Inventory Date/Time")
+        return _("Inventory date/time")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Date/Time")
+        return _("Date/time")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -178,6 +190,10 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
+    @property
+    def painter_options(self):
+        return ["show_internal_tree_paths"]
+
     def _compute_data(self, row: Row, cell: Cell) -> ImmutableDeltaTree:
         try:
             _validate_inventory_tree_uniqueness(row)
@@ -193,23 +209,26 @@ class PainterInvhistDelta(Painter):
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
-            tree_id=str(row["invhist_time"]),
+            inv_display_hints,
+            theme,
+            self.request,
+            self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, self.request)
-            code = HTML(output_funnel.drain())
+            tree_renderer.show(tree, str(row["invhist_time"]))
+            code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -307,18 +326,18 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
+    row: Row, path: SDPath, key: SDKey, title: str, paint_function: PaintFunction
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            key,
-            attributes.pairs.get(key),
-            attributes.retentions.get(key),
-        ),
-        hint,
-    )
+    return SDItem(
+        key=key,
+        title=title,
+        value=attributes.pairs.get(key),
+        retention_interval=attributes.retentions.get(key),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def attribute_painter_from_hint(
@@ -351,7 +370,9 @@ def attribute_painter_from_hint(
         printable=True,
         load_inv=True,
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
+        paint=lambda row: _paint_host_inventory_attribute(
+            row, path, key, hint.title, hint.paint_function
+        ),
         export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
         export_for_csv=lambda row, cell: (
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
@@ -373,17 +394,19 @@ class ColumnPainterFromHint(TypedDict):
     export_for_json: Callable[[Row, Cell], SDValue]
 
 
-def _paint_host_inventory_column(row: Row, ident: str, hint: ColumnDisplayHint) -> CellSpec:
+def _paint_host_inventory_column(
+    row: Row, ident: str, title: str, paint_function: PaintFunction
+) -> CellSpec:
     if ident not in row:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            SDKey(ident),
-            row[ident],
-            row.get("_".join([ident, "retention_interval"])),
-        ),
-        hint,
-    )
+    return SDItem(
+        key=SDKey(ident),
+        title=title,
+        value=row[ident],
+        retention_interval=row.get("_".join([ident, "retention_interval"])),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
@@ -402,7 +425,7 @@ def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPaint
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_column(row, ident, hint),
+        paint=lambda row: _paint_host_inventory_column(row, ident, hint.title, hint.paint_function),
         export_for_python=lambda row, cell: row.get(ident),
         export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
         export_for_json=lambda row, cell: row.get(ident),
@@ -440,12 +463,15 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
     tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        inv_display_hints,
+        theme,
+        request,
+        painter_options.get("show_internal_tree_paths"),
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree, request)
-        code = HTML(output_funnel.drain())
+        tree_renderer.show(tree)
+        code = HTML.without_escaping(output_funnel.drain())
 
     return "invtree", code
 
@@ -477,14 +503,16 @@ def node_painter_from_hint(
         ),
         # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW inventory tree
+        # not look good for the HW/SW Inventory tree
         printable=False,
         load_inv=True,
         sorter=hint.ident,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
         export_for_python=lambda row, cell: (
-            _compute_node_painter_data(row, hint.path).serialize()
+            serialize_tree(_compute_node_painter_data(row, hint.path))
         ),
         export_for_csv=lambda row, cell: _export_node_for_csv(),
-        export_for_json=lambda row, cell: _compute_node_painter_data(row, hint.path).serialize(),
+        export_for_json=lambda row, cell: serialize_tree(
+            _compute_node_painter_data(row, hint.path)
+        ),
     )

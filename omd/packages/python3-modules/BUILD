@@ -1,5 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
-load("@omd_packages//:static_variables.bzl", "INTERNAL_PYPI_MIRROR")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "all_requirements")
 load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file", "get_pip_options")
 
@@ -15,6 +14,7 @@ config_setting(
     ],
 ) for module in all_requirements]
 
+# Third Party packages parsed from Pipfile
 [build_python_module(
     name = "%s_compile" % module,
     srcs = [
@@ -30,83 +30,61 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
     }),
 ) for module in all_requirements]
 
-[build_python_module(
-    name = "%s_compile" % module,
+# TODO: Switch to official release when netapp has fixed their build process
+# See: https://github.com/NetApp/ontap-rest-python/issues/46
+MODULE_NETAPP = "netapp-ontap"
+
+MODULE_NETAPP_SOURCE = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"
+
+build_python_module(
+    name = "%s_compile" % MODULE_NETAPP,
     srcs = [
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
-        "@omd_packages//packages:cmk-agent-based",
-        "@omd_packages//packages:cmk-agent-receiver",
-        "@omd_packages//packages:cmk-graphing",
-        "@omd_packages//packages:cmk-livestatus-client",
-        "@omd_packages//packages:cmk-mkp-tool",
-        "@omd_packages//packages:cmk-rulesets",
-        "@omd_packages//packages:cmk-server-side-calls",
-        "@omd_packages//packages:cmk-werks",
         "@openssl",
         "@python",
     ],
     outs = [
-        "compiled_%s.tar" % module,
+        "compiled_%s.tar" % MODULE_NETAPP,
     ],
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
-            pip_add_opts = get_pip_options(module),
+            module_name = MODULE_NETAPP,
+            pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = dep,
+            requirements = MODULE_NETAPP_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
-            pip_add_opts = get_pip_options(module),
+            module_name = MODULE_NETAPP,
+            pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = dep,
+            requirements = MODULE_NETAPP_SOURCE,
         ),
     }),
-) for module, dep in [
-    ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
-    ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
-    ("rulesets", "$(execpath @omd_packages//packages:cmk-rulesets)"),
-    ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
-    ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
-    ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
-    ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),
-    ("livestatus-client", "$(execpath @omd_packages//packages:cmk-livestatus-client)"),
-    # TODO: Switch to official release when netapp has fixed their build process
-    # See: https://github.com/NetApp/ontap-rest-python/issues/46
-    ("netapp-ontap", "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"),
-]]
+)
 
 genrule(
     name = "python3-modules",
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "agent-based",
-            "agent-receiver",
-            "graphing",
-            "mkp-tool",
-            "rulesets",
-            "server-side-calls",
-            "werks",
-            "livestatus-client",
             "netapp-ontap",
         ]
     ],
@@ -149,7 +127,7 @@ genrule(
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
-	tar cf $@ python3-modules
+	tar cf $@ -C python3-modules .
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     visibility = ["//visibility:public"],
 )

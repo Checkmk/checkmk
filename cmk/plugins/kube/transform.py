@@ -165,6 +165,7 @@ def pod_conditions(
 ) -> list[api.PodCondition]:
     condition_types = {
         "PodHasNetwork": api.ConditionType.PODHASNETWORK,
+        "PodReadyToStartContainers": api.ConditionType.PODREADYTOSTARTCONTAINERS,
         "PodScheduled": api.ConditionType.PODSCHEDULED,
         "Initialized": api.ConditionType.INITIALIZED,
         "ContainersReady": api.ConditionType.CONTAINERSREADY,

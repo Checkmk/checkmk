@@ -7,7 +7,9 @@ description:
  This check monitors the size of datafiles in MSSQL.
  Levels can be set for the usage relative to the maximum size,
  relative to the currently allocated size and for the currently
- allocated size itself.
+ allocated size itself. The effective maximum size is calculated
+ as the lesser of the configured maximum size and the total of the
+ currently used size plus free space.
 
  This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation

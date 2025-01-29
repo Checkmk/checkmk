@@ -6,7 +6,7 @@ logfiles:
             observe:
                 - 'C:\tmp': # this is location
                     # below list of file to view on location
-                    - 'logfiles\message_*.log' 
+                    - 'logfiles\message_*.log'
                     - 'logfile\my*.log'
                 - 'D:\log':
                     - 'sample1.txt'
@@ -18,32 +18,32 @@ logfiles:
                 - warn:   'Unable to contact*'
                 - ignore: 'Backup * saved'
         - My special logs:
-            observe: 
+            observe:
                 - 'C:\tmp\memo.udf':
             patterns:
                 - ok:     '*mail sent*'
                 - warn:   '*overdue*'
         - My interesting logs:
-            description: > 
-                this is my description which I can add to almost any iten 
+            description: >
+                this is my description which I can add to almost any iten
                 item ib the config file and see it in the log
-            observe: 
+            observe:
                 - 'C:\tmp\memo.crit':
                     # below is default
-                    rotated: no     
-                    context: yes      
+                    rotated: no
+                    context: yes
                     from_start: no
             patterns:
                 - ok:     '*mail sent*'
                 - warn:   '*overdue*'
-                
+
 
     # # handling of the log can be customized through tags prepended to the name
     # #
     # # don't send context lines around relevant lines
     # textfile = nocontext d:\log\sample.txt
     # # read new files from the first line. Otherwise the agent will start at the
-    # # last line at the time the agent first sees the file 
+    # # last line at the time the agent first sees the file
     # textfile = from_start d:\log\sample*.txt
     # # treat the file as a rotated log (one where in certain intervals a new file is
     # # created and the previous file is at some point moved away).

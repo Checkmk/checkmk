@@ -198,7 +198,11 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
         ),
     ],
 )
-def test_check_temperature(params: tuple[Number, TempParamType, str | None], kwargs, expected: Iterable[object] | CheckResult | None) -> None:  # type: ignore[no-untyped-def]
+def test_check_temperature(  # type: ignore[no-untyped-def]
+    params: tuple[Number, TempParamType, str | None],
+    kwargs,
+    expected: Iterable[object] | CheckResult | None,
+) -> None:
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
 
@@ -275,7 +279,6 @@ _WATO_DICT: TrendComputeDict = {
     ],
 )
 def test_check_temperature_trend(test_case: Entry) -> None:
-
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
     state = {"temp.foo.delta": (unix_ts(time), test_case.reading), "temp.foo.trend": (0, 0)}

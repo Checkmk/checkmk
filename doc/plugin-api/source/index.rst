@@ -16,7 +16,7 @@ Most of the plugin APIs (Agent based, Ruleset, Server-side calls and Graphing AP
 This section will cover those APIs.
 The Bakery API has a different logic for now, but will be adapted in the future versions.
 
-The shipped plugins are located under the ``cmk/plugins`` folder, while local third party plugins are placed under the ``local/cmk_addons/plugins`` folder in the site.
+The shipped plugins are located under the ``cmk/plugins`` folder, while local third party plugins are placed under the ``local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
 Below the top-level folder, plugins are organized in families, e.g. all plugins concerning cisco devices will be found under the folder named ``cisco``.
@@ -53,13 +53,9 @@ Each plugin expects a different prefix in the variable name:
    - graphs the ``graph_`` prefix
 
 .. toctree::
+   :glob:
 
-   cmk.agent_based/index
-   cmk.base.plugins.bakery.bakery_api/index
-   cmk.server_side_calls/index
-   cmk.graphing/index
-   cmk.rulesets/index
-   cmk.cee.dcd.plugins.connectors.connectors_api/index
+   cmk.*/index
 
 Indices and tables
 ==================

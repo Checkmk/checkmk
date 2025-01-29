@@ -51,7 +51,7 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
     auto t = std::chrono::system_clock::to_time_t(tp);
-    struct tm ret;
+    struct tm ret{};
 // NOTE: A brilliant example of how to make a simple API function a total
 // chaos follows...
 #if defined(__STDC_LIB_EXT1__)
@@ -71,7 +71,7 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // circumstances, so better avoid it there. Signature:
     //    struct tm *localtime_r(const time_t *restrict timer,
     //                           struct tm *restrict result);
-    localtime_r(&t, &ret);
+    (void)localtime_r(&t, &ret);
 #endif
     return ret;
 }
@@ -83,7 +83,7 @@ inline std::chrono::system_clock::time_point from_tm(tm tp) {
 template <typename Rep, typename Period>
 inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     using namespace std::chrono_literals;
-    timeval tv;
+    timeval tv{};
     // NOTE: The static_casts below are needed to avoid warning on e.g. some
     // 32bit platforms, because the underlying types might be larger than the
     // timeval fields. We can't use the correct POSIX types time_t and
@@ -117,11 +117,12 @@ struct FormattedTimePoint {
         std::chrono::system_clock::time_point time_point)
         : tp(time_point) {}
 
+    // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
     std::chrono::system_clock::time_point tp;
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {
-        tm local = to_tm(f.tp);
+        const tm local = to_tm(f.tp);
         return os << std::put_time(&local, "%Y-%m-%d %H:%M:%S");
     }
 };

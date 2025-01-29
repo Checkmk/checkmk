@@ -6,17 +6,13 @@
 import os
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, Literal, NotRequired, TypedDict
+from typing import Any, cast, Literal, NewType, NotRequired, TypedDict
 
-import cmk.utils.store as store
-from cmk.utils.config_validation_layer.user_connections import (
-    PrivateKeyPath,
-    PublicKeyPath,
-    validate_user_connections,
-)
+from cmk.ccc import store
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.type_defs import DisableNotificationsAttribute
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -44,18 +40,13 @@ class LDAPConnectionConfigDiscover(TypedDict):
     connect_to: tuple[Literal["discover"], Discover]
 
 
-class SyncAttribute(TypedDict, total=False):
-    attr: str
+class SyncAttribute(TypedDict, total=True):
+    attr: NotRequired[str]
 
 
-class GroupsToContactGroups(TypedDict, total=False):
-    nested: Literal[True]
-    other_connections: list[str]
-
-
-class DisableNotificationsAttribute(TypedDict):
-    disable: NotRequired[Literal[True]]
-    timerange: NotRequired[tuple[float, float]]
+class GroupsToContactGroups(TypedDict, total=True):
+    nested: NotRequired[Literal[True]]
+    other_connections: NotRequired[list[str]]
 
 
 DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]
@@ -91,29 +82,29 @@ class GroupsToSync(TypedDict):
     attribute: ATTRIBUTE
 
 
-class GroupsToAttributes(TypedDict, total=False):
-    nested: Literal[True]
-    other_connections: list[str]
+class GroupsToAttributes(TypedDict, total=True):
+    nested: NotRequired[Literal[True]]
+    other_connections: NotRequired[list[str]]
     groups: list[GroupsToSync]
 
 
-class ActivePlugins(TypedDict, total=False):
-    alias: SyncAttribute
-    auth_expire: SyncAttribute
-    groups_to_roles: dict[str, list[tuple[str, str | None]]]
-    groups_to_contactgroups: GroupsToContactGroups
-    groups_to_attributes: GroupsToAttributes
-    disable_notifications: SyncAttribute
-    email: SyncAttribute
-    icons_per_item: SyncAttribute
-    nav_hide_icons_title: SyncAttribute
-    pager: SyncAttribute
-    show_mode: SyncAttribute
-    ui_sidebar_position: SyncAttribute
-    start_url: SyncAttribute
-    temperature_unit: SyncAttribute
-    ui_theme: SyncAttribute
-    force_authuser: SyncAttribute
+class ActivePlugins(TypedDict, total=True):
+    alias: NotRequired[SyncAttribute]
+    auth_expire: NotRequired[SyncAttribute]
+    groups_to_roles: NotRequired[dict[str, list[tuple[str, str | None]]]]
+    groups_to_contactgroups: NotRequired[GroupsToContactGroups]
+    groups_to_attributes: NotRequired[GroupsToAttributes]
+    disable_notifications: NotRequired[SyncAttribute]
+    email: NotRequired[SyncAttribute]
+    icons_per_item: NotRequired[SyncAttribute]
+    nav_hide_icons_title: NotRequired[SyncAttribute]
+    pager: NotRequired[SyncAttribute]
+    show_mode: NotRequired[SyncAttribute]
+    ui_sidebar_position: NotRequired[SyncAttribute]
+    start_url: NotRequired[SyncAttribute]
+    temperature_unit: NotRequired[SyncAttribute]
+    ui_theme: NotRequired[SyncAttribute]
+    force_authuser: NotRequired[SyncAttribute]
 
 
 DIR_SERVER_389 = tuple[Literal["389directoryserver"], LDAPConnectionConfigFixed]
@@ -152,30 +143,51 @@ class LDAPUserConnectionConfig(UserConnectionConfig):
     type: Literal["ldap"]
 
 
-class SAMLUserConnectionConfig(UserConnectionConfig):
+# these need to be written to a .mk file, so a more complex type like Path will lead to problems
+PrivateKeyPath = NewType("PrivateKeyPath", str)
+PublicKeyPath = NewType("PublicKeyPath", str)
+
+
+class ContactGroupMapping(TypedDict):
+    attribute_match_value: str
+    contact_group_ids: Sequence[str]
+
+
+# TODO: This type is horrible, one can't even dispatch to the right alternative at runtime without
+#  looking at the *values*. This must be done differently, so dispatching can be done on the *types*
+ContactGroupMappingSpec = (
+    str | tuple[str, dict[str, str]] | tuple[str, dict[str, str | Sequence[ContactGroupMapping]]]
+)
+SerializedCertificateSpec = (
+    Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+)
+ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
+
+
+class SAMLRequestedAuthnContext(TypedDict):
+    comparison: Literal["exact", "minimum", "maximum", "better"]
+    authn_context_class_ref: Sequence[str]
+
+
+class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     name: str
     description: str
     comment: str
     docu_url: str
-    idp_metadata: Any
+    idp_metadata: tuple[str, str] | tuple[str, tuple[str, str, bytes]]
     checkmk_entity_id: str
     checkmk_metadata_endpoint: str
     checkmk_assertion_consumer_service_endpoint: str
     checkmk_server_url: str
-    connection_timeout: tuple[int, int]
-    signature_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    )
-    encryption_certificate: NotRequired[
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    ]
+    connection_timeout: tuple[int, int]  # connection timeout, read timeout
+    signature_certificate: SerializedCertificateSpec
+    encryption_certificate: NotRequired[SerializedCertificateSpec]
+    requested_authn_context: NotRequired[SAMLRequestedAuthnContext]
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str
-    contactgroups_mapping: str
-    role_membership_mapping: (
-        Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
-    )
+    contactgroups_mapping: ContactGroupMappingSpec
+    role_membership_mapping: ROLE_MAPPING
     type: Literal["saml2"]
     version: Literal["1.0.0"]
     owned_by_site: str
@@ -283,18 +295,6 @@ def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     }
 
 
-# The saved configuration for user connections is a bit inconsistent, let's fix
-# this here once and for all.
-def fix_user_connections() -> None:
-    for cfg in active_config.user_connections:
-        # Although our current configuration always seems to have a 'disabled'
-        # entry, this might not have always been the case.
-        cfg.setdefault("disabled", False)
-        # Only migrated configurations have a 'type' entry, all others are
-        # implictly LDAP connections.
-        cfg.setdefault("type", "ldap")
-
-
 def locked_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
@@ -326,7 +326,7 @@ def load_connection_config(lock: bool = False) -> UserConnections:
     return UserConnectionConfigFile().load_for_reading()
 
 
-def save_connection_config(connections: Sequence[ConfigurableUserConnectionSpec]) -> None:
+def save_connection_config(connections: list[ConfigurableUserConnectionSpec]) -> None:
     """Save the connections for the Setup
 
     Note:
@@ -358,31 +358,10 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         super().__init__(
             config_file_path=Path(multisite_dir() + "user_connections.mk"),
             config_variable="user_connections",
+            spec_class=ConfigurableUserConnectionSpec,
         )
 
-    def load_for_reading(self) -> Sequence[ConfigurableUserConnectionSpec]:
-        cfg = self._load_file(lock=False)
-        validate_user_connections(cfg)
-        return cfg
-
-    def load_for_modification(self) -> list[ConfigurableUserConnectionSpec]:
-        cfg = self._load_file(lock=True)
-        validate_user_connections(cfg)
-        return cfg
-
-    def _load_file(self, lock: bool) -> list[ConfigurableUserConnectionSpec]:
-        return store.load_from_mk_file(
-            self._config_file_path,
-            key=self._config_variable,
-            default=[],
-            lock=lock,
-        )
-
-    def save(self, cfg: Sequence[ConfigurableUserConnectionSpec]) -> None:
-        validate_user_connections(cfg)
-        self._save(cfg)
-
-    def _save(self, cfg: Sequence) -> None:
+    def save(self, cfg: list[ConfigurableUserConnectionSpec]) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             str(self._config_file_path),
@@ -395,15 +374,6 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
             connector_class.config_changed()
 
         clear_user_connection_cache()
-
-    def load_without_validation(self, lock: bool = False) -> list[ConfigurableUserConnectionSpec]:
-        """Only use this directly for update config actions"""
-        return self._load_file(lock=True)
-
-    def save_without_validation(self, cfg: list) -> None:
-        """Only use this directly for update config actions"""
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        self._save(cfg)
 
 
 def register_config_file(config_file_registry: ConfigFileRegistry) -> None:

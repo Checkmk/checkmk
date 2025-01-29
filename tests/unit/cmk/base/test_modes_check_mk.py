@@ -5,14 +5,14 @@
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 
 from cmk.fetchers import PiggybackFetcher
 
-import cmk.base.modes.check_mk as check_mk
+from cmk.base.modes import check_mk
 
 
 class TestModeDumpAgent:

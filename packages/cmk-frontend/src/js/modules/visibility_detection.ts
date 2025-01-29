@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {add_class, remove_class} from "./utils";
 
 //#   .--Visibility----------------------------------------------------------.
 //#   |               __     ___     _ _     _ _ _ _                         |
@@ -30,7 +30,7 @@ export function initialize() {
     else if ((hidden_attr_name = "webkitHidden") in document)
         document.addEventListener(
             "webkitvisibilitychange",
-            on_visibility_change
+            on_visibility_change,
         );
     else if ((hidden_attr_name = "msHidden") in document)
         document.addEventListener("msvisibilitychange", on_visibility_change);
@@ -69,8 +69,8 @@ export function initialize() {
 
         if (!g_visibility_detection_enabled) return;
 
-        utils.remove_class(document.body, "visible");
-        utils.remove_class(document.body, "hidden");
+        remove_class(document.body, "visible");
+        remove_class(document.body, "hidden");
 
         let new_class: "visible" | "hidden";
         if (evt.type in evtMap) {
@@ -80,7 +80,7 @@ export function initialize() {
         }
 
         //console.log([evt.type, new_class, document.hidden, location.href]);
-        utils.add_class(document.body, new_class);
+        add_class(document.body, new_class);
     }
 
     // set the initial state (but only if browser supports the Page Visibility API)

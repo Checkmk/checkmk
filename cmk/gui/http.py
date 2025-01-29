@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
+
 """Wrapper layer between WSGI and GUI application code"""
 
 import ast
@@ -16,11 +18,11 @@ from typing import Any, cast, Literal, overload, Protocol, TypeVar
 import flask
 from flask import request as flask_request
 from pydantic import BaseModel
-from six import ensure_str
 from werkzeug.utils import get_content_type
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.site import url_prefix
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import url_prefix
+
 from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.ctx_stack import request_local_attr
@@ -191,15 +193,10 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        # ? type of values attribute and functions defined with it are unclear
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, (
-                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
-                    if values
-                    else None
-                )
+                yield (name, (values[-1] if values else None))
 
     @overload
     def var(self, name: str) -> str | None: ...
@@ -219,7 +216,7 @@ class LegacyDeprecatedMixin:
             return default
 
         # Preserve previous behaviour
-        return ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+        return str(values[-1])
 
     def has_var(self, varname: str) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -242,11 +239,9 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        # ? type of self.cookies argument is unclear
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
-            # Why would we want to do that? test_http.py requires it though.
-            return ensure_str(value)  # pylint: disable= six-ensure-str-bin-call
+            return value
         return None
 
     def get_request_header(self, key: str, default: str | None = None) -> str | None:
@@ -310,11 +305,14 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    # The system web servers configured request timeout.
+    # This is the time before the request terminates from the view of the client.
+    request_timeout = 110
+
     # TODO investigate why there are so many form_parts
     max_form_parts = 20000
+    max_form_memory_size = 20 * 1024 * 1024
     meta: dict[str, Any]
-
-    # pylint: disable=too-many-ancestors
 
     def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
         # Modify the environment to fix double URLs in some apache configurations, only once.
@@ -337,15 +335,6 @@ class Request(
                     "module to make Checkmk work."
                 )
             )
-
-    @property
-    def request_timeout(self) -> int:
-        """The system web servers configured request timeout.
-
-        This is the time before the request terminates from the view of the client."""
-        # TODO: Found no way to get this information from WSGI environment. Hard code
-        #       the timeout for the moment.
-        return 110
 
     @property
     def remote_ip(self) -> str | None:

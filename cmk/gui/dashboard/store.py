@@ -3,22 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import time
 from typing import Any
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.views.store import internal_view_to_runtime_view
 
-from ...utils.exceptions import MKGeneralException
-from .builtin_dashboards import builtin_dashboards
+from .builtin_dashboards import (
+    builtin_dashboard_extender_registry,
+    builtin_dashboards,
+)
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 
 
@@ -39,7 +45,9 @@ class DashboardStore:
         """Loads all definitions from disk and returns them"""
         return visuals.load(
             "dashboards",
-            builtin_dashboards,
+            builtin_dashboard_extender_registry[cmk_version.edition(paths.omd_root).short].callable(
+                builtin_dashboards, active_config
+            ),
             _internal_dashboard_to_runtime_dashboard,
         )
 
@@ -78,6 +86,11 @@ def save_all_dashboards() -> None:
     visuals.save("dashboards", get_all_dashboards())
 
 
+def save_and_replicate_all_dashboards(back: str = "edit_dashboards.py") -> None:
+    save_all_dashboards()
+    user_profile_async_replication_page(back_url=request.get_url_input("back", back))
+
+
 def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
 
@@ -90,32 +103,17 @@ def get_permitted_dashboards_by_owners() -> dict[DashboardName, dict[UserId, Das
     return DashboardStore.get_instance().permitted_by_owner
 
 
-def load_dashboard_with_cloning(
+def load_dashboard(
     permitted_dashboards: dict[DashboardName, DashboardConfig],
     name: DashboardName,
-    edit: bool = True,
 ) -> DashboardConfig:
-    all_dashboards = get_all_dashboards()
-    board = visuals.get_permissioned_visual(
+    return visuals.get_permissioned_visual(
         name,
         request.get_validated_type_input(UserId, "owner"),
         "dashboard",
         permitted_dashboards,
-        all_dashboards,
+        get_all_dashboards(),
     )
-    if edit and board["owner"] == UserId.builtin():
-        # Trying to edit a built-in dashboard results in doing a copy
-        active_user = user.id
-        assert active_user is not None
-        board = copy.deepcopy(board)
-        board["owner"] = active_user
-        board["public"] = False
-
-        all_dashboards[(active_user, name)] = board
-        permitted_dashboards[name] = board
-        save_all_dashboards()
-
-    return board
 
 
 def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
@@ -133,4 +131,4 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
 def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None:
     dashboard["dashlets"].append(dashlet_spec)
     dashboard["mtime"] = int(time.time())
-    save_all_dashboards()
+    save_and_replicate_all_dashboards()

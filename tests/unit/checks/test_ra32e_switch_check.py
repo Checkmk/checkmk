@@ -68,7 +68,7 @@ def test_ra32e_switch_discovery(info: StringTable, result: Sequence[tuple[str, N
 
 def test_ra32e_switch_check_closed_no_rule() -> None:
     check = Check(RA32E_SWITCH)
-    result = BasicCheckResult(*check.run_check("Sensor 01", None, [["1"]]))
+    result = BasicCheckResult(*check.run_check("Sensor 01", {"state": "ignore"}, [["1"]]))
 
     assert result.status == 0
     assert result.infotext.startswith("closed")

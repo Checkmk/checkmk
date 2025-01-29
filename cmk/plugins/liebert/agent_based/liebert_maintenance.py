@@ -10,12 +10,13 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    render,
     Result,
     Service,
     SimpleSNMPSection,
@@ -62,10 +63,12 @@ def check_liebert_maintenance(params: Mapping[str, Any], section: Section) -> Ch
     time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()
 
     warn_days, crit_days = params["levels"]
-    yield from check_levels(
+    yield from check_levels_v1(
         time_left_seconds,
         levels_lower=(warn_days * 86400, crit_days * 86400),
-        render_func=render.timespan,
+        render_func=lambda s: (
+            f"{int(s // 86400)} days" if s > 0 else f"{int(-s // 86400)} days overdue"
+        ),
     )
 
 

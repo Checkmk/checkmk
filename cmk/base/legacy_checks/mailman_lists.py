@@ -4,10 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_mailman_lists(info):
@@ -27,6 +40,7 @@ def parse_mailman_lists(string_table: StringTable) -> StringTable:
 
 
 check_info["mailman_lists"] = LegacyCheckDefinition(
+    name="mailman_lists",
     parse_function=parse_mailman_lists,
     service_name="Mailinglist %s",
     discovery_function=inventory_mailman_lists,

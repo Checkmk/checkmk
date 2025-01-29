@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Migrate legacy checks.
 
-This tool will modify legacy check plugins in place, to make them use the API `cmk.agent_based.v2`.
+This tool will modify legacy check plug-ins in place, to make them use the API `cmk.agent_based.v2`.
 It requires you to install the python library `libcst`.
-It does not require, but will attempt to call `autoflake`, `scripts/run-black` and `scripts/run-isort` on the modified file(s).
+It does not require, but will attempt to call `autoflake`, `scripts/run-format` and `scripts/run-sort` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.
 
 It's a quick and dirty, untested hacky thing.
 """
+
 import argparse
 import subprocess
 import sys
@@ -19,6 +20,17 @@ from pathlib import Path
 from typing import Final, Literal
 
 import libcst as cst
+
+# just add whatever we might need, we'll remove the unused ones later
+_ADDED_IMPORTS = (
+    "from collections.abc import Iterable, Mapping",
+    "from typing import Any",
+    "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!",
+    (
+        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
+        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin"
+    ),
+)
 
 
 def _is_service(expr: cst.BaseExpression) -> bool:
@@ -91,7 +103,6 @@ def _make_metrics(metric_list: cst.BaseExpression) -> Iterable[cst.Call | cst.Fr
 
 
 def _make_single_metric(element: cst.BaseExpression) -> cst.Call | cst.Name:
-
     def _make_levels_kwarg(w: cst.BaseExpression, c: cst.BaseExpression) -> Iterable[cst.Arg]:
         if (
             isinstance(w, cst.Name)
@@ -167,15 +178,7 @@ class AddImportsTransformer(cst.CSTTransformer):
             self.added_import = True
             return cst.FlattenSentinel(
                 [
-                    cst.parse_statement("from collections.abc import Iterable, Mapping"),
-                    cst.parse_statement("from typing import Any"),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!"
-                    ),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
-                        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin",
-                    ),
+                    *(cst.parse_statement(statement) for statement in _ADDED_IMPORTS),
                     updated_node,
                 ]
             )
@@ -725,7 +728,6 @@ def _try_to_run(*command_items: object) -> None:
 
 
 def main(argv: Sequence[str]) -> None:
-
     args = parse_arguments(argv)
 
     for file in (Path(p) for p in args.files):
@@ -738,8 +740,8 @@ def main(argv: Sequence[str]) -> None:
                 raise
 
     _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
-    _try_to_run("scripts/run-isort", *args.files)
-    _try_to_run("scripts/run-black", *args.files)
+    _try_to_run("scripts/run-sort", *args.files)
+    _try_to_run("scripts/run-format", *args.files)
 
 
 if __name__ == "__main__":

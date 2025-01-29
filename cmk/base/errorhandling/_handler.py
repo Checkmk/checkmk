@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-import cmk.utils.debug
-from cmk.utils.exceptions import (
+import cmk.ccc.debug
+from cmk.ccc.exceptions import (
     MKAgentError,
     MKFetcherError,
     MKGeneralException,
@@ -16,6 +16,7 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -90,15 +91,15 @@ def _handle_failure(
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc
-        return exit_spec.get("timeout", 2), "Timed out\n"
+        return exit_spec.get("timeout", 2), "Timed out"
 
     if isinstance(exc, (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError)):
-        return exit_spec.get("connection", 2), f"{exc}\n"
+        return exit_spec.get("connection", 2), str(exc)
 
     if isinstance(exc, MKGeneralException):
-        return exit_spec.get("exception", 3), f"{exc}\n"
+        return exit_spec.get("exception", 3), str(exc)
 
-    if cmk.utils.debug.enabled():
+    if cmk.ccc.debug.enabled():
         raise exc
     return (
         exit_spec.get("exception", 3),

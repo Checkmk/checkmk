@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_ddn_s2a_uptime(string_table):
@@ -31,8 +33,9 @@ def check_ddn_s2a_uptime(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_uptime"] = LegacyCheckDefinition(
+    name="ddn_s2a_uptime",
     parse_function=parse_ddn_s2a_uptime,
-    service_name="DDN S2A Power-On Time",  # We don't use "Uptime" as a service description here,
+    service_name="DDN S2A Power-On Time",  # We don't use "Uptime" as a service name here,
     # because this value is different from the uptime value
     # supplied via SNMP.,
     discovery_function=inventory_ddn_s2a_uptime,

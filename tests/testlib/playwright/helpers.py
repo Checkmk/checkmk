@@ -7,6 +7,7 @@
 
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
 from pprint import pformat
 from re import Pattern
@@ -51,7 +52,13 @@ class LocatorHelper(ABC):
 
     def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""
-        expect(self.locator("div.error")).to_have_text(message)
+        expect(self.locator("div.error"), "Invalid text in the error message box.").to_have_text(
+            message
+        )
+
+    def get_error_text(self) -> str | None:
+        """get error text content"""
+        return self.locator("div.error").text_content()
 
     def check_warning(self, message: str | Pattern) -> None:
         """check for a warning div and its content"""
@@ -149,5 +156,18 @@ class Keys(Enum):
 
 
 class CmkCredentials(NamedTuple):
+    """Credentials to a Checkmk site."""
+
     username: str
     password: str
+
+
+@dataclass
+class DropdownListNameToID:
+    """Common Checkmk UI mapping between `dropdown list`s and `menu ID`s."""
+
+    Commands: str = "menu_commands"
+    Display: str = "menu_display"
+    Export: str = "menu_export"
+    Help: str = "menu_help"
+    Related: str = "menu_related"

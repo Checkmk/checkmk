@@ -14,7 +14,9 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    Result,
     Service,
+    State,
     StringTable,
 )
 from cmk.plugins.lib.temperature import (
@@ -152,31 +154,41 @@ def _check_netapp_ontap_temp(
     if not (sensors := section.get(item)):
         return
 
-    checksensors: Sequence[TemperatureSensor] = [
-        TemperatureSensor(
-            id=sensor.item_name(),
-            temp=sensor.temperature,
-            result=check_temperature(
-                sensor.temperature,
-                params,
-                dev_levels=parse_levels(
-                    (
-                        sensor.high_warning,
-                        sensor.high_critical,
-                    )
-                ),
-                dev_levels_lower=parse_levels(
-                    (
-                        sensor.low_warning,
-                        sensor.low_critical,
-                    )
-                ),
-            ).reading,
-        )
-        for sensor in sensors
-    ]
+    checksensors = []
+    for sensor in sensors:
+        if sensor.state == "ok":
+            assert sensor.temperature is not None
+            checksensors.append(
+                TemperatureSensor(
+                    id=sensor.item_name(),
+                    temp=sensor.temperature,
+                    result=check_temperature(
+                        sensor.temperature,
+                        params,
+                        dev_levels=parse_levels(
+                            (
+                                sensor.high_warning,
+                                sensor.high_critical,
+                            )
+                        ),
+                        dev_levels_lower=parse_levels(
+                            (
+                                sensor.low_warning,
+                                sensor.low_critical,
+                            )
+                        ),
+                    ).reading,
+                )
+            )
 
     yield from aggregate_temperature_results(checksensors, params, value_store)
+    failed_sensors = [s for s in sensors if s.state != "ok"]
+    if failed_sensors:
+        failed_sensor_names = ", ".join(s.item_name() for s in failed_sensors)
+        yield Result(
+            state=State.CRIT,
+            summary=f"Additional failed sensors: {len(failed_sensors)} ({failed_sensor_names})",
+        )
 
 
 def check_netapp_ontap_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:

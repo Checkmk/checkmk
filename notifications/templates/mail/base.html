@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html style="background-color: #EAEAEA;">
+    <head>
+        <title>HTML Email template</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        {% import 'macros.html' as macros %}
+        {% set service_notification = data.WHAT == 'SERVICE' %}
+        {% if service_notification %}
+            {% set href = data.LINKEDSERVICEDESC.split('"')[1] %}
+        {% else %}
+            {% set href = data.LINKEDHOSTNAME.split('"')[1] %}
+        {% endif %}
+        {% if data.PARAMETER_ELEMENTSS %}
+            {% set elements = data.PARAMETER_ELEMENTSS.split() %}
+        {% else %}
+            {% set elements = ["graph"] %}
+        {% endif %}
+        {% set elements_to_ignore = ["graph", "abstime", "longoutput"] %}
+        {% set elements_without_graph = elements | reject("in", elements_to_ignore) | list %}
+        {% set state_mapping = {
+            "OK": "background-color: #13D389; color: #000000;",
+            "UP": "background-color: #13D389; color: #000000;",
+            "WARNING": "background-color: #FFD703; color: #000000;",
+            "CRITICAL": "background-color: #C83232; color: #ffffff;",
+            "DOWN": "background-color: #C83232; color: #ffffff;",
+            "UNKNOWN": "background-color: #ff8800; color: #ffffff;",
+            "UNREACHABLE": "background-color: #ff8800; color: #ffffff;",
+            "PENDING": "background-color: #888888; color: #ffffff;"
+        } %}
+        <table width="100%" style=" border-collapse: collapse; ">
+            <tr>
+                <td align="center" style="padding: 20px;">
+                    <table width="100%"
+                           align="center"
+                           style="max-width: 600px;
+                                  min-width: 220px;
+                                  border: 1px solid #ccc;
+                                  border-collapse: collapse;
+                                  background-color: #ffffff">
+                        {{ macros.margin_tr() }}
+                        <tr>
+                            <td align="center" style="padding: 8px;">
+                                {% if not is_bulk or bulk_summary %}
+                                    <table align="center" style=" border-collapse: collapse; width: 100%; min-width: 220px;
+                                        max-width: 536px"">
+                                        <tr>
+                                            <td>
+                                                <img src="cid:checkmk_logo.png"
+                                                     alt="Checkmk Logo"
+                                                     style="display: block;
+                                                            width: 110px;
+                                                            height: 30px;
+                                                            border: 0" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table align="center"
+                                           width="100%"
+                                           style="min-width: 220px;
+                                                  max-width: 536px">
+                                        <tr>
+                                            <td style="padding: 5px 0 20px 0;">
+                                                <table width="100%">
+                                                    <tr>
+                                                        <td style="border-bottom: 1px solid #e5e5e5;
+                                                                   height: 1px;
+                                                                   line-height: 1px;
+                                                                   mso-line-height-rule: exactly">
+                                                            <!--[if mso]>
+                                                                <div style=" border-bottom: 1px solid #e5e5e5; width: 536px; height: 1px; line-height: 1px; mso-line-height-rule: exactly; ">
+                                                                    &nbsp;
+                                                                </div>
+                                                            <![endif]-->
+                                                            <span style="display: block; width: 100%; height: 1px; line-height: 1px">&nbsp;</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                {% endif %}
+                                {% if bulk_summary %}
+                                    {% include 'bulk.html' %}
+                                {% endif %}
+                                {% if insert %}
+                                    <table align="center"
+                                           width="100%"
+                                           style="margin-top: 16px;
+                                                  border: 1px solid #e5e5e5;
+                                                  min-width: 220px;
+                                                  max-width: 536px;
+                                                  border-radius: 4px 0 0 0">
+                                        <tr>
+                                            <td>
+                                                <div style="padding: 20px;">{{ insert | safe }}</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                {% endif %}
+                                {% if data.NOTIFICATIONTYPE in ["PROBLEM", "RECOVERY"] %}
+                                    {% include 'summary.html' %}
+                                {% else %}
+                                    {% include 'summary_commands.html' %}
+                                {% endif %}
+                                {% include 'event_overview.html' %}
+                                {% if graphs and 'graph' in elements %}
+                                    {% include 'graph.html' %}
+                                {% endif %}
+                                {% if elements_without_graph %}
+                                    {% include 'additional.html' %}
+                                {% endif %}
+                                {% if data.PARAMETER_CONTACT_GROUPS %}
+                                    {% include 'contact_groups.html' %}
+                                {% endif %}
+                                {% if service_notification and data.PARAMETER_SVC_LABELS %}
+                                    {% include 'service_labels.html' %}
+                                {% endif %}
+                                {% if data.PARAMETER_HOST_LABELS %}
+                                    {% include 'host_labels.html' %}
+                                {% endif %}
+                                {% if data.PARAMETER_HOST_TAGS %}
+                                    {% include 'host_tags.html' %}
+                                {% endif %}
+                                {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
+                                {% if data.PARAMETER_NOTIFICATION_RULE %}
+                                    {% include 'matching_rule.html' %}
+                                {% endif %}
+                                <td>
+                                </tr>
+                                {{ macros.margin_tr() }}
+                                {{ macros.margin_tr() }}
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                {% if not is_bulk or last_bulk_entry %}
+                    <table align="center" style="margin: 0 auto;">
+                        <tr>
+                            <td>
+                                <p style="text-align: center; margin: 0; color: #23496d">
+                                  Checkmk GmbH, Kellerstraße 27, Munich, Germany
+                                  <br>
+                                  <br>
+                                  You have received this e-mail because you are subscribed to notifications for this event.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                {% endif %}
+            </body>
+        </html>

@@ -18,6 +18,7 @@ public:
         : contact_group_{contact_group} {}
 
     [[nodiscard]] bool isMember(const IContact &contact) const override {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
         const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)

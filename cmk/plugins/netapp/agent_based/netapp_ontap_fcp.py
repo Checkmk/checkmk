@@ -8,7 +8,8 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -93,7 +94,7 @@ def parse_netapp_ontap_fc_ports(
     return {
         f"{fc_port.node_name}.{fc_port.name}": fc_port
         for vol in string_table
-        if (fc_port := models.FcPortModel.model_validate_json(vol[0]))
+        for fc_port in [models.FcPortModel.model_validate_json(vol[0])]
     }
 
 
@@ -109,7 +110,7 @@ def parse_netapp_ontap_fc_interfaces_counters(
     return {
         counter_obj.port_wwpn: counter_obj
         for line in string_table
-        if (counter_obj := models.FcInterfaceTrafficCountersModel.model_validate_json(line[0]))
+        for counter_obj in [models.FcInterfaceTrafficCountersModel.model_validate_json(line[0])]
     }
 
 
@@ -230,7 +231,7 @@ def _io_bytes_results(
                 label=descr,
             )
         else:
-            yield from check_levels(
+            yield from check_levels_v1(
                 value=value,
                 metric_name=what,
                 levels_upper=levels.upper or None,
@@ -256,7 +257,7 @@ def _io_ops_results(
         if value is None:
             continue
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value=value, metric_name=what, render_func=str, label=descr, notice_only=True
         )
 
@@ -291,7 +292,7 @@ def _latency_results(
                 value=value, metric_name=f"{what}_latency", levels=levels_upper, label=text
             )
         else:
-            yield from check_levels(
+            yield from check_levels_v1(
                 value=value,
                 metric_name=f"{what}_latency",
                 levels_upper=levels_upper,

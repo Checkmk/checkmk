@@ -1,5 +1,10 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 import { fileURLToPath, URL } from 'node:url'
-
+import { type RollupLog } from 'rollup'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -22,38 +27,59 @@ export default defineConfig(({ command }) => {
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend/', import.meta.url))
       }
     },
     build: {
+      manifest: '.manifest.json',
       sourcemap: true,
       rollupOptions: {
+        onwarn: function (message: string | RollupLog) {
+          if (typeof message === 'object') {
+            if (message.code === 'CIRCULAR_DEPENDENCY') {
+              const external_circular_dependency = message.ids!.filter((id) =>
+                id.includes('/node_modules/')
+              )
+              if (external_circular_dependency.length === message.ids!.length) {
+                // its a circular dependency completely in node_modules folder, so we ignore it
+                return
+              }
+            }
+            console.warn(message.message)
+          } else {
+            console.warn(message)
+          }
+          if (command === 'build') {
+            throw new Error('no warnings allowed!')
+          }
+        },
         input: {
-          'vue_min.js': './src/main.ts',
-          'vue_stage1.js': './src/vue_stage1.ts'
-        },
-        output: {
-          // the Checkmk site does not support dynamic filenames for assets.
-          // we can not rename the file, otherwise the sourcemap would no longer match.
-          entryFileNames: 'assets/[name]'
-        },
-        external: [
-          // treat all themes files as external to the build
-          // so the build process will ignore them
-          /themes\/.*/
-        ]
+          'main.js': './src/main.ts',
+          'stage1.js': './src/stage1.ts'
+        }
       }
-    }
+    },
+    base: ''
   }
-  if (command == 'build') {
+  if (command === 'build') {
     return resultBuild
   } else {
     console.log(command)
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
+      test: {
+        // enable jest-like global test APIs
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: ['tests/setup-tests.ts']
+      },
       server: {
         strictPort: true,
+        fs: {
+          allow: ['.', '../cmk-frontend/']
+        },
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading
           '^(?!/cmk-frontend-vue-ahr)': 'http://localhost/'

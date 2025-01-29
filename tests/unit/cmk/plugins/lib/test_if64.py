@@ -31,6 +31,7 @@ def test_generic_parse_if64() -> None:
                 "0",
                 "** Trunk to main switch **",
                 [0, 12, 206, 149, 55, 128],
+                "1",
             ],
             [
                 "3",
@@ -67,6 +68,7 @@ def test_generic_parse_if64() -> None:
                 out_qlen=0,
                 phys_address=[0, 12, 206, 149, 55, 128],
                 oper_status_name="up",
+                admin_status="1",
             ),
             interfaces.Counters(
                 in_octets=615170130480,

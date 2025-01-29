@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions to work with persisted values"""
 
-
-# pylint: disable=duplicate-code
-
-
 from collections.abc import MutableMapping
 from typing import Any, cast
 
@@ -96,8 +92,7 @@ def get_rate(  # type: ignore[misc]
             pass
         case _other:
             raise GetRateError(
-                f"Counter {key!r} has been initialized."
-                " Result available on second check execution."
+                f"Counter {key!r} has been initialized. Result available on second check execution."
             )
 
     if time <= last_time:

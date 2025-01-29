@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<emcvnx_raidgroups>>>
@@ -112,6 +114,7 @@ def parse_emcvnx_raidgroups(info):
 
 
 check_info["emcvnx_raidgroups"] = LegacyCheckDefinition(
+    name="emcvnx_raidgroups",
     parse_function=parse_emcvnx_raidgroups,
 )
 
@@ -140,6 +143,7 @@ def check_emcvnx_raidgroups_list_luns(item, _no_params, section):
 
 
 check_info["emcvnx_raidgroups.list_luns"] = LegacyCheckDefinition(
+    name="emcvnx_raidgroups_list_luns",
     service_name="RAID Group %s LUNs",
     sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups,
@@ -177,6 +181,7 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, section):
 
 
 check_info["emcvnx_raidgroups.list_disks"] = LegacyCheckDefinition(
+    name="emcvnx_raidgroups_list_disks",
     service_name="RAID Group %s Disks",
     sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups,
@@ -230,6 +235,7 @@ def check_emcvnx_raidgroups_capacity(item, params, section):
 
 
 check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
+    name="emcvnx_raidgroups_capacity",
     service_name="RAID Group %s Capacity",
     sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups_capacity,
@@ -283,6 +289,7 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, section):
 
 
 check_info["emcvnx_raidgroups.capacity_contiguous"] = LegacyCheckDefinition(
+    name="emcvnx_raidgroups_capacity_contiguous",
     service_name="RAID Group %s Capacity Contiguous",
     sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups_capacity_contiguous,

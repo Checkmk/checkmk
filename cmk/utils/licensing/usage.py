@@ -19,8 +19,11 @@ from uuid import UUID
 
 import livestatus
 
-import cmk.utils.store as store
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
+from cmk.utils import paths
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -38,7 +41,6 @@ from cmk.utils.licensing.helper import (
     rot47,
 )
 from cmk.utils.paths import licensing_dir, omd_root
-from cmk.utils.site import omd_site
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
@@ -158,13 +160,13 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     cloud_counter = _get_cloud_counter()
     synthetic_monitoring_counter = _get_synthetic_monitoring_counter()
 
-    general_infos = cmk_version.get_general_version_infos()
+    general_infos = cmk_version.get_general_version_infos(omd_root)
     extensions = _load_extensions()
 
     return LicenseUsageSample(
         instance_id=instance_id,
         site_hash=site_hash,
-        version=cmk_version.omd_version(),
+        version=cmk_version.omd_version(paths.omd_root),
         edition=general_infos["edition"],
         platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),
@@ -204,17 +206,12 @@ class HostsOrServicesCounter(NamedTuple):
 def _get_hosts_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET hosts\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 2\n"
-                "Stats: check_type = 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET hosts\n"
+            "Stats: host_check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 2\n"
+            "Stats: check_type = 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
         )
     )
 
@@ -222,23 +219,18 @@ def _get_hosts_counter() -> HostsOrServicesCounter:
 def _get_services_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET services\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "Stats: service_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 4\n"
-                "Stats: host_check_type = 2\n"
-                "Stats: check_type = 2\n"
-                "StatsAnd: 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-                "Stats: service_labels = '{label_name}' '{label_value}'\n"
-                "StatsOr: 2\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET services\n"
+            "Stats: host_check_type != 2\n"
+            "Stats: check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 4\n"
+            "Stats: host_check_type = 2\n"
+            "Stats: check_type = 2\n"
+            "StatsAnd: 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsOr: 2\n"
         )
     )
 
@@ -420,6 +412,12 @@ def save_extensions(extensions: LicenseUsageExtensions) -> None:
         )
 
 
+def _parse_extensions(raw: object) -> LicenseUsageExtensions:
+    if isinstance(raw, dict):
+        return LicenseUsageExtensions(ntop=raw.get("ntop", False))
+    raise TypeError("Wrong extensions type: %r" % type(raw))
+
+
 def _load_extensions() -> LicenseUsageExtensions:
     extensions_file_path = _get_extensions_file_path()
     with store.locked(extensions_file_path):
@@ -429,7 +427,7 @@ def _load_extensions() -> LicenseUsageExtensions:
                 default=b"{}",
             )
         )
-    return LicenseUsageExtensions.parse(raw_extensions)
+    return _parse_extensions(raw_extensions)
 
 
 # .

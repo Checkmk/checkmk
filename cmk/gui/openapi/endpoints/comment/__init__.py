@@ -23,6 +23,7 @@ Related documentation
 """
 
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from livestatus import SiteId
@@ -76,6 +77,10 @@ def _serialize_comment(comment: Comment) -> DomainObject:
     if "site" in dict_comment:
         dict_comment["site_id"] = dict_comment.pop("site")
 
+    dict_comment["entry_time"] = (
+        datetime.strptime(dict_comment["entry_time"], "%b %d %Y %H:%M:%S").isoformat() + "+00:00"
+    )
+
     return constructors.domain_object(
         domain_type="comment",
         identifier=str(comment.id),
@@ -106,7 +111,7 @@ COLLECTION_NAME = {
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist",
         example="Memory",
         required=False,
@@ -141,7 +146,11 @@ OPTIONAL_SITE_ID = {
 
 
 class GetCommentsByQuery(BaseSchema):
-    query = gui_fields.query_field(Comments, required=False)
+    query = gui_fields.query_field(
+        Comments,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 @Endpoint(
@@ -235,13 +244,14 @@ def create_host_comment(params: Mapping[str, Any]) -> Response:
     match body["comment_type"]:
         case "host":
             site_id = utils.get_site_id_for_host(live_connection, body["host_name"])
-            comment_cmds.add_host_comment(
-                connection=live_connection,
-                host_name=body["host_name"],
-                comment_txt=body["comment"],
-                site_id=site_id,
-                persistent=body["persistent"],
-                user=user.ident,
+            live_connection.command_obj(
+                comment_cmds.AddHostComment(
+                    host_name=body["host_name"],
+                    user=user.ident,
+                    comment=body["comment"],
+                    persistent=body["persistent"],
+                ),
+                site_id,
             )
 
         case "host_group":
@@ -253,7 +263,7 @@ def create_host_comment(params: Mapping[str, Any]) -> Response:
                 comment_cmds.add_host_comment_by_query(
                     connection=live_connection,
                     query=body["query"],
-                    comment_txt=body["comment"],
+                    comment=body["comment"],
                     user=user.ident,
                     persistent=body["persistent"],
                 )
@@ -315,7 +325,7 @@ def create_service_comment(params: Mapping[str, Any]) -> Response:
             except CommentQueryException:
                 return problem(
                     status=400,
-                    title="The query did not match any service descriptions",
+                    title="The query did not match any service names",
                     detail="The provided query returned an empty list so no comment was created",
                 )
 

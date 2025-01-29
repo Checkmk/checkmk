@@ -15,7 +15,7 @@ namespace a = column::attribute_list;
 
 class AttributeBitTestFixture : public ::testing::TestWithParam<unsigned long> {
 protected:
-    unsigned long mask;
+    unsigned long mask{};
 };
 
 TEST_P(AttributeBitTestFixture, IdentityNumeric) {
@@ -27,8 +27,8 @@ TEST_P(AttributeBitTestFixture, IdentityString) {
     auto mask = GetParam();
     auto bit_v = a::encode(mask);
     std::vector<std::string> strs{};
-    std::transform(bit_v.begin(), bit_v.end(), std::back_inserter(strs),
-                   column::detail::serialize<a::AttributeBit>);
+    std::ranges::transform(bit_v, std::back_inserter(strs),
+                           column::detail::serialize<a::AttributeBit>);
 
     EXPECT_EQ(mask, a::decode(a::encode(strs)));
 }

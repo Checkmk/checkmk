@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# example output
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5027 Supply Humidity
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5027 Unavailable
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5027 % RH
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5028 Return Humidity
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
+# .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
+
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.liebert.agent_based.lib import (
+    DETECT_LIEBERT,
+    parse_liebert,
+    Section,
+    SystemSection,
+)
+
+LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
+    "levels": (50.0, 55.0),
+    "levels_lower": (10.0, 15.0),
+}
+
+
+def _item_from_key(key: str) -> str:
+    return key.replace(" Humidity", "")
+
+
+def _get_item_data(
+    item: str,
+    section: Section[str],
+) -> tuple:
+    for key, data in section.items():
+        if _item_from_key(key) == item:
+            return data
+    return (None, None)
+
+
+def parse_liebert_humidity_air(string_table: Sequence[StringTable]) -> Section[str]:
+    return parse_liebert(string_table, str)
+
+
+def discover_liebert_humidity_air(
+    section_liebert_humidity_air: Section[str] | None,
+    section_liebert_system: SystemSection | None,
+) -> DiscoveryResult:
+    if section_liebert_humidity_air is None:
+        return
+
+    for key, (value, _unit) in section_liebert_humidity_air.items():
+        if "Unavailable" not in value:
+            yield Service(item=_item_from_key(key))
+
+
+def check_liebert_humidity_air(
+    item: str,
+    params: Mapping[str, Any],
+    section_liebert_humidity_air: Section[str] | None,
+    section_liebert_system: SystemSection | None,
+) -> CheckResult:
+    if section_liebert_humidity_air is None or section_liebert_system is None:
+        return
+
+    value, unit = _get_item_data(item, section_liebert_humidity_air)
+    if value is None:
+        return
+
+    device_state = section_liebert_system.get("Unit Operating State")
+    if "Unavailable" in value and device_state == "standby":
+        yield Result(state=State.OK, summary="Unit is in standby (unavailable)")
+        return
+
+    try:
+        value = float(value)
+    except ValueError:
+        return
+
+    yield from check_levels_v1(
+        value=value,
+        metric_name="humidity",
+        levels_upper=params["levels"],
+        levels_lower=params["levels_lower"],
+        render_func=lambda retval: f"{retval:.2f} {unit}",
+        boundaries=(0, None),
+    )
+
+
+snmp_section_liebert_humidity_air = SNMPSection(
+    name="liebert_humidity_air",
+    detect=DETECT_LIEBERT,
+    parse_function=parse_liebert_humidity_air,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
+            oids=[
+                "10.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+                "10.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            ],
+        ),
+    ],
+)
+
+check_plugin_liebert_humidity_air = CheckPlugin(
+    name="liebert_humidity_air",
+    sections=["liebert_humidity_air", "liebert_system"],
+    service_name="%s Humidity",
+    discovery_function=discover_liebert_humidity_air,
+    check_function=check_liebert_humidity_air,
+    check_default_parameters=LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS,
+    check_ruleset_name="humidity",
+)

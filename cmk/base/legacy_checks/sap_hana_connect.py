@@ -7,10 +7,10 @@
 import re
 from collections.abc import Callable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.plugins.lib import sap_hana
 
-import cmk.plugins.lib.sap_hana as sap_hana
+check_info = {}
 
 _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
     "Worker: OK": (0, lambda inp: inp == "0"),
@@ -71,6 +71,7 @@ def discover_sap_hana_connect(section):
 
 
 check_info["sap_hana_connect"] = LegacyCheckDefinition(
+    name="sap_hana_connect",
     parse_function=parse_sap_hana_connect,
     service_name="SAP HANA CONNECT %s",
     discovery_function=discover_sap_hana_connect,

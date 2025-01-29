@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.crypto.password import PasswordHash
-from cmk.utils.store.htpasswd import Entries, Htpasswd
 from cmk.utils.user import UserId
+
+from cmk.gui.utils.htpasswd import Entries, Htpasswd
+
+from cmk.crypto.password_hashing import PasswordHash
 
 
 @pytest.fixture(name="htpasswd_file")

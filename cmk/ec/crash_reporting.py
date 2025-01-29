@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Event console specific crash report."""
 
-import cmk.utils.crash_reporting
+import cmk.ccc.crash_reporting
 
-CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
+CrashReportStore = cmk.ccc.crash_reporting.CrashReportStore
 
 
-@cmk.utils.crash_reporting.crash_report_registry.register
-class ECCrashReport(cmk.utils.crash_reporting.ABCCrashReport):
+@cmk.ccc.crash_reporting.crash_report_registry.register
+class ECCrashReport(cmk.ccc.crash_reporting.ABCCrashReport[cmk.ccc.crash_reporting.VersionInfo]):
     @classmethod
     def type(cls) -> str:
         return "ec"

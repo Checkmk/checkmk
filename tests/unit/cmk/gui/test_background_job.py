@@ -4,38 +4,41 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import multiprocessing
-import sys
+import threading
 import time
+from collections.abc import Iterator, Sequence
+from pathlib import Path
 
 import pytest
+from opentelemetry import trace as otel_trace
+from pydantic import BaseModel
 
 from tests.testlib.utils import wait_until
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.log
-from cmk.gui import config
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobDefines,
+    BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
     JobStatusStates,
+    JobTarget,
+    NoArgs,
+    running_job_ids,
+    simple_job_target,
+    wait_for_background_jobs,
 )
-from cmk.gui.logged_in import user
 
+from cmk.trace import get_tracer, init_tracing, ReadableSpan
+from cmk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 
-@pytest.fixture(autouse=True)
-def debug_logging(load_config):
-    cmk.gui.log.set_log_levels(
-        {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
-    )
-    yield
-    cmk.gui.log.set_log_levels(config.active_config.log_levels)
+tracer = get_tracer()
 
 
 def test_registered_background_jobs() -> None:
@@ -50,21 +53,17 @@ def test_registered_background_jobs() -> None:
         "UserSyncBackgroundJob",
         "UserProfileCleanupBackgroundJob",
         "ServiceDiscoveryBackgroundJob",
-        "ActivationCleanupBackgroundJob",
         "CheckmkAutomationBackgroundJob",
         "DiagnosticsDumpBackgroundJob",
         "SearchIndexBackgroundJob",
         "SpecGeneratorBackgroundJob",
-        "DiscoveredHostLabelSyncJob",
-        "SyncRemoteSitesBackgroundJob",
-        "HostRemovalBackgroundJob",
         "AutodiscoveryBackgroundJob",
+        "QuickSetupStageActionBackgroundJob",
+        "QuickSetupActionBackgroundJob",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         expected_jobs += [
-            "HostRegistrationBackgroundJob",
-            "DiscoverRegisteredHostsBackgroundJob",
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",
             "ReportingBackgroundJob",
@@ -101,26 +100,25 @@ class DummyBackgroundJob(BackgroundJob):
     job_prefix = "dummy_job"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return "Dummy Job"
 
     def __init__(self) -> None:
-        self.finish_hello_event = multiprocessing.Event()
+        self.finish_hello_event = threading.Event()
 
         super().__init__(self.job_prefix)
 
-    def execute_hello(self, job_interface):
-        sys.stdout.write("Hallo :-)\n")
-        sys.stdout.flush()
+    def execute_hello(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+        job_interface.send_progress_update("Hallo :-)")
         self.finish_hello_event.wait()
 
-    def execute_endless(self, job_interface):
-        sys.stdout.write("Hanging loop\n")
-        sys.stdout.flush()
-        time.sleep(100)
+    def execute_endless(self, job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+        job_interface.send_progress_update("Hanging loop")
+        while not job_interface.stop_event.is_set():
+            time.sleep(0.1)
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
 def test_start_job() -> None:
     job = DummyBackgroundJob()
 
@@ -128,26 +126,26 @@ def test_start_job() -> None:
     assert status.state == JobStatusStates.INITIALIZED
 
     job.start(
-        job.execute_hello,
+        simple_job_target(job.execute_hello),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
+        override_job_log_level=logging.DEBUG,
     )
-    wait_until(job.is_active, timeout=5, interval=0.1)
+    wait_until(job.is_active, timeout=10, interval=0.1)
 
-    with pytest.raises(BackgroundJobAlreadyRunning):
-        job.start(
-            job.execute_hello,
-            InitialStatusArgs(
-                title=job.gui_title(),
-                deletable=False,
-                stoppable=True,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+    assert job.start(
+        simple_job_target(job.execute_hello),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    ).is_error()
     assert job.is_active()
 
     job.finish_hello_event.set()
@@ -155,7 +153,7 @@ def test_start_job() -> None:
     wait_until(
         lambda: job.get_status().state
         not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -163,26 +161,28 @@ def test_start_job() -> None:
     assert status.state == JobStatusStates.FINISHED
 
     output = "\n".join(status.loginfo["JobProgressUpdate"])
+    # Make sure we get the generic background job output
     assert "Initialized background job" in output
+    # Make sure we get the job specific output
     assert "Hallo :-)" in output
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
 
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -217,21 +217,21 @@ def test_job_status_not_started() -> None:
     assert job.get_title() == "Background job"
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=10,
         interval=0.1,
     )
 
@@ -250,21 +250,21 @@ def test_job_status_while_running() -> None:
     job.stop()
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
     job.start(
-        job.execute_endless,
+        simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
             deletable=False,
             stoppable=True,
-            user=str(user.id) if user.id else None,
+            user=None,
         ),
     )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
-        timeout=5,
+        timeout=20,
         interval=0.1,
     )
     job.stop()
@@ -284,3 +284,222 @@ def test_job_status_after_stop() -> None:
     assert job.exists() is True
     assert job.get_job_id() == "dummy_job"
     assert job.get_title() == "Dummy Job"
+
+
+def test_running_job_ids_none() -> None:
+    assert not running_job_ids(logging.getLogger())
+
+
+@pytest.mark.usefixtures("allow_background_jobs")
+def test_running_job_ids_one_running() -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        simple_job_target(job.execute_endless),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    try:
+        assert running_job_ids(logging.getLogger()) == ["dummy_job"]
+    finally:
+        job.stop()
+
+
+@pytest.mark.usefixtures("allow_background_jobs")
+def test_wait_for_background_jobs_while_one_running_for_too_long(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        simple_job_target(job.execute_endless),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    try:
+        with caplog.at_level(logging.INFO):
+            try:
+                job_registry.register(DummyBackgroundJob)
+                wait_for_background_jobs(logging.getLogger(), timeout=1)
+            finally:
+                job_registry.unregister("DummyBackgroundJob")
+
+        logs = [rec.message for rec in caplog.records]
+        assert "Waiting for dummy_job to finish..." in logs
+        assert "WARNING: Did not finish within 1 seconds" in logs
+    finally:
+        job.stop()
+
+
+@pytest.mark.usefixtures("allow_background_jobs")
+def test_wait_for_background_jobs_while_one_running_but_finishes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    job = DummyBackgroundJob()
+    job.start(
+        simple_job_target(job.execute_endless),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    )
+    wait_until(
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
+        timeout=20,
+        interval=0.1,
+    )
+
+    with caplog.at_level(logging.INFO):
+        try:
+            job_registry.register(DummyBackgroundJob)
+            threading.Thread(target=job.stop).start()
+            wait_for_background_jobs(logging.getLogger(), timeout=2)
+        finally:
+            job_registry.unregister("DummyBackgroundJob")
+
+    logs = [rec.message for rec in caplog.records]
+    assert "Waiting for dummy_job to finish..." in logs
+    assert "WARNING: Did not finish within 2 seconds" not in logs
+
+
+# Works with -pno:opentelemetry but not with the plugin
+@pytest.mark.skip(reason="Does not work in all scenarios")
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs", "reset_global_tracer_provider")
+def test_tracing_with_background_job(tmp_path: Path) -> None:
+    terminate_signal_file = tmp_path / "terminate_signal"
+    exporter = InMemorySpanExporter()
+
+    job = DummyBackgroundJob()
+
+    provider = init_tracing(
+        service_namespace="namespace",
+        service_name="service",
+        service_instance_id="instance",
+        extra_resource_attributes={"cmk.ding": "dong"},
+        host_name="myhost",
+    )
+    provider.add_span_processor(BatchSpanProcessor(exporter, export_timeout_millis=3000))
+
+    with tracer.span("test_tracing_with_background_job"):
+        status = job.get_status()
+        assert status.state == JobStatusStates.INITIALIZED
+
+        job.start(
+            JobTarget(
+                callable=job_callback,
+                args=JobArgs(signal_file=terminate_signal_file),
+            ),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+        wait_until(job.is_active, timeout=20, interval=0.1)
+        assert job.is_active()
+
+        terminate_signal_file.touch()
+        try:
+            wait_until(
+                lambda: job.get_status().state
+                not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
+                timeout=20,
+                interval=0.1,
+            )
+        except TimeoutError:
+            raise
+
+        status = job.get_status()
+        output = "\n".join(status.loginfo["JobProgressUpdate"])
+        assert status.state == JobStatusStates.FINISHED, output
+
+    provider.force_flush()
+
+    # Check spans produced in the parent process
+    span_names = [span.name for span in exporter.spans]
+    assert "start_background_job[dummy_job]" in span_names, span_names
+
+    # Check spans produced in the background job
+    assert "job_callback" in span_names
+    assert "run_process[dummy_job]" in span_names
+
+
+@pytest.fixture(name="reset_global_tracer_provider")
+def _fixture_reset_global_tracer_provider() -> Iterator[None]:
+    provider_orig = otel_trace._TRACER_PROVIDER
+    try:
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
+        otel_trace._TRACER_PROVIDER = None
+        yield
+    finally:
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
+        otel_trace._TRACER_PROVIDER = provider_orig
+
+
+class JobArgs(BaseModel, frozen=True):
+    signal_file: Path
+
+
+@tracer.instrument("job_callback")
+def job_callback(job_interface: BackgroundProcessInterface, args: JobArgs) -> None:
+    job_interface.send_progress_update("Hi :-)")
+    while not args.signal_file.exists():
+        time.sleep(0.05)
+
+
+class InMemorySpanExporter(SpanExporter):
+    """Collects spans in memory and provides for inspection"""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._spans: list[ReadableSpan] = []
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        with self._lock:
+            self._spans += spans
+        return SpanExportResult.SUCCESS
+
+    @property
+    def spans(self) -> list[ReadableSpan]:
+        with self._lock:
+            return self._spans
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
+
+class JobSpanExporter(SpanExporter):
+    """Collects span names in the background job directory"""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        for span in spans:
+            with self.path.open("a+") as f:
+                f.write(str(span.name) + "\n")
+        return SpanExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True

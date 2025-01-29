@@ -19,7 +19,7 @@ import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.config import (
     active_config,
     builtin_role_ids,
@@ -257,8 +257,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
     assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
-    assert default_unauthorized_builtin_role_ids == ["agent_registration"]
-    assert builtin_role_ids == ["user", "admin", "guest", "agent_registration"]
+    assert default_unauthorized_builtin_role_ids == ["agent_registration", "no_permissions"]
+    assert builtin_role_ids == ["user", "admin", "guest", "agent_registration", "no_permissions"]
     assert "test" not in active_config.admin_users
 
     with create_and_destroy_user(username="test") as user:

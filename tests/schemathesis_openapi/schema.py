@@ -9,10 +9,11 @@ from re import match
 from typing import Any
 
 import schemathesis
+from requests.structures import CaseInsensitiveDict
 from schemathesis import DataGenerationMethod
 from schemathesis.specs.openapi import schemas
 
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
 
 from tests.schemathesis_openapi import settings
 
@@ -125,12 +126,13 @@ def add_links(
             elif parameter_pattern and parameter_pattern != property_pattern:
                 logger.warning(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
-                    ' "%s" has a different pattern!',
+                    ' "%s" has a different pattern "%s"!',
                     method.upper(),
                     endpoint["target"],
                     parameter_pattern,
                     endpoint["source"],
                     property_id,
+                    property_pattern,
                 )
             schema.add_link(
                 source=schema[endpoint["source"]]["POST"],
@@ -179,7 +181,8 @@ def get_site() -> Iterator[Site]:
 def get_schema() -> schemas.BaseOpenAPISchema:
     """Return schema for parametrization."""
     site = next(get_site())
-    token = f"Bearer automation {site.get_automation_secret()}"
+
+    token = f"Bearer {AUTOMATION_USER} {site.get_automation_secret()}"
 
     @schemathesis.auths.register()
     class _Auth(schemathesis.auths.AuthProvider):
@@ -190,12 +193,13 @@ def get_schema() -> schemas.BaseOpenAPISchema:
 
         def set(self, case, data, context):
             case.cookies = {}
+            if case.headers is None:
+                case.headers = CaseInsensitiveDict({})
             case.headers["Authorization"] = token
             case.headers["Content-Type"] = "application/json"
 
-    site_id = site.id
-    api_url = f"http://localhost/{site_id}/check_mk/api/1.0"
-    schema_filename = "openapi-swagger-ui"
+    api_url = f"http://localhost:{site.apache_port}/{site.id}/check_mk/api/1.0"
+    schema_filename = "openapi-doc"
     schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", "")
     if os.path.exists(f"{schema_filedir}/{schema_filename}.json"):
         schema_filetype = "json"
@@ -355,12 +359,11 @@ def update_schema(
                     raw_schema[key][child].update(upd_values)
                     for val in del_values:
                         raw_schema[key][child].pop(val, None)
-            else:
-                if matching_dict(raw_schema[key], expected):
-                    logger.debug('Patching path "%s" with %s', key_path, upd_values)
-                    raw_schema[key].update(upd_values)
-                    for val in del_values:
-                        raw_schema[key].pop(val, None)
+            elif matching_dict(raw_schema[key], expected):
+                logger.debug('Patching path "%s" with %s', key_path, upd_values)
+                raw_schema[key].update(upd_values)
+                for val in del_values:
+                    raw_schema[key].pop(val, None)
         else:
             update_schema(
                 raw_schema[key],

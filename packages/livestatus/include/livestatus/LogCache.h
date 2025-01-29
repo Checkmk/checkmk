@@ -6,22 +6,20 @@
 #ifndef LogCache_h
 #define LogCache_h
 
+#include <bitset>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <filesystem>
-#include <functional>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
-#include <utility>
-#include <vector>
 
 #include "livestatus/Logfile.h"
-
-class LogEntry;
-class Logger;
 class ICore;
+class Logger;
+class Query;
 
 // We keep this on top level to make forward declarations possible.
 class LogFiles {
@@ -30,21 +28,34 @@ public:
                                std::unique_ptr<Logfile>>;
     using const_iterator = container::const_iterator;
 
-    explicit LogFiles(const container &log_files) : log_files_{log_files} {}
-    [[nodiscard]] auto begin() const { return log_files_.begin(); }
-    [[nodiscard]] auto end() const { return log_files_.end(); }
+    explicit LogFiles(const container &log_files) : log_files_{&log_files} {}
+    [[nodiscard]] auto begin() const { return log_files_->begin(); }
+    [[nodiscard]] auto end() const { return log_files_->end(); }
 
 private:
-    const container &log_files_;
+    const container *log_files_;
 };
 
-class LogFilter {
+using LogEntryClasses = std::bitset<32>;
+
+class LogRestrictions {
 public:
-    size_t max_lines_per_logfile;
-    unsigned classmask;
+    size_t max_lines_per_log_file{};
+    LogEntryClasses log_entry_classes;
+};
+
+// This represents the half-open interval {t | since <= t < until}.
+class LogPeriod {
+public:
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
+
+    static LogPeriod make(const Query &query);
+    [[nodiscard]] bool empty() const { return since >= until; }
+    [[nodiscard]] auto duration() const { return until - since; }
 };
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p);
 
 // NOTE: This class is currently broken due to race conditions: Although it uses
 // a lock internally to guard against concurrent modifications happening by its
@@ -62,52 +73,34 @@ public:
     // Store::_log_cached. It passes this instance to TableLog::TableLog() and
     // TableStateHistory::TableStateHistory(). StateHistoryThread::run()
     // constructs its own instance.
-    explicit LogCache(ICore *mc);
+    explicit LogCache(ICore *core);
 
     // Used for a confusing fragile protocol between LogCache and Logfile to
     // keep the number of cached log entries under control. Used by
     // Logfile::loadRange()
-    void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
-
-    // Return log file paths chronologically backwards up to a given horizon
-    // plus the first skipped log file path (if any). Used by
-    // StateHistoryThread::run().
-    std::pair<std::vector<std::filesystem::path>,
-              std::optional<std::filesystem::path>>
-    pathsSince(std::chrono::system_clock::time_point since);
+    void logLineHasBeenAdded(Logfile *log_file,
+                             LogEntryClasses log_entry_classes_to_keep);
 
     // Call the given function with a locked and updated LogCache, keeping the
-    // lock and the update function local. Used by
-    // TableStateHistory::answerQuery()
+    // lock and the update function local.
     template <typename F>
-    inline auto apply(F f) {
-        std::lock_guard<std::mutex> lg(_lock);
+    auto apply(F f) {
+        const std::lock_guard<std::mutex> lg{lock_};
         update();
-        return f(LogFiles{_logfiles});
+        return f(LogFiles{log_files_}, num_cached_log_messages_);
     }
 
-    // Call the given callback for each log entry matching the filter in a
-    // chronologically backwards fashion, until the callback returns false. Used
-    // by TableLog::answerQuery().
-    void for_each(
-        const LogFilter &log_filter,
-        const std::function<bool(const LogEntry &)> &process_log_entry);
-
-    // Returns the overall number of log entries currently in the cache. Used by
-    // Store::numCachedLogMessages().
-    size_t numCachedLogMessages();
-
 private:
-    ICore *const _mc;
-    std::mutex _lock;
-    size_t _num_cached_log_messages;
-    size_t _num_at_last_check;
+    ICore *const core_;
+    std::mutex lock_;
+    size_t num_cached_log_messages_;
+    size_t num_at_last_check_;
     std::map<std::chrono::system_clock::time_point, std::unique_ptr<Logfile>>
-        _logfiles;
-    std::chrono::system_clock::time_point _last_index_update;
+        log_files_;
+    std::chrono::system_clock::time_point last_index_update_;
 
     void update();
-    void addToIndex(std::unique_ptr<Logfile> logfile);
+    void addToIndex(const std::filesystem::path &path, bool watch);
     [[nodiscard]] Logger *logger() const;
 };
 

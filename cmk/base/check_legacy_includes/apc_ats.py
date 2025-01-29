@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
-from typing import NamedTuple
-
-from cmk.agent_based.v2 import any_of, equals
+from typing import NamedTuple, Self
 
 
 class CommunictionStatus(enum.Enum):
@@ -49,7 +47,7 @@ class Status(NamedTuple):
     powersources: Sequence[PowerSource]
 
     @classmethod
-    def from_raw(cls, line):
+    def from_raw(cls, line: Iterable[str]) -> Self:
         com_state, source, redunancy, overcurrent, *powersources = list(map(_parse_int, line))
         return cls(
             com_status=CommunictionStatus(com_state),
@@ -72,9 +70,3 @@ def _parse_int(value: str) -> int | None:
     with suppress(ValueError):
         return int(value)
     return None
-
-
-DETECT = any_of(
-    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
-    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.32"),
-)

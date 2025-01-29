@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import TypeVar
 
 from cmk.agent_based.v2 import startswith, StringTable
@@ -32,7 +32,7 @@ def parse_liebert_str_without_unit(string_table: StringTable) -> SectionWithoutU
 
 
 def parse_liebert_without_unit(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
     type_func: Callable[[str], TParsed],
 ) -> SectionWithoutUnit[TParsed]:
     parsed = {}
@@ -64,7 +64,7 @@ def parse_liebert_without_unit(
 
 
 def parse_liebert(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
     type_func: Callable[[str], TParsed],
 ) -> Section[TParsed]:
     parsed = {}

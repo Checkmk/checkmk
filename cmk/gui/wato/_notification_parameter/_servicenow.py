@@ -3,21 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    HTTPUrl,
-    Integer,
-    TextAreaUnicode,
-    TextInput,
-)
-from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 
-from ._base import NotificationParameter
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    DictGroup,
+    Dictionary,
+    FieldSize,
+    Integer,
+    List,
+    migrate_to_password,
+    migrate_to_proxy,
+    MultilineText,
+    Password,
+    Proxy,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+)
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex, NumberInRange
+
+from ._helpers import notification_macro_help_fs
 
 
 class NotificationParameterServiceNow(NotificationParameter):
@@ -26,46 +39,89 @@ class NotificationParameterServiceNow(NotificationParameter):
         return "servicenow"
 
     @property
-    def spec(self) -> Dictionary:
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=_("Create notification with the following parameters"),
-            required_keys=["url", "username", "password", "mgmt_type"],
-            elements=[
-                (
-                    "url",
-                    HTTPUrl(
-                        title=_("ServiceNow URL"),
-                        help=_(
-                            "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+            title=Title("Create notification with the following parameters"),
+            migrate=_migrate_auth_section,
+            elements={
+                "url": DictElement(
+                    parameter_form=String(
+                        title=Title("ServiceNow URL"),
+                        help_text=Help(
+                            "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
                         ),
-                        allow_empty=False,
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
+                    required=True,
                 ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "username",
-                    TextInput(
-                        title=_("Username"),
-                        help=_(
-                            "The user, used for login, has to have at least the "
-                            "role 'itil' in ServiceNow."
+                "proxy_url": DictElement(
+                    parameter_form=Proxy(
+                        title=Title("HTTP proxy"),
+                        migrate=migrate_to_proxy,
+                    )
+                ),
+                "auth": DictElement(
+                    required=True,
+                    parameter_form=CascadingSingleChoice(
+                        title=Title("Authentication"),
+                        help_text=Help(
+                            "Authentication details for communicating with "
+                            "ServiceNow. If you want to create incidents, at "
+                            "least the role 'itil' is required. If you want "
+                            "to create cases, at least 'csm_ws_integration' "
+                            "and 'sn_customerservice_agent' are required."
                         ),
-                        size=40,
-                        allow_empty=False,
+                        prefill=DefaultValue("auth_basic"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="auth_basic",
+                                title=Title("Basic authentication"),
+                                parameter_form=Dictionary(
+                                    elements={
+                                        "username": DictElement(
+                                            parameter_form=String(
+                                                title=Title("Login username"),
+                                                custom_validate=[LengthInRange(min_value=1)],
+                                            ),
+                                            required=True,
+                                        ),
+                                        "password": DictElement(
+                                            parameter_form=Password(
+                                                title=Title("Password"),
+                                                migrate=migrate_to_password,
+                                            ),
+                                            required=True,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="auth_token",
+                                title=Title("OAuth token authentication"),
+                                parameter_form=Dictionary(
+                                    elements={
+                                        "token": DictElement(
+                                            parameter_form=Password(
+                                                title=Title("OAuth token"),
+                                                migrate=migrate_to_password,
+                                            ),
+                                            required=True,
+                                        ),
+                                    },
+                                ),
+                            ),
+                        ],
                     ),
                 ),
-                (
-                    "password",
-                    IndividualOrStoredPassword(
-                        title=_("Password of the user"),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "use_site_id",
-                    Alternative(
-                        title=_("Use site ID prefix"),
-                        help=_(
+                "use_site_id": DictElement(
+                    parameter_form=SingleChoice(
+                        migrate=lambda o: "use_site_id" if o else "deactivated",
+                        title=Title("Use site ID prefix"),
+                        help_text=Help(
                             "Please use this option if you have multiple "
                             "sites in a distributed setup which send their "
                             "notifications to the same ServiceNow instance. "
@@ -73,49 +129,61 @@ class NotificationParameterServiceNow(NotificationParameter):
                             "problem ID on incident creation."
                         ),
                         elements=[
-                            FixedValue(value=False, title=_("Deactivated"), totext=""),
-                            FixedValue(value=True, title=_("Use site ID"), totext=""),
+                            SingleChoiceElement(
+                                name="deactivated",
+                                title=Title("Deactivated"),
+                            ),
+                            SingleChoiceElement(
+                                name="use_site_id",
+                                title=Title("Use site ID"),
+                            ),
                         ],
-                        default_value=False,
-                    ),
+                        prefill=DefaultValue("deactivated"),
+                    )
                 ),
-                (
-                    "timeout",
-                    TextInput(
-                        title=_("Set optional timeout for connections to ServiceNow"),
-                        help=_("Here you can configure timeout settings in seconds."),
-                        default_value="10",
-                        size=3,
-                    ),
+                "timeout": DictElement(
+                    parameter_form=String(
+                        title=Title("Set optional timeout for connections to ServiceNow"),
+                        help_text=Help("Here you can configure timeout settings in seconds."),
+                        prefill=DefaultValue("10"),
+                    )
                 ),
-                (
-                    "mgmt_type",
-                    CascadingDropdown(
-                        title=_("Management type"),
-                        help=_(
+                "mgmt_type": DictElement(
+                    required=True,
+                    parameter_form=CascadingSingleChoice(
+                        title=Title("Management type"),
+                        help_text=Help(
                             "With ServiceNow you can create different "
                             "types of management issues, currently "
                             "supported are indicents and cases."
                         ),
-                        choices=[
-                            ("incident", _("Incident"), self._incident_vs()),
-                            ("case", _("Case"), self._case_vs()),
+                        prefill=DefaultValue("incident"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="incident",
+                                title=Title("Incident"),
+                                parameter_form=self._incident_fs(),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="case",
+                                title=Title("Case"),
+                                parameter_form=self._case_fs(),
+                            ),
                         ],
                     ),
                 ),
-            ],
+            },
         )
 
-    def _incident_vs(self) -> Dictionary:
+    def _incident_fs(self) -> Dictionary:
         return Dictionary(
-            title=_("Incident"),
-            required_keys=["caller"],
-            elements=[
-                (
-                    "caller",
-                    TextInput(
-                        title=_("Caller ID"),
-                        help=_(
+            title=Title("Incident"),
+            elements={
+                "caller": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Caller ID"),
+                        help_text=Help(
                             "Caller is the user on behalf of whom the incident is being reported "
                             "within ServiceNow. Please enter the name of the caller here. "
                             "It is recommended to use the same user as used for login. "
@@ -127,333 +195,470 @@ class NotificationParameterServiceNow(NotificationParameter):
                         ),
                     ),
                 ),
-                ("host_short_desc", self._host_short_desc(_("incidents"))),
-                ("svc_short_desc", self._svc_short_desc(_("incidents"))),
-                (
-                    "host_desc",
-                    self._host_desc(
-                        title=_("Description for host incidents"),
-                        help_text=_(
+                "host_short_desc": DictElement(
+                    parameter_form=self._host_short_desc(_("incidents"))
+                ),
+                "svc_short_desc": DictElement(parameter_form=self._svc_short_desc(_("incidents"))),
+                "host_desc": DictElement(
+                    parameter_form=self._host_desc(
+                        title=Title("Description for host incidents"),
+                        help_text=Help(
                             "Text that should be set in field <tt>Description</tt> "
                             "for host notifications."
                         ),
                     ),
                 ),
-                (
-                    "svc_desc",
-                    self._svc_desc(
-                        title=_("Description for service incidents"),
-                        help_text=_(
+                "svc_desc": DictElement(
+                    parameter_form=self._svc_desc(
+                        title=Title("Description for service incidents"),
+                        help_text=Help(
                             "Text that should be set in field <tt>Description</tt> "
                             "for service notifications."
                         ),
                     ),
                 ),
-                (
-                    "urgency",
-                    DropdownChoice(
-                        title=_("Urgency"),
-                        help=_(
+                "urgency": DictElement(
+                    parameter_form=SingleChoice(
+                        title=Title("Urgency"),
+                        help_text=Help(
                             'See <a href="https://docs.servicenow.com/bundle/'
                             "helsinki-it-service-management/page/product/incident-management/"
                             'reference/r_PrioritizationOfIncidents.html" target="_blank">'
                             "ServiceNow Incident</a> for more information."
                         ),
-                        choices=[
-                            ("low", _("Low")),
-                            ("medium", _("Medium")),
-                            ("high", _("High")),
+                        elements=[
+                            SingleChoiceElement(name="low", title=Title("Low")),
+                            SingleChoiceElement(name="medium", title=Title("Medium")),
+                            SingleChoiceElement(name="high", title=Title("High")),
                         ],
-                        default_value="low",
+                        prefill=DefaultValue("low"),
                     ),
                 ),
-                (
-                    "impact",
-                    DropdownChoice(
-                        title=_("Impact"),
-                        help=_(
+                "impact": DictElement(
+                    parameter_form=SingleChoice(
+                        title=Title("Impact"),
+                        help_text=Help(
                             'See <a href="https://docs.servicenow.com/bundle/'
                             "helsinki-it-service-management/page/product/incident-management/"
                             'reference/r_PrioritizationOfIncidents.html" target="_blank">'
                             "ServiceNow Incident</a> for more information."
                         ),
-                        choices=[
-                            ("low", _("Low")),
-                            ("medium", _("Medium")),
-                            ("high", _("High")),
+                        elements=[
+                            SingleChoiceElement(name="low", title=Title("Low")),
+                            SingleChoiceElement(name="medium", title=Title("Medium")),
+                            SingleChoiceElement(name="high", title=Title("High")),
                         ],
-                        default_value="low",
+                        prefill=DefaultValue("low"),
                     ),
                 ),
-                (
-                    "ack_state",
-                    Dictionary(
-                        title=_("Settings for incident state in case of acknowledgement"),
-                        help=_(
+                "custom_fields": DictElement(parameter_form=self._custom_fields_fs()),
+                "ack_state": DictElement(
+                    parameter_form=Dictionary(
+                        title=Title("Settings for incident state in case of acknowledgement"),
+                        help_text=Help(
                             "Here you can define the state of the incident in case of an "
                             "acknowledgement of the affected host or service problem."
                         ),
-                        elements=[
-                            (
-                                "start",
-                                Alternative(
-                                    title=_("State of incident if acknowledgement is set"),
-                                    help=_(
+                        elements={
+                            "start": DictElement(
+                                parameter_form=CascadingSingleChoice(
+                                    title=Title("State of incident if acknowledgement is set"),
+                                    help_text=Help(
                                         "Here you can define the state of the incident in case of an "
                                         "acknowledgement of the host or service problem."
                                     ),
+                                    prefill=DefaultValue("predefined"),
+                                    migrate=_migrate_state_of,
                                     elements=[
-                                        DropdownChoice(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="predefined",
+                                            title=Title(
                                                 "State of incident if acknowledgement is set (predefined)"
                                             ),
-                                            help=_(
-                                                "Please note that the mapping to the numeric "
-                                                "ServiceNow state may be changed at your system "
-                                                "and can differ from our definitions. In this case "
-                                                "use the option below."
+                                            parameter_form=SingleChoice(
+                                                title=Title(
+                                                    "State of incident if acknowledgement is set (predefined)"
+                                                ),
+                                                help_text=Help(
+                                                    "Please note that the mapping to the numeric "
+                                                    "ServiceNow state may be changed at your system "
+                                                    "and can differ from our definitions. In this case "
+                                                    "use the option below."
+                                                ),
+                                                elements=[
+                                                    SingleChoiceElement(name=name, title=title)
+                                                    for name, title in self._get_state_choices(
+                                                        "incident"
+                                                    )
+                                                ],
+                                                prefill=DefaultValue("none"),
                                             ),
-                                            choices=self._get_state_choices("incident"),
-                                            default_value="none",
                                         ),
-                                        Integer(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="integer",
+                                            title=Title(
                                                 "State of incident if acknowledgement is set (as integer)"
                                             ),
-                                            minvalue=0,
+                                            parameter_form=Integer(
+                                                title=Title(
+                                                    "State of incident if acknowledgement is set (as integer)"
+                                                ),
+                                                custom_validate=[NumberInRange(min_value=0)],
+                                            ),
                                         ),
                                     ],
                                 ),
-                            ),
-                        ],
+                            )
+                        },
                     ),
                 ),
-                ("recovery_state", self._recovery_state_vs(_("incident"))),
-                (
-                    "dt_state",
-                    Dictionary(
-                        title=_("Settings for incident state in case of downtime"),
-                        help=_(
+                "recovery_state": DictElement(
+                    parameter_form=self._recovery_state_fs(_("incident"))
+                ),
+                "dt_state": DictElement(
+                    parameter_form=Dictionary(
+                        title=Title("Settings for incident state in case of downtime"),
+                        help_text=Help(
                             "Here you can define the state of the incident in case of a "
                             "downtime of the affected host or service."
                         ),
-                        elements=[
-                            (
-                                "start",
-                                Alternative(
-                                    title=_("State of incident if downtime is set"),
+                        elements={
+                            "start": DictElement(
+                                parameter_form=CascadingSingleChoice(
+                                    title=Title("State of incident if downtime is set"),
+                                    prefill=DefaultValue("predefined"),
+                                    migrate=_migrate_state_of,
                                     elements=[
-                                        DropdownChoice(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="predefined",
+                                            title=Title(
                                                 "State of incident if downtime is set (predefined)"
                                             ),
-                                            help=_(
-                                                "Please note that the mapping to the numeric "
-                                                "ServiceNow state may be changed at your system "
-                                                "and can differ from our definitions. In this case "
-                                                "use the option below."
+                                            parameter_form=SingleChoice(
+                                                title=Title(
+                                                    "State of incident if downtime is set (predefined)"
+                                                ),
+                                                help_text=Help(
+                                                    "Please note that the mapping to the numeric "
+                                                    "ServiceNow state may be changed at your system "
+                                                    "and can differ from our definitions. In this case "
+                                                    "use the option below."
+                                                ),
+                                                elements=[
+                                                    SingleChoiceElement(name=name, title=title)
+                                                    for name, title in self._get_state_choices(
+                                                        "incident"
+                                                    )
+                                                ],
+                                                prefill=DefaultValue("none"),
                                             ),
-                                            choices=self._get_state_choices("incident"),
-                                            default_value="none",
                                         ),
-                                        Integer(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="integer",
+                                            title=Title(
                                                 "State of incident if downtime is set (as integer)"
                                             ),
-                                            minvalue=0,
+                                            parameter_form=Integer(
+                                                title=Title(
+                                                    "State of incident if downtime is set (as integer)"
+                                                ),
+                                                custom_validate=[NumberInRange(min_value=0)],
+                                            ),
                                         ),
                                     ],
                                 ),
                             ),
-                            (
-                                "end",
-                                Alternative(
-                                    title=_("State of incident if downtime expires"),
-                                    help=_(
+                            "end": DictElement(
+                                parameter_form=CascadingSingleChoice(
+                                    title=Title("State of incident if downtime expires"),
+                                    help_text=Help(
                                         "Here you can define the state of the incident in case of an "
                                         "ending acknowledgement of the host or service problem."
                                     ),
+                                    prefill=DefaultValue("predefined"),
+                                    migrate=_migrate_state_of,
                                     elements=[
-                                        DropdownChoice(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="predefined",
+                                            title=Title(
                                                 "State of incident if downtime expires (predefined)"
                                             ),
-                                            help=_(
-                                                "Please note that the mapping to the numeric "
-                                                "ServiceNow state may be changed at your system "
-                                                "and can differ from our definitions. In this case "
-                                                "use the option below."
+                                            parameter_form=SingleChoice(
+                                                title=Title(
+                                                    "State of incident if downtime expires (predefined)"
+                                                ),
+                                                help_text=Help(
+                                                    "Please note that the mapping to the numeric "
+                                                    "ServiceNow state may be changed at your system "
+                                                    "and can differ from our definitions. In this case "
+                                                    "use the option below."
+                                                ),
+                                                elements=[
+                                                    SingleChoiceElement(name=name, title=title)
+                                                    for name, title in self._get_state_choices(
+                                                        "incident"
+                                                    )
+                                                ],
+                                                prefill=DefaultValue("none"),
                                             ),
-                                            choices=self._get_state_choices("incident"),
-                                            default_value="none",
                                         ),
-                                        Integer(
-                                            title=_(
+                                        CascadingSingleChoiceElement(
+                                            name="integer",
+                                            title=Title(
                                                 "State of incident if downtime expires (as integer)"
                                             ),
-                                            minvalue=0,
+                                            parameter_form=Integer(
+                                                title=Title(
+                                                    "State of incident if downtime expires (as integer)"
+                                                ),
+                                                custom_validate=[NumberInRange(min_value=0)],
+                                            ),
                                         ),
                                     ],
                                 ),
                             ),
-                        ],
+                        },
                     ),
                 ),
-            ],
+            },
         )
 
-    def _case_vs(self) -> Dictionary:
+    def _case_fs(self) -> Dictionary:
         return Dictionary(
-            title=_("Case"),
-            elements=[
-                ("host_short_desc", self._host_short_desc(_("cases"))),
-                ("svc_short_desc", self._svc_short_desc(_("cases"))),
-                (
-                    "host_desc",
-                    self._host_desc(
-                        title=_("Resolution notes for host cases"),
-                        help_text=_(
+            title=Title("Case"),
+            elements={
+                "host_short_desc": DictElement(parameter_form=self._host_short_desc(_("cases"))),
+                "svc_short_desc": DictElement(parameter_form=self._svc_short_desc(_("cases"))),
+                "host_desc": DictElement(
+                    parameter_form=self._host_desc(
+                        title=Title("Resolution notes for host cases"),
+                        help_text=Help(
                             "Text that should be set in field <tt>Resolution notes</tt> "
                             "on recovery service notifications."
                         ),
                     ),
                 ),
-                (
-                    "svc_desc",
-                    self._svc_desc(
-                        title=_("Resolution notes for service cases"),
-                        help_text=_(
+                "svc_desc": DictElement(
+                    parameter_form=self._svc_desc(
+                        title=Title("Resolution notes for service cases"),
+                        help_text=Help(
                             "Text that should be set in field <tt>Resolution notes</tt> "
                             "on recovery service notifications."
                         ),
                     ),
                 ),
-                (
-                    "priority",
-                    DropdownChoice(
-                        title=_("Priority"),
-                        help=_(
+                "priority": DictElement(
+                    parameter_form=SingleChoice(
+                        title=Title("Priority"),
+                        help_text=Help(
                             "Here you can define with which priority the case should be created."
                         ),
-                        choices=[
-                            ("low", _("Low")),
-                            ("moderate", _("Moderate")),
-                            ("high", _("High")),
-                            ("critical", _("Critical")),
+                        elements=[
+                            SingleChoiceElement(name="low", title=Title("Low")),
+                            SingleChoiceElement(name="moderate", title=Title("Moderate")),
+                            SingleChoiceElement(name="high", title=Title("High")),
+                            SingleChoiceElement(name="critical", title=Title("Critical")),
                         ],
-                        default_value="low",
+                        prefill=DefaultValue("low"),
                     ),
                 ),
-                ("recovery_state", self._recovery_state_vs(_("case"))),
-            ],
+                "custom_fields": DictElement(parameter_form=self._custom_fields_fs()),
+                "recovery_state": DictElement(parameter_form=self._recovery_state_fs(_("case"))),
+            },
         )
 
-    def _host_desc(self, title: str, help_text: str) -> TextAreaUnicode:
-        return TextAreaUnicode(
+    def _host_desc(self, title: Title, help_text: Help) -> MultilineText:
+        return MultilineText(
             title=title,
-            help=help_text,
-            rows=7,
-            cols=58,
+            help_text=help_text,
             monospaced=True,
-            default_value="""Host: $HOSTNAME$
+            prefill=DefaultValue("""Host: $HOSTNAME$
 Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
-""",
+"""),
         )
 
-    def _svc_desc(self, title: str, help_text: str) -> TextAreaUnicode:
-        return TextAreaUnicode(
+    def _svc_desc(self, title: Title, help_text: Help) -> MultilineText:
+        return MultilineText(
             title=title,
-            help=help_text,
-            rows=11,
-            cols=58,
+            help_text=help_text,
             monospaced=True,
-            default_value="""Host: $HOSTNAME$
+            prefill=DefaultValue("""Host: $HOSTNAME$
 Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
-""",
+"""),
         )
 
-    def _host_short_desc(self, issue_type: str) -> TextInput:
-        return TextInput(
-            title=_("Short description for host %s") % issue_type,
-            help=_(
+    def _host_short_desc(self, issue_type: str) -> String:
+        return String(
+            title=Title("Short description for host %s") % issue_type,
+            help_text=Help(
                 "Text that should be set in field <tt>Short description</tt> "
                 "for host notifications."
             ),
-            default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
-            size=64,
+            field_size=FieldSize.LARGE,
+            prefill=DefaultValue("Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$"),
         )
 
-    def _svc_short_desc(self, issue_type: str) -> TextInput:
-        return TextInput(
-            title=_("Short description for service %s") % issue_type,
-            help=_(
+    def _svc_short_desc(self, issue_type: str) -> String:
+        return String(
+            title=Title("Short description for service %s") % issue_type,
+            help_text=Help(
                 "Text that should be set in field <tt>Short description</tt> "
                 "for service notifications."
             ),
-            default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
-            size=68,
+            field_size=FieldSize.LARGE,
+            prefill=DefaultValue("Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$"),
         )
 
-    def _recovery_state_vs(self, issue_type: str) -> Dictionary:
+    def _recovery_state_fs(self, issue_type: str) -> Dictionary:
         return Dictionary(
-            title=_("Settings for %s state in case of recovery") % issue_type,
-            help=_(
+            title=Title("Settings for %s state in case of recovery") % issue_type,
+            help_text=Help(
                 "Here you can define the state of the %s in case of a recovery "
                 "of the affected host or service problem."
             )
             % issue_type,
-            elements=[
-                (
-                    "start",
-                    Alternative(
-                        title=_("State of %s if recovery is set") % issue_type,
+            elements={
+                "start": DictElement(
+                    parameter_form=CascadingSingleChoice(
+                        title=Title("State of %s if recovery is set") % issue_type,
+                        prefill=DefaultValue("predefined"),
+                        migrate=_migrate_state_of,
                         elements=[
-                            DropdownChoice(
-                                title=_("State of case if recovery is set (predefined)"),
-                                help=_(
-                                    "Please note that the mapping to the numeric "
-                                    "ServiceNow state may be changed at your system "
-                                    "and can differ from our definitions. In this case "
-                                    "use the option below."
+                            CascadingSingleChoiceElement(
+                                name="predefined",
+                                title=Title("State of case if recovery is set (predefined)"),
+                                parameter_form=SingleChoice(
+                                    title=Title("State of case if recovery is set (predefined)"),
+                                    help_text=Help(
+                                        "Please note that the mapping to the numeric "
+                                        "ServiceNow state may be changed at your system "
+                                        "and can differ from our definitions. In this case "
+                                        "use the option below."
+                                    ),
+                                    elements=[
+                                        SingleChoiceElement(name=name, title=title)
+                                        for name, title in self._get_state_choices("incident")
+                                    ],
+                                    prefill=DefaultValue("none"),
                                 ),
-                                choices=self._get_state_choices(issue_type),
-                                default_value="none",
                             ),
-                            Integer(
-                                title=_("State of %s if recovery is set (as integer)") % issue_type,
-                                minvalue=0,
+                            CascadingSingleChoiceElement(
+                                name="integer",
+                                title=Title("State of %s if recovery is set (as integer)")
+                                % issue_type,
+                                parameter_form=Integer(
+                                    title=Title("State of %s if recovery is set (as integer)")
+                                    % issue_type,
+                                    custom_validate=[NumberInRange(min_value=0)],
+                                ),
                             ),
                         ],
                     ),
                 ),
-            ],
+            },
         )
 
-    def _get_state_choices(self, issue_type: str) -> list[tuple[str, str]]:
+    def _get_state_choices(self, issue_type: str) -> list[tuple[str, Title]]:
         if issue_type == "incident":
             return [
-                ("none", _("Don't change state")),
-                ("new", _("New")),
-                ("progress", _("In Progress")),
-                ("hold", _("On Hold")),
-                ("resolved", _("Resolved")),
-                ("closed", _("Closed")),
-                ("canceled", _("Canceled")),
+                ("none", Title("Don't change state")),
+                ("new", Title("New")),
+                ("progress", Title("In Progress")),
+                ("hold", Title("On Hold")),
+                ("resolved", Title("Resolved")),
+                ("closed", Title("Closed")),
+                ("canceled", Title("Canceled")),
             ]
 
         # Cases
         return [
-            ("none", _("Don't change state")),
-            ("new", _("New")),
-            ("closed", _("Closed")),
-            ("resolved", _("Resolved")),
-            ("open", _("Open")),
-            ("awaiting_info", _("Awaiting info")),
+            ("none", Title("Don't change state")),
+            ("new", Title("New")),
+            ("closed", Title("Closed")),
+            ("resolved", Title("Resolved")),
+            ("open", Title("Open")),
+            ("awaiting_info", Title("Awaiting info")),
         ]
+
+    def _custom_fields_fs(self) -> List:
+        return List(
+            title=Title("Custom fields"),
+            element_template=Dictionary(
+                migrate=_migrate_custom_fields,
+                elements={
+                    "name": DictElement(
+                        group=DictGroup(),
+                        required=True,
+                        parameter_form=String(
+                            title=Title("Name"),
+                            help_text=Help(
+                                "Enter the technical name of the field as defined "
+                                "in the ServiceNow database."
+                            ),
+                            custom_validate=[
+                                LengthInRange(min_value=1),
+                                MatchRegex(
+                                    regex="^[-a-z0-9A-Z_]*$",
+                                    error_msg=Message(
+                                        "Invalid custom field. Only the characters a-z, A-Z, "
+                                        "0-9, _ and - are allowed."
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                    "value": DictElement(
+                        group=DictGroup(),
+                        required=True,
+                        parameter_form=String(
+                            title=Title("Value"),
+                            help_text=notification_macro_help_fs(),
+                            custom_validate=[LengthInRange(min_value=1)],
+                        ),
+                    ),
+                },
+            ),
+        )
+
+
+def _migrate_custom_fields(o: object) -> dict[str, str]:
+    match o:
+        case (name, value):
+            assert isinstance(name, str)
+            assert isinstance(value, str)
+            return {"name": name, "value": value}
+        case {"name": name, "value": value}:
+            return {"name": name, "value": value}
+        case _:
+            raise TypeError(f"Invalid custom field: {o}")
+
+
+def _migrate_state_of(o: object) -> tuple[str, object]:
+    match o:
+        case str():
+            return "predefined", o
+        case int():
+            return "integer", o
+        case ["predefined", p]:
+            return "predefined", p
+        case ["integer", i]:
+            return "integer", i
+        case _:
+            raise TypeError(f"Invalid state: {o}")
+
+
+def _migrate_auth_section(params):
+    if "auth" in params:
+        return params
+    username = params.pop("username")
+    password = params.pop("password")
+    params["auth"] = ("auth_basic", {"username": username, "password": ("password", password[1])})
+
+    return params

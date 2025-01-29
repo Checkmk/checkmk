@@ -16,21 +16,9 @@ _A_HREF = re.compile(
 )
 
 
-class HTMLEscapedStr(str):
-    """str in which all HTML entities are escaped
-
-    Not sure if this class really makes sense. I would only use this for
-    strings in which all entities are escaped. So as soon as we go the
-    permissive way, we shouldn't use this class anymore. Perhaps we should use
-    another? In `cmk.gui` we have the HTML object which is more or less exactly
-    that... I keep it for now, it shouldn't hurt let's see where this
-    goes...
-    """
-
-
-def escape(value: str) -> HTMLEscapedStr:
+def escape(value: str) -> str:
     """escape text for HTML (e.g. `< -> &lt;`)"""
-    return HTMLEscapedStr(html_escape(value, quote=True))
+    return html_escape(value, quote=True)
 
 
 def _unescape_link(escaped_str: str) -> str:

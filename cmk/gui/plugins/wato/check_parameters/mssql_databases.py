@@ -19,15 +19,15 @@ def _parameter_valuespec_mssql_databases():
                 "map_db_states",
                 Dictionary(
                     elements=[
-                        ("ONLINE", MonitoringState(title=_("Database Online"))),
-                        ("OFFLINE", MonitoringState(title=_("Database Offline"))),
-                        ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
+                        ("ONLINE", MonitoringState(title=_("Database online"))),
+                        ("OFFLINE", MonitoringState(title=_("Database offline"))),
+                        ("RESTORING", MonitoringState(title=_("Database files are restored"))),
                         ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
                         (
                             "RECOVERY_PENDING",
                             MonitoringState(title=_("Database must be recovered")),
                         ),
-                        ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
+                        ("SUSPECT", MonitoringState(title=_("Database suspect"))),
                         ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
                     ],
                     title=_("Map Database States"),

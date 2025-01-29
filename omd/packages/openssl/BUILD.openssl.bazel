@@ -1,0 +1,139 @@
+load("@//bazel/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+configure_make(
+    name = "openssl",
+    args = ["-j6"],
+    configure_command = "config",
+    configure_in_place = True,
+    configure_options = [
+        # In order to relocate OpenSSL after the Bazel build to a configurable
+        # directory (e.g. /omd/versions/2.3.0p23-cee/skel/etc/ssl/) we have to
+        # binary search/replace the compiled-in path.
+        # Note that openssldir can't be absolute since the provided directory would
+        # have to be writeable at build time. Left relative it will be prefixed
+        # to an also absolute path provided by foreign_cc's `configure_make`
+        "--openssldir='skel/etc/ssl'",
+        "enable-md2",
+        "no-tests",
+        # default is lib64 since 3.x some other software might be surprised to find artifacts under lib
+        "--libdir=lib",
+        # Do not build shared legacy module
+        "no-module",
+        "-O2",
+    ],
+    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
+    # combined with foreign_cc/configure_make's RPATH agnosticness
+    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
+    # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
+    #   + the actual build directory, leading to a potentially wrong RPATH
+    #   next to the fact that build artifacts won't be binary identical even
+    #   when built in an exact same environment
+    # This can be worked around by setting RPATH again after `bazel build` still
+    # leaving us with RPATH placeholders of different size
+    # Unfortunately this does not work for dynamic libraries, since strangely
+    # for those the flags definded with `copts` will be appended rather than
+    # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
+    # For that reason we need to manually set RPATH outside Bazel (during `make`)
+    env = {"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    lib_name = "openssl",
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "openssl",
+        "c_rehash",
+    ],
+    out_data_dirs = [
+        "skel",
+        "lib/pkgconfig",
+        "lib/engines-3",
+    ],
+    out_shared_libs = [
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
+        "libssl.so",
+        "libssl.so.3",
+        "libcrypto.so",
+        "libcrypto.so.3",
+    ],
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    targets = [
+        "build_programs",
+        "install_sw",
+        "install_ssldirs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_export_shared_library(
+    name = "libssl.so.3",
+    srcs = [":openssl"],
+    shared_library = "libssl.so.3",
+)
+
+cc_export_shared_library(
+    name = "libssl.so",
+    srcs = [":openssl"],
+    shared_library = "libssl.so",
+)
+
+cc_export_shared_library(
+    name = "libcrypto.so.3",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so.3",
+)
+
+cc_export_shared_library(
+    name = "libcrypto.so",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so",
+)
+
+cc_export_static_library(
+    name = "libssl.a",
+    srcs = [":openssl"],
+    static_library = "libssl.a",
+)
+
+cc_export_static_library(
+    name = "libcrypto.a",
+    srcs = [":openssl"],
+    static_library = "libcrypto.a",
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "openssl_shared",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
+        ":libssl.so",
+        ":libssl.so.3",
+        ":libcrypto.so",
+        ":libcrypto.so.3",
+    ],
+)
+
+cc_library(
+    name = "openssl_static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libcrypto.a",
+        ":libssl.a",
+    ],
+)

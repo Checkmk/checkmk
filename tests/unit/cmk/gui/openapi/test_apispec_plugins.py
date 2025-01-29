@@ -2,14 +2,12 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# fmt: off
 
 from collections.abc import Mapping
 
 import pytest
 from apispec import APISpec
 from marshmallow import post_load, Schema, ValidationError
-from marshmallow.base import SchemaABC
 
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
@@ -32,40 +30,45 @@ class Movie:
         return self.year > other.year
 
     def __eq__(self, other: object) -> bool:
-        return (isinstance(other, Movie) and self.title == other.title and self.director == other.director and self.year == other.year)
+        return (
+            isinstance(other, Movie)
+            and self.title == other.title
+            and self.director == other.director
+            and self.year == other.year
+        )
 
 
 MOVIES = {
-    'Solyaris': {
-        'title': 'Solyaris',
-        'director': 'Andrei Tarkovsky',
-        'year': 1972
+    "Solyaris": {
+        "title": "Solyaris",
+        "director": "Andrei Tarkovsky",
+        "year": 1972,
     },
-    'Stalker': {
-        'title': 'Stalker',
-        'director': 'Andrei Tarkovsky',
-        'year': 1979
+    "Stalker": {
+        "title": "Stalker",
+        "director": "Andrei Tarkovsky",
+        "year": 1979,
     },
 }
 
 BROKEN_MOVIE = {
-    'Plan 9 from Outer Space': {
-        'title': None,
-        'director': None,
-        'year': 1957,
+    "Plan 9 from Outer Space": {
+        "title": None,
+        "director": None,
+        "year": 1957,
     },
 }
 
 EXPECTED_MOVIES = {
-    'Solyaris': Movie(
-        title='Solyaris',
-        director='Andrei Tarkovsky',
-        year=1972
+    "Solyaris": Movie(
+        title="Solyaris",
+        director="Andrei Tarkovsky",
+        year=1972,
     ),
-    'Stalker': Movie(
-        title='Stalker',
-        director='Andrei Tarkovsky',
-        year=1979
+    "Stalker": Movie(
+        title="Stalker",
+        director="Andrei Tarkovsky",
+        year=1979,
     ),
 }
 
@@ -85,11 +88,13 @@ class MovieDictSchema(ValueTypedDictSchema):
 
 
 class CustomTagDictSchema(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(fields.String(
-        description="Tag value here",
-        pattern="foo|bar",
-        required=True,
-    ))
+    value_type = ValueTypedDictSchema.field(
+        fields.String(
+            description="Tag value here",
+            pattern="foo|bar",
+            required=True,
+        )
+    )
 
 
 class IntegerDictSchema(ValueTypedDictSchema):
@@ -100,70 +105,79 @@ class EmailSchema(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(fields.Email())
 
 
-@pytest.fixture(name="spec", scope='function')
+@pytest.fixture(name="spec", scope="function")
 def spec_fixture():
-    return APISpec(title='Sensationalist Witty Title',
-                   version='1.0.0',
-                   openapi_version='3.0.0',
-                   plugins=[
-                       CheckmkMarshmallowPlugin(),
-                   ])
+    return APISpec(
+        title="Sensationalist Witty Title",
+        version="1.0.0",
+        openapi_version="3.0.0",
+        plugins=[
+            CheckmkMarshmallowPlugin(),
+        ],
+    )
 
 
 def test_apispec_plugin_string_to_schema_dict(spec: APISpec) -> None:
     # Schema suffix of schemas gets stripped by library
-    spec.components.schema('MovieDict', schema=MovieDictSchema)
+    spec.components.schema("MovieDict", schema=MovieDictSchema)
 
-    schemas = spec.to_dict()['components']['schemas']
-    assert schemas['MovieDict'] == {
-        'type': 'object',
-        'additionalProperties': {
-            '$ref': '#/components/schemas/Movie'
-        }
+    schemas = spec.to_dict()["components"]["schemas"]
+    assert schemas["MovieDict"] == {
+        "type": "object",
+        "additionalProperties": {"$ref": "#/components/schemas/Movie"},
     }
 
 
 def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
     # Schema suffix of schemas gets stripped by library
-    spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
-    schemas = spec.to_dict()['components']['schemas']
-    assert schemas['CustomTagDict'] == {
-        'type': 'object',
-        'additionalProperties': {
-            'type': 'string',
-            'description': 'Tag value here',
-            'pattern': 'foo|bar',
-            'required': True,
-        }
+    spec.components.schema("CustomTagDict", schema=CustomTagDictSchema)
+    schemas = spec.to_dict()["components"]["schemas"]
+    assert schemas["CustomTagDict"] == {
+        "type": "object",
+        "additionalProperties": {
+            "type": "string",
+            "description": "Tag value here",
+            "pattern": "foo|bar",
+            "required": True,
+        },
     }
 
 
 def test_apispec_plugin_parameters(spec: APISpec) -> None:
     # Different code paths are executed here. We need to make sure our plug-in handles this.
-    spec.components.parameter('var', 'path', {'description': "Some path variable"})
+    spec.components.parameter("var", "path", {"description": "Some path variable"})
 
 
 @pytest.mark.parametrize(
-    ['schema_class', 'in_data', 'expected_result'],
+    ["schema_class", "in_data", "expected_result"],
     [
         (MovieDictSchema, MOVIES, EXPECTED_MOVIES),
-        (IntegerDictSchema, {'foo': 1}, {'foo': 1}),
-        (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
+        (IntegerDictSchema, {"foo": 1}, {"foo": 1}),
+        (EmailSchema, {"bob": "bob@example.com"}, {"bob": "bob@example.com"}),
     ],
 )
-def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data: Mapping[str,object], expected_result: Mapping[str,object]) -> None:
+def test_typed_dictionary_success(
+    schema_class: type[Schema],
+    in_data: Mapping[str, object],
+    expected_result: Mapping[str, object],
+) -> None:
     schema = schema_class()
     result = schema.load(in_data)
     assert result == expected_result
     assert schema.dump(result) == in_data
 
 
-@pytest.mark.parametrize(['schema_class', 'in_data'], [
-    (MovieDictSchema, BROKEN_MOVIE),
-    (IntegerDictSchema, {'bar': 'eins'}),
-    (EmailSchema, {'hans': 'foo'}),
-])
-def test_typed_dictionary_failed_validation(schema_class: type[SchemaABC], in_data: Mapping[str,object]) -> None:
+@pytest.mark.parametrize(
+    ["schema_class", "in_data"],
+    [
+        (MovieDictSchema, BROKEN_MOVIE),
+        (IntegerDictSchema, {"bar": "eins"}),
+        (EmailSchema, {"hans": "foo"}),
+    ],
+)
+def test_typed_dictionary_failed_validation(
+    schema_class: type[Schema], in_data: Mapping[str, object]
+) -> None:
     schema = schema_class()
     with pytest.raises(ValidationError):
         schema.load(in_data)

@@ -5,7 +5,6 @@
 
 #include "test_utilities.h"
 
-#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -30,7 +29,8 @@ CustomVariables::CustomVariables(Attributes attrs) : attrs_(std::move(attrs)) {
 
 customvariablesmember *CustomVariables::start() { return &cvms_.back(); }
 
-TestHost::TestHost(const Attributes &cust_vars) : cust_vars_(cust_vars) {
+TestHost::TestHost(const Attributes &cust_vars)
+    : host_struct{}, cust_vars_{cust_vars} {
     name = cc("sesame_street");
     display_name = cc("the display name");
     alias = cc("the alias");
@@ -43,7 +43,7 @@ TestHost::TestHost(const Attributes &cust_vars) : cust_vars_(cust_vars) {
 }
 
 TestService::TestService(host *h, const Attributes &cust_vars)
-    : cust_vars_(cust_vars) {
+    : service_struct{}, cust_vars_(cust_vars) {
     description = cc("muppet_show");
     display_name = cc("The Muppet Show");
     nagios_compat_service_check_command(*this) = cc("check_fozzie_bear");

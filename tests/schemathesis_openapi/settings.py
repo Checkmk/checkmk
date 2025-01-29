@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from copy import deepcopy
 from os import environ, getenv
 
@@ -52,7 +52,7 @@ schemathesis.register_string_format(
 )
 
 # hypothesis settings
-current_profile = settings._current_profile if hasattr(settings, "_current_profile") else "default"
+current_profile = getattr(settings, "_current_profile", "default")
 
 # default settings profile
 default_settings = {

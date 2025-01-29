@@ -13,7 +13,7 @@ from cmk.server_side_calls.v1 import Secret
 
 class SMTPConnectionParameters(BaseModel):
     tls: bool = False
-    port: int = 25
+    port: int | None = None
 
 
 class BasicAuthParameters(BaseModel):

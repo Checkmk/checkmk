@@ -41,6 +41,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_processes,
-        title=lambda: _("Oracle Processes"),
+        title=lambda: _("Oracle processes"),
     )
 )

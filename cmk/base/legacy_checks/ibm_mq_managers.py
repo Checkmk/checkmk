@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
@@ -61,7 +63,7 @@ def inventory_ibm_mq_managers(parsed):
         yield item, {}
 
 
-def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-branches
+def check_ibm_mq_managers(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
@@ -86,16 +88,14 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
             yield 0, "High availability: replicated"
     elif standby == "PERMITTED":
         if len(instances) == 2:
-            yield 0, "Multi-Instance: {}={} and {}={}".format(
-                instances[0][0],
-                instances[0][1],
-                instances[1][0],
-                instances[1][1],
+            yield (
+                0,
+                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and {instances[1][0]}={instances[1][1]}",
             )
         elif len(instances) == 1:
-            yield 2, "Multi-Instance: {}={} and missing partner".format(
-                instances[0][0],
-                instances[0][1],
+            yield (
+                2,
+                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and missing partner",
             )
         else:
             yield 2, "Multi-Instance: unknown instances (%s)" % instances
@@ -112,6 +112,7 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
 
 
 check_info["ibm_mq_managers"] = LegacyCheckDefinition(
+    name="ibm_mq_managers",
     service_name="IBM MQ Manager %s",
     discovery_function=inventory_ibm_mq_managers,
     check_function=check_ibm_mq_managers,

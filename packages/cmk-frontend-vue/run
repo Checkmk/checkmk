@@ -5,6 +5,8 @@
 
 set -e
 
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -14,30 +16,40 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment    setup environment"
     echo "  -c, --clean                remove artifacts first"
-    echo "  -F, --check-format         check for correct formatting"
     echo "  -b, --build                build"
-    echo "  -a, --all                  shortcut for -F -b -U -u -i -t"
-    echo "  -f, --format               format sources"
+    echo "  -d, --build-dev            build in dev mode"
+    echo "  -t, --tests                run tests"
+    echo "  -F, --check-format         check for correct formatting"
     echo "  -T, --tsc                  run tsc"
     echo "  -E, --eslint               run eslint"
-    echo "  -t, --tests                run tests"
+    echo "  -a, --all                  shortcut for -b -t -F -T -E -d"
+    echo "  -f, --format               format sources"
     echo "  -h, --help                 show this help"
+}
+
+setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv/bin/activate
+    SETUP_VENV_RAN=yes
 }
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_SETUP_ENVIRONMENT=no
     RUN_CLEAN=no
-    RUN_CHECK_FORMAT=no
     RUN_BUILD=no
-    RUN_FORMAT=no
+    RUN_BUILD_DEV=no
+    RUN_TESTS=no
+    RUN_CHECK_FORMAT=no
     RUN_TSC=no
     RUN_ESLINT=no
-    RUN_TESTS=no
+    RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbafTEth' --long 'setup-environment,clean,clean,check-format,build,all,format,tsc,eslint,tests,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbtdFTEafh' --long 'clean,build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -46,18 +58,8 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
-                shift
-                continue
-                ;;
             '-c' | '--clean')
                 RUN_CLEAN=yes
-                shift
-                continue
-                ;;
-            '-F' | '--check-format')
-                RUN_CHECK_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -66,17 +68,18 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-a' | '--all')
-                RUN_CHECK_FORMAT=yes
-                RUN_TSC=yes
-                RUN_ESLINT=yes
-                RUN_TESTS=yes
-                RUN_BUILD=yes
+            '-d' | '--build-dev')
+                RUN_BUILD_DEV=yes
                 shift
                 continue
                 ;;
-            '-f' | '--format')
-                RUN_FORMAT=yes
+            '-t' | '--tests')
+                RUN_TESTS=yes
+                shift
+                continue
+                ;;
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -90,8 +93,18 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-t' | '--tests')
+            '-a' | '--all')
+                RUN_BUILD=yes
+                RUN_BUILD_DEV=yes
                 RUN_TESTS=yes
+                RUN_CHECK_FORMAT=yes
+                RUN_TSC=yes
+                RUN_ESLINT=yes
+                shift
+                continue
+                ;;
+            '-f' | '--format')
+                RUN_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -108,14 +121,10 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_FORMAT RUN_TSC RUN_ESLINT RUN_TESTS
+    readonly RUN_CLEAN RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
 }
 
-run_setup_environment() {
-    ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
-    export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
-    export SASS_BINARY_SITE="${ARTIFACTS_BASE}/repository/archives/"
-    export NODE_OPTIONS="--dns-result-order=ipv4first",
+npm_install_dependencies() {
     npm \
         ci \
         --yes \
@@ -123,31 +132,56 @@ run_setup_environment() {
         --audit=false
 }
 
-run_clean() {
-    rm -rf dist
+npm_dependencies_installed() {
+    npm ls --all &>/dev/null
 }
 
-run_check_format() {
-    npm run test-prettier
+setup_npm() {
+    test "${SETUP_NPM_RAN}" = "yes" && return
+    npm_dependencies_installed || npm_install_dependencies
+    echo "npm version $(npm --version)"
+    echo "node version $(node --version)"
+    SETUP_NPM_RAN=yes
+}
+
+run_clean() {
+    rm -rf dist node_modules dist-dev
 }
 
 run_build() {
+    setup_npm
     npm run build
 }
 
-run_format() {
-    npm run prettier
+run_build_dev() {
+    setup_npm
+    NODE_ENV=dev npm run build -- --outDir dist-dev
+}
+
+run_check_format() {
+    setup_npm
+    npm run test-prettier
+    setup_venv
+    python3 scripts/test_license_headers.py
 }
 
 run_tsc() {
+    setup_npm
     npm run test-tsc
 }
 
 run_eslint() {
+    setup_npm
     npm run test-eslint
 }
 
+run_format() {
+    setup_npm
+    npm run prettier
+}
+
 run_tests() {
+    setup_npm
     npm run test
 }
 
@@ -156,14 +190,14 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && run_clean
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_BUILD} = yes && run_build
-    test ${RUN_FORMAT} = yes && run_format
+    test ${RUN_TESTS} = yes && run_tests
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_TSC} = yes && run_tsc
     test ${RUN_ESLINT} = yes && run_eslint
-    test ${RUN_TESTS} = yes && run_tests
+    test ${RUN_FORMAT} = yes && run_format
+    test ${RUN_BUILD_DEV} = yes && run_build_dev
     true
 }
 

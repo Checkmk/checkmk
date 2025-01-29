@@ -12,7 +12,7 @@ import pytest
 from cmk.mkp_tool import PackageName, PackagePart, PackageVersion
 from cmk.mkp_tool._mkp import Manifest, read_manifest_optionally
 
-TEST_MANIFEST = Manifest(  # type: ignore[call-arg]  # mypy is wrong :-(
+TEST_MANIFEST = Manifest(
     title="Unit test package",
     name=PackageName("test_package"),
     description="A nice package to test with. Also I want to thank my grandma.",
@@ -29,7 +29,7 @@ TEST_MANIFEST = Manifest(  # type: ignore[call-arg]  # mypy is wrong :-(
 class TestManifest:
     def test_read_15_manifest(self) -> None:
         """make sure we can read old packages without 'usable until'"""
-        assert Manifest.parse_python_string(
+        Manifest.parse_python_string(
             "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
@@ -43,7 +43,7 @@ class TestManifest:
 
     def test_read_20_manifest(self) -> None:
         """make sure we can read old packages with 'num_files'"""
-        assert Manifest.parse_python_string(
+        Manifest.parse_python_string(
             "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
@@ -57,7 +57,7 @@ class TestManifest:
         )
 
     def test_read_21_manifest(self) -> None:
-        assert Manifest.parse_python_string(
+        Manifest.parse_python_string(
             "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"

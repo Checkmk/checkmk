@@ -7,6 +7,7 @@ password store compatible.
 
 We are working towards a more staight forward solution.
 """
+
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -21,6 +22,9 @@ HACK_AGENTS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
+    "aws": False,
+    "aws_status": False,  # needs no secret
+    "azure": True,
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret
@@ -30,6 +34,7 @@ HACK_AGENTS = {
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
     "gcp": True,
+    "gerrit": False,
     "jenkins": True,
     "mobileiron": True,
     "netapp_ontap": True,
@@ -37,6 +42,44 @@ HACK_AGENTS = {
     "proxmox_ve": True,
     "pure_storage_fa": True,
     "three_par": True,
+    "emcvnx": True,
+    "rabbitmq": True,
+    "redfish": False,
+    "redfish_power": False,
+    "tinkerforge": False,  # needs no secret
+    "couchbase": True,
+    "zerto": True,
+    "siemens_plc": False,  # needs no secret
+    "acme_sbc": False,  # needs no secret
+    "activemq": True,
+    "alertmanager": False,
+    "prometheus": False,
+    "allnet_ip_sensoric": False,  # needs no secret
+    "graylog": True,
+    "storeonce": True,
+    "appdynamics": True,
+    "ddn_s2a": True,
+    "gcp_status": False,  # needs no secret
+    "hivemanager_ng": True,
+    "hivemanager": True,
+    "hp_msa": True,
+    "ibmsvc": False,  # needs no secret
+    "innovaphone": True,
+    "storeonce4x": True,
+    "vsphere": True,
+    "jolokia": True,
+    "random": False,  # needs no secret
+    "mqtt": True,
+    "splunk": True,
+    "vnx_quotas": True,
+    "ucs_bladecenter": True,
+    "smb_share": True,
+    "jira": True,
+    "salesforce": False,  # needs no secret
+    "ipmi_sensors": True,
+    "ruckus_spot": True,
+    "kube": True,
+    "otel": False,  # needs no secret
 }
 
 
@@ -44,23 +87,29 @@ HACK_CHECKS = {
     # For the plugins developed against the cmk.server_side_calls.v1 we
     # need to know whether they support the password store natively, or
     # if we have to apply the password store hack.
-    # Make sure to have *all* active check plugins listed here, so we
+    # Make sure to have *all* active check plug-ins listed here, so we
     # can test for it
+    "bi_aggr": False,
     "by_ssh": False,  # has no secret
     "cert": False,  # has no secret
     "cmk_inv": False,  # has no secret
+    "disk_smb": False,
     "dns": False,  # has no secret
     "elasticsearch_query": False,
     "form_submit": False,  # has no secret
     "ftp": False,  # has no secret
-    "http": True,
+    "http": True,  # monitoring-plugins
     "httpv2": False,  # yay!
     "icmp": False,  # has no secret
-    "ldap": True,
+    "ldap": True,  # monitoring-plugins
+    "mail_loop": False,
+    "mailboxes": False,
+    "mail": False,
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
-    "smtp": True,
-    "sql": True,
+    "sftp": False,
+    "smtp": True,  # monitoring-plugins
+    "sql": False,
     "ssh": False,  # has no secret
     "tcp": False,  # has no secret
     "traceroute": False,  # has no secret

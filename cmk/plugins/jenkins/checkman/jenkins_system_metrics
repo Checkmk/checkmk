@@ -1,0 +1,24 @@
+title: Jenkins: System metrics
+agents: jenkins
+catalog: app/jenkins
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors various system metrics of Jenkins.
+ The data is collected through the plugin "Metrics" (https://plugins.jenkins.io/metrics), which has to be installed in Jenkins.
+ Please note that the proper retrieval of information requires the
+ monitoring user to have the "view" permission for "Metrics".
+
+ Information about threads will be shown, for example running, waiting,
+ deadlocked or blocked threads.
+
+ Information about memory usage will be shown.
+
+ The amount of currently active HTTP requests will be shown.
+
+ Needs the datasource "Jenkins" to be configured.
+
+ Tested with Jenkins 2.440.3 and Metrics plugin 4.2.21-449.v6960d7c54c69.
+
+discovery:
+ One service is created.

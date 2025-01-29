@@ -48,7 +48,7 @@ def _make_parameter_form() -> Dictionary:
         title=Title("Check TCP port connection"),
         help_text=Help(
             "This check tests the connection to a TCP port. It uses "
-            "<tt>check_tcp</tt> from the standard Nagios plugins."
+            "<tt>check_tcp</tt> from the standard Nagios plug-ins."
         ),
         elements={
             "port": DictElement(
@@ -59,10 +59,10 @@ def _make_parameter_form() -> Dictionary:
             ),
             "svc_description": DictElement(
                 parameter_form=String(
-                    title=Title("Service description"),
+                    title=Title("Service name"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
-                        "Here you can specify a service description. "
+                        "Here you can specify a service name. "
                         "If this parameter is not set, the service is named <tt>TCP Port [PORT NUMBER]</tt>"
                     ),
                 ),

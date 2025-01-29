@@ -6,12 +6,11 @@
 from logging import Logger
 from typing import Final
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
 import cmk.base.config as base_config
 from cmk.base.api.agent_based import register as agent_based_register
-from cmk.base.check_api import get_check_api_context
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
@@ -489,9 +488,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "mssql_connections_default_levels",
     "mssql_tablespace_default_levels",
     "names",
-    "netapp_api_cpu_cm_default_levels",
-    "netapp_api_cpu_default_levels",
-    "netapp_api_snapshots_default_levels",
     "netapp_cpu_default_levels",
     "netapp_fcpio_default_levels",
     "netctr_counter_indices",
@@ -674,7 +670,6 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
         base_config.load_all_plugins(
-            get_check_api_context,
             local_checks_dir=paths.local_checks_dir,
             checks_dir=paths.checks_dir,
         )
@@ -697,7 +692,7 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
             return
         raise MKUserError(
             None,
-            "Loading config variables for legacy check plugins is no longer supported. "
+            "Loading config variables for legacy check plug-ins is no longer supported. "
             f"Please remove the following variables from your .mk files: {', '.join(sorted(problematic_variables))}",
         )
 

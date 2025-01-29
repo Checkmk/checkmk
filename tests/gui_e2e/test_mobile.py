@@ -5,60 +5,58 @@
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.dashboard import DashboardMobile
+from tests.testlib.playwright.pom.login import LoginPage
 
 _header_selector = "div.ui-header.ui-bar-inherit.ui-header-fixed.slidedown"
 _listview_selector = "ul.ui-listview.ui-listview-inset.ui-corner-all.ui-shadow"
 
-_texts_for_selectors = [
-    "Host search",
-    "Service search",
-    "Host problems (all)",
-    "Host problems (unhandled)",
-    "Service problems (all)",
-    "Service problems (unhandled)",
-    "History",
-    "Classical web GUI",
-    "Logout",
-]
+_texts_for_selectors = DashboardMobile.links
+_texts_for_selectors.remove("Logout")
 
 # "Events" appears twice as text in the homepage. Using hrefs to avoid duplications.
 _hrefs_for_selectors = [
-    "mobile_view.py?view_name=mobile_events",
-    "mobile_view.py?view_name=ec_events_mobile",
+    pytest.param("mobile_view.py?view_name=mobile_events", id="history-events"),
+    pytest.param("mobile_view.py?view_name=ec_events_mobile", id="ec-events"),
 ]
 
 
-def test_login(logged_in_page_mobile: LoginPage) -> None:
+def test_login(dashboard_page_mobile: DashboardMobile) -> None:
     """Login into the Chechmk mobile page and assert the presence of the header."""
     expect(
-        logged_in_page_mobile.locator(_header_selector + " >> text=Checkmk Mobile")
+        dashboard_page_mobile.locator(_header_selector + " >> text=Checkmk Mobile")
     ).to_be_visible()
 
 
 @pytest.mark.parametrize("text", _texts_for_selectors)
-def test_homepage_texts(logged_in_page_mobile: LoginPage, text: str) -> None:
+def test_homepage_texts(dashboard_page_mobile: DashboardMobile, text: str) -> None:
     """Assert the presence of the main locators via text selectors in the mobile homepage."""
-    expect(logged_in_page_mobile.locator(_listview_selector + f" >> text={text}")).to_be_visible()
+    expect(dashboard_page_mobile.locator(_listview_selector + f" >> text={text}")).to_be_visible()
 
 
 @pytest.mark.parametrize("href", _hrefs_for_selectors)
-def test_homepage_hrefs(logged_in_page_mobile: LoginPage, href: str) -> None:
+def test_homepage_hrefs(dashboard_page_mobile: DashboardMobile, href: str) -> None:
     """Assert the presence of the main locators via href selectors in the mobile homepage."""
     expect(
-        logged_in_page_mobile.locator(_listview_selector + f" >> a[href='{href}']")
+        dashboard_page_mobile.locator(_listview_selector + f" >> a[href='{href}']")
     ).to_be_visible()
 
 
 @pytest.mark.parametrize("text", _texts_for_selectors)
-def test_navigate_homepage_texts(logged_in_page_mobile: LoginPage, text: str) -> None:
+def test_navigate_homepage_texts(dashboard_page_mobile: DashboardMobile, text: str) -> None:
     """Navigate all main locators via text selectors in the mobile homepage."""
-    logged_in_page_mobile.locator(_listview_selector + f" >> text={text}").click()
-    logged_in_page_mobile.page.go_back()
+    dashboard_page_mobile.locator(_listview_selector + f" >> text={text}").click()
+    dashboard_page_mobile.page.go_back()
 
 
 @pytest.mark.parametrize("href", _hrefs_for_selectors)
-def test_navigate_homepage_hrefs(logged_in_page_mobile: LoginPage, href: str) -> None:
+def test_navigate_homepage_hrefs(dashboard_page_mobile: DashboardMobile, href: str) -> None:
     """Navigate all main locators via href selectors in the mobile homepage."""
-    logged_in_page_mobile.locator(_listview_selector + f" >> a[href='{href}']").click()
-    logged_in_page_mobile.page.go_back()
+    dashboard_page_mobile.locator(_listview_selector + f" >> a[href='{href}']").click()
+    dashboard_page_mobile.page.go_back()
+
+
+def test_logout(dashboard_page_mobile: DashboardMobile) -> None:
+    """Logout from the GUI"""
+    dashboard_page_mobile.logout.click()
+    LoginPage(dashboard_page_mobile.page, navigate_to_page=False)

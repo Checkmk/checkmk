@@ -7,6 +7,7 @@
 import "core-js/stable";
 import "./modules/figures/cmk_figures_plugins";
 
+/* eslint-disable import/no-namespace -- Needed for exports */
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
@@ -22,22 +23,28 @@ import * as backup from "./modules/backup";
 import * as bi from "./modules/bi";
 import * as dashboard from "./modules/dashboard";
 import * as element_dragging from "./modules/element_dragging";
-import {figure_registry} from "./modules/figures/cmk_figures";
 import * as cmk_figures from "./modules/figures/cmk_figures";
-import {EventStats, HostStats, ServiceStats} from "./modules/figures/cmk_stats";
-import {TableFigure} from "./modules/figures/cmk_table";
+import {register} from "./modules/figures/register";
 import * as foldable_container from "./modules/foldable_container";
 import * as forms from "./modules/forms";
 import * as graph_integration from "./modules/graph_integration";
 import * as graphs from "./modules/graphs";
+import * as graphs_cee from "./modules/graphs_cee";
 import * as help from "./modules/help";
 import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
+import {insert_before} from "./modules/layout";
+import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
+import * as ntop_alerts from "./modules/ntop/ntop_alerts";
+import * as ntop_flows from "./modules/ntop/ntop_flows";
+import * as ntop_host_details from "./modules/ntop/ntop_host_details";
+import * as ntop_top_talkers from "./modules/ntop/ntop_top_talkers";
+import * as ntop_utils from "./modules/ntop/ntop_utils";
 import * as number_format from "./modules/number_format";
 import * as page_menu from "./modules/page_menu";
-import * as password_meter from "./modules/password_meter";
+import {initPasswordStrength} from "./modules/password_meter";
 import * as popup_menu from "./modules/popup_menu";
 import * as prediction from "./modules/prediction";
 import * as profile_replication from "./modules/profile_replication";
@@ -51,7 +58,7 @@ import * as sites from "./modules/sites";
 import * as sla from "./modules/sla";
 import {render_stats_table} from "./modules/tracking_display";
 import * as transfer from "./modules/transfer";
-import {RequireConfirmation} from "./modules/types";
+import type {RequireConfirmation} from "./modules/types";
 import * as utils from "./modules/utils";
 import * as valuespecs from "./modules/valuespecs";
 import * as views from "./modules/views";
@@ -59,49 +66,12 @@ import * as visibility_detection from "./modules/visibility_detection";
 import * as wato from "./modules/wato";
 import * as webauthn from "./modules/webauthn";
 
-// Optional import is currently not possible using the ES6 imports
-let graphs_cee;
-let ntop_host_details;
-let ntop_alerts;
-let ntop_flows;
-let ntop_top_talkers;
-let ntop_utils;
-let license_usage_timeseries_graph;
-let register;
+register();
 
-function registerRawFigureBaseClasses() {
-    figure_registry.register(TableFigure);
-    figure_registry.register(HostStats);
-    figure_registry.register(ServiceStats);
-    figure_registry.register(EventStats);
-}
-
-registerRawFigureBaseClasses();
-if (process.env.ENTERPRISE !== "no") {
-    register = require("./modules/cee/register.ts");
-    register.registerEnterpriseFigureBaseClasses();
-    require("./modules/cee/figures/cmk_figures_plugins_cee");
-    graphs_cee = require("./modules/cee/graphs_cee");
-    ntop_host_details = require("./modules/cee/ntop/ntop_host_details");
-    ntop_alerts = require("./modules/cee/ntop/ntop_alerts");
-    ntop_flows = require("./modules/cee/ntop/ntop_flows");
-    ntop_top_talkers = require("./modules/cee/ntop/ntop_top_talkers");
-    ntop_utils = require("./modules/cee/ntop/ntop_utils");
-    license_usage_timeseries_graph = require("./modules/cee/license_usage/license_usage_timeseries_graph");
-} else {
-    graphs_cee = null;
-    ntop_host_details = null;
-    ntop_alerts = null;
-    ntop_flows = null;
-    ntop_top_talkers = null;
-    ntop_utils = null;
-    license_usage_timeseries_graph = null;
-}
-
-type CallableFunctionOptions = {[key: string]: string};
+type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
     node: HTMLElement,
-    options: CallableFunctionOptions
+    options: CallableFunctionArguments,
 ) => Promise<void>;
 
 // See cmk.gui.htmllib.generator:KnownTSFunction
@@ -109,6 +79,7 @@ type CallableFunction = (
 const callable_functions: {[name: string]: CallableFunction} = {
     render_stats_table: render_stats_table,
     render_qr_code: render_qr_code,
+    insert_before: insert_before,
 };
 
 $(() => {
@@ -125,22 +96,22 @@ $(() => {
         .forEach((container, _) => {
             const data = container.dataset;
             const function_name: string = data.cmk_call_ts_function!;
-            let options: CallableFunctionOptions;
-            if (data.cmk_call_ts_options) {
-                options = JSON.parse(data.cmk_call_ts_options);
+            let args: CallableFunctionArguments; // arguments is a restricted name in JavaScript
+            if (data.cmk_call_ts_arguments) {
+                args = JSON.parse(data.cmk_call_ts_arguments);
             } else {
-                options = {};
+                args = {};
             }
             const ts_function = callable_functions[function_name];
             // The function has the responsibility to take the container and do it's thing with it.
-            ts_function(container, options);
+            ts_function(container, args);
         });
 
     document
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
         .forEach((form, _) => {
             const confirmation: RequireConfirmation = JSON.parse(
-                form.dataset.cmk_form_confirmation!
+                form.dataset.cmk_form_confirmation!,
             );
             forms.add_confirm_on_submit(form, confirmation);
         });
@@ -159,6 +130,7 @@ export const cmk_export = {
         background_job: background_job,
         backup: backup,
         bi: bi,
+        d3: d3,
         dashboard: dashboard,
         element_dragging: element_dragging,
         figures: cmk_figures,
@@ -205,4 +177,4 @@ export const cmk_export = {
     },
 };
 
-password_meter.initPasswordStrength();
+initPasswordStrength();

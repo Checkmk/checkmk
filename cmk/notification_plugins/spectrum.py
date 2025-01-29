@@ -65,11 +65,16 @@ def main() -> NoReturn:
         base_oid + ".10": 3,  # SPECIFIC TRAP (type) NUMBER
         base_oid + ".11": "Call number 123456",  # CALLOUT STRING
         base_oid + ".12": complete_url,
-        base_oid
-        + ".13": "{} alarm on host {}".format(
+        base_oid + ".13": "{} alarm on host {}".format(
             context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]
         ),
         base_oid + ".14": context.get("SERVICEGROUPNAMES", ""),
     }
 
-    sys.exit(send_trap(oids, context["PARAMETER_DESTINATION"], context["PARAMETER_COMMUNITY"]))
+    sys.exit(
+        send_trap(
+            oids,
+            context["PARAMETER_DESTINATION"],
+            utils.get_password_from_env_or_context(key="PARAMETER_COMMUNITY", context=context),
+        )
+    )

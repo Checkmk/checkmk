@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import contextlib
 import datetime
@@ -329,6 +328,66 @@ def test_check_trend_time_period_zero_lower_bound() -> None:
         Result(
             state=State.CRIT,
             summary="Time until temperature limit reached: 1 minute 0 seconds (warn/crit below 8 minutes 0 seconds/6 minutes 0 seconds)",
+        ),
+    ]
+
+
+def test_check_trend_time_levels_above_crit() -> None:
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
+        results = list(
+            temperature._check_trend(
+                {"temp.my_test.delta": (0, 10.0)},
+                67.0,
+                {
+                    "period": 1,
+                    "trend_levels": (3, 5),
+                    "trend_levels_lower": (10, 15),
+                    "trend_timeleft": (120, 60),
+                },
+                "c",
+                60.0,
+                0.0,
+                "my_test",
+            )
+        )
+    assert results == [
+        Result(
+            state=State.CRIT,
+            summary="Temperature trend: +57.0 °C per 1 min (warn/crit at +3 °C per 1 min/+5 °C per 1 min)",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Time until temperature limit reached: 0 seconds (warn/crit below 2 hours 0 minutes/1 hour 0 minutes)",
+        ),
+    ]
+
+
+def test_check_trend_time_levels_below_lower_crit() -> None:
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
+        results = list(
+            temperature._check_trend(
+                {"temp.my_test.delta": (0, 27.0)},
+                25.0,
+                {
+                    "period": 1,
+                    "trend_levels": (3, 5),
+                    "trend_levels_lower": (10, 15),
+                    "trend_timeleft": (120, 60),
+                },
+                "c",
+                60.0,
+                30.0,
+                "my_test",
+            )
+        )
+    assert results == [
+        Result(
+            state=State.OK,
+            summary="Temperature trend: -2.0 °C per 1 min",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Time until temperature limit reached: 0 seconds (warn/crit below 2 hours 0 minutes/1 hour 0 minutes)",
         ),
     ]
 
@@ -950,24 +1009,3 @@ def test_check_temperature_ignores_trend_computation() -> None:
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
-
-
-@pytest.mark.parametrize(
-    "unique_name, value_store",
-    [
-        (None, mock_value_store()),
-        ("unique_name", None),
-    ],
-)
-def test_check_temperature_either_unique_name_or_value_store(
-    unique_name: str | None, value_store: MutableMapping[str, Any] | None
-) -> None:
-    with pytest.raises(ValueError):
-        list(
-            temperature.check_temperature(
-                20.0,
-                {},
-                unique_name=unique_name,
-                value_store=value_store,
-            )
-        )

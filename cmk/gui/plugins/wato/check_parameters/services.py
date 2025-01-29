@@ -33,9 +33,9 @@ def _valuespec_inventory_services_rules():
                     title=_("Services (Regular Expressions)"),
                     size=49,
                     help=_(
-                        "Regular expressions matching the begining of the internal name "
+                        "Regular expressions matching the beginning of the internal name "
                         "or the description of the service. "
-                        "If no name is given then this rule will match all services. The "
+                        "If no name is given, then this rule will match all services. The "
                         "match is done on the <i>beginning</i> of the service name. It "
                         "is done <i>case sensitive</i>. You can do a case insensitive match "
                         "by prefixing the regular expression with <tt>(?i)</tt>. Example: "
@@ -68,7 +68,7 @@ def _valuespec_inventory_services_rules():
             ),
         ],
         help=_(
-            "This rule can be used to configure the inventory of the windows services check. "
+            "This rule can be used to configure the discovery of the windows services check. "
             "You can configure specific windows services to be monitored by the windows check by "
             "selecting them by name, current state during the inventory, or start mode."
         ),
@@ -89,12 +89,12 @@ def _item_spec_services():
     return TextInput(
         title=_("Name of the service"),
         help=_(
-            "Please Please note, that the agent replaces spaces in "
+            "Please note, that the agent replaces spaces in "
             "the service names with underscores. If you are unsure about the "
-            "correct spelling of the name then please look at the output of "
-            "the agent (cmk -d HOSTNAME). The service names  are in the first "
+            "correct spelling of the name, then please look at the output of "
+            "the agent (cmk -d HOSTNAME). The service names are in the first "
             "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
-            "do not mix up the service name with the display name of the service."
+            "do not mix up the service name with the display name of the service. "
             "The latter one is just being displayed as a further information."
         ),
         allow_empty=False,

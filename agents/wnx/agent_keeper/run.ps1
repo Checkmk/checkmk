@@ -38,7 +38,7 @@ $packDoc = $false
 # repo/branch specific short path
 # TODO(sk): move it to CI upon confirmation that screen works as intended
 $shortenPath = "workdir\workspace\checkmk\master"
-$shortenLink = "y"
+$shortenLink = "ym"
 
 if ("$env:arg_var_value" -ne "") {
     $env:arg_val_name = $env:arg_var_value

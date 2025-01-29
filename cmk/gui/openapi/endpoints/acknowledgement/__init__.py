@@ -11,6 +11,7 @@ somebody is attending to it.
 You can find an introduction to the acknowledgement of problems in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
+
 from collections.abc import Mapping
 
 # TODO: List acknowledgments
@@ -43,7 +44,7 @@ from cmk import fields
 
 SERVICE_DESCRIPTION = {
     "service_description": fields.String(
-        description="The service description.",
+        description="The service name.",
         example="Memory",
     )
 }

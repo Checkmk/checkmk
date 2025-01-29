@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 import cmk.gui.watolib.config_domain_name as utils
 
@@ -12,12 +14,11 @@ def test_registered_generators() -> None:
     expected_generators = [
         "acknowledge_initial_werks",
         "basic_wato_config",
-        "create_automation_user",
         "create_registration_automation_user",
         "ec_sample_rule_pack",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_generators += [
             "cee_agent_bakery",
             "cee_rrd_config",
@@ -31,7 +32,7 @@ def test_get_sorted_generators() -> None:
         "basic_wato_config",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             "cee_rrd_config",
             "cee_agent_bakery",
@@ -40,7 +41,6 @@ def test_get_sorted_generators() -> None:
     expected += [
         "acknowledge_initial_werks",
         "ec_sample_rule_pack",
-        "create_automation_user",
         "create_registration_automation_user",
     ]
 

@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any, TypedDict
 
-from cmk.utils import store
+from cmk.ccc import store
 
 from cmk.gui.i18n import _
 

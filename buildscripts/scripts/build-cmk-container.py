@@ -12,7 +12,7 @@ may require the following env variables
 - DOCKER_USERNAME=carl.lama
 - DOCKER_PASSPHRASE=eatingHands
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
 --edition=enterprise \
@@ -27,7 +27,7 @@ may require the following env variables
 - INTERNAL_DEPLOY_PORT=42
 - INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=2.2.0 \
 --edition=enterprise \
@@ -44,33 +44,16 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import tarfile
-from contextlib import contextmanager
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Iterator, Union
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 
-
-def strtobool(val: str | bool) -> bool:
-    """Convert a string representation of truth to true (1) or false (0).
-    Raises ArgumentTypeError if 'val' is anything else.
-
-    distutils.util.strtobool() no longer part of the standard library in 3.12
-
-    https://github.com/python/cpython/blob/v3.11.2/Lib/distutils/util.py#L308
-    """
-    if isinstance(val, bool):
-        return val
-    val = val.lower()
-    if val in ("y", "yes", "t", "true", "on", "1"):
-        return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
+from buildscripts.scripts.lib.common import cwd, strtobool
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -142,12 +125,11 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_cmd(
-    cmd: Union[list[str], str],
-    shell: bool = False,
+    cmd: list[str] | str,
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:
-    completed_process = subprocess.run(cmd, encoding="utf-8", capture_output=True, shell=shell)
+    completed_process = subprocess.run(cmd, encoding="utf-8", capture_output=True, check=False)
     if raise_exception and completed_process.returncode != 0:
         raise Exception(
             f"Failed to execute command '{' '.join(cmd)}' with: {completed_process.stdout}, {completed_process.stderr}"
@@ -157,16 +139,6 @@ def run_cmd(
         LOG.debug(completed_process.stdout.strip())
 
     return completed_process
-
-
-@contextmanager
-def cwd(path: Union[str, Path]) -> Iterator[None]:
-    oldpwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(oldpwd)
 
 
 logging.basicConfig(
@@ -185,7 +157,7 @@ docker_client = docker.from_env(timeout=1200)
 
 def cleanup() -> None:
     """Cleanup"""
-    LOG.info(f"Remove temporary directory '{tmp_path}'")
+    LOG.info("Remove temporary directory '%s'", tmp_path)
     rmtree(tmp_path)
 
 
@@ -203,19 +175,19 @@ def docker_tag(
     if target_version is None:
         target_version = version_tag
 
-    LOG.info(f"Creating tag ...")
-    LOG.debug(f"target_version: {target_version}")
-    LOG.debug(f"args: {args}")
-    LOG.debug(f"version_tag: {version_tag}")
-    LOG.debug(f"registry: {registry}")
-    LOG.debug(f"folder: {folder}")
-    LOG.debug(f"target_version: {target_version}")
+    LOG.info("Creating tag ...")
+    LOG.debug("target_version: %s", target_version)
+    LOG.debug("args: %s", args)
+    LOG.debug("version_tag: %s", version_tag)
+    LOG.debug("registry: %s", registry)
+    LOG.debug("folder: %s", folder)
+    LOG.debug("target_version: %s", target_version)
 
-    LOG.debug(f"Getting tagged image: {source_tag}")
+    LOG.debug("Getting tagged image: %s", source_tag)
     image = docker_client.images.get(source_tag)
-    LOG.debug(f"this image: {image}")
+    LOG.debug("this image: %s", image)
 
-    LOG.debug(f"placing new tag, repo: {this_repository}, tag: {target_version}")
+    LOG.debug("placing new tag, repo: %s, tag: %s", this_repository, target_version)
     image.tag(
         repository=this_repository,
         tag=target_version,
@@ -223,16 +195,16 @@ def docker_tag(
     LOG.debug("Done")
 
     if args.set_branch_latest_tag:
-        LOG.info(f"Create '{args.branch}-latest' tag ...")
-        LOG.debug(f"placing new tag, repo: {this_repository}, tag: {args.branch}-latest")
+        LOG.info("Create '%s-latest' tag ...", args.branch)
+        LOG.debug("placing new tag, repo: %s, tag: %s-latest", this_repository, args.branch)
         image.tag(
             repository=this_repository,
             tag=f"{args.branch}-latest",
         )
         LOG.debug("Done")
     else:
-        LOG.info(f"Create 'daily' tag ...")
-        LOG.debug(f"placing new tag, repo: {this_repository}, tag: {args.branch}-daily")
+        LOG.info("Create 'daily' tag ...")
+        LOG.debug("placing new tag, repo: %s, tag: %s-daily", this_repository, args.branch)
         image.tag(
             repository=this_repository,
             tag=f"{args.branch}-daily",
@@ -240,9 +212,9 @@ def docker_tag(
         LOG.debug("Done")
 
     if args.set_latest_tag:
-        LOG.info(f"Create 'latest' tag ...")
+        LOG.info("Create 'latest' tag ...")
 
-        LOG.debug(f"placing new tag, repo: {this_repository}, tag: latest")
+        LOG.debug("placing new tag, repo: %s, tag: latest", this_repository)
         image.tag(
             repository=this_repository,
             tag="latest",
@@ -250,12 +222,12 @@ def docker_tag(
         LOG.debug("Done")
 
     image.reload()
-    LOG.debug(f"Final image tags: {image.tags}")
+    LOG.debug("Final image tags: %s", image.tags)
 
 
 def docker_login(registry: str, docker_username: str, docker_passphrase: str) -> None:
     """Log into a registry"""
-    LOG.info(f"Login to {registry} ...")
+    LOG.info("Perform docker login to registry '%s' as user '%s' ...", registry, docker_username)
     docker_client.login(registry=registry, username=docker_username, password=docker_passphrase)
 
 
@@ -264,7 +236,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     this_repository = f"{registry}{folder}/check-mk-{args.edition}"
 
     if "-rc" in version_tag:
-        LOG.info(f"{version_tag} was a release candidate, do a retagging before pushing")
+        LOG.info("%s was a release candidate, do a retagging before pushing", version_tag)
         version_tag = re.sub("-rc[0-9]*", "", version_tag)
         docker_tag(
             args=args,
@@ -280,48 +252,54 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
         docker_passphrase=os.environ.get("DOCKER_PASSPHRASE", ""),
     )
 
-    LOG.info(f"Pushing '{this_repository}' as '{version_tag}' ...")
+    LOG.info("Pushing '%s' as '%s' ...", this_repository, version_tag)
     resp = docker_client.images.push(
         repository=this_repository, tag=version_tag, stream=True, decode=True
     )
     for line in resp:
         LOG.debug(line)
+        if "error" in line:
+            raise ValueError(f"Some error occured during upload: {line}")
 
     if args.set_branch_latest_tag:
-        LOG.info(f"Pushing '{this_repository}' as '{args.branch}-latest' ...")
+        LOG.info("Pushing '%s' as '%s-latest' ...", this_repository, args.branch)
         resp = docker_client.images.push(
             repository=this_repository, tag=f"{args.branch}-latest", stream=True, decode=True
         )
     else:
-        LOG.info(f"Pushing '{this_repository}' as '{args.branch}-daily' ...")
+        LOG.info("Pushing '%s' as '%s-daily' ...", this_repository, args.branch)
         resp = docker_client.images.push(
             repository=this_repository, tag=f"{args.branch}-daily", stream=True, decode=True
         )
 
     for line in resp:
         LOG.debug(line)
+        if "error" in line:
+            raise ValueError(f"Some error occured during upload: {line}")
 
     if args.set_latest_tag:
-        LOG.info(f"Pushing '{this_repository}' as 'latest' ...")
+        LOG.info("Pushing '%s' as 'latest' ...", this_repository)
         resp = docker_client.images.push(
             repository=this_repository, tag="latest", stream=True, decode=True
         )
         for line in resp:
             LOG.debug(line)
+            if "error" in line:
+                raise ValueError(f"Some error occured during upload: {line}")
 
 
 def needed_packages(mk_file: str, output_file: str) -> None:
     """Extract needed packages from MK file"""
     packages = []
-    with open(Path(mk_file).resolve(), "r") as file:
+    with open(Path(mk_file).resolve()) as file:
         lines = [line.rstrip() for line in file]
         for line in lines:
             this = re.findall(r"^(OS_PACKAGES\s*\+=\s*)(.*?)(?=#|$)", line)
             if len(this):
                 packages.append(this[0][-1].strip())
 
-    LOG.debug(f"Needed packages based on {mk_file}: {packages}")
-    LOG.debug(f"Save needed-packages file to '{output_file}'")
+    LOG.debug("Needed packages based on %s: %s", mk_file, packages)
+    LOG.debug("Save needed-packages file to '%s'", output_file)
     with open(output_file, "w") as file:
         file.write(" ".join(packages))
 
@@ -332,13 +310,13 @@ def docker_load(args: argparse.Namespace, version_tag: str, registry: str, folde
     this_repository = f"{registry}{folder}/check-mk-{args.edition}"
 
     with cwd(tmp_path):
-        LOG.debug(f"Now at: {os.getcwd()}")
-        LOG.debug(f"Loading image '{tar_name}' ...")
+        LOG.debug("Now at: %s", os.getcwd())
+        LOG.debug("Loading image '%s' ...", tar_name)
 
         with gzip.open(tar_name, "rb") as tar_ball:
             loaded_image = docker_client.images.load(tar_ball)[0]
 
-    LOG.debug(f"Create '{this_repository}:{version_tag}' tag ...")
+    LOG.debug("Create '%s:%s' tag ...", this_repository, version_tag)
     loaded_image.tag(
         repository=this_repository,
         tag=version_tag,
@@ -352,11 +330,11 @@ def check_for_local_image(
     image_name_with_tag = f"{registry}{folder}/check-mk-{args.edition}:{version_tag}"
 
     try:
-        image = docker_client.images.get(image_name_with_tag)
-        LOG.info(f"{image_name_with_tag} locally available")
+        docker_client.images.get(image_name_with_tag)
+        LOG.info("%s locally available", image_name_with_tag)
         return True
     except docker.errors.ImageNotFound:
-        LOG.info(f"{image_name_with_tag} not found locally, please pull or load it")
+        LOG.info("%s not found locally, please pull or load it", image_name_with_tag)
         return False
 
 
@@ -384,9 +362,13 @@ def build_tar_gz(
     tar_name = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
 
     with cwd(docker_path):
-        LOG.debug(f"Now at: {os.getcwd()}")
+        LOG.debug("Now at: %s", os.getcwd())
         LOG.debug(
-            f"Building image '{docker_path}', tagged: '{this_tag}', buildargs: '{buildargs}', nocache: '{args.no_cache}' ..."
+            "Building image '%s', tagged: '%s', buildargs: '%s', nocache: '%s' ...",
+            docker_path,
+            this_tag,
+            buildargs,
+            args.no_cache,
         )
         image, build_logs = docker_client.images.build(
             # Do not use the cache when set to True
@@ -395,16 +377,18 @@ def build_tar_gz(
             tag=this_tag,
             path=docker_path,
         )
-        LOG.debug(f"Built image: {image}")
+        LOG.debug("Built image: %s", image)
         for chunk in build_logs:
             if "stream" in chunk:
                 for line in chunk["stream"].splitlines():
                     LOG.debug(line)
 
-        LOG.info(f"Creating Image-Tarball {tar_name} ...")
+        LOG.info("Creating Image-Tarball %s ...", tar_name)
         if "-rc" in version_tag:
             LOG.info(
-                f"{version_tag} contains rc information, do a retagging before docker save with {args.version}."
+                "%s contains rc information, do a retagging before docker save with %s.",
+                version_tag,
+                args.version,
             )
 
             # image.tag() is required to make image.save() work properly.
@@ -417,7 +401,7 @@ def build_tar_gz(
             )
             # reload this object from the server and update attrs
             image.reload()
-            LOG.debug(f"Image tags after re-tagging: {image.tags}")
+            LOG.debug("Image tags after re-tagging: %s", image.tags)
             this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
             with gzip.open(tar_name, "wb") as tar_ball:
                 # image.save() can only take elements of the tags list of an image
@@ -425,7 +409,11 @@ def build_tar_gz(
                 for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
             LOG.debug(
-                f"Remove image {this_tag} now, it will be loaded from tar.gz at a later point again, see CMK-16498"
+                (
+                    "Remove image %s now, it will be loaded from tar.gz at a later point again, "
+                    "see CMK-16498"
+                ),
+                this_tag,
             )
             docker_client.images.remove(image=this_tag)
         else:
@@ -449,13 +437,13 @@ def build_image(
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
     pkg_file = f"{pkg_name}_0.jammy_{architecture}.deb"
 
-    LOG.debug(f"docker_path: {docker_path}")
-    LOG.debug(f"docker_image_archive: {docker_image_archive}")
-    LOG.debug(f"pkg_name: {pkg_name}")
-    LOG.debug(f"architecture: {architecture}")
-    LOG.debug(f"pkg_file: {pkg_file}")
+    LOG.debug("docker_path: %s", docker_path)
+    LOG.debug("docker_image_archive: %s", docker_image_archive)
+    LOG.debug("pkg_name: %s", pkg_name)
+    LOG.debug("architecture: %s", architecture)
+    LOG.debug("pkg_file: %s", pkg_file)
 
-    LOG.info(f"Unpack source tar to {tmp_path}")
+    LOG.info("Unpack source tar to %s", tmp_path)
     with tarfile.open(
         name=f"{args.source_path}/check-mk-{args.edition}-{args.version}{suffix}.tar.gz",
         mode="r:gz",
@@ -492,7 +480,7 @@ def main() -> None:
     LOG.setLevel(LOG_LEVELS[min(len(LOG_LEVELS) - 1, max(args.verbose, 0))])
 
     LOG.debug("Docker version: %r", docker_client.info()["ServerVersion"])
-    LOG.debug(f"args: {args}")
+    LOG.debug("args: %s", args)
 
     # Default to our internal registry, set it to "" if you want push it to dockerhub
     registry = os.environ.get("CHECKMK_REGISTRY", "registry.checkmk.com")
@@ -509,6 +497,8 @@ def main() -> None:
             suffix = ".cee"
         case "managed":
             suffix = ".cme"
+            registry = ""
+            folder = "checkmk"
         case "cloud":
             suffix = ".cce"
             registry = ""
@@ -522,11 +512,11 @@ def main() -> None:
 
     version_tag = Path(args.source_path).name
 
-    LOG.debug(f"tmp_path: {tmp_path}")
-    LOG.debug(f"version_tag: {version_tag}")
-    LOG.debug(f"registry: {registry}")
-    LOG.debug(f"suffix: {suffix}")
-    LOG.debug(f"base_path: {base_path}")
+    LOG.debug("tmp_path: %s", tmp_path)
+    LOG.debug("version_tag: %s", version_tag)
+    LOG.debug("registry: %s", registry)
+    LOG.debug("suffix: %s", suffix)
+    LOG.debug("base_path: %s", base_path)
 
     if os.environ.get("NEXUS_USERNAME"):
         docker_login(

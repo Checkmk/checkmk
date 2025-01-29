@@ -62,7 +62,7 @@ def test_check_netapp_ontap_aggr_ok(
 
     assert isinstance(result[2], Metric)
     assert result[2].name == "fs_used_percent"
-    assert result[3] == Result(state=State.OK, summary="Used: 50.00% - 5.00 GB of 10.0 GB")
+    assert result[3] == Result(state=State.OK, summary="Used: 50.00% - 4.66 GiB of 9.31 GiB")
 
 
 def test_check_netapp_ontap_aggr_warn(

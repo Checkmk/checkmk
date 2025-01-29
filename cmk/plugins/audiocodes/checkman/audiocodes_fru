@@ -1,0 +1,10 @@
+title: AudioCodes: FRU
+agents: snmp
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the action and status of every module FRU.
+
+discovery:
+ One service is created for every module.

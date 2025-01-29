@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<table align="center"
+       width="100%"
+       style="border: 1px solid #e5e5e5;
+              border-collapse: separate;
+              border-top: 8px solid #77BCE4;
+              min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td align="center" style="padding: 10px 0 5px 0;">
+            <table width="100%"
+                   height="124"
+                   style="border-collapse: collapse;
+                          border-spacing: 0;
+                          max-width: 472px">
+                <tr>
+                    <td width="80"
+                        height="33"
+                        style="font-size:14px;
+                               font-weight:600;
+                               padding:8px;
+                               border-bottom: 1px solid #e5e5e5">Event:</td>
+                    <td height="33" style="font-size:14px; border-bottom: 1px solid #e5e5e5;">
+                        <table style="border-collapse: collapse;">
+                            <tr>
+                                <td style=" padding: 0; ">
+                                    <div style=" display: flex; align-items: center; ">
+                                        {{ data.NOTIFICATIONTYPE.title() }} (while
+                                        <p height="18"
+                                           width="42"
+                                           style="align-content: center;
+                                                  text-align: center;
+                                                  margin-left: 3px;
+                                                  font-weight: 600;
+                                                  border-radius: 8px;
+                                                  padding: 0 10px 0 10px;
+                                                  {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %}">
+                                            {% if service_notification %}
+                                                {{ data.SERVICESTATE[:4] }}
+                                            {% else %}
+                                                {{ data.HOSTSTATE[:4] }}
+                                            {% endif %}
+                                        </p>
+                                        )
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% if service_notification %}
+                    <tr style="border-bottom: 1px solid #e5e5e5;">
+                        <td width="80"
+                            style="font-size:14px;
+                                   font-weight:600;
+                                   padding:8px;
+                                   border-bottom: 1px solid #e5e5e5;
+                                   height:33px;
+                                   color: #2c3844">Service:</td>
+                        <td style="font-size:14px;
+                                   border-bottom: 1px solid #e5e5e5;
+                                   height:33px;
+                                   color: #2c3844">{{ data.LINKEDSERVICEDESC | safe }}</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td {{ macros.td_first_child(width='80px', padding='8px') }}>
+                        Host:
+                    </td>
+                    <td {{ macros.td_last_child() }}>
+                        {{ data.LINKEDHOSTNAME | safe }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
+        </td>
+    </tr>
+</table>

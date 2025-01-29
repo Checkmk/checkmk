@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
+import re
 
 import pytest
 
@@ -11,7 +12,7 @@ from livestatus import SiteId
 
 import cmk.ec.export as ec
 from cmk.ec.config import MatchGroups, TextMatchResult
-from cmk.ec.rule_matcher import MatchPriority
+from cmk.ec.rule_matcher import compile_matching_value, MatchPriority
 
 
 @pytest.mark.parametrize(
@@ -122,6 +123,24 @@ from cmk.ec.rule_matcher import MatchPriority
             (),
             (),
         ),
+        # regex, dot star
+        (
+            "test ODBC test",
+            ec.MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            ".*ODBC",
+            "test ODBC",
+            (),
+            (),
+        ),
+        # regex, dot star also at the end
+        (
+            "test ODBC test",
+            ec.MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            ".*ODBC.*",
+            "test ODBC test",
+            (),
+            (),
+        ),
     ],
 )
 def test_match_message(
@@ -188,7 +207,7 @@ def test_match_priority(
         rule["match_priority"] = match_priority
     if cancel_priority is not None:
         rule["cancel_priority"] = cancel_priority
-    event: ec.Event = {"priority": priority}
+    event = ec.Event(priority=priority)
     assert m.event_rule_determine_match_priority(rule, event) == expected
 
 
@@ -411,3 +430,37 @@ def test_match_ipaddress(result: ec.MatchResult, rule: ec.Rule, event: ec.Event)
 def test_match_facility(result: ec.MatchResult, rule: ec.Rule, event: ec.Event) -> None:
     m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     assert m.event_rule_matches_facility(rule, event) == result
+
+
+@pytest.mark.parametrize(
+    "original_value, expected_result",
+    [
+        ("simpleString", "simplestring"),
+        ("  spaces  ", "spaces"),
+        (".*regex", "regex"),
+        ("", None),
+        ("    ", None),
+        (".*", None),
+    ],
+)
+def test_compile_matching_value_non_regex(original_value: str, expected_result: str) -> None:
+    assert compile_matching_value("match", original_value) == expected_result
+
+
+@pytest.mark.parametrize(
+    "original_value, expected_start",
+    [("^regex$", "^regex$"), (".*regex.*", "regex.*"), (".*?lazy", ".*?lazy")],
+)
+def test_compile_matching_value_regex(original_value: str, expected_start: str) -> None:
+    compiled_pattern = compile_matching_value("match", original_value)
+    assert isinstance(compiled_pattern, re.Pattern)
+    assert compiled_pattern.pattern.startswith(expected_start)
+
+
+@pytest.mark.parametrize("key", ["non_match", "random_key"])
+def test_compile_matching_value_different_key(key: str) -> None:
+    original_value = ".*regex"
+    compiled_pattern = compile_matching_value(key, original_value)
+    assert isinstance(compiled_pattern, re.Pattern)
+    # Expect the original pattern since the key is not in {"match", "match_ok"}
+    assert compiled_pattern.pattern == original_value

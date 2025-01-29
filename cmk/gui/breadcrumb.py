@@ -6,6 +6,7 @@
 
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable, MutableSequence
@@ -13,7 +14,7 @@ from typing import NamedTuple
 
 import cmk.gui.htmllib.html
 from cmk.gui.type_defs import MegaMenu
-from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -22,7 +23,7 @@ class BreadcrumbItem(NamedTuple):
     url: str | None
 
 
-class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors
+class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __init__(self, items: Iterable[BreadcrumbItem] | None = None) -> None:
         super().__init__()
         self._items: list[BreadcrumbItem] = list(items) if items else []
@@ -52,9 +53,9 @@ class BreadcrumbRenderer:
 
         for item in breadcrumb:
             if item.url:
-                cmk.gui.htmllib.html.html.a(escape_to_html(str(item.title)), href=item.url)
+                cmk.gui.htmllib.html.html.a(HTML.with_escaping(str(item.title)), href=item.url)
             else:
-                cmk.gui.htmllib.html.html.span(escape_to_html(str(item.title)))
+                cmk.gui.htmllib.html.html.span(HTML.with_escaping(str(item.title)))
 
         cmk.gui.htmllib.html.html.close_div()
 

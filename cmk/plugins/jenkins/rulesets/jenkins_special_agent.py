@@ -31,7 +31,7 @@ def _validate_sub_path(value: str) -> None:
 def _formspec_jenkins() -> Dictionary:
     return Dictionary(
         title=Title("Jenkins connection"),
-        help_text=Help("Requests data from a jenkins instance."),
+        help_text=Help("Requests data from a Jenkins instance."),
         elements={
             "instance": DictElement(
                 parameter_form=String(
@@ -39,10 +39,10 @@ def _formspec_jenkins() -> Dictionary:
                     help_text=Help(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "host name here, eg. my_jenkins.com."
+                        "host name here, e.g. my_jenkins.com."
                     ),
                     custom_validate=[
-                        LengthInRange(min_value=1, max_value=32),
+                        LengthInRange(min_value=1),
                     ],
                     macro_support=True,
                 ),
@@ -52,7 +52,7 @@ def _formspec_jenkins() -> Dictionary:
                 parameter_form=String(
                     title=Title("Path"),
                     help_text=Help(
-                        "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
+                        "Add (sub) path to the URI, i.e. [proto]://[host]:[port]/[path]."
                     ),
                     custom_validate=[LengthInRange(min_value=1), _validate_sub_path],
                 ),
@@ -65,9 +65,7 @@ def _formspec_jenkins() -> Dictionary:
                         "The username that should be used for accessing the "
                         "jenkins API. Has to have read permissions at least."
                     ),
-                    custom_validate=[
-                        LengthInRange(min_value=1, max_value=32),
-                    ],
+                    custom_validate=[LengthInRange(min_value=1)],
                 ),
                 required=True,
             ),
@@ -75,9 +73,7 @@ def _formspec_jenkins() -> Dictionary:
                 parameter_form=Password(
                     help_text=Help("The password or API key of the user."),
                     title=Title("Password of the user"),
-                    custom_validate=[
-                        LengthInRange(min_value=1),
-                    ],
+                    custom_validate=[LengthInRange(min_value=1)],
                     migrate=migrate_to_password,
                 ),
                 required=True,
@@ -110,14 +106,18 @@ def _formspec_jenkins() -> Dictionary:
                     title=Title("Monitor (min. 1)"),
                     help_text=Help(
                         "Defines what information to query. You can choose "
-                        "between the instance state, job states, node states "
-                        "and the job queue."
+                        "between the instance state, job states, node states, "
+                        "the job queue and system metrics."
                     ),
                     elements=[
                         MultipleChoiceElement(name="instance", title=Title("Instance state")),
                         MultipleChoiceElement(name="jobs", title=Title("Job state")),
                         MultipleChoiceElement(name="nodes", title=Title("Node state")),
                         MultipleChoiceElement(name="queue", title=Title("Queue info")),
+                        MultipleChoiceElement(
+                            name="system_metrics",
+                            title=Title("System metrics (requires 'Metrics' plugin in Jenkins)"),
+                        ),
                     ],
                     prefill=DefaultValue(["instance", "jobs", "nodes", "queue"]),
                     custom_validate=[

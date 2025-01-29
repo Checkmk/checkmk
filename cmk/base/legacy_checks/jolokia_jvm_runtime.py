@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_jolokia_jvm_runtime(string_table):
@@ -31,6 +33,7 @@ def discover_jolokia_jvm_runtime(section):
 
 
 check_info["jolokia_jvm_runtime"] = LegacyCheckDefinition(
+    name="jolokia_jvm_runtime",
     parse_function=parse_jolokia_jvm_runtime,
     service_name="JVM %s Uptime",
     discovery_function=discover_jolokia_jvm_runtime,

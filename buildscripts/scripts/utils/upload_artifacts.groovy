@@ -45,12 +45,18 @@ def download_version_dir(DOWNLOAD_SOURCE,
         ||==========================================================================================
         """.stripMargin());
     stage("Download from shared storage (${INFO})") {
-        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+        withCredentials([
+            sshUserPrivateKey(
+                // We're using here a key which is usable for the fips server AND the other build nodes in order
+                // to streamline the keys.
+                credentialsId: 'jenkins-fips-server',
+                keyFileVariable: 'ssh_key')
+            ]) {
             sh("mkdir -p ${DOWNLOAD_DEST}");
             sh("""
                 rsync --recursive --links --perms --times --verbose \
                     --exclude=${EXCLUDE_PATTERN} \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${ssh_key} -p ${PORT}" \
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
             """);
@@ -59,25 +65,25 @@ def download_version_dir(DOWNLOAD_SOURCE,
 }
 /* groovylint-enable ParameterCount */
 
-def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="", ADDITONAL_ARGS="") {
     println("""
-        ||== upload_version_dir ================================================================
+        ||== upload_version_dir ====================================================================
         || SOURCE_PATH      = |${SOURCE_PATH}|
         || UPLOAD_DEST      = |${UPLOAD_DEST}|
         || PORT             = |${PORT}|
         || EXCLUDE_PATTERN  = |${EXCLUDE_PATTERN}|
+        || ADDITONAL_ARGS   = |${ADDITONAL_ARGS}|
         ||==========================================================================================
         """.stripMargin());
-    stage('Upload to download server') {
-        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
-            sh("""
-                rsync -av \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                    --exclude=${EXCLUDE_PATTERN} \
-                    ${SOURCE_PATH} \
-                    ${UPLOAD_DEST}
-            """);
-        }
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
+        sh("""
+            rsync -av \
+                ${ADDITONAL_ARGS} \
+                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                --exclude=${EXCLUDE_PATTERN} \
+                ${SOURCE_PATH} \
+                ${UPLOAD_DEST}
+        """);
     }
 }
 
@@ -102,6 +108,24 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
                 ${archive_base}/./${cmk_version}/${filename} \
                 ${archive_base}/./${cmk_version}/${filename}${hashfile_extension} \
                 ${upload_dest}
+        """);
+    }
+}
+
+def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
+    println("""
+        ||== upload_files_to_nexus() ================================================
+        || SOURCE_PATTERN      = |${SOURCE_PATTERN}|
+        || UPLOAD_DEST      = |${UPLOAD_DEST}|
+        ||======================================================================
+        """.stripMargin());
+
+    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+        sh("""
+            for i in ${SOURCE_PATTERN}; do
+                echo "Upload \${i} to Nexus";
+                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "\${i}" "${UPLOAD_DEST}";
+            done
         """);
     }
 }

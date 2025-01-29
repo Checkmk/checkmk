@@ -6,7 +6,7 @@
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.ifaceoper as ifaceoper
+from cmk.gui import ifaceoper
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
@@ -49,16 +49,16 @@ class RulespecGroupInventory(RulespecGroup):
 
     @property
     def title(self) -> str:
-        return _("Hardware / Software Inventory")
+        return _("HW/SW Inventory")
 
     @property
     def help(self):
-        return _("Configuration of the Checkmk Hardware and Software Inventory System")
+        return _("Configuration of the Checkmk hardware- and software inventory system")
 
 
 def _valuespec_active_checks_cmk_inv() -> Dictionary:
     return Dictionary(
-        title=_("Do hardware/software inventory"),
+        title=_("Do HW/SW Inventory"),
         help=_(
             "All hosts configured via this ruleset will do a hardware and "
             "software inventory. For each configured host a new active check "
@@ -88,6 +88,13 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                 "hw_changes",
                 MonitoringState(
                     title=_("State when hardware changes are detected"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "nw_changes",
+                MonitoringState(
+                    title=_("State when networking changes are detected"),
                     default_value=0,
                 ),
             ),
@@ -258,7 +265,7 @@ def _valuespec_inv_parameters_lnx_sysctl():
             "This rule allows for defining regex-patterns for in- and excluding kernel "
             "configuration parameters in the inventory. By default, no parameters are included. "
             "Note that some kernel configuration parameters change frequently. Inventorizing "
-            "one of these parameters will lead to frequent changes in the HW/SW inventory, "
+            "one of these parameters will lead to frequent changes in the HW/SW Inventory, "
             "which can quickly fill up the temporary file system."
         ),
         elements=[
@@ -334,7 +341,7 @@ def _valuespec_inv_retention_intervals() -> ValueSpec:
             ],
             optional_keys=["attributes", "columns"],
         ),
-        title=_("Retention intervals for HW/SW inventory entities"),
+        title=_("Retention intervals for HW/SW Inventory entities"),
         help=vs_inventory_path_or_keys_help()
         + _(
             "<br>With these intervals specific single values or table columns can be kept"

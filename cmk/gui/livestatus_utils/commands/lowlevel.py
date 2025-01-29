@@ -7,7 +7,7 @@ from typing import Any
 
 from livestatus import MultiSiteConnection, SiteId
 
-from cmk.utils.site import omd_site
+from cmk.ccc.site import omd_site
 
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 

@@ -7,7 +7,12 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-import cmk.gui.visuals as visuals
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
+from cmk.gui import visuals
+from cmk.gui.config import active_config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import (
@@ -18,6 +23,8 @@ from cmk.gui.type_defs import (
     ViewName,
     ViewSpec,
 )
+
+from .builtin_views import builtin_view_extender_registry
 
 # TODO: Refactor to plugin_registries
 multisite_builtin_views: dict[ViewName, ViewSpec] = {}
@@ -67,7 +74,9 @@ class ViewStore:
             k: v
             for k, v in visuals.load(
                 "views",
-                multisite_builtin_views,
+                builtin_view_extender_registry[cmk_version.edition(paths.omd_root).short].callable(
+                    multisite_builtin_views, data_source_registry, active_config
+                ),
                 internal_view_to_runtime_view,
             ).items()
             if v["datasource"] in data_source_registry

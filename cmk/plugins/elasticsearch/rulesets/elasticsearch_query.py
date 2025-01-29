@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     LevelDirection,
     List,
+    migrate_to_integer_simple_levels,
     migrate_to_password,
     Password,
     SimpleLevels,
@@ -24,6 +25,13 @@ from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
+def _migrate_to_float(value: object) -> float:
+    if isinstance(value, int | float):
+        return float(value)
+
+    raise TypeError(value)
+
+
 def _parameter_form() -> Dictionary:
     return Dictionary(
         elements={
@@ -31,7 +39,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Item suffix"),
                     help_text=Help(
-                        "Here you can define what service description (item) is "
+                        "Here you can define what service name (item) is "
                         "used for the created service. The resulting item "
                         "is always prefixed with 'Elasticsearch Query'."
                     ),
@@ -139,7 +147,8 @@ def _parameter_form() -> Dictionary:
                         TimeMagnitude.HOUR,
                         TimeMagnitude.MINUTE,
                     ),
-                    prefill=DefaultValue(60),
+                    prefill=DefaultValue(60.0),
+                    migrate=_migrate_to_float,
                 ),
                 required=True,
             ),
@@ -149,6 +158,7 @@ def _parameter_form() -> Dictionary:
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
                 required=False,
             ),

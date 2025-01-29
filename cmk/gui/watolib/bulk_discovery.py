@@ -6,16 +6,25 @@
 from collections.abc import Sequence
 from typing import NamedTuple, NewType, TypedDict
 
+from pydantic import BaseModel
+
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import configuration_lockfile
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
 from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -144,7 +153,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                 "error_handling",
                 Checkbox(
                     title=_("Error handling"),
-                    label=_("Ignore errors in single check plugins"),
+                    label=_("Ignore errors in single check plug-ins"),
                     default_value=True,
                 ),
             ),
@@ -154,7 +163,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: str | tuple[str, dict[str, bool]]
+    param: str | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool]]:
     # already migrated
     if isinstance(param, tuple):
@@ -219,6 +228,17 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ).url()
 
     def do_execute(
+        self,
+        mode: DiscoverySettings,
+        do_scan: DoFullScan,
+        ignore_errors: IgnoreErrors,
+        tasks: Sequence[DiscoveryTask],
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
+        with job_interface.gui_context():
+            self._do_execute(mode, do_scan, ignore_errors, tasks, job_interface)
+
+    def _do_execute(
         self,
         mode: DiscoverySettings,
         do_scan: DoFullScan,
@@ -317,7 +337,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(configuration_lockfile):
             tree = folder_tree()
             tree.invalidate_caches()
             folder = tree.folder(task.folder_path)
@@ -447,8 +467,14 @@ def start_bulk_discovery(
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
     job.start(
-        lambda job_interface: job.do_execute(
-            discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
+        JobTarget(
+            callable=bulk_discovery_job_entry_point,
+            args=BulkDiscoveryJobArgs(
+                discovery_mode=discovery_mode,
+                do_full_scan=do_full_scan,
+                ignore_errors=ignore_errors,
+                tasks=tasks,
+            ),
         ),
         InitialStatusArgs(
             title=job.gui_title(),
@@ -456,6 +482,21 @@ def start_bulk_discovery(
             stoppable=False,
             user=str(user.id) if user.id else None,
         ),
+    )
+
+
+class BulkDiscoveryJobArgs(BaseModel, frozen=True):
+    discovery_mode: DiscoverySettings
+    do_full_scan: DoFullScan
+    ignore_errors: IgnoreErrors
+    tasks: Sequence[DiscoveryTask]
+
+
+def bulk_discovery_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: BulkDiscoveryJobArgs
+) -> None:
+    BulkDiscoveryBackgroundJob().do_execute(
+        args.discovery_mode, args.do_full_scan, args.ignore_errors, args.tasks, job_interface
     )
 
 

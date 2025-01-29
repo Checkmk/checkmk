@@ -13,5 +13,5 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 )
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo --login -u "$SITE" -- bash -c "omd reload apache"
+    sudo --login -u "$SITE" -- bash -c "omd reload apache ; omd restart ui-job-scheduler"
 fi

@@ -12,12 +12,15 @@ from collections.abc import Callable, Sequence
 from getpass import getpass
 from pathlib import Path
 
-import cmk.utils.crypto.password_hashing as password_hashing
-import cmk.utils.version as cmk_version
-from cmk.utils.crypto.password import Password
+import cmk.ccc.version as cmk_version
+
 from cmk.utils.paths import htpasswd_file
-from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
+
+from cmk.gui.utils.htpasswd import Htpasswd
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 HTPASSWD_FILE = Path(htpasswd_file)
 
@@ -101,7 +104,7 @@ def _run_cmkpasswd(
     if dst_file is not None:
         Htpasswd(dst_file).save(user_id, pw_hash)
     else:
-        print(Htpasswd.serialize_entries([(user_id, pw_hash)]))
+        sys.stdout.write(Htpasswd.serialize_entries([(user_id, pw_hash)]) + "\n")
 
 
 def main(args: Sequence[str]) -> int:
@@ -120,7 +123,7 @@ def main(args: Sequence[str]) -> int:
         InvalidPasswordError,
         InvalidUsernameError,
     ) as e:
-        print("cmk-passwd:", e, file=sys.stderr)
+        sys.stderr.write(f"cmk-passwd: {e}\n")
         return 1
 
     return 0

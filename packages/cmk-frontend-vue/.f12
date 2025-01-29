@@ -8,5 +8,5 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-npm run build-only
-cp ./dist/assets/*.js* "$ROOT/share/check_mk/web/htdocs/js/"
+npm run build
+rsync -rlD ./dist/ "$ROOT/share/check_mk/web/htdocs/cmk-frontend-vue/"

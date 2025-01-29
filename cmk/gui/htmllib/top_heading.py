@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from cmk.utils.licensing.registry import get_licensing_user_effect
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -40,10 +39,8 @@ def top_heading(
     writer.open_div(class_="titlebar")
     writer.open_div()
 
-    # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
-    # here and self.a() escapes the content (with permissive escaping) again. We don't want
-    # to handle "title" permissive.
-    html_title = HTML(escaping.escape_attribute(title))
+    # We don't want to handle "title" permissive.
+    html_title = HTML.with_escaping(title)
     writer.a(
         html_title,
         class_="title",
@@ -63,6 +60,8 @@ def top_heading(
             request,
             browser_reload=browser_reload,
         )
+
+    _may_show_license_banner(writer)
 
     if page_state:
         PageStateRenderer().show(page_state)
@@ -95,7 +94,18 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
             )
         ).header
     ) and (set(header_effect.roles).intersection(user.role_ids)):
-        writer.show_warning(header_effect.message_html)
+        writer.show_warning(HTML.without_escaping(header_effect.message_html))
+
+
+def _may_show_license_banner(writer: HTMLWriter) -> None:
+    if (
+        header_effect := get_licensing_user_effect(
+            licensing_settings_link=makeuri_contextless(
+                _request, [("mode", "licensing")], filename="wato.py"
+            )
+        ).banner
+    ) and (set(header_effect.roles).intersection(user.role_ids)):
+        writer.write_html(HTML.without_escaping(header_effect.message_html))
 
 
 def _make_default_page_state(

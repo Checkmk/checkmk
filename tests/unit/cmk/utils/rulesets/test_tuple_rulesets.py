@@ -3,23 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 """
 Tests for legacy tuple rulesets.
 """
-
-
-# pylint: disable=redefined-outer-name
 
 from collections.abc import Mapping, Sequence
 from typing import Final
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -34,7 +31,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
-    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")
 
 
 @pytest.fixture()
@@ -110,7 +107,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
     ]
 
     matcher = ts.config_cache.ruleset_matcher
-    assert matcher.service_extra_conf(HostName("host1"), "service1", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host1"), "service1", {}, ruleset) == [
         "1",
         "2",
         "3",
@@ -121,7 +118,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert matcher.service_extra_conf(HostName("host1"), "serv", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host1"), "serv", {}, ruleset) == [
         "1",
         "2",
         "3",
@@ -132,7 +129,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert matcher.service_extra_conf(HostName("host2"), "service1", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host2"), "service1", {}, ruleset) == [
         "1",
         "2",
         "3",
@@ -389,8 +386,12 @@ def test_get_service_bool_value(
     ruleset, outcome_host1, outcome_host2 = parameters
     matcher = ts.config_cache.ruleset_matcher
 
-    assert matcher.get_service_bool_value(HostName("host1"), "service1", ruleset) == outcome_host1
-    assert matcher.get_service_bool_value(HostName("host2"), "service2", ruleset) == outcome_host2
+    assert (
+        matcher.get_service_bool_value(HostName("host1"), "service1", {}, ruleset) == outcome_host1
+    )
+    assert (
+        matcher.get_service_bool_value(HostName("host2"), "service2", {}, ruleset) == outcome_host2
+    )
 
 
 def test_all_matching_hosts(ts: Scenario) -> None:

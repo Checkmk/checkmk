@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.version import parse_check_mk_version
+from cmk.ccc.version import parse_check_mk_version
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -45,7 +45,7 @@ def _parameter_valuespec_checkmk_agent_plugins():
                     title=_("Regular expression to exclude plug-ins"),
                     mode=RegExp.infix,
                     help=_(
-                        "Plugins or local checks matching this pattern will be excluded from the "
+                        "Plug-ins or local checks matching this pattern will be excluded from the "
                         "comparison with the specified required versions."
                     ),
                 ),

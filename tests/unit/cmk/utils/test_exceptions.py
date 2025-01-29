@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from cmk.utils.exceptions import MKException
+from cmk.ccc.exceptions import MKException
 
 
 @pytest.mark.parametrize(

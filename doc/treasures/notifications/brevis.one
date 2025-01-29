@@ -1,17 +1,19 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# brevis.one SMS Gateway
-
+#!/usr/bin/env python3
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# brevis.one SMS Gateway
 
 # Send notification to a brevis.one SMS Gateway
 #
 # This notification script can be put below share/check_mk/notifications.
 # Please configure the needed credentials
 
-import sys, os, urllib
+import os
+import sys
+import urllib.parse
+import urllib.request
 
 # user with permission to use Web-API of gateway
 username = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -20,20 +22,21 @@ password = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 location = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 to = os.environ.get("NOTIFY_CONTACTPAGER")
-message = os.environ['NOTIFY_HOSTNAME'] + " "
+message = os.environ["NOTIFY_HOSTNAME"] + " "
 
-if os.environ['NOTIFY_WHAT'] == 'SERVICE':
-    message += os.environ['NOTIFY_SERVICESTATE'] + " "
-    message += os.environ['NOTIFY_SERVICEDESC']
+if os.environ["NOTIFY_WHAT"] == "SERVICE":
+    message += os.environ["NOTIFY_SERVICESTATE"] + " "
+    message += os.environ["NOTIFY_SERVICEDESC"]
 else:
     # Host message
-    message += "is " + os.environ['NOTIFY_HOSTSTATE']
+    message += "is " + os.environ["NOTIFY_HOSTSTATE"]
 
-url = "%s?" % location + urllib.urlencode([("username", username), ("password", password),
-                                           ("to", to), ("text", message)])
+url = "%s?" % location + urllib.parse.urlencode(
+    [("username", username), ("password", password), ("to", to), ("text", message)]
+)
 
 try:
-    handle = urllib.urlopen(url)
+    handle = urllib.request.urlopen(url)
     response = handle.read().strip()
 
     if handle.getcode() == 200:

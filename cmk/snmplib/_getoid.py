@@ -6,11 +6,12 @@
 from collections.abc import Callable
 from contextlib import suppress
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.cleanup
-import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils import tty
 from cmk.utils.sectionname import SectionName
 
 from ._table import SNMPDecodedString
@@ -30,7 +31,7 @@ def get_single_oid(
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
     if oid[0] != ".":
-        if cmk.utils.debug.enabled():
+        if cmk.ccc.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
         oid = "." + oid
 
@@ -51,7 +52,7 @@ def get_single_oid(
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
         except Exception:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
             value = None
 

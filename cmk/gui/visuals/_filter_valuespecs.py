@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import json
 import sys
@@ -41,9 +40,7 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 
 
-def FilterChoices(  # pylint: disable=redefined-builtin
-    infos: SingleInfos, title: str, help: str
-) -> DualListChoice:
+def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos):
@@ -66,7 +63,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
     for persistance.
     """
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         *,
         name: str,
@@ -127,7 +124,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     try:
         with output_funnel.plugged():
             f.display(value)
-            html.write_html(HTML(output_funnel.drain()))
+            html.write_html(HTML.without_escaping(output_funnel.drain()))
     except LivestatusTestingError:
         raise
     except Exception as e:
@@ -138,7 +135,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         html.icon(
             "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
         )
-        html.write_text(_("This filter cannot be displayed"))
+        html.write_text_permissive(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
 
@@ -166,13 +163,17 @@ class VisualFilterList(ListOfMultiple):
             if fname not in ignored_context_choices:
                 yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, ignored_context_choices: Sequence[str] = (), **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        info_list: SingleInfos,
+        ignored_context_choices: Sequence[str] = (),
+        title: str | None = None,
+        allow_empty: bool = True,
+    ) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
-        kwargs.setdefault("title", _("Filters"))
-        kwargs.setdefault("add_label", _("Add filter"))
-        kwargs.setdefault("del_label", _("Remove filter"))
-        kwargs["delete_style"] = "filter"
+        if title is None:
+            title = _("Filters")
 
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(
@@ -187,7 +188,10 @@ class VisualFilterList(ListOfMultiple):
             page_request_vars={
                 "infos": info_list,
             },
-            **kwargs,
+            allow_empty=allow_empty,
+            add_label=_("Add filter"),
+            del_label=_("Remove filter"),
+            delete_style="filter",
         )
 
     def from_html_vars(self, varprefix: str) -> VisualContext:

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+
+check_info = {}
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.7.1.4.1.3.1 "CPU1 Power"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.7.1.4.1.3.2 "CPU2 Power"
@@ -47,6 +48,7 @@ def discover_fsc_sc2_power_consumption(section):
 
 
 check_info["fsc_sc2_power_consumption"] = LegacyCheckDefinition(
+    name="fsc_sc2_power_consumption",
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.7.1",

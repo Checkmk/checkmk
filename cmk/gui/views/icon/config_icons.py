@@ -3,23 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-from cmk.gui.config import active_config
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
 
 from .base import Icon
-from .registry import icon_and_action_registry
 
 
-def update_icons_from_configuration() -> None:
-    _update_builtin_icons(active_config.builtin_icon_visibility)
-    _register_custom_user_icons_and_actions(active_config.user_icons_and_actions)
-
-
-def _update_builtin_icons(builtin_icon_visibility):
-    # Now apply the global settings customized options
+def update_builtin_icons_from_config(
+    icons: dict[str, Icon], builtin_icon_visibility: dict[str, BuiltinIconVisibility]
+) -> dict[str, Icon]:
     for icon_id, cfg in builtin_icon_visibility.items():
-        icon = icon_and_action_registry.get(icon_id)
+        icon = icons.get(icon_id)
         if icon is None:
             continue
 
@@ -28,10 +22,12 @@ def _update_builtin_icons(builtin_icon_visibility):
         if "sort_index" in cfg:
             icon.override_sort_index(cfg["sort_index"])
 
+    return icons
 
-def _register_custom_user_icons_and_actions(user_icons_and_actions):
-    for icon_id, icon_cfg in user_icons_and_actions.items():
-        icon_class = type(
+
+def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str, Icon]:
+    return {
+        icon_id: type(
             "CustomIcon%s" % icon_id.title(),
             (Icon,),
             {
@@ -48,6 +44,6 @@ def _register_custom_user_icons_and_actions(user_icons_and_actions):
                     self._icon_spec.get("url"),
                 ),
             },
-        )
-
-        icon_and_action_registry.register(icon_class)
+        )()
+        for icon_id, icon_cfg in user_icons_and_actions.items()
+    }

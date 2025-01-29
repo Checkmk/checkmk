@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
 
@@ -107,3 +106,63 @@ def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
 def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
     result = main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value)
     assert result.error.endswith(message)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(
+            "0.0.0.0",
+            id="IP4 address.",
+        ),
+        pytest.param(
+            "127.0.0.1",
+            id="IP4 localhost.",
+        ),
+        pytest.param(
+            "[::]",
+            id="IPv6 wildcard address",
+        ),
+        pytest.param(
+            "[::1]",
+            id="IPv6 localhost.",
+        ),
+    ],
+)
+def test__error_from_config_choice_listen_address_accept_value(value: str) -> None:
+    assert main._error_from_config_choice(config_hooks.IpListenAddressHasError(), value).is_ok()
+
+
+@pytest.mark.parametrize(
+    "value, message",
+    [
+        pytest.param(
+            "",
+            "Empty address",
+        ),
+        pytest.param(
+            "127.0.",
+            "Invalid IPv4 address",
+        ),
+        pytest.param(
+            "[:::::::",
+            "Invalid IPv4 address",
+        ),
+        pytest.param(
+            "[zzz]",
+            "Invalid IPv6 address",
+        ),
+    ],
+)
+def test__error_from_config_choice_listen_address_has_error(value: str, message: str) -> None:
+    result = main._error_from_config_choice(config_hooks.IpListenAddressHasError(), value)
+    assert result.error.endswith(message)
+
+
+def test__error_from_config_choice_network_port() -> None:
+    choices = config_hooks.NetworkPortHasError()
+    assert main._error_from_config_choice(choices, "1024").is_ok()
+    assert main._error_from_config_choice(choices, "65535").is_ok()
+    assert main._error_from_config_choice(choices, "22").error == "Invalid port number"
+    assert main._error_from_config_choice(choices, "65536").error == "Invalid port number"
+    assert main._error_from_config_choice(choices, "").error == "Invalid port number"

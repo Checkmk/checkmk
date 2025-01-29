@@ -5,10 +5,11 @@
 
 from collections.abc import Iterator
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
+from cmk.utils import paths
+
+from cmk.gui import pagetypes, visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
@@ -236,11 +237,11 @@ def _collect_linked_visuals_of_type(
             continue
 
         # Optional feature of visuals: Make them dynamically available as links or not.
-        # This has been implemented for HW/SW inventory views which are often useless when a host
+        # This has been implemented for HW/SW Inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
         vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
-        if not visual_type.link_from(view, rows, visual, vars_values):
+        if not visual_type.link_from(view.spec["single_infos"], rows, visual, vars_values):
             continue
 
         yield visual_type, visual
@@ -349,7 +350,7 @@ def _get_combined_graphs_entry(
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         return False
 
     if view.name == "service":
@@ -403,7 +404,7 @@ def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
             title=_("Network monitoring"),
             entries=[
                 PageMenuEntry(
-                    title=_("Parent/Child topology"),
+                    title=_("Parent/child topology"),
                     icon_name="aggr",
                     item=make_simple_link(
                         makeuri_contextless(
@@ -553,7 +554,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("_test_host_notifications", 1),
                 ],
@@ -571,7 +572,7 @@ def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterat
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("service_name", serivce_name),
                     ("_test_service_notifications", 1),

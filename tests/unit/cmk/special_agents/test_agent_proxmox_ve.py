@@ -477,10 +477,49 @@ def test_parse_backup_logs(
         assert results == expected_results
 
 
+@pytest.mark.parametrize(
+    "log, expected_backup_amount, expected_backup_total, expected_backup_time",
+    [
+        pytest.param(
+            "INFO: root.pxar: had to backup 962.93 MiB of 5.444 GiB (compressed 200.638 MiB) in 37.10s",
+            1009705288,
+            5845450490,
+            37.1,
+            id="old log format",
+        ),
+        pytest.param(
+            "INFO: root.pxar: had to backup 1004.756 MiB of 5.434 GiB (compressed 221.297 MiB) in 58.86 s (average 17.07 MiB/s)",
+            1053563027,
+            5834713072,
+            58.86,
+            id="new log format",
+        ),
+    ],
+)
+def test_parsing_backuped_log_formats(
+    log: str, expected_backup_amount: int, expected_backup_total: int, expected_backup_time: int
+) -> None:
+    backup_task = BackupTask(
+        {},
+        [
+            {"n": 1, "t": "INFO: Starting Backup of VM 1"},
+            {"n": 2, "t": "INFO: Backup started at 2024-07-02 01:00:00"},
+            {"n": 3, "t": log},
+            {"n": 4, "t": "INFO: Finished Backup of VM 1 (01:05:00)"},
+        ],
+        strict=True,
+        dump_erroneous_logs=False,
+    )
+
+    assert backup_task.backup_data["1"]["backup_amount"] == expected_backup_amount
+    assert backup_task.backup_data["1"]["backup_total"] == expected_backup_total
+    assert backup_task.backup_data["1"]["backup_time"] == expected_backup_time
+
+
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from tests.testlib.utils import repo_path
+    from tests.testlib.repo import repo_path
 
     assert not pytest.main(
         [

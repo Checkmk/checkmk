@@ -11,7 +11,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
 from .dashlet import dashlet_registry, DashletConfig
-from .store import get_permitted_dashboards, save_all_dashboards
+from .store import get_permitted_dashboards, save_and_replicate_all_dashboards
 from .type_defs import DashboardConfig
 
 __all__ = ["ajax_dashlet_pos", "page_clone_dashlet", "page_delete_dashlet"]
@@ -43,7 +43,7 @@ def page_clone_dashlet() -> None:
 
     dashboard["dashlets"].append(new_dashlet_spec)
     dashboard["mtime"] = int(time.time())
-    save_all_dashboards()
+    save_and_replicate_all_dashboards()
 
     raise HTTPRedirect(request.get_url_input("back"))
 
@@ -64,13 +64,13 @@ def page_delete_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     try:
-        _dashlet_spec = dashboard["dashlets"][ident]  # noqa: F841
+        _dashlet_spec = dashboard["dashlets"][ident]
     except IndexError:
         raise MKUserError("id", _("The element does not exist."))
 
     dashboard["dashlets"].pop(ident)
     dashboard["mtime"] = int(time.time())
-    save_all_dashboards()
+    save_and_replicate_all_dashboards()
 
     raise HTTPRedirect(request.get_url_input("back"))
 
@@ -88,7 +88,7 @@ def ajax_dashlet_pos() -> None:
         request.get_integer_input_mandatory("w"),
         request.get_integer_input_mandatory("h"),
     )
-    save_all_dashboards()
+    save_and_replicate_all_dashboards()
     response.set_data("OK %d" % board["mtime"])
 
 

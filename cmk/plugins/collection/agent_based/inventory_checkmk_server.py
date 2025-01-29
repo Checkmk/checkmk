@@ -11,7 +11,9 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
-import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
+import cmk.ccc.version as cmk_version  # pylint: disable=cmk-module-layer-violation
+
+from cmk.utils import paths
 
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
 
@@ -75,7 +77,7 @@ def merge_sections(
         }
 
     # SECTION: omd_status
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         services = [
             "nagios",
             "npcd",

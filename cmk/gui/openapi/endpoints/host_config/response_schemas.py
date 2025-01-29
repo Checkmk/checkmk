@@ -42,7 +42,7 @@ class FolderExtensions(BaseSchema):
         "view",
         "outbound",
         description=(
-            "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
+            "The folder's attributes. Hosts placed in this folder will inherit these attributes."
         ),
     )
 
@@ -83,7 +83,7 @@ class FolderCollection(DomainObjectCollection):
 
 
 def _effective_attributes_schema():
-    class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
+    class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore[misc]
         @post_dump(pass_original=True)
         def add_tags_and_custom_attributes_back(
             self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any

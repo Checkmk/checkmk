@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 from .checktestlib import Check, CheckResult
 
@@ -125,52 +124,3 @@ def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
     with pytest.raises(IgnoreResultsError):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
-
-
-@pytest.mark.usefixtures("initialised_item_state")
-def test_wmi_msexch_isclienttype_wato_params() -> None:
-    check = Check("msexch_isclienttype")
-
-    # prepare the state (scoped to this function by the fixture)
-    get_value_store().update({"RPCRequests_": (0.0, 1145789)})
-
-    assert list(
-        check.run_check(
-            item="_total",
-            params={
-                "store_latency": (41.0, 51.0),
-                "clienttype_latency": (40.0, 50.0),
-                "clienttype_requests": (60, 70),
-            },
-            info=check.run_parse(info_msx_info_store_1),
-        )
-    ) == [
-        (
-            0,
-            "Average latency: 0.49 ms",
-            [("average_latency", 0.48712422193702626, 40.0, 50.0)],
-        ),
-        (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
-    ]
-
-
-@pytest.mark.usefixtures("initialised_item_state")
-def test_wmi_msexch_isstore_wato_params() -> None:
-    check = Check("msexch_isstore")
-    assert list(
-        check.run_check(
-            item="_total",
-            params={
-                "store_latency": (41.0, 51.0),
-                "clienttype_latency": (40.0, 50.0),
-                "clienttype_requests": (60, 70),
-            },
-            info=check.run_parse(info_msx_info_store_1),
-        )
-    ) == [
-        (
-            0,
-            "Average latency: 0.49 ms",
-            [("average_latency", 0.48712422193702626, 41.0, 51.0)],
-        ),
-    ]

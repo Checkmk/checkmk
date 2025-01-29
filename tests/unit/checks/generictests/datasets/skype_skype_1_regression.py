@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 checkname = "skype"
@@ -11,8 +10,14 @@ checkname = "skype"
 mock_item_state = {
     "": {
         "WEB - Failed search requests/sec_LS:WEB - Address Book Web Query": (0.0, 0),
-        "WEB - Failed Get Locations Requests/Second_LS:WEB - Location Information Service": (0.0, 225),
-        "WEB - Timed out Active Directory Requests/sec_LS:WEB - Distribution List Expansion": (0.0, 0),
+        "WEB - Failed Get Locations Requests/Second_LS:WEB - Location Information Service": (
+            0.0,
+            225,
+        ),
+        "WEB - Timed out Active Directory Requests/sec_LS:WEB - Distribution List Expansion": (
+            0.0,
+            0,
+        ),
         "UCWA - HTTP 5xx Responses/Second_LS:WEB - UCWA": (0.0, 1),
         "WEB - Failed File Requests/Second_LS:WEB - Address Book File Download": (0.0, 0),
     },
@@ -20,18 +25,24 @@ mock_item_state = {
         "CAA - Incomplete calls per sec_LS:CAA - Operations": (0.0, 2),
     },
     "sip_stack": {
-       "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol": (0, 2748689388),
-       "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol_Base": (0, 1761360),
-       "SIP - Incoming Responses Dropped /Sec_LS:SIP - Protocol": (0, 271),
-       "SIP - Incoming Requests Dropped /Sec_LS:SIP - Protocol": (0, 596),
-       "USrv - Throttled requests/sec_LS:USrv - DBStore": (0, 0),
-       "SIP - Local 503 Responses /Sec_LS:SIP - Responses": (0, 6),
-       "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management": (0.0, 3275709004),
-       "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management_Base": (0.0, 2063694),
-       "SIP - Average Outgoing Queue Delay_LS:SIP - Peers": (0.0, 1198364279),
-       "SIP - Average Outgoing Queue Delay_LS:SIP - Peers_Base": (0.0, 7423),
-       "SIP - Sends Timed-Out /Sec_LS:SIP - Peers": (0.0, 0),
-       "SIP - Authentication System Errors /Sec_LS:SIP - Authentication": (0.0, 0),
+        "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol": (0, 2748689388),
+        "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol_Base": (0, 1761360),
+        "SIP - Incoming Responses Dropped /Sec_LS:SIP - Protocol": (0, 271),
+        "SIP - Incoming Requests Dropped /Sec_LS:SIP - Protocol": (0, 596),
+        "USrv - Throttled requests/sec_LS:USrv - DBStore": (0, 0),
+        "SIP - Local 503 Responses /Sec_LS:SIP - Responses": (0, 6),
+        "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management": (
+            0.0,
+            3275709004,
+        ),
+        "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management_Base": (
+            0.0,
+            2063694,
+        ),
+        "SIP - Average Outgoing Queue Delay_LS:SIP - Peers": (0.0, 1198364279),
+        "SIP - Average Outgoing Queue Delay_LS:SIP - Peers_Base": (0.0, 7423),
+        "SIP - Sends Timed-Out /Sec_LS:SIP - Peers": (0.0, 0),
+        "SIP - Authentication System Errors /Sec_LS:SIP - Authentication": (0.0, 0),
     },
     "edge_auth": {
         "- Bad Requests Received/sec_LS:A/V Auth - Requests": (0.0, 0),
@@ -39,8 +50,14 @@ mock_item_state = {
     "edge": {
         "A/V Edge - Authentication Failures/sec_LS:A/V Edge - UDP Counters": (0.0, 0),
         "A/V Edge - Authentication Failures/sec_LS:A/V Edge - TCP Counters": (0.0, 0),
-        "A/V Edge - Allocate Requests Exceeding Port Limit/sec_LS:A/V Edge - UDP Counters": (0.0, 0),
-        "A/V Edge - Allocate Requests Exceeding Port Limit/sec_LS:A/V Edge - TCP Counters": (0.0, 0),
+        "A/V Edge - Allocate Requests Exceeding Port Limit/sec_LS:A/V Edge - UDP Counters": (
+            0.0,
+            0,
+        ),
+        "A/V Edge - Allocate Requests Exceeding Port Limit/sec_LS:A/V Edge - TCP Counters": (
+            0.0,
+            0,
+        ),
         "A/V Edge - Packets Dropped/sec_LS:A/V Edge - UDP Counters": (0.0, 0),
         "A/V Edge - Packets Dropped/sec_LS:A/V Edge - TCP Counters": (0.0, 0),
     },

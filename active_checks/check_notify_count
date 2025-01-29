@@ -13,11 +13,8 @@ import livestatus
 
 
 def usage():
-    sys.stderr.write(
-        """check_notify_count
-
-USAGE: check_notify_count
-       check_notify_count -h
+    sys.stdout.write(
+        """usage: check_notify_count OPTIONS
 
 OPTIONS:
   -h, --help    Show this help message and exit

@@ -12,6 +12,7 @@ string concatenation.
 It's implementation is still a bit rudimentary but supports most necessary concepts already.
 
 """
+
 from __future__ import annotations
 
 import abc
@@ -200,13 +201,12 @@ class ListExpression(UnaryExpression):
         if not other:
             # Check for empty list
             op = "="
+        elif ignore_case:
+            # case-insensitive equality
+            op = "<="
         else:
-            if ignore_case:
-                # case-insensitive equality
-                op = "<="
-            else:
-                # equality
-                op = ">="
+            # equality
+            op = ">="
         return self.op(op, other)
 
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
@@ -283,12 +283,7 @@ class BinaryExpression(QueryExpression):
         self._header = header
 
     def __repr__(self) -> str:
-        return "{}({} {} {})".format(
-            self._header,
-            self.left.value,
-            self.operator,
-            self.right.value,
-        )
+        return f"{self._header}({self.left.value} {self.operator} {self.right.value})"
 
     def __str__(self) -> str:
         return f"{self.left.value} {self.operator} {self.right.value}"

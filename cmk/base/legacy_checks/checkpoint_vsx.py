@@ -9,11 +9,11 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
 from cmk.plugins.lib.detection import DETECT_NEVER
+
+check_info = {}
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0
@@ -136,6 +136,7 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
+    name="checkpoint_vsx",
     detect=DETECT_NEVER,
     fetch=[
         SNMPTree(
@@ -196,6 +197,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
 
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_connections",
     service_name="VS %s Connections",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("conn_num"),
@@ -251,6 +253,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_packets",
     service_name="VS %s Packets",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("packets"),
@@ -298,6 +301,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_traffic",
     service_name="VS %s Traffic",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("bytes_accepted"),
@@ -324,7 +328,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
     ha_state = data.get("vs_ha_status")
     if ha_state is not None:
         state = 0
-        if not ha_state.lower() in ["active", "standby"]:
+        if ha_state.lower() not in ["active", "standby"]:
             state = 2
 
         yield state, "HA Status: %s" % ha_state
@@ -352,10 +356,10 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_status",
     service_name="VS %s Status",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("vs_ha_status"),
     check_function=check_checkpoint_vsx_status,
-    check_ruleset_name="checkpoint_vsx_traffic_status",
 )
 # .

@@ -417,7 +417,7 @@ class LDAPContactGroupMembership(LDAPCheckbox):
     handle_nested = fields.Boolean(
         description="When enabled, this plug-in will not only handle direct group memberships, "
         "instead it will also dig into nested groups and treat the members of those groups as "
-        "contact group members as well. Please mind that this feature might increase the "
+        "contact group members as well. Please bear in mind that this feature might increase the "
         "execution time of your LDAP sync.",
     )
     sync_from_other_connections = fields.List(
@@ -496,7 +496,7 @@ class LDAPGroupsToAttributes(LDAPCheckbox):
     handle_nested = fields.Boolean(
         description="Once you enable this option, this plug-in will not only handle direct group "
         "memberships, instead it will also dig into nested groups and treat the members of those "
-        "groups as contact group members as well. Please mind that this feature might increase the "
+        "groups as contact group members as well. Please bear in mind that this feature might increase the "
         "execution time of your LDAP sync. (Active Directory only at the moment)",
     )
     sync_from_other_connections = fields.List(
@@ -509,8 +509,8 @@ class LDAPGroupsToAttributes(LDAPCheckbox):
     groups_to_sync = fields.List(
         fields.Nested(LDAPGroupsToSyncSelector),
         description="Specify the groups to control the value of a given user attribute. If a user is "
-        "not a member of a group, the attribute will be left at it's default value. When a single "
-        "attribute is set by multiple groups and a user is member of multiple of these groups, the "
+        "not a member of a group, the attribute will be left at its default value. When a single "
+        "attribute is set by multiple groups and a user is a member of multiple of these groups, the "
         "later plug-in in the list will override the others.",
         example=[
             {
@@ -617,13 +617,13 @@ class LDAPSyncPlugins(BaseSchema):
     )
     visibility_of_hosts_or_services = fields.Nested(
         LDAPSyncPluginVisibilityOfHostsOrServices,
-        description="When this option is checked, then the status GUI will only display hosts and "
-        "services that the user is a contact for - even if he has the permission for seeing all objects.",
+        description="When this option is checked, the status GUI will only display hosts and "
+        "services that the user is a contact for - even if they have the permission for seeing all objects.",
     )
     contact_group_membership = fields.Nested(
         LDAPContactGroupMembership,
-        description="Adds the user to contactgroups based on the group memberships in LDAP. This plug-in "
-        "adds the user only to existing contactgroups while the name of the contactgroup must match the "
+        description="Adds the user to contact groups based on the group memberships in LDAP. This plug-in "
+        "adds the user only to existing contact groups while the name of the contact group must match the "
         "common name (cn) of the LDAP group.",
     )
     groups_to_custom_user_attributes = fields.Nested(
@@ -662,7 +662,7 @@ class LDAPOther(BaseSchema):
     sync_interval = fields.Nested(
         LDAPSyncInterval,
         description="This option defines the interval of the LDAP synchronization. This setting "
-        "is only used by sites which have the Automatic User Synchronization enabled.",
+        "is only used by sites which have the automatic user synchronization enabled.",
     )
 
 
@@ -671,7 +671,7 @@ class LDAPConnectionConfig(BaseSchema):
     ldap_connection = fields.Nested(LDAPConnection)
     users = fields.Nested(LDAPUsers)
     groups = fields.Nested(LDAPGroups)
-    sync_plugins = fields.Nested(ldap_sync_plugin_schema())
+    sync_plugins = fields.Nested(ldap_sync_plugin_schema)
     other = fields.Nested(LDAPOther)
 
 
@@ -686,7 +686,7 @@ ldap_config_example: dict[str, dict[str, Any]] = {
     "ldap_connection": {
         "directory_type": {
             "type": "active_directory_manual",
-            "ldap_server": "10.200.3.32",
+            "ldap_server": "123.31.12.34",
             "failover_servers": [],
         },
         "bind_credentials": {"state": "disabled"},

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
 from pylint.lint import PyLinter
 
-from tests.testlib.pylint_checker_cmk_module_layers import (
+from tests.pylint.checker_cmk_module_layers import (
     _COMPONENTS,
     CMKModuleLayerChecker,
     get_absolute_importee,
@@ -50,21 +49,12 @@ def test_get_absolute_importee(
         ("cmk/base", "cmk.base", "cmk.gui", False),
         # allow component internal imprt
         ("cmk/gui", "cmk.gui.foo", "cmk.gui.bar", True),
-        # utils not ok in agent based plugins
-        ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.utils.debug", False),
         # `checkers` in `utils` is wrong but anywhere else is OK
         ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
         ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
-        # disallow import of one plug-in in another
-        (
-            "cmk/base/plugins/agent_based",
-            "cmk.base.plugins.agent_based.foo",
-            "cmk.base.plugins.agent_based.bar",
-            False,
-        ),
         # disallow import of `base` / `gui` in `automations`
         ("cmk/automations", "cmk.automations.x", "cmk.base.a", False),
         ("cmk/automations", "cmk.automations.y", "cmk.gui.b", False),

@@ -206,8 +206,9 @@ class Fault:
     severity: FaultSeverity
 
     def monitoring_state(self) -> State:
-        if self.acknowledge:
-            return State.OK
+        # refererence: werk #17287
+        # if self.acknowledge:
+        #     return State.OK
 
         match self.severity:
             case FaultSeverity.major | FaultSeverity.critical:

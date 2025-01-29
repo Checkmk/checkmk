@@ -3,21 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 import inspect
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.version import Edition
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin,
+    InventoryPlugin,
+    SectionPlugin,
+    SNMPSectionPlugin,
+)
 
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.discover_plugins import PluginLocation
@@ -205,34 +211,37 @@ def validate_default_parameters(
         raise TypeError(f"missing ruleset name for default {params_type} parameters")
 
 
-def validate_check_ruleset_item_consistency(
-    check_plugin: CheckPlugin,
-    check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
-) -> None:
-    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+def filter_relevant_raw_sections(
+    *,
+    consumers: Iterable[CheckPlugin | InventoryPlugin],
+    sections: Iterable[SectionPlugin],
+) -> Mapping[SectionName, SectionPlugin]:
+    """Return the raw sections potentially relevant for the given check or inventory plugins"""
+    parsed_section_names = {
+        section_name for plugin in consumers for section_name in plugin.sections
+    }
 
-    Mixed checkgroups lead to strange exceptions when processing the check parameters.
-    So it is much better to catch these errors in a central place with a clear error message.
+    return {
+        section.name: section
+        for section in sections
+        if section.parsed_section_name in parsed_section_names
+    }
+
+
+def sections_needing_redetection(
+    sections: Iterable[SNMPSectionPlugin],
+) -> set[SectionName]:
+    """Return the names of sections that need to be redetected
+
+    Sections that are not the only producers of their parsed
+    sections need to be re-detected during checking.
     """
-    if check_plugin.check_ruleset_name is None:
-        return
-
-    present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]
-    if not present_check_plugins:
-        return
-
-    # Try to detect whether the check has an item. But this mechanism is not
-    # 100% reliable since Checkmk appends an item to the service_description when "%s"
-    # is not in the checks service_description template.
-    # Maybe we need to define a new rule which enforces the developer to use the %s in
-    # the service_description. At least for grouped checks.
-    item_present = ITEM_VARIABLE in check_plugin.service_name
-    item_expected = ITEM_VARIABLE in present_check_plugins[0].service_name
-
-    if item_present is not item_expected:
-        present_plugins = ", ".join(str(p.name) for p in present_check_plugins)
-        raise ValueError(
-            f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
-            "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
-        )
+    sections_by_parsed_name = defaultdict(set)
+    for section in sections:
+        sections_by_parsed_name[section.parsed_section_name].add(section.name)
+    return {
+        section_name
+        for section_names in sections_by_parsed_name.values()
+        if len(section_names) > 1
+        for section_name in section_names
+    }

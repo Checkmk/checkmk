@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import importlib
 import io
@@ -18,18 +17,25 @@ from typing import Any, Literal
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
-import cmk.utils.debug
-import cmk.utils.version as cmk_version
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
-import cmk.base.config as config
-import cmk.base.core_nagios as core_nagios
+from cmk.base import config, core_nagios
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins
+
+from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
+from cmk.server_side_calls_backend import load_active_checks
 
 
 def ip_address_of_never_called(
@@ -44,6 +50,17 @@ def ip_address_of_return_local(
     _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
 ) -> HostAddress:
     return HostAddress("127.0.0.1")
+
+
+def _patch_plugin_loading(
+    monkeypatch: pytest.MonkeyPatch,
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+) -> None:
+    monkeypatch.setattr(
+        config,
+        load_active_checks.__name__,
+        lambda *a, **kw: loaded_active_checks,
+    )
 
 
 def test_format_nagios_object() -> None:
@@ -243,9 +260,11 @@ def test_format_nagios_object() -> None:
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
+        result["__LABELSOURCE_cmk/customer"] = "discovered"
+        result["__LABEL_cmk/customer"] = "provider"
 
     ts = Scenario()
     ts.add_host(HostName("localhost"))
@@ -336,7 +355,9 @@ class TestHostCheckStore:
         assert not store.host_check_source_file_path(config_path, hostname).exists()
         assert not store.host_check_file_path(config_path, hostname).exists()
 
-        store.write(config_path, hostname, "xyz")
+        store.write(
+            config_path, hostname, "xyz", precompile_mode=core_nagios.PrecompileMode.INSTANT
+        )
 
         assert store.host_check_source_file_path(config_path, hostname).exists()
         assert store.host_check_file_path(config_path, hostname).exists()
@@ -348,6 +369,32 @@ class TestHostCheckStore:
             assert p.read().startswith(importlib.util.MAGIC_NUMBER)
 
         assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
+
+
+def _make_plugins_for_test() -> AgentBasedPlugins:
+    """Don't load actual plugins, just create some dummy objects."""
+    # most attributes are not used in this test
+    return AgentBasedPlugins(
+        agent_sections={},
+        snmp_sections={},
+        check_plugins={
+            CheckPluginName("uptime"): CheckPlugin(
+                name=CheckPluginName("uptime"),
+                sections=[],
+                service_name="",
+                discovery_function=lambda: (),
+                discovery_default_parameters=None,
+                discovery_ruleset_name=None,
+                discovery_ruleset_type="merged",
+                check_function=lambda: (),
+                check_default_parameters=None,
+                check_ruleset_name=None,
+                cluster_check_function=None,
+                location=PluginLocation("some.test.module.name", "uptime"),
+            )
+        },
+        inventory_plugins={},
+    )
 
 
 def test_dump_precompiled_hostcheck(
@@ -366,60 +413,33 @@ def test_dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
+        plugins=_make_plugins_for_test(),
+        precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
 
 
-def test_dump_precompiled_hostcheck_without_check_mk_service(
-    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
-) -> None:
-    hostname = HostName("localhost")
-    ts = Scenario()
-    ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
-    host_check = core_nagios.dump_precompiled_hostcheck(
-        config_cache,
-        config_path,
-        hostname,
-    )
-    assert host_check is None
-
-
-def test_dump_precompiled_hostcheck_not_existing_host(
-    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
-) -> None:
-    config_cache = Scenario().apply(monkeypatch)
-    host_check = core_nagios.dump_precompiled_hostcheck(
-        config_cache,
-        config_path,
-        HostName("not-existing"),
-    )
-    assert host_check is None
-
-
-def mock_argument_function(params: Mapping[str, str]) -> str:
-    return "--arg1 arument1 --host_alias $HOSTALIAS$"
-
-
-def mock_service_description(params: Mapping[str, str]) -> str:
-    return "Active check of $HOSTNAME$"
+MOCK_PLUGIN = ActiveCheckConfig(
+    name="my_active_check",
+    parameter_parser=lambda x: x,
+    commands_function=lambda params, host_config: (
+        ActiveCheckCommand(
+            service_description=f"Active check of {host_config.name}",
+            command_arguments=("--arg1", "arument1", "--host_alias", f"{host_config.alias}"),
+        ),
+    ),
+)
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, expected_result",
+    "active_checks, loaded_active_checks, host_attrs, expected_result",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
-            },
+            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -445,13 +465,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
-            },
+            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "0.0.0.0",
@@ -464,7 +478,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2\n'
+            "  check_command                 check_mk_active-my_active_check!'Failed to lookup IP address and no explicit IP address configured'\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -476,52 +490,9 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
-            {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": lambda _: [
-                        "--arg1",
-                        "arument1",
-                        "--host_alias",
-                        "$HOSTALIAS$",
-                    ],
-                    "service_description": mock_service_description,
-                }
-            },
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            "\n"
-            "\n"
-            "# Active checks\n"
-            "define service {\n"
-            "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias 'my_host_alias'\n"
-            "  check_interval                1.0\n"
-            "  host_name                     my_host\n"
-            "  service_description           Active check of my_host\n"
-            "  use                           check_mk_perf,check_mk_default\n"
-            "}\n"
-            "\n",
-            id="arguments_list",
-        ),
-        pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
-            },
+            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -543,63 +514,23 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "\n",
             id="duplicate_active_checks",
         ),
-        pytest.param(
-            [
-                (
-                    "http",
-                    [
-                        {
-                            "description": "My http check",
-                            "param1": "param1",
-                            "name": "my special HTTP",
-                        }
-                    ],
-                ),
-            ],
-            {
-                "http": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": lambda x: "HTTP my special HTTP",
-                }
-            },
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            "\n"
-            "\n"
-            "# Active checks\n"
-            "define service {\n"
-            "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias my_host_alias\n"
-            "  check_interval                1.0\n"
-            "  host_name                     my_host\n"
-            "  service_description           HTTP my special HTTP\n"
-            "  use                           check_mk_perf,check_mk_default\n"
-            "}\n"
-            "\n",
-            id="old_service_description",
-        ),
     ],
 )
 def test_create_nagios_servicedefs_active_check(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
+    hostname = HostName("my_host")
     config_cache = config._create_config_cache()
+    monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
@@ -612,7 +543,7 @@ def test_create_nagios_servicedefs_active_check(
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, expected_result, expected_warning",
+    "active_checks, loaded_active_checks, host_attrs, expected_result, expected_warning",
     [
         pytest.param(
             [
@@ -620,16 +551,26 @@ def test_create_nagios_servicedefs_active_check(
                 ("my_active_check2", [{"description": "My active check", "param2": "param2"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": lambda e: "My description",
-                },
-                "my_active_check2": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": lambda e: "My description",
-                },
+                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description="My description",
+                            command_arguments=("--option", "value"),
+                        ),
+                    ),
+                ),
+                PluginLocation("cmk.plugins", "some_other_name"): ActiveCheckConfig(
+                    name="my_active_check2",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description="My description",
+                            command_arguments=("--option", "value"),
+                        ),
+                    ),
+                ),
             },
             {
                 "alias": "my_host_alias",
@@ -643,7 +584,7 @@ def test_create_nagios_servicedefs_active_check(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
+            "  check_command                 check_mk_active-my_active_check!--option value\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
@@ -651,7 +592,7 @@ def test_create_nagios_servicedefs_active_check(
             "}\n"
             "\n",
             "\n"
-            "WARNING: ERROR: Duplicate service description (active check) 'My description' for host 'my_host'!\n"
+            "WARNING: ERROR: Duplicate service name (active check) 'My description' for host 'my_host'!\n"
             " - 1st occurrence: check plug-in / item: active(my_active_check) / 'My description'\n"
             " - 2nd occurrence: check plug-in / item: active(my_active_check2) / None\n"
             "\n",
@@ -662,11 +603,16 @@ def test_create_nagios_servicedefs_active_check(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": lambda _: "",
-                }
+                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description="",
+                            command_arguments=("--option", "value"),
+                        ),
+                    ),
+                ),
             },
             {
                 "alias": "my_host_alias",
@@ -684,14 +630,14 @@ def test_create_nagios_servicedefs_active_check(
 )
 def test_create_nagios_servicedefs_with_warnings(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, Any],
     expected_result: str,
     expected_warning: str,
     monkeypatch: MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()
@@ -714,22 +660,27 @@ def test_create_nagios_servicedefs_with_warnings(
     assert outfile.getvalue() == expected_result
 
     captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert captured.err == expected_warning
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, expected_result",
+    "active_checks, loaded_active_checks, host_attrs, expected_result",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
+                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=("--option", "value"),
+                        ),
+                    ),
+                ),
             },
             {
                 "alias": "my_host_alias",
@@ -745,20 +696,20 @@ def test_create_nagios_servicedefs_with_warnings(
 )
 def test_create_nagios_servicedefs_omit_service(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
-    hostname = HostName("my_host")
     outfile = io.StringIO()
+    hostname = HostName("my_host")
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
@@ -770,18 +721,23 @@ def test_create_nagios_servicedefs_omit_service(
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, error_message",
+    "active_checks, loaded_active_checks, host_attrs, error_message",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": lambda _: 12,
-                    "service_description": mock_service_description,
-                }
+                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=("--option", 42),  # type: ignore[arg-type]  # invalid on purpose
+                        ),
+                    ),
+                ),
             },
             {
                 "alias": "my_host_alias",
@@ -790,27 +746,27 @@ def test_create_nagios_servicedefs_omit_service(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            "\nWARNING: Config creation for active check my_active_check failed on my_host: "
-            "The check argument function needs to return either a list of arguments or a string"
-            " of the concatenated arguments (Service: Active check of my_host).\n",
+            "\nWARNING: Config creation for active check my_active_check failed on my_host:"
+            " Got invalid argument list from SSC plugin: 42 at index 1 in ('--option', 42)."
+            " Expected either `str` or `Secret`.\n",
             id="invalid_args",
         ),
     ],
 )
 def test_create_nagios_servicedefs_invalid_args(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, Any],
     error_message: str,
     monkeypatch: MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
@@ -821,24 +777,16 @@ def test_create_nagios_servicedefs_invalid_args(
         cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
-    out, _ = capsys.readouterr()
-    assert out == error_message
+    assert error_message == capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, expected_result",
+    "active_checks, host_attrs, expected_result",
     [
         pytest.param(
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {
-                "my_active_check": {
-                    "command_line": "some_command $ARG1$",
-                    "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
-                }
-            },
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -851,7 +799,7 @@ def test_create_nagios_servicedefs_invalid_args(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
+            "  check_command                 check_mk_active-my_active_check!--option value\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -864,7 +812,7 @@ def test_create_nagios_servicedefs_invalid_args(
             "# ------------------------------------------------------------\n"
             "\n"
             "define command {\n"
-            "  command_line                  some_command $ARG1$\n"
+            "  command_line                  check_my_active_check $ARG1$\n"
             "  command_name                  check_mk_active-my_active_check\n"
             "}\n"
             "\n",
@@ -874,12 +822,25 @@ def test_create_nagios_servicedefs_invalid_args(
 )
 def test_create_nagios_config_commands(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
+    _patch_plugin_loading(
+        monkeypatch,
+        {
+            PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda x: x,
+                commands_function=lambda params, host_config: (
+                    ActiveCheckCommand(
+                        service_description=f"Active check of {host_config.name}",
+                        command_arguments=("--option", "value"),
+                    ),
+                ),
+            ),
+        },
+    )
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()

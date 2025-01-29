@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     DataSize,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     InputHint,
@@ -148,6 +149,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -156,6 +158,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -209,7 +212,7 @@ def _valuespec_expected_regex_body() -> Dictionary:
                 required=True,
             ),
             "invert": DictElement(
-                parameter_form=BooleanChoice(label=Label("return CRITICAL if found, OK if not")),
+                parameter_form=BooleanChoice(label=Label("Return WARNING if found, OK if not")),
                 required=True,
             ),
         },
@@ -244,9 +247,8 @@ def _send_data() -> Dictionary:
                                 elements=[
                                     CascadingSingleChoiceElement(
                                         name="common",
-                                        title=Title("Type selection"),
+                                        title=Title("Select type from list"),
                                         parameter_form=SingleChoice(
-                                            title=Title("Select type from list"),
                                             elements=[
                                                 SingleChoiceElement(
                                                     name=content_type.lower()
@@ -285,10 +287,12 @@ def _send_data() -> Dictionary:
 
 header_dict_elements = {
     "header_name": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Name"), prefill=InputHint("Accept-Language")),
         required=True,
     ),
     "header_value": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Value"), prefill=InputHint("en-US,en;q=0.5")),
         required=True,
     ),
@@ -302,14 +306,6 @@ def _valuespec_connection() -> Dictionary:
             "Options in this group define how the connection to the web server is established."
         ),
         elements={
-            # Not yet implemented
-            #    "virtual_host": DictElement(
-            #        Text(
-            #        title=Title("Virtual host"),
-            #        size=80,
-            #        input_hint="www.mydomain.de",
-            #    ),
-            # ),
             "method": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Title("HTTP method"),
@@ -377,10 +373,11 @@ def _valuespec_connection() -> Dictionary:
                         "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
                         "on this rule set as the plug-in needs to be called with an unsafe "
                         "configuration of OpenSSL 3. This requires a direct call via "
-                        "<i>Integrate Nagios plugins.</i>"
+                        "<i>Integrate Nagios plug-ins.</i>"
                     ),
                     elements={
                         "min_version": DictElement(
+                            group=DictGroup(),
                             parameter_form=SingleChoice(
                                 elements=[
                                     SingleChoiceElement(name="auto", title=Title("Negotiate")),
@@ -395,6 +392,7 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                         "allow_higher": DictElement(
+                            group=DictGroup(),
                             parameter_form=BooleanChoice(label=Label("Allow higher versions")),
                             required=True,
                         ),
@@ -402,6 +400,24 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+            "address_family": DictElement(
+                parameter_form=SingleChoice(
+                    title=Title("IP address family"),
+                    help_text=Help(
+                        "The check will use any IP address protocol by default. Selecting a "
+                        "specific protocol or use the primary of a host will enforce the usage "
+                        "of your choice. This gives you more control if you want to ensure the "
+                        "availability of you web endpoint through either IPv4 or IPv6."
+                    ),
+                    prefill=DefaultValue("any"),
+                    elements=[
+                        SingleChoiceElement("any", Title("Use any network address")),
+                        SingleChoiceElement("ipv4", Title("Enforce IPv4")),
+                        SingleChoiceElement("ipv6", Title("Enforce IPv6")),
+                        SingleChoiceElement("primary", Title("Enforce primary address family")),
+                    ],
+                ),
+            ),
             "redirects": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("How to handle redirects"),
@@ -433,7 +449,7 @@ def _valuespec_connection() -> Dictionary:
                         ),
                         SingleChoiceElement(
                             name="stickyport",
-                            title=Title("Follow, but stay to same IP-address and port"),
+                            title=Title("Follow, but stay to same IP address and port"),
                         ),
                     ],
                     prefill=DefaultValue("follow"),
@@ -442,7 +458,10 @@ def _valuespec_connection() -> Dictionary:
             "timeout": DictElement(
                 parameter_form=TimeSpan(
                     title=Title("Connection timeout"),
-                    displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                    displayed_magnitudes=[
+                        TimeMagnitude.SECOND,
+                        TimeMagnitude.MILLISECOND,
+                    ],
                     help_text=Help(
                         "The result will be treated as connection failure if the threshold gets "
                         "reached and leads to a CRIT on the service."
@@ -460,6 +479,7 @@ def _valuespec_connection() -> Dictionary:
                         "valid string for a header value."
                     ),
                     prefill=DefaultValue(_DEFAULT_USER_AGENT),
+                    macro_support=True,
                 ),
             ),
             "add_headers": DictElement(
@@ -539,10 +559,10 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search for header"),
                     help_text=Help(
-                        "The provided header key and value need to be exact as in the "
+                        "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get WARN if any, the key or the value, is not matching. If looking"
-                        "for a regular expression the first match will considered as success."
+                        "get a WARN, if either the key or the value does not match. If searching "
+                        "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -566,9 +586,9 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search in body"),
                     help_text=Help(
-                        "The provided string to look for needs to be exact as in the raw document "
-                        "body. This includes html markups in between user facing strings. This is "
-                        "also true if looking through a regular expression."
+                        "The provided string to be looked for needs to be exactly the same as in "
+                        "the raw document body. This includes html markups between user-oriented "
+                        "strings. This is also true for searching in a regular expression."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -589,6 +609,17 @@ def _valuespec_content() -> Dictionary:
     )
 
 
+def _migrate_to_cascading(params: object) -> tuple[str, object]:
+    match params:
+        case "validate", tuple(value):
+            return "validate", value
+        case "no_validation", None:
+            return "no_validation", None
+        case str(level_type), tuple(value):
+            return "validate", (level_type, value)
+    raise ValueError(f"Invalid value {params!r} for certificate levels")
+
+
 # This could change later, so we need to distinct between standard settings and
 # individual settings (currently referred as "shared_settings")
 def _valuespec_settings(is_standard: bool = True) -> Dictionary:
@@ -603,12 +634,30 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
             "individual settings of an endpoint."
         ),
         elements={
+            "server": DictElement(
+                parameter_form=String(
+                    title=Title("Connect to specific host"),
+                    help_text=Help(
+                        "You may enter any fully qualified domain name or valid "
+                        "IP address here if you need to a different server to connect to rather "
+                        "than the one specified in the URL. The name must not contain any further "
+                        "information, like port or protocol. You may use macros in "
+                        "this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+                        "or $HOSTADDRESS$."
+                    ),
+                    prefill=InputHint("192.168.0.73 or my.host.tld"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
             "connection": DictElement(parameter_form=_valuespec_connection()),
             "response_time": DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=SimpleLevels[float](
                     title=Title("Response time"),
                     form_spec_template=TimeSpan(
-                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                        displayed_magnitudes=[
+                            TimeMagnitude.SECOND,
+                            TimeMagnitude.MILLISECOND,
+                        ],
                     ),
                     level_direction=LevelDirection.UPPER,
                     help_text=Help(
@@ -618,14 +667,49 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 ),
             ),
             "server_response": DictElement(parameter_form=_valuespec_response()),
-            "cert": DictElement[SimpleLevelsConfigModel[float]](
-                parameter_form=SimpleLevels[float](
+            "cert": DictElement(
+                parameter_form=CascadingSingleChoice(
                     title=Title("Certificate validity"),
-                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.DAY]),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=DefaultValue((40.0 * _DAY, 20.0 * _DAY)),
-                    help_text=Help("Minimum number of days a certificate has to be valid."),
-                )
+                    help_text=Help(
+                        "By default the certificate validity in general will be checked. With "
+                        "this option you can choose to check additionally for the remeinaing time "
+                        "the certificate will be valid or ignore the certificate completely. "
+                        "Please use the latter as last resort and with caution!"
+                    ),
+                    prefill=DefaultValue("validate"),
+                    migrate=_migrate_to_cascading,
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="validate",
+                            title=Title("Check certificate"),
+                            parameter_form=SimpleLevels[float](
+                                form_spec_template=TimeSpan(
+                                    displayed_magnitudes=[TimeMagnitude.DAY]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_fixed_levels=DefaultValue((40.0 * _DAY, 20.0 * _DAY)),
+                                help_text=Help(
+                                    "Minimum number of days a certificate has to be valid."
+                                ),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="no_validation",
+                            title=Title("Ignore certificate"),
+                            parameter_form=FixedValue(
+                                value=None,
+                                help_text=Help(
+                                    "If invalid certificates are trusted, any certificate for any "
+                                    "site will be trusted for use. This includes expired "
+                                    "certificates and introduces significant vulnerabilities such "
+                                    "as man-in-the-middle attacks. Please use this option as a "
+                                    "last resort and ideally in combination with an independent "
+                                    "certificate check."
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
             ),
             "document": DictElement(parameter_form=_valuespec_document()),
             "content": DictElement(parameter_form=_valuespec_content()),
@@ -650,15 +734,16 @@ def _valuespec_endpoints() -> List:
                         title=Title("Service name"),
                         elements={
                             "prefix": DictElement(
+                                group=DictGroup(),
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose to not use the prefix option."
+                                        "The prefix is automatically added to each service to be able to organize it. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title("Use protocol name: HTTP(S)"),
+                                            title=Title('Use "HTTP(S)" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",
@@ -670,13 +755,15 @@ def _valuespec_endpoints() -> List:
                                 required=True,
                             ),
                             "name": DictElement(
+                                group=DictGroup(),
                                 parameter_form=String(
                                     title=Title("Name"),
                                     help_text=Help(
-                                        "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                        "The name is the individual part of the used service name. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
                                     prefill=InputHint("My service name"),
+                                    macro_support=True,
                                 ),
                                 required=True,
                             ),
@@ -689,7 +776,7 @@ def _valuespec_endpoints() -> List:
                         title=Title("URL"),
                         help_text=Help(
                             "The URL to monitor. This URL must include the protocol (HTTP or "
-                            "HTTPS), the full address and, if needed, also the port the endpoint "
+                            "HTTPS), the full address and, if needed, also the port of the endpoint "
                             "if using a non standard port. The URL may also include query "
                             "parameters or anchors. You may use macros in this field. The most "
                             "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
@@ -702,9 +789,13 @@ def _valuespec_endpoints() -> List:
                         ),
                         custom_validate=(
                             validators.Url(
-                                [validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS],
+                                [
+                                    validators.UrlProtocol.HTTP,
+                                    validators.UrlProtocol.HTTPS,
+                                ],
                             ),
                         ),
+                        # macro_support=True, # deactivated to avoid conflicts with manual help_text
                     ),
                     required=True,
                 ),

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils import version
+from cmk.ccc import version
+
+from cmk.utils import paths
 
 from cmk.gui.rest_api_types.site_connection import SiteConfig
 
@@ -55,14 +57,23 @@ def default_config_example() -> SiteConfig:
             },
             "replicate_event_console": True,
             "replicate_extensions": True,
+            "message_broker_port": 5672,
         },
     }
 
-    if version.edition() is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.CME:
         r["basic_settings"] = {
             "alias": "Die remote site 1",
             "site_id": "site_id_1",
             "customer": "provider",
         }
+
+    return r
+
+
+def no_replication_config_example() -> SiteConfig:
+    r: SiteConfig = default_config_example()
+
+    r["configuration_connection"] = {"enable_replication": False}
 
     return r

@@ -9,7 +9,7 @@ from __future__ import annotations
 import enum
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import assert_never, Self
+from typing import assert_never, override, Self
 
 
 class _Operation(enum.Enum):
@@ -61,6 +61,7 @@ class Title:
     _arg: str | Self
     _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}({self._arg!r})"

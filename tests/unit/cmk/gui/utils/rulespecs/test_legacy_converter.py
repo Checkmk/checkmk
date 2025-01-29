@@ -5,27 +5,29 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from functools import partial
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import pytest
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
     _convert_to_legacy_rulespec_group,
-    _convert_to_legacy_valuespec,
     _to_generated_builtin_sub_group,
     convert_to_legacy_rulespec,
+    convert_to_legacy_valuespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
@@ -220,7 +222,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Percentage(),
-            legacy_valuespecs.Percentage(display_format="%r"),
+            legacy_valuespecs.Percentage(
+                display_format="%r",
+                minvalue=None,
+                maxvalue=None,
+            ),
             id="minimal Percentage",
         ),
         pytest.param(
@@ -237,6 +243,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("label"),
                 display_format="%r",
                 default_value=-1.0,
+                minvalue=None,
+                maxvalue=None,
                 validate=lambda x, y: None,
             ),
             id="Percentage",
@@ -739,8 +747,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.MonitoredService(),
             legacy_valuespecs.MonitoredServiceDescription(
-                title=_("Service description"),
-                help=_("Select from a list of service descriptions known to Checkmk"),
+                title=_("Service name"),
+                help=_("Select from a list of service names known to Checkmk"),
                 autocompleter=ContextAutocompleterConfig(
                     ident=legacy_valuespecs.MonitoredServiceDescription.ident,
                     strict=True,
@@ -794,7 +802,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     )
                 ]
             ),
-            legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=()),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=())
+            ),
             id="minimal MultipleChoice",
         ),
         pytest.param(
@@ -812,12 +822,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "second")),
             ),
-            legacy_valuespecs.ListChoice(
-                choices=[("first", _("First")), ("second", _("Second"))],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "second"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(
+                    choices=[("first", _("First")), ("second", _("Second"))],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "second"],
+                )
             ),
             id="MultipleChoice",
         ),
@@ -863,25 +875,27 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "third")),
             ),
-            legacy_valuespecs.DualListChoice(
-                choices=[
-                    ("first", _("First")),
-                    ("second", _("Second")),
-                    ("third", _("Third")),
-                    ("fourth", _("Fourth")),
-                    ("fifth", _("Fifth")),
-                    ("sixth", _("Sixth")),
-                    ("seventh", _("Seventh")),
-                    ("eight", _("Eight")),
-                    ("ninth", _("Ninth")),
-                    ("tenth", _("Tenth")),
-                    ("eleventh", _("Eleventh")),
-                ],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "third"],
-                rows=11,
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.DualListChoice(
+                    choices=[
+                        ("first", _("First")),
+                        ("second", _("Second")),
+                        ("third", _("Third")),
+                        ("fourth", _("Fourth")),
+                        ("fifth", _("Fifth")),
+                        ("sixth", _("Sixth")),
+                        ("seventh", _("Seventh")),
+                        ("eight", _("Eight")),
+                        ("ninth", _("Ninth")),
+                        ("tenth", _("Tenth")),
+                        ("eleventh", _("Eleventh")),
+                    ],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "third"],
+                    rows=11,
+                )
             ),
             id="large MultipleChoice",
         ),
@@ -928,13 +942,51 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="TimePeriod",
         ),
+        pytest.param(
+            Tuple(
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Minimal Tuple",
+        ),
+        pytest.param(
+            Tuple(
+                title=api_v1.Title("title"),
+                help_text=api_v1.Help("help text"),
+                show_titles=False,
+                layout="float",
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                title="title",
+                help="help text",
+                show_titles=False,
+                orientation="float",
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Tuple",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
     new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
     _compare_specs(
-        _convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected
+        convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected
     )
 
 
@@ -1022,7 +1074,7 @@ def _get_cascading_single_choice_with_prefill_selection(
 def test_cascading_singe_choice_prefill_selection_conversion(
     prefilled_spec: api_v1.form_specs.CascadingSingleChoice, expected_default_value: tuple
 ) -> None:
-    converted_prefilled_spec = _convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
+    converted_prefilled_spec = convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
     assert expected_default_value == converted_prefilled_spec.default_value()
 
 
@@ -1493,7 +1545,11 @@ def test_convert_to_legacy_rulespec(
 
 
 def _compare_specs(actual: object, expected: object) -> None:
-    ignored_attrs = {"__orig_class__"}
+    # The form_spec fields are only available if the rulespec uses a form_spec
+    ignored_attrs = {
+        "__orig_class__",
+        "_form_spec_definition",
+    }
 
     if isinstance(expected, Sequence) and not isinstance(expected, str):
         assert isinstance(actual, Sequence) and not isinstance(actual, str)
@@ -1528,6 +1584,7 @@ def _compare_specs(actual: object, expected: object) -> None:
             #  check that the field was set during conversion and test behavior separately
             assert (actual_value is not None) is (expected_value is not None)
             continue
+
         if not callable(expected_value):
             _compare_specs(actual_value, expected_value)
             continue
@@ -1602,7 +1659,7 @@ def test_generated_rulespec_group_single_registration():
 def test_convert_validation(
     input_value: str, validate: tuple[Callable[[str], object], ...]
 ) -> None:
-    converted_spec = _convert_to_legacy_valuespec(
+    converted_spec = convert_to_legacy_valuespec(
         api_v1.form_specs.String(custom_validate=validate),
         translate_to_current_language,
     )
@@ -1625,6 +1682,44 @@ def test_convert_validation(
     assert actual_error.value.args == expected_error.value.args
     assert actual_error.value.message == expected_error.value.message
     assert actual_error.value.varname == expected_error.value.varname
+
+
+@pytest.mark.parametrize(
+    ["bounds", "input_value", "value_is_valid"],
+    [
+        pytest.param((0, 100), 50, True, id="valid value"),
+        pytest.param((0, None), 200, True, id="valid value without max"),
+        pytest.param((None, 100), -1, True, id="valid value without min"),
+        pytest.param((0, 100), 101, False, id="invalid value above upper bound"),
+        pytest.param((0, 100), -1, False, id="invalid value below lower bound"),
+    ],
+)
+def test_percentage_validation(
+    bounds: tuple[float | None, float | None], input_value: float, value_is_valid: bool
+) -> None:
+    converted_spec = convert_to_legacy_valuespec(
+        api_v1.form_specs.Percentage(
+            custom_validate=[
+                api_v1.form_specs.validators.NumberInRange(min_value=bounds[0], max_value=bounds[1])
+            ]
+        ),
+        translate_to_current_language,
+    )
+
+    expected_spec = legacy_valuespecs.Percentage(
+        display_format="%r", minvalue=bounds[0], maxvalue=bounds[1]
+    )
+
+    test_args = (input_value, "var_prefix")
+    if value_is_valid:
+        expected_spec.validate_value(*test_args)
+        converted_spec.validate_value(*test_args)
+    else:
+        with pytest.raises(MKUserError):
+            expected_spec.validate_value(*test_args)
+
+        with pytest.raises(MKUserError):
+            converted_spec.validate_value(*test_args)
 
 
 @pytest.mark.parametrize(
@@ -1656,7 +1751,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
         custom_validate=(_v1_custom_list_validate,),
     )
 
-    legacy_list = _convert_to_legacy_valuespec(v1_api_list, translate_to_current_language)
+    legacy_list = convert_to_legacy_valuespec(v1_api_list, translate_to_current_language)
 
     with pytest.raises(MKUserError, match=expected_error):
         legacy_list.validate_value(input_value, "var_prefix")
@@ -1711,6 +1806,21 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             ("key_new", "value_new"),
             id="migrate nested and top level element",
         ),
+        pytest.param(
+            api_v1.form_specs.CascadingSingleChoice(
+                elements=[
+                    api_v1.form_specs.CascadingSingleChoiceElement(
+                        name="key_new",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.FixedValue(value=None),
+                    )
+                ],
+                migrate=lambda x: ("key_new", None),
+            ),
+            None,
+            ("key_new", None),
+            id="migrate from `None` (Alterative + FixedValue(None))",
+        ),
     ],
 )
 def test_migrate(
@@ -1718,7 +1828,7 @@ def test_migrate(
     old_value: object,
     expected_transformed_value: object,
 ) -> None:
-    legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
+    legacy_valuespec = convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
     actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
     assert expected_transformed_value == actual_transformed_value
 
@@ -2301,7 +2411,7 @@ def test_level_conversion(
                 ),
             },
             {"a": 1, "b": 2, "c": 3},
-            {"DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2}, "c": 3},
+            {"DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1, "b": 2}, "c": 3},
             id="some elements grouped, some not",
         ),
         pytest.param(
@@ -2319,8 +2429,8 @@ def test_level_conversion(
             },
             {"a": 1, "b": 2},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1},
-                "DictGroup(title=Title('Grouptitle'),help_text=Help('Helptext'))": {"b": 2},
+                "DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1},
+                "DictGrouptitleTitleGrouptitlehelptextHelpHelptext": {"b": 2},
             },
             id="different groups",
         ),
@@ -2355,10 +2465,10 @@ def test_level_conversion(
             },
             {"a": 1, "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4}},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+                "DictGrouptitleTitleGrouptitlehelptextNone": {
                     "a": 1,
                     "b": {
-                        "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                        "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                             "a_nested": 2,
                             "b_nested": 3,
                         },
@@ -2377,7 +2487,7 @@ def test_dictionary_groups_datamodel_transformation(
 ) -> None:
     to_convert = api_v1.form_specs.Dictionary(elements=input_elements)
 
-    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert isinstance(converted, legacy_valuespecs.Transform)
 
     assert converted.to_valuespec(consumer_model) == form_model
@@ -2423,10 +2533,10 @@ def test_dictionary_groups_ignored_elements() -> None:
         "c": 6,
     }
     form_model = {
-        "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+        "DictGrouptitleTitleGrouptitlehelptextNone": {
             "a": 1,
             "b": {
-                "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                     "a_nested": 2,
                     "b_nested": 3,
                 },
@@ -2437,7 +2547,7 @@ def test_dictionary_groups_ignored_elements() -> None:
         "c": 6,
     }
 
-    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert isinstance(converted, legacy_valuespecs.Transform)
 
     assert converted.to_valuespec(consumer_model) == form_model
@@ -2481,7 +2591,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2491,7 +2601,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="no dictelement props",
@@ -2515,7 +2625,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2526,7 +2636,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="some required dictelements/vertical rendering",
@@ -2550,7 +2660,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2562,7 +2672,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="all required dictelements/horizontal rendering",
@@ -2585,7 +2695,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2596,7 +2706,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only dictelements",
@@ -2620,7 +2730,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2632,7 +2742,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                         ),
                     ],
                     required_keys=[],
-                    hidden_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    hidden_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only all dictelements",
@@ -2666,7 +2776,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABChidden'),help_text=None)",
+                            "DictGrouptitleTitleABChiddenhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC hidden"),
                                 elements=[
@@ -2677,7 +2787,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                         (
-                            "DictGroup(title=Title('ABCshown'),help_text=None)",
+                            "DictGrouptitleTitleABCshownhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC shown"),
                                 elements=[
@@ -2688,8 +2798,8 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABCshown'),help_text=None)"],
-                    hidden_keys=["DictGroup(title=Title('ABChidden'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABCshownhelptextNone"],
+                    hidden_keys=["DictGrouptitleTitleABChiddenhelptextNone"],
                 ),
             ),
             id="render_only some dictelements",
@@ -2699,9 +2809,21 @@ def test_dictionary_groups_ignored_elements() -> None:
 def test_dictionary_groups_dict_element_properties(
     to_convert: api_v1.form_specs.Dictionary, expected: legacy_valuespecs.Dictionary
 ) -> None:
-    _compare_specs(
-        _convert_to_legacy_valuespec(to_convert, translate_to_current_language), expected
-    )
+    _compare_specs(convert_to_legacy_valuespec(to_convert, translate_to_current_language), expected)
+
+
+def _inner_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "a" in values:
+        values["b"] = values.pop("a")
+    return values
+
+
+def _out_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "foo" in values:
+        values["bar"] = values.pop("foo")
+    return values
 
 
 @pytest.mark.parametrize(
@@ -2730,6 +2852,55 @@ def test_dictionary_groups_dict_element_properties(
             {"a": {"a_nested": 1}, "b": 2},
             {"a": {"a_nested": 2}, "b": 4},
             id="outermost migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.FixedValue(value=1),
+                                ),
+                            },
+                            migrate=_inner_migration,
+                        ),
+                    ),
+                },
+            ),
+            {"foo": {"a": 1}},
+            {"bar": {"b": 1}},
+            id="nested key migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            migrate=_inner_migration,
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        migrate=_inner_migration,
+                                        elements={
+                                            "b": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        },
+                                    )
+                                )
+                            },
+                        ),
+                    )
+                },
+            ),
+            {"foo": {"a": {"a": ""}}},
+            {"bar": {"b": {"b": ""}}},
+            id="migration of nested dictionary with inner group",
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(
@@ -2817,8 +2988,86 @@ def test_dictionary_groups_dict_element_properties(
 def test_dictionary_groups_migrate(
     to_convert: api_v1.form_specs.Dictionary, value_to_migrate: object, expected: object
 ) -> None:
-    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert converted.transform_value(value_to_migrate) == expected
+
+
+@pytest.mark.parametrize(
+    ["form_spec", "rule"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        elements={
+                                            "key3": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        }
+                                    )
+                                )
+                            }
+                        ),
+                    )
+                }
+            ),
+            {"key1": {"key2": {"key3": ""}}},
+            id="nested dictionary with inner group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                migrate=lambda x: x,  # type: ignore[arg-type, return-value]
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer migrate",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                custom_validate=(lambda x: None,),
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer validate",
+        ),
+    ],
+)
+def test_dictionary_groups_legacy_validation(
+    form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, Any]
+) -> None:
+    converted = convert_to_legacy_valuespec(form_spec, lambda x: x)
+    converted.validate_datatype(rule, "")
+    converted.validate_value(rule, "")
 
 
 @pytest.mark.parametrize(
@@ -2883,6 +3132,24 @@ def test_dictionary_groups_migrate(
 def test_dictionary_groups_validate(
     to_convert: api_v1.form_specs.Dictionary, value_to_validate: object
 ) -> None:
-    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
+    converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     with pytest.raises(MKUserError):
         converted.validate_value(value_to_validate, "")
+
+
+def test_agent_config_rule_spec_transformations_work_with_previous_non_dict_values() -> None:
+    legacy_rulespec = convert_to_legacy_rulespec(
+        api_v1.rule_specs.AgentConfig(
+            name="test_rulespec",
+            title=api_v1.Title("rulespec title"),
+            topic=api_v1.rule_specs.Topic.GENERAL,
+            parameter_form=lambda: api_v1.form_specs.Dictionary(
+                elements={},
+                migrate=lambda _x: {},
+            ),
+            help_text=api_v1.Help("help text"),
+        ),
+        Edition.CRE,
+        translate_to_current_language,
+    )
+    assert legacy_rulespec.valuespec.transform_value(()) == {"cmk-match-type": "dict"}

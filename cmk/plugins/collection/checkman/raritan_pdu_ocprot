@@ -11,7 +11,7 @@ description:
  as CRIT, closed as OK, and unavailable as UNKNOWN.
 
 item:
- The ID of the overcurrent protector, eg. C1.
+ The ID of the overcurrent protector, e.g. C1.
 
 discovery:
  One service is created for each overcurrent protector.

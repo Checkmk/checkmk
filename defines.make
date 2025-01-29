@@ -41,7 +41,7 @@ else
 SAAS              := no
 endif
 
-VERSION            := 2.4.0b1
+VERSION            := 2.5.0b1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)
@@ -50,7 +50,14 @@ PKG_VERSION        := $(VERSION)
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.4.0
+BRANCH_VERSION     := 2.5.0
+
+# return nothing if the branch name, e.g. "master" is not the version e.g. 2.4.0
+# this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does
+# fallback to "master" instead of the branch version value above
+# set this to any value after creating a new (beta) branch
+BRANCH_NAME_IS_BRANCH_VERSION :=
+
 # This automatism did not work well in all cases. There were daily build jobs that used
 # e.g. 2020.02.08 as BRANCH_VERSION, even if they should use 1.7.0
 #BRANCH_VERSION := $(shell echo "$(VERSION)" | sed -E 's/^([0-9]+.[0-9]+.[0-9]+).*$$/\1/')
@@ -61,7 +68,7 @@ BRANCH_VERSION     := 2.4.0
 #endif
 
 SHELL              := /bin/bash
-CLANG_VERSION      := 17
+CLANG_VERSION      := 19
 
 PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
 
@@ -75,7 +82,6 @@ GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PA
 # * the python version is now centralized within bazel, see package_versions.bzl
 # * update test_03_pip_interpreter_version
 # * update omd/Licenses.csv, too.
-# * you may need to regenerate the Pipfile.lock with "make --what-if Pipfile Pipfile.lock"
 PYTHON_VERSION  := $(shell sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/package_versions.bzl)
 
 # convenience stuff derived from PYTHON_VERSION
@@ -100,22 +106,13 @@ PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR := $(PYTHON_VERSION_WINDOWS_MAJOR).$(PYTH
 AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
 
 # Needed for bootstrapping CI and development environments
-PIPENV_VERSION := 2023.11.15
 VIRTUALENV_VERSION := 20.25.0
-NODEJS_VERSION := 18
+NODEJS_VERSION := 22
 NPM_VERSION := 10
 
-# PyPi Mirror Configuration
-# By default our internal Python mirror is used.
-# To use the official Python mirror, please export `USE_EXTERNAL_PIPENV_MIRROR=true`.
-EXTERNAL_PYPI_MIRROR := https://pypi.org/simple
-INTERNAL_PYPI_MIRROR := $(shell sed -n 's|^INTERNAL_PYPI_MIRROR = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/static_variables.bzl)
-
-ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
-PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-else
-PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-endif
+# Bazel paths
+BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
+BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
 
 print-%:
 	@echo '$($*)'

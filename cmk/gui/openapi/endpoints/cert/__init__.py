@@ -8,19 +8,19 @@ WARNING: Use at your own risk, not supported.
 
 Checkmk uses TLS certificates to secure agent communication.
 """
+
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import cryptography.x509 as x509
+from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.utils.certs import cert_dir, CertManagementEvent, root_cert_path, RootCA
-from cmk.utils.crypto.certificate import CertificateSigningRequest
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.paths import omd_root
 
-import cmk.gui.config as config
+from cmk.gui import config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -35,6 +35,8 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
+
+from cmk.crypto.certificate import CertificateSigningRequest
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
@@ -70,7 +72,6 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
-
     cert = _get_agent_ca().sign_csr(
         CertificateSigningRequest(csr),
         expiry=relativedelta(

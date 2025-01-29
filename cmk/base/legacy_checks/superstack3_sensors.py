@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_superstack3_sensors(info):
@@ -30,6 +30,7 @@ def parse_superstack3_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["superstack3_sensors"] = LegacyCheckDefinition(
+    name="superstack3_sensors",
     parse_function=parse_superstack3_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com superstack 3"),
     fetch=SNMPTree(

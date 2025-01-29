@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils import version
+from cmk.ccc import version
 
 from agents.plugins import apache_status, mk_jolokia, nginx_status
 

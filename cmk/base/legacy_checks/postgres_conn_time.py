@@ -14,10 +14,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 
 def parse_postgres_conn_time(string_table):
@@ -48,6 +48,7 @@ def check_postgres_conn_time(item, _no_params, parsed):
 
 
 check_info["postgres_conn_time"] = LegacyCheckDefinition(
+    name="postgres_conn_time",
     parse_function=parse_postgres_conn_time,
     service_name="PostgreSQL Connection Time %s",
     discovery_function=inventory_postgres_conn_time,

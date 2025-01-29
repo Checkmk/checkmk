@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, render
 
 Levels = tuple[float, float]
@@ -104,16 +104,17 @@ def size_trend(
         yield Metric("growth", mb_per_sec * SEC_PER_D)  # MB / day
 
     # apply levels for absolute growth in MB / interval
-    yield from check_levels(
+    yield from check_levels_v1(
         mb_in_range * MB,
         levels_upper=levels.get("trend_bytes"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
-        render_func=lambda x: ("+" if x >= 0 else "") + render.disksize(x),
+        # Don't use render.disksize here, see SUP-19150.
+        render_func=lambda x: ("+" if x >= 0 else "") + render.bytes(x),
         label="trend per %s" % render.timespan(range_sec),
     )
 
     # apply levels for percentual growth in % / interval
-    yield from check_levels(
+    yield from check_levels_v1(
         mb_in_range * 100 / size_mb,
         levels_upper=levels.get("trend_perc"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_perc")),
@@ -148,8 +149,12 @@ def size_trend(
     free_space = max(size_mb - used_mb, 0)
 
     if mb_in_range > 0 and not math.isinf(value := free_space / mb_in_range):
-        yield from check_levels(
-            value * range_sec / SEC_PER_H,
+        hours_till_full = value * range_sec / SEC_PER_H
+        # Ignore time left if it's more than 10 years
+        if hours_till_full > 10 * 365 * 24:
+            return
+        yield from check_levels_v1(
+            hours_till_full,
             levels_lower=levels.get("trend_timeleft"),
             metric_name="trend_hoursleft" if "trend_showtimeleft" in levels else None,
             render_func=lambda x: render.timespan(x * SEC_PER_H),

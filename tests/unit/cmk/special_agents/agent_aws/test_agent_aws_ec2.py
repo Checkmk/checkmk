@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Protocol
 
@@ -127,7 +127,7 @@ def get_ec2_sections() -> EC2Sections:
     ) -> EC2SectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
@@ -139,7 +139,11 @@ def get_ec2_sections() -> EC2Sections:
 
         # TODO: FakeEC2Client shoud actually subclass EC2Client, etc.
         ec2_limits = EC2Limits(
-            fake_ec2_client, region, config, distributor, fake_service_quotas_client  # type: ignore[arg-type]
+            fake_ec2_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_service_quotas_client,  # type: ignore[arg-type]
         )
         ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
         ec2_labels = EC2Labels(fake_ec2_client, region, config)  # type: ignore[arg-type]

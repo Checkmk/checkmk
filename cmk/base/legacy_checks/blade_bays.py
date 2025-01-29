@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.plugins.lib.blade import DETECT_BLADE
+from cmk.plugins.blade.agent_based.detection import DETECT_BLADE
+
+check_info = {}
 
 # mypy: disable-error-code="var-annotated"
 
@@ -67,12 +68,14 @@ def check_blade_bays(item, params, parsed):
     yield from check_elphase(item, params, parsed)
 
     data = parsed[item]
-    yield 0, "Max. power: {} W, Type: {}, ID: {}".format(
-        data["power_max"], data["type"], data["id"]
+    yield (
+        0,
+        "Max. power: {} W, Type: {}, ID: {}".format(data["power_max"], data["type"], data["id"]),
     )
 
 
 check_info["blade_bays"] = LegacyCheckDefinition(
+    name="blade_bays",
     detect=DETECT_BLADE,
     fetch=[
         SNMPTree(

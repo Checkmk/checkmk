@@ -11,9 +11,7 @@ from enum import Enum
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
-from cmk.gui import config
+from cmk.gui import config, userdb, utils
 from cmk.gui.message import message_gui
 
 

@@ -66,7 +66,7 @@ def check_internal_alerts(section: InternalAlerts) -> CheckResult:
     )
     if section.critical_alerts:
         yield Result(
-            state=State.OK, notice=f'Critical alerts: {", ".join(section.critical_alerts)}'
+            state=State.OK, notice=f"Critical alerts: {', '.join(section.critical_alerts)}"
         )
 
     yield Result(
@@ -74,11 +74,11 @@ def check_internal_alerts(section: InternalAlerts) -> CheckResult:
         summary=f"Warning: {len(section.warning_alerts)}",
     )
     if section.warning_alerts:
-        yield Result(state=State.OK, notice=f'Warning alerts: {", ".join(section.warning_alerts)}')
+        yield Result(state=State.OK, notice=f"Warning alerts: {', '.join(section.warning_alerts)}")
 
     yield Result(state=State.OK, summary=f"Info: {len(section.info_alerts)}")
     if section.info_alerts:
-        yield Result(state=State.OK, notice=f'Info alerts: {", ".join(section.info_alerts)}')
+        yield Result(state=State.OK, notice=f"Info alerts: {', '.join(section.info_alerts)}")
 
 
 check_plugin_pure_storage_fa_alerts = CheckPlugin(

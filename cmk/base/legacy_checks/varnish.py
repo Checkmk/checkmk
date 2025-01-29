@@ -8,11 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
+
+check_info = {}
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
@@ -395,13 +396,14 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
         except OverflowError:
             return (
                 3,
-                f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
+                f"Could not handle uptime value {parsed['uptime']['value']!r}. "
                 "Output of `varnishstats` seems to be faulty.",
             )
     return None
 
 
 check_info["varnish"] = LegacyCheckDefinition(
+    name="varnish",
     parse_function=parse_varnish,
     service_name="Varnish Uptime",
     discovery_function=inventory_varnish_uptime,
@@ -436,6 +438,7 @@ def check_varnish_cache(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.cache"] = LegacyCheckDefinition(
+    name="varnish_cache",
     service_name="Varnish Cache",
     sections=["varnish"],
     discovery_function=discover_varnish_cache,
@@ -472,6 +475,7 @@ def check_varnish_client(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.client"] = LegacyCheckDefinition(
+    name="varnish_client",
     service_name="Varnish Client",
     sections=["varnish"],
     discovery_function=discover_varnish_client,
@@ -513,6 +517,7 @@ def check_varnish_backend(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.backend"] = LegacyCheckDefinition(
+    name="varnish_backend",
     service_name="Varnish Backend",
     sections=["varnish"],
     discovery_function=discover_varnish_backend,
@@ -568,6 +573,7 @@ def check_varnish_fetch(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.fetch"] = LegacyCheckDefinition(
+    name="varnish_fetch",
     service_name="Varnish Fetch",
     sections=["varnish"],
     discovery_function=discover_varnish_fetch,
@@ -602,6 +608,7 @@ def check_varnish_esi(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.esi"] = LegacyCheckDefinition(
+    name="varnish_esi",
     service_name="Varnish ESI",
     sections=["varnish"],
     discovery_function=discover_varnish_esi,
@@ -638,6 +645,7 @@ def check_varnish_objects(item, params, parsed):
 #   |                            |__/                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.objects"] = LegacyCheckDefinition(
+    name="varnish_objects",
     service_name="Varnish Objects",
     sections=["varnish"],
     discovery_function=discover_varnish_objects,
@@ -677,6 +685,7 @@ def check_varnish_worker(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.worker"] = LegacyCheckDefinition(
+    name="varnish_worker",
     service_name="Varnish Worker",
     sections=["varnish"],
     discovery_function=discover_varnish_worker,
@@ -703,6 +712,7 @@ def check_varnish_cache_hit_ratio(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
+    name="varnish_cache_hit_ratio",
     service_name="Varnish Cache Hit Ratio",
     sections=["varnish"],
     discovery_function=discover_varnish_cache_hit_ratio,
@@ -738,6 +748,7 @@ def check_varnish_backend_success_ratio(item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
+    name="varnish_backend_success_ratio",
     service_name="Varnish Backend Success Ratio",
     sections=["varnish"],
     discovery_function=discover_varnish_backend_success_ratio,
@@ -781,6 +792,7 @@ def discover_varnish_worker_thread_ratio(parsed):
 
 
 check_info["varnish.worker_thread_ratio"] = LegacyCheckDefinition(
+    name="varnish_worker_thread_ratio",
     service_name="Varnish Worker Thread Ratio",
     sections=["varnish"],
     discovery_function=discover_varnish_worker_thread_ratio,

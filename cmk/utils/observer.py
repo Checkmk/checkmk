@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Final
 
 import cmk.utils.misc
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.caching import cache_manager
 from cmk.utils.log import VERBOSE
 

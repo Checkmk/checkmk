@@ -26,17 +26,18 @@ import traceback
 import types
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import Literal, NamedTuple, TextIO
+from typing import Final, Literal, NamedTuple, TextIO
 
 from cmk.utils.metrics import MetricName
 
-from cmk.gui.graphing._parser import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.graphing._color import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.graphing._perfometer import (  # pylint: disable=cmk-module-layer-violation
     _DualPerfometerSpec,
     _LinearPerfometerSpec,
+    _LogarithmicPerfometerSpec,
     _StackedPerfometerSpec,
-    LogarithmicPerfometerSpec,
     PerfometerSpec,
 )
 from cmk.gui.graphing._utils import (  # pylint: disable=cmk-module-layer-violation
@@ -66,11 +67,10 @@ def _parse_arguments() -> argparse.Namespace:
         help="Stop at the very first exception",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
+        "--cmk-header",
         action="store_true",
         default=False,
-        help="Show informations during migration",
+        help="Add CMK header",
     )
     parser.add_argument(
         "folders",
@@ -96,17 +96,17 @@ def _parse_arguments() -> argparse.Namespace:
         help="Migrate translations",
     )
     parser.add_argument(
-        "--sanitize",
+        "--balance-colors",
         action="store_true",
         default=False,
-        help="Sanitize connected graph objects, eg. improve colors or similar",
+        help="Balance colors",
     )
     return parser.parse_args()
 
 
-def _setup_logger(debug: bool, verbose: bool) -> None:
+def _setup_logger(debug: bool) -> None:
     handler: logging.StreamHandler[TextIO] | logging.NullHandler
-    if debug or verbose:
+    if debug:
         handler = logging.StreamHandler()
     else:
         handler = logging.NullHandler()
@@ -158,7 +158,9 @@ def _load_module(filepath: Path) -> types.ModuleType:
     return mod
 
 
-def _load_file_content(path: Path) -> tuple[
+def _load_file_content(
+    path: Path,
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],
@@ -184,7 +186,9 @@ def _load_file_content(path: Path) -> tuple[
     return metric_info, check_metrics, perfometer_info, graph_info
 
 
-def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple[
+def _load(
+    debug: bool, folders: Sequence[str], load_translations: bool
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],
@@ -203,9 +207,11 @@ def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple
                     loaded_perfometer_info,
                     loaded_graph_info,
                 ) = _load_file_content(path)
-            except Exception:
+            except Exception as e:
+                _show_exception(e)
                 if debug:
                     sys.exit(1)
+                continue
 
             legacy_metric_info.update(loaded_metric_info)
             if load_translations:
@@ -330,7 +336,7 @@ def _collect_metric_names_from_legacy_linear_perfometer(
 
 
 def _collect_metric_names_from_legacy_logarithmic_perfometer(
-    legacy_perfometer: LogarithmicPerfometerSpec,
+    legacy_perfometer: _LogarithmicPerfometerSpec,
 ) -> CheckedExpression:
     return _collect_metric_names_of_expression(legacy_perfometer["metric"])
 
@@ -799,7 +805,7 @@ def _parse_legacy_metric_info(
         rgb = _rgb_from_legacy_wheel(legacy_color)
     return metrics.Metric(
         name=name,
-        title=Title(str(info["title"])),
+        title=Title("%s") % str(info["title"]),
         unit=unit_parser.parse(info["unit"]),
         color=min(
             (_Distance.from_rgb(rgb, color) for color in metrics.Color),
@@ -932,7 +938,7 @@ def _make_percent(
     explicit_color: metrics.Color,
 ) -> metrics.Fraction:
     return metrics.Fraction(
-        Title(explicit_title),
+        Title("%s") % explicit_title,
         metrics.Unit(metrics.DecimalNotation("%")),
         explicit_color,
         dividend=metrics.Product(
@@ -1069,7 +1075,7 @@ def _resolve_stack(
             case "+":
                 resolved.append(
                     metrics.Sum(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         explicit_color,
                         [left, right],
                     )
@@ -1077,7 +1083,7 @@ def _resolve_stack(
             case "*":
                 resolved.append(
                     metrics.Product(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         [left, right],
@@ -1086,7 +1092,7 @@ def _resolve_stack(
             case "-":
                 resolved.append(
                     metrics.Difference(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         explicit_color,
                         minuend=left,
                         subtrahend=right,
@@ -1096,7 +1102,7 @@ def _resolve_stack(
                 # Handle zero division by always adding a tiny bit to the divisor
                 resolved.append(
                     metrics.Fraction(
-                        Title(explicit_title),
+                        Title("%s") % explicit_title,
                         unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         dividend=left,
@@ -1119,6 +1125,39 @@ def _resolve_stack(
                 )
 
     return resolved[0]
+
+
+def _flat_summand(
+    summand: (
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ),
+) -> Iterator[
+    str
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
+]:
+    match summand:
+        case metrics.Sum():
+            for sub_summand in summand.summands:
+                yield from _flat_summand(sub_summand)
+        case _:
+            yield summand
 
 
 def _parse_expression(
@@ -1181,7 +1220,19 @@ def _parse_expression(
                     _parse_single_expression(unit_parser, word, explicit_title, explicit_color)
                 )
 
-    return _resolve_stack(unit_parser, stack, explicit_title, explicit_unit_name, explicit_color)
+    resolved = _resolve_stack(
+        unit_parser, stack, explicit_title, explicit_unit_name, explicit_color
+    )
+    # Flat summands if we have several, subsequent 'Sum's, eg. "metric1,metric2,metrics3,+,+"
+    return (
+        metrics.Sum(
+            resolved.title,
+            resolved.color,
+            [f for s in resolved.summands for f in _flat_summand(s)],
+        )
+        if isinstance(resolved, metrics.Sum)
+        else resolved
+    )
 
 
 def _raw_metric_names(
@@ -1270,7 +1321,7 @@ def _compute_border85(half_value: int | float) -> int:
 
 def _parse_legacy_logarithmic_perfometer(
     unit_parser: UnitParser,
-    legacy_logarithmic_perfometer: LogarithmicPerfometerSpec,
+    legacy_logarithmic_perfometer: _LogarithmicPerfometerSpec,
 ) -> perfometers.Perfometer:
     segments = [_parse_expression(unit_parser, legacy_logarithmic_perfometer["metric"], "")]
     return perfometers.Perfometer(
@@ -1527,7 +1578,7 @@ def _parse_legacy_graph_info(
     if lower_compound_lines or lower_simple_lines:
         lower = graphs.Graph(
             name=name,
-            title=Title(str(info["title"])),
+            title=Title("%s") % str(info["title"]),
             minimal_range=minimal_range,
             compound_lines=lower_compound_lines,
             simple_lines=list(lower_simple_lines) + list(lower_scalars),
@@ -1545,7 +1596,7 @@ def _parse_legacy_graph_info(
             simple_lines.extend(scalars)
         upper = graphs.Graph(
             name=name,
-            title=Title(str(info["title"])),
+            title=Title("%s") % str(info["title"]),
             minimal_range=minimal_range,
             compound_lines=upper_compound_lines,
             simple_lines=simple_lines,
@@ -1574,10 +1625,26 @@ def _parse_legacy_graph_infos(
 
         if lower is not None and upper is not None:
             yield graphs.Bidirectional(
-                name=f"{lower.name}_{upper.name}",
-                title=Title(str(info["title"])),
-                lower=lower,
-                upper=upper,
+                name=lower.name,
+                title=Title("%s") % str(info["title"]),
+                lower=graphs.Graph(
+                    name=f"{lower.name}_lower",
+                    title=lower.title,
+                    minimal_range=lower.minimal_range,
+                    compound_lines=lower.compound_lines,
+                    simple_lines=lower.simple_lines,
+                    optional=lower.optional,
+                    conflicting=lower.conflicting,
+                ),
+                upper=graphs.Graph(
+                    name=f"{upper.name}_upper",
+                    title=upper.title,
+                    minimal_range=upper.minimal_range,
+                    compound_lines=upper.compound_lines,
+                    simple_lines=upper.simple_lines,
+                    optional=upper.optional,
+                    conflicting=upper.conflicting,
+                ),
             )
         elif lower is not None and upper is None:
             yield lower
@@ -1621,14 +1688,47 @@ def _migrate(
 
 
 # .
-#   .--sanitize------------------------------------------------------------.
-#   |                                   _ _   _                            |
-#   |                   ___  __ _ _ __ (_) |_(_)_______                    |
-#   |                  / __|/ _` | '_ \| | __| |_  / _ \                   |
-#   |                  \__ \ (_| | | | | | |_| |/ /  __/                   |
-#   |                  |___/\__,_|_| |_|_|\__|_/___\___|                   |
+#   .--balance colors------------------------------------------------------.
+#   |   _           _                                  _                   |
+#   |  | |__   __ _| | __ _ _ __   ___ ___    ___ ___ | | ___  _ __ ___    |
+#   |  | '_ \ / _` | |/ _` | '_ \ / __/ _ \  / __/ _ \| |/ _ \| '__/ __|   |
+#   |  | |_) | (_| | | (_| | | | | (_|  __/ | (_| (_) | | (_) | |  \__ \   |
+#   |  |_.__/ \__,_|_|\__,_|_| |_|\___\___|  \___\___/|_|\___/|_|  |___/   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+_COLOR_PRECEDENCES: Final[Sequence[metrics.Color]] = [
+    metrics.Color.BLUE,
+    metrics.Color.GREEN,
+    metrics.Color.PURPLE,
+    metrics.Color.BROWN,
+    metrics.Color.GRAY,
+    metrics.Color.ORANGE,
+    metrics.Color.RED,
+    metrics.Color.CYAN,
+    metrics.Color.PINK,
+    metrics.Color.YELLOW,
+    metrics.Color.LIGHT_BLUE,
+    metrics.Color.LIGHT_GREEN,
+    metrics.Color.LIGHT_PURPLE,
+    metrics.Color.LIGHT_BROWN,
+    metrics.Color.LIGHT_GRAY,
+    metrics.Color.LIGHT_ORANGE,
+    metrics.Color.LIGHT_RED,
+    metrics.Color.LIGHT_CYAN,
+    metrics.Color.LIGHT_PINK,
+    metrics.Color.LIGHT_YELLOW,
+    metrics.Color.DARK_BLUE,
+    metrics.Color.DARK_GREEN,
+    metrics.Color.DARK_PURPLE,
+    metrics.Color.DARK_BROWN,
+    metrics.Color.DARK_GRAY,
+    metrics.Color.DARK_ORANGE,
+    metrics.Color.DARK_RED,
+    metrics.Color.DARK_CYAN,
+    metrics.Color.DARK_PINK,
+    metrics.Color.DARK_YELLOW,
+]
 
 
 def _collect_metric_names_from_quantity(
@@ -1664,20 +1764,63 @@ def _collect_metric_names_from_quantity(
             yield from _collect_metric_names_from_quantity(quantity.divisor)
 
 
+def _collect_metric_names_from_perfometer(
+    migrated_perfometer: perfometers.Perfometer,
+) -> Iterator[str]:
+    if not isinstance(migrated_perfometer.focus_range.lower.value, (int, float)):
+        yield from _collect_metric_names_from_quantity(migrated_perfometer.focus_range.lower.value)
+    if not isinstance(migrated_perfometer.focus_range.upper.value, (int, float)):
+        yield from _collect_metric_names_from_quantity(migrated_perfometer.focus_range.upper.value)
+    for segment in migrated_perfometer.segments:
+        yield from _collect_metric_names_from_quantity(segment)
+
+
+def _balance_colors_from_perfometer(
+    migrated_perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
+) -> Mapping[str, metrics.Color]:
+    match migrated_perfometer:
+        case perfometers.Perfometer():
+            metric_names = set(_collect_metric_names_from_perfometer(migrated_perfometer))
+        case perfometers.Bidirectional():
+            metric_names = set(
+                _collect_metric_names_from_perfometer(migrated_perfometer.left)
+            ).union(_collect_metric_names_from_perfometer(migrated_perfometer.right))
+        case perfometers.Stacked():
+            metric_names = set(
+                _collect_metric_names_from_perfometer(migrated_perfometer.lower)
+            ).union(_collect_metric_names_from_perfometer(migrated_perfometer.upper))
+    return (
+        dict(zip(metric_names, _COLOR_PRECEDENCES))
+        if len(metric_names) <= len(_COLOR_PRECEDENCES)
+        else {}
+    )
+
+
 def _collect_metric_names_from_graph(migrated_graph_template: graphs.Graph) -> Iterator[str]:
+    if migrated_graph_template.minimal_range:
+        if not isinstance(migrated_graph_template.minimal_range.lower, (int, float)):
+            yield from _collect_metric_names_from_quantity(
+                migrated_graph_template.minimal_range.lower
+            )
+        if not isinstance(migrated_graph_template.minimal_range.lower, (int, float)):
+            yield from _collect_metric_names_from_quantity(
+                migrated_graph_template.minimal_range.lower
+            )
     for compound_line in migrated_graph_template.compound_lines:
         yield from _collect_metric_names_from_quantity(compound_line)
     for simple_line in migrated_graph_template.simple_lines:
         yield from _collect_metric_names_from_quantity(simple_line)
+    yield from migrated_graph_template.optional
+    yield from migrated_graph_template.conflicting
 
 
-def _sanitize_metric_colors(
-    migrated_metrics: Sequence[metrics.Metric],
-    migrated_graph_templates: Sequence[graphs.Graph | graphs.Bidirectional],
-) -> Sequence[metrics.Metric]:
-    colors_by_metric_name: dict[str, metrics.Color] = {}
-    for migrated_graph_template in migrated_graph_templates:
-        if isinstance(migrated_graph_template, graphs.Bidirectional):
+def _balance_colors_from_graph(
+    migrated_graph_template: graphs.Graph | graphs.Bidirectional,
+) -> Mapping[str, metrics.Color]:
+    match migrated_graph_template:
+        case graphs.Graph():
+            metric_names = set(_collect_metric_names_from_graph(migrated_graph_template))
+        case graphs.Bidirectional():
             if (
                 len(
                     lower_metric_names := set(
@@ -1693,13 +1836,38 @@ def _sanitize_metric_colors(
                 )
                 == 1
             ):
-                colors_by_metric_name[lower_metric_names.pop()] = metrics.Color.BLUE
-                colors_by_metric_name[upper_metric_names.pop()] = metrics.Color.GREEN
+                return {
+                    lower_metric_names.pop(): metrics.Color.BLUE,
+                    upper_metric_names.pop(): metrics.Color.GREEN,
+                }
+            metric_names = set(
+                _collect_metric_names_from_graph(migrated_graph_template.lower)
+            ).union(_collect_metric_names_from_graph(migrated_graph_template.upper))
+    return (
+        dict(zip(metric_names, _COLOR_PRECEDENCES))
+        if len(metric_names) <= len(_COLOR_PRECEDENCES)
+        else {}
+    )
 
-    sanitized_metrics: list[metrics.Metric] = []
+
+def _balance_metric_colors(
+    migrated_metrics: Sequence[metrics.Metric],
+    migrated_perfometers: Sequence[
+        perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked
+    ],
+    migrated_graph_templates: Sequence[graphs.Graph | graphs.Bidirectional],
+) -> Sequence[metrics.Metric]:
+    colors_by_metric_name: dict[str, metrics.Color] = {}
+    for migrated_perfometer in migrated_perfometers:
+        colors_by_metric_name.update(_balance_colors_from_perfometer(migrated_perfometer))
+
+    for migrated_graph_template in migrated_graph_templates:
+        colors_by_metric_name.update(_balance_colors_from_graph(migrated_graph_template))
+
+    balanced_metrics: list[metrics.Metric] = []
     for migrated_metric in migrated_metrics:
         if migrated_metric.name in colors_by_metric_name:
-            sanitized_metrics.append(
+            balanced_metrics.append(
                 metrics.Metric(
                     name=migrated_metric.name,
                     title=migrated_metric.title,
@@ -1708,17 +1876,8 @@ def _sanitize_metric_colors(
                 )
             )
         else:
-            sanitized_metrics.append(migrated_metric)
-    return sanitized_metrics
-
-
-def _sanitize(migrated_objects: MigratedObjects) -> MigratedObjects:
-    return MigratedObjects(
-        _sanitize_metric_colors(migrated_objects.metrics, migrated_objects.graph_templates),
-        migrated_objects.translations,
-        migrated_objects.perfometers,
-        migrated_objects.graph_templates,
-    )
+            balanced_metrics.append(migrated_metric)
+    return balanced_metrics
 
 
 # .
@@ -2121,12 +2280,33 @@ def _obj_repr(
             return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
 
 
+def _imports_repr(migration_objects: MigratedObjects) -> str:
+    def _import_names() -> Iterator[str]:
+        if migration_objects.metrics:
+            yield "metrics"
+            yield "Title"
+        if migration_objects.translations:
+            yield "translations"
+        if migration_objects.perfometers:
+            yield "perfometers"
+            yield "Title"
+        if migration_objects.graph_templates:
+            yield "graphs"
+            yield "Title"
+
+    return (
+        f"from cmk.graphing.v1 import {', '.join(import_names)}"
+        if (import_names := sorted(set(_import_names())))
+        else ""
+    )
+
+
 # .
 
 
 def main() -> None:
     args = _parse_arguments()
-    _setup_logger(args.debug, args.verbose)
+    _setup_logger(args.debug)
     metric_name_filter = _MetricNameFilter(args.filter_metric_names)
     migration_errors = MigrationErrors()
 
@@ -2178,13 +2358,47 @@ def main() -> None:
             {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
         )
 
-    if args.sanitize:
-        migrated_objects = _sanitize(migrated_objects)
+    if args.balance_colors:
+        migrated_objects = MigratedObjects(
+            _balance_metric_colors(
+                migrated_objects.metrics,
+                migrated_objects.perfometers,
+                migrated_objects.graph_templates,
+            ),
+            migrated_objects.translations,
+            migrated_objects.perfometers,
+            migrated_objects.graph_templates,
+        )
 
+    if imports_repr := _imports_repr(migrated_objects):
+        if args.cmk_header:
+            print(
+                f"""#!/usr/bin/env python3
+# Copyright (C) {datetime.today().year} Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""
+            )
+        print(f"{imports_repr}\n")
     if migrated_objects:
-        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
-    for migrated_object in migrated_objects:
-        print(_obj_repr(unit_parser, migrated_object))
+        print(
+            "\n".join(sorted([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
+            + "\n"
+        )
+    if migrated_metrics := sorted([_obj_repr(unit_parser, o) for o in migrated_objects.metrics]):
+        print("\n".join(migrated_metrics) + "\n")
+    if migrated_perfometers := [_obj_repr(unit_parser, o) for o in migrated_objects.perfometers]:
+        print("\n".join(migrated_perfometers) + "\n")
+    if migrated_graph_templates := sorted(
+        [_obj_repr(unit_parser, o) for o in migrated_objects.graph_templates]
+    ):
+        print("\n".join(migrated_graph_templates) + "\n")
+    if args.translations and (
+        migrated_translations := sorted(
+            [_obj_repr(unit_parser, t) for t in migrated_objects.translations]
+        )
+    ):
+        print("\n".join(migrated_translations) + "\n")
 
     if migration_errors.metrics_without_def:
         _LOGGER.info(

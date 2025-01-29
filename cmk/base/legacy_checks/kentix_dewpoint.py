@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.kentix import DETECT_KENTIX
+
+check_info = {}
 
 #
 # 2017 comNET GmbH, Bjoern Mueller
@@ -40,6 +41,7 @@ def check_kentix_dewpoint(item: str, params: TempParamType, section: Section) ->
 
 
 check_info["kentix_dewpoint"] = LegacyCheckDefinition(
+    name="kentix_dewpoint",
     detect=DETECT_KENTIX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",

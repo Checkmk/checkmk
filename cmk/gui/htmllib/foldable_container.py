@@ -10,8 +10,8 @@ from contextlib import contextmanager
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
 
 from .tag_rendering import HTMLContent
 
@@ -54,7 +54,7 @@ def foldable_container(
     )
 
     if isinstance(title, HTML):  # custom HTML code
-        html.write_text(title)
+        html.write_text_permissive(title)
 
     else:
         html.open_b(class_=["treeangle", "title"])
@@ -62,7 +62,7 @@ def foldable_container(
         if title_url:
             html.a(title, href=title_url, target=title_target)
         else:
-            html.write_text(title)
+            html.write_text_permissive(title)
         html.close_b()
 
     html.close_div()

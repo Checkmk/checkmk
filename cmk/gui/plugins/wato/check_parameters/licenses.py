@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
 
 
 def _migrate_licenses(
-    params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False]
+    params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False],
 ) -> dict:
     match params:
         case dict():
@@ -48,7 +48,7 @@ def _vs_license():
                     "levels",
                     CascadingDropdown(
                         title=_("Levels for Number of Licenses"),
-                        default_value=None,
+                        default_value="crit_on_all",
                         choices=[
                             (
                                 "absolute",
@@ -83,6 +83,7 @@ def _vs_license():
                                 _("Go critical if all licenses are used"),
                                 FixedValue(
                                     value=None,
+                                    totext="",
                                 ),
                             ),
                             (
@@ -90,6 +91,7 @@ def _vs_license():
                                 _("Always be OK"),
                                 FixedValue(
                                     value=False,
+                                    totext="",
                                 ),
                             ),
                         ],

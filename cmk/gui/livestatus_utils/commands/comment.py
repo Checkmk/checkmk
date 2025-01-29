@@ -2,15 +2,16 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module contains helpers to set comments for host and service.
-"""
+"""This module contains helpers to set comments for host and service."""
+
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-from livestatus import MultiSiteConnection, SiteId
+from livestatus import Command, MultiSiteConnection, SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.expressions import QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
@@ -110,68 +111,44 @@ def get_comments(
     return results
 
 
+@dataclass(frozen=True)
+class AddHostComment(Command):
+    host_name: HostName
+    comment: str
+    user: UserId = UserId.builtin()
+    persistent: bool = False
+
+    @property
+    def name(self) -> str:
+        return "ADD_HOST_COMMENT"
+
+    @property
+    def args(self) -> list[Command.Arguments]:
+        return [self.host_name, self.persistent, self.user, self.comment]
+
+
 def add_host_comment_by_query(
     connection: MultiSiteConnection,
     query: QueryExpression,
-    comment_txt: str,
+    comment: str,
     user: UserId = UserId.builtin(),
     persistent: bool = False,
 ) -> None:
     q = Query([Hosts.name]).filter(query)
 
     with detailed_connection(connection) as conn:
-        hosts = [(row["site"], row["name"]) for row in q.iterate(conn)]
+        hosts: list[tuple[SiteId, HostName]] = [
+            (row["site"], row["name"]) for row in q.iterate(conn)
+        ]
 
     if not hosts:
         raise CommentQueryException
 
     for site, host in hosts:
-        add_host_comment(connection, host, comment_txt, site, persistent, user)
-
-
-def add_host_comment(
-    connection: MultiSiteConnection,
-    host_name: str,
-    comment_txt: str,
-    site_id: SiteId,
-    persistent: bool = False,
-    user: UserId = UserId.builtin(),
-) -> None:
-    """Add a comment for a particular host.
-
-    Args:
-        connection:
-            A livestatus connection object
-
-        host_name:
-            The host-name for which the comment is for
-
-        comment_txt:
-            The comment which will be stored for the host
-
-        site_id:
-            The site name
-
-        persistent:
-            If set, the comment will persist across program restarts until it is deleted manually.
-            If not set, the comment will be deleted the next time the Core is restarted.
-
-        user:
-
-    Examples:
-
-        >>> from cmk.gui.session import SuperUserContext
-        >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> cmd = "COMMAND [...] ADD_HOST_COMMENT;example.com;0;;test"
-        >>> with simple_expect() as live, SuperUserContext():
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
-        ...     add_host_comment(live, 'example.com', 'test', "NO_SITE")
-
-    """
-
-    return send_command(
-        connection, "ADD_HOST_COMMENT", [host_name, int(persistent), user, comment_txt], site_id
-    )
+        connection.command_obj(
+            AddHostComment(host_name=host, comment=comment, persistent=persistent, user=user),
+            site,
+        )
 
 
 def add_service_comment_by_query(
@@ -212,7 +189,7 @@ def add_service_comment(
             The host-name where the service is located
 
         service_description:
-            The service description for which the comment is for
+            The service name for which the comment is for
 
         site_id:
             The site name

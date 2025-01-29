@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from livestatus import SiteId
 
@@ -16,6 +17,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 
+from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,
@@ -45,9 +47,10 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_scan_parents_job(mocker: MagicMock, host: Host) -> None:
+def test_scan_parents_job(
+    suppress_bake_agents_in_background: MagicMock, mocker: MockerFixture, host: Host
+) -> None:
     # GIVEN
-    mocker.patch("cmk.gui.watolib.bakery.try_bake_agents_for_hosts")
     scan_parents_mock = mocker.patch("cmk.gui.watolib.parent_scan.scan_parents")
     scan_parents_mock.return_value = ScanParentsResult(
         results=[GatewayResult(Gateway(None, HostAddress("123.0.0.1"), None), "gateway", 0, "")]
@@ -68,5 +71,8 @@ def test_scan_parents_job(mocker: MagicMock, host: Host) -> None:
     start_parent_scan(hosts=[host], job=ParentScanBackgroundJob(), settings=settings)
 
     # THEN
-    updated_host = folder_tree().root_folder().host(host.name())  # Regenerate data
-    assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]
+    with application_and_request_context():
+        updated_host = folder_tree().root_folder().host(host.name())
+        assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]
+
+    suppress_bake_agents_in_background.assert_called_once_with([f"gw-{host.id()}-123-0-0-1"])

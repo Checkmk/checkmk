@@ -9,10 +9,11 @@ import traceback
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.ccc import store
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -31,7 +32,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.watolib.activate_changes import add_replication_paths
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -43,22 +43,34 @@ from cmk.gui.watolib.config_domain_name import (
     wato_fileheader,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+
+from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
 
 
 def register(
-    config_domain_registry: ConfigDomainRegistry, config_variable_registry: ConfigVariableRegistry
+    config_domain_registry: ConfigDomainRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
-    config_domain_registry.register(ConfigDomainDiskspace)
-    config_domain_registry.register(ConfigDomainApache)
-    config_domain_registry.register(ConfigDomainRRDCached)
+    config_domain_registry.register(ConfigDomainDiskspace())
+    config_domain_registry.register(ConfigDomainApache())
+    config_domain_registry.register(ConfigDomainRRDCached())
     config_variable_registry.register(ConfigVariableSiteAutostart)
     config_variable_registry.register(ConfigVariableSiteCore)
     config_variable_registry.register(ConfigVariableSiteLivestatusTCP)
     config_variable_registry.register(ConfigVariableSiteDiskspaceCleanup)
     config_variable_registry.register(ConfigVariableSiteApacheProcessTuning)
     config_variable_registry.register(ConfigVariableSiteRRDCachedTuning)
+    replication_path_registry.register(
+        ReplicationPath(
+            "dir",
+            "diskspace",
+            str(cmk.utils.paths.diskspace_config_dir.relative_to(cmk.utils.paths.omd_root)),
+            [],
+        )
+    )
 
 
 # .
@@ -78,8 +90,8 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_autostart"
@@ -88,8 +100,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
         return Checkbox(
             title=_("Start during system boot"),
             help=_(
-                "Whether or not this site should be started during startup of "
-                "the Checkmk server."
+                "Whether or not this site should be started during startup of the Checkmk server."
             ),
         )
 
@@ -98,8 +109,8 @@ class ConfigVariableSiteCore(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_core"
@@ -118,7 +129,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
     def _monitoring_core_choices(self):
         cores = []
-        if edition() is not Edition.CRE:
+        if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
             cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
@@ -188,8 +199,8 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_livestatus_tcp"
@@ -224,11 +235,9 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Diskspace cleanup does not support site specific globals!
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -238,73 +247,18 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return []
 
     def config_dir(self):
-        return ""  # unused, we override load and save below
-
-    def load_full_config(self, site_specific=False, custom_site_path=None):
-        return self.load()
-
-    def load(self, site_specific=False, custom_site_path=None):
-        cleanup_settings = {**store.load_mk_file(self.diskspace_config, default={})}
-        if not cleanup_settings:
-            return {}
-
-        # Convert old config (min_free_bytes and min_file_age) were independent options
-        if "min_free_bytes" in cleanup_settings:
-            cleanup_settings["min_free_bytes"] = (
-                cleanup_settings["min_free_bytes"],
-                cleanup_settings.pop("min_file_age", 2592000),
-            )  # 1 month
-
-        if cleanup_settings.get("cleanup_abandoned_host_files", False) is None:
-            del cleanup_settings["cleanup_abandoned_host_files"]
-
-        if cleanup_settings.get("max_file_age", False) is None:
-            del cleanup_settings["max_file_age"]
-
-        return {
-            "diskspace_cleanup": cleanup_settings,
-        }
-
-    def save(self, settings, site_specific=False, custom_site_path=None):
-        if site_specific:
-            return  # not supported at the moment
-
-        config = {}
-
-        if "diskspace_cleanup" in settings:
-            # Convert to old config format.
-            for k, v in settings.get("diskspace_cleanup", {}).items():
-                if k == "min_free_bytes":
-                    config["min_free_bytes"], config["min_file_age"] = v
-                else:
-                    config[k] = v
-
-            if "cleanup_abandoned_host_files" not in settings.get("diskspace_cleanup", {}):
-                config["cleanup_abandoned_host_files"] = None
-
-        output = ""
-        for k, v in sorted(config.items()):
-            output += f"{k} = {v!r}\n"
-
-        store.save_text_to_file(self.diskspace_config, output)
+        return cmk.utils.paths.diskspace_config_dir
 
     def default_globals(self) -> Mapping[str, Any]:
-        diskspace_context: dict[str, Any] = {}
-        filename = cmk.utils.paths.omd_root / "bin/diskspace"
-        with filename.open(encoding="utf-8") as f:
-            code = compile(f.read(), str(filename), "exec")
-            exec(code, {}, diskspace_context)  # nosec B102 # BNS:aee528
-        return {
-            "diskspace_cleanup": diskspace_context["default_config"],
-        }
+        return {"diskspace_cleanup": diskspace_DEFAULT_CONFIG.model_dump(exclude_none=True)}
 
 
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainDiskspace
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainDiskspace()
 
     def ident(self) -> str:
         return "diskspace_cleanup"
@@ -382,7 +336,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                             "are normally deleted. But there are cases, where the files are left on "
                             "the disk until manual deletion, for example if you move a host from one "
                             "site to another or deleting a host manually from the configuration.<br>"
-                            "The performance data (RRDs) and HW/SW inventory archive are never deleted "
+                            "The performance data (RRDs) and HW/SW Inventory archive are never deleted "
                             "during host deletion. They are only deleted automatically when you enable "
                             "this option and after the configured period."
                         ),
@@ -393,17 +347,6 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
             empty_text=_("Disk space cleanup is disabled"),
         )
 
-
-add_replication_paths(
-    [
-        ReplicationPath(
-            "file",
-            "diskspace",
-            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
-            [],
-        ),
-    ]
-)
 
 # .
 #   .--Apache--------------------------------------------------------------.
@@ -466,9 +409,10 @@ class ConfigDomainApache(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {
@@ -499,8 +443,8 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainApache
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainApache()
 
     def ident(self) -> str:
         return "apache_process_tuning"
@@ -586,9 +530,10 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
-        config = self.load(site_specific=False)
-        config.update(self.load(site_specific=True))
-        return config
+        return {
+            **self.load(site_specific=False),
+            **self.load(site_specific=True),
+        }
 
     def default_globals(self) -> Mapping[str, Any]:
         return {
@@ -622,8 +567,8 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainRRDCached
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainRRDCached()
 
     def ident(self) -> str:
         return "rrdcached_tuning"

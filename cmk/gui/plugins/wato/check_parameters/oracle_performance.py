@@ -40,15 +40,15 @@ def _valuespec_discovery_oracle_performance():
                 "dbtime",
                 FixedValue(
                     value=True,
-                    title=_("Create separate Service for DB-Time"),
-                    totext=_("Extracts DB-Time performance data into a separate service"),
+                    title=_("Create separate service for DB time"),
+                    totext=_("Extracts DB time performance data into a separate service"),
                 ),
             ),
             (
                 "memory",
                 FixedValue(
                     value=True,
-                    title=_("Create separate Service for memory information"),
+                    title=_("Create separate service for memory information"),
                     totext=_(
                         "Extracts SGA performance data into a separate service and additionally displays PGA performance data"
                     ),
@@ -58,7 +58,7 @@ def _valuespec_discovery_oracle_performance():
                 "iostat_bytes",
                 FixedValue(
                     value=True,
-                    title=_("Create additional Service for IO Stats Bytes"),
+                    title=_("Create additional service for IO stats bytes"),
                     totext=_(
                         "Creates a new service that displays information about disk I/O of database files. "
                         "This service displays the number of bytes read and written to database files."
@@ -69,7 +69,7 @@ def _valuespec_discovery_oracle_performance():
                 "iostat_ios",
                 FixedValue(
                     value=True,
-                    title=_("Create additional Service for IO Stats Requests"),
+                    title=_("Create additional service for IO stats requests"),
                     totext=_(
                         "Creates a new service that displays information about disk I/O of database files. "
                         "This service displays the number of single block read and write requests that are being made to database files."
@@ -80,7 +80,7 @@ def _valuespec_discovery_oracle_performance():
                 "waitclasses",
                 FixedValue(
                     value=True,
-                    title=_("Create additional Service for System Wait"),
+                    title=_("Create additional service for system wait"),
                     totext=_(
                         "Display the time an oracle instance spents inside of the different wait classes."
                     ),
@@ -170,11 +170,11 @@ def _parameter_valuespec_oracle_performance():
                         orientation="horizontal",
                         choices=[
                             ("oracle_db_cpu", "DB CPU", levels_tuple(Float, "1/s")),
-                            ("oracle_db_time", "DB Time", levels_tuple(Float, "1/s")),
-                            ("oracle_db_wait_time", "DB Non-Idle Wait", levels_tuple(Float, "1/s")),
+                            ("oracle_db_time", "DB time", levels_tuple(Float, "1/s")),
+                            ("oracle_db_wait_time", "DB non-idle wait", levels_tuple(Float, "1/s")),
                         ],
                     ),
-                    title=_("Levels for DB Time"),
+                    title=_("Levels for DB time"),
                 ),
             ),
             (
@@ -185,7 +185,7 @@ def _parameter_valuespec_oracle_performance():
                         orientation="horizontal",
                         choices=memory_choices,
                     ),
-                    title=_("Levels for Memory"),
+                    title=_("Levels for memory"),
                 ),
             ),
             (
@@ -196,7 +196,7 @@ def _parameter_valuespec_oracle_performance():
                         orientation="horizontal",
                         choices=iostat_bytes_choices,
                     ),
-                    title=_("Levels for IO Stats Bytes"),
+                    title=_("Levels for IO stats bytes"),
                 ),
             ),
             (
@@ -207,7 +207,7 @@ def _parameter_valuespec_oracle_performance():
                         orientation="horizontal",
                         choices=iostat_ios_choices,
                     ),
-                    title=_("Levels for IO Stats Requests"),
+                    title=_("Levels for IO stats requests"),
                 ),
             ),
             (
@@ -218,7 +218,7 @@ def _parameter_valuespec_oracle_performance():
                         orientation="horizontal",
                         choices=waitclasses_choices,
                     ),
-                    title=_("Levels for System Wait"),
+                    title=_("Levels for system wait"),
                 ),
             ),
         ],
@@ -232,6 +232,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_performance,
-        title=lambda: _("Oracle Performance"),
+        title=lambda: _("Oracle performance"),
     )
 )

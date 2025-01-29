@@ -17,21 +17,29 @@ configure_make(
     configure_in_place = True,
     configure_options = [
         "-v",
-        "--sysconfdir=$INSTALLDIR/etc/pnp4nagios",
-        "--libexecdir=$INSTALLDIR/lib/pnp4nagios",
-        "--docdir=$INSTALLDIR/share/doc/pnp4nagios",
-        "--datarootdir=$INSTALLDIR/share/pnp4nagios/htdocs",
-        "--localstatedir=$INSTALLDIR/var/pnp4nagios",
-        "--with-perfdata-dir=$INSTALLDIR/var/pnp4nagios/perfdata",
-        "--with-perfdata-spool-dir=$INSTALLDIR/tmp/pnp4nagios/spool",
-        "--with-perfdata-logfile=$INSTALLDIR/var/pnp4nagios/log/perfdata.log",
-        "--with-nagios-user=\\$\\$\\(id\\ -un\\)",
-        "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
+        "--sysconfdir=$$INSTALLDIR/etc/pnp4nagios",
+        "--libexecdir=$$INSTALLDIR/lib/pnp4nagios",
+        "--docdir=$$INSTALLDIR/share/doc/pnp4nagios",
+        "--datarootdir=$$INSTALLDIR/share/pnp4nagios/htdocs",
+        "--localstatedir=$$INSTALLDIR/var/pnp4nagios",
+        "--with-perfdata-dir=$$INSTALLDIR/var/pnp4nagios/perfdata",
+        "--with-perfdata-spool-dir=$$INSTALLDIR/tmp/pnp4nagios/spool",
+        "--with-perfdata-logfile=$$INSTALLDIR/var/pnp4nagios/log/perfdata.log",
+        "--with-nagios-user=$$(id -un)",
+        "--with-nagios-group=$$(id -gn)",
         "--with-rrdtool=/bin/true",
-        # The perl_lib_path seems to be obsolete (Tested by checking metrics in raw edition)
-        #        "--with-perl_lib_path=$(location @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5",
+        # The perl_lib_path is necessery for performance
+        # we use PLACEHOLDER because OMD_ROOT is not available at this point since it changes daily
+        "--with-perl_lib_path=PLACEHOLDER/lib/perl5/lib/perl5",
         "--with-base-url='/\\#\\#\\#SITE\\#\\#\\#/pnp4nagios'",
     ],
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    },
     lib_source = ":all_srcs",
     out_binaries = ["npcd"],
     out_data_dirs = [
@@ -70,6 +78,7 @@ configure_make(
         "all",
         "install",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

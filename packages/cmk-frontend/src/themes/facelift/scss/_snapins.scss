@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -545,11 +546,11 @@ div.spacertop {
 
     tr {
       &.dark {
-        background-color: lighten($navbar-color, 1%);
+        background-color: color.adjust($navbar-color, $lightness: 1%);
       }
 
       &.light {
-        background-color: lighten($navbar-color, 3%);
+        background-color: color.adjust($navbar-color, $lightness: 3%);
       }
     }
 

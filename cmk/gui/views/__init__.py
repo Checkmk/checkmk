@@ -3,36 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping
 from typing import Any
 
-import cmk.gui.utils as utils
-import cmk.gui.visuals as visuals
+from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
-from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
-from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0 import painters
-from cmk.gui.painter.v0.base import painter_registry, register_painter
-from cmk.gui.painter_options import painter_option_registry
-from cmk.gui.permissions import (
-    declare_dynamic_permissions,
-    declare_permission,
-    PermissionSection,
-    PermissionSectionRegistry,
-)
+from cmk.gui.painter.v0 import register_painter
+from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
-from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import icon, inventory
 from .command import register_legacy_command
 from .icon import Icon, icon_and_action_registry
-from .inventory import register_inv_paint_functions, register_table_views_and_columns
-from .sorter import register_sorter, register_sorters, sorter_registry
+from .inventory import register_table_views_and_columns
+from .sorter import register_sorter
 from .store import multisite_builtin_views
 from .view_choices import format_view_title
 
@@ -45,10 +34,10 @@ multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
-    register_inv_paint_functions(globals())
+    inventory.register_inv_paint_functions(globals())
 
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -86,8 +75,8 @@ def load_plugins() -> None:
     declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
 
 
-def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
-    """Register pre 2.1 "plugin API"
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
@@ -100,15 +89,12 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.data_source as data_source
-    import cmk.gui.exporter as exporter
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
+    import cmk.gui.painter.v0.registry as painter_registry
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
-    import cmk.gui.painter_options as painter_options
     import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
-    import cmk.gui.visual_link as visual_link
-    from cmk.gui import display_options
+    from cmk.gui import data_source, display_options, exporter, painter_options, visual_link
     from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
 
     from . import command, layout, sorter, store
@@ -195,12 +181,16 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "EmptyCell",
         "CellSpec",
         "Painter",
-        "painter_registry",
-        "register_painter",
         "ExportCellContent",
         "join_row",
     ):
         api_module.__dict__[name] = painter_base.__dict__[name]
+
+    for name in (
+        "painter_registry",
+        "register_painter",
+    ):
+        api_module.__dict__[name] = painter_registry.__dict__[name]
 
     for name in (
         "format_plugin_output",

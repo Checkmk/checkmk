@@ -4,26 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Mapping
 from unittest.mock import call, MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 
 from cmk.automations.results import (
     GetServicesLabelsResult,
     ServiceDiscoveryPreviewResult,
-    SetAutochecksResult,
+    SetAutochecksInput,
+    SetAutochecksV2Result,
 )
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
 
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
@@ -937,7 +941,7 @@ def fixture_mock_discovery(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture(name="mock_set_autochecks")
 def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.set_autochecks", return_value=SetAutochecksResult()
+        "cmk.gui.watolib.services.set_autochecks_v2", return_value=SetAutochecksV2Result()
     )
 
 
@@ -992,14 +996,14 @@ def test_openapi_discovery_refresh_services(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     assert (
         resp.location
         == "/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
         call("example.com", prevent_fetching=False, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
@@ -1019,7 +1023,7 @@ def test_openapi_discovery_tabula_rasa(
         params='{"mode": "tabula_rasa", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
@@ -1032,8 +1036,8 @@ def test_openapi_discovery_tabula_rasa(
         )
     ]
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
     ]
 
 
@@ -1056,7 +1060,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
@@ -1075,78 +1079,77 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     assert df_boot_ignore.text == ""
     mock_discovery_preview.assert_called_once()
     mock_discovery_preview.reset_mock()
+    sample_host_name = HostName("example.com")
+    expected_autochecks: Mapping[ServiceName, AutocheckEntry] = {
+        "CPU load": AutocheckEntry(CheckPluginName("cpu_loads"), None, {}, {}),
+        "Number of threads": AutocheckEntry(CheckPluginName("cpu_threads"), None, {}, {}),
+        "Filesystem /boot/efi": AutocheckEntry(
+            CheckPluginName("df"), "/boot/efi", {"include_volume_name": False}, {}
+        ),
+        "Kernel Performance": AutocheckEntry(CheckPluginName("kernel_performance"), None, {}, {}),
+        "CPU utilization": AutocheckEntry(CheckPluginName("kernel_util"), None, {}, {}),
+        "Temperature Zone 0": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 0", {}, {}),
+        "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
+        "Temperature Zone 2": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 2", {}, {}),
+        "Temperature Zone 3": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 3", {}, {}),
+        "Temperature Zone 4": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 4", {}, {}),
+        "Temperature Zone 5": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 5", {}, {}),
+        "Temperature Zone 6": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 6", {}, {}),
+        "Temperature Zone 7": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 7", {}, {}),
+        "Temperature Zone 8": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 8", {}, {}),
+        "OMD heute Event Console": AutocheckEntry(
+            CheckPluginName("mkeventd_status"), "heute", {}, {}
+        ),
+        "OMD stable Event Console": AutocheckEntry(
+            CheckPluginName("mkeventd_status"), "stable", {}, {}
+        ),
+        "OMD heute Notification Spooler": AutocheckEntry(
+            CheckPluginName("mknotifyd"), "heute", {}, {}
+        ),
+        "OMD stable Notification Spooler": AutocheckEntry(
+            CheckPluginName("mknotifyd"), "stable", {}, {}
+        ),
+        "Mount options of /": AutocheckEntry(
+            CheckPluginName("mounts"),
+            "/",
+            {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
+            {},
+        ),
+        "Mount options of /boot": AutocheckEntry(
+            CheckPluginName("mounts"), "/boot", {"mount_options": ["relatime", "rw"]}, {}
+        ),
+        "Mount options of /boot/efi": AutocheckEntry(
+            CheckPluginName("mounts"),
+            "/boot/efi",
+            {
+                "mount_options": [
+                    "codepage=437",
+                    "dmask=0077",
+                    "errors=remount-ro",
+                    "fmask=0077",
+                    "iocharset=iso8859-1",
+                    "relatime",
+                    "rw",
+                    "shortname=mixed",
+                ]
+            },
+            {},
+        ),
+        "OMD heute apache": AutocheckEntry(CheckPluginName("omd_apache"), "heute", {}, {}),
+        "OMD stable apache": AutocheckEntry(CheckPluginName("omd_apache"), "stable", {}, {}),
+        "Systemd Service Summary": AutocheckEntry(
+            CheckPluginName("systemd_units_services_summary"), "Summary", {}, {}
+        ),
+        "TCP Connections": AutocheckEntry(CheckPluginName("tcp_conn_stats"), None, {}, {}),
+        "Uptime": AutocheckEntry(CheckPluginName("uptime"), None, {}, {}),
+    }
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
-        "example.com",
-        {
-            ("cpu_loads", None): ("CPU load", {}, {}, ["heute"]),
-            ("cpu_threads", None): ("Number of threads", {}, {}, ["heute"]),
-            ("df", "/boot/efi"): (
-                "Filesystem /boot/efi",
-                {"include_volume_name": False},
-                {},
-                ["heute"],
-            ),
-            ("kernel_performance", None): ("Kernel Performance", {}, {}, ["heute"]),
-            ("kernel_util", None): ("CPU utilization", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", {}, {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", {}, {}, ["heute"]),
-            ("mkeventd_status", "stable"): ("OMD stable Event Console", {}, {}, ["heute"]),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", {}, {}, ["heute"]),
-            ("mknotifyd", "stable"): ("OMD stable Notification Spooler", {}, {}, ["heute"]),
-            ("mounts", "/"): (
-                "Mount options of /",
-                {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot"): (
-                "Mount options of /boot",
-                {"mount_options": ["relatime", "rw"]},
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot/efi"): (
-                "Mount options of /boot/efi",
-                {
-                    "mount_options": [
-                        "codepage=437",
-                        "dmask=0077",
-                        "errors=remount-ro",
-                        "fmask=0077",
-                        "iocharset=iso8859-1",
-                        "relatime",
-                        "rw",
-                        "shortname=mixed",
-                    ]
-                },
-                {},
-                ["heute"],
-            ),
-            ("omd_apache", "heute"): ("OMD heute apache", {}, {}, ["heute"]),
-            ("omd_apache", "stable"): ("OMD stable apache", {}, {}, ["heute"]),
-            ("systemd_units_services_summary", "Summary"): (
-                "Systemd Service Summary",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("tcp_conn_stats", None): (
-                "TCP Connections",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("uptime", None): ("Uptime", {}, {}, ["heute"]),
-        },
+        SetAutochecksInput(
+            sample_host_name,
+            expected_autochecks,
+            {},
+        ),
     )
     mock_set_autochecks.reset_mock()
 
@@ -1159,121 +1162,28 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     )
     assert df_boot_monitor.text == ""
     mock_discovery_preview.assert_called_once()
+    expected_autochecks_2: Mapping[ServiceName, AutocheckEntry] = {
+        **expected_autochecks,
+        **{
+            "Filesystem /boot": AutocheckEntry(
+                CheckPluginName("df"), "/boot", {"include_volume_name": False}, {}
+            )
+        },
+    }
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
-        "example.com",
-        {
-            ("cpu_loads", None): ("CPU load", {}, {}, ["heute"]),
-            ("cpu_threads", None): ("Number of threads", {}, {}, ["heute"]),
-            ("df", "/boot/efi"): (
-                "Filesystem /boot/efi",
-                {"include_volume_name": False},
-                {},
-                ["heute"],
-            ),
-            ("df", "/boot"): (
-                "Filesystem /boot",
-                {"include_volume_name": False},
-                {},
-                ["heute"],
-            ),
-            ("kernel_performance", None): ("Kernel Performance", {}, {}, ["heute"]),
-            ("kernel_util", None): ("CPU utilization", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", {}, {}, ["heute"]),
-            ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", {}, {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", {}, {}, ["heute"]),
-            ("mkeventd_status", "stable"): (
-                "OMD stable Event Console",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", {}, {}, ["heute"]),
-            ("mknotifyd", "stable"): (
-                "OMD stable Notification Spooler",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/"): (
-                "Mount options of /",
-                {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot"): (
-                "Mount options of /boot",
-                {"mount_options": ["relatime", "rw"]},
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot/efi"): (
-                "Mount options of /boot/efi",
-                {
-                    "mount_options": [
-                        "codepage=437",
-                        "dmask=0077",
-                        "errors=remount-ro",
-                        "fmask=0077",
-                        "iocharset=iso8859-1",
-                        "relatime",
-                        "rw",
-                        "shortname=mixed",
-                    ]
-                },
-                {},
-                ["heute"],
-            ),
-            ("omd_apache", "heute"): ("OMD heute apache", {}, {}, ["heute"]),
-            ("omd_apache", "stable"): ("OMD stable apache", {}, {}, ["heute"]),
-            ("systemd_units_services_summary", "Summary"): (
-                "Systemd Service Summary",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("tcp_conn_stats", None): (
-                "TCP Connections",
-                {},
-                {},
-                ["heute"],
-            ),
-            ("uptime", None): ("Uptime", {}, {}, ["heute"]),
-        },
+        SetAutochecksInput(
+            sample_host_name,
+            expected_autochecks_2,
+            {},
+        ),
     )
 
 
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_discover_single_service(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-    mock_set_autochecks: MagicMock,
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_openapi_bulk_discovery_with_default_options(
+    base: str, clients: ClientRegistry, mocker: MockerFixture
 ) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        f"{base}/objects/host/example.com/actions/update_discovery_phase/invoke",
-        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-        status=204,
-    )
-    assert resp.text == ""
-    mock_discovery_preview.assert_called_once()
-    # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
-    # known to the host. I have not verified this. But in case something like this happens, the
-    # endpoint should fail with some error instead instead of continuing silently.
-    mock_set_autochecks.assert_not_called()
-
-
-def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(
         entries=[
@@ -1288,14 +1198,16 @@ def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientR
         ]
     )
 
+    automation = mocker.patch("cmk.gui.watolib.bulk_discovery.discovery")
     resp = clients.ServiceDiscovery.bulk_discovery(
         hostnames=["foobar", "sample"],
         monitor_undecided_services=True,
     )
+    automation.assert_called_once()
     assert resp.json["id"] == "bulk_discovery"
-    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
-        "is finished"
-    ), resp.json
+    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith("is finished"), (
+        resp.json
+    )
     assert "active" in resp.json["extensions"]
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
@@ -1337,7 +1249,7 @@ def test_openapi_refresh_job_status(
         params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=302,
+        status=303,
     )
 
     aut_user_auth_wsgi_app.call_method(
@@ -1358,19 +1270,3 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
-
-
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_deprecated_execute_discovery_endpoint(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-        status=302,
-    )

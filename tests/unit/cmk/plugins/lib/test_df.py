@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
@@ -111,7 +109,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -120,7 +118,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,
@@ -165,7 +163,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -174,7 +172,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,
@@ -229,7 +227,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Used: 42.71% - 46.0 GB of 108 GB",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
@@ -238,7 +236,7 @@ def test_df_discovery(
                 ),
                 Result(
                     state=State.OK,
-                    summary="trend per 1 day 0 hours: +169 TB",
+                    summary="trend per 1 day 0 hours: +154 TiB",
                 ),
                 Result(
                     state=State.OK,
@@ -308,8 +306,8 @@ def test_df_check_filesystem_single(
             ["fake1", "fake2"],
         ),
         (
-            {  # pylint: disable= duplicate-key
-                "fake_same_name": {  # noqa: F601
+            {
+                "fake_same_name": {
                     "size_mb": None,
                     "avail_mb": None,
                     "reserved_mb": 0,

@@ -8,17 +8,17 @@ import collections
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
 # .1.3.6.1.4.1.25597.11.5.1.7.0 2016/02/26 15:42:06 --> FE-FIREEYE-MIB::feLastContentUpdateTime.0
 
-SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+SecurityContent = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "SecurityContent", "version update_status update_time_str update_time_seconds"
 )
 
@@ -71,6 +71,7 @@ def check_fireeye_content(_no_item, params, parsed):
 
 
 check_info["fireeye_content"] = LegacyCheckDefinition(
+    name="fireeye_content",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",

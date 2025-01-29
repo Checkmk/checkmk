@@ -16,11 +16,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
+
+check_info = {}
 
 
 def inventory_octopus_trunks(info):
@@ -54,6 +54,7 @@ def parse_sni_octopuse_trunks(string_table: Sequence[StringTable]) -> Sequence[S
 
 
 check_info["sni_octopuse_trunks"] = LegacyCheckDefinition(
+    name="sni_octopuse_trunks",
     parse_function=parse_sni_octopuse_trunks,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=[

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+
 from cmk.gui import main_modules
+from cmk.gui.graphing._legacy import metric_info
 
 main_modules.load_plugins()
-from cmk.gui.graphing._utils import metric_info
-
-print("test" in metric_info)
+sys.stdout.write(f"{'test' in metric_info}\n")

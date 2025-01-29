@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # gets optional socket as argument
 do_query() {
@@ -23,23 +23,34 @@ do_query() {
     # Check if mysqld is running and root password setup
     echo "<<<mysql_ping>>>"
     echo "$INSTANCE_HEADER"
-    mysqladmin --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
+    $MYSQLADMIN --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
 
     echo "<<<mysql>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
             FROM information_schema.TABLES GROUP BY table_schema"
 
-    echo "<<<mysql_slave>>>"
+    MYSQL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();" | grep -o '^[0-9]\+')
+    MYSQL_FULL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();")
+
+    echo "<<<mysql_replica_slave>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
-        -e "show slave status\G"
+
+    if echo "$MYSQL_FULL_VERSION" | grep -q "MariaDB"; then
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
+    elif [ "$MYSQL_VERSION" -ge 8 ]; then
+        STATUS_COMMAND="SHOW REPLICA STATUS\G"
+    else
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
+    fi
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
+        -e "$STATUS_COMMAND"
 
 }
 
@@ -51,31 +62,39 @@ if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
 EOF
 fi
 
-if type mysqladmin >/dev/null; then
-    mysql_socket_string=$(grep -F -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-    alias_string=$(grep -F -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*aliases=\([^ ]*\).*/\1/p')
-
-    if [ -z "$mysql_socket_string" ]; then
-        mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-    fi
-    if [ -z "$mysql_socket_string" ]; then
-        do_query "" ""
-    else
-        IFS=" " mapfile -t mysql_sockets <<<"$mysql_socket_string"
-        IFS="," read -r -a aliases <<<"$alias_string"
-
-        for i in "${!mysql_sockets[@]}"; do
-            socket="${mysql_sockets[i]}"
-            alias="${aliases[i]}"
-            if [ -z "$alias" ]; then
-                do_query "$socket" "$socket"
-            else
-                do_query "$socket" "$alias"
-            fi
-        done
-    fi
-
-    # In async execution the cache file would be removed if the plugin exits with non-zero exit code.
-    # Avoid this from happening, just because the last mysql command failed (due to missing permissions).
+if type mariadb-admin &>/dev/null; then
+    MYSQL=mariadb
+    MYSQLADMIN=mariadb-admin
+elif type mysqladmin &>/dev/null; then
+    MYSQL=mysql
+    MYSQLADMIN=mysqladmin
+else
     exit 0
 fi
+
+mysql_socket_string=$(grep -F -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+alias_string=$(grep -F -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*aliases=\([^ ]*\).*/\1/p')
+
+if [ -z "$mysql_socket_string" ]; then
+    mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+fi
+if [ -z "$mysql_socket_string" ]; then
+    do_query "" ""
+else
+    IFS=" " mapfile -t mysql_sockets <<<"$mysql_socket_string"
+    IFS="," read -r -a aliases <<<"$alias_string"
+
+    for i in "${!mysql_sockets[@]}"; do
+        socket="${mysql_sockets[i]}"
+        alias="${aliases[i]}"
+        if [ -z "$alias" ]; then
+            do_query "$socket" "$socket"
+        else
+            do_query "$socket" "$alias"
+        fi
+    done
+fi
+
+# In async execution the cache file would be removed if the plugin exits with non-zero exit code.
+# Avoid this from happening, just because the last mysql command failed (due to missing permissions).
+exit 0

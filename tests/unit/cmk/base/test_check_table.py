@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Mapping
 
@@ -12,7 +10,7 @@ import pytest
 from pytest import MonkeyPatch
 
 # No stub file
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
@@ -27,9 +25,11 @@ from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
 
+from cmk.discover_plugins import PluginLocation
+
 
 @pytest.fixture(autouse=True, scope="module")
-def _use_fix_register(fix_register):
+def _use_fix_register(agent_based_plugins):
     """These tests modify the plug-in registry. Make sure to load it first."""
 
 
@@ -177,7 +177,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -192,7 +193,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check bla_blub / ITEM",
                     parameters=TimespecificParameters(()),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
                 (CheckPluginName("blub_bla"), "ITEM"): ConfiguredService(
@@ -201,7 +203,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check blub_bla / ITEM",
                     parameters=TimespecificParameters(),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -222,7 +225,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -242,7 +246,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
                 (CheckPluginName("smart_temp"), "static-node1"): ConfiguredService(
@@ -257,7 +262,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -278,7 +284,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
                 (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(
@@ -292,7 +299,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
             },
@@ -312,7 +320,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },
@@ -332,7 +341,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },
@@ -352,7 +362,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },
@@ -634,7 +645,7 @@ def test_check_table__get_static_check_entries(
             {},
             RuleSetName("ps"),
             None,
-            None,
+            PluginLocation(module="module", name="name"),
         ),
     )
 
@@ -645,9 +656,9 @@ def test_check_table__get_static_check_entries(
     entries = config._get_checkgroup_parameters(
         config_cache.ruleset_matcher,
         hostname,
-        "ps",
         "item",
-        "Process item",
+        {},
+        "ps",
     )
 
     assert len(entries) == 1

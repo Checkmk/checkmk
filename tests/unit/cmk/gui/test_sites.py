@@ -3,80 +3,106 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-import pytest
 from pytest_mock.plugin import MockerFixture
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteId
 
 import cmk.utils.paths
 
-import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
+from cmk.gui import sites, user_sites
 from cmk.gui.logged_in import user
 
-
-@pytest.mark.parametrize(
-    "site_spec,result",
-    [
-        (
-            {"socket": ("local", None), "proxy": None},
-            f"unix:{cmk.utils.paths.omd_root}/tmp/run/live",
-        ),
-        (
-            {
-                "socket": ("local", None),
-                "proxy": {"params": None},
-            },
-            f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite",
-        ),
-        ({"socket": ("unix", {"path": "/a/b/c"}), "proxy": None}, "unix:/a/b/c"),
-        (
-            {
-                "socket": ("tcp", {"address": ("127.0.0.1", 1234), "tls": ("plain_text", {})}),
-                "proxy": None,
-            },
-            "tcp:127.0.0.1:1234",
-        ),
-        (
-            {
-                "socket": ("tcp6", {"address": ("::1", 1234), "tls": ("plain_text", {})}),
-                "proxy": None,
-            },
-            "tcp6:::1:1234",
-        ),
-        (
-            {"socket": ("unix", {"path": "/a/b/c"}), "proxy": {"params": None}},
-            f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite",
-        ),
-    ],
-)
-def test_encode_socket_for_livestatus(site_spec: SiteConfiguration, result: str) -> None:
-    assert sites.encode_socket_for_livestatus(SiteId("mysite"), site_spec) == result
+from cmk.livestatus_client import NetworkSocketDetails, UnixSocketDetails
 
 
-@pytest.mark.parametrize(
-    "site_spec,result",
-    [
-        (
+def test_encode_socket_for_livestatus_local() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"), {"socket": ("local", None), "proxy": None}
+        )
+        == f"unix:{cmk.utils.paths.omd_root}/tmp/run/live"
+    )
+
+
+def test_encode_socket_for_livestatus_local_liveproxy() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"), {"socket": ("local", None), "proxy": {"params": None}}
+        )
+        == f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite"
+    )
+
+
+def test_encode_socket_for_livestatus_unix() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"),
+            {"socket": ("unix", UnixSocketDetails(path="/a/b/c")), "proxy": None},
+        )
+        == "unix:/a/b/c"
+    )
+
+
+def test_encode_socket_for_livestatus_unix_liveproxy() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"),
+            {"socket": ("unix", UnixSocketDetails(path="/a/b/c")), "proxy": {"params": None}},
+        )
+        == f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite"
+    )
+
+
+def test_encode_socket_for_livestatus_tcp() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"),
             {
                 "socket": (
                     "tcp",
-                    {"address": ("127.0.0.1", 1234), "tls": ("encrypted", {"verify": True})},
+                    NetworkSocketDetails(address=("127.0.0.1", 1234), tls=("plain_text", {})),
                 ),
                 "proxy": None,
             },
+        )
+        == "tcp:127.0.0.1:1234"
+    )
+
+
+def test_encode_socket_for_livestatus_tcp6() -> None:
+    assert (
+        sites.encode_socket_for_livestatus(
+            SiteId("mysite"),
             {
-                "socket": "tcp:127.0.0.1:1234",
-                "tls": ("encrypted", {"verify": True}),
+                "socket": (
+                    "tcp6",
+                    NetworkSocketDetails(address=("::1", 1234), tls=("plain_text", {})),
+                ),
                 "proxy": None,
             },
-        ),
-    ],
-)
-def test_site_config_for_livestatus_tcp_tls(site_spec: SiteConfiguration, result: dict) -> None:
-    assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
+        )
+        == "tcp6:::1:1234"
+    )
+
+
+def test_site_config_for_livestatus_tcp_tls() -> None:
+    assert sites._site_config_for_livestatus(
+        SiteId("mysite"),
+        {
+            "socket": (
+                "tcp",
+                NetworkSocketDetails(
+                    address=("127.0.0.1", 1234), tls=("encrypted", {"verify": True})
+                ),
+            ),
+            "proxy": None,
+        },
+    ) == {
+        "socket": "tcp:127.0.0.1:1234",
+        "tls": ("encrypted", {"verify": True}),
+        "proxy": None,
+    }
 
 
 def test_sorted_sites(mocker: MockerFixture, request_context: None) -> None:

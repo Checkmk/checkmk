@@ -10,24 +10,20 @@ import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator, Sequence
-from dataclasses import asdict
-from typing import NamedTuple
-
-from six import ensure_str
+from collections.abc import Collection, Iterator
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.render as render
+from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
+
+from cmk.utils import paths, render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -40,6 +36,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
+    make_javascript_action,
     make_javascript_link,
     make_simple_link,
     PageMenu,
@@ -47,6 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
     show_confirm_cancel_dialog,
+    show_success_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.sites import SiteStatus
@@ -61,9 +59,11 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
+    ConfigWarnings,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    verify_remote_site_config,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
@@ -92,9 +92,7 @@ class ActivationState(enum.Enum):
     ERROR = 2
 
 
-def _show_activation_state_messages(
-    title: str, messages: Sequence[str], state: ActivationState
-) -> None:
+def _show_activation_state_messages(title: str, message: str, state: ActivationState) -> None:
     html.open_div(id="activation_state_message_container")
 
     html.open_div(class_="state_bar state%s" % state.value)
@@ -110,8 +108,7 @@ def _show_activation_state_messages(
     html.open_div(class_="message_container")
     html.h2(title)
     html.open_div()
-    for msg in messages:
-        html.span(msg)
+    html.span(message)
     html.close_div()
     html.close_div()  # activation_state_message
 
@@ -146,7 +143,10 @@ def _get_snapshots() -> list[str]:
 
 def _get_last_wato_snapshot_file():
     for snapshot_file in _get_snapshots():
-        status = backup_snapshots.get_snapshot_status(snapshot_file)
+        status = backup_snapshots.get_snapshot_status(
+            snapshot=snapshot_file,
+            debug=active_config.debug,
+        )
         if status["type"] == "automatic" and not status["broken"]:
             return snapshot_file
     return None
@@ -339,7 +339,7 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
 
             table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
             table.cell(_("User"), css=["narrow nobr"])
-            html.write_text(change["user_id"] if change["user_id"] else "")
+            html.write_text_permissive(change["user_id"] if change["user_id"] else "")
             if is_foreign_change(change):
                 html.icon("foreign_changes", _("This change has been made by another user"))
 
@@ -351,22 +351,25 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
                     ),
                 )
                 if prevent_discard_changes(change)
-                else ""
+                else HTML.empty()
             )
 
             # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
             # to handle this in a special way because of the SiteChanges file format. Would be
             # cleaner to transport the text type (like AuditLogStore is doing it).
-            table.cell(_("Change"), HTML(icon_code + change["text"]))
+            table.cell(_("Change"), icon_code + HTML.without_escaping(change["text"]))
 
             table.cell(_("Affected sites"), css=["affected_sites"])
             if affects_all_sites(change):
-                html.write_text("<i>%s</i>" % _("All sites"))
+                html.write_text_permissive("<i>%s</i>" % _("All sites"))
             else:
-                html.write_text(", ".join(sorted(change["affected_sites"])))
+                html.write_text_permissive(", ".join(sorted(change["affected_sites"])))
 
 
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
+    VAR_ORIGIN = "origin"
+    VAR_SPECIAL_AGENT_NAME = "special_agent_name"
+
     @classmethod
     def name(cls) -> str:
         return "changelog"
@@ -380,6 +383,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
+        self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -510,7 +514,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if edition() in (Edition.CME, Edition.CCE):
+        if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -537,6 +541,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return self._license_allows_activation()
 
     def page(self) -> None:
+        self._quick_setup_activation_msg()
+        self._quick_setup_following_step()
         self._activation_msg()
         self._activation_form()
 
@@ -546,6 +552,60 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if self.has_pending_changes():
             _change_table(self._pending_changes, _("Pending changes"))
+
+    def _quick_setup_activation_msg(self):
+        if not (self._quick_setup_origin and self.has_pending_changes()):
+            return
+
+        message = html.render_div(
+            (
+                html.render_div(
+                    _("Activate the changes by clicking the Activate on selected sites button.")
+                )
+                + html.render_div(_("This action will affect all pending changes you have made."))
+            ),
+            class_="confirm_info",
+        )
+
+        confirm_url = "javascript:" + make_javascript_action(
+            'cmk.activation.activate_changes("selected")'
+        )
+
+        show_confirm_cancel_dialog(
+            title=_("Activate pending changes"),
+            confirm_url=confirm_url,
+            confirm_text=_("Activate on selected sites"),
+            message=message,
+            show_cancel_button=False,
+        )
+
+    def _quick_setup_following_step(self):
+        if not self._quick_setup_origin or self.has_pending_changes():
+            return
+
+        special_agent_name = request.get_ascii_input(self.VAR_SPECIAL_AGENT_NAME, "")
+
+        message = html.render_div(
+            (
+                html.render_div(_("The changes have been activated successfully."))
+                + html.render_div(
+                    _(
+                        "Go to the Monitor > All Hosts page or click the Go to All hosts button to start monitoring your %s services."
+                    )
+                    % special_agent_name
+                )
+            ),
+            class_="confirm_info",
+        )
+
+        show_success_dialog(
+            title=_("Changes activated"),
+            confirm_url=makeuri_contextless(
+                request, [("view_name", "allhosts")], filename="view.py"
+            ),
+            confirm_text=_('Go to "All hosts"'),
+            message=message,
+        )
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")
@@ -612,41 +672,44 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:
-        errors = []
-        warnings = []
-
         if block_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
                 request, [("mode", "licensing")], filename="wato.py"
             ),
         ).block:
-            errors.append(block_effect.message_html)
+            _show_activation_state_messages(
+                _("Activation not possible because of the following licensing issues:"),
+                block_effect.message_html,
+                ActivationState.ERROR,
+            )
+            return
 
-        if edition_has_enforced_licensing():
+        if edition_has_enforced_licensing(edition(paths.omd_root)):
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_five_days
             ):
-                errors.append(_("The license usage history is older than five days."))
+                _show_activation_state_messages(
+                    "",
+                    _(
+                        "The license usage history is older than five days. In order to have a"
+                        " reliable average of the number of services the license usage report must"
+                        " contain a significant number of license usage samples. Please execute"
+                        " the following command as site user 'cmk-update-license-usage --force' in"
+                        " order to solve this situation."
+                    ),
+                    ActivationState.WARNING,
+                )
             elif (
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_three_days
             ):
-                warnings.append(
-                    _(
-                        "The license usage history was updated at least three days ago."
-                        "<br>Note: If it cannot be updated within five days activate changes"
-                        " will be blocked."
-                    )
+                _show_activation_state_messages(
+                    "",
+                    _("The license usage history was updated at least three days ago."),
+                    ActivationState.WARNING,
                 )
-        if errors:
-            error_title = _("Activation not possible because of the following licensing issues:")
-            _show_activation_state_messages(error_title, errors, ActivationState.ERROR)
-
-            return
-        if warnings:
-            _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
     def _activation_status(self) -> None:
         with table_element(
@@ -767,18 +830,18 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         status: str,
     ) -> None:
         if status == "dead":
-            html.write_text(str(site_status["exception"]))
+            html.write_text_permissive(str(site_status["exception"]))
             return
 
         last_state = self._last_activation_state(site_id)
 
         if not is_logged_in:
-            html.write_text(_("Is not logged in.") + " ")
+            html.write_text_permissive(_("Is not logged in.") + " ")
 
         if not last_state:
-            html.write_text(_("Has never been activated"))
+            html.write_text_permissive(_("Has never been activated"))
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
-            html.write_text(_("Activation needed"))
+            html.write_text_permissive(_("Activation needed"))
         else:
             html.javascript(
                 "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
@@ -948,17 +1011,13 @@ class PageAjaxStartActivation(AjaxPage):
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
-        # ? type of activate_until is unclear
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
         manager.load()
-        # ? type of api_request is unclear
-        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-            api_request.get("sites", "").strip()
-        )
+        affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -983,7 +1042,7 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
+            activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",
@@ -1011,35 +1070,17 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class ActivateChangesRequest(NamedTuple):
-    site_id: SiteId
-    domains: DomainRequests
-
-
-class AutomationActivateChanges(AutomationCommand):
-    def command_name(self):
+class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+    def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self):
-        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
-        activate_changes.verify_remote_site_config(site_id)
-
+    def get_request(self) -> DomainRequests:
+        verify_remote_site_config(SiteId(request.get_ascii_input_mandatory("site_id")))
+        domains = request.get_ascii_input_mandatory("domains")
         try:
-            serialized_domain_requests = ast.literal_eval(
-                request.get_ascii_input_mandatory("domains")
-            )
-            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
-                serialized_domain_requests = [
-                    asdict(DomainRequest(x)) for x in serialized_domain_requests
-                ]
+            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
         except SyntaxError:
-            raise MKAutomationException(
-                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
-            )
+            raise MKAutomationException(_("Invalid request: %r") % domains)
 
-        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
-
-    def execute(self, api_request):
-        return activate_changes.execute_activate_changes(
-            activate_changes.parse_serialized_domain_requests(api_request.domains)
-        )
+    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
+        return activate_changes.execute_activate_changes(api_request)

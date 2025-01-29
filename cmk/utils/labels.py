@@ -6,18 +6,17 @@
 
 from __future__ import annotations
 
-import dataclasses
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
-from cmk.utils.site import omd_site
 
 Labels = Mapping[str, str]
 
@@ -155,7 +154,7 @@ class LabelsSerializer:
 
     @staticmethod
     def deserialize(raw: bytes) -> Mapping[str, HostLabelValueDict]:
-        # Skip labels discovered by the previous HW/SW inventory approach
+        # Skip labels discovered by the previous HW/SW Inventory approach
         # (which was addded+removed in 1.6 beta)
         return {
             str(key): {
@@ -227,9 +226,3 @@ def single_label_group_from_labels(
             [(operator, label) for label in labels],
         )
     ]
-
-
-@dataclasses.dataclass(frozen=True)
-class CollectedHostLabels:
-    host_labels: Labels
-    service_labels: dict[ServiceName, Labels]

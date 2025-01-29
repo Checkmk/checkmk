@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disable-error-code="import-untyped,no-untyped-def"
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
 
@@ -19,10 +20,10 @@ from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, S
 from reportlab.platypus.doctemplate import PageTemplate
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.tableofcontents import TableOfContents
-from svglib.svglib import svg2rlg
+from svglib.svglib import svg2rlg  # type: ignore[import-not-found]
 
 
-class MyDocTemplate(SimpleDocTemplate):
+class MyDocTemplate(SimpleDocTemplate):  # type: ignore[misc]
     """Custom DocTemplate configured for handling of table of contents"""
 
     def __init__(self, filename, **kw) -> None:
@@ -56,15 +57,15 @@ def heading(text, sty):
     from hashlib import sha1
 
     # Create bookmarkname
-    bn = sha1((text + sty.name).encode("utf-8")).hexdigest()
+    bn = sha1((text + sty.name).encode("utf-8")).hexdigest()  # nosec B324
     # Modify paragraph text to include an anchor point with name bn
     h = Paragraph(text + '<a name="%s"/>' % bn, sty)
     # Store the bookmark name on the flowable so afterFlowable can see this
-    h._bookmarkName = bn
+    h._bookmarkName = bn  # noqa: SLF001 TODO & FIXME: Don't change private object's attributes :-|
     return h
 
 
-def add_page_number(canvas, doc):
+def add_page_number(canvas):
     page_num = canvas.getPageNumber()
     if page_num < 4:
         return
@@ -74,7 +75,7 @@ def add_page_number(canvas, doc):
 
 
 def used_licenses_from_csv(path_licenses_csv):
-    used_licenses = []
+    used_licenses = set()
     with open(path_licenses_csv) as csv_file:
         csv_file.readline()  # Drop line of headers
         rows = list(csv.reader(csv_file))
@@ -85,7 +86,7 @@ def used_licenses_from_csv(path_licenses_csv):
 def main():
     try:
         path_omd = Path(__file__).resolve().parent.parent
-    except:
+    except BaseException:
         raise OSError
 
     path_license_texts = path_omd / "license_sources/license_texts/"
@@ -156,7 +157,7 @@ def main():
             story.append(heading(headline, h1))
             story.append(Paragraph(text_content, normal))
         else:
-            print('No license text file found for ID "%s" and path %s' % (used_license, file_path))
+            print(f'No license text file found for ID "{used_license}" and path {file_path}')
 
     doc = MyDocTemplate(str(path_pdf))
     doc.multiBuild(story, onLaterPages=add_page_number)

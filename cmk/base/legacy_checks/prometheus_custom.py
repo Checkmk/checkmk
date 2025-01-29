@@ -6,10 +6,10 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store
+
+check_info = {}
 
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
@@ -91,14 +91,13 @@ def _metric_levels(
 
     """
     missing_levels = (None, None)
-    if service_levels:
-        for metric_entry in service_levels:
-            if metric_entry["metric_label"] == metric_label:
-                metric_levels = metric_entry.get("levels", {})
-                return (
-                    *metric_levels.get("upper_levels", missing_levels),
-                    *metric_levels.get("lower_levels", missing_levels),
-                )
+    for metric_entry in service_levels:
+        if metric_entry["metric_label"] == metric_label:
+            metric_levels = metric_entry.get("levels", {})
+            return (
+                *metric_levels.get("upper_levels", missing_levels),
+                *metric_levels.get("lower_levels", missing_levels),
+            )
 
     if datasource_levels:
         return (
@@ -127,7 +126,7 @@ def check_prometheus_custom(item, params, parsed):
         levels = _metric_levels(
             metric_label,
             metric_details.get("levels"),
-            params.get("metric_list"),
+            params["metric_list"],
         )
         yield check_levels(
             float(metric_details["value"]),
@@ -142,9 +141,11 @@ def discover_prometheus_custom(section):
 
 
 check_info["prometheus_custom"] = LegacyCheckDefinition(
+    name="prometheus_custom",
     parse_function=parse_prometheus_custom,
     service_name="%s",
     discovery_function=discover_prometheus_custom,
     check_function=check_prometheus_custom,
     check_ruleset_name="prometheus_custom",
+    check_default_parameters={"metric_list": []},
 )

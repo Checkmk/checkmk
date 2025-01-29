@@ -3,232 +3,231 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Background job process entry point.
+
+This must not be imported from anywhere outside of the background job process."""
+
 from __future__ import annotations
 
-import io
 import logging
-import multiprocessing
-import os
-import signal
-import sys
+import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager, nullcontext
+from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
-from types import FrameType
+from typing import ContextManager, IO
 
 from setproctitle import setthreadtitle
 
-import cmk.utils.paths
-from cmk.utils import daemon, render, store
-from cmk.utils.exceptions import MKTerminate
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import edition
+
+from cmk.utils import paths
 from cmk.utils.log import VERBOSE
+from cmk.utils.user import UserId
 
-from cmk.gui import log, sites
+from cmk.gui import log
+from cmk.gui.crash_handler import create_gui_crash_report
+from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
-from cmk.gui.utils.timeout_manager import timeout_manager
+from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.single_global_setting import load_gui_log_levels
 
+from cmk.trace import (
+    get_tracer,
+    get_tracer_provider,
+    INVALID_SPAN,
+    Link,
+    set_span_in_context,
+    TracerProvider,
+)
+
+from ._app import BackgroundJobFlaskApp
 from ._defines import BackgroundJobDefines
+from ._interface import BackgroundProcessInterface, JobParameters, JobTarget
 from ._status import JobStatusStates
-from ._store import JobStatusStore
+from ._store import JobStatusSpecUpdate, JobStatusStore
+
+tracer = get_tracer()
 
 
-class BackgroundProcess(multiprocessing.Process):
-    """When started, BackgroundJob spawns one instance of BackgroundProcess"""
+def run_process(job_parameters: JobParameters) -> None:
+    (
+        stop_event,
+        work_dir,
+        job_id,
+        target,
+        lock_wato,
+        is_stoppable,
+        override_job_log_level,
+        span_id,
+        origin_span_context,
+    ) = job_parameters
 
-    def __init__(
-        self,
-        logger: logging.Logger,
-        work_dir: str,
-        job_id: str,
-        target: Callable[[BackgroundProcessInterface], None],
-    ) -> None:
-        super().__init__()
-        self._jobstatus_store = JobStatusStore(work_dir)
-        self._logger = logger
-        self._target = target
-        self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
+    logger = log.logger.getChild("background-job")
+    jobstatus_store = JobStatusStore(work_dir)
+    setthreadtitle(BackgroundJobDefines.process_name)
 
-    def _register_signal_handlers(self) -> None:
-        self._logger.debug("Register signal handler %d", os.getpid())
-        signal.signal(signal.SIGTERM, self._handle_sigterm)
+    final_status_update: JobStatusSpecUpdate = {}
+    try:
+        job_status = jobstatus_store.read()
+        # TODO: Influences the whole process. Set level on our log handler, to have it job specific?
+        _set_log_levels(override_job_log_level)
 
-    def _handle_sigterm(self, signum: int, frame: FrameType | None) -> None:
-        self._logger.debug("Received SIGTERM")
-        status = self._jobstatus_store.read()
-        if not status.stoppable:
-            self._logger.warning(
-                "Skip termination of background job (Job ID: %s, PID: %d)",
-                self._job_interface.get_job_id(),
-                os.getpid(),
+        with (
+            _open_progress_update(Path(work_dir)) as progress_update,
+            _progress_update_logging(progress_update),
+            tracer.span(
+                f"run_process[{span_id}]",
+                context=set_span_in_context(INVALID_SPAN),
+                attributes={
+                    "cmk.job_id": job_id,
+                    "cmk.target.callable": str(target.callable),
+                },
+                links=[Link(origin_span_context.to_span_context())],
+            ),
+            (
+                store.lock_checkmk_configuration(paths.configuration_lockfile)
+                if lock_wato
+                else nullcontext()
+            ),
+        ):
+            logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
+            jobstatus_store.update({"state": JobStatusStates.RUNNING})
+
+            _execute_function(
+                logger,
+                target,
+                BackgroundProcessInterface(
+                    work_dir,
+                    job_id,
+                    logger,
+                    stop_event,
+                    gui_job_context_manager(job_status.user),
+                    progress_update,
+                ),
             )
-            return
-
-        raise MKTerminate()
-
-    def run(self) -> None:
-        self._detach_from_parent()
-
-        try:
-            self.initialize_environment()
-            self._logger.log(
-                VERBOSE, "Initialized background job (Job ID: %s)", self._job_interface.get_job_id()
-            )
-            self._jobstatus_store.update(
-                {
-                    "pid": self.pid,
-                    "state": JobStatusStates.RUNNING,
-                }
-            )
-
-            # The actual function call
-            self._execute_function()
 
             # Final status update
-            job_status = self._jobstatus_store.read()
+            job_status = jobstatus_store.read()
 
             if job_status.loginfo["JobException"]:
                 final_state = JobStatusStates.EXCEPTION
+            elif stop_event.is_set():
+                logger.warning("Job was stopped")
+                final_state = JobStatusStates.STOPPED
             else:
                 final_state = JobStatusStates.FINISHED
 
-            self._jobstatus_store.update(
-                {
-                    "state": final_state,
-                    "duration": time.time() - job_status.started,
-                }
-            )
-        except MKTerminate:
-            self._logger.warning("Job was stopped")
-            self._jobstatus_store.update({"state": JobStatusStates.STOPPED})
-        except Exception:
-            self._logger.error(
-                "Exception while preparing background function environment", exc_info=True
-            )
-            self._jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
+            final_status_update = {
+                "state": final_state,
+                "duration": time.time() - job_status.started,
+            }
 
-    def _detach_from_parent(self) -> None:
-        # Detach from parent and cleanup inherited file descriptors
-        os.setsid()
-
-        # NOTE: Setting the thread title is not for cosmetics! BackgroundJob._is_correct_process()
-        # will not do the right thing without it! Furthermore, using setproctitle() instead of
-        # setthreadtitle() would be more fragile, because the former will only work if os.environ
-        # has not been damaged too much, but our tests do this via mock.patch.dict(os.environ, ...).
-        setthreadtitle(BackgroundJobDefines.process_name)
-
-        sys.stdin.close()
-        # NOTE
-        # When forking off from an mod_wsgi process, these handles are not the standard stdout and
-        # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
-        # closed then mod_wsgi will trigger a "RuntimeError: log object has expired" if you want to
-        # use them again, as this is considered a programming error. The logging framework
-        # installs an "atexit" callback which flushes the logs upon the process exiting. This
-        # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
-        # This will happen even if sys.stdout and sys.stderr are reset to their originals because
-        # the logging.StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
-        # sys.stdout.close()
-        # sys.stderr.close()
-        daemon.closefrom(0)
-
-    def initialize_environment(self) -> None:
-        """Setup environment (Logging, Livestatus handles, etc.)"""
-        self._init_gui_logging()
-        self._disable_timeout_manager()
-        self._cleanup_livestatus_connections()
-        self._open_stdout_and_stderr()
-        self._enable_logging_to_stdout()
-        self._register_signal_handlers()
-        self._lock_configuration()
-
-    def _init_gui_logging(self) -> None:
-        log.init_logging()  # NOTE: We run in a subprocess!
-        self._logger = log.logger.getChild("background-job")
-        self._log_path_hint = _("More information can be found in ~/var/log/web.log")
-
-    def _disable_timeout_manager(self) -> None:
-        if timeout_manager:
-            timeout_manager.disable_timeout()
-
-    def _cleanup_livestatus_connections(self) -> None:
-        """Close livestatus connections inherited from the parent process"""
-        sites.disconnect()
-
-    def _execute_function(self) -> None:
-        try:
-            self._target(self._job_interface)
-        except MKTerminate:
-            raise
-        except Exception as e:
-            self._logger.exception("Exception in background function")
-            self._job_interface.send_exception(_("Exception: %s") % (e))
-
-    def _open_stdout_and_stderr(self) -> None:
-        """Create a temporary file and use it as stdout / stderr buffer"""
-        # - We can not use io.BytesIO() or similar because we need real file descriptors
-        #   to be able to catch the (debug) output of libraries like libldap or subproccesses
-        # - Use buffering=0 to make the non flushed output directly visible in
-        #   the job progress dialog
-        # - Python 3's stdout and stderr expect 'str' not 'bytes'
-        unbuffered = (
-            Path(self._job_interface.get_work_dir()) / BackgroundJobDefines.progress_update_filename
-        ).open("wb", buffering=0)
-        sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
-        os.dup2(sys.stdout.fileno(), 1)
-        os.dup2(sys.stderr.fileno(), 2)
-
-    def _enable_logging_to_stdout(self) -> None:
-        """In addition to the web.log we also want to see the job specific logs
-        in stdout (which results in job progress info)"""
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(cmk.utils.log.get_formatter())
-        log.logger.addHandler(handler)
-
-    def _lock_configuration(self) -> None:
-        if self._jobstatus_store.read().lock_wato:
-            store.release_all_locks()
-            store.lock_exclusive()
-
-
-class BackgroundProcessInterface:
-    def __init__(self, work_dir: str, job_id: str, logger: logging.Logger) -> None:
-        self._work_dir = work_dir
-        self._job_id = job_id
-        self._logger = logger
-
-    def get_work_dir(self) -> str:
-        return self._work_dir
-
-    def get_job_id(self) -> str:
-        return self._job_id
-
-    def get_logger(self) -> logging.Logger:
-        return self._logger
-
-    def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:
-        """The progress update is written to stdout and will be caught by the threads counterpart"""
-        message = info
-        if with_timestamp:
-            message = f"{render.time_of_day(time.time())} {message}"
-        sys.stdout.write(message + "\n")
-
-    def send_result_message(self, info: str) -> None:
-        """The result message is written to a distinct file to separate this info from the rest of
-        the context information. This message should contain a short result message and/or some kind
-        of resulting data, e.g. a link to a report or an agent output. As it may contain HTML code
-        it is not written to stdout."""
-        encoded_info = "%s\n" % info
-        result_message_path = (
-            Path(self.get_work_dir()) / BackgroundJobDefines.result_message_filename
+    except MKTerminate:
+        logger.warning("Job was stopped")
+        final_status_update = {"state": JobStatusStates.STOPPED}
+    except Exception:
+        crash = create_gui_crash_report()
+        logger.error(
+            "Exception while preparing background function environment (Crash ID: %s)",
+            crash.ident_to_text(),
+            exc_info=True,
         )
-        with result_message_path.open("ab") as f:
-            f.write(encoded_info.encode())
+        final_status_update = {"state": JobStatusStates.EXCEPTION}
+    finally:
+        # We want to be sure that all spans we created so far are flushed before the background
+        # jobs goes into it's final state. There may spans come later. These are handled by an
+        # atexit handler, which is registered by opentelemetry, during the finalization of the
+        # interpreter, but we want to have all finished spans collected before we set the
+        # background job to finished.
+        if isinstance(provider := get_tracer_provider(), TracerProvider):
+            provider.force_flush()
 
-    def send_exception(self, info: str) -> None:
-        """Exceptions are written to stdout because of log output clarity
-        as well as into a distinct file, to separate this info from the rest of the context information
-        """
-        # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
-        encoded_info = "%s\n" % info
-        sys.stdout.write(encoded_info)
-        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
-            f.write(encoded_info.encode())
+        jobstatus_store.update(final_status_update)
+
+        # The UI code does not clean up locks properly in all cases, so we need to do it here
+        # in case there were some locks left over
+        store.release_all_locks()
+
+
+def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[None]]:
+    @contextmanager
+    def gui_job_context() -> Iterator[None]:
+        try:
+            features = features_registry[str(edition(paths.omd_root))]
+        except KeyError:
+            raise ValueError(f"Invalid edition: {edition}")
+
+        with (
+            BackgroundJobFlaskApp(features).test_request_context("/"),
+            SuperUserContext() if user is None else UserContext(UserId(user)),
+        ):
+            yield None
+
+    return gui_job_context
+
+
+def _execute_function(
+    logger: Logger,
+    target: JobTarget,
+    job_interface: BackgroundProcessInterface,
+) -> None:
+    try:
+        target.callable(job_interface, target.args)
+    except MKTerminate:
+        raise
+    except Exception as e:
+        crash = create_gui_crash_report()
+        logger.exception("Exception in background function (Crash ID: %s)", crash.ident_to_text())
+        job_interface.send_exception(_("Exception (Crash ID: %s): %s") % (crash.ident_to_text(), e))
+
+
+def _open_progress_update(work_dir: Path) -> IO[str]:
+    """Set-up the job specific log file"""
+    # Use buffering=1 to make each line directly visible in the job progress dialog
+    return (work_dir / BackgroundJobDefines.progress_update_filename).open("w", buffering=1)
+
+
+@contextmanager
+def _progress_update_logging(progress_update: IO[str]) -> Iterator[None]:
+    log.logger.addHandler(progress_update_handler := _progress_update_handler(progress_update))
+    try:
+        yield
+    finally:
+        log.logger.removeHandler(progress_update_handler)
+
+
+def _progress_update_handler(progress_update: IO[str]) -> StreamHandler:
+    """In addition to the web.log we also want to see the job specific logs
+    in stdout (which results in job progress info)"""
+    handler = StreamHandler(stream=progress_update)
+    handler.addFilter(ThreadLogFilter(threading.current_thread().name))
+    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    return handler
+
+
+def _set_log_levels(override_job_log_level: int | None) -> None:
+    log.set_log_levels(
+        {
+            **load_gui_log_levels(),
+            **(
+                {"cmk.web.background-job": override_job_log_level}
+                if override_job_log_level is not None
+                else {}
+            ),
+        }
+    )
+
+
+class ThreadLogFilter(logging.Filter):
+    """This filter only show log entries for specified thread name"""
+
+    def __init__(self, thread_name: str) -> None:
+        super().__init__()
+        self.thread_name = thread_name
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.threadName == self.thread_name

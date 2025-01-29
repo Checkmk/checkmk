@@ -6,17 +6,17 @@ import importlib.util
 import os
 import os.path
 import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import-not-found]
+from importlib._bootstrap_external import SourceFileLoader
 
 import flask
 import pytest
-import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
-from cmk.utils.site import omd_site
+from cmk.ccc.site import omd_site
+
 from cmk.utils.user import UserId
 
 
@@ -45,9 +45,9 @@ def test_wsgi_app(request_context: None) -> None:
     def start_response(status, response_headers, exc_info=None):
         pass
 
-    assert wsgi_app.config_loader.mode == "default"
+    assert wsgi_app.wsgi.config_loader.mode == "default"
     wsgi_app(env, start_response)
-    assert wsgi_app.config_loader.mode == "imported"
+    assert wsgi_app.wsgi.config_loader.mode == "imported"
 
 
 def _import_file(file_name: str) -> types.ModuleType:
@@ -118,10 +118,7 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
-    login.form["_username"] = username
-    login.form["_password"] = password
-    resp = login.form.submit("_login", index=1)
+    resp: CmkTestResponse = wsgi_app.login(username, password)
 
     assert "Invalid credentials." not in resp.text
 
@@ -143,9 +140,8 @@ def test_openapi_version(
 
 
 def test_openapi_app_exception(
-    wsgi_app_debug_off: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
-    wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get(
@@ -160,25 +156,9 @@ def test_openapi_app_exception(
     assert "id" in resp.json["ext"]
 
 
-def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
-
-
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
     assert response.text == "Missing secret for automation command."
-
-
-def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.text.startswith("You are not allowed")
-
-    resp = wsgi_app.get(
-        "/NO_SITE/check_mk/ajax_graph_images.py",
-        status=200,
-        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
-    )
-    assert resp.text == ""
 
 
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
@@ -186,7 +166,7 @@ def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.options("/", status=404)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)

@@ -7,7 +7,7 @@
 import time
 from collections.abc import Collection, Iterator
 
-import cmk.utils.render as render
+from cmk.utils import render
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.display_options import display_options
@@ -30,6 +30,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -259,9 +260,11 @@ class ModeAuditLog(WatoMode):
     def _render_filter_form(self) -> HTML:
         with output_funnel.plugged():
             self._display_audit_log_options()
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 
@@ -280,7 +283,7 @@ class ModeAuditLog(WatoMode):
     def page(self) -> None:
         with html.form_context("fileselection_form", method="POST"):
             if not request.has_var("file_selection"):
-                html.write_text(_("Please choose an audit log to view:"))
+                html.write_text_permissive(_("Please choose an audit log to view:"))
                 html.br()
                 html.br()
             self._vs_file_selection().render_input("file_selection", None)
@@ -395,11 +398,13 @@ class ModeAuditLog(WatoMode):
                         _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
                     )
 
-                text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
+                text = HTML.without_escaping(
+                    escaping.escape_text(entry.text).replace("\n", "<br>\n")
+                )
                 table.cell(_("Summary"), text)
 
                 if self._show_details:
-                    diff_text = HTML(
+                    diff_text = HTML.without_escaping(
                         escaping.escape_text(entry.diff_text).replace("\n", "<br>\n")
                         if entry.diff_text
                         else ""
@@ -653,9 +658,8 @@ class ModeAuditLog(WatoMode):
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-{}_{}.csv".format(
-                render.date(time.time()),
-                render.time_of_day(time.time()),
+            filename = (
+                f"wato-auditlog-{render.date(time.time())}_{render.time_of_day(time.time())}.csv"
             )
         else:
             filename = "wato-auditlog-{}_{}_days.csv".format(

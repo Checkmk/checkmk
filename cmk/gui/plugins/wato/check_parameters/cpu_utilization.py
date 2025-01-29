@@ -24,7 +24,7 @@ def cpu_util_elements():
             Tuple(
                 title=_("Levels over an extended time period on total CPU utilization"),
                 elements=[
-                    Percentage(title=_("High utilization at "), default_value=100.0),
+                    Percentage(title=_("High utilization at "), default_value=100.0, maxvalue=None),
                     Age(title=_("Warning after "), default_value=5 * 60),
                     Age(title=_("Critical after "), default_value=15 * 60),
                 ],
@@ -48,8 +48,8 @@ def cpu_util_elements():
                     "A single thread fully utilizing a single core (potentially due to a bug) "
                     "may go unnoticed when only monitoring the total utilization of the CPU. "
                     "With this configuration, Checkmk will alert if a single core is "
-                    "exceeding a utilization threshold over an extended period of time."
-                    "This is currently only supported on linux and windows agents "
+                    "exceeding a utilization threshold over an extended period of time. "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
             ),
@@ -158,7 +158,7 @@ def cpu_util_elements():
                     "details page, showing utilization of individual cores. "
                     "Please note that this graph may be impractical on "
                     "device with very many cores. "
-                    "This is currently only supported on linux and windows agents "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
                 choices=[
@@ -240,7 +240,7 @@ rulespec_registry.register(
 
 
 def _cpu_utilization_to_dict(
-    param: tuple[float, float] | dict[str, tuple[float, float]]
+    param: tuple[float, float] | dict[str, tuple[float, float]],
 ) -> dict[str, tuple[float, float]]:
     if not param:
         return {}

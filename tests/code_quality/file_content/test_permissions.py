@@ -8,9 +8,9 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
-from ..conftest import ChangedFiles
+from tests.code_quality.utils import ChangedFiles
 
 
 def is_executable(path: Path) -> bool:
@@ -35,8 +35,8 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
     (
         "agents/plugins/*",
         is_executable,
-        ["README", "Makefile", "__init__.py"],
-        ["*.checksum", "*.pyc"],
+        ["BUILD", "README", "Makefile", "__init__.py"],
+        ["*.checksum", "*.pyc", "*_2.py"],
     ),
     ("checks/*", is_not_executable, [], []),
     ("cmk/plugins/*/manpages/*", is_not_executable, [], []),

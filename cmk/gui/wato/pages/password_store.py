@@ -2,14 +2,23 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import copy
 from collections.abc import Collection
 
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.quick_setup.html import (
+    quick_setup_duplication_warning,
+    quick_setup_locked_warning,
+    quick_setup_render_link,
+    quick_setup_source_cell,
+)
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import (
@@ -18,9 +27,15 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DualListChoice,
     FixedValue,
+    ValueSpec,
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.wato.pages._simple_modes import (
+    convert_dict_elements_vs2fs,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+)
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
@@ -28,7 +43,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 
-from ._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
+from cmk.rulesets.v1.form_specs import DictElement
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -49,11 +64,11 @@ class PasswordStoreModeType(SimpleModeType[Password]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
-        return [ConfigDomainCore]
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
 
 
-class ModePasswords(SimpleListMode):
+class ModePasswords(SimpleListMode[Password]):
     @classmethod
     def name(cls) -> str:
         return "passwords"
@@ -75,6 +90,14 @@ class ModePasswords(SimpleListMode):
     def _table_title(self) -> str:
         return _("Passwords")
 
+    def _validate_deletion(self, ident: str, entry: Password) -> None:
+        if is_locked_by_quick_setup(entry.get("locked_by")):
+            raise MKUserError(
+                "_delete",
+                _("Cannot delete %s because it's managed by Quick setup.")
+                % self._mode_type.name_singular(),
+            )
+
     def _delete_confirm_message(self) -> str:
         return " ".join(
             [
@@ -86,6 +109,19 @@ class ModePasswords(SimpleListMode):
                 super()._delete_confirm_message(),
             ]
         )
+
+    def _show_delete_action(self, nr: int, ident: str, entry: Password) -> None:
+        if is_locked_by_quick_setup(entry.get("locked_by")):
+            html.icon_button(
+                url="",
+                title=_("%s can only be deleted via Quick setup")
+                % self._mode_type.name_singular().title(),
+                icon="delete",
+                class_=["disabled"],
+            )
+
+        else:
+            super()._show_delete_action(nr, ident, entry)
 
     def page(self) -> None:
         html.p(
@@ -109,22 +145,26 @@ class ModePasswords(SimpleListMode):
         table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
-            html.write_text(
+            html.write_text_permissive(
                 _('Administrators (having the permission "Write access to all passwords")')
             )
         else:
-            html.write_text(self._contact_group_alias(entry["owned_by"]))
+            html.write_text_permissive(self._contact_group_alias(entry["owned_by"]))
         table.cell(_("Shared with"))
         if not entry["shared_with"]:
-            html.write_text(_("Not shared"))
+            html.write_text_permissive(_("Not shared"))
         else:
-            html.write_text(", ".join([self._contact_group_alias(g) for g in entry["shared_with"]]))
+            html.write_text_permissive(
+                ", ".join([self._contact_group_alias(g) for g in entry["shared_with"]])
+            )
+
+        quick_setup_source_cell(table, entry.get("locked_by"))
 
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-class ModeEditPassword(SimpleEditMode):
+class ModeEditPassword(SimpleEditMode[Password]):
     @classmethod
     def name(cls) -> str:
         return "edit_password"
@@ -138,10 +178,38 @@ class ModeEditPassword(SimpleEditMode):
         return ModePasswords
 
     def __init__(self) -> None:
+        self._clone_source: Password | None = None
         super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
+
+    def _clone_entry(self, entry: Password) -> Password:
+        self._clone_source = entry
+        clone = copy.deepcopy(entry)
+        # remove the lock when cloning
+        clone.pop("locked_by", None)
+        return clone
+
+    def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
+        elements = super()._vs_mandatory_elements()
+        locked_by = None if self._new else self._entry.get("locked_by")
+        if is_locked_by_quick_setup(locked_by):
+            elements.append(
+                (
+                    "source",
+                    FixedValue(
+                        value=locked_by["instance_id"],
+                        title=_("Source"),
+                        totext=quick_setup_render_link(locked_by),
+                    ),
+                )
+            )
+
+        return elements
+
+    def _mandatory_elements(self) -> dict[str, DictElement]:
+        return convert_dict_elements_vs2fs(self._vs_mandatory_elements())
 
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):
@@ -211,3 +279,14 @@ class ModeEditPassword(SimpleEditMode):
         ]
 
         return elements
+
+    def _page_form_quick_setup_warning(self) -> None:
+        locked_by = None if self._new else self._entry.get("locked_by")
+        if (
+            is_locked_by_quick_setup(locked_by)
+            and request.get_ascii_input("mode") != "edit_configuration_bundle"
+        ):
+            quick_setup_locked_warning(locked_by, self._mode_type.name_singular())
+
+        elif self._clone_source and (locked_by := self._clone_source.get("locked_by")):
+            quick_setup_duplication_warning(locked_by, self._mode_type.name_singular())

@@ -22,9 +22,8 @@ from collections.abc import Collection
 
 from marshmallow import ValidationError
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -41,6 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
+    show_confirm_cancel_dialog,
 )
 from cmk.gui.permissions import (
     load_dynamic_permissions,
@@ -49,10 +49,17 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.userdb import UserRole
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -63,6 +70,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeRoles)
     mode_registry.register(ModeEditRole)
     mode_registry.register(ModeRoleMatrix)
+    mode_registry.register(ModeRoleTwoFactor)
 
 
 class ModeRoles(WatoMode):
@@ -134,7 +142,7 @@ class ModeRoles(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
@@ -160,6 +168,9 @@ class ModeRoles(WatoMode):
                 # Type
                 table.cell(_("Type"), _("built-in") if role.builtin else _("custom"))
 
+                # Two factor
+                table.cell(_("Two Factor"), _("Required") if role.two_factor else _("Not required"))
+
                 # Modifications
                 table.cell(
                     _("Modifications"),
@@ -172,7 +183,7 @@ class ModeRoles(WatoMode):
                 # Users
                 table.cell(
                     _("Users"),
-                    HTML(", ").join(
+                    HTML.without_escaping(", ").join(
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),
@@ -187,6 +198,74 @@ class ModeRoles(WatoMode):
         # Possibly we could also display the following information
         # - number of set permissions (needs loading users)
         # - number of users with this role
+
+
+class ModeRoleTwoFactor(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "enforce_two_factor_on_role"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["users"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeRoles
+
+    def __init__(self) -> None:
+        super().__init__()
+        load_dynamic_permissions()
+
+    def _from_vars(self):
+        self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
+        self._role: UserRole = userroles.get_role(self._role_id)
+
+    def title(self) -> str:
+        return _("Enforce two factor on %s role") % self._role_id
+
+    def page(self) -> None:
+        request.get_ascii_input_mandatory("two_factor_enforce")
+        confirm_url = makeactionuri(request, transactions, [("_action", "confirm")])
+        cancel_url = makeuri_contextless(
+            request,
+            [("mode", ModeEditRole.name()), ("edit", self._role.name)],
+        )
+
+        message = html.render_div(
+            (
+                html.render_span(_("Warning:"), class_="underline")
+                + _(
+                    " Enforcing two factor for the %s role will terminate any current sessions for users who have this role but have not enabled any two factor."
+                )
+                % self._role.name
+            ),
+            class_="confirm_info",
+        )
+
+        show_confirm_cancel_dialog(
+            _("Enforce two factor on all users with %s role?") % self._role.name,
+            confirm_url,
+            cancel_url,
+            message,
+            confirm_text=_("Confirm"),
+        )
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+        if request.var("_action") != "confirm":
+            return None
+        if request.get_ascii_input_mandatory("two_factor_enforce") != "enforce":
+            return None
+
+        self._role.two_factor = True
+
+        userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=self._role_id)
+        userroles.logout_users_with_role(self._role_id)
+        _changes.add_change(
+            "edit-roles", _("Modified user role '%s'") % self._role_id, sites=get_login_sites()
+        )
+        return redirect(mode_url(ModeRoles.name()))
 
 
 class ModeEditRole(WatoMode):
@@ -224,6 +303,8 @@ class ModeEditRole(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if html.form_submitted("search"):
             return None
 
@@ -247,6 +328,18 @@ class ModeEditRole(WatoMode):
 
         self._role.name = new_id
 
+        if self._role.two_factor != bool(html.get_checkbox("two_factor")) and bool(
+            html.get_checkbox("two_factor")
+        ):
+            url = redirect(
+                mode_url(
+                    "enforce_two_factor_on_role", edit=self._role.name, two_factor_enforce="enforce"
+                )
+            )
+        else:
+            url = redirect(mode_url("roles"))
+            self._role.two_factor = bool(html.get_checkbox("two_factor"))
+
         userroles.update_permissions(self._role, request.itervars(prefix="perm_"))
         userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=RoleID(new_id))
         self._role_id = RoleID(new_id)
@@ -254,7 +347,7 @@ class ModeEditRole(WatoMode):
         _changes.add_change(
             "edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites()
         )
-        return redirect(mode_url("roles"))
+        return url
 
     def page(self) -> None:
         with html.form_context("role", method="POST"):
@@ -267,7 +360,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
+            html.write_text_permissive("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)
@@ -277,6 +370,19 @@ class ModeEditRole(WatoMode):
         forms.section(_("Alias"))
         html.help(_("An alias or description of the role"))
         html.text_input("alias", self._role.alias, size=50)
+
+        forms.section(_("Enforce two factor authentication"))
+        html.help(
+            _(
+                "If set enabled from a disabled state, all users with this role will be required to setup two factor authentication "
+                "and will be logout out of any current sessions if they have not enabled two factor. "
+                "'Enforce two factor authentication' in global settings will override this setting."
+            )
+        )
+        html.checkbox(
+            "two_factor",
+            self._role.two_factor,
+        )
 
         # Based on
         if not self._role.builtin:

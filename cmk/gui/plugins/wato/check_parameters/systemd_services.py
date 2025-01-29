@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Container
+from typing import Literal
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -12,11 +15,14 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import (
     Dictionary,
+    Filesize,
     ListChoice,
     ListOf,
     MonitoringState,
     TextInput,
     TextOrRegExp,
+    TimeSpan,
+    Tuple,
 )
 
 
@@ -214,6 +220,12 @@ rulespec_registry.register(
     )
 )
 
+MIN_SEC_MS: Container[Literal["minutes", "seconds", "milliseconds"]] = [
+    "minutes",
+    "seconds",
+    "milliseconds",
+]
+
 
 def _parameter_valuespec_systemd_units() -> Dictionary:
     return Dictionary(
@@ -259,6 +271,55 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
                 MonitoringState(
                     title=_("Monitoring state if a monitored unit is not found at all."),
                     default_value=2,
+                ),
+            ),
+            # TODO: add these to the plugins default parameters upon migration to the ruleset API!
+            (
+                "memory",
+                Tuple(
+                    title=_("Memory upper levels"),
+                    help=_("Define the upper levels for memory usage."),
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "cpu_time",
+                Tuple(
+                    title=_("CPU time upper levels"),
+                    help=_("Define the upper levels for the consumed CPU time."),
+                    elements=[
+                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
+                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
+                    ],
+                ),
+            ),
+            (
+                "active_since_lower",
+                Tuple(
+                    title=_("Lower levels for the time the service is active"),
+                    help=_(
+                        "Define the lower levels for the time, the systemd service is active since."
+                    ),
+                    elements=[
+                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
+                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
+                    ],
+                ),
+            ),
+            (
+                "active_since_upper",
+                Tuple(
+                    title=_("Upper levels for the time the service is active"),
+                    help=_(
+                        "Define the upper levels for the time, the systemd service is active since."
+                    ),
+                    elements=[
+                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
+                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
+                    ],
                 ),
             ),
         ],

@@ -10,7 +10,7 @@ from livestatus import livestatus_lql, SiteId
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -36,7 +36,7 @@ def ajax_popup_action_menu() -> None:
     for icon in icons:
         if isinstance(icon, LegacyIconEntry):
             html.open_li()
-            html.write_text(icon.code)
+            html.write_text_permissive(icon.code)
             html.close_li()
         elif isinstance(icon, IconEntry):
             html.open_li()
@@ -51,9 +51,9 @@ def ajax_popup_action_menu() -> None:
 
             html.icon(icon.icon_name)
             if icon.title:
-                html.write_text(icon.title)
+                html.write_text_permissive(icon.title)
             else:
-                html.write_text(_("No title"))
+                html.write_text_permissive(_("No title"))
             if icon.url_spec:
                 html.close_a()
             html.close_li()

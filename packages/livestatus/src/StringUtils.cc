@@ -19,13 +19,13 @@
 namespace mk {
 std::string unsafe_tolower(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
+    std::ranges::transform(str, result.begin(), ::tolower);
     return result;
 }
 
 std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    std::ranges::transform(str, result.begin(), ::toupper);
     return result;
 }
 
@@ -143,9 +143,12 @@ std::string replace_chars(const std::string &str,
 }
 
 std::string ipv4ToString(in_addr_t ipv4_address) {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     char addr_buf[INET_ADDRSTRLEN];
     struct in_addr ia = {ipv4_address};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     return addr_buf;
 }
 namespace ec {
@@ -160,6 +163,8 @@ std::vector<std::string> split_list(const std::string &str) {
 }
 
 }  // namespace ec
+
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 bool is_utf8(std::string_view s) {
     // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf p.125
     // Correct UTF-8 encoding
@@ -175,6 +180,7 @@ bool is_utf8(std::string_view s) {
     // U+40000 -  U+FFFFF    F1 - F3    80 - BF     80 - BF    80 - BF
     // U+100000 - U+10FFFF   F4         80 - 8F     80 - BF    80 - BF
     const auto *end = s.cend();
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     for (const char *p = s.cbegin(); p != end; ++p) {
         const unsigned char ch0 = *p;
         if (ch0 < 0x80) {
@@ -227,6 +233,7 @@ bool is_utf8(std::string_view s) {
             return false;
         }
         const unsigned char ch3 = *++p;
+        // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         if (ch3 < 0x80 || ch3 > 0xBF) {
             return false;
         }

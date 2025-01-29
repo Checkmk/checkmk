@@ -35,8 +35,8 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
         )
 
 
-class AutomationRemoveTLSRegistration(AutomationCommand):
-    def command_name(self):
+class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
+    def command_name(self) -> str:
         return "remove-tls-registration"
 
     def get_request(self) -> Sequence[HostName]:

@@ -18,7 +18,7 @@ class TestVersionedConfigPath:
     def config_path(self):
         ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
         # Call next because this is where `latest` etc. are created and updated.
-        yield next(VersionedConfigPath(0))  # pylint: disable=stop-iteration-return
+        yield next(VersionedConfigPath(0))
         shutil.rmtree(ConfigPath.ROOT)
 
     def test_iter(self, config_path: VersionedConfigPath) -> None:

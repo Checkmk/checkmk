@@ -21,8 +21,7 @@ get_candidates_from_stdin() {
     done
 }
 
-get_files_from_filesystem() {
-    cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
+_grep_with_excludes() {
     # shellcheck disable=SC2046  # we want word splitting in the comment lines below
     grep \
         --recursive \
@@ -103,6 +102,13 @@ get_files_from_filesystem() {
         --exclude="*.zip" \
         --exclude="Dockerfile" \
         --exclude="README*" \
+        "$@"
+}
+
+get_files_from_filesystem() {
+    cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
+    # shellcheck disable=SC2046  # we want word splitting in the comment lines below
+    _grep_with_excludes \
         $(: autoconf stuff --------------------------------------------------) \
         --exclude-dir="autom4te.cache" \
         --exclude="ar-lib" \
@@ -124,13 +130,37 @@ get_files_from_filesystem() {
         $(: various artifact directories ------------------------------------) \
         --exclude-dir="bazel-*" \
         --exclude-dir="build" \
+        --exclude-dir="external" \
         --exclude-dir="node_modules" \
+        --exclude-dir=".venv" \
         --exclude-dir="shared_cargo_folder" \
         $(: docker directories ----------------------------------------------) \
         --exclude-dir="build_user_home" \
-        $(: OMD stuff, should perhaps be included partially -----------------) \
+        $(: search in omd separately, for more fine tuning ------------------) \
         --exclude-dir="omd" \
-        "${SHEBANG_PATTERN}" ./*
+        "${SHEBANG_PATTERN}" ./* &&
+        _grep_with_excludes \
+            $(: just the status quo, feel free to fix stuff -----------------) \
+            --exclude="distro" \
+            --exclude="configure" \
+            --exclude="MKEVENTD*" \
+            --exclude=".f12" \
+            --exclude="AGENT_RECEIVER*" \
+            --exclude="MULTISITE_*" \
+            --exclude-dir="debian" \
+            --exclude-dir="apache-omd" \
+            --exclude-dir="appliance" \
+            --exclude-dir="build" \
+            --exclude-dir="maintenance" \
+            --exclude-dir="nagios" \
+            --exclude-dir="nagvis" \
+            --exclude-dir="navicli" \
+            --exclude-dir="perl-modules" \
+            --exclude-dir="enterprise" \
+            --exclude-dir="omd" \
+            --exclude-dir="pnp4nagios" \
+            --exclude-dir="mk-livestatus" \
+            "${SHEBANG_PATTERN}" ./omd/*
 }
 
 filter_for_shell_files() {

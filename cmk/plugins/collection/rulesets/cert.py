@@ -115,17 +115,25 @@ def _valuespec_specific_values() -> Dictionary:
                     ),
                     elements={
                         "common_name": DictElement[str](
-                            parameter_form=String(title=Title("Common name (CN)")),
+                            parameter_form=String(
+                                title=Title("Common name (CN)"), macro_support=True
+                            ),
                         ),
                         "organization": DictElement[str](
-                            parameter_form=String(title=Title("Organization (O)"))
+                            parameter_form=String(
+                                title=Title("Organization (O)"), macro_support=True
+                            )
                         ),
                         "org_unit": DictElement[str](
-                            parameter_form=String(title=Title("Organizational unit (OU)"))
+                            parameter_form=String(
+                                title=Title("Organizational unit (OU)"), macro_support=True
+                            )
                         ),
-                        "state": DictElement[str](parameter_form=String(title=Title("State (ST)"))),
+                        "state": DictElement[str](
+                            parameter_form=String(title=Title("State (ST)"), macro_support=True)
+                        ),
                         "country": DictElement[str](
-                            parameter_form=String(title=Title("Country (C)"))
+                            parameter_form=String(title=Title("Country (C)"), macro_support=True)
                         ),
                     },
                 )
@@ -142,13 +150,19 @@ def _valuespec_specific_values() -> Dictionary:
                     ),
                     elements={
                         "common_name": DictElement[str](
-                            parameter_form=String(title=Title("Common name (CN)")),
+                            parameter_form=String(
+                                title=Title("Common name (CN)"), macro_support=True
+                            ),
                         ),
                         "organization": DictElement[str](
-                            parameter_form=String(title=Title("Organization (O)"))
+                            parameter_form=String(
+                                title=Title("Organization (O)"), macro_support=True
+                            )
                         ),
                         "org_unit": DictElement[str](
-                            parameter_form=String(title=Title("Organizational unit (OU)"))
+                            parameter_form=String(
+                                title=Title("Organizational unit (OU)"), macro_support=True
+                            )
                         ),
                         "pubkey_algorithm": DictElement(
                             parameter_form=CascadingSingleChoice(
@@ -187,6 +201,7 @@ def _valuespec_specific_values() -> Dictionary:
                                     "The key size is provided as an integer and needs to match "
                                     "exactly the value in the certificate."
                                 ),
+                                macro_support=True,
                             )
                         ),
                     },
@@ -194,13 +209,13 @@ def _valuespec_specific_values() -> Dictionary:
             ),
             "altnames": DictElement[Sequence[str]](
                 parameter_form=List[str](
-                    element_template=String(),
+                    element_template=String(macro_support=True),
                     title=Title("Certificate subject alternative name"),
                     help_text=Help(
                         "You may enter one or several alternative names that are "
                         "expected to be in the certificate. Please note that the check "
                         "does only accept DNS names and is case sensitive. So, the "
-                        "alternative names need to be exaclty provided as defined "
+                        "alternative names need to be exactly provided as defined "
                         "in the certificate."
                     ),
                 ),
@@ -261,13 +276,13 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     help_text=Help(
                                         "The prefix is automatically attached to each service "
                                         "name to be able to organize them. The prefix is static "
-                                        "and will be CERT. Alternatively, you may choose to not "
+                                        "and will be CERT. Alternatively, you may choose not to "
                                         "use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title('Use "CERT as prefix"'),
+                                            title=Title('Use "CERT" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",
@@ -381,7 +396,7 @@ def _form_active_checks_cert() -> Dictionary:
 def _signature_algorithm_choice() -> CascadingSingleChoice:
     def fmt(sa: ObjectIdentifier) -> Title:
         return Title("%s (%s)") % (
-            sa._name,  # pylint: disable=protected-access
+            sa._name,
             sa.dotted_string,
         )
 
@@ -421,7 +436,7 @@ def _signature_algorithm_choice() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Certificate signature algorithm"),
         help_text=Help(
-            "The signature algorithm algorithm for the "
+            "The signature algorithm for the "
             "certificate's signature. Please note that an matching is done on "
             "the OID"
         ),

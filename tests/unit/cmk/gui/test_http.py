@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from pytest import MonkeyPatch
 from werkzeug.test import create_environ
 
-import cmk.gui.http as http
+from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -569,3 +569,36 @@ def test_content_disposition_invalid_characters(
     response.set_content_type(content_type)
     with pytest.raises(ValueError, match="Invalid character in filename"):
         response.set_content_disposition(disposition_type, file_name)
+
+
+def test_remote_ip() -> None:
+    r = http.Request(create_environ())
+    assert r.remote_ip is None
+
+    r = http.Request(
+        create_environ(environ_base={"REMOTE_ADDR": "42.42.42.42"}),
+    )
+    assert r.remote_addr == "42.42.42.42"
+    assert r.remote_ip == "42.42.42.42"
+
+    r = http.Request(
+        create_environ(
+            environ_base={"REMOTE_ADDR": "42.42.42.42", "HTTP_X_FORWARDED_FOR": "23.23.23.23"}
+        ),
+    )
+    assert r.remote_addr == "42.42.42.42"
+    assert r.remote_ip == "42.42.42.42"
+
+    r = http.Request(
+        create_environ(environ_base={"REMOTE_ADDR": "::1", "HTTP_X_FORWARDED_FOR": "23.23.23.23"}),
+    )
+    assert r.remote_addr == "::1"
+    assert r.remote_ip == "23.23.23.23"
+
+    r = http.Request(
+        create_environ(
+            environ_base={"REMOTE_ADDR": "::1", "HTTP_X_FORWARDED_FOR": "42.42.42.42, 23.23.23.23"}
+        ),
+    )
+    assert r.remote_addr == "::1"
+    assert r.remote_ip == "23.23.23.23"

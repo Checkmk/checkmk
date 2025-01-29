@@ -10,7 +10,7 @@ from collections.abc import Collection
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -65,14 +65,14 @@ class ModeRandomHosts(WatoMode):
         with html.form_context("random"):
             forms.header(_("Add random hosts"))
             forms.section(_("Number to create"))
-            html.write_text("%s: " % _("Hosts to create in each folder"))
+            html.write_text_permissive("%s: " % _("Hosts to create in each folder"))
             html.text_input("count", default_value="10", cssclass="number")
             html.set_focus("count")
             html.br()
-            html.write_text("%s: " % _("Number of folders to create in each level"))
+            html.write_text_permissive("%s: " % _("Number of folders to create in each level"))
             html.text_input("folders", default_value="10", cssclass="number")
             html.br()
-            html.write_text("%s: " % _("Levels of folders to create"))
+            html.write_text_permissive("%s: " % _("Levels of folders to create"))
             html.text_input("levels", default_value="1", cssclass="number")
 
             forms.end()

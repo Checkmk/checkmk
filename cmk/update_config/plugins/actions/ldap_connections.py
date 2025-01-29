@@ -16,7 +16,7 @@ class UpdateLDAPConnections(UpdateAction):
         # during runtime and never persisted, so the we can not be sure that the migration was done for
         # all connections. So we need to keep the migration for the 2.4 here and can drop it afterwards.
         config_file = UserConnectionConfigFile()
-        connections = config_file.load_without_validation()
+        connections = config_file.load_for_modification()
         migrated = False
         for connection in connections:
             if connection["type"] == "ldap":

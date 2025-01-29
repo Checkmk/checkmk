@@ -1,6 +1,6 @@
 #
 # This is the configuration file for the pre-commit framework.
-# To use this you need to install it seperately and activate it for your repository.
+# To use this you need to install it separately and activate it for your repository.
 # To do so issue the following commands:
 #
 #     pip3 install pre-commit
@@ -17,16 +17,25 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/charliermarsh/ruff-pre-commit
-      rev: 'v0.4.4'
+      rev: "v0.8.3"
       hooks:
-        - id: ruff
+          - id: ruff
+          - id: ruff-format
+          # Run ruff import sorting
+          - id: ruff
+            args: [--select, I, --fix]
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
-          - id: check-yaml
+          - id: check-yaml # pre-commit cannot parse utf-16 files
+            exclude: |
+                (?x)(
+                    ^agents/wnx/test_files/config/check_mk_dev_malformed.yml|
+                    ^agents/wnx/test_files/config/check_mk_dev_utf16.yml
+                )
           - id: end-of-file-fixer
             exclude: .werks/.*
           - id: fix-encoding-pragma
@@ -37,6 +46,10 @@ repos:
                     ^non-free/cmk-update-agent/|
                     ^tests/agent-plugin-unit/
                 )
+    - repo: https://github.com/gitleaks/gitleaks
+      rev: v8.16.1
+      hooks:
+          - id: gitleaks
     - repo: local
       hooks:
           - id: check-cmk-namespace
@@ -44,75 +57,87 @@ repos:
             language: script
             entry: scripts/check-cmk-namespace
             types: [file, python]
+            require_serial: true
           - id: remove-stale-imports
             name: Remove stale imports
             language: script
             entry: scripts/run-autoflake
             types: [file, python]
-          - id: isort
-            name: Run isort
-            entry: scripts/run-isort
-            language: script
-            types: [file, python]
-          - id: black
-            name: Run black
-            entry: scripts/run-black
-            language: script
-            types: [file, python]
+            require_serial: true
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high
-            entry: scripts/run-pipenv run bandit --config bandit.yaml -ll
+            entry: scripts/run-uvenv bandit --config bandit.yaml -ll
             language: script
             types: [file, python]
+            require_serial: true
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules
             language: script
             files: omd/packages/python3?-modules
             types: [file]
+            require_serial: true
           - id: sphinx
             name: Sphinx Documentation
-            entry: scripts/run-pipenv run make -C doc/documentation html
+            entry: make -C doc/documentation html
             files: ^doc/documentation/.*(rst|puml)$
             pass_filenames: false
             language: script
             types: [file]
-          - id: pylint
-            name: Check pylint
-            entry: scripts/check-pylint
-            language: script
-            types: [file, python]
+            require_serial: true
           - id: doctest
             name: Doctests
             entry: scripts/run-doctests
             language: script
             types: [file, python]
             verbose: true
+            require_serial: true
           - id: mypy
             name: Check types with mypy
             entry: scripts/run-mypy
             language: script
             types: [file, python]
+            require_serial: true
           - id: licence
             name: Check licence headers
             entry: scripts/check-licence
             language: script
             types: [file, python]
+            require_serial: true
           - id: absolute-imports
             name: Check absolute imports
             entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
+            require_serial: true
           - id: unittest
             name: unittests
             entry: scripts/run-unittests
             language: script
             types: [file, python]
+            require_serial: true
             verbose: true
+          - id: buildifier_format
+            name: Format bazel files
+            entry: scripts/run-buildifier
+            language: script
+            types: ["bazel", "file", "non-executable", "text"]
+            verbose: true
+            require_serial: true
+          - id: buildifier_lint
+            name: Lint bazel files
+            entry: scripts/run-buildifier
+            args: ["--lint=warn"]
+            language: script
+            types: ["bazel", "file", "non-executable", "text"]
+            verbose: true
+            require_serial: true
+          - id: requirements-locking
+            name: requirements locking
+            entry: bazel test //:requirements_test
+            pass_filenames: false
+            language: system
+            files: ^requirements.*\.txt$
+            verbose: true
+            require_serial: true

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import re
 from typing import Any
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.gui.permissions import permission_registry
 
@@ -16,9 +15,9 @@ from .base import Command
 from .group import command_group_registry
 
 
-class CommandRegistry(Registry[type[Command]]):
-    def plugin_name(self, instance: type[Command]) -> str:
-        return instance().ident
+class CommandRegistry(Registry[Command]):
+    def plugin_name(self, instance: Command) -> str:
+        return instance.ident
 
 
 command_registry = CommandRegistry()
@@ -26,27 +25,18 @@ command_registry = CommandRegistry()
 
 # TODO: Kept for pre 1.6 compatibility
 def register_legacy_command(spec: dict[str, Any]) -> None:
-    ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
-    cls = type(
-        "LegacyCommand%s" % str(ident).title(),
-        (Command,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._spec["title"]),
-            "confirm_button": property(lambda s: s._spec.get("confirm_button", "Submit")),
-            "permission": property(lambda s: permission_registry[s._spec["permission"]]),
-            "tables": property(lambda s: s._spec["tables"]),
-            "render": lambda s: s._spec["render"](),
-            "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"](
-                cmdtag, spec, row
+    command_registry.register(
+        Command(
+            ident=re.sub("[^a-zA-Z]", "", spec["title"]).lower(),
+            title=spec["title"],
+            confirm_button=spec.get("confirm_button", "Submit"),
+            permission=permission_registry[spec["permission"]],
+            tables=spec["tables"],
+            render=spec["render"],
+            action=lambda command, cmdtag, cmd_spec, row, row_index, action_rows: spec["action"](
+                cmdtag, cmd_spec, row
             ),
-            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"](
-                cmdtag, spec, row
-            ),
-            "group": lambda s: command_group_registry[s._spec.get("group", "various")],
-            "only_view": lambda s: s._spec.get("only_view"),
-        },
+            group=command_group_registry[spec.get("group", "various")],
+            only_view=spec.get("only_view"),
+        )
     )
-    command_registry.register(cls)

@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -25,7 +25,7 @@ configure_make(
         "--disable-snmptrapd-subagent",
         "--with-defaults",
         "--disable-scripts",
-        '--with-mibdirs="\\\\$$\\$$HOME/local/share/snmp/mibs:\\\\$$\\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
+        r'--with-mibdirs="\\$$\\HOME/local/share/snmp/mibs:\\$$\\HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
     ],
     copts = [
         "-I$BUILD_TMPDIR/include",
@@ -34,14 +34,18 @@ configure_make(
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
         "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
         "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
         "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
-        "HOME": "/home/\\$$\\$${USER}/",
+        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [
@@ -98,6 +102,9 @@ configure_make(
                 INSTALLSITEMAN3DIR=/share/man/man3 \
                 INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
                 install
+
+        chmod u+w -R ${INSTALLDIR}
+        chmod 644 ${INSTALLDIR}/share/snmp/mibs/*
     """,
     targets = [
         "",
@@ -106,23 +113,13 @@ configure_make(
         "-C man DESTDIR='/' install",
         "-C mibs DESTDIR='/' mibsinstall",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )
 
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/stunnel/skel",
-        "@omd_packages//omd/packages/stunnel/skel:skel_root",
-    ],
-    outs = [
-        "skel/etc/init.d/stunnel",
-        "skel/etc/logrotate.d/stunnel",
-        "skel/etc/rc.d/85-stunnel",
-        "skel/etc/stunnel/server.conf",
-        "skel/etc/stunnel/conf.d",
-    ],
-    cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
-    """,
+filegroup(
+    name = "gen_dir",
+    srcs = [":net-snmp"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

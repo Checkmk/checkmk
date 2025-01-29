@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
 
 import pytest
 
@@ -22,11 +19,6 @@ SECTION_ELEMENTS = "initialized", "hasnetwork", "scheduled", "containersready", 
 def test_parameter_valuespec_returns_a_dictionary() -> None:
     parameters = kube_pod_conditions._parameter_valuespec()
     assert isinstance(parameters, Dictionary)
-
-
-def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
-    parameters = kube_pod_conditions._parameter_valuespec()
-    assert len(parameters._elements()) == len(SECTION_ELEMENTS)
 
 
 @pytest.mark.parametrize("section_element", SECTION_ELEMENTS)

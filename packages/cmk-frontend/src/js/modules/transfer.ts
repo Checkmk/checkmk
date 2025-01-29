@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
+import {call_ajax} from "./ajax";
 
 // @ts-ignore
 declare let XDomainRequest;
@@ -16,7 +16,7 @@ export function submit_crash_report(url: string, post_data: string) {
     document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
-        ajax.call_ajax(url, {
+        call_ajax(url, {
             method: "POST",
             post_data: post_data,
             response_handler: handle_report_response,
@@ -34,7 +34,7 @@ export function submit_crash_report(url: string, post_data: string) {
         handle_report_error(
             null,
             null,
-            "Your browser does not support direct reporting."
+            "Your browser does not support direct reporting.",
         );
     }
 }
@@ -65,7 +65,7 @@ function submit_with_ie(url, post_data) {
 
 function handle_report_response(
     _handler_data: {base_url: string},
-    response_body: string
+    response_body: string,
 ) {
     hide_report_processing_msg();
 
@@ -73,13 +73,15 @@ function handle_report_response(
         const id = response_body.split(" ")[1];
         const success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         success_container.innerHTML = success_container.innerHTML.replace(
             /###ID###/,
-            id
+            id,
         );
     } else {
         const fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         fail_container.children[0].innerHTML += " (" + response_body + ").";
     }
 }
@@ -87,21 +89,25 @@ function handle_report_response(
 function handle_report_error(
     handler_data: {base_url: string} | null,
     status_code: number | null,
-    error_msg: string
+    error_msg: string,
 ) {
     hide_report_processing_msg();
 
     const fail_container = document.getElementById("fail_msg")!;
     fail_container.style.display = "block";
+    const message_element = fail_container.children[0];
     if (status_code) {
-        fail_container.children[0].innerHTML += " (HTTP: " + status_code + ").";
+        message_element.append(` (HTTP: ${status_code}).`);
     } else if (error_msg) {
-        fail_container.children[0].innerHTML += " (" + error_msg + ").";
+        message_element.append(` (${error_msg}).`);
     } else {
-        fail_container.children[0].innerHTML +=
-            " (<tt>" +
-            handler_data!["base_url"] +
-            "</tt> is not reachable. Does your browser block XMLHttpRequest requests?).";
+        const tt = document.createElement("tt");
+        tt.textContent = handler_data!["base_url"];
+        message_element.append(
+            "(",
+            tt,
+            "is not reachable. Does your browser block XMLHttpRequest requests?).",
+        );
     }
 }
 

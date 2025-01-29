@@ -11,8 +11,6 @@ import pytest
 from cmk.plugins.datadog.server_side_calls.agent_datadog import special_agent_datadog
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "params, expected_result",
@@ -44,18 +42,18 @@ pytestmark = pytest.mark.checks
                     "tags_to_show": [
                         ".*",
                     ],
-                    "syslog_facility": 1,
-                    "syslog_priority": 1,
-                    "service_level": 0,
-                    "add_text": True,
+                    "syslog_facility": ("user", 1),
+                    "syslog_priority": ("alert", 1),
+                    "service_level": ("(no Service level)", 0),
+                    "add_text": "add_text",
                 },
                 "logs": {
                     "max_age": 456,
                     "query": "test",
                     "indexes": ["t3", "t4"],
-                    "text": [("name", "key")],
-                    "syslog_facility": 1,
-                    "service_level": 0,
+                    "text": [{"name": "name", "key": "key"}],
+                    "syslog_facility": ("user", 1),
+                    "service_level": ("(no Service level)", 0),
                 },
             },
             [
@@ -115,10 +113,10 @@ pytestmark = pytest.mark.checks
                 "monitors": {},
                 "events": {
                     "max_age": 600,
-                    "syslog_facility": 1,
-                    "syslog_priority": 1,
-                    "service_level": 0,
-                    "add_text": False,
+                    "syslog_facility": ("user", 1),
+                    "syslog_priority": ("alert", 1),
+                    "service_level": ("(no Service level)", 0),
+                    "add_text": "do_not_add_text",
                 },
             },
             [

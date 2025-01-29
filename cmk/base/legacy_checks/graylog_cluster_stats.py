@@ -8,11 +8,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
+
+check_info = {}
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
@@ -81,6 +81,7 @@ def check_graylog_cluster_stats(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats"] = LegacyCheckDefinition(
+    name="graylog_cluster_stats",
     parse_function=deserialize_and_merge_json,
     service_name="Graylog Cluster Stats",
     discovery_function=discover_graylog_cluster_stats,
@@ -96,7 +97,7 @@ def inventory_graylog_cluster_stats_elastic(parsed):
     return []
 
 
-def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
+def check_graylog_cluster_stats_elastic(
     _no_item,
     params,
     parsed,
@@ -184,6 +185,7 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
 
 
 check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
+    name="graylog_cluster_stats_elastic",
     service_name="Graylog Cluster Elasticsearch Stats",
     sections=["graylog_cluster_stats"],
     discovery_function=inventory_graylog_cluster_stats_elastic,
@@ -258,6 +260,7 @@ def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats.mongodb"] = LegacyCheckDefinition(
+    name="graylog_cluster_stats_mongodb",
     service_name="Graylog Cluster MongoDB Stats",
     sections=["graylog_cluster_stats"],
     discovery_function=inventory_graylog_cluster_stats_mongodb,

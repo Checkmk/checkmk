@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=too-many-branches,no-else-break
 
 import asyncio
 from ssl import SSLObject
+from typing import override
 from urllib.parse import unquote
 
 import h11
@@ -34,6 +34,7 @@ def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:
 
 class _ClientCertProtocol(H11Protocol):
     # copied from uvicorn.protocols.http.h11_impl.H11Protocol
+    @override
     def handle_events(self) -> None:
         while True:
             try:
@@ -88,7 +89,9 @@ class _ClientCertProtocol(H11Protocol):
                     "http_version": event.http_version.decode("ascii"),
                     "server": self.server,
                     "client": self.client,
-                    "scheme": self.scheme,
+                    # Upstream also has this suppression
+                    # https://github.com/encode/uvicorn/blob/47304d9ae76321f0f5f649ff4f73e09b17085933/uvicorn/protocols/http/h11_impl.py#L210C43-L210C75
+                    "scheme": self.scheme,  # type: ignore[typeddict-item]
                     "method": event.method.decode("ascii"),
                     "root_path": self.root_path,
                     "path": unquote(raw_path.decode("ascii")),

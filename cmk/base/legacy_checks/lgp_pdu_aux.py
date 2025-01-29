@@ -36,11 +36,11 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 lgp_pdu_aux_types = {
     "0": "UNSPEC",
@@ -55,6 +55,33 @@ lgp_pdu_aux_states = [
     "open",
     "closed",
 ]
+
+
+def savefloat(f: str) -> float:
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
+    try:
+        return float(f)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
 
 _lgp_pdu_aux_fields: Mapping[str, tuple[Callable[[str], str | float | int], str]] = {
     # Index, Type, Factor, ID
@@ -81,7 +108,7 @@ def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
         type_, id_ = oid.split(".", 1)
-        if not id_ in new_info:
+        if id_ not in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
 
         try:
@@ -169,6 +196,7 @@ def parse_lgp_pdu_aux(string_table: StringTable) -> StringTable:
 
 
 check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+    name="lgp_pdu_aux",
     parse_function=parse_lgp_pdu_aux,
     detect=DETECT_LGP,
     fetch=SNMPTree(

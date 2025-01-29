@@ -5,19 +5,20 @@
 from collections.abc import Iterable
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.apc_ats import (
     CommunictionStatus,
-    DETECT,
     OverCurrentStatus,
     PowerSupplyStatus,
     RedunandancyStatus,
     Source,
     Status,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.apc import DETECT_ATS
+
+check_info = {}
 
 
 def parse_apc_ats_status(info: StringTable) -> Status | None:
@@ -85,8 +86,9 @@ def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterabl
 
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
+    name="apc_ats_status",
     parse_function=parse_apc_ats_status,
-    detect=DETECT,
+    detect=DETECT_ATS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
         oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0", "17.0", "18.0"],

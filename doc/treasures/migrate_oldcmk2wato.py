@@ -204,7 +204,7 @@ def get_hosts_mk(file_vars):
             add_wato_parameter(hostname, "parents", list(all_host_parents[hostname]))
             parent_list.append((",".join(all_host_parents[hostname]), [hostname]))
 
-    # IP Addresses
+    # IP addresses
     ip_dict = {}
     for hostname in host_dict.keys():
         if hostname in all_ipaddresses:

@@ -9,7 +9,7 @@
 set -e -o pipefail
 
 TARGET_DIR="${TARGET_DIR:-/opt}"
-if [ "$DISTRO" = "cma-3" ] || [ "$DISTRO" = "cma-4" ]; then
+if [ "$DISTRO" = "cma-4" ]; then
     # As there are no system tests for the appliance, an installation of CMK
     # dependencies is not required
     exit
@@ -36,11 +36,6 @@ cleanup() {
 extract_needed_packages
 
 case "$DISTRO" in
-    centos-*)
-        add_gpg_key
-        # shellcheck disable=SC2046  # we want word splitting here
-        yum install -y $(cat "$TARGET_DIR"/needed-packages)
-        ;;
     almalinux-*)
         add_gpg_key
         # "mod_auth_mellon" is assumed to be installed on RHEL-9 from 2.3 on

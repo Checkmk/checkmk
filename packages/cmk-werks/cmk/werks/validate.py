@@ -6,6 +6,7 @@
 import argparse
 import os
 import re
+import sys
 from pathlib import Path
 
 from . import load_werk
@@ -49,7 +50,7 @@ def main(
         except Exception as e:
             raise RuntimeError(f"Error while loading werk {werk_path}\n\n{werk_content}") from e
 
-    print(f"Successfully validated {len(werks_to_check)} werks")
+    sys.stdout.write(f"Successfully validated {len(werks_to_check)} werks\n")
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         "--version-regex",
         help="regex used to validate the version in the werk",
         default=r"^\d.\d.\d([ipb]\d+)?$",
-        type=lambda x: re.compile(x),  # pylint: disable=unnecessary-lambda
+        type=lambda x: re.compile(x),
     )
     parser.add_argument(
         "--werk-config",

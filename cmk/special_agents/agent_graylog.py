@@ -59,7 +59,7 @@ def main(argv=None):
     return 0
 
 
-def handle_request(args, sections):  # pylint: disable=too-many-branches
+def handle_request(args, sections):
     url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
 
     for section in sections:
@@ -221,7 +221,7 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 def handle_response(url, args, method="GET", events_since=86400):
     if method == "POST":
         try:
-            response = requests.post(  # nosec B113
+            response = requests.post(  # nosec B113 # BNS:0b0eac
                 url,
                 auth=(args.user, args.password),
                 headers={
@@ -237,7 +237,7 @@ def handle_response(url, args, method="GET", events_since=86400):
 
     else:
         try:
-            response = requests.get(url, auth=(args.user, args.password))  # nosec B113
+            response = requests.get(url, auth=(args.user, args.password))  # nosec B113 # BNS:0b0eac
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:
@@ -329,7 +329,7 @@ def parse_arguments(argv):
         "-m",
         "--sections",
         default=sections,
-        help="""Comma seperated list of data to query. Possible values: %s (default: all)"""
+        help="""Comma separated list of data to query. Possible values: %s (default: all)"""
         % ", ".join(sections),
     )
     parser.add_argument(

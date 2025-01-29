@@ -80,13 +80,12 @@ def markdown_to_nowiki(content: str) -> str:
                 if element.text is not None or element:
                     yield _render_children(element)
                     yield ""
+                elif element[0].tag == "code":
+                    yield "C+:"
+                    yield _render_children(element[0])
+                    yield "\n----\nC-:\n"
                 else:
-                    if element[0].tag == "code":
-                        yield "C+:"
-                        yield _render_children(element[0])
-                        yield "\n----\nC-:\n"
-                    else:
-                        raise NotImplementedError()
+                    raise NotImplementedError()
             elif element.tag == "ul":
                 for li in element:
                     yield f"LI: {_render_children(li)}"

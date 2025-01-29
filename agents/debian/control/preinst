@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# In case of an upgrade, we must cleanup here.
-# 'preun' runs after the new scripts have been deployed
-# (too late cleanup files only deployed by the old package).
+# In case of changed installation directories, cleaning up here is not effective,
+# but must happen on preremove instead.
+# We still have to keep it here because the old package may be missing the preremove script.
 if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
     /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 fi

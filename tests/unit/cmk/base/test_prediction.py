@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import datetime
 import math
 import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from pprint import pprint
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -136,11 +134,8 @@ def test_time_slices(
         tick=False,
     ):
         timestamp = time.time()
-        print(timestamp)
 
         slices = _grouping.time_slices(int(timestamp), horizon, period_name)
-        pprint([("ontz", x, time.ctime(x), time.ctime(y)) for x, y in slices])
-    pprint([("sys", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result
 
 

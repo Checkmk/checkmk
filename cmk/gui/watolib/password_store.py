@@ -7,11 +7,12 @@ import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
-from cmk.utils import password_store, store
-from cmk.utils.config_validation_layer.passwords import validate_passwords
+from cmk.ccc import store
+
+from cmk.utils import password_store
 from cmk.utils.password_store import Password
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
@@ -24,6 +25,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "passwords.mk",
             config_variable="stored_passwords",
+            spec_class=Password,
         )
 
     def filter_usable_entries(self, entries: dict[str, Password]) -> dict[str, Password]:
@@ -60,14 +62,12 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
             ),
             password_store.load(password_store.password_store_path()),
         )
-        validate_passwords(cfg)
         return cfg
 
     def save(self, cfg: Mapping[str, Password]) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
-        validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data)
         password_store.save(passwords, password_store.password_store_path())
@@ -76,7 +76,9 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
 
 def update_passwords_merged_file() -> None:
     # update the "live" merged passwords file
-    subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
+    subprocess.check_call(
+        ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+    )
 
 
 def join_password_specs(
@@ -91,7 +93,7 @@ def join_password_specs(
 
 
 def split_password_specs(
-    joined: Mapping[str, Password]
+    joined: Mapping[str, Password],
 ) -> tuple[dict[str, Password], dict[str, str]]:
     """Separate passwords from meta data"""
     meta_data, passwords = {}, {}
@@ -109,6 +111,12 @@ def passwordstore_choices() -> Choices:
         (ident, pw["title"])
         for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
     ]
+
+
+# TODO remove this once a solution for use of passwordstore_choices is found
+def passwordstore_choices_without_user() -> Choices:
+    pw_store = PasswordStore()
+    return [(ident, pw["title"]) for ident, pw in pw_store.load_for_reading().items()]
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

@@ -5,12 +5,11 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.api.agent_based.register import AgentBasedPlugins
+
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 
 
 @pytest.mark.parametrize(
@@ -36,8 +35,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
     ],
 )
 def test_check_aws_elb_statistics(
-    fix_register: FixRegister, string_table: StringTable, expected_result: CheckResult
+    agent_based_plugins: AgentBasedPlugins, string_table: StringTable, expected_result: CheckResult
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("aws_elb")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("aws_elb")]
     result = list(check_plugin.check_function(item=None, params={}, section=string_table))
     assert result == expected_result

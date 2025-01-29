@@ -7,12 +7,13 @@
 
 #include <cctype>
 #include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 using namespace std::string_view_literals;
 
 // The states of our tiny finite state machine to parse the performance data.
-enum class state {
+enum class state : std::uint8_t {
     start,
     single_quoted,
     quote_within_quote,
@@ -26,6 +27,7 @@ enum class state {
     error
 };
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 PerformanceData::PerformanceData(
     const std::string &perf_data,
     const std::string &default_check_command_name) {

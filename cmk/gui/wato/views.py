@@ -6,11 +6,12 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.gui.config import Config
 from cmk.gui.http import Request
-from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.i18n import _, _l
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
@@ -65,15 +66,15 @@ def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Req
     if how == "plain":
         return title_path[-1]
     if how == "abs":
-        return HTML(" / ").join(title_path)
+        return HTML.without_escaping(" / ").join(title_path)
     # We assume that only hosts are show, that are below the current Setup path.
     # If not then better output absolute path then wrong path.
     current_path = request.var("wato_folder")
     if not current_path or not wato_path.startswith(current_path):
-        return HTML(" / ").join(title_path)
+        return HTML.without_escaping(" / ").join(title_path)
 
     depth = current_path.count("/") + 1
-    return HTML(" / ").join(title_path[depth:])
+    return HTML.without_escaping(" / ").join(title_path[depth:])
 
 
 def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:
@@ -165,52 +166,58 @@ def _get_wato_folder_text(r: Row, how: str, *, request: Request) -> str:
     return str(get_wato_folder(r, how, False, request=request))
 
 
-class SorterWatoFolderAbs(Sorter):
-    @property
-    def ident(self) -> str:
-        return "wato_folder_abs"
-
-    @property
-    def title(self) -> str:
-        return _("Folder - complete path")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "abs", request=self.request)
+def _sort_wato_folder_abs(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_wato_folder(r1, r2, "abs", request=request)
 
 
-class SorterWatoFolderRel(Sorter):
-    @property
-    def ident(self) -> str:
-        return "wato_folder_rel"
-
-    @property
-    def title(self) -> str:
-        return _("Folder - relative path")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "rel", request=self.request)
+SorterWatoFolderAbs = Sorter(
+    ident="wato_folder_abs",
+    title=_l("Folder - complete path"),
+    columns=["host_filename"],
+    sort_function=_sort_wato_folder_abs,
+)
 
 
-class SorterWatoFolderPlain(Sorter):
-    @property
-    def ident(self) -> str:
-        return "wato_folder_plain"
+def _sort_wato_folder_rel(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_wato_folder(r1, r2, "rel", request=request)
 
-    @property
-    def title(self) -> str:
-        return _("Folder - just folder name")
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
+SorterWatoFolderRel = Sorter(
+    ident="wato_folder_rel",
+    title=_l("Folder - relative path"),
+    columns=["host_filename"],
+    sort_function=_sort_wato_folder_rel,
+)
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "plain", request=self.request)
+
+def _sort_wato_folder_plain(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_wato_folder(r1, r2, "plain", request=request)
+
+
+SorterWatoFolderPlain = Sorter(
+    ident="wato_folder_plain",
+    title=_l("Folder - just folder name"),
+    columns=["host_filename"],
+    sort_function=_sort_wato_folder_plain,
+)

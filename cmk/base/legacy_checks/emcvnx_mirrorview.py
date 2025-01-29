@@ -73,8 +73,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_emcvnx_mirrorview(string_table):
@@ -97,15 +98,14 @@ def parse_emcvnx_mirrorview(string_table):
 
             if line[0] == "Images":
                 instance.setdefault("Images", {})
-            else:
-                if "Images" in instance:
-                    if line[0] == "Image UID":
-                        image_uid = lun_value
-                        instance["Images"].setdefault(image_uid, {})
-                    else:
-                        instance["Images"][image_uid][line[0]] = lun_value
+            elif "Images" in instance:
+                if line[0] == "Image UID":
+                    image_uid = lun_value
+                    instance["Images"].setdefault(image_uid, {})
                 else:
-                    instance[line[0]] = lun_value
+                    instance["Images"][image_uid][line[0]] = lun_value
+            else:
+                instance[line[0]] = lun_value
     return parsed
 
 
@@ -136,6 +136,7 @@ def check_emcvnx_mirrorview(item, params, parsed):
 
 
 check_info["emcvnx_mirrorview"] = LegacyCheckDefinition(
+    name="emcvnx_mirrorview",
     parse_function=parse_emcvnx_mirrorview,
     service_name="Mirror view %s",
     discovery_function=inventory_emcvnx_mirrorview,

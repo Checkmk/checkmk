@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.structured_data import ImmutableTree, SDNodeName
+import pytest
 
-from cmk.gui.painter.v0.base import JoinCell
+from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeName
+
+from cmk.gui.painter.v0 import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
-from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
+from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 
 
+@pytest.mark.usefixtures("request_context")
 def test_row_post_processor() -> None:
     class _FakeJoinCell(JoinCell):
         def painter_parameters(self) -> PainterParameters | None:
@@ -22,7 +25,7 @@ def test_row_post_processor() -> None:
             "invorainstance_sid": "sid1",
             "invorainstance_version": "version1",
             "invorainstance_bar": "bar",
-            "host_inventory": ImmutableTree.deserialize(
+            "host_inventory": deserialize_tree(
                 {
                     "Attributes": {},
                     "Nodes": {
@@ -92,6 +95,14 @@ def test_row_post_processor() -> None:
                 }
             ),
         },
+        {
+            "site": "mysite2",
+            "host_name": "my-host-name2",
+            "invorainstance_sid": "sid1",
+            "invorainstance_version": "version1",
+            "invorainstance_bar": "bar",
+            "host_inventory": ImmutableTree(),
+        },
     ]
 
     expected_len = len(rows)
@@ -116,6 +127,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Match 'version'
             _FakeJoinCell(
@@ -130,6 +142,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Match 'bar', not unique
             _FakeJoinCell(
@@ -144,6 +157,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Unknown macro
             _FakeJoinCell(
@@ -158,6 +172,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
             # Unknown node
             _FakeJoinCell(
@@ -172,6 +187,7 @@ def test_row_post_processor() -> None:
                     _column_type="join_inv_column",
                 ),
                 "",
+                painter_registry,
             ),
         ],
         view_datasource_ident="invorainstance",
@@ -189,7 +205,7 @@ def test_row_post_processor() -> None:
                 "invorainstance_sid": "sid1",
                 "invorainstance_version": "version1",
                 "invorainstance_bar": "bar",
-                "host_inventory": ImmutableTree.deserialize(
+                "host_inventory": deserialize_tree(
                     {
                         "Attributes": {},
                         "Nodes": {

@@ -30,7 +30,7 @@ description:
  Without the restrictive option {SITES} all sites on that server are
  considered which satisfy above conditions.
 
- If more than one value is assigned they have to be separated by one space, eg.
+ If more than one value is assigned they have to be separated by one space, e.g.
 
  - {TAGS=prod snmp}
 

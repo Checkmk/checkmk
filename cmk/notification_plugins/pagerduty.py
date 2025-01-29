@@ -7,13 +7,14 @@ Send notification messages to PagerDuty
 =======================================
 
 """
+
 from typing import Any
 
 from cmk.notification_plugins.utils import (
+    get_password_from_env_or_context,
     host_url_from_context,
     post_request,
     process_by_status_code,
-    retrieve_from_passwordstore,
     service_url_from_context,
 )
 
@@ -66,7 +67,9 @@ def _pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
         incident_url = host_url_from_context(context)
 
     msg_payload = {
-        "routing_key": retrieve_from_passwordstore(context["PARAMETER_ROUTING_KEY"]),
+        "routing_key": get_password_from_env_or_context(
+            key="PARAMETER_ROUTING_KEY", context=context
+        ),
         "event_action": pagerduty_event_type(context["NOTIFICATIONTYPE"]),
         "dedup_key": incident_key,
         "payload": {

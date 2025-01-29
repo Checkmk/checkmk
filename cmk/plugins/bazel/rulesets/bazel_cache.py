@@ -30,14 +30,14 @@ def _formspec_bazel_cache() -> Dictionary:
             "user": DictElement(
                 parameter_form=String(
                     title=Title("Bazel Cache User"),
-                    help_text=Help("The username used to connect to the Bazel Cache"),
+                    help_text=Help("The username used to connect to the Bazel cache"),
                 ),
                 required=False,
             ),
             "password": DictElement(
                 parameter_form=Password(
-                    title=Title("Bazel Cache Password"),
-                    help_text=Help("The password used to connect to the Bazel Cache"),
+                    title=Title("Bazel Cache password"),
+                    help_text=Help("The password used to connect to the Bazel cache"),
                     migrate=migrate_to_password,
                 ),
                 required=False,

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<table width="100%"
+       height="124"
+       style="border-collapse: collapse;
+              mso-table-lspace: 0pt;
+              mso-table-rspace: 0pt;
+              min-width: 220px;
+              max-width: 536px"
+       align="center"
+       cellspacing="0"
+       cellpadding="0"
+       border="0">
+    <tr align="left" style=" background-color: #F1F1F1; height: 35px; ">
+        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Host</th>
+        <th align="left"
+            style="border: 1px solid #DFDFDF;
+                   padding-left: 2%;
+                   mso-line-height-rule: exactly">Service</th>
+        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Event</th>
+        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Event date</th>
+    </tr>
+    {% for entry in bulk_summary %}
+        {% set bulk_service_notification = entry.WHAT == 'SERVICE' %}
+        <tr style=" border: 1px solid #DFDFDF; height: 35px; ">
+            <td style=" border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; width: 15%; ">{{ entry.LINKEDHOSTNAME | safe }}</td>
+            <td style=" border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; ">
+                {% if bulk_service_notification %}{{ entry.LINKEDSERVICEDESC | safe }}{% endif %}
+            </td>
+            <td height="33"
+                style="font-size: 14px;
+                       font-weight: 600;
+                       border-bottom: 1px solid #e5e5e5;
+                       color: #2c3844">
+                <table style="border-collapse: collapse;" align="center">
+                    <tr>
+                        <td style="padding: 0; vertical-align: middle;">
+                            <div style="{{ macros.event_marker_bulk_style() }};
+                                        {% if service_notification %} {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }} {% endif %};
+                                        display: inline-block;
+                                        /* Inline block to respect width */">
+                                {% if service_notification %}
+                                    {{ data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                {% else %}
+                                    {{ data.PREVIOUSHOSTHARDSTATE[:4] }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="padding: 0 5px;
+                                   vertical-align: middle;
+                                   text-align: center;
+                                   line-height: 1;
+                                   height: 33px">
+                            <!--[if mso]>
+                            <div style="margin-top: 5px;">
+                            <![endif]-->
+                            <div style="font-size: 14px;
+                                        font-weight: 600;
+                                        line-height: 1.5;
+                                        display: inline-block">&#8211;&#8250;</div>
+                            <!--[if mso]>
+                            </div>
+                            <![endif]-->
+                        </td>
+                        <td style="padding: 0; vertical-align: middle;">
+                            <div style="{{ macros.event_marker_bulk_style() }};
+                                        {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %};
+                                        display: inline-block;
+                                        /* Inline block to respect width */">
+                                {% if service_notification %}
+                                    {{ data.SERVICESTATE[:4] }}
+                                {% else %}
+                                    {{ data.HOSTSTATE[:4] }}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td style=" border: 1px solid #DFDFDF; width: 27%; padding: 0% 2% 0 2%; ">{{ entry.LONGDATETIME }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<table width="100%"
+       align="center"
+       style="min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td>
+            <a href="#"
+               class="view_graph"
+               style="color: black;
+                      display: block;
+                      height: 16px;
+                      font-size: 14px;
+                      color: #2c3843;
+                      line-height: 24px">View event history</a>
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+</table>

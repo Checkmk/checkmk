@@ -10,8 +10,9 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
@@ -32,9 +33,7 @@ from .snmp import make_backend, SNMPPluginStore
 __all__ = ["SNMPFetcher", "SNMPSectionMeta", "SNMPScanConfig"]
 
 
-class WalkCache(
-    MutableMapping[tuple[str, str, bool], SNMPRowInfo]
-):  # pylint: disable=too-many-ancestors
+class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
     """A cache on a per-fetchoid basis
 
     This cache is different from section stores in that is per-fetchoid,
@@ -121,28 +120,13 @@ class WalkCache(
             self._write_row(path, rowinfo)
 
 
-@dataclasses.dataclass(init=False)
+@dataclasses.dataclass(kw_only=True)
 class SNMPSectionMeta:
     """Metadata for the section names."""
 
     checking: bool
     disabled: bool
     redetect: bool
-    fetch_interval: int | None
-
-    def __init__(
-        self,
-        *,
-        checking: bool,
-        disabled: bool,
-        redetect: bool,
-        fetch_interval: int | None,
-    ) -> None:
-        # There does not seem to be a way to have kwonly dataclasses.
-        self.checking = checking
-        self.disabled = disabled
-        self.redetect = redetect
-        self.fetch_interval = fetch_interval
 
     def serialize(self) -> Mapping[str, Any]:
         return dataclasses.asdict(self)
@@ -302,7 +286,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         """
         if self._backend is None:
-            raise MKFetcherError("missing backend")
+            raise TypeError("missing backend")
 
         now = int(time.time())
         persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}
@@ -351,10 +335,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         cls,
         section_names: Iterable[SectionName],
     ) -> Sequence[SectionName]:
-        # In former Checkmk versions (<=1.4.0) CPU check plugins were
-        # checked before other check plugins like interface checks.
+        # In former Checkmk versions (<=1.4.0) CPU check plug-ins were
+        # checked before other check plug-ins like interface checks.
         # In Checkmk 1.5 the order was random and
-        # interface sections where executed before CPU check plugins.
+        # interface sections where executed before CPU check plug-ins.
         # This lead to high CPU utilization sent by device. Thus we have
         # to re-order the section names.
         return sorted(

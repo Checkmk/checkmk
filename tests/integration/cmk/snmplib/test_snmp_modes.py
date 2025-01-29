@@ -169,7 +169,9 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = dataclasses.replace(default_config(backend_type), ipaddress=HostAddress("bla.local"))
+    config = dataclasses.replace(
+        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+    )
 
     assert get_single_oid(site, ".1.3.6.1.2.1.1.7.0", backend_type, config)[0] is None
 

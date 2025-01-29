@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
 import os
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -19,7 +18,7 @@ import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
 
-from cmk.utils import version
+from cmk.ccc import version
 
 
 def test_initialize_site_ca(
@@ -60,69 +59,9 @@ def test_hostname() -> None:
 
 
 def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    omdlib.main.main_help(object(), object())
+    omdlib.main.main_help()
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
-
-
-def test_sitename_must_be_valid_ok(tmp_path: Path) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-    assert omdlib.main.sitename_must_be_valid(SiteContext("lulu")) is None
-
-
-@pytest.mark.parametrize(
-    "name,expected_result",
-    [
-        ("0asd", False),
-        ("asd0", True),
-        ("", False),
-        ("aaaaaaaaaaaaaaaa", True),
-        ("aaaaaaaaaaaaaaaaa", False),
-    ],
-)
-def test_sitename_must_be_valid_regex(tmp_path: Path, name: str, expected_result: bool) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-
-    if expected_result:
-        assert omdlib.main.sitename_must_be_valid(SiteContext(name)) is None
-    else:
-        with pytest.raises(SystemExit, match="Invalid site name"):
-            omdlib.main.sitename_must_be_valid(SiteContext(name))
-
-
-def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-
-    with pytest.raises(SystemExit, match="already existing"):
-        omdlib.main.sitename_must_be_valid(SiteContext("lala"))
-
-
-def test_get_orig_working_directory(tmp_path: Path) -> None:
-    orig_wd = os.getcwd()
-    try:
-        base_path = tmp_path.joinpath("lala")
-        base_path.mkdir(parents=True)
-        os.chdir(str(base_path))
-        assert omdlib.main._get_orig_working_directory() == str(base_path)
-    finally:
-        os.chdir(orig_wd)
-
-
-def test_get_orig_working_directory_not_existing(tmp_path: Path) -> None:
-    orig_wd = os.getcwd()
-    try:
-        test_dir = tmp_path.joinpath("lala")
-        test_dir.mkdir()
-
-        os.chdir(str(test_dir))
-        assert os.getcwd() == str(test_dir)
-
-        test_dir.rmdir()
-        assert not test_dir.exists()
-
-        assert omdlib.main._get_orig_working_directory() == "/"
-    finally:
-        os.chdir(orig_wd)
 
 
 @pytest.mark.parametrize("edition", list(version.Edition))
@@ -424,9 +363,47 @@ def test_permission_action_all_changed_streamline_standard_directories(relpath: 
             old_type="dir",
             new_type="dir",
             user_type="dir",
-            old_perm=int(0o775),
-            new_perm=int(0o770),
-            user_perm=int(0o750),
+            old_perm=0o775,
+            new_perm=0o770,
+            user_perm=0o750,
         )
         == "default"
     )
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        ("2.0.0p39.cee", ["check-mk-enterprise-2.0.0p39"]),
+        ("2.1.0p45.cee", ["check-mk-enterprise-2.1.0p45"]),
+        ("2.3.0.cee", ["check-mk-enterprise-2.3.0"]),
+        ("2.3.0p10.cce", ["check-mk-cloud-2.3.0p10"]),
+        ("2.3.0p10.cme", ["check-mk-managed-2.3.0p10"]),
+        ("2.3.0-2024.07.16.cee", ["check-mk-enterprise-2.3.0-2024.07.16"]),
+        ("2.4.0-2024.07.16.cee", ["check-mk-enterprise-2.4.0-2024.07.16"]),
+    ],
+)
+def test_select_matching_packages(version: str, expected: Sequence[str]) -> None:
+    installed_packages = [
+        "check-mk-agent",
+        "check-mk-cloud-2.3.0p10",
+        "check-mk-cloud-2.3.0p8",
+        "check-mk-enterprise-2.0.0p39",
+        "check-mk-enterprise-2.1.0p45",
+        "check-mk-enterprise-2.2.0p11",
+        "check-mk-enterprise-2.2.0p23",
+        "check-mk-enterprise-2.3.0",
+        "check-mk-enterprise-2.3.0-2024.07.16",
+        "check-mk-enterprise-2.3.0p9",
+        "check-mk-enterprise-2.4.0-2024.07.16",
+        "check-mk-free-2.1.0p40",
+        "check-mk-free-2.1.0p41",
+        "check-mk-managed-2.3.0p10",
+        "check-mk-managed-2.3.0p7",
+        "check-mk-raw-2.2.0p26",
+        "check-mk-raw-2.3.0p7",
+        "check-mk-raw-2.4.0-2024.03.18",
+        "check-mk-raw-2.4.0-2024.04.16",
+        "cheese",
+    ]
+    assert omdlib.main.select_matching_packages(version, installed_packages) == expected

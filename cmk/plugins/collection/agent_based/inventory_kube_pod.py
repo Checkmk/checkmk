@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Iterable
 
 from cmk.agent_based.v2 import (
@@ -24,7 +23,7 @@ def parse_kube_pod_container_specs(string_table: StringTable) -> ContainerSpecs:
     >>> parse_kube_pod_container_specs([['{"containers": {"coredns": {"image_pull_policy": "IfNotPresent"}}}']])
     ContainerSpecs(containers={'coredns': ContainerSpec(image_pull_policy='IfNotPresent')})
     """
-    return ContainerSpecs(**json.loads(string_table[0][0]))
+    return ContainerSpecs.model_validate_json(string_table[0][0])
 
 
 agent_section_kube_pod_container_specs_v1 = AgentSection(

@@ -4,15 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
+from typing import assert_never
 
 from livestatus import LivestatusResponse
 
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 from cmk.gui import sites, visuals
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing._formatter import AutoPrecision, IECFormatter, StrictPrecision
+from cmk.gui.graphing._legacy import UnitInfo
+from cmk.gui.graphing._metrics import MetricSpec
+from cmk.gui.graphing._translated_metrics import TranslatedMetric
+from cmk.gui.graphing._unit import (
+    ConvertibleUnitSpecification,
+    user_specific_unit,
+    UserSpecificUnit,
+)
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -32,17 +44,12 @@ def service_table_query(
 def _table_query(
     context: VisualContext, table: str, columns: Iterable[ColumnName], infos: list[str]
 ) -> tuple[list[ColumnName], LivestatusResponse]:
-    filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
+    filter_headers, only_sites = visuals.get_filter_headers(infos, context)
 
-    query = (
-        f"GET {table}\n"
-        "Columns: %(cols)s\n"
-        "%(filter)s"
-        % {
-            "cols": " ".join(columns),
-            "filter": filter_headers,
-        }
-    )
+    query = f"GET {table}\nColumns: %(cols)s\n%(filter)s" % {
+        "cols": " ".join(columns),
+        "filter": filter_headers,
+    }
 
     with sites.only_sites(only_sites), sites.prepend_site():
         try:
@@ -80,10 +87,53 @@ def create_service_view_url(context):
     )
 
 
-def purge_metric_for_js(metric):
+def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
+    return {"bounds": {}} | _purge_unit_spec_for_js(metric_spec.unit_spec)
+
+
+def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
+    return {"bounds": translated_metric.scalar} | _purge_unit_spec_for_js(
+        translated_metric.unit_spec
+    )
+
+
+def _purge_unit_spec_for_js(
+    unit_spec: UnitInfo | ConvertibleUnitSpecification,
+) -> dict[str, object]:
     return {
-        "bounds": metric.get("scalar", {}),
-        "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]},
+        "unit": (
+            {
+                "js_render": unit_spec.js_render,
+                "stepping": unit_spec.stepping,
+            }
+            if isinstance(unit_spec, UnitInfo)
+            else _transform_user_specific_unit_for_js(
+                user_specific_unit(
+                    unit_spec,
+                    user,
+                    active_config,
+                )
+            )
+        ),
+    }
+
+
+def _transform_user_specific_unit_for_js(
+    unit_for_current_user: UserSpecificUnit,
+) -> dict[str, object]:
+    match unit_for_current_user.formatter.precision:
+        case AutoPrecision():
+            js_precision = "AutoPrecision"
+        case StrictPrecision():
+            js_precision = "StrictPrecision"
+        case _:
+            assert_never(unit_for_current_user.formatter)
+    return {
+        "js_render": f"""v => new cmk.number_format.{unit_for_current_user.formatter.js_formatter_name}(
+    "{unit_for_current_user.formatter.symbol}",
+    new cmk.number_format.{js_precision}({unit_for_current_user.formatter.precision.digits}),
+).render(v)""",
+        "stepping": "binary" if isinstance(unit_for_current_user.formatter, IECFormatter) else None,
     }
 
 

@@ -7,6 +7,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"

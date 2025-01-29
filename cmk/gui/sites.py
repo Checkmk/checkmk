@@ -23,20 +23,24 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
+
+from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
-from cmk.utils.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.flask_app import current_app
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.compatibility import (
     is_distributed_monitoring_compatible_for_licensing,
     LicensingCompatibility,
@@ -106,7 +110,8 @@ def cleanup_connections() -> Iterator[None]:
 # sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
-    if not g:
+    # NOTE: g.__bool__() *can* return False due to the LocalProxy Kung Fu!
+    if not g:  # type: ignore[truthy-bool]
         return
     logger.debug("Disconnecting site connections")
     if "live" in g:
@@ -132,9 +137,7 @@ def all_groups(what: str) -> list[tuple[str, str]]:
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
-    query = (
-        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
-    )
+    query = "GET hosts\nCache: reload\nColumns: alias\nFilter: name = %s" % lqencode(host_name)
 
     with only_sites(site_id):
         try:
@@ -273,13 +276,15 @@ def _inhibit_incompatible_site_connection(
     }
 
 
-ConnectionClass = MultiSiteConnection
-
-
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
-    g.live = ConnectionClass(enabled_sites, disabled_sites)
+
+    g.live = MultiSiteConnection(
+        sites=enabled_sites,
+        disabled_sites=disabled_sites,
+        only_sites_postprocess=current_app().features.livestatus_only_sites_postprocess,
+    )
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
@@ -315,7 +320,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             )
             continue
 
-        central_edition = edition()
+        central_edition = edition(paths.omd_root)
         central_version = __version__
         remote_edition = _edition_from_livestatus(remote_edition)
         central_license_state = get_license_state()
@@ -364,7 +369,7 @@ def _get_enabled_and_disabled_sites(
     for site_id, site_spec in user.authorized_sites().items():
         site_spec = _site_config_for_livestatus(site_id, site_spec)
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        # pylint: disable=unsupported-assignment-operation
+
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec
         else:
@@ -386,9 +391,8 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     if site_spec.get("proxy") is not None:
         assert site_spec["proxy"] is not None
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
-    else:
-        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
-            copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
+    elif isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+        copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site
@@ -443,7 +447,10 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> dict[str, str]:
+def site_state_titles() -> dict[
+    Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
+    str,
+]:
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),
@@ -452,6 +459,7 @@ def site_state_titles() -> dict[str, str]:
         "dead": _("This site is not responding."),
         "waiting": _("The status of this site has not yet been determined."),
         "missing": _("This site does not exist."),
+        "unknown": _("The status of this site could not be determined."),
     }
 
 
@@ -590,3 +598,14 @@ def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tup
             continue
         sites_enabled.append(entry)
     return sites_enabled
+
+
+def site_choices() -> list[tuple[str, str]]:
+    return sorted(
+        [
+            (sitename, get_site_config(active_config, sitename)["alias"])
+            for sitename, state in states().items()
+            if state["state"] == "online"
+        ],
+        key=lambda a: a[1].lower(),
+    )

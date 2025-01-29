@@ -505,8 +505,8 @@ function Clear-All() {
     }
 
     Write-Host "Cleaning packages..."
-    Build-Package $true "cmk-agent-ctl" "Controller" "--clean"
-    Build-Package $true "mk-sql" "MK-SQL" "--clean"
+    Build-Package $true "host/cmk-agent-ctl" "Controller" "--clean"
+    Build-Package $true "host/mk-sql" "MK-SQL" "--clean"
 
     Clear-Artifacts
 
@@ -541,8 +541,8 @@ try {
     Clear-Artifacts
     Clear-All
     Build-Agent
-    Build-Package $argCtl "cmk-agent-ctl" "Controller"
-    Build-Package $argSql "mk-sql" "MK-SQL"
+    Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
+    Build-Package $argSql "host/mk-sql" "MK-SQL"
     Build-Ohm
     Build-Ext
     Build-MSI

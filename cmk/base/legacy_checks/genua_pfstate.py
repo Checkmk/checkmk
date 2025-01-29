@@ -5,17 +5,30 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
+
+check_info = {}
 
 # Example Agent Output:
 # GENUA-MIB:
 # .1.3.6.1.4.1.3717.2.1.1.6.1 = INTEGER: 300000
 # .1.3.6.1.4.1.3717.2.1.1.6.2 = INTEGER: 1268
 # .1.3.6.1.4.1.3717.2.1.1.6.3 = INTEGER: 1
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def discover_genua_pfstate(string_table: StringTable) -> DiscoveryResult:
@@ -70,6 +83,7 @@ def parse_genua_pfstate(string_table: Sequence[StringTable]) -> Sequence[StringT
 
 
 check_info["genua_pfstate"] = LegacyCheckDefinition(
+    name="genua_pfstate",
     parse_function=parse_genua_pfstate,
     detect=DETECT_GENUA,
     fetch=[

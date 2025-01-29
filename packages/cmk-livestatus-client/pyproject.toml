@@ -1,11 +1,14 @@
 [project]
 name = "cmk-livestatus-client"
 version = "1.0.0"
-dependencies = []
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools]
 # cmk.livestatus_client was exposed as livestatus from the beginning of Checkmk.
@@ -18,51 +21,9 @@ packages = ["cmk", "cmk.livestatus_client", "livestatus"]
 
 [tool.bandit]
 
-[tool.black]
-line_length = 100
-quiet = true
+[tool.ruff]
+target-version = "py312"
+line-length = 100
 
-[tool.isort]
-profile = "black"
-order_by_type = false
-line_length = 100
-py_version = 312
-
-[tool.mypy]
-explicit_package_bases = true
-packages = ["cmk", "tests"]
-strict = true
-# Miscellaneous stuff not in --strict
-disallow_any_decorated = true
-# TODO: Disabled for initial move to a package
-disallow_any_explicit = false
-# TODO: Disabled for initial move to a package
-disallow_any_expr = false
-disallow_any_generics = true
-disallow_any_unimported = true
-disallow_subclassing_any = true
-no_implicit_optional = true
-strict_optional = true
-warn_unreachable = true
-# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
-disable_bytearray_promotion = true
-disable_memoryview_promotion = true
-
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = [
-  # We should at least document modules and classes. :-/
-  "missing-class-docstring",
-  "missing-function-docstring",
-  # Instead of suppressing TODOs, we should actually fix them. :-/
-  "fixme",
-]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
-testpaths = ["cmk", "tests"]
-addopts = "--doctest-modules --import-mode=importlib"
+[tool.ruff.lint.isort]
+order-by-type = false

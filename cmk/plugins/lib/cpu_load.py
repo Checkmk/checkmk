@@ -5,7 +5,8 @@
 
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import CheckResult, Result, State
 
 from .cpu import ProcessorType, Section
@@ -88,7 +89,7 @@ def _check_cpu_load_type(
         levels_upper = (
             (levels[0] * num_cpus, levels[1] * num_cpus) if isinstance(levels, tuple) else None
         )
-        yield from check_levels(
+        yield from check_levels_v1(
             value,
             metric_name=f"load{avg}",
             levels_upper=levels_upper,
@@ -98,7 +99,9 @@ def _check_cpu_load_type(
         )
 
     # provide additional info text
-    per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    per_core_txt = (
+        f"{avg} min load per core: {(value / num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    )
     yield (
         Result(state=State.OK, notice=per_core_txt)
         if notice_only

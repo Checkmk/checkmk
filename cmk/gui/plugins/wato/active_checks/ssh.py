@@ -20,7 +20,7 @@ def _valuespec_active_checks_ssh():
             (
                 "description",
                 TextInput(
-                    title=_("Service Description"),
+                    title=_("Service description"),
                 ),
             ),
             (
@@ -33,7 +33,7 @@ def _valuespec_active_checks_ssh():
             (
                 "timeout",
                 Integer(
-                    title=_("Connect Timeout"),
+                    title=_("Connect timeout"),
                     help=_("Seconds before connection times out"),
                     default_value=10,
                 ),

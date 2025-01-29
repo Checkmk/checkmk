@@ -15,19 +15,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import logging
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../../../"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-agent-based"))
+sys.path.insert(0, os.path.abspath("../../../packages/cmk-crypto"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-graphing"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-rulesets"))
 sys.path.insert(0, os.path.abspath("../../../packages/cmk-server-side-calls"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Checkmk's Plugin APIs"
-copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin
+project = "Checkmk's Plug-in APIs"
+copyright = "2023, Checkmk GmbH"  # noqa: A001
 author = "Checkmk GmbH"
 
 # -- General configuration ---------------------------------------------------
@@ -41,6 +43,34 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_rtd_theme",
 ]
+
+# Ignore unneeded dependencies during sphinx doc build time for now.
+#
+# The better way to deal with it would be to create a dedicated venv for the plugin API doc
+# generator which pulls in our packages as dependencies. This way we would ensure that all
+# dependencies are available during the sphinx execution. But since the documented modules
+# cmk.base.plugins.bakery.bakery_api and
+# cmk.cee.dcd.plugins.connectors.connectors_api
+# are not separate packages right now, we can not move on with this.
+autodoc_mock_imports = [
+    "cmk.trace",
+    "livestatus",
+    "cryptography",
+]
+
+suppress_warnings = [
+    # Our v1 and v2 APIs expose Result and Metric which is totally fine. Silence the warning.
+    "ref.python",
+]
+
+# The warnings "*:docstring of cmk.agent_based.v1._value_store_utils.GetRateError:1: WARNING:
+# duplicate object description of cmk.agent_based.v1._value_store_utils.GetRateError, other instance
+# in cmk.agent_based/v1, use :no-index: for one of them" is similar to the warning suppressed above
+# and built like this intentionally. Since this warning can not be suppressed using the sphinx
+# suppress_warnings feature we filter out the log message.
+logging.getLogger("sphinx").addFilter(
+    lambda s: "duplicate object description of cmk.agent_based.v1" not in s.getMessage()
+)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

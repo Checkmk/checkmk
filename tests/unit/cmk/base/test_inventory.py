@@ -15,6 +15,8 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
+    _serialize_retention_interval,
+    deserialize_tree,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
@@ -23,6 +25,7 @@ from cmk.utils.structured_data import (
     SDKey,
     SDNodeName,
     SDRowIdent,
+    serialize_tree,
     UpdateResult,
 )
 
@@ -160,7 +163,7 @@ def test__inventorize_real_host_only_items() -> None:
         previous_tree=ImmutableTree(),
     )
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -348,7 +351,9 @@ def test__inventorize_real_host_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
+            "Retentions": {
+                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+            },
         }
     else:
         raw_attributes = {
@@ -362,14 +367,14 @@ def test__inventorize_real_host_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()}
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -557,7 +562,9 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
+            "Retentions": {
+                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+            },
         }
     else:
         raw_attributes = {
@@ -571,14 +578,14 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()}
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -653,7 +660,7 @@ def _make_tree_or_items(
     previous_table_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
     raw_cache_info: tuple[int, int] | None,
 ) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {},
@@ -666,7 +673,7 @@ def _make_tree_or_items(
                             "Attributes": {
                                 "Pairs": {"old": "Key", "keys": "Previous Keys"},
                                 "Retentions": {
-                                    k: v.serialize()
+                                    k: _serialize_retention_interval(v)
                                     for k, v in previous_attributes_retentions.items()
                                 },
                             },
@@ -691,7 +698,7 @@ def _make_tree_or_items(
                                     },
                                 ],
                                 "Retentions": {
-                                    i: {k: v.serialize() for k, v in ri.items()}
+                                    i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                                     for i, ri in previous_table_retentions.items()
                                 },
                             },
@@ -1274,7 +1281,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
     hostname = HostName("my-host")
 
-    check_result = inventorize_host(
+    check_results = inventorize_host(
         hostname,
         fetcher=fetcher,
         parser=parser,
@@ -1295,15 +1302,16 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         ),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
-    ).check_result
+    ).check_results
 
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     assert expected == check_result.state
     assert "Did not update the tree due to at least one error" in check_result.summary
 
 
 def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
-    check_result = inventorize_host(
+    check_results = inventorize_host(
         hostname,
         # no data!
         fetcher=lambda *args, **kwargs: [],
@@ -1317,8 +1325,9 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         parameters=HWSWInventoryParameters.from_raw({}),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
-    ).check_result
+    ).check_results
 
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     assert check_result.state == 0
     assert check_result.summary == "No data yet, please be patient"
 
@@ -1421,7 +1430,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
     "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
     [
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             # No further impact, may not be realistic here
@@ -1438,7 +1447,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             _create_root_tree({SDKey("key"): "new value"}),
@@ -1447,7 +1456,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             _create_root_tree({SDKey("key"): "new value"}),
@@ -1455,17 +1464,13 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-            ),
+            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
             _create_root_tree({SDKey("key"): "value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
-            ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-            ),
+            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
             _create_root_tree({SDKey("key"): "value"}),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
@@ -1536,7 +1541,7 @@ def test_add_rows_with_different_key_columns() -> None:
             ),
         ]
     )
-    tree_from_fs = ImmutableTree.deserialize(trees.inventory.serialize())
+    tree_from_fs = deserialize_tree(serialize_tree(trees.inventory))
     assert tree_from_fs == trees.inventory
     rows = tree_from_fs.get_rows((SDNodeName("path-to-node"),))
     assert len(rows) == 3

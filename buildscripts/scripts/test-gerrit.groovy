@@ -42,21 +42,6 @@ def main() {
                 sh("buildscripts/scripts/ensure-workspace-integrity");
             }
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
-
-            /// Reason for the following try/catch block:
-            /// Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
-            /// in case a job is aborted during a rebuild of the .venv, the .venv will be left broken
-            /// the next run in this workspace will use the .venv as-is but fail to import modules
-            /// attempts to use a trap in the .venv Makefile-target were also not succesful - SIGKILL is not trap-able...
-            /// So at the end, we need to use a groovy try/catch to ensure a rebuild in the next job in case something failed
-            try {
-                sh("""scripts/run-in-docker.sh \
-                    make .venv
-                """);
-            } catch (e) {
-                sh("rm -rf .venv");
-                throw e;
-            }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
@@ -66,7 +51,7 @@ def main() {
             stage("Create stages") {
                 /// Generate list of stages to be added - save them locally for reference
                 sh("""scripts/run-in-docker.sh \
-                    scripts/run-pipenv run \
+                    scripts/run-uvenv \
                       buildscripts/scripts/validate_changes.py \
                       --env "RESULTS=${result_dir}" \
                       --env "WORKSPACE=${checkout_dir}" \
@@ -119,7 +104,7 @@ def main() {
                 )]);
 
                 show_duration("archiveArtifacts") {
-                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/**');
                 }
             }
         }

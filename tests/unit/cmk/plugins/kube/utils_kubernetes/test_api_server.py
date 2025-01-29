@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 # mypy: disallow-untyped-defs
 import json
@@ -38,7 +37,7 @@ def _core_api() -> CoreAPI:
 
 
 CALL_API = "cmk.plugins.kube.api_server.send_request"
-SUPPORTED_VERSION_STR = "Supported versions are v1.24, v1.25, v1.26, v1.27, v1.28."
+SUPPORTED_VERSION_STR = "Supported versions are v1.26, v1.27, v1.28, v1.29, v1.30, v1.31."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
@@ -149,7 +148,7 @@ def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
-    identify this issue. Instead, the issue needs to be handled seperately.
+    identify this issue. Instead, the issue needs to be handled separately.
     """
     response = requests.Response()
     response.status_code = 200
@@ -164,7 +163,7 @@ def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
-    identify this issue. Instead, the issue needs to be handled seperately.
+    identify this issue. Instead, the issue needs to be handled separately.
     """
 
     # arrange
@@ -281,17 +280,17 @@ def test_decompose_git_version(
             ],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.24.2"), major=1, minor=24),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.26.2"), major=1, minor=26),
             [],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.25.0"), major=1, minor=25),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.27.0"), major=1, minor=27),
             [],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.29.0"), major=1, minor=29),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.32.0"), major=1, minor=32),
             [
-                "WARNING Unsupported Kubernetes version 'v1.29.0'. " + SUPPORTED_VERSION_STR,
+                "WARNING Unsupported Kubernetes version 'v1.32.0'. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
         ),

@@ -11,7 +11,7 @@ from cmk.utils.user import UserId
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
@@ -874,7 +874,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_time", negate=False),
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
-            "title": _l("Service Notifications"),
+            "title": _l("Service notifications"),
             "owner": UserId.builtin(),
             "single_infos": ["service", "host"],
             "context": {
@@ -1017,7 +1017,7 @@ def render_mobile_list(
             html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
-                content = HTML(" &middot; ").join(
+                content = HTML.without_escaping(" &middot; ").join(
                     [
                         rendered_cell[1]
                         for rendered_cell in rendered_cells[1 : num_columns + 1]
@@ -1033,7 +1033,7 @@ def render_mobile_list(
                     assert isinstance(rendered_content, (str, HTML))
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
-                    html.write_text(": ")
+                    html.write_text_permissive(": ")
                     html.span(rendered_content, class_=rendered_class)
                     html.close_p()
 

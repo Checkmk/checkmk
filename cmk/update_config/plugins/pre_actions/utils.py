@@ -5,11 +5,12 @@
 
 import enum
 import sys
-from collections.abc import Callable, Sequence
-from logging import Logger
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from termios import tcflush, TCIFLUSH
 from typing import Final
+
+from cmk.ccc import version
 
 from cmk.utils import paths
 from cmk.utils.setup_search_index import request_index_rebuild
@@ -27,7 +28,7 @@ from cmk.mkp_tool import (
     PackageID,
     PackageStore,
     PathConfig,
-    reload_apache,
+    reload_services_affected_by_mkp_changes,
 )
 
 AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
@@ -38,15 +39,21 @@ AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after
 )
 
 
-def prompt(message: str) -> str:
+def _prompt(message: str) -> str:
     tcflush(sys.stdin, TCIFLUSH)
     return input(message)
 
 
-def get_path_config() -> PathConfig:
+def get_path_config() -> PathConfig | None:
+    local_path = plugins_local_path()
+    addons_path = addons_plugins_local_path()
+    if local_path is None:
+        return None
+    if addons_path is None:
+        return None
     return PathConfig(
-        cmk_plugins_dir=plugins_local_path(),
-        cmk_addons_plugins_dir=addons_plugins_local_path(),
+        cmk_plugins_dir=local_path,
+        cmk_addons_plugins_dir=addons_path,
         agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
         agents_dir=paths.local_agents_dir,
         alert_handlers_dir=paths.local_alert_handlers_dir,
@@ -83,28 +90,33 @@ class ConflictMode(enum.StrEnum):
     INSTALL = "install"
     KEEP_OLD = "keepold"
     ABORT = "abort"
+    FORCE = "force"
 
 
-USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
-USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
+_USER_INPUT_ABORT: Final = ("a", "abort")
+_USER_INPUT_CONTINUE: Final = ("c", "continue")
+_USER_INPUT_DISABLE: Final = ("d", "disable")
+
+
+class Resume(enum.Enum):
+    UPDATE = enum.auto()
+    ABORT = enum.auto()
+
+    def is_abort(self) -> bool:
+        return self is Resume.ABORT
+
+    def is_not_abort(self) -> bool:
+        return self is not Resume.ABORT
 
 
 def disable_incomp_mkp(
-    logger: Logger,
     conflict_mode: ConflictMode,
-    module_name: str,
-    error: BaseException,
     package_id: PackageID,
     installer: Installer,
     package_store: PackageStore,
     path_config: PathConfig,
-    path: Path,
 ) -> bool:
-    logger.error(error_message_incomp_package(path, package_id, error))
-    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-        conflict_mode is ConflictMode.ASK
-        and _request_user_input_on_incompatible_file().lower() in USER_INPUT_DISABLE
-    ):
+    if _request_user_input_on_incompatible_file(conflict_mode).is_not_abort():
         if (
             disabled := disable(
                 installer,
@@ -121,12 +133,20 @@ def disable_incomp_mkp(
     return False
 
 
-def _request_user_input_on_incompatible_file() -> str:
-    return prompt(
-        "You can abort the update process (A) or disable the "
-        "extension package (d) and continue the update process.\n"
-        "Abort the update process? [A/d] \n"
-    )
+def _request_user_input_on_incompatible_file(conflict_mode: ConflictMode) -> Resume:
+    match conflict_mode:
+        case ConflictMode.FORCE:
+            return Resume.UPDATE
+        case ConflictMode.ABORT:
+            return Resume.ABORT
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return Resume.UPDATE
+        case ConflictMode.ASK:
+            return _disable_per_users_choice(
+                "You can abort the update process (A) or disable the "
+                "extension package (d) and continue the update process.\n"
+                "Abort the update process? [A/d] \n"
+            )
 
 
 def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseException) -> str:
@@ -138,16 +158,11 @@ def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseE
 
 def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
-        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
-    )
-
-
-def continue_on_incomp_local_file(conflict_mode: ConflictMode) -> bool:
-    return continue_per_users_choice(
-        conflict_mode,
-        "You can abort the update process (A) and try to fix "
-        "the incompatibilities or continue the update (c).\n\n"
-        "Abort the update process? [A/c] \n",
+        on_any_change=(
+            reload_services_affected_by_mkp_changes,
+            invalidate_visuals_cache,
+            request_index_rebuild,
+        )
     )
 
 
@@ -155,20 +170,56 @@ def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
     return f"Incompatible local file '{path}'.\nError: {error}\n\n"
 
 
-def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
-    if conflict_mode is ConflictMode.ASK:
-        return prompt(propt_text).lower() in USER_INPUT_CONTINUE
-    return False
+def continue_per_users_choice(prompt_text: str) -> Resume:
+    while (response := _prompt(prompt_text).lower()) not in [
+        *_USER_INPUT_CONTINUE,
+        *_USER_INPUT_ABORT,
+    ]:
+        sys.stdout.write(f"Invalid input '{response}'.\n")
+    if response in _USER_INPUT_CONTINUE:
+        return Resume.UPDATE
+    return Resume.ABORT
+
+
+def _disable_per_users_choice(prompt_text: str) -> Resume:
+    while (response := _prompt(prompt_text).lower()) not in [
+        *_USER_INPUT_DISABLE,
+        *_USER_INPUT_ABORT,
+    ]:
+        sys.stdout.write(f"Invalid input '{response}'.\n")
+    if response in _USER_INPUT_DISABLE:
+        return Resume.UPDATE
+    return Resume.ABORT
 
 
 def get_installer_and_package_map(
     path_config: PathConfig,
-) -> tuple[Installer, dict[Path, PackageID]]:
+) -> tuple[Installer, Mapping[Path, Manifest]]:
     installer = Installer(paths.installed_packages_dir)
     installed_files_package_map = {
-        Path(path_config.get_path(part)).resolve() / file: manifest.id
+        Path(path_config.get_path(part)).resolve() / file: manifest
         for manifest in installer.get_installed_manifests()
         for part, files in manifest.files.items()
         for file in files
     }
     return installer, installed_files_package_map
+
+
+def is_applicable_mkp(manifest: Manifest) -> bool:
+    """Try to find out if this MKP is applicable to the version we upgrade to.
+    Assume yes if we can't find out.
+    """
+    target_version = version.Version.from_str(version.__version__)
+    try:
+        lower_bound_ok = target_version >= version.Version.from_str(manifest.version_min_required)
+    except ValueError:
+        lower_bound_ok = True
+
+    try:
+        upper_bound_ok = manifest.version_usable_until is None or (
+            version.Version.from_str(manifest.version_usable_until) > target_version
+        )
+    except ValueError:
+        upper_bound_ok = True
+
+    return lower_bound_ok and upper_bound_ok

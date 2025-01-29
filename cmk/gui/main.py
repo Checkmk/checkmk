@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.site import omd_site
+from cmk.ccc.site import omd_site
+
 from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.config import active_config

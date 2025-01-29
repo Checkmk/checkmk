@@ -7,29 +7,37 @@ from tests.testlib.site import Site
 
 
 def test_init_scripts(site: Site) -> None:
-    scripts = [
+    scripts = {
+        "agent-receiver",
         "apache",
+        "automation-helper",
+        "ui-job-scheduler",
         "core",
         "crontab",
         "mkeventd",
         "nagios",
         "npcd",
+        "piggyback-hub",
         "pnp_gearman_worker",
-        "rrdcached",
-        "xinetd",
-        "stunnel",
+        "rabbitmq",
         "redis",
-        "agent-receiver",
-    ]
+        "rrdcached",
+        "stunnel",
+        "xinetd",
+    }
 
     if not site.version.is_raw_edition():
-        scripts += [
+        scripts |= {
             "cmc",
             "dcd",
             "liveproxyd",
             "mknotifyd",
-        ]
+        }
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+        scripts |= {"otel-collector"}
+    if not site.version.is_saas_edition():
+        scripts |= {"jaeger"}
 
-    installed_scripts = site.listdir("etc/init.d")
+    installed_scripts = set(site.listdir("etc/init.d"))
 
-    assert sorted(scripts) == sorted(installed_scripts)
+    assert scripts == installed_scripts

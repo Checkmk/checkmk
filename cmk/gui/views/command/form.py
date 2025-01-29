@@ -8,7 +8,7 @@ from typing import Literal
 
 from livestatus import SiteId
 
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options
@@ -31,7 +31,7 @@ def core_command(
     Sequence[CommandSpec], list[tuple[str, str]], CommandConfirmDialogOptions, CommandExecutor
 ]:
     """Examine the current HTML variables in order determine, which command the user has selected.
-    The fetch ids from a data row (host name, service description, downtime/commands id) and
+    The fetch ids from a data row (host name, service name, downtime/commands id) and
     construct one or several core command lines and a descriptive confirm dialog."""
     host = row.get("host_name")
     descr = row.get("service_description")
@@ -57,8 +57,7 @@ def core_command(
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and confirm dialog options for the
     # confirmation dialog.
-    for cmd_class in command_registry.values():
-        cmd = cmd_class()
+    for cmd in command_registry.values():
         if user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, action_rows)
             confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
@@ -67,7 +66,7 @@ def core_command(
                 commands, confirm_dialog_options = result
                 break
 
-    if commands is None or not confirm_dialog_options:
+    if commands is None:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others
@@ -97,8 +96,7 @@ def should_show_command_form(
     # information) then the first info is the primary table. So 'what'
     # will be one of "host", "service", "command" or "downtime".
     what = datasource.infos[0]
-    for command_class in command_registry.values():
-        command = command_class()
+    for command in command_registry.values():
         if what in command.tables and user.may(command.permission.name):
             return True
 
@@ -108,8 +106,7 @@ def should_show_command_form(
 def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Command]]:
     by_group: dict[type[CommandGroup], list[Command]] = {}
 
-    for command_class in command_registry.values():
-        command = command_class()
+    for command in command_registry.values():
         if info_name in command.tables and user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.
@@ -123,7 +120,7 @@ def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Com
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
-def do_actions(  # pylint: disable=too-many-branches
+def do_actions(
     view: ViewSpec,
     what: InfoName,
     action_rows: Rows,

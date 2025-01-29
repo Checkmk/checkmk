@@ -6,22 +6,19 @@ from __future__ import annotations
 
 import abc
 import json
-import typing
+from typing import final
+from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from cmk.gui.utils.json import patch_json
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-if typing.TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
-
 
 class AbstractWSGIMiddleware(abc.ABC):
-    @typing.final
+    @final
     def __init__(self, app: WSGIApplication) -> None:
         self.app = app
 
-    @typing.final
+    @final
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)
 

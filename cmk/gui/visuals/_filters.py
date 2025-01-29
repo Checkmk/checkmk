@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import json
 import re
@@ -21,7 +20,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
@@ -35,7 +33,7 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocom
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import DualListChoice, LabelGroups
+from cmk.gui.valuespec import LabelGroups
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (
@@ -45,9 +43,6 @@ from .filter import (
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-)
-from .filter import filter_registry as global_filter_registry
-from .filter import (
     FilterGroupCombo,
     FilterNumberRange,
     FilterOption,
@@ -56,6 +51,7 @@ from .filter import (
     InputTextFilter,
     RegexFilter,
 )
+from .filter import filter_registry as global_filter_registry
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
@@ -68,7 +64,6 @@ def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> No
     register_host_and_service_detail_filters(filter_registry)
     register_contact_filters(filter_registry)
     register_group_table_filters(filter_registry)
-    register_site_filters(filter_registry)
     register_comment_filters(filter_registry)
     register_downtime_filters(filter_registry)
     register_log_filters(filter_registry)
@@ -223,7 +218,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Summary (plugin output) (regex)"),
+            title=_l("Summary (plug-in output) (regex)"),
             sort_index=202,
             info="service",
             query_filter=query_filters.TextQuery(
@@ -941,116 +936,10 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
     )
 
 
-class SiteFilter(Filter):
-    heading_hook: Callable[[FilterHTTPVariables], str | None]
-
-    def __init__(
-        self,
-        *,
-        title: str | LazyString,
-        sort_index: int,
-        query_filter: query_filters.Query,
-        description: None | str | LazyString = None,
-        is_show_more: bool = False,
-    ) -> None:
-        self.query_filter = query_filter
-
-        super().__init__(
-            ident=self.query_filter.ident,
-            title=title,
-            sort_index=sort_index,
-            info="host",
-            htmlvars=self.query_filter.request_vars,
-            link_columns=[],
-            description=description,
-            is_show_more=is_show_more,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        choices = [(current_value, current_value)] if current_value else []
-
-        html.dropdown(
-            self.query_filter.request_vars[0],
-            choices,
-            current_value,
-            style="width: 250px;",
-            class_=["ajax-vals"],
-            data_autocompleter=json.dumps(
-                AutocompleterConfig(
-                    ident="sites",
-                    strict=self.query_filter.ident == "site",
-                ).config
-            ),
-        )
-
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        return SiteFilter.heading_hook(value)
-
-    def request_vars_from_row(self, row: Row) -> dict[str, str]:
-        return {"site": row["site"]}
-
-
-def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
-    current_value = value.get("site")
-    return (
-        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
-        if current_value
-        else None
-    )
-
-
-class MultipleSitesFilter(SiteFilter):
-    # Poor man's composition:  Renderer differs between CME and non-CME.
-    sites_options: Callable[[], list[tuple[str, str]]] | None = None
-
-    def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
-        return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        sites_options = type(self).sites_options
-        assert sites_options is not None
-        sites_vs = DualListChoice(choices=sites_options, rows=4)
-        sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
-
-
-def register_site_filters(filter_registry: FilterRegistry) -> None:
-    filter_registry.register(
-        SiteFilter(
-            title=_l("Site"),
-            sort_index=500,
-            query_filter=query_filters.Query(
-                ident="siteopt",
-                request_vars=["site"],
-            ),
-            description=_l("Optional selection of a site"),
-        )
-    )
-
-    filter_registry.register(
-        SiteFilter(
-            title=_l("Site (enforced)"),
-            sort_index=501,
-            query_filter=query_filters.Query(ident="site", request_vars=["site"]),
-            description=_l("Selection of site is enforced, use this filter for joining"),
-            is_show_more=True,
-        )
-    )
-
-    filter_registry.register(
-        MultipleSitesFilter(
-            title=_l("Multiple sites"),
-            sort_index=502,
-            query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
-            description=_l("Associative selection of multiple sites"),
-        )
-    )
-
-
 def register_host_and_service_detail_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Host Notification Number"),
+            title=_l("Current host notification number"),
             sort_index=232,
             info="host",
             query_filter=query_filters.NumberRangeQuery(
@@ -1061,7 +950,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Service Notification Number"),
+            title=_l("Current service notification number"),
             sort_index=232,
             info="service",
             query_filter=query_filters.NumberRangeQuery(
@@ -1072,7 +961,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Number of Services of the Host"),
+            title=_l("Number of services of the host"),
             sort_index=234,
             info="host",
             query_filter=query_filters.NumberRangeQuery(
@@ -1565,12 +1454,12 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
 
 
 def register_kubernetes_filters(filter_registry: FilterRegistry) -> None:
-    filter_kubernetes_register(filter_registry, _("Kubernetes Cluster"), "cluster")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Namespace"), "namespace")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Node"), "node")
-    filter_kubernetes_register(filter_registry, _("Kubernetes Deployment"), "deployment")
-    filter_kubernetes_register(filter_registry, _("Kubernetes DaemonSet"), "daemonset")
-    filter_kubernetes_register(filter_registry, _("Kubernetes StatefulSet"), "statefulset")
+    filter_kubernetes_register(filter_registry, _("Kubernetes cluster"), "cluster")
+    filter_kubernetes_register(filter_registry, _("Kubernetes namespace"), "namespace")
+    filter_kubernetes_register(filter_registry, _("Kubernetes node"), "node")
+    filter_kubernetes_register(filter_registry, _("Kubernetes deployment"), "deployment")
+    filter_kubernetes_register(filter_registry, _("Kubernetes daemonSet"), "daemonset")
+    filter_kubernetes_register(filter_registry, _("Kubernetes statefulSet"), "statefulset")
 
 
 def filter_kubernetes_register(
@@ -1650,11 +1539,7 @@ class CustomAttributeFilter(Filter):
                 _("The requested item %s does not exist") % attribute_id,
             )
         val = value[self.value_varname(self.ident)]
-        return "Filter: {}_custom_variables ~~ {} ^{}\n".format(
-            self.info,
-            livestatus.lqencode(attribute_id.upper()),
-            livestatus.lqencode(val),
-        )
+        return f"Filter: {self.info}_custom_variables ~~ {livestatus.lqencode(attribute_id.upper())} ^{livestatus.lqencode(val)}\n"
 
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.value_varname(self.ident)
@@ -1770,7 +1655,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        return html.write_text(
+        return html.write_text_permissive(
             _(
                 "Used in the host and service problems graphs of the main dashboard. Not intended "
                 "for any other purposes."

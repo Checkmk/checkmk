@@ -1,0 +1,18 @@
+title: Ceph Storage: Status
+agents: linux
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+  This check monitors the status of a Ceph cluster by evaluating its health, OSD map, and PG map.
+
+  The check reports on various metrics, including overall health, OSD full status, placement groups, and recovering bytes per second.
+
+item:
+  The literal string "Status".
+
+discovery:
+  The check will discover a single service.
+
+cluster:
+ On a cluster only the first nodes' response is checked.

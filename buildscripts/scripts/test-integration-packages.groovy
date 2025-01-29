@@ -2,69 +2,132 @@
 
 /// file: test-integration-packages.groovy
 
-/// Run integration tests for the Checkmk Docker image
+/// Run integration tests for the checkmk OS packages
+
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
     check_job_parameters([
         "EDITION",
         "VERSION",
         "OVERRIDE_DISTROS",
-        "USE_CASE"
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "USE_CASE",
     ]);
 
     check_environment_variables([
         "BRANCH",
-        "DOCKER_TAG",
-        "DOCKER_TAG_DEFAULT",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_tests", override: OVERRIDE_DISTROS);
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+
+    // TODO: we should always use USE_CASE directly from the job parameters
+    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
+    test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
+    def all_distros = versioning.get_distros(override: "all");
+    def selected_distros = versioning.get_distros(
+        edition: EDITION,
+        use_case: use_case,
+        override: OVERRIDE_DISTROS
+    );
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        safe_branch_name,
-        env.DOCKER_TAG,  // FIXME
-        env.DOCKER_TAG_DEFAULT);
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+    );
 
     currentBuild.description += (
         """
         |Run integration tests for packages<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
-        |safe_branch_name: ${safe_branch_name}<br>
-        |cmk_version: ${cmk_version}<br>
-        |distros: ${distros}<br>
+        |selected_distros: ${selected_distros}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:......  │${safe_branch_name}│
-        |docker_tag:............  │${docker_tag}│
-        |distros:...............  │${distros}│
-        |cmk_version:...........  │${cmk_version}
+        |all_distros:.............  │${all_distros}│
+        |selected_distros:........  │${selected_distros}│
+        |branch_name:.............. │${branch_name}│
+        |safe_branch_name:........  │${safe_branch_name}│
+        |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |branch_version:........... │${branch_version}│
+        |docker_tag:..............  │${docker_tag}│
         |===================================================
         """.stripMargin());
 
-    stage('test integration') {  // TODO should not be needed
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            // TODO: don't run make test-integration-docker but use docker.inside() instead
-            testing_helper.run_make_targets(
-                // Get the ID of the docker group from the node(!). This must not be
-                // executed inside the container (as long as the IDs are different)
-                DOCKER_GROUP_ID: get_docker_group_id(),
-                DISTRO_LIST: distros,
-                EDITION: EDITION,
-                VERSION: VERSION,
-                DOCKER_TAG: docker_tag,
-                MAKE_TARGET: "test-integration-docker",
-                BRANCH: versioning.branch_name(scm),
-                cmk_version: cmk_version,
-            );
+    def relative_job_name = "${branch_base_folder}/builders/test-integration-single-f12less";
+
+    /// avoid failures due to leftover artifacts from prior runs
+    sh("rm -rf ${checkout_dir}/test-results");
+
+    currentBuild.result = parallel(
+        all_distros.collectEntries { distro ->
+            [("${distro}") : {
+                def stepName = "Test ${distro}";
+                def run_condition = distro in selected_distros;
+
+                /// this makes sure the whole parallel thread is marked as skipped
+                if (! run_condition){
+                    Utils.markStageSkippedForConditional(stepName);
+                }
+
+                smart_stage(
+                    name: stepName,
+                    condition: run_condition,
+                    raiseOnError: false,
+                ) {
+                    def build_instance = smart_build(
+                        job: relative_job_name,
+                        parameters: [
+                            stringParam(name: "DISTRO", value: distro),
+                            stringParam(name: "EDITION", value: EDITION),
+                            stringParam(name: "VERSION", value: VERSION),
+                            stringParam(name: "DOCKER_TAG", value: docker_tag),
+                            stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                        ],
+                    );
+                    copyArtifacts(
+                        projectName: build_instance.getFullProjectName(),
+                        selector: specific(build_instance.getId()), // buildNumber shall be a string
+                        target: "${checkout_dir}/test-results",
+                        fingerprintArtifacts: true
+                    );
+                    return build_instance.getResult();
+                }
+            }]
+        }
+    ).values().every { it } ? "SUCCESS" : "FAILURE";
+
+    stage("Archive / process test reports") {
+        dir("${checkout_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+            }
+            xunit([Custom(
+                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: "**/junit.xml",
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )]);
         }
     }
 }

@@ -9,7 +9,7 @@ from typing import ContextManager, TypedDict
 
 from cmk.utils.tags import TagGroup, TagID
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -215,10 +215,13 @@ class VirtualHostTree(SidebarSnapin):
             ("filled_in", "filter"),
             ("_show_filter_form", "0"),
         ]
+        active_urlvars: list[str] = []
         if viewname == "svcproblems":
             urlvars += [("st1", "on"), ("st2", "on"), ("st3", "on")]
+            active_urlvars.append("svcstate")
+            urlvars += [("is_in_downtime", "0")]
+            active_urlvars.append("in_downtime")
 
-        active_urlvars: list[str] = []
         if tag_urlvars := self._get_tag_url_vars(tree_spec, node_values):
             urlvars += tag_urlvars
             active_urlvars.append("host_tags")
@@ -328,7 +331,7 @@ function virtual_host_tree_enter(path)
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
 
-    def _add_host_to_tree(  # pylint: disable=too-many-branches
+    def _add_host_to_tree(
         self,
         tree_spec: Sequence[str],
         tree: Tree,
@@ -482,11 +485,9 @@ function virtual_host_tree_enter(path)
                 "Columns: host_name filename state num_services_ok num_services_warn "
                 "num_services_crit num_services_unknown custom_variables"
             )
-            hosts: list[
-                tuple[str, str, str, int, int, int, int, int, dict[str, str]]
-            ] = sites.live().query(
-                query
-            )  # type: ignore[assignment]
+            hosts: list[tuple[str, str, str, int, int, int, int, int, dict[str, str]]] = (
+                sites.live().query(query)  # type: ignore[assignment]
+            )
         finally:
             sites.live().set_prepend_site(False)
 

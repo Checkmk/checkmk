@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+
 import pytest
 
-import cmk.utils.plugin_registry
+import cmk.ccc.plugin_registry
 
 
 class Plugin:
     pass
 
 
-class PluginRegistry(cmk.utils.plugin_registry.Registry[type[Plugin]]):
+class PluginRegistry(cmk.ccc.plugin_registry.Registry[type[Plugin]]):
     def plugin_name(self, instance):
         return instance.__name__
 
@@ -62,15 +62,24 @@ def test_delitem(basic_registry: PluginRegistry) -> None:
         basic_registry.unregister("bla")
 
     @basic_registry.register
-    class DelPlugin(Plugin):  # pylint: disable=unused-variable
+    class DelPlugin(Plugin):
         pass
 
     basic_registry.unregister("DelPlugin")
 
 
+def test_clear() -> None:
+    registry = PluginRegistry()
+    registry.register(Plugin)
+    assert "Plugin" in registry
+
+    registry.clear()
+    assert "Plugin" not in registry
+
+
 def test_getitem(basic_registry: PluginRegistry) -> None:
     with pytest.raises(KeyError):
-        _unused = basic_registry["bla"]  # noqa: F841
+        _unused = basic_registry["bla"]
 
     assert basic_registry["Plugin"] == Plugin
 
@@ -94,6 +103,6 @@ def test_get(basic_registry: PluginRegistry) -> None:
     assert basic_registry.get("Plugin") == Plugin
 
 
-class InstanceRegistry(cmk.utils.plugin_registry.Registry[Plugin]):
+class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):
     def plugin_name(self, instance):
         return instance.__class__.__name__

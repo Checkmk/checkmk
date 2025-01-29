@@ -6,7 +6,9 @@
 import subprocess
 from logging import Logger
 
-from cmk.utils.site import get_omd_config
+from cmk.ccc.site import get_omd_config
+
+from cmk.utils.paths import omd_root
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -15,7 +17,7 @@ class UpdateCoreConfig(UpdateAction):
     """Ensure we have a fresh Micro Core config after all update actions were executed"""
 
     def __call__(self, logger: Logger) -> None:
-        if get_omd_config()["CONFIG_CORE"] == "none":
+        if get_omd_config(omd_root)["CONFIG_CORE"] == "none":
             return  # No core config is needed in this case
         subprocess.check_call(["cmk", "-U"], shell=False)
 

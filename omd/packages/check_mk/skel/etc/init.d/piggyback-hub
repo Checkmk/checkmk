@@ -1,0 +1,143 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+PIDFILE=$OMD_ROOT/tmp/run/piggyback-hub.pid
+LOGFILE=$OMD_ROOT/var/log/piggyback-hub.log
+CONFDIR=$OMD_ROOT/etc/check_mk/piggyback_hub.d/wato
+DAEMON=$OMD_ROOT/bin/cmk-piggyback-hub
+PID=$(cat "$PIDFILE" 2>/dev/null)
+
+process_is_running() {
+    [ -e "$PIDFILE" ] && kill -0 "$PID" 2>/dev/null
+}
+
+await_process_stop() {
+    max=$(("${1}" * 10)) # tenths of a second
+    for N in $(seq "${max}"); do
+        process_is_running || return 0
+        [ $((N % 10)) -eq 0 ] && printf "."
+        sleep 0.1
+    done
+    return 1
+}
+
+force_kill() {
+    printf 'sending SIGKILL.'
+    kill -9 "${PID}"
+}
+
+exit_with_code() {
+    printf "%s\n" "${2}"
+    exit "${1}"
+}
+
+contains_string() {
+    grep -e "$2" -r "$1" >/dev/null 2>&1
+}
+
+distributed_piggyback_enabled() {
+    if [ -a "$CONFDIR/sitespecific.mk" ] && contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled"; then
+        contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled = True"
+        return $?
+
+    elif [ -a "$CONFDIR/global.mk" ] && contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled"; then
+        contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled = True"
+        return $?
+    fi
+
+    return 0
+}
+
+case "$1" in
+
+    start)
+        printf "Starting piggyback-hub..."
+
+        distributed_piggyback_enabled || exit_with_code 5 'disabled.'
+
+        if process_is_running; then
+            exit_with_code 0 'already running.'
+        fi
+
+        if "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT" "$OMD_SITE"; then
+            exit_with_code 0 'OK'
+        else
+            exit_with_code 1 'failed'
+        fi
+        ;;
+
+    stop)
+        printf "Stopping piggyback-hub..."
+
+        if distributed_piggyback_enabled; then
+            code=0
+            msg=""
+        else
+            code=5
+            msg="(disabled)"
+        fi
+
+        if [ -z "$PID" ]; then
+            exit_with_code "${code}" "not running ${msg}"
+        fi
+
+        if ! process_is_running; then
+            rm "$PIDFILE"
+            exit_with_code "${code}" "not running (PID file orphaned) ${msg}"
+        fi
+
+        echo -n "killing $PID..."
+
+        if ! kill "$PID" 2>/dev/null; then
+            rm "$PIDFILE"
+            exit_with_code "${code}" "OK ${msg}"
+        fi
+
+        # Signal could be sent
+
+        # Patiently wait for the process to stop
+        if await_process_stop 60; then
+            exit_with_code "${code}" "OK ${msg}"
+        fi
+
+        # Insist on killing the process
+        force_kill
+        if await_process_stop 10; then
+            exit_with_code "${code}" "OK ${msg}"
+        fi
+        exit_with_code 1 "failed ${msg}"
+        ;;
+
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+
+    status)
+        printf 'Checking status of piggyback-hub...'
+
+        if distributed_piggyback_enabled; then
+            code=1
+            msg=""
+        else
+            code=5
+            msg="(disabled)"
+        fi
+
+        if [ -z "$PID" ]; then
+            exit_with_code "${code}" "not running ${msg}"
+        fi
+
+        if ! process_is_running; then
+            exit_with_code "${code}" "not running ${msg}(PID file orphaned)"
+        fi
+
+        exit_with_code 0 "running ${msg}"
+        ;;
+    *)
+        exit_with_code 1 "Usage: ${0} {start|stop|restart|reload|status}"
+        ;;
+
+esac

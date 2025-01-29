@@ -6,9 +6,9 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based import smart
+from cmk.plugins.collection.agent_based import smart
 
-checkname = "smart"
+checkname = "smart_temp"
 
 parsed = smart.parse_raw_values(
     [
@@ -411,10 +411,10 @@ parsed = smart.parse_raw_values(
     ]
 )
 
-discovery = {"temp": [("/dev/nvme0n1", {}), ("/dev/sda", {})]}
+discovery = {"": [("/dev/nvme0n1", {}), ("/dev/sda", {})]}
 
 checks = {
-    "temp": [
+    "": [
         (
             "/dev/nvme0n1",
             {"levels": (35, 40)},

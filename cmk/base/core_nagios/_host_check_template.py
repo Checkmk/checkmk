@@ -5,27 +5,25 @@
 
 
 import sys
-from importlib import import_module
+from contextlib import suppress
 
-import cmk.utils.debug
+import cmk.ccc.debug
+
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
-from cmk.utils.exceptions import MKTerminate
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.submitters import get_submitter
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.api.agent_based.register import register_plugin_by_type
+from cmk.base import config
+from cmk.base.api.agent_based.register import load_selected_plugins
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
 from cmk.discover_plugins import PluginLocation
 
-# This will be replaced by the config genreration, when the template is instanciated.
+# This will be replaced by the config generation, when the template is instanciated.
 CONFIG = HostCheckConfig(
     delay_precompile=False,
     src="",
@@ -79,26 +77,21 @@ def main() -> int:
     if CONFIG.delay_precompile:
         _self_compile(CONFIG.src, CONFIG.dst)
 
-    for location in CONFIG.locations:
-        module = import_module(location.module)
-        if location.name is not None:
-            register_plugin_by_type(location, getattr(module, location.name))
-
-    cmk.base.utils.register_sigint_handler()
     cmk.utils.log.setup_console_logging()
 
     cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
     if debug:
-        cmk.utils.debug.enable()
-
-    config.load_checks(check_api.get_check_api_context, CONFIG.checks_to_load)
-
-    config.load_packed_config(LATEST_CONFIG)
-
-    config.ipaddresses = CONFIG.ipaddresses
-    config.ipv6addresses = CONFIG.ipv6addresses
+        cmk.ccc.debug.enable()
 
     try:
+        _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
+        load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
+
+        config.load_packed_config(LATEST_CONFIG)
+
+        config.ipaddresses = CONFIG.ipaddresses
+        config.ipv6addresses = CONFIG.ipv6addresses
+
         return mode_check(
             get_submitter,
             {},
@@ -107,8 +100,10 @@ def main() -> int:
             keepalive=False,
             precompiled_host_check=True,
         )
-    except MKTerminate:
-        out.output("<Interrupted>\n", stream=sys.stderr)
+    except KeyboardInterrupt:
+        with suppress(IOError):
+            sys.stderr.write("<Interrupted>\n")
+            sys.stderr.flush()
         return 1
     except Exception as e:
         import traceback

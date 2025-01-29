@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
@@ -30,10 +30,10 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // Make sure that the ICore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
     // knot between NebCore and Store.
-    ASSERT_EXIT(  // NOLINT
+    ASSERT_EXIT(
         {
             Store(nullptr);
-            exit(0);
+            ::exit(0);  // NOLINT(concurrency-mt-unsafe)
         },
         ::testing::ExitedWithCode(0), "");
 }
@@ -42,7 +42,7 @@ namespace {
 // First test fixture: A single host
 struct HostMacroExpanderTest : public ::testing::Test {
     void SetUp() override {
-        std::fill(std::begin(macro_user), std::end(macro_user), nullptr);
+        std::ranges::fill(macro_user, nullptr);
         macro_user[10] = cc("I drink and I know things");
     }
 

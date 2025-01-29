@@ -7,63 +7,30 @@ import dataclasses
 import logging
 import os
 import subprocess
-import time
-import uuid
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType, TypedDict
 
-import livestatus
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+from cmk.ccc.store import load_object_from_file, save_object_to_file
 
-import cmk.utils.statename as statename
-from cmk.utils import store
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.i18n import _
-from cmk.utils.labels import CollectedHostLabels
-from cmk.utils.notify_types import EnrichedEventContext
+from cmk.utils.labels import Labels
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.store import load_object_from_file, save_object_to_file
+from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
 
-# NOTE: Keep in sync with values in MonitoringLog.cc.
-MAX_COMMENT_LENGTH = 2000
-MAX_PLUGIN_OUTPUT_LENGTH = 1000
-_SEMICOLON: Final = "%3B"
-# from https://www.w3schools.com/tags/ref_urlencode.ASP
-# Nagios uses ":", which is even more surprising, I guess.
 
-# 0 -> OK
-# 1 -> temporary issue
-# 2 -> permanent issue
-NotificationResultCode = NewType("NotificationResultCode", int)
-NotificationPluginName = NewType("NotificationPluginName", str)
-
-
-class NotificationResult(TypedDict, total=False):
-    plugin: NotificationPluginName
-    status: NotificationResultCode
-    output: list[str]
-    forward: bool
-    context: NotificationContext
-
-
-class NotificationForward(TypedDict):
-    forward: Literal[True]
-    context: EnrichedEventContext
-
-
-class NotificationViaPlugin(TypedDict):
-    plugin: str
-    context: NotificationContext
-
-
-def _state_for(exit_code: NotificationResultCode) -> str:
-    return statename.service_state_name(exit_code, "UNKNOWN")
+@dataclasses.dataclass(frozen=True)
+class NotificationHostConfig:
+    host_labels: Labels
+    service_labels: Mapping[ServiceName, Labels]
+    tags: Mapping[TagGroupID, TagID]
 
 
 def find_wato_folder(context: NotificationContext) -> str:
@@ -74,83 +41,6 @@ def find_wato_folder(context: NotificationContext) -> str:
             if tag.startswith("/wato/")
         ),
         "",
-    )
-
-
-def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
-        what = "SERVICE NOTIFICATION"
-        spec = f"{hostname};{service}"
-        state = context["SERVICESTATE"]
-        output = context["SERVICEOUTPUT"]
-    else:
-        what = "HOST NOTIFICATION"
-        spec = hostname
-        state = context["HOSTSTATE"]
-        output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
-    return "{}: {};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
-    )
-
-
-def notification_progress_message(
-    plugin: NotificationPluginName,
-    context: NotificationContext,
-    exit_code: NotificationResultCode,
-    output: str,
-) -> str:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
-        what = "SERVICE NOTIFICATION PROGRESS"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION PROGRESS"
-        spec = hostname
-    state = _state_for(exit_code)
-    return "{}: {};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
-    )
-
-
-def notification_result_message(
-    plugin: NotificationPluginName,
-    context: NotificationContext,
-    exit_code: NotificationResultCode,
-    output: list[str],
-) -> str:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
-        what = "SERVICE NOTIFICATION RESULT"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION RESULT"
-        spec = hostname
-    state = _state_for(exit_code)
-    comment = " -- ".join(output)
-    short_output = output[-1] if output else ""
-    return "{}: {};{};{};{};{};{}".format(
-        what,
-        contact,
-        spec,
-        state,
-        plugin,
-        short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
-        comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON),
     )
 
 
@@ -196,60 +86,20 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
             logger_.info(not_found_msg)
 
 
-def create_spoolfile(
-    logger_: Logger,
-    spool_dir: Path,
-    data: NotificationForward | NotificationResult | NotificationViaPlugin,
-) -> None:
-    spool_dir.mkdir(parents=True, exist_ok=True)
-    file_path = spool_dir / str(uuid.uuid4())
-    logger_.info("Creating spoolfile: %s", file_path)
-    store.save_object_to_file(file_path, data, pretty=True)
-
-
-def log_to_history(message: str) -> None:
-    _livestatus_cmd(f"LOG;{message}")
-
-
-def _livestatus_cmd(command: str) -> None:
-    logger.info("sending command %s", command)
-    timeout = 2
-    try:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(timeout)
-        connection.command("[%d] %s" % (time.time(), command))
-    except Exception:
-        logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
-        logger.info("Command was: %s", command)
-
-
-def transform_flexible_and_plain_context(context: NotificationContext) -> NotificationContext:
-    if "CONTACTS" not in context:
-        context["CONTACTS"] = context.get("CONTACTNAME", "?")
-        context["PARAMETER_GRAPHS_PER_NOTIFICATION"] = "5"
-        context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"] = "5"
-    return context
-
-
-def transform_flexible_and_plain_plugin(
-    plugin: NotificationPluginName | None,
-) -> NotificationPluginName:
-    return plugin or NotificationPluginName("mail")
-
-
 def write_notify_host_file(
     config_path: VersionedConfigPath,
-    labels_per_host: Mapping[HostName, CollectedHostLabels],
+    config_per_host: Mapping[HostName, NotificationHostConfig],
 ) -> None:
-    notify_labels_path: Path = _get_host_file_path(config_path)
-    for host, labels in labels_per_host.items():
-        host_path = notify_labels_path / host
+    notify_config_path: Path = _get_host_file_path(config_path)
+    for host, labels in config_per_host.items():
+        host_path = notify_config_path / host
         save_object_to_file(
             host_path,
             dataclasses.asdict(
-                CollectedHostLabels(
+                NotificationHostConfig(
                     host_labels=labels.host_labels,
                     service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                    tags=labels.tags,
                 )
             ),
         )
@@ -257,12 +107,12 @@ def write_notify_host_file(
 
 def read_notify_host_file(
     host_name: HostName,
-) -> CollectedHostLabels:
+) -> NotificationHostConfig:
     host_file_path: Path = _get_host_file_path(host_name=host_name)
-    return CollectedHostLabels(
+    return NotificationHostConfig(
         **load_object_from_file(
             path=host_file_path,
-            default={"host_labels": {}, "service_labels": {}},
+            default={"host_labels": {}, "service_labels": {}, "tags": {}},
         )
     )
 
@@ -273,5 +123,5 @@ def _get_host_file_path(
 ) -> Path:
     root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
     if host_name:
-        return root_path / "notify" / "labels" / host_name
-    return root_path / "notify" / "labels"
+        return root_path / "notify" / "host_config" / host_name
+    return root_path / "notify" / "host_config"

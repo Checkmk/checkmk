@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_license:sep(58)>>>
@@ -29,7 +31,7 @@ def parse_ibm_svc_license(string_table):
     for line in string_table:
         if line[0].startswith("license_"):
             license_ = line[0].replace("license_", "")
-            if not license_ in licenses:
+            if license_ not in licenses:
                 licenses[license_] = [0.0, 0.0]
             if line[1] == "off":
                 licenses[license_][0] = 0.0
@@ -37,7 +39,7 @@ def parse_ibm_svc_license(string_table):
                 licenses[license_][0] = float(line[1])
         if line[0].startswith("used_"):
             license_ = line[0].replace("used_", "")
-            if not license_ in licenses:
+            if license_ not in licenses:
                 licenses[license_] = [0.0, 0.0]
             licenses[license_][1] = float(line[1])
     return licenses
@@ -56,6 +58,7 @@ def check_ibm_svc_license(item, params, parsed):
 
 
 check_info["ibm_svc_license"] = LegacyCheckDefinition(
+    name="ibm_svc_license",
     parse_function=parse_ibm_svc_license,
     service_name="License %s",
     discovery_function=inventory_ibm_svc_license,

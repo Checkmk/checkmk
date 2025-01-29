@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
 import cmk.plugins.jenkins.agent_based.jenkins_nodes as jn
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 
 @pytest.fixture(scope="module", name="section")
@@ -34,9 +33,7 @@ def test_discovery(section: jn.Section) -> None:
 
 
 def test_check_windows_item(section: jn.Section) -> None:
-    assert list(
-        jn.check_jenkins_nodes("Windows", {"jenkins_offline": State.CRIT.value}, section)
-    ) == [
+    assert list(jn.check_jenkins_nodes("Windows", jn.CHECK_DEFAULT_PARAMETERS, section)) == [
         Result(state=State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
         Result(state=State.OK, summary="Is JNLP agent: yes"),
         Result(state=State.OK, summary="Is idle: yes"),
@@ -46,7 +43,7 @@ def test_check_windows_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 0),
         Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(state=State.OK, summary="Average response time: 35 milliseconds"),
         Metric("avg_response_time", 0.035),
@@ -58,9 +55,7 @@ def test_check_windows_item(section: jn.Section) -> None:
 
 
 def test_check_master_item(section: jn.Section) -> None:
-    assert list(
-        jn.check_jenkins_nodes("master", {"jenkins_offline": State.CRIT.value}, section)
-    ) == [
+    assert list(jn.check_jenkins_nodes("master", jn.CHECK_DEFAULT_PARAMETERS, section)) == [
         Result(state=State.OK, summary="Description: The Master Jenkins Node"),
         Result(state=State.OK, summary="Is JNLP agent: no"),
         Result(state=State.OK, summary="Is idle: no"),
@@ -70,7 +65,7 @@ def test_check_master_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 3),
         Result(state=State.OK, summary="Number of idle executors: 17"),
         Metric("jenkins_idle_executors", 17),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(state=State.OK, summary="Average response time: 0 seconds"),
         Metric("avg_response_time", 0.0),
@@ -86,7 +81,7 @@ def test_check_foo_item(section: jn.Section) -> None:
         jn.check_jenkins_nodes(
             "foo",
             {
-                "jenkins_offline": State.CRIT.value,
+                **jn.CHECK_DEFAULT_PARAMETERS,
                 "avg_response_time": ("fixed", (1.0, 2.0)),
                 "jenkins_clock": ("fixed", (3.0, 4.0)),
             },
@@ -102,7 +97,7 @@ def test_check_foo_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 0),
         Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(
             state=State.WARN,
@@ -117,3 +112,130 @@ def test_check_foo_item(section: jn.Section) -> None:
         Result(state=State.OK, summary="Free temp space: 14.0 GiB"),
         Metric("jenkins_temp", 15085674496),
     ]
+
+
+@pytest.fixture(scope="module", name="multi_label_section")
+def _multi_label_section() -> jn.Section:
+    """
+    Example output containing a node with multiple assigned labels
+    """
+    return jn.parse_jenkins_nodes(
+        [
+            [
+                """
+            [
+    {
+        "_class": "hudson.slaves.SlaveComputer",
+        "assignedLabels":
+        [
+            {
+                "busyExecutors": 42,
+                "idleExecutors": 63,
+                "name": "fra",
+                "nodes":
+                [
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "NORMAL"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    }
+                ]
+            },
+            {
+                "busyExecutors": 7,
+                "idleExecutors": 14,
+                "name": "build-fra-002.lan.corpo.net",
+                "nodes":
+                [
+                    {
+                        "mode": "NORMAL"
+                    }
+                ]
+            },
+            {
+                "busyExecutors": 42,
+                "idleExecutors": 63,
+                "name": "both",
+                "nodes":
+                [
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    },
+                    {
+                        "mode": "NORMAL"
+                    },
+                    {
+                        "mode": "EXCLUSIVE"
+                    }
+                ]
+            }
+        ],
+        "description": "",
+        "displayName": "build-fra-002.lan.corpo.net",
+        "idle": false,
+        "jnlpAgent": false,
+        "monitorData": {},
+        "numExecutors": 21,
+        "offline": false,
+        "offlineCause": null,
+        "temporarilyOffline": false
+    }
+]
+            """
+            ]
+        ]
+    )
+
+
+def test_showing_correct_executor_amount(multi_label_section):
+    """
+    Test that the correct executor amount is shown
+
+    The test will only check for very specific metrics and their correct value.
+    """
+    executor_metrics = [
+        metric
+        for metric in jn.check_jenkins_nodes(
+            "build-fra-002.lan.corpo.net",
+            jn.CHECK_DEFAULT_PARAMETERS,
+            multi_label_section,
+        )
+        if isinstance(metric, Metric) and metric[0].endswith("_executors")
+    ]
+
+    expected_metrics = [
+        Metric("jenkins_num_executors", 21.0),
+        Metric("jenkins_busy_executors", 7.0),
+        Metric("jenkins_idle_executors", 14.0),
+    ]
+
+    for metric_to_search in expected_metrics:
+        assert metric_to_search in executor_metrics
+
+
+def test_showing_correct_executor_mode(multi_label_section):
+    check_results = list(
+        jn.check_jenkins_nodes(
+            "build-fra-002.lan.corpo.net",
+            jn.CHECK_DEFAULT_PARAMETERS,
+            multi_label_section,
+        )
+    )
+
+    assert Result(state=State.OK, summary="Mode: Normal") in check_results

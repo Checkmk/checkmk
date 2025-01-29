@@ -5,7 +5,9 @@
 
 import pytest
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry
@@ -31,13 +33,17 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
+        "piggyback_hub",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
         ]
+
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+        expected_config_domains.append("otel_collector")
 
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
@@ -48,10 +54,12 @@ def test_registered_automation_commands() -> None:
         "activate-changes",
         "push-profiles",
         "check-analyze-config",
+        "create-broker-certs",
         "diagnostics-dump-get-file",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
+        "store-broker-certs",
         "network-scan",
         "ping",
         "get-config-sync-state",
@@ -68,7 +76,7 @@ def test_registered_automation_commands() -> None:
         "rename-hosts-uuid-link",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
@@ -99,6 +107,7 @@ def test_registered_configvars() -> None:
         "debug_rules",
         "default_user_profile",
         "default_bi_layout",
+        "default_dynamic_visual_permission",
         "delay_precompile",
         "diskspace_cleanup",
         "enable_sounds",
@@ -141,12 +150,14 @@ def test_registered_configvars() -> None:
         "page_heading",
         "pagetitle_date_format",
         "password_policy",
+        "piggyback_hub_enabled",
         "piggyback_max_cachefile_age",
         "profile",
         "quicksearch_dropdown_limit",
         "quicksearch_search_order",
         "remote_status",
         "replication",
+        "require_two_factor_all_users",
         "reschedule_timeout",
         "restart_locking",
         "retention_interval",
@@ -190,7 +201,6 @@ def test_registered_configvars() -> None:
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
-        "wato_hide_help_in_lists",
         "wato_hide_hosttags",
         "wato_hide_varnames",
         "wato_icon_categories",
@@ -205,12 +215,14 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
-        "experimental_features",
+        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
+        "site_trace_send",
+        "site_trace_receive",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -237,6 +249,7 @@ def test_registered_configvars() -> None:
             "cmc_livestatus_lines_per_file",
             "cmc_livestatus_logcache_size",
             "cmc_livestatus_threads",
+            "cmc_max_response_size",
             "cmc_log_cmk_helpers",
             "cmc_log_levels",
             "cmc_log_limit",
@@ -251,8 +264,14 @@ def test_registered_configvars() -> None:
             "cmc_state_retention_interval",
             "cmc_statehist_cache",
             "cmc_timeperiod_horizon",
+            "dcd_activate_changes_timeout",
+            "dcd_bulk_discovery_timeout",
             "dcd_log_levels",
-            "dcd_web_api_connection",
+            "dcd_site_update_interval",
+            "dcd_max_activation_delay",
+            "dcd_max_hosts_per_bulk_discovery",
+            "dcd_prevent_unwanted_notification",
+            "dcd_use_inter_lock",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",
@@ -286,7 +305,7 @@ def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
-        assert issubclass(var.domain(), ABCConfigDomain)
+        assert isinstance(var.domain(), ABCConfigDomain)
         assert isinstance(var.ident(), str)
         assert isinstance(var.valuespec(), ValueSpec)
 
@@ -305,9 +324,10 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
+        "Distributed piggyback",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
 
 
 def inventory_stormshield_info(info):
@@ -17,13 +17,10 @@ def inventory_stormshield_info(info):
 
 def check_stormshield_info(item, params, info):
     for model, version, serial, sysname, syslanguage in info:
-        yield 0, "Model: {}, Version: {}, Serial: {}, SysName: {}, \
-            SysLanguage: {}".format(
-            model,
-            version,
-            serial,
-            sysname,
-            syslanguage,
+        yield (
+            0,
+            f"Model: {model}, Version: {version}, Serial: {serial}, SysName: {sysname}, \
+            SysLanguage: {syslanguage}",
         )
 
 
@@ -32,6 +29,7 @@ def parse_stormshield_info(string_table: StringTable) -> StringTable | None:
 
 
 check_info["stormshield_info"] = LegacyCheckDefinition(
+    name="stormshield_info",
     parse_function=parse_stormshield_info,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

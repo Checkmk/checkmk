@@ -58,7 +58,7 @@ def main() {
 
     if (was_timer_triggered()) {
         println("Current job was triggered by Timer, so we need to use the production parameters.");
-        send_werk_mails_of_branches = ["master", "2.2.0", "2.1.0", "2.0.0"];
+        send_werk_mails_of_branches = ["master", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0"];
         send_werk_mails = true;
         add_werk_git_notes = true;
         assume_no_mails_sent_except = "";
@@ -92,7 +92,7 @@ def main() {
                             sh("""
                                 git config --add user.name ${user};
                                 git config --add user.email ${JENKINS_MAIL};
-                                scripts/run-pipenv run python3 -m cmk.utils.werks mail \
+                                scripts/run-uvenv python3 -m cmk.utils.werks mail \
                                 . origin/${branch} werk_mail ${cmd_line};
                             """);
                         }

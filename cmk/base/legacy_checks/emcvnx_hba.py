@@ -64,10 +64,23 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def parse_emcvnx_hba(string_table):
@@ -108,19 +121,18 @@ def check_emcvnx_hba(item, _no_params, parsed):
     write_blocks_per_sec = get_rate(
         get_value_store(), countername_w, now, write_blocks, raise_overflow=True
     )
-    read_blocks_per_sec = saveint(read_blocks_per_sec)
-    write_blocks_per_sec = saveint(write_blocks_per_sec)
     perfdata.append(("read_blocks", read_blocks_per_sec))
     perfdata.append(("write_blocks", write_blocks_per_sec))
 
     return (
         0,
-        f"Read: {read_blocks_per_sec} Blocks/s, Write: {write_blocks_per_sec} Blocks/s",
+        f"Read: {read_blocks_per_sec:.2f} Blocks/s, Write: {write_blocks_per_sec:.2f} Blocks/s",
         perfdata,
     )
 
 
 check_info["emcvnx_hba"] = LegacyCheckDefinition(
+    name="emcvnx_hba",
     parse_function=parse_emcvnx_hba,
     service_name="HBA %s",
     discovery_function=inventory_emcvnx_hba,

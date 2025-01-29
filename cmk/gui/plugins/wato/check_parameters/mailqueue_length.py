@@ -33,8 +33,7 @@ mailqueue_elements: list[tuple[str, ValueSpec]] = [
         Tuple(
             title=_("Mails in active mail queue"),
             help=_(
-                "This rule is applied to the number of E-Mails currently "
-                "in the active mail queue"
+                "This rule is applied to the number of E-Mails currently in the active mail queue"
             ),
             elements=[
                 Integer(title=_("Warning at"), unit=_("mails"), default_value=800),

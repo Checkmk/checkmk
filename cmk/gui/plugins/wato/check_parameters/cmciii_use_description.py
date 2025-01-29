@@ -19,7 +19,7 @@ def _valuespec_discovery_cmciii():
             (
                 "use_sensor_description",
                 DropdownChoice(
-                    title=_("Service description"),
+                    title=_("Service name"),
                     help=_(
                         "Since the sensor description is a user defined text, multiple sensors "
                         "may have the same description. To ensure that items are unique, they "

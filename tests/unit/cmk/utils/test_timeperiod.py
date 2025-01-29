@@ -29,12 +29,12 @@ def test_is_timeperiod_active() -> None:
         },
         "time_period_3": {
             "alias": "Exclude via exception that matches",  # exclude matches
-            "2024-01-03": [("11:10", "11:15")],
+            "2024-01-03": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
         "time_period_4": {
             "alias": "Exclude via exception that does not match",  # exclude not matching
-            "2024-01-03": [("11:12", "11:15")],
+            "2024-01-03": [("11:12", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
         "time_period_5": {

@@ -1,0 +1,113 @@
+@use "sass:color";
+@charset "UTF-8";
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+div#detailed_timeline {
+  .legend-table {
+    margin-right: auto;
+    margin-bottom: 40px;
+    margin-left: auto;
+  }
+
+  .legend-td-extra-space {
+    padding: 3px 50px 3px 3px;
+  }
+
+  td {
+    padding: 3px;
+    text-align: left;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: $midgrey;
+    shape-rendering: crispEdges;
+  }
+
+  .line-daily-services {
+    fill: none;
+    stroke: $blue;
+    stroke-width: 1px;
+  }
+
+  .legend-daily-services {
+    fill: $blue;
+  }
+
+  .line-monthly-service-averages {
+    fill: none;
+    stroke: $downtime;
+    stroke-width: 2px;
+  }
+
+  .legend-monthly-service-averages {
+    fill: $downtime;
+  }
+
+  .line-subscription-limit {
+    fill: none;
+    stroke: $danger;
+    stroke-width: 2px;
+  }
+
+  .line-free-tests {
+    fill: none;
+    stroke: $green;
+    stroke-width: 2px;
+  }
+
+  .legend-subscription-limit {
+    fill: $danger;
+  }
+
+  .legend-free-tests {
+    fill: $green;
+  }
+
+  .legend-current-usage {
+    fill: $success-dimmed-2;
+  }
+
+  .legend-first-above-subscription {
+    fill: $yellow;
+  }
+
+  .legend-highest-usage {
+    fill: color.adjust($flapping, $lightness: -20%);
+  }
+
+  .line-subscription-start-end {
+    stroke: $middarkgrey;
+    stroke-width: 2px;
+  }
+
+  .text-subscription-start-end {
+    font-size: 12px;
+    text-anchor: middle;
+  }
+
+  .line-pointer {
+    visibility: hidden;
+    stroke: $grey-2;
+    stroke-width: 1;
+  }
+
+  .line-pointer.on {
+    visibility: visible;
+  }
+}
+
+div.tooltip.license_usage {
+  position: absolute;
+  z-index: 10;
+  padding: 5px;
+  background: $headline-color;
+  visibility: hidden;
+
+  &.on {
+    visibility: visible;
+  }
+}

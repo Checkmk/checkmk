@@ -32,6 +32,14 @@ def generate_prism_command(
     if "port" in params:
         args.extend(["--port", str(params["port"])])
 
+    if params["no_cert_check"]:
+        args.append("--no-cert-check")
+    else:
+        args.extend(["--cert-server-name", host_config.name])
+
+    if "timeout" in params:
+        args.extend(["--timeout", f"{params['timeout']:.0f}"])
+
     yield SpecialAgentCommand(command_arguments=args)
 
 

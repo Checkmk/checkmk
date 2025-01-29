@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type,no-untyped-def"
+# mypy: disable-error-code="arg-type"
 
 import json
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}
@@ -59,7 +60,7 @@ def parse_graylog_sources(string_table: StringTable) -> SourceInfoSection:
     return parsed
 
 
-def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str, Any]):
+def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str, Any]) -> Iterable:
     total_messages, average_messages, total_new_messages = handle_graylog_messages(
         item_data.num_messages, params
     )
@@ -79,7 +80,9 @@ def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str,
     )
 
 
-def check_graylog_sources(item: str, params: Mapping[str, Any], section: SourceInfoSection):
+def check_graylog_sources(
+    item: str, params: Mapping[str, Any], section: SourceInfoSection
+) -> Iterable:
     if (item_data := section.get(item)) is None:
         return
 
@@ -94,6 +97,7 @@ def discover_graylog_sources(section):
 
 
 check_info["graylog_sources"] = LegacyCheckDefinition(
+    name="graylog_sources",
     parse_function=parse_graylog_sources,
     service_name="Graylog Source %s",
     discovery_function=discover_graylog_sources,

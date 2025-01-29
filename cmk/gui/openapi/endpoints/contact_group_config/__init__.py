@@ -19,13 +19,23 @@ A contact group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this contact group.
 
 """
-from collections.abc import Mapping
-from typing import Any
 
-from cmk.utils import version
+from collections.abc import Iterable, Mapping
+from typing import Any, cast, Literal
 
+from cmk.ccc import version
+
+from cmk.utils import paths
+
+from cmk.gui.groups import GroupSpec
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.contact_group_config.common import (
+    APIGroupSpec,
+    APIInventoryPaths,
+    APIPathRestriction,
+    APIPermittedPath,
+)
 from cmk.gui.openapi.endpoints.contact_group_config.request_schemas import (
     BulkDeleteContactGroup,
     BulkInputContactGroup,
@@ -38,6 +48,7 @@ from cmk.gui.openapi.endpoints.contact_group_config.response_schemas import (
     ContactGroupCollection,
 )
 from cmk.gui.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -63,7 +74,12 @@ from cmk.gui.watolib.groups import (
     GroupInUseException,
     UnknownGroupException,
 )
-from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.groups_io import (
+    InventoryPaths,
+    load_contact_group_information,
+    NothingOrChoices,
+    PermittedPath,
+)
 
 PERMISSIONS = permissions.Perm("wato.users")
 
@@ -73,6 +89,97 @@ RW_PERMISSIONS = permissions.AllPerm(
         PERMISSIONS,
     ]
 )
+
+
+def _add_path_restriction_from_api(
+    out: PermittedPath, key: Literal["attributes", "columns", "nodes"], raw: APIPermittedPath
+) -> None:
+    match raw[key]:
+        case {"type": "no_restriction"}:
+            pass
+        case {"type": "restrict_all"}:
+            out[key] = "nothing"
+        case {"type": "restrict_values", "values": values}:
+            # TODO: Remove cast once https://github.com/python/mypy/pull/17600 is merged
+            out[key] = "choices", cast(list[str], values)
+        case unknown:
+            raise ValueError(f"Unknown path restriction: {unknown}")
+
+
+def _paths_from_api(raw_paths: list[APIPermittedPath]) -> Iterable[PermittedPath]:
+    for raw_path in raw_paths:
+        path: PermittedPath = {
+            "visible_raw_path": raw_path["path"],
+        }
+        _add_path_restriction_from_api(path, "attributes", raw_path)
+        _add_path_restriction_from_api(path, "columns", raw_path)
+        _add_path_restriction_from_api(path, "nodes", raw_path)
+
+        yield path
+
+
+def _inventory_paths_from_api(inventory_paths: APIInventoryPaths | None) -> InventoryPaths:
+    match inventory_paths:
+        case None:
+            return "allow_all"
+        case {"type": "allow_all"}:
+            return "allow_all"
+        case {"type": "forbid_all"}:
+            return "forbid_all"
+        case {"type": "specific_paths", "paths": raw_paths}:
+            # TODO: Remove cast once https://github.com/python/mypy/pull/17600 is merged
+            return "paths", list(_paths_from_api(cast(list[APIPermittedPath], raw_paths)))
+        case _:
+            raise ValueError(f"Unknown inventory paths: {inventory_paths}")
+
+
+def _group_from_api(group: APIGroupSpec, keep_unset: bool = False) -> GroupSpec:
+    if "inventory_paths" in group or not keep_unset:
+        group["inventory_paths"] = _inventory_paths_from_api(group.get("inventory_paths"))
+
+    return group
+
+
+def _path_restriction_to_api(value: NothingOrChoices | None) -> APIPathRestriction:
+    match value:
+        case None:
+            return {"type": "no_restriction"}
+        case "nothing":
+            return {"type": "restrict_all"}
+        case ("choices", values):
+            return {"type": "restrict_values", "values": list(values)}
+        case unknown:
+            raise ValueError(f"Unknown path restriction: {unknown}")
+
+
+def _paths_to_api(permitted_paths: Iterable[PermittedPath]) -> Iterable[APIPermittedPath]:
+    for path in permitted_paths:
+        yield {
+            "path": path["visible_raw_path"],
+            "attributes": _path_restriction_to_api(path.get("attributes")),
+            "columns": _path_restriction_to_api(path.get("columns")),
+            "nodes": _path_restriction_to_api(path.get("nodes")),
+        }
+
+
+def _inventory_paths_to_api(inventory_paths: InventoryPaths | None) -> APIInventoryPaths:
+    match inventory_paths:
+        case None | "allow_all":
+            return {"type": "allow_all"}
+        case "forbid_all":
+            return {"type": "forbid_all"}
+        case ("paths", permitted_paths):
+            return {
+                "type": "specific_paths",
+                "paths": list(_paths_to_api(permitted_paths)),
+            }
+        case unknown:
+            raise ValueError(f"Unknown inventory paths: {unknown}")
+
+
+def _group_to_api(group: GroupSpec) -> APIGroupSpec:
+    group["inventory_paths"] = _inventory_paths_to_api(group.get("inventory_paths"))
+    return group
 
 
 @Endpoint(
@@ -90,12 +197,15 @@ def create(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     body = params["body"]
     name = body["name"]
-    group_details = {"alias": body["alias"]}
-    if version.edition() is version.Edition.CME:
+    group_details = {
+        "alias": body["alias"],
+        "inventory_paths": _inventory_paths_from_api(body.get("inventory_paths")),
+    }
+    if version.edition(paths.omd_root) is version.Edition.CME:
         group_details = update_customer_info(group_details, body["customer"])
     add_group(name, "contact", group_details)
     group = fetch_group(name, "contact")
-    return serve_group(group, serialize_group("contact_group_config"))
+    return serve_group(_group_to_api(group), serialize_group("contact_group_config"))
 
 
 @Endpoint(
@@ -116,10 +226,15 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 
     contact_group_names = []
     for group_name, group_details in contact_group_details.items():
+        group_details["inventory_paths"] = _inventory_paths_from_api(
+            group_details.get("inventory_paths")
+        )
         add_group(group_name, "contact", group_details)
         contact_group_names.append(group_name)
 
-    contact_groups = fetch_specific_groups(contact_group_names, "contact")
+    contact_groups = [
+        _group_to_api(group) for group in fetch_specific_groups(contact_group_names, "contact")
+    ]
     return serve_json(serialize_group_list("contact_group_config", contact_groups))
 
 
@@ -134,7 +249,7 @@ def list_group(params: Mapping[str, Any]) -> Response:
     """Show all contact groups"""
     user.need_permission("wato.users")
     collection = [
-        {"id": k, "alias": v["alias"]} for k, v in load_contact_group_information().items()
+        _group_to_api(group) for group in build_group_list(load_contact_group_information())
     ]
     return serve_json(
         serialize_group_list("contact_group_config", collection),
@@ -155,7 +270,7 @@ def show(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
-    return serve_group(group, serialize_group("contact_group_config"))
+    return serve_group(_group_to_api(group), serialize_group("contact_group_config"))
 
 
 @Endpoint(
@@ -245,10 +360,14 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
-    constructors.require_etag(constructors.hash_of_dict(group))
-    edit_group(name, "contact", updated_group_details(name, "contact", params["body"]))
+    constructors.require_etag(constructors.hash_of_dict(_group_to_api(group)))
+    edit_group(
+        name,
+        "contact",
+        updated_group_details(name, "contact", _group_from_api(params["body"], keep_unset=True)),
+    )
     group = fetch_group(name, "contact")
-    return serve_group(group, serialize_group("contact_group_config"))
+    return serve_group(_group_to_api(group), serialize_group("contact_group_config"))
 
 
 @Endpoint(
@@ -269,8 +388,8 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
-    entries = body["entries"]
-    updated_contact_groups = update_groups("contact", entries)
+    entries = [_group_from_api(entry, keep_unset=True) for entry in body["entries"]]
+    updated_contact_groups = [_group_to_api(group) for group in update_groups("contact", entries)]
     return serve_json(serialize_group_list("contact_group_config", updated_contact_groups))
 
 

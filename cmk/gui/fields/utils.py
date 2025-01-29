@@ -6,7 +6,7 @@
 import collections
 import functools
 import typing
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
 
 from marshmallow import ValidationError
@@ -60,42 +60,6 @@ def collect_attributes(
     """Collect all host attributes for a specific object type
 
     Use cases can be host or folder creation or updating.
-
-    Args:
-        object_type:
-            Either 'host', 'folder' or 'cluster'
-
-        context:
-            Either 'create' or 'update' or 'view'
-
-    Returns:
-        A list of attribute describing named-tuples.
-
-    Examples:
-
-        >>> attrs = collect_attributes('host', 'create')
-        >>> assert len(attrs) > 10, len(attrs)
-
-        >>> attrs = collect_attributes('host', 'update')
-        >>> assert len(attrs) > 10, len(attrs)
-
-        >>> attrs = collect_attributes('cluster', 'create')
-        >>> assert len(attrs) > 10, len(attrs)
-
-        >>> attrs = collect_attributes('cluster', 'update')
-        >>> assert len(attrs) > 10, len(attrs)
-
-        >>> attrs = collect_attributes('folder', 'create')
-        >>> assert len(attrs) > 10, len(attrs)
-
-        >>> attrs = collect_attributes('folder', 'update')
-        >>> assert len(attrs) > 10
-
-    To check the content of the list, uncomment this one.
-
-        # >>> import pprint
-        # >>> pprint.pprint(attrs)
-
     """
     something = TypeVar("something")
 
@@ -280,63 +244,14 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
-    dict_ = schema_dict.copy()
+def _schema_from_dict(name: str, schema_dict: Mapping[str, Any]) -> type[BaseSchema]:
+    dict_ = {**schema_dict}
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
 
 
 @functools.lru_cache
-def attr_openapi_schema(
-    object_type: ObjectType,
-    context: ObjectContext,
-) -> type[BaseSchema]:
-    """
-
-    Examples:
-
-        Known attributes are allowed through:
-
-            >>> schema_class = attr_openapi_schema("host", "create")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-            >>> schema_class = attr_openapi_schema("folder", "update")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-            >>> schema_class = attr_openapi_schema("cluster", "create")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-        Unknown attributes lead to an error:
-
-            >>> schema_obj.load({'foo': 'bar'})
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
-
-        Wrong values on tag groups also lead to an error:
-
-            >>> schema_obj.load({'tag_address_family': 'ip-v5-only'})
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: {'tag_address_family': ["'ip-v5-only' is not one of the enum values: ['ip-v4-only', 'ip-v6-only', 'ip-v4v6', 'no-ip']"]}
-
-    Args:
-        object_type:
-            Either "host", "folder" or "cluster".
-
-        context:
-            Either "create" or "update"
-
-    Returns:
-        A marshmallow schema with the attributes as fields.
-
-    """
+def attr_openapi_schema(object_type: ObjectType, context: ObjectContext) -> type[BaseSchema]:
     schema = collections.OrderedDict()
     for attr in collect_attributes(object_type, context):
         schema[attr.name] = _field_from_attr(attr)

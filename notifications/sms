@@ -46,7 +46,7 @@ raw_context = collect_context()
 message = get_sms_message_from_context(raw_context)
 
 
-def quote_message(msg, max_length=None):
+def quote_message(msg: str, max_length: int | None = None) -> str:
     if max_length:
         return "'" + msg.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + msg.replace("'", "'\"'\"'") + "'"

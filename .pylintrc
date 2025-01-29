@@ -1,26 +1,22 @@
 [MASTER]
 # Setup the Python paths needed for our tests.
-#
-# Please note:
-# - repo path is added to be able to import tests.conftest
-# - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
-    import tests.conftest;
+    from tests.testlib.repo import add_protocols_path, add_python_paths, add_otel_collector_path;
+    add_protocols_path();
+    add_python_paths();
+    add_otel_collector_path();
 load-plugins=
-    tests.testlib.pylint_cmk,
-    tests.testlib.pylint_checker_localization,
-    tests.testlib.pylint_checker_forbidden_objects,
-    tests.testlib.pylint_checker_cmk_module_layers,
-    tests.testlib.pylint_checker_layering_violation,
-    pylint.extensions.bad_builtin,
+    tests.pylint.cmk_edition_ignores,
+    tests.pylint.checker_localization,
+    tests.pylint.checker_cmk_module_layers,
+    tests.pylint.checker_layering_violation,
     pylint_pydantic
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster
 persistent=no
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic,lxml
-bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 signature-mutators=cmk.utils.store.with_lock_dict
 
@@ -72,6 +68,7 @@ disable=
     # will be a non-trivial amount of work.
     too-few-public-methods,
     too-many-arguments,
+    too-many-positional-arguments,
     too-many-boolean-expressions,
     too-many-instance-attributes,
     too-many-lines,
@@ -150,7 +147,12 @@ disable=
     broad-exception-raised,
     #---------------------------------------------------------------------------
     # Import order is checked by isort
-    wrong-import-order
+    wrong-import-order,
+    #---------------------------------------------------------------------------
+    # New in version 3.2.0 which causes new findings
+    # TODO: fix these new findings - https://jira.lan.tribe29.com/browse/CMK-17473
+    possibly-used-before-assignment,
+    contextmanager-generator-missing-cleanup
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

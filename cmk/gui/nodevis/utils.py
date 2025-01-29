@@ -8,8 +8,9 @@ from typing import Any
 
 from livestatus import lqencode
 
+from cmk.ccc import store
+
 import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -74,8 +75,8 @@ def get_toggle_layout_designer_page_menu_entry():
         icon_name="toggle_off",
         item=make_javascript_link(
             "const new_state = node_instance.toggle_layout_designer();"
-            "d3.select('.suggestion.topology_layout_designer').select('img').classed('on', new_state);"
-            "d3.select('#menu_shortcut_edit_layout').select('img').classed('on', new_state);"
+            "cmk.d3.select('.suggestion.topology_layout_designer').select('img').classed('on', new_state);"
+            "cmk.d3.select('#menu_shortcut_edit_layout').select('img').classed('on', new_state);"
         ),
         name="edit_layout",
         css_classes=["topology_layout_designer", "noselect"],
@@ -90,7 +91,7 @@ def get_compare_history_page_menu_entry():
         icon_name="toggle_off",
         item=make_javascript_link(
             "const new_state = node_instance.toggle_compare_history();"
-            "d3.select('.suggestion.topology_compare_history').select('img').classed('on', new_state);"
+            "cmk.d3.select('.suggestion.topology_compare_history').select('img').classed('on', new_state);"
         ),
         name="compare_history",
         css_classes=["topology_compare_history", "noselect"],

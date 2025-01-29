@@ -6,16 +6,11 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include <cstddef>
-#include <memory>
 #include <string>
 
-#include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
-class Column;
 class ICore;
-class Query;
-class User;
+class LogCache;
 
 class TableLog : public Table {
 public:
@@ -29,10 +24,7 @@ public:
         std::string colname) const override;
 
 private:
-    LogCache *_log_cache;
-
-    static LogFilter constructFilter(Query &query,
-                                     size_t max_lines_per_logfile);
+    LogCache *log_cache_;
 };
 
 #endif  // TableLog_h

@@ -5,27 +5,29 @@
 
 import os
 import pickle
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import save_object_to_file
+
 import cmk.utils
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.store import save_object_to_file
+from cmk.utils.escaping import escape
 from cmk.utils.user import UserId
 
-from cmk.gui import hooks, userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import PermissionName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
@@ -95,22 +97,21 @@ def load(
 
 def _fix_lazy_strings(obj: TVisual) -> TVisual:
     """
-    Recursively evaluate all LazyStrings in the object to fixed strings by running them through
-    str()
+    Recursively evaluate all LazyStrings in the object to fixed strings by running them through str()
     """
 
-    match obj:
-        case dict():
-            # cast is needed for the TypedDicts
-            return cast(TVisual, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
-        case list():
-            return list(map(_fix_lazy_strings, obj))
-        case tuple():
-            return tuple(map(_fix_lazy_strings, obj))
-        case LazyString():
-            return str(obj)
+    def _fix(value: object) -> object:
+        if isinstance(value, dict):
+            return {attr: _fix(element) for attr, element in value.items()}
+        if isinstance(value, list):
+            return [_fix(element) for element in value]
+        if isinstance(value, tuple):
+            return tuple(_fix(element) for element in value)
+        if isinstance(value, LazyString):
+            return str(value)
+        return value
 
-    return obj
+    return cast(TVisual, {attr: _fix(value) for attr, value in obj.items()})
 
 
 class _CombinedVisualsCache(Generic[TVisual]):
@@ -193,11 +194,8 @@ class _CombinedVisualsCache(Generic[TVisual]):
         self._update_cache_info_timestamp()
 
 
-hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
-hooks.register_builtin(
-    "snapshot-pushed", lambda: store.clear_pickled_files_cache(cmk.utils.paths.tmp_dir)
-)
-hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
+def invalidate_all_caches() -> None:
+    _CombinedVisualsCache.invalidate_all_caches()
 
 
 def _load_custom_user_visuals(
@@ -273,6 +271,16 @@ def load_visuals_of_a_user(
     return user_visuals
 
 
+def load_raw_visuals_of_a_user(
+    what: VisualTypeName,
+    user_id: UserId,
+) -> dict[str, dict[str, Any]]:
+    path = cmk.utils.paths.profile_dir / user_id / f"user_{what}.mk"
+    return store.try_load_file_from_pickle_cache(
+        path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
+    )
+
+
 def _get_packaged_visuals(
     visual_type: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],
@@ -309,7 +317,8 @@ def _get_packaged_visuals(
 def get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | None]:
     return (
         {}
-        if cmk_version.edition() is cmk_version.Edition.CRE or not user.may("wato.manage_mkps")
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE
+        or not user.may("wato.manage_mkps")
         else id_to_mkp(
             Installer(cmk.utils.paths.installed_packages_dir),
             _all_local_visuals_files(what),
@@ -375,11 +384,20 @@ def _get_local_path(visual_type: VisualTypeName) -> Path:
     raise MKUserError(None, _("This package type is not supported."))
 
 
+def _get_dynamic_visual_default_permissions() -> Sequence[RoleName]:
+    if active_config.default_dynamic_visual_permission == "yes":
+        return default_authorized_builtin_role_ids
+    return ["admin"]
+
+
 def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
     if published_to_user(visual) and permname not in permission_registry:
         declare_permission(
-            permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
+            permname,
+            f"{visual['title']} ({visual['name']})",
+            visual["description"],
+            _get_dynamic_visual_default_permissions(),
         )
 
 
@@ -388,9 +406,9 @@ def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: 
     if visual["packaged"] and permname not in permission_registry:
         declare_permission(
             permname,
-            visual["title"] + _(" (packaged)"),
+            f"{visual['title']} ({visual['name']}, {_('packaged)')}",
             visual["description"],
-            default_authorized_builtin_role_ids,
+            _get_dynamic_visual_default_permissions(),
         )
 
 
@@ -452,7 +470,7 @@ def available(
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
-def available_by_owner(  # pylint: disable=too-many-branches
+def available_by_owner(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, dict[UserId, TVisual]]:
@@ -560,4 +578,6 @@ def get_permissioned_visual(
 
     if visual := permitted_visuals.get(item):
         return visual
-    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
+    raise MKUserError(
+        "%s_name" % what, _("The requested %s %s does not exist") % (what, escape(item))
+    )

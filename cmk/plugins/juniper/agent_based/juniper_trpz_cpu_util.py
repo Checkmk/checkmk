@@ -5,7 +5,7 @@
 
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -40,18 +40,18 @@ def discovery_juniper_trpz_cpu_util(section: Section) -> DiscoveryResult:
 
 
 def check_juniper_trpz_cpu_util(params: Params, section: Section) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.utilc,
         metric_name="utilc",
         render_func=lambda v: f"{v}% current",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.util1,
         levels_upper=params["util"],
         metric_name="util1",
         render_func=lambda v: f"{v}% 1min",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.util5,
         levels_upper=params["util"],
         metric_name="util5",

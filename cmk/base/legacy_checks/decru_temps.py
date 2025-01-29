@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, fahrenheit_to_celsius
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
+
+check_info = {}
 
 
 def inventory_decru_temps(info):
@@ -32,6 +33,7 @@ def parse_decru_temps(string_table: StringTable) -> StringTable:
 
 
 check_info["decru_temps"] = LegacyCheckDefinition(
+    name="decru_temps",
     parse_function=parse_decru_temps,
     detect=DETECT_DECRU,
     fetch=SNMPTree(

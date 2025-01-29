@@ -48,10 +48,10 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, contains, equals, exists, SNMPTree, StringTable
+
+check_info = {}
 
 DETECT_SUPERMICRO = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
@@ -74,6 +74,7 @@ def parse_supermicro(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro"] = LegacyCheckDefinition(
+    name="supermicro",
     parse_function=parse_supermicro,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(
@@ -138,8 +139,10 @@ def check_supermicro_sensors(item, _no_params, info):
                 perfvar = "temp"
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
+                    # TODO: Could warn_upper and crit_upper be None here?
                     reading, warn_upper, crit_upper = (
-                        x / 1000.0 for x in (reading, warn_upper, crit_upper)
+                        x / 1000.0  # type: ignore[operator]
+                        for x in (reading, warn_upper, crit_upper)
                     )
                     unit = "V"
                 perfvar = "voltage"
@@ -159,6 +162,7 @@ def parse_supermicro_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro_sensors"] = LegacyCheckDefinition(
+    name="supermicro_sensors",
     parse_function=parse_supermicro_sensors,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(
@@ -207,6 +211,7 @@ def parse_supermicro_smart(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro_smart"] = LegacyCheckDefinition(
+    name="supermicro_smart",
     parse_function=parse_supermicro_smart,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(

@@ -14,7 +14,26 @@ from cmk.gui.valuespec import TextInput
 
 
 def _parameter_valuespec_volume_groups():
-    return vs_filesystem(elements=[FilesystemElements.levels])
+    return vs_filesystem(
+        elements=[
+            FilesystemElements.levels,
+        ],
+        # Ignore some keys that are present in the default parameters.
+        # Look at the available data and see which should be configurable here.
+        ignored_keys=[
+            "magic",
+            "magic_normsize",
+            "inode_levels",
+            "levels_low",
+            "volume_groups",
+            "show_levels",
+            "inodes_levels",
+            "show_inodes",
+            "show_reserved",
+            "trend_range",
+            "trend_perfdata",
+        ],
+    )
 
 
 rulespec_registry.register(

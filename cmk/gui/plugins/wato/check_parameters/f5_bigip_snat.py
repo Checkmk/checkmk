@@ -19,7 +19,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_in_octets",
                 Levels(
-                    title=_("Incoming Traffic Maximum"),
+                    title=_("Incoming traffic maximum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -28,7 +28,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_in_octets_lower",
                 Levels(
-                    title=_("Incoming Traffic Minimum"),
+                    title=_("Incoming traffic minimum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -37,7 +37,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_out_octets",
                 Levels(
-                    title=_("Outgoing Traffic Maximum"),
+                    title=_("Outgoing traffic maximum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -46,7 +46,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_out_octets_lower",
                 Levels(
-                    title=_("Outgoing Traffic Minimum"),
+                    title=_("Outgoing traffic minimum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -55,7 +55,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_total_octets",
                 Levels(
-                    title=_("Total Traffic Maximum"),
+                    title=_("Total traffic maximum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -64,7 +64,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_total_octets_lower",
                 Levels(
-                    title=_("Total Traffic Minimum"),
+                    title=_("Total traffic minimum"),
                     unit=_("bytes/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -73,7 +73,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_in_pkts",
                 Levels(
-                    title=_("Incoming Packets Maximum"),
+                    title=_("Incoming packets maximum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -82,7 +82,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_in_pkts_lower",
                 Levels(
-                    title=_("Incoming Packets Minimum"),
+                    title=_("Incoming packets minimum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -91,7 +91,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_out_pkts",
                 Levels(
-                    title=_("Outgoing Packets Maximum"),
+                    title=_("Outgoing packets maximum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -100,7 +100,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_out_pkts_lower",
                 Levels(
-                    title=_("Outgoing Packets Minimum"),
+                    title=_("Outgoing packets minimum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -109,7 +109,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_total_pkts",
                 Levels(
-                    title=_("Total Packets Maximum"),
+                    title=_("Total packets maximum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -118,7 +118,7 @@ def _parameter_valuespec_f5_bigip_snat():
             (
                 "if_total_pkts_lower",
                 Levels(
-                    title=_("Total Packets Minimum"),
+                    title=_("Total packets minimum"),
                     unit=_("packets/s"),
                     default_difference=(5, 8),
                     default_value=None,
@@ -132,9 +132,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="f5_bigip_snat",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Source NAT Name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Source NAT name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_snat,
-        title=lambda: _("F5 Loadbalancer Source NAT"),
+        title=lambda: _("F5 load balancer source NAT"),
     )
 )

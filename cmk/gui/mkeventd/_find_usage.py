@@ -5,11 +5,10 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.config_validation_layer.groups import GroupName
-
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import config_variable_registry
@@ -25,7 +24,7 @@ def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
         config_variable = config_variable_registry["mkeventd_notify_contactgroup"]()
         domain = config_variable.domain()
         configured = global_config.get("mkeventd_notify_contactgroup")
-        default_value = domain().default_globals()["mkeventd_notify_contactgroup"]
+        default_value = domain.default_globals()["mkeventd_notify_contactgroup"]
         if (configured and name == configured) or name == default_value:
             used_in.append(
                 (

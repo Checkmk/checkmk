@@ -34,10 +34,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -90,6 +90,7 @@ def check_oracle_diva_csm(item, params, info):
 
 
 check_info["oracle_diva_csm"] = LegacyCheckDefinition(
+    name="oracle_diva_csm",
     parse_function=parse_oracle_diva_csm,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
     fetch=[
@@ -133,6 +134,7 @@ def check_oracle_diva_csm_drive(item, params, info):
 
 
 check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
+    name="oracle_diva_csm_drive",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_drive,
@@ -149,6 +151,7 @@ def check_oracle_diva_csm_actor(item, params, info):
 
 
 check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
+    name="oracle_diva_csm_actor",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_actor,
@@ -165,6 +168,7 @@ def check_oracle_diva_csm_archive(item, params, info):
 
 
 check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
+    name="oracle_diva_csm_archive",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_archive,
@@ -198,11 +202,7 @@ def check_oracle_diva_csm_objects(item, params, info):
     if len(info) > 4 and len(info[4]) > 0:
         object_count, remaining_size, total_size = map(int, info[4][0])
 
-        infotext = "managed objects: {}, remaining size: {} GB of {} GB".format(
-            object_count,
-            remaining_size,
-            total_size,
-        )
+        infotext = f"managed objects: {object_count}, remaining size: {remaining_size} GB of {total_size} GB"
 
         return (
             0,
@@ -223,6 +223,7 @@ def check_oracle_diva_csm_objects(item, params, info):
 
 
 check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
+    name="oracle_diva_csm_objects",
     service_name="DIVA Managed Objects",
     sections=["oracle_diva_csm"],
     discovery_function=inventory_oracle_diva_csm_objects,
@@ -261,6 +262,7 @@ def check_oracle_diva_csm_tapes(item, params, info):
 
 
 check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
+    name="oracle_diva_csm_tapes",
     service_name="DIVA Blank Tapes",
     sections=["oracle_diva_csm"],
     discovery_function=inventory_oracle_diva_csm_tapes,

@@ -5,13 +5,36 @@
 
 from __future__ import annotations
 
-import random
+import secrets
 import time
 from collections.abc import Callable
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Literal, Protocol
+
+from cmk.utils.log.security_event import log_security_event, SecurityEvent
+from cmk.utils.user import UserId
 
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.http import request
+
+
+class _TransactionIdInvalid(ValueError):
+    """Exception for transaction id validation"""
+
+
+@dataclass
+class TransactionIDValidationFailureEvent(SecurityEvent):
+    """Indicates failed transaction id validation"""
+
+    def __init__(self, *, username: UserId | None, remote_ip: str | None) -> None:
+        super().__init__(
+            "Transaction ID validation failed",
+            {
+                "user": str(username or "Unknown user"),
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.application_errors,
+        )
 
 
 class ReaderProtocol(Protocol):
@@ -24,9 +47,12 @@ class TransactionManager:
 
     def __init__(
         self,
+        user: UserId | None,
         reader: ReaderProtocol,
         writer: Callable[[list[str]], None],
     ) -> None:
+        self._user = user
+
         self._reader = reader
         self._writer = writer
 
@@ -50,7 +76,7 @@ class TransactionManager:
         return self._current_transid
 
     def fresh_transid(self) -> str:
-        """Compute a (hopefully) unique transaction id.
+        """Compute a unique transaction id.
 
         This is generated during rendering of a form or an action link, stored
         in a user specific file for later validation, sent to the users browser
@@ -58,7 +84,7 @@ class TransactionManager:
         (link / form) and then validated if it is a known transid. When it is a
         known transid, it will be used and invalidated. If the id is not known,
         the action will not be processed."""
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        transid = "%d/%s" % (int(time.time()), secrets.token_urlsafe(8))
         self._new_transids.append(transid)
         return transid
 
@@ -80,6 +106,26 @@ class TransactionManager:
                 cleared_ids.append(valid_id)
         self._writer(cleared_ids[-30:] + self._new_transids)
 
+    def _validate_transaction_id(self, transid: str) -> Literal[True]:
+        if "/" not in transid:
+            raise _TransactionIdInvalid("No '/' in transid")
+
+        try:
+            timestamp = int(transid.split("/", 1)[0])
+        except ValueError:
+            raise _TransactionIdInvalid("Timestamp invalid")
+
+        # If age is too old (one week), it is always
+        # invalid:
+        if time.time() - timestamp >= 604800:  # 7 * 24 hours
+            raise _TransactionIdInvalid("Timestamp expired")
+
+        # Now check, if this transid is a valid one
+        if transid not in self._reader(lock=False):
+            raise _TransactionIdInvalid("Transid not found")
+
+        return True
+
     def transaction_valid(self) -> bool:
         """Checks if the current transaction is valid
 
@@ -98,25 +144,16 @@ class TransactionManager:
         if self._ignore_transids and (not transid or transid == "-1"):
             return True  # automation
 
-        if "/" not in transid:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp_str = transid.split("/", 1)[0]
-
         try:
-            timestamp = int(timestamp_str)
-        except ValueError:
+            return self._validate_transaction_id(transid)
+        except _TransactionIdInvalid:
+            log_security_event(
+                TransactionIDValidationFailureEvent(
+                    username=self._user,
+                    remote_ip=request.remote_ip,
+                )
+            )
             return False
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - timestamp >= 604800:  # 7 * 24 hours
-            return False
-
-        # Now check, if this transid is a valid one
-        return transid in self._reader(lock=False)
 
     def is_transaction(self) -> bool:
         """Checks, if the current page is a transation, i.e. something that is secured by

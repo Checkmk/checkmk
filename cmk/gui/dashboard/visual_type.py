@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
@@ -19,7 +19,7 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
-from .store import add_dashlet, get_permitted_dashboards, load_dashboard_with_cloning
+from .store import add_dashlet, get_permitted_dashboards, load_dashboard
 from .type_defs import ABCGraphDashletConfig
 
 
@@ -96,7 +96,7 @@ class VisualTypeDashboards(VisualType):
             )
 
         permitted_dashboards = get_permitted_dashboards()
-        dashboard = load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
+        dashboard = load_dashboard(permitted_dashboards, target_visual_name)
 
         dashlet_spec = DashletConfig(
             {
@@ -165,6 +165,6 @@ class VisualTypeDashboards(VisualType):
             )
 
         raise MKGeneralException(
-            _("Graph specification '%s' is insufficient for Dashboard.")
+            _("Graph specification '%s' is insufficient for dashboard.")
             % graph_specification.graph_type
         )

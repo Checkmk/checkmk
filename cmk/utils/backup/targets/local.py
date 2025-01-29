@@ -10,6 +10,9 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import is_cma
+
 from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (
     BACKUP_INFO_FILENAME,
@@ -21,8 +24,6 @@ from cmk.utils.backup.utils import (
     UnrecognizedBackupTypeError,
     verify_backup_file,
 )
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.version import is_cma
 
 from ..job import Job, JobConfig
 from . import TargetId

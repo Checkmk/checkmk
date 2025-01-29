@@ -13,15 +13,19 @@ from typing import Any
 
 from livestatus import MKLivestatusNotFoundError, SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.render
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import (
+    get_template_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -30,12 +34,12 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 
@@ -49,8 +53,14 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
+from ._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderConfigBase,
+    GraphRenderOptions,
+    GraphTitleFormat,
+)
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
+from ._legacy import get_render_function, get_unit_info, LegacyUnitSpecification
 from ._utils import SizeEx
 
 RenderOutput = HTML | str
@@ -92,13 +102,15 @@ def host_service_graph_popup_cmk(
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
-        size=(30, 10),
-        font_size=SizePT(6.0),
-        resizable=False,
-        show_controls=False,
-        show_legend=False,
-        interaction=False,
-        show_time_range_previews=False,
+        GraphRenderOptions(
+            size=(30, 10),
+            font_size=SizePT(6.0),
+            resizable=False,
+            show_controls=False,
+            show_legend=False,
+            interaction=False,
+            show_time_range_previews=False,
+        ),
     )
 
     graph_data_range = make_graph_data_range(
@@ -108,10 +120,10 @@ def host_service_graph_popup_cmk(
 
     html.write_html(
         render_graphs_from_specification_html(
-            TemplateGraphSpecification(
-                site=site,
+            get_template_graph_specification(
+                site_id=site,
                 host_name=host_name,
-                service_description=service_description,
+                service_name=service_description,
             ),
             graph_data_range,
             graph_render_config,
@@ -160,7 +172,7 @@ def _render_graph_html(
 ) -> HTML:
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
@@ -274,7 +286,7 @@ def _show_html_graph_title(
             graph_render_config,
             explicit_title=graph_render_config.explicit_title,
         ),
-        separator=" / ",
+        separator=HTML.without_escaping(" / "),
     )
     if not title:
         return
@@ -336,7 +348,7 @@ def _show_graph_html_content(
     if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
         html.h2(additional_html.title)
-        html.write_html(HTML(additional_html.html))
+        html.write_html(HTML.without_escaping(additional_html.html))
         html.close_div()
 
     html.close_div()
@@ -414,9 +426,7 @@ def _get_scalars(
     return scalars
 
 
-def _show_graph_legend(  # pylint: disable=too-many-branches
-    graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig
-) -> None:
+def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
     """Render legend that describe the metrics"""
     graph_width = graph_render_config.size[0] * html_size_per_ex
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
@@ -484,7 +494,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
-        html.write_text(curve["title"])
+        html.write_text_permissive(curve["title"])
         html.close_td()
 
         for scalar, title, inactive in scalars:
@@ -506,7 +516,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(horizontal_rule.color))
-            html.write_text(str(horizontal_rule.title))
+            html.write_text_permissive(str(horizontal_rule.title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into
@@ -577,7 +587,7 @@ class AjaxGraph(cmk.gui.pages.Page):
     def ident(cls) -> str:
         return "ajax_graph"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
         try:
@@ -655,7 +665,7 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
         "html": html_code,
@@ -750,10 +760,10 @@ def _render_graphs_from_definitions(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
     for graph_recipe in graph_recipes:
-        recipe_specific_render_config = graph_render_config.model_copy(
-            update=dict(graph_recipe.render_options)
+        recipe_specific_render_config = graph_render_config.update_from_options(
+            graph_recipe.render_options
         )
         recipe_specific_data_range = graph_data_range.model_copy(
             update=dict(graph_recipe.data_range or {})
@@ -839,7 +849,7 @@ def _render_graph_content_html(
     *,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
 
     try:
         graph_artwork = compute_graph_artwork(
@@ -922,7 +932,7 @@ def _render_time_range_selection(
             )
         )
     return HTMLWriter.render_table(
-        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
 
 
@@ -969,7 +979,7 @@ class AjaxGraphHover(cmk.gui.pages.Page):
     def ident(cls) -> str:
         return "ajax_graph_hover"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")
         try:
@@ -1000,7 +1010,11 @@ def _render_ajax_graph_hover(
         "curve_values": list(
             compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(graph_recipe, curves),
-                graph_recipe.unit,
+                get_render_function(
+                    get_unit_info(graph_recipe.unit_spec.id)
+                    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)
+                    else graph_recipe.unit_spec
+                ),
                 hover_time,
             )
         ),
@@ -1111,7 +1125,17 @@ def host_service_graph_dashlet_cmk(
                 graph_render_config,
                 graph_artwork,
             )
-            graph_render_config.size = (width, int(height - legend_height))
+            if (graph_height := int(height - legend_height)) <= 0:
+                html.write_html(
+                    render_graph_error_html(
+                        title=_("Dashlet too short to render graph"),
+                        msg_or_exc=_(
+                            "Either increase the dashlet height or disable the graph legend."
+                        ),
+                    )
+                )
+                return None
+            graph_render_config.size = (width, graph_height)
 
     html_code = _render_graphs_from_definitions(
         [graph_recipe],

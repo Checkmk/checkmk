@@ -13,16 +13,28 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
+import json
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, cast, Generic, TypeVar
 
 from livestatus import SiteId
 
-import cmk.gui.forms as forms
+from cmk.utils.urls import is_allowed_url
+
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
+from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    parse_data_from_frontend,
+    render_form_spec,
+    RenderMode,
+)
+from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -37,6 +49,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeuri_contextless
@@ -49,15 +62,23 @@ from cmk.gui.valuespec import (
     FixedValue,
     ID,
     RuleComment,
-    SetupSiteChoice,
     TextInput,
+    ValueSpec,
 )
+from cmk.gui.valuespec import SetupSiteChoice as VSSetupSiteChoice
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
+from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import DictElement, FieldSize, FormSpec
+from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+
 _T = TypeVar("_T", bound=Mapping[str, Any])
+
+DoValidate = bool
 
 
 class SimpleModeType(Generic[_T], abc.ABC):
@@ -67,7 +88,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def name_singular(self):
+    def name_singular(self) -> str:
         """Name of the object used. This is used in user visible messages, buttons and titles."""
         raise NotImplementedError()
 
@@ -78,8 +99,8 @@ class SimpleModeType(Generic[_T], abc.ABC):
         """
         raise NotImplementedError()
 
-    def site_valuespec(self) -> DualListChoice | SetupSiteChoice:
-        return SetupSiteChoice()
+    def site_valuespec(self) -> DualListChoice | VSSetupSiteChoice:
+        return VSSetupSiteChoice()
 
     @abc.abstractmethod
     def can_be_disabled(self) -> bool:
@@ -90,7 +111,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
@@ -276,7 +297,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
 
     def _show_row(self, nr: int, table: Table, ident: str, entry: _T) -> None:
         table.cell("#", css=["narrow nowrap"])
-        html.write_text(nr)
+        html.write_text_permissive(nr)
 
         self._show_action_cell(nr, table, ident, entry)
         self._show_entry_cells(table, ident, entry)
@@ -302,6 +323,9 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
+        self._show_delete_action(nr, ident, entry)
+
+    def _show_delete_action(self, nr: int, ident: str, entry: _T) -> None:
         confirm_delete: str = _("ID: %s") % ident
         if delete_confirm_msg := self._delete_confirm_message():
             confirm_delete += "<br><br>" + delete_confirm_msg
@@ -322,15 +346,30 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
 
 
-class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
+class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     """Base class for edit modes"""
 
-    @abc.abstractmethod
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         raise NotImplementedError()
 
-    def _from_vars(self) -> None:
-        ident = request.get_ascii_input("ident")
+    def _fs_individual_elements(self) -> dict[str, DictElement]:
+        raise NotImplementedError()
+
+    def _individual_elements(self) -> dict[str, DictElement]:
+        return self._fs_individual_elements()
+
+    def _fs_mandatory_elements(self) -> dict[str, DictElement]:
+        return self._fs_general_properties()
+
+    def from_vars(self, ident_var: str) -> None:
+        self._from_vars(ident_var)
+
+    @property
+    def entry(self) -> _T:
+        return self._entry
+
+    def _from_vars(self, ident_var: str = "ident") -> None:
+        ident = request.get_ascii_input(ident_var)
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -355,12 +394,19 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
             self._new = True
             self._ident = None
-            self._entry = copy.deepcopy(entry)
+            self._entry = self._clone_entry(entry)
             return
 
         self._new = True
         self._ident = None
-        self._entry = {}
+        self._entry = self._default_entry()
+
+    def _clone_entry(self, entry: _T) -> _T:
+        return copy.deepcopy(entry)
+
+    def _default_entry(self) -> _T:
+        # This is only relevant when rendering with form specs
+        return cast(_T, {})
 
     def title(self) -> str:
         if self._new:
@@ -371,6 +417,29 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         return make_simple_form_page_menu(
             _("Actions"), breadcrumb, form_name="edit", button_name="_save"
         )
+
+    def _get_catalog_converter(
+        self,
+    ) -> Dict2CatalogConverter:
+        general_elements = self._fs_mandatory_elements()
+        general_keys = general_elements.keys()
+        individual_elements = self._individual_elements()
+        individual_keys = individual_elements.keys()
+        headers: Headers = [
+            (_("General properties"), list(general_keys)),
+            (_("%s properties") % self._mode_type.name_singular().title(), list(individual_keys)),
+        ]
+        return Dict2CatalogConverter.build_from_dictionary(
+            FormSpecDictionary(elements={**general_elements, **individual_elements}),
+            headers,
+        )
+
+    def catalog(self) -> Catalog | None:
+        # Note: We may skip the CatalogConverter and build the Catalog ourselves
+        return self._get_catalog_converter().catalog
+
+    def _validate_vs(self, entry: dict[str, Any], varprefix: str) -> None:
+        pass
 
     def valuespec(self) -> Dictionary:
         general_elements = self._vs_mandatory_elements()
@@ -389,12 +458,12 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                 (_("%s properties") % self._mode_type.name_singular().title(), individual_keys),
             ],
             render="form",
+            validate=self._validate_vs,
         )
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
-        ident_attr: list = []
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, ValueSpec]] = [
                 (
                     "ident",
                     ID(
@@ -467,6 +536,104 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
         return elements
 
+    def _fs_general_properties(self) -> dict[str, form_specs.DictElement]:
+        elements: dict[str, form_specs.DictElement[Any]] = {}
+        if self._new:
+            elements["ident"] = form_specs.DictElement(
+                parameter_form=form_specs.String(
+                    title=Title("Unique ID"),
+                    help_text=Help(
+                        "The ID must be unique. It acts as internal key when objects reference it."
+                    ),
+                    prefill=form_specs.DefaultValue(self._default_id()),
+                    custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                    field_size=FieldSize.LARGE,
+                ),
+            )
+        else:
+            assert self._ident is not None
+            elements["ident"] = form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.FixedValue(
+                    title=Title("Unique ID"),
+                    help_text=Help(
+                        "The ID must be unique. It acts as internal key when objects reference it."
+                    ),
+                    value=self._ident,
+                ),
+            )
+
+        if "locked_by" in self._entry:
+            shown_info = ", ".join(f"{x}: {y}" for x, y in self._entry["locked_by"].items())
+            elements["locked_by"] = form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.FixedValue(
+                    title=Title("Locked by"),
+                    value=shown_info,
+                ),
+            )
+
+        elements["title"] = form_specs.DictElement(
+            parameter_form=form_specs.String(
+                title=Title("Title"),
+                help_text=Help("Name your %s for easy recognition.")
+                % self._mode_type.name_singular(),
+                custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                field_size=FieldSize.LARGE,
+            ),
+        )
+        elements["comment"] = form_specs.DictElement(
+            parameter_form=CommentTextArea(
+                title=Title("Comment"),
+                help_text=Help(
+                    "Optionally, add a comment to explain the purpose of this "
+                    "object. The comment is only visible in this dialog and can help "
+                    "other users to understand the intentions of the configured "
+                    "attributes."
+                ),
+            ),
+        )
+
+        def _validate_documentation_url(value: str) -> None:
+            if not is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+                raise ValidationError(
+                    Message("Not a valid URL (Only http and https URLs are allowed)."),
+                )
+
+        elements["docu_url"] = form_specs.DictElement(
+            parameter_form=form_specs.String(
+                title=Title("Documentation URL"),
+                help_text=Help(
+                    "Optionally, add a URL linking to a documentation or any other "
+                    "page. An icon links to the page and opens in a new tab when "
+                    "clicked. You can use either global URLs (starting with "
+                    "<tt>http://</tt>), absolute local URLs (starting with "
+                    "<tt>/</tt>) or relative URLs (relative to "
+                    "<tt>check_mk/</tt>)."
+                ),  # % str(html.render_icon("url")),
+                custom_validate=(_validate_documentation_url,),
+                field_size=FieldSize.LARGE,
+            ),
+        )
+
+        if self._mode_type.can_be_disabled():
+            elements["disabled"] = form_specs.DictElement(
+                parameter_form=form_specs.BooleanChoice(
+                    title=Title("Activation"),
+                    help_text=Help(
+                        "Selecting this option will disable the %s, but "
+                        "it will remain in the configuration."
+                    )
+                    % self._mode_type.name_singular(),
+                    label=Label("do not activate this %s") % self._mode_type.name_singular(),
+                ),
+            )
+
+        if self._mode_type.is_site_specific():
+            elements["site"] = form_specs.DictElement(parameter_form=create_setup_site_choice())
+
+        return elements
+
     def _default_id(self) -> str:
         return unique_default_name_suggestion(
             self._mode_type.name_singular(),
@@ -476,10 +643,16 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
     def _vs_optional_keys(self) -> list[str]:
         return []
 
-    def action(self) -> ActionResult:
-        if not transactions.transaction_valid():
-            return redirect(mode_url(self._mode_type.list_mode_name()))
+    def _update_entry_from_vars(self) -> None:
+        render_mode, form_spec = self._get_render_mode()
+        match render_mode:
+            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
+                assert form_spec is not None
+                self._update_entry_from_vars_form_spec(form_spec)
+            case RenderMode.BACKEND:
+                self._update_entry_from_vars_valuespec()
 
+    def _update_entry_from_vars_valuespec(self) -> None:
         vs = self.valuespec()
 
         config = vs.from_html_vars("_edit")
@@ -488,7 +661,45 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         if "ident" in config:
             self._ident = config.pop("ident")
         assert self._ident is not None
-        self._entry = config
+        entries = self._store.load_for_modification()
+
+        # Keep the "locked_by" attribute if it exists in the current entry
+        if self._ident in entries and "locked_by" in entries[self._ident]:
+            config = {**config, "locked_by": entries[self._ident]["locked_by"]}
+
+        # No typing support from valuespecs here, so we need to cast
+        self._entry = cast(_T, config)
+
+    def _update_entry_from_vars_form_spec(self, form_spec: FormSpec) -> None:
+        config = parse_data_from_frontend(
+            form_spec,
+            self._vue_field_id(),
+        )
+
+        # The form spec was rendered via a Catalog form spec, which introduced needless topics
+        # We need to convert the config back to a flat dictionary
+        config = self._get_catalog_converter().convert_catalog_to_flat_config(config)
+
+        if "ident" in config:
+            self._ident = config.pop("ident")
+        assert self._ident is not None
+        entries = self._store.load_for_modification()
+
+        # Keep the "locked_by" attribute if it exists in the current entry
+        if self._ident in entries and "locked_by" in entries[self._ident]:
+            config = {**config, "locked_by": entries[self._ident]["locked_by"]}
+
+        # No typing support from form specs here, so we need to cast
+        self._entry = cast(_T, config)
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if not transactions.transaction_valid():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
+
+        self._update_entry_from_vars()
+        assert self._ident is not None
 
         entries = self._store.load_for_modification()
 
@@ -532,14 +743,85 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
     def _save(self, entries: dict[str, _T]) -> None:
         self._store.save(entries)
 
-    def page(self) -> None:
-        with html.form_context("edit", method="POST"):
+    def page(self, form_name: str = "edit") -> None:
+        with html.form_context(form_name, method="POST"):
+            self._page_form_quick_setup_warning()
+
             html.prevent_password_auto_completion()
 
-            vs = self.valuespec()
+            self._page_form_render_entry()
 
-            vs.render_input("_edit", self._entry)
-            vs.set_focus("_edit")
             forms.end()
-
             html.hidden_fields()
+
+    def _page_form_quick_setup_warning(self) -> None:
+        pass
+
+    def _get_render_mode(self) -> tuple[RenderMode, FormSpec | None]:
+        # No longer depends on global switch, but on the global switch
+        # but on existence of the fs_individual_elements implementation
+        try:
+            self._fs_individual_elements()
+        except NotImplementedError:
+            return RenderMode.BACKEND, None
+
+        # Frontend rendering is done via the Catalog class. There is no valuespec fallback
+        return RenderMode.FRONTEND, self.catalog()
+
+    def _page_form_render_entry(self) -> None:
+        render_mode, form_spec = self._get_render_mode()
+        match render_mode:
+            case RenderMode.BACKEND:
+                self._page_form_render_entry_valuespec()
+
+            case RenderMode.FRONTEND:
+                assert form_spec is not None
+                # This prevents sending the form when pressing enter in an input field
+                html.form_has_submit_button = True
+                self._page_form_render_entry_form_spec(form_spec)
+
+    def _page_form_render_entry_valuespec(self) -> None:
+        vs = self.valuespec()
+        vs.render_input("_edit", dict(self._entry) if not self._new else {})
+        vs.set_focus("_edit")
+
+    def _page_form_render_entry_form_spec(self, form_spec: FormSpec) -> None:
+        value, origin, do_validate = self._get_render_settings()
+        render_form_spec(form_spec, self._vue_field_id(), value, origin, do_validate)
+
+    def _vue_field_id(self) -> str:
+        return f"_edit_{self._mode_type.type_name()}"
+
+    def _get_render_settings(self) -> tuple[Any, DataOrigin, DoValidate]:
+        if request.has_var(self._vue_field_id()):
+            # The form was submitted, always validate data
+            return (
+                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
+                DataOrigin.FRONTEND,
+                True,
+            )
+
+        if self._new:
+            # New form, no validation
+            return DEFAULT_VALUE, DataOrigin.DISK, False
+
+        # Existing entry from disk
+        catalog_converter = self._get_catalog_converter()
+
+        # The ident is not part of the saved config
+        # So, the entry is not longer a type _T
+        cloned_entry: Any = copy.deepcopy(self._entry)
+        cloned_entry["ident"] = self._ident
+        catalog_config = catalog_converter.convert_flat_to_catalog_config(cloned_entry)
+        return catalog_config, DataOrigin.DISK, True
+
+
+def convert_dict_elements_vs2fs(elements: list[DictionaryEntry]) -> dict[str, DictElement]:
+    # Transitional helper function, can be removed once all SimpleEditMode pages are converted
+    # Wraps legacy dictionary valuespec elements into form spec elements
+    fs_elements: dict[str, form_specs.DictElement[Any]] = {}
+    for key, element in elements:
+        fs_elements[key] = DictElement(
+            parameter_form=LegacyValueSpec.wrap(element),
+        )
+    return fs_elements

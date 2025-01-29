@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Alias: TCP port number for RabbitMQ Instance
+# Menu: Basic
+# Description:
+#  Configure the port on which the RabbitMQ Instance
+#  will listen for connections. If the port isn't
+#  available, the next available port will be chosen.
+
+# This hook needs CONFIG_RABBITMQ_ONLY_FROM
+# shellcheck disable=SC1091
+if [ -f "$OMD_ROOT"/etc/omd/site.conf ]; then
+    . "$OMD_ROOT"/etc/omd/site.conf
+else
+    CONFIG_RABBITMQ_ONLY_FROM=${CONFIG_RABBITMQ_ONLY_FROM::-2}::
+fi
+
+case "$1" in
+    default)
+        PORT=$("$OMD_ROOT/lib/omd/next_free_port" RABBITMQ_PORT 5672)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "[0-9]{1,5}"
+        ;;
+    set)
+        PORT=$("$OMD_ROOT/lib/omd/next_free_port" RABBITMQ_PORT "$2")
+
+        if [ "$PORT" != "$2" ]; then
+            echo "RabbitMQ port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+
+        # similar code is in RABBITMQ_ONLY_FROM; should be kept in sync
+        CONF_FILE="$OMD_ROOT/etc/rabbitmq/conf.d/01-default.conf"
+        echo "# Port and IP addresses set by \`omd config\` hooks \`RABBITMQ_ONLY_FROM\` and" >"$CONF_FILE"
+        echo "# \`RABBITMQ_PORT\`. Better do not edit manually." >>"$CONF_FILE"
+
+        IFS=' ' read -r -a arr <<<"$CONFIG_RABBITMQ_ONLY_FROM"
+        for i in "${!arr[@]}"; do
+            echo "listeners.ssl.$((i + 1)) = ${arr[$i]}:$PORT" >>"$CONF_FILE"
+        done
+        ;;
+esac

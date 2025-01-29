@@ -20,6 +20,11 @@ configure_make(
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
     },
     install_prefix = "xinetd_dir",
@@ -43,4 +48,5 @@ configure_make(
             install -m 644 ${BUILD_TMPDIR}/$file ${INSTALLDIR}/share/doc/xinetd; \
         done
     """,
+    visibility = ["//visibility:public"],
 )

@@ -8,7 +8,6 @@ import enum
 import os
 import pwd
 import shutil
-from collections.abc import Iterator
 from pathlib import Path
 
 from omdlib.skel_permissions import get_skel_permissions, Permissions
@@ -23,17 +22,6 @@ def is_containerized() -> bool:
     )
 
 
-@contextlib.contextmanager
-def chdir(path: str) -> Iterator[None]:
-    """Change working directory and return on exit"""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
-
-
 def delete_user_file(user_path: str) -> None:
     if not os.path.islink(user_path) and os.path.isdir(user_path):
         shutil.rmtree(user_path)
@@ -44,10 +32,6 @@ def delete_user_file(user_path: str) -> None:
 def delete_directory_contents(d: str) -> None:
     for f in os.listdir(d):
         delete_user_file(d + "/" + f)
-
-
-def omd_base_path() -> str:
-    return "/"
 
 
 def get_editor() -> str:
@@ -125,7 +109,7 @@ def create_skeleton_files(
 ) -> None:
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
-    with chdir(skelroot):  # make relative paths
+    with contextlib.chdir(skelroot):  # make relative paths
         for dirpath, dirnames, filenames in os.walk(directory):
             dirpath = dirpath.removeprefix("./")
             for entry in dirnames + filenames:
@@ -143,3 +127,20 @@ def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
+
+
+# TODO: move to sites.py, this is currently not possible due to circular import
+def site_exists(site_dir: Path) -> bool:
+    # In container environments the tmpfs may be managed by the container runtime (when
+    # using the --tmpfs option).  In this case the site directory is
+    # created as parent of the tmp directory to mount the tmpfs during
+    # container initialization. Detect this situation and don't treat the
+    # site as existing in that case.
+    if is_containerized():
+        if not os.path.exists(site_dir):
+            return False
+        if os.listdir(site_dir) == ["tmp"]:
+            return False
+        return True
+
+    return os.path.exists(site_dir)

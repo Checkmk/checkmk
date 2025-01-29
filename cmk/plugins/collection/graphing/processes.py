@@ -9,12 +9,6 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 
-metric_process_handles = metrics.Metric(
-    name="process_handles",
-    title=Title("Process handles"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
 metric_process_mapped_size = metrics.Metric(
     name="process_mapped_size",
     title=Title("Mapped size"),
@@ -61,6 +55,11 @@ perfometer_processes = perfometers.Perfometer(
     segments=["processes"],
 )
 
+graph_number_of_processes = graphs.Graph(
+    name="number_of_processes",
+    title=Title("Number of processes"),
+    compound_lines=["processes"],
+)
 graph_size_of_processes = graphs.Graph(
     name="size_of_processes",
     title=Title("Size of processes"),
@@ -122,9 +121,4 @@ graph_size_per_process = graphs.Graph(
             ),
         )
     ],
-)
-graph_number_of_processes = graphs.Graph(
-    name="number_of_processes",
-    title=Title("Number of processes"),
-    compound_lines=["processes"],
 )

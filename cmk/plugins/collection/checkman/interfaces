@@ -4,6 +4,10 @@ catalog: hw/network/generic
 license: GPLv2
 distribution: check_mk
 description:
+ Under solaris and HP-UX, make sure you have the statgrab binary available on
+ the monitored machine. Under HP-UX, you also need to activate the
+ {hpux_statgrab} agent plugin.
+
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces by using the information
  provided by various SNMP MIBs or agent data.

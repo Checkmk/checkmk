@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from contextlib import suppress
 from pathlib import Path
 
 from cmk.utils.log import console
-
-import cmk.base.obsolete_output as out
 
 _profile = None
 _profile_path = Path("profile.out")
@@ -16,11 +15,11 @@ _profile_path = Path("profile.out")
 
 def enable() -> None:
     global _profile
-    import cProfile  # pylint: disable=import-outside-toplevel
+    import cProfile
 
     _profile = cProfile.Profile()
     _profile.enable()
-    console.verbose("Enabled profiling.\n")
+    console.verbose("Enabled profiling.")
 
 
 def enabled() -> bool:
@@ -49,7 +48,6 @@ stats.sort_stats('cumtime').print_stats()"""
         )
 
     show_profile.chmod(0o755)
-    out.output(
-        f"Profile '{_profile_path}' written. Please run {show_profile}.\n",
-        stream=sys.stderr,
-    )
+    with suppress(IOError):
+        sys.stderr.write(f"Profile '{_profile_path}' written. Please run {show_profile}.\n")
+        sys.stderr.flush()

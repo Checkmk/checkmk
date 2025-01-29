@@ -3,18 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+
 import datetime
 from contextlib import contextmanager
 
 import time_machine
-
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.hostaddress import HostName
-
-from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    current_host,
-    current_service,
-)
 
 from ..checktestlib import (
     assertCheckResultsEqual,
@@ -26,7 +19,6 @@ from ..checktestlib import (
     Immutables,
     MissingCheckInfoError,
     mock_item_state,
-    MockHostExtraConf,
 )
 from .checkhandler import checkhandler
 
@@ -74,10 +66,7 @@ def get_merged_parameters(check, provided_p):
 
 
 def get_mock_values(dataset, subcheck):
-    mock_is_d = getattr(dataset, "mock_item_state", {})
-    mock_hc_d = getattr(dataset, "mock_host_conf", {})
-    mock_hc_m = getattr(dataset, "mock_host_conf_merged", {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {})
+    return getattr(dataset, "mock_item_state", {}).get(subcheck, {})
 
 
 def get_discovery_expected(subcheck, dataset):
@@ -147,13 +136,11 @@ def run_test_on_discovery(check, subcheck, dataset, info_arg, immu):
 def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
-    check_plugin_name = maincheckify(check.name)
 
     for item, params, results_expected_raw in test_cases:
         immu.register(params, "params")
 
-        with current_service(check_plugin_name, "unit test description"):
-            result = CheckResult(check.run_check(item, params, info_arg))
+        result = CheckResult(check.run_check(item, params, info_arg))
 
         immu.test(" after check (%s): " % check.info.check_function.__name__)
 
@@ -195,14 +182,9 @@ def run(check_info, dataset):
             immu.test(" after get_info_argument ")
             immu.register(info_arg, "info_arg")
 
-            mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
+            item_state = get_mock_values(dataset, subcheck)
 
-            with (
-                current_host(HostName("non-existent-testhost")),
-                mock_item_state(mock_is),
-                MockHostExtraConf(check, mock_hec),
-                MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),
-            ):
+            with mock_item_state(item_state):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)

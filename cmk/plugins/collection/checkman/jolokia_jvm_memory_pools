@@ -12,7 +12,7 @@ description:
  It will then fetch the memory usage from the JMX status info of the remote
  Java Virtual Machine.
 
- Both, version 1.7 and 2.0 of Jolokia are supported.
+ Versions 1.7, 2.0 and 2.1 of Jolokia are supported.
 
 item:
  The name of the application server instance followed by the statement {{Memory Pool}}

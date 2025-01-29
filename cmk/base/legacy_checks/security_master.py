@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 #
 # SNMP Infos
@@ -65,7 +66,33 @@ from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith
 # also only one sensor group is supported with this plugin!
 
 
-def parse_security_master(string_table):  # pylint: disable=too-many-branches
+def savefloat(f: str) -> float:
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
+    try:
+        return float(f)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
+
+def parse_security_master(string_table):
     supported_sensors = {
         50: "temp",
         60: "humidity",
@@ -97,13 +124,13 @@ def parse_security_master(string_table):  # pylint: disable=too-many-branches
                 except ValueError:
                     alarm = -1
             elif num + ".7.0" == oid_second:
-                crit_low = savefloat(saveint(sensor_second) / 1000.0)
+                crit_low = saveint(sensor_second) / 1000.0
             elif num + ".8.0" == oid_second:
-                warn_low = savefloat(saveint(sensor_second) / 1000.0)
+                warn_low = saveint(sensor_second) / 1000.0
             elif num + ".9.0" == oid_second:
-                warn_high = savefloat(saveint(sensor_second) / 1000.0)
+                warn_high = saveint(sensor_second) / 1000.0
             elif num + ".10.0" == oid_second:
-                crit_high = savefloat(saveint(sensor_second) / 1000.0)
+                crit_high = saveint(sensor_second) / 1000.0
 
         if sensor_id in supported_sensors:
             parsed[supported_sensors[sensor_id]][service_name] = {
@@ -147,6 +174,7 @@ def discover_security_master(parsed):
 
 
 check_info["security_master"] = LegacyCheckDefinition(
+    name="security_master",
     detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     fetch=[
         SNMPTree(
@@ -190,6 +218,7 @@ def discover_security_master_humidity(parsed):
 
 
 check_info["security_master.humidity"] = LegacyCheckDefinition(
+    name="security_master_humidity",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_humidity,
@@ -231,6 +260,7 @@ def discover_security_master_temp(parsed):
 
 
 check_info["security_master.temp"] = LegacyCheckDefinition(
+    name="security_master_temp",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_temp,

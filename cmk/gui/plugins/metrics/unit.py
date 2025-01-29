@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 import cmk.utils.render
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._type_defs import UnitInfo
-from cmk.gui.graphing._unit_info import unit_info
+from cmk.gui.graphing._legacy import unit_info, UnitInfoWithOrWithoutID
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -164,7 +163,7 @@ unit_info["bits/s"] = {
 
 
 def bytes_human_readable_list(
-    values: Iterable[float],
+    values: Collection[float],
     precision: int,
     unit_symbol: str,
 ) -> tuple[str, list[str]]:
@@ -189,7 +188,7 @@ unit_info["bytes/d"] = {
     "stepping": "binary",  # for vertical graph labels
 }
 
-_TEMPERATURE_UNIT_SPECS: Mapping[TemperatureUnit, UnitInfo] = {
+_TEMPERATURE_UNIT_SPECS: Mapping[TemperatureUnit, UnitInfoWithOrWithoutID] = {
     TemperatureUnit.CELSIUS: {
         "title": _("Degree Celsius"),
         "symbol": "°C",
@@ -333,7 +332,7 @@ unit_info["EUR"] = {
 unit_info["RCU"] = {
     "title": _("RCU"),
     "symbol": _("RCU"),
-    "description": _("Read Capacity Units"),
+    "description": _("Read capacity units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="RCU"),
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'RCU')",
 }
@@ -341,7 +340,7 @@ unit_info["RCU"] = {
 unit_info["WCU"] = {
     "title": _("WCU"),
     "symbol": _("WCU"),
-    "description": _("Write Capacity Units"),
+    "description": _("Write capacity units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="WCU"),
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'WCU')",
 }

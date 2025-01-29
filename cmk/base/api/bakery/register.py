@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.debug
+import sys
+
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -67,8 +70,8 @@ def bakery_plugin(
 
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"):
-        console.error(f"Error in bakery plug-in {plugin}: {exception}\n")
-        if cmk.utils.debug.enabled():
+        console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
+        if cmk.ccc.debug.enabled():
             raise exception
 
     return registered_bakery_plugins

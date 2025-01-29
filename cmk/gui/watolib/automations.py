@@ -9,33 +9,37 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import functools
 import json
-import logging
+import os
 import re
 import subprocess
+import time
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from io import BytesIO
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import requests
 import urllib3
+from pydantic import BaseModel, field_validator
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
-import cmk.utils.version as cmk_version
-from cmk.utils import store as store
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import get_omd_config
+
+from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-from cmk.utils.log import VERBOSE
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -43,14 +47,16 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobStatusSpec,
     JobStatusStates,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import get_site_config
+from cmk.gui.site_config import get_site_config, is_replication_enabled
+from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
     is_distributed_setup_compatible_for_licensing,
@@ -63,11 +69,19 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
+from cmk import trace
+
+from . import automation_helper, automation_subprocess
+from .automation_executor import AutomationExecutor
+
 auto_logger = logger.getChild("automations")
+tracer = trace.get_tracer()
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
 
 
 class MKAutomationException(MKGeneralException):
@@ -86,80 +100,59 @@ def check_mk_local_automation_serialized(
     indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
+    force_cli_interface: bool = False,
 ) -> tuple[Sequence[str], SerializedResult]:
-    if args is None:
-        args = []
-    new_args = list(args)
+    with tracer.span(
+        f"local_automation[{command}]",
+        attributes={"cmk.automation.args": repr(args)},
+    ) as span:
+        if args is None:
+            args = []
 
-    if stdin_data is None:
-        stdin_data = repr(indata)
+        if stdin_data is None:
+            stdin_data = repr(indata)
 
-    if timeout:
-        new_args = ["--timeout", "%d" % timeout] + new_args
+        if command in ["restart", "reload"]:
+            call_hook_pre_activate_changes()
 
-    cmd = ["check_mk"]
-
-    if auto_logger.isEnabledFor(logging.DEBUG):
-        cmd.append("-vv")
-    elif auto_logger.isEnabledFor(VERBOSE):
-        cmd.append("-v")
-
-    cmd += ["--automation", command] + new_args
-
-    if command in ["restart", "reload"]:
-        call_hook_pre_activate_changes()
-
-    # This debug output makes problems when doing bulk inventory, because
-    # it garbles the non-HTML response output
-    # if config.debug:
-    #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-    auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-    auto_logger.info("STDIN: %r" % stdin_data)
-
-    try:
-        completed_process = subprocess.run(
-            cmd,
-            capture_output=True,
-            close_fds=True,
-            encoding="utf-8",
-            input=stdin_data,
-            check=False,
+        executor: AutomationExecutor = (
+            automation_subprocess.SubprocessExecutor()
+            if force_cli_interface
+            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            or not _automation_helper_enabled_in_omd_config()
+            else automation_helper.HelperExecutor()
         )
-    except Exception as e:
-        raise local_automation_failure(command=command, cmdline=cmd, exc=e)
 
-    auto_logger.info("FINISHED: %d" % completed_process.returncode)
-    auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
-
-    if completed_process.stderr:
-        auto_logger.warning(
-            "'%s' returned '%s'"
-            % (
-                " ".join(cmd),
-                completed_process.stderr,
+        try:
+            result = executor.execute(command, args, stdin_data, auto_logger, timeout)
+        except Exception as e:
+            raise local_automation_failure(
+                command=command,
+                cmdline=executor.command_description(command, args, logger, timeout),
+                exc=e,
             )
-        )
-    if completed_process.returncode:
-        auto_logger.error(
-            "Error running %r (exit code %d)"
-            % (
-                subprocess.list2cmdline(cmd),
-                completed_process.returncode,
+
+        span.set_attribute("cmk.automation.exit_code", result.exit_code)
+        auto_logger.info("FINISHED: %d" % result.exit_code)
+        auto_logger.debug("OUTPUT: %r" % result.output)
+
+        if result.exit_code:
+            auto_logger.error(
+                "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
             )
-        )
-        raise local_automation_failure(
-            command=command,
-            cmdline=cmd,
-            code=completed_process.returncode,
-            out=completed_process.stdout,
-            err=completed_process.stderr,
-        )
+            raise local_automation_failure(
+                command=command,
+                cmdline=result.command_description,
+                code=result.exit_code,
+                out=result.output,
+                err=result.error,
+            )
 
-    # On successful "restart" command execute the activate changes hook
-    if command in ["restart", "reload"]:
-        call_hook_activate_changes()
+        # On successful "restart" command execute the activate changes hook
+        if command in ["restart", "reload"]:
+            call_hook_activate_changes()
 
-    return cmd, SerializedResult(completed_process.stdout)
+        return result.command_description, SerializedResult(result.output)
 
 
 def local_automation_failure(
@@ -198,41 +191,49 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    site = get_site_config(active_config, site_id)
-    if "secret" not in site:
-        raise MKGeneralException(
-            _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
-        )
+    with tracer.span(
+        f"remote_automation[{command}]",
+        attributes={
+            "cmk.automation.target_site_id": str(site_id),
+            "cmk.automation.args": repr(args),
+        },
+    ):
+        site = get_site_config(active_config, site_id)
+        if "secret" not in site:
+            raise MKGeneralException(
+                _('Cannot connect to site "%s": The site is not logged in')
+                % site.get("alias", site_id)
+            )
 
-    if not site.get("replication"):
-        raise MKGeneralException(
-            _('Cannot connect to site "%s": The replication is disabled')
-            % site.get("alias", site_id)
-        )
+        if not is_replication_enabled(site):
+            raise MKGeneralException(
+                _('Cannot connect to site "%s": The replication is disabled')
+                % site.get("alias", site_id)
+            )
 
-    sync(site_id)
+        sync(site_id)
 
-    if non_blocking_http:
-        # This will start a background job process on the remote site to execute the automation
-        # asynchronously. It then polls the remote site, waiting for completion of the job.
-        return _do_check_mk_remote_automation_in_background_job_serialized(
-            site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
-        )
+        if non_blocking_http:
+            # This will start a background job process on the remote site to execute the automation
+            # asynchronously. It then polls the remote site, waiting for completion of the job.
+            return _do_check_mk_remote_automation_in_background_job_serialized(
+                site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
+            )
 
-    # Synchronous execution of the actual remote command in a single blocking HTTP request
-    return SerializedResult(
-        _do_remote_automation_serialized(
-            site=get_site_config(active_config, site_id),
-            command="checkmk-automation",
-            vars_=[
-                ("automation", command),  # The Checkmk automation command
-                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
-                ("indata", mk_repr(indata).decode("ascii")),  # The input data
-                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
-                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
-            ],
+        # Synchronous execution of the actual remote command in a single blocking HTTP request
+        return SerializedResult(
+            _do_remote_automation_serialized(
+                site=get_site_config(active_config, site_id),
+                command="checkmk-automation",
+                vars_=[
+                    ("automation", command),  # The Checkmk automation command
+                    ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                    ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                    ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                    ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
+                ],
+            )
         )
-    )
 
 
 # This hook is executed when one applies the pending configuration changes
@@ -246,7 +247,7 @@ def check_mk_remote_automation_serialized(
 def call_hook_pre_activate_changes() -> None:
     if hooks.registered("pre-activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
@@ -263,7 +264,7 @@ def call_hook_pre_activate_changes() -> None:
 def call_hook_activate_changes() -> None:
     if hooks.registered("activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
@@ -276,7 +277,7 @@ def _do_remote_automation_serialized(
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site, command)
+    auto_logger.info("RUN [%s]: %s", sanitize_site_configuration(site), command)
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]
@@ -383,20 +384,27 @@ def get_url_raw(
     data: Mapping[str, str] | None = None,
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
+    add_headers: dict[str, str] | None = None,
 ) -> requests.Response:
-    response = requests.post(
-        url,
-        data=data,
-        verify=not insecure,
-        auth=auth,
-        files=files,
-        timeout=timeout,
-        headers={
-            "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition().short,
-            "x-checkmk-license-state": get_license_state().readable,
-        },
-    )
+    headers_ = {
+        "x-checkmk-version": cmk_version.__version__,
+        "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
+        "x-checkmk-license-state": get_license_state().readable,
+    }
+    headers_.update(add_headers or {})
+
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            verify=not insecure,
+            auth=auth,
+            files=files,
+            timeout=timeout,
+            headers=headers_,
+        )
+    except (ConnectionError, requests.ConnectionError) as e:
+        raise MKUserError(None, _("Could not connect to the remote site (%s)") % e)
 
     response.encoding = "utf-8"  # Always decode with utf-8
 
@@ -427,7 +435,7 @@ def _verify_compatibility(response: requests.Response) -> None:
     Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
     """
     central_version = cmk_version.__version__
-    central_edition_short = cmk_version.edition().short
+    central_edition_short = cmk_version.edition(paths.omd_root).short
     central_license_state = get_license_state()
 
     remote_version = response.headers.get("x-checkmk-version", "")
@@ -477,7 +485,7 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
     )
     central_license_state = parse_license_state(request.headers.get("x-checkmk-license-state", ""))
     remote_version = cmk_version.__version__
-    remote_edition_short = cmk_version.edition().short
+    remote_edition_short = cmk_version.edition(paths.omd_root).short
     remote_license_state = get_license_state()
 
     compatibility = compatible_with_central_site(
@@ -524,17 +532,6 @@ def get_url(
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
-def get_url_json(
-    url: str,
-    insecure: bool,
-    auth: tuple[str, str] | None = None,
-    data: Mapping[str, str] | None = None,
-    files: Mapping[str, BytesIO] | None = None,
-    timeout: float | None = None,
-) -> object:
-    return get_url_raw(url, insecure, auth, data, files, timeout).json()
-
-
 def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
     if not name:
         raise MKUserError("_name", _("Please specify your administrator login on the remote site."))
@@ -549,7 +546,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         "_login": "1",
         "_username": name,
         "_password": password,
-        "_origtarget": f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition().short}",
+        "_origtarget": f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition(paths.omd_root).short}",
         "_plain_error": "1",
     }
     response = get_url(
@@ -570,7 +567,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
         if (
-            cmk_version.edition() is cmk_version.Edition.CME
+            cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
             and eval_response["edition_short"] != "cme"
         ):
             raise MKUserError(
@@ -639,6 +636,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break
+        time.sleep(0.25)
 
     assert isinstance(result, str)
 
@@ -663,7 +661,7 @@ def _start_remote_automation_job(
     return job_id
 
 
-class AutomationCheckmkAutomationStart(AutomationCommand):
+class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -679,7 +677,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
         job.start(
-            lambda job_interface: job.execute_automation(job_interface, api_request),
+            JobTarget(
+                callable=checkmk_automation_job_entry_point,
+                args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
+            ),
             InitialStatusArgs(
                 title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
                 user=str(user.id) if user.id else None,
@@ -689,7 +690,19 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         return job.get_job_id()
 
 
-class AutomationCheckmkAutomationGetStatus(AutomationCommand):
+class CheckmkAutomationJobArgs(BaseModel, frozen=True):
+    job_id: str
+    api_request: CheckmkAutomationRequest
+
+
+def checkmk_automation_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: CheckmkAutomationJobArgs
+) -> None:
+    job = CheckmkAutomationBackgroundJob(args.job_id)
+    job.execute_automation(job_interface, args.api_request)
+
+
+class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
 
@@ -746,6 +759,14 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             )
 
     def execute_automation(
+        self,
+        job_interface: BackgroundProcessInterface,
+        api_request: CheckmkAutomationRequest,
+    ) -> None:
+        with job_interface.gui_context():
+            self._execute_automation(job_interface, api_request)
+
+    def _execute_automation(
         self,
         job_interface: BackgroundProcessInterface,
         api_request: CheckmkAutomationRequest,
@@ -843,3 +864,41 @@ def compatible_with_central_site(
         return licensing_compatibility
 
     return cmk_version.VersionsCompatible()
+
+
+class LastKnownCentralSiteVersion(BaseModel):
+    """information about the central site
+
+    this is currently only used to store the central site info. We need that info in order to
+    communicate to the central site e.g. with the updater-registration (CEE freature). There we
+    decide on the auth scheme based on that info.
+
+    As of now this can go with 2.5 since then it is certain the central site supports the new
+    scheme. In 2.4 we could encounter a 2.3 central site that does not support the new scheme."""
+
+    version_str: str
+
+    @property
+    def cmk_version(self) -> cmk_version.Version:
+        return cmk_version.Version.from_str(self.version_str)
+
+    @field_validator("version_str")
+    @classmethod
+    def _validate_version(cls, v: str) -> str:
+        # just check if it is parse able...
+        cmk_version.Version.from_str(v)
+        return v
+
+
+class LastKnownCentralSiteVersionStore(store.PydanticStore):
+    def __init__(self) -> None:
+        super().__init__(self.get_path(), model=LastKnownCentralSiteVersion)
+
+    @staticmethod
+    def get_path() -> Path:
+        return Path(paths.var_dir) / "last_known_site_version.json"
+
+
+@functools.cache
+def _automation_helper_enabled_in_omd_config() -> bool:
+    return get_omd_config(paths.omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"

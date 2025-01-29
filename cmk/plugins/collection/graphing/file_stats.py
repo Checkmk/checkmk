@@ -3,26 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import metrics, perfometers, Title, translations
-
-translation_fileinfo = translations.Translation(
-    name="fileinfo",
-    check_commands=[translations.PassiveCheck("fileinfo")],
-    translations={"size": translations.RenameTo("file_size")},
-)
-
-translation_fileinfo_groups = translations.Translation(
-    name="fileinfo_groups",
-    check_commands=[translations.PassiveCheck("fileinfo_groups")],
-    translations={
-        "age_newest": translations.RenameTo("file_age_newest"),
-        "age_oldest": translations.RenameTo("file_age_oldest"),
-        "count": translations.RenameTo("file_count"),
-        "size": translations.RenameTo("total_file_size"),
-        "size_largest": translations.RenameTo("file_size_largest"),
-        "size_smallest": translations.RenameTo("file_size_smallest"),
-    },
-)
+from cmk.graphing.v1 import metrics, Title
 
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
@@ -75,17 +56,4 @@ metric_file_age_newest = metrics.Metric(
     title=Title("Newest file"),
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
-)
-
-metric_age = metrics.Metric(
-    name="age",
-    title=Title("Age"),
-    unit=UNIT_TIME,
-    color=metrics.Color.YELLOW,
-)
-
-perfometer_age = perfometers.Perfometer(
-    name="age",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(5000000)),
-    segments=["age"],
 )

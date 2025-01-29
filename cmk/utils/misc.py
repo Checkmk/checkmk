@@ -16,7 +16,7 @@ from typing import Any
 
 # TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s: str) -> str:
-    """Quote a string (host name or service description) in PNP4Nagios format
+    """Quote a string (host name or service name) in PNP4Nagios format
 
     Because it is used as path element, this needs to be handled as "str" in Python 2 and 3
     """

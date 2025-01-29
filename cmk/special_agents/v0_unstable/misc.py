@@ -24,17 +24,17 @@ from typing import Any
 
 import requests
 
-import cmk.utils.store as store
+from cmk.ccc import store
 
 LOG = logging.getLogger(__name__)
 
 
 class AgentJSON:
-    def __init__(self, key, title) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, key: str, title: str) -> None:
         self._key = key
         self._title = title
 
-    def usage(self):
+    def usage(self) -> None:
         sys.stderr.write(
             """
 Check_MK %s Agent
@@ -50,7 +50,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             % (self._title, self._key)
         )
 
-    def get_content(self):
+    def get_content(self) -> dict[str, list[str]] | None:
         short_options = "h"
         long_options = ["section_url=", "help", "newline_replacement=", "debug"]
 
@@ -82,7 +82,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
         content: dict[str, list[str]] = {}
         for section_name, url in sections:
             content.setdefault(section_name, [])
-            c = requests.get(url)  # nosec B113
+            c = requests.get(url)  # nosec B113 # BNS:0b0eac
             content[section_name].append(c.text.replace("\n", newline_replacement))
 
         if opt_debug:
@@ -90,10 +90,10 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                 try:
                     pprint.pprint(json.loads(line))
                 except Exception:
-                    print(line)
-        else:
-            return content
-        return None
+                    sys.stdout.write(line + "\n")
+            return None
+
+        return content
 
 
 def datetime_serializer(obj):
@@ -243,7 +243,7 @@ def vcrtrace(**vcr_init_kwargs):
     """
 
     class VcrTraceAction(argparse.Action):
-        def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        def __init__(self, *args, **kwargs):
             kwargs.setdefault("metavar", "TRACEFILE")
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             kwargs["help"] = "{} {}".format(help_part, kwargs.get("help", ""))
@@ -256,7 +256,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore[import-untyped] # pylint: disable=import-outside-toplevel
+            import vcr  # type: ignore[import-untyped]
 
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
@@ -267,7 +267,7 @@ def vcrtrace(**vcr_init_kwargs):
     return VcrTraceAction
 
 
-def get_seconds_since_midnight(current_time) -> float:  # type: ignore[no-untyped-def]
+def get_seconds_since_midnight(current_time: datetime.datetime) -> float:
     midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
     return (current_time - midnight).total_seconds()
 

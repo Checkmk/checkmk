@@ -35,11 +35,11 @@ def PredictiveLevels(
     INJECTION_KEY = "__injected__"
     return Transform(
         Dictionary(
-            title=_("Predictive Levels (only on CMC)"),
+            title=_("Predictive levels (only on CMC)"),
             ignored_keys=[
                 # This is a place holder:
                 # The backend uses this marker to inject a callback to get the prediction.
-                # Its main purpose it to bind the host name and service description,
+                # Its main purpose it to bind the host name and service name,
                 # which are not known to the plugin.
                 INJECTION_KEY,
             ],
@@ -240,7 +240,7 @@ def PredictiveLevels(
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
 def Levels(
-    help: str | None = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,
     default_levels: tuple[float, float] = (0.0, 0.0),
     default_difference: tuple[float, float] = (0.0, 0.0),
     default_value: tuple[float, float] | None = None,

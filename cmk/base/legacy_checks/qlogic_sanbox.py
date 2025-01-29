@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 qlogic_sanbox_status_map = [
     "undefined",  # 0
@@ -24,6 +24,7 @@ def parse_qlogic_sanbox(string_table: StringTable) -> StringTable:
 
 
 check_info["qlogic_sanbox"] = LegacyCheckDefinition(
+    name="qlogic_sanbox",
     parse_function=parse_qlogic_sanbox,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
@@ -106,6 +107,7 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
 
 check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
+    name="qlogic_sanbox_temp",
     service_name="Temperature Sensor %s",
     sections=["qlogic_sanbox"],
     discovery_function=inventory_qlogic_sanbox_temp,
@@ -171,6 +173,7 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
 
 
 check_info["qlogic_sanbox.psu"] = LegacyCheckDefinition(
+    name="qlogic_sanbox_psu",
     service_name="PSU %s",
     sections=["qlogic_sanbox"],
     discovery_function=inventory_qlogic_sanbox_psu,

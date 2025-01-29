@@ -8,7 +8,9 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
+
+from cmk.utils import tty
 from cmk.utils.log import console
 
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
@@ -20,14 +22,14 @@ def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: L
 
     logger.info("")
     console.warning(
-        console.format_warning(
+        tty.format_warning(
             "Network port configuration may need your attention\n\n"
             "It seems like you copied an existing site. In case you plan to use both on the same "
             "system, you may have to review the network port configuration of your sites. Two sites "
             "with the same configuration may cause network port conflicts. "
             "For example if you enabled livestatus to listen via TCP or enabled the Event Console "
             "to listen for incoming Syslog messages or SNMP traps, you may have to update the "
-            "configuration in one of the sites to resolve the conflicts.\n\n"
+            "configuration in one of the sites to resolve the conflicts.\n"
         )
     )
 

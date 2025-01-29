@@ -18,119 +18,138 @@ from cmk.gui.graphing._artwork import (
     _t_axis_labels_seconds,
     _t_axis_labels_week,
     _VAxisMinMax,
+    LayoutedCurve,
+    LayoutedCurveLine,
     TimeAxis,
     TimeAxisLabel,
 )
+from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 
 @pytest.mark.parametrize(
-    "explicit_vertical_range, layouted_curves_range, graph_data_vrange, mirrored, expected_v_axis_min_max",
+    "explicit_vertical_range, layouted_curves, graph_data_vrange, mirrored, expected_v_axis_min_max",
     [
         pytest.param(
-            (None, None),
-            (None, None),
+            None,
+            [],
             None,
             False,
-            _VAxisMinMax((0.0, 1.0), 1.0, 0.0, 1.5),
+            _VAxisMinMax(1.0, (0.0, 1.5)),
             id="default",
         ),
         pytest.param(
-            (None, None),
-            (None, None),
+            None,
+            [],
             None,
             True,
-            _VAxisMinMax((-1.0, 1.0), 2.0, -2.0, 2.0),
+            _VAxisMinMax(2.0, (-2.0, 2.0)),
             id="default-mirrored",
         ),
         #
         pytest.param(
-            (0.01, 0.02),
-            (None, None),
+            MinimalVerticalRange(min=0.01, max=0.02),
+            [],
             None,
             False,
-            _VAxisMinMax((0.0, 0.02), 0.02, 0.0, 0.03),
+            _VAxisMinMax(0.01, (0.005, 0.025)),
             id="small-pos",
         ),
         pytest.param(
-            (0.01, 0.02),
-            (None, None),
+            FixedVerticalRange(min=0.01, max=0.02),
+            [],
             None,
             True,
-            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            _VAxisMinMax(0.04, (-0.04, 0.04)),
             id="small-pos-mirrored",
         ),
         pytest.param(
-            (-0.01, 0.02),
-            (None, None),
+            MinimalVerticalRange(min=-0.01, max=0.02),
+            [],
             None,
             False,
-            _VAxisMinMax((-0.01, 0.02), 0.03, -0.025, 0.035),
+            _VAxisMinMax(0.03, (-0.025, 0.035)),
             id="small-neg",
         ),
         pytest.param(
-            (-0.01, 0.02),
-            (None, None),
+            FixedVerticalRange(min=-0.01, max=0.02),
+            [],
             None,
             True,
-            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            _VAxisMinMax(0.04, (-0.04, 0.04)),
             id="small-neg-mirrored",
         ),
         #
         pytest.param(
-            (-5.0, 10.0),
-            (None, None),
+            MinimalVerticalRange(min=-5.0, max=10.0),
+            [],
             None,
             False,
-            _VAxisMinMax((-5.0, 10.0), 15.0, -12.5, 17.5),
+            _VAxisMinMax(15.0, (-12.5, 17.5)),
             id="explicit_vertical_range",
         ),
         pytest.param(
-            (-5.0, 10.0),
-            (None, None),
+            FixedVerticalRange(min=-5.0, max=10.0),
+            [],
             None,
             True,
-            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
+            _VAxisMinMax(20.0, (-20.0, 20.0)),
             id="explicit_vertical_range-mirrored",
         ),
         pytest.param(
-            (None, None),
-            (-5.0, 10.0),
+            None,
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-5.0, 10.0],
+                )
+            ],
             None,
             False,
-            _VAxisMinMax((-5.0, 10.0), 15.0, -12.5, 17.5),
-            id="layouted_curves_range",
+            _VAxisMinMax(15.0, (-12.5, 17.5)),
+            id="layouted_curves",
         ),
         pytest.param(
-            (None, None),
-            (-5.0, 10.0),
+            None,
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-5.0, 10.0],
+                )
+            ],
             None,
             True,
-            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
-            id="layouted_curves_range-mirrored",
+            _VAxisMinMax(20.0, (-20.0, 20.0)),
+            id="layouted_curves-mirrored",
         ),
         pytest.param(
-            (None, None),
-            (None, None),
+            None,
+            [],
             (-5.0, 10.0),
             False,
-            _VAxisMinMax((0.0, 1.0), 15.0, -5.0, 10.0),
+            _VAxisMinMax(15.0, (-5.0, 10.0)),
             id="graph_data_vrange",
         ),
         pytest.param(
-            (None, None),
-            (None, None),
+            None,
+            [],
             (-5.0, 10.0),
             True,
-            _VAxisMinMax((-1.0, 1.0), 20.0, -10.0, 10.0),
+            _VAxisMinMax(20.0, (-10.0, 10.0)),
             id="graph_data_vrange-mirrored",
         ),
     ],
 )
 def test__compute_v_axis_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
-    layouted_curves_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
     expected_v_axis_min_max: _VAxisMinMax,
@@ -138,7 +157,7 @@ def test__compute_v_axis_min_max(
     assert (
         _compute_v_axis_min_max(
             explicit_vertical_range,
-            layouted_curves_range,
+            layouted_curves,
             graph_data_vrange,
             mirrored,
             SizeEx(1),
@@ -148,41 +167,102 @@ def test__compute_v_axis_min_max(
 
 
 @pytest.mark.parametrize(
-    "explicit_vertical_range, layouted_curves_range, graph_data_vrange, expected_v_axis_min_max",
+    "explicit_vertical_range, layouted_curves, graph_data_vrange, expected_v_axis_min_max",
     [
         pytest.param(
-            (-500.0, 1000.0),
-            (-5.0, 10.0),
+            FixedVerticalRange(min=-500.0, max=1000.0),
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-600.0, 2000.0],
+                )
+            ],
             None,
-            _VAxisMinMax((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
-            id="explicit_vertical_range-and-layouted_curves_range",
+            _VAxisMinMax(1500.0, (-1250.0, 1750.0)),
+            id="explicit_vertical_range_fixed-and-layouted_curves",
         ),
         pytest.param(
-            (-500.0, 1000.0),
-            (None, None),
+            MinimalVerticalRange(min=-500.0, max=1000.0),
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-250.0, 500.0],
+                )
+            ],
+            None,
+            _VAxisMinMax(1500.0, (-1250.0, 1750.0)),
+            id="explicit_vertical_range_minimal-and-layouted_curves_smaller",
+        ),
+        pytest.param(
+            MinimalVerticalRange(min=-500.0, max=1000.0),
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-1000.0, 2000.0],
+                )
+            ],
+            None,
+            _VAxisMinMax(3000.0, (-2500.0, 3500.0)),
+            id="explicit_vertical_range_minimal-and-layouted_curves_larger",
+        ),
+        pytest.param(
+            None,
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[1000.0, 2000.0],
+                )
+            ],
+            None,
+            _VAxisMinMax(2000.0, (0, 3000.0)),
+            id="layouted_curves_at_least_zero",
+        ),
+        pytest.param(
+            FixedVerticalRange(min=-500.0, max=1000.0),
+            [],
             (-5.0, 10.0),
-            _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
+            _VAxisMinMax(15.0, (-5.0, 10.0)),
             id="graph_data_vrange-precedence-over-explicit_vertical_range",
         ),
         pytest.param(
-            (None, None),
-            (-500.0, 1000.0),
+            None,
+            [
+                LayoutedCurveLine(
+                    color="",
+                    title="",
+                    scalars={},
+                    type="line",
+                    points=[-500.0, 1000.0],
+                )
+            ],
             (-5.0, 10.0),
-            _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
-            id="graph_data_vrange-precedence-over-layouted_curves_range",
+            _VAxisMinMax(15.0, (-5.0, 10.0)),
+            id="graph_data_vrange-precedence-over-layouted_curves",
         ),
     ],
 )
 def test__compute_v_axis_min_max_precedence(
-    explicit_vertical_range: tuple[float | None, float | None],
-    layouted_curves_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
     expected_v_axis_min_max: _VAxisMinMax,
 ) -> None:
     assert (
         _compute_v_axis_min_max(
             explicit_vertical_range,
-            layouted_curves_range,
+            layouted_curves,
             graph_data_vrange,
             False,
             SizeEx(1),

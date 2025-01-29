@@ -10,13 +10,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any
 
+from cmk.ccc import store
+
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
+from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral
@@ -37,7 +37,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -287,7 +286,7 @@ def _validate_msg(msg: Message, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-branches
+def _process_message_message(msg: Message) -> None:
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 
@@ -322,7 +321,7 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = escape_to_html(_("The message has successfully been sent..."))
+    message = HTML.with_escaping(_("The message has successfully been sent..."))
     message += HTMLWriter.render_br()
 
     parts = []
@@ -338,15 +337,15 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
             )
         )
 
-    message += HTMLWriter.render_ul(HTML().join(parts))
+    message += HTMLWriter.render_ul(HTML.empty().join(parts))
     message += HTMLWriter.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
-        error_message = HTML()
+        error_message = HTML.empty()
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s messages to the following users:") % method
-            table_rows = HTML()
+            table_rows = HTML.empty()
             for user_id, exception in method_errors:
                 table_rows += HTMLWriter.render_tr(
                     HTMLWriter.render_td(HTMLWriter.render_tt(user_id))

@@ -7,8 +7,9 @@ from collections.abc import Sized
 from functools import partial
 from typing import TypeVar
 
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+
 import cmk.utils.resulttype as result
-from cmk.utils.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 from .filecache import FileCache

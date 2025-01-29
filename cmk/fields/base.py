@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from collections.abc import Mapping
+from collections.abc import Collection, Hashable, Mapping
 from typing import Any, Protocol
 
 from marshmallow import fields, ValidationError
 
 
 class OpenAPIAttributes:
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         metadata = kwargs.setdefault("metadata", {})
         for key in [
+            "deprecated",
             "description",
             "doc_default",
             "enum",
@@ -199,7 +200,7 @@ class Integer(OpenAPIAttributes, fields.Integer):
         return value
 
 
-def _freeze(obj: Any, partial: tuple[str, ...] | None = None):  # type: ignore[no-untyped-def]
+def _freeze(obj: Any, partial: tuple[str, ...] | None = None) -> Hashable:
     """Freeze all the things, so we can put them in a set.
 
     Examples:
@@ -246,12 +247,12 @@ class UniqueFields:
     default_error_messages = {
         "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
         "duplicate_vary": (
-            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
+            "Duplicate entry found at entry #{idx}: {entry!r} (optional fields {optional!r})"
         ),
     }
 
-    def _verify_unique_schema_entries(  # type: ignore[no-untyped-def]
-        self: HasMakeError, value, _fields
+    def _verify_unique_schema_entries(
+        self: HasMakeError, value: Collection, _fields: Mapping
     ) -> None:
         required_fields = tuple(name for name, field in _fields.items() if field.required)
         seen = set()
@@ -280,7 +281,7 @@ class UniqueFields:
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self: HasMakeError, value) -> None:  # type: ignore[no-untyped-def]
+    def _verify_unique_scalar_entries(self: HasMakeError, value: Collection) -> None:
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()
@@ -337,7 +338,7 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
 
     def _deserialize(self, value, attr, data, partial=None, **kwargs):
         self._validate_missing(value)
-        if value is fields.missing_:  # type: ignore[attr-defined]
+        if value is fields.missing_:  # type: ignore[attr-defined, unused-ignore]
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)

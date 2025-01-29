@@ -1,0 +1,13 @@
+title: Redfish Network Adapters
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the network adaptors of a Redfish compatible device.
+
+discovery:
+ One service is created for each network adapter of the device.
+
+item:
+ The id of the network adapter.

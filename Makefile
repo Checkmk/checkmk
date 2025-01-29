@@ -6,34 +6,22 @@
 include defines.make
 include artifacts.make
 
+BAZEL_CMD          ?= $(REPO_PATH)/scripts/run-bazel.sh
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-# TODO: Prefixing the command with the environment variable breaks xargs usage below!
-PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
-BLACK              := scripts/run-black
-
-OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
-
-LOCK_FD := 200
-LOCK_PATH := .venv.lock
-PY_PATH := .venv/bin/python
-ifneq ("$(wildcard $(PY_PATH))","")
-  PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
-else
-  PY_VIRT_MAJ_MIN := "unknown"
-endif
+UVENV              := scripts/run-uvenv
 
 # The CI environment variable should only be set by Jenkins
 CI ?= false
 
-.PHONY: announcement all build check-setup \
-        clean dist docker-context-clean documentation \
+.PHONY: announcement all build \
+        clean dist documentation \
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        protobuf-files frontend-vue
+        requirements_all_lock.txt protobuf-files frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -51,15 +39,6 @@ deb:
 
 cma:
 	$(MAKE) -C omd cma
-
-check-setup:
-	echo "From here on we check the successful setup of some parts ..."
-	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
-	  echo "Your PATH is missing '~/.local/bin' to work properly with pipenv."; \
-	  exit 1; \
-	else \
-		echo "Checks passed"; \
-	fi
 
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
@@ -88,7 +67,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-fr
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
-	    git rev-parse --short HEAD > COMMIT ; \
+	    git rev-parse HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
@@ -121,15 +100,15 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-fr
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 cmk-frontend:
-	ENTERPRISE=$(ENTERPRISE) packages/cmk-frontend/run --setup-environment --all
+	packages/cmk-frontend/run --clean --all
 
 frontend-vue:
-	packages/cmk-frontend-vue/run --setup-environment --all
+	packages/cmk-frontend-vue/run --clean --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
 
 packages:
@@ -148,27 +127,13 @@ version:
 # but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
-	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/neb/CMakeLists.txt
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/cmk-update-agent/cmk_update_agent.py
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
-	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 endif
-
-$(OPENAPI_SPEC): $(shell find cmk/gui/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
-	@export PYTHONPATH=${REPO_PATH} ; \
-	export TMPFILE=$$(mktemp);  \
-	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
-	mv $$TMPFILE $@
-
-
-openapi-clean:
-	rm -f $(OPENAPI_SPEC)
-openapi: $(OPENAPI_SPEC)
-
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -183,25 +148,25 @@ clean:
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
+	    --exclude="**/*.code-workspace" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
-	    --exclude=".werks/.my_ids"
+	    --exclude=".werks/.my_ids" \
+	    --exclude="user.bazelrc"
 
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock" \
 	    --exclude=".cargo" \
-	    --exclude="node_modules"
+	    --exclude="node_modules" \
+	    --exclude=".cache"
 
 # The list of files and folders to be protected from remove after "buildclean" is called
 # Rust dirs are kept due to heavy load when compiled: .cargo, controller
-AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
-MK_SQL_TARGET_PATH=packages/mk-sql/target
+HOST_PACKAGES_TARGET_PATH=packages/host/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
-	    --exclude=$(AGENT_CTL_TARGET_PATH) \
-	    --exclude=$(MK_SQL_TARGET_PATH) \
+	    --exclude=$(HOST_PACKAGES_TARGET_PATH) \
 	    --exclude="agents/plugins/*_2.py" \
 	    --exclude="agents/plugins/*.py.checksum"
 
@@ -217,30 +182,16 @@ mrclean:
 buildclean:
 	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
 
-
-# This target should clean up everything which may have been built previously in the same working directory
-# within a specific docker image, which would be *falsely* re-used in another (incompatible) docker image.
-# One example:
-# - python-ldap wheel has been built in docker image ubuntu:20.04
-# - this would include a shared object file which is linked against the system's libldap in version 2.4
-# - switching to another docker image, e.g. ubuntu:22.04, would not have libldap in that version (but in version 2.5)
-# 	ldd .venv/lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so | grep "ldap"
-#		libldap_r-2.4.so.2 => not found
-# TODO: The list of to-be-cleaned artifacts is by no means complete. Add more as soon we know about them.
-docker-context-clean:
-	rm -rf .cache .venv
-
 setup:
 	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
 	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
-	$(MAKE) check-setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C non-free/cmc-protocols protobuf-files
+	$(MAKE) -C non-free/packages/cmc-protocols protobuf-files
 endif
 
 format: format-python format-c format-shell format-bazel
@@ -261,15 +212,10 @@ ifeq ($(ENTERPRISE),yes)
 	packages/cmc/run --check-format
 endif
 
-format-python: format-python-isort format-python-black
+format-python:
+	./scripts/run-uvenv ruff check --select I --fix
+	./.venv/bin/ruff format
 
-format-python-isort:
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml
-
-format-python-black:
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(BLACK)
 
 format-shell:
 	$(MAKE)	-C tests format-shell
@@ -278,53 +224,41 @@ what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
 
 format-bazel:
-	scripts/run-buildifier --lint=fix --mode=fix
+	scripts/run-buildifier --mode=fix
+
+lint-bazel:
+	scripts/run-buildifier --lint=fix
 
 documentation:
 	echo Nothing to do here remove this target
 
 sw-documentation-docker:
-	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
+	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
-.python-$(PYTHON_MAJOR_DOT_MINOR)-stamp:
-	$(RM) .python-*-stamp
-	touch $@
+# Use this target to update the requirements_*_lock.txt files
+# TODO: Find a _way_ better ways to handle this
+relock_venv:
+	for type in runtime all; do \
+	    filename=requirements_$${type}_lock.txt; \
+	    > $${filename}; \
+	done; \
+	bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
+	bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
 
-# TODO: pipenv and make don't really cooperate nicely: Locking alone already
-# creates a virtual environment with setuptools/pip/wheel. This could lead to a
-# wrong up-to-date status of it later, so let's remove it here. What we really
-# want is a check if the contents of .venv match the contents of Pipfile.lock.
-# We should do this via some move-if-change Kung Fu, but for now rm suffices.
-Pipfile.lock: Pipfile
-	@if [ "${CI}" == "true" ]; then \
-		echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
-		echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
-		echo "make --what-if Pipfile Pipfile.lock"; \
-		exit 1; \
-	fi
-
-	@( \
-		echo "Locking Python requirements..." ; \
-		flock $(LOCK_FD); \
-		( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
-	) $(LOCK_FD)>$(LOCK_PATH); \
-
-# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as specified in the Pipfile.lock.
-# This is extremely fast since the dependencies do not have to be resolved.
-# Cleanup partially created pipenv. This makes us able to automatically repair
-# broken virtual environments which may have been caused by network issues.
-# SETUPTOOLS_ENABLE_FEATURES="legacy-editable" is needed for mypy being able to
-# type check a package that's installed editable:
-# https://github.com/python/mypy/issues/13392
-.venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
-	@( \
-	    echo "Creating .venv..." ; \
-	    flock $(LOCK_FD); \
-	    if [ "$(CI)" == "true" ] || [ "$(PY_VIRT_MAJ_MIN)" != "$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)" ]; then \
-	      echo "INFO: Runs on CI: $(CI), Python version of .venv: $(PY_VIRT_MAJ_MIN), Target python version: $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
-	      echo "Cleaning up .venv before sync..."; \
-	      $(RM) -r .venv; \
-	    fi; \
-	    ( SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
-	) $(LOCK_FD)>$(LOCK_PATH)
+# .venv is PHONY because the dependencies are resolved by bazel
+.venv:
+	@set -e; \
+	if ! bazel test //:requirements_test > /dev/null; then \
+		if [ "${CI}" == "true" ]; then \
+			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
+			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \
+			echo "bazel run //:requirements.update"; \
+			exit 1; \
+		fi; \
+		# TODO: We currently need to first have an updated runtime lock file as this is the input for the all_lock file. \
+		# Therefore execution order matters! \
+		bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
+		bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
+	fi; \
+	CC="gcc" bazel run //:create_venv

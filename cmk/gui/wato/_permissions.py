@@ -25,7 +25,7 @@ def register(
                 "This permissions allows users to use Setup - Checkmk's "
                 "Web Administration Tool. Without this "
                 "permission all references to Setup (buttons, links, "
-                "snapins) will be invisible."
+                "snap-ins) will be invisible."
             ),
             defaults=["admin", "user"],
         )
@@ -95,9 +95,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discard",
-            title=_l("Discard changes"),
+            title=_l("Revert changes"),
             description=_l(
-                "This permission allows to discard pending changes. Beware that this holds only for "
+                "This permission allows to revert pending changes. Beware that this holds only for "
                 "the user's own pending changes, not for those of other users (foreign changes)."
             ),
             defaults=["admin", "user"],
@@ -108,11 +108,11 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discardforeign",
-            title=_l("Discard foreign changes"),
+            title=_l("Revert foreign changes"),
             description=_l(
                 "When several users work in parallel with Setup then several pending changes of "
                 "different users might pile up before changes are activated. Only with this permission "
-                "a user will be allowed to discard all pending changes, including foreign ones."
+                "a user will be allowed to revert all pending changes, including foreign ones."
             ),
             defaults=["admin"],
         )
@@ -407,7 +407,7 @@ def register(
             title=_l("Rulesets"),
             description=_l(
                 "Access to the module for managing Checkmk rules. Please note that a user can only "
-                "manage rules in folders he has permissions to. "
+                "manage rules in folders he has permissions to."
             ),
             defaults=["admin", "user"],
         )
@@ -465,7 +465,7 @@ def register(
             title=_l("User management"),
             description=_l(
                 "This permission is needed for the modules <b>Users</b>, "
-                "<b>Roles</b> and <b>Contact Groups</b>"
+                "<b>Roles</b> and <b>Contact groups</b>"
             ),
             defaults=["admin"],
         )
@@ -511,7 +511,7 @@ def register(
             name="snapshots",
             title=_l("Manage snapshots"),
             description=_l(
-                "Access to the module <i>Snaphsots</i>. Please note: a user with "
+                "Access to the module <i>Snapshots</i>. Please note: a user with "
                 "write access to this module "
                 "can make arbitrary changes to the configuration by restoring uploaded snapshots."
             ),

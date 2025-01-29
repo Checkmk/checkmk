@@ -14,10 +14,10 @@
 import json
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
+
+check_info = {}
 
 
 def parse_jira_custom_svc(string_table):
@@ -124,6 +124,7 @@ def discover_jira_custom_svc(section):
 
 
 check_info["jira_custom_svc"] = LegacyCheckDefinition(
+    name="jira_custom_svc",
     parse_function=parse_jira_custom_svc,
     service_name="Jira %s",
     discovery_function=discover_jira_custom_svc,

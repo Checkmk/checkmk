@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+
+check_info = {}
 
 huawei_switch_stack_unknown_role = "unknown"
 
@@ -53,6 +53,7 @@ def check_huawei_switch_stack(item, params, parsed):
 
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(
+    name="huawei_switch_stack",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

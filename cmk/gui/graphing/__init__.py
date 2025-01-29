@@ -7,27 +7,20 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from . import _perfometer
-from ._autocompleter import graph_templates_autocompleter, metrics_autocompleter
+from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
-from ._graph_specification import (
-    graph_specification_registry,
+from ._graph_specification import graph_specification_registry
+from ._graph_templates import TemplateGraphSpecification
+from ._legacy import perfometer_info, PerfometerSpec
+from ._metric_operation import (
     metric_operation_registry,
     MetricOpConstant,
     MetricOpConstantNA,
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from ._graph_templates import TemplateGraphSpecification
-from ._perfometer import (
-    get_first_matching_perfometer,
-    LogarithmicPerfometerSpec,
-    MetricometerRendererLegacyLogarithmic,
-    parse_perfometer,
-    perfometer_info,
-    PerfometerSpec,
-    renderer_registry,
-)
+from ._metrics import registered_metrics
+from ._perfometer import get_first_matching_perfometer, parse_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
 
@@ -45,18 +38,14 @@ def register(
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
-    _perfometer.register()
     autocompleter_registry.register_autocompleter("monitored_metrics", metrics_autocompleter)
-    autocompleter_registry.register_autocompleter("available_graphs", graph_templates_autocompleter)
 
 
 __all__ = [
     "register",
     "get_first_matching_perfometer",
-    "LogarithmicPerfometerSpec",
-    "MetricometerRendererLegacyLogarithmic",
     "parse_perfometer",
     "perfometer_info",
     "PerfometerSpec",
-    "renderer_registry",
+    "registered_metrics",
 ]

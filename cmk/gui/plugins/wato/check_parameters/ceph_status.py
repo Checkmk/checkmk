@@ -14,6 +14,7 @@ from cmk.gui.valuespec import Dictionary
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
+        is_deprecated=True,
         check_group_name="ceph_status",
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",

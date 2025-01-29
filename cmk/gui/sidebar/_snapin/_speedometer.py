@@ -5,12 +5,12 @@
 
 import json
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import RoleName
-from cmk.gui.utils.theme import theme
 
 from ._base import SidebarSnapin
 from ._helpers import snapin_width

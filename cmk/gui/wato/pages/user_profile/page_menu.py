@@ -5,7 +5,9 @@
 
 from collections.abc import Iterator
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -30,7 +32,7 @@ def page_menu_dropdown_user_related(
 def _page_menu_entries_related(
     page_name: str, show_shortcuts: bool = True
 ) -> Iterator[PageMenuEntry]:
-    is_cse_edition = cmk_version.edition() == cmk_version.Edition.CSE
+    is_cse_edition = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
 
     if page_name != "user_change_pw" and not is_cse_edition:
         yield PageMenuEntry(

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.1 "Ambient"
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.2 "Systemboard 1"
@@ -107,6 +108,7 @@ def check_fsc_sc2_temp(item, params, info):
 
 
 check_info["fsc_sc2_temp"] = LegacyCheckDefinition(
+    name="fsc_sc2_temp",
     parse_function=parse_fsc_sc2_temp,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

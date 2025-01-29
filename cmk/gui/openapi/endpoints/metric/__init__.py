@@ -7,6 +7,7 @@
 Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._graph_images import graph_spec_from_request
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas

@@ -8,11 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_f5_bigip_conns(info):
@@ -21,32 +22,33 @@ def inventory_f5_bigip_conns(info):
     return []
 
 
-def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branches
+def check_f5_bigip_conns(item, params, info):
     # Connection rate
     now = time.time()
+    value_store = get_value_store()
     total_native_compat_rate = 0.0
     conns_dict = {}
 
     for line in info:
         if line[2] != "":
             native_conn_rate = get_rate(
-                get_value_store(), "native", now, int(line[2]), raise_overflow=True
+                value_store, "native", now, int(line[2]), raise_overflow=True
             )
         else:
             native_conn_rate = 0
 
         if line[3] != "":
             compat_conn_rate = get_rate(
-                get_value_store(), "compat", now, int(line[3]), raise_overflow=True
+                value_store, "compat", now, int(line[3]), raise_overflow=True
             )
         else:
             compat_conn_rate = 0
 
-            total_native_compat_rate += native_conn_rate + compat_conn_rate
+        total_native_compat_rate += native_conn_rate + compat_conn_rate
 
         if line[4] != "":
             stat_http_req_rate = get_rate(
-                get_value_store(), "stathttpreqs", now, int(line[4]), raise_overflow=True
+                value_store, "stathttpreqs", now, int(line[4]), raise_overflow=True
             )
         else:
             stat_http_req_rate = None
@@ -89,6 +91,7 @@ def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+    name="f5_bigip_conns",
     parse_function=parse_f5_bigip_conns,
     detect=DETECT,
     fetch=SNMPTree(

@@ -5,25 +5,31 @@
 
 from __future__ import annotations
 
+import datetime
+import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-import cmk.utils.resulttype as result
-from cmk.utils.exceptions import (
+from cmk.ccc.exceptions import (
     MKAgentError,
     MKFetcherError,
     MKIPAddressLookupError,
     MKSNMPError,
     MKTimeout,
 )
+
+import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
-from cmk.checkengine.parser import HostSections
+from cmk.checkengine.parser import AgentRawDataSection, HostSections
+
+from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -34,7 +40,7 @@ class SummaryConfig:
 
     exit_spec: ExitSpec
     time_settings: PiggybackTimeSettings
-    is_piggyback_host: bool
+    expect_data: bool
 
 
 class SummarizerFunction(Protocol):
@@ -50,16 +56,16 @@ def summarize(
     host_sections: result.Result[HostSections, Exception],
     config: SummaryConfig,
     *,
-    # TODO(ml): Check if this is redundant with SummaryConfig.is_piggyback
     fetcher_type: FetcherType,
 ) -> Sequence[ActiveCheckResult]:
     if fetcher_type is FetcherType.PIGGYBACK:
         return host_sections.fold(
-            ok=lambda _: summarize_piggyback(
+            ok=lambda host_sections: summarize_piggyback(
+                host_sections=host_sections,
                 hostname=hostname,
                 ipaddress=ipaddress,
                 time_settings=config.time_settings,
-                is_piggyback=config.is_piggyback_host,
+                expect_data=config.expect_data,
             ),
             error=lambda exc: summarize_failure(config.exit_spec, exc),
         )
@@ -101,23 +107,55 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
 
 def summarize_piggyback(
     *,
+    host_sections: HostSections[AgentRawDataSection],
     hostname: HostName,
     ipaddress: HostAddress | None,
     time_settings: PiggybackTimeSettings,
-    # Tag: 'Always use and expect piggback data'
-    is_piggyback: bool,
+    expect_data: bool,
+    now: int | None = None,
 ) -> Sequence[ActiveCheckResult]:
-    if sources := [
-        source
-        for origin in (hostname, ipaddress)
-        # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
-        # `HostSections.piggyback_raw_data` because this allows it to
-        # sneakily use cached data.  At minimum, we should group all cache
-        # handling performed after the parser.
-        for source in get_piggyback_raw_data(origin, time_settings)
+    summary_section = SectionName("piggyback_source_summary")
+    config = PiggybackConfig(hostname, time_settings)
+    now = int(time.time()) if now is None else now
+    if meta_infos := [
+        PiggybackMetaData.deserialize(raw_file_info)
+        for (raw_file_info,) in host_sections.sections.get(summary_section, [])
     ]:
-        return [ActiveCheckResult(src.info.status, src.info.message) for src in sources]
+        return [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
 
-    if is_piggyback:
+    if expect_data:
         return [ActiveCheckResult(1, "Missing data")]
     return [ActiveCheckResult(0, "Success (but no data found for this host)")]
+
+
+def _summarize_single_piggyback_source(
+    meta: PiggybackMetaData, config: PiggybackConfig, now: float
+) -> ActiveCheckResult:
+    if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
+        return ActiveCheckResult(
+            0,
+            f"Piggyback data outdated (age: {_render_time(age)}, allowed: {_render_time(allowed)})",
+        )
+
+    if meta.last_contact is None or (meta.last_update < meta.last_contact):
+        msg = f"Piggyback data not updated by source '{meta.source}'"
+        state = 0  # TODO: can it be 'validity_state' here as well? Why would we go back to ok?
+        if (time_left := meta.last_update + config.validity_period(meta.source) - now) > 0:
+            msg += f" (still valid, {_render_time(time_left)} left)"
+            state = config.validity_state(meta.source)
+        return ActiveCheckResult(state, msg)
+
+    return ActiveCheckResult(0, f"Successfully processed from source '{meta.source}'")
+
+
+def _render_time(value: float | int) -> str:
+    """Format time difference seconds into human readable text
+
+    >>> _render_time(184)
+    '0:03:04'
+
+    Unlikely in this context, but still acceptable:
+    >>> _render_time(92635.3)
+    '1 day, 1:43:55'
+    """
+    return str(datetime.timedelta(seconds=round(value)))

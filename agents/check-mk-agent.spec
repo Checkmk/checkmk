@@ -46,7 +46,9 @@ define __spec_install_pre %{___build_pre} &&\
 /usr/lib/check_mk_agent
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/cmk-agent-ctl.gz
-/var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
+/var/lib/cmk-agent/scripts/manage-agent-user.sh
+/var/lib/cmk-agent/scripts/manage-binaries.sh
+/var/lib/cmk-agent/scripts/migrate.sh
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
@@ -58,31 +60,30 @@ define __spec_install_pre %{___build_pre} &&\
 
 %pre
 
-# In case of an upgrade, we must cleanup here.
-# 'preun' runs after the new scripts have been deployed
-# (too late cleanup files only deployed by the old package).
-if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
-    /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+if [ -r /var/lib/cmk-agent/cmk-agent/scripts/super-server/setup ]; then
+    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup cleanup
+    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup trigger
 fi
 
 %posttrans
 
+# Migration is currently only used for migrating runtime files from muliple directory deployment
+# to single directory deployment, but may be augmented by further migration actions in the future.
+# This should run as the first action after files have been placed
+# by the package manager, in order to provide a clean structure for all further scripts.
+/bin/sh /var/lib/cmk-agent/scripts/migrate.sh
+
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy
 
-# Only create our dedicated user, if the controller is in place (and working)
-# Otherwise we can do without the user.
-if "/usr/bin"/cmk-agent-ctl --version >/dev/null 2>&1; then
-    BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
-fi
+BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/manage-agent-user.sh
 
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
 
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh install
+
 %preun
 
-case "$1" in
-    0 | remove | purge)
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
-        ;;
-esac
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger

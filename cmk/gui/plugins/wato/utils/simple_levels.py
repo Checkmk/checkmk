@@ -5,7 +5,7 @@
 from typing import Literal
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Age, Alternative, FixedValue, Float, Integer, Percentage, Tuple
+from cmk.gui.valuespec import Age, Alternative, FixedValue, Float, Integer, Tuple, ValueSpec
 
 
 def _NoLevels() -> FixedValue:
@@ -16,37 +16,38 @@ def _NoLevels() -> FixedValue:
     )
 
 
-_Spec = type[Integer] | type[Float] | type[Percentage] | type[Age]
+_Spec = type[Integer] | type[Float] | type[Age]
 
 
 def _FixedLevels(
-    value_spec: _Spec,
+    spec: _Spec,
     default_value: tuple[float | int, float | int],
     unit: str,
     direction: Literal["upper", "lower"],
 ) -> Tuple:
-    type_ = int if value_spec in (Integer, Age) else float
-    kw = {} if value_spec is Age else {"unit": unit}
+    def element(idx: Literal[0, 1], title_upper: str, title_lower: str) -> ValueSpec:
+        title = title_upper if direction == "upper" else title_lower
+        dv = default_value[idx]
+        if issubclass(spec, Integer):
+            return spec(title=title, default_value=int(dv), unit=unit)
+        if issubclass(spec, Float):
+            return spec(title=title, default_value=float(dv), unit=unit)
+        if issubclass(spec, Age):
+            return spec(title=title, default_value=int(dv))
+        raise ValueError(f"illegal ValueSpec type {spec}, expected Integer or Float or Age")
+
     return Tuple(
         title=_("Fixed Levels"),
         elements=[
-            value_spec(
-                title=_("Warning at") if direction == "upper" else _("Warning below"),
-                default_value=type_(default_value[0]),
-                **kw,  # type: ignore[arg-type]
-            ),
-            value_spec(
-                title=_("Critical at") if direction == "upper" else _("Critical below"),
-                default_value=type_(default_value[1]),
-                **kw,  # type: ignore[arg-type]
-            ),
+            element(0, _("Warning at"), _("Warning below")),
+            element(1, _("Critical at"), _("Critical below")),
         ],
     )
 
 
 def SimpleLevels(
     spec: _Spec = Float,
-    help: str | None = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,
     default_levels: tuple[float | int, float | int] = (0.0, 0.0),
     default_value: tuple[float, float] | None = None,
     title: str | None = None,

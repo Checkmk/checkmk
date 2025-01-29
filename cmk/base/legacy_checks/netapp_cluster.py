@@ -19,10 +19,10 @@
 # SNMPv2-SMI::enterprises.789.1.2.3.8.0 = INTEGER: 4
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_netapp_cluster(info):
@@ -95,6 +95,7 @@ def parse_netapp_cluster(string_table: StringTable) -> StringTable:
 
 
 check_info["netapp_cluster"] = LegacyCheckDefinition(
+    name="netapp_cluster",
     parse_function=parse_netapp_cluster,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),

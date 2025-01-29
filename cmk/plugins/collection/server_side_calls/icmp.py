@@ -36,8 +36,8 @@ class ICMPParams(BaseModel):
     multiple_services: bool = False
     description: str | None = None
     address: AddressType = AddressType.ADDRESS
-    address_index: int | None = None
-    explicit_address: str | None = None
+    address_index: int
+    explicit_address: str | None
     min_pings: int = 0
     timeout: int | None = None
     packets: int | None = None
@@ -56,14 +56,14 @@ class AddressCmdArgs(NamedTuple):
         return addresses
 
 
-def parse_address(raw_params: Mapping[str, object]) -> tuple[AddressType, int | None, str | None]:
+def parse_address(raw_params: Mapping[str, object]) -> tuple[AddressType, int, str | None]:
     address = raw_params.get("address", "address")
     if isinstance(address, str):
-        return AddressType(address), None, None
+        return AddressType(address), 0, None
     if isinstance(address, tuple) and address[0] in ("indexed_ipv4address", "indexed_ipv6address"):
         return AddressType(address[0]), int(address[1]), None
     if isinstance(address, tuple) and address[0] == "explicit":
-        return AddressType(address[0]), None, str(address[1])
+        return AddressType(address[0]), 0, str(address[1])
     raise ValueError("Invalid address parameters")
 
 
@@ -127,9 +127,9 @@ def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> Addres
                 raise ValueError("Host has no IPv4 addresses")
             try:
                 return AddressCmdArgs(
-                    IPAddressFamily.IPV4, [ipv4.additional_addresses[params.address_index]]  # type: ignore[index]
+                    IPAddressFamily.IPV4, [ipv4.additional_addresses[params.address_index - 1]]
                 )
-            except (TypeError, IndexError) as exc:
+            except IndexError as exc:
                 raise ValueError(f"Invalid address index: {params.address_index!r}") from exc
 
         case AddressType.INDEXED_IPv6ADDRESS:
@@ -137,9 +137,9 @@ def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> Addres
                 raise ValueError("Host has no IPv6 addresses")
             try:
                 return AddressCmdArgs(
-                    IPAddressFamily.IPV6, [ipv6.additional_addresses[params.address_index]]  # type: ignore[index]
+                    IPAddressFamily.IPV6, [ipv6.additional_addresses[params.address_index - 1]]
                 )
-            except (TypeError, IndexError) as exc:
+            except IndexError as exc:
                 raise ValueError(f"Invalid address index: {params.address_index!r}") from exc
 
         case AddressType.EXPLICIT:

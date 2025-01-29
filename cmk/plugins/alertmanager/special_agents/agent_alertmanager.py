@@ -5,31 +5,44 @@
 """
 Special agent for monitoring Promtheus Alertmanager with Checkmk.
 """
+
 import argparse
 import ast
 import json
 import logging
 import sys
 import traceback
+from collections.abc import Sequence
 from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.plugins.lib.prometheus import extract_connection_args, generate_api_session
+from cmk.plugins.lib.prometheus import (
+    add_authentication_args,
+    authentication_from_args,
+    generate_api_session,
+    get_api_url,
+)
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
     )
     parser.add_argument(
         "--config",
-        type=str,
+        required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-
+    add_authentication_args(parser)
+    parser.add_argument(
+        "--disable-cert-verification",
+        action="store_true",
+        help="Do not verify TLS certificate.",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -55,7 +68,7 @@ class AlertmanagerAPI:
     Realizes communication with the Alertmanager API
     """
 
-    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, session: ApiSession) -> None:
         self.session = session
 
     def query_static_endpoint(self, endpoint: str) -> requests.models.Response:
@@ -125,13 +138,17 @@ def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlert
     return groups
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
     try:
         config = ast.literal_eval(args.config)
-        session = generate_api_session(extract_connection_args(config))
+        session = generate_api_session(
+            get_api_url(config["connection"], config["protocol"]),
+            authentication_from_args(args),
+            not args.disable_cert_verification,
+        )
         api_client = AlertmanagerAPI(session)
         alertmanager_rules_section(api_client, config)
     except Exception as e:

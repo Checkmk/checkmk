@@ -7,7 +7,8 @@
 import pytest
 
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2 import StringTable
 
 pytestmark = pytest.mark.checks
 

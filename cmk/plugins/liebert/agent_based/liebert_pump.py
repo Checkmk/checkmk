@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -45,7 +47,7 @@ def check_liebert_pump(item: str, section: Section[float]) -> CheckResult:
         if "Threshold" in key and key.replace(" Threshold", "") == item:
             crit = c_value
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value,
         levels_upper=(crit, crit),
         render_func=lambda x: f"{x:.2f} {unit}",

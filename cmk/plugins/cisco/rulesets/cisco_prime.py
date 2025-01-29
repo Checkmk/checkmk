@@ -45,7 +45,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="ip_address",
-                            title=Title("IP Address"),
+                            title=Title("IP address"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
@@ -55,12 +55,12 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="custom",
-                            title=Title("Custom Host"),
+                            title=Title("Custom host"),
                             parameter_form=Dictionary(
                                 elements={
                                     "host": DictElement(
                                         parameter_form=String(
-                                            title=Title("Custom Host"),
+                                            title=Title("Custom host"),
                                             custom_validate=(LengthInRange(min_value=1),),
                                             macro_support=True,
                                         ),
@@ -119,7 +119,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
-                    title=Title("Connect Timeout"),
+                    title=Title("Connect timeout"),
                     help_text=Help("The network timeout in seconds"),
                     prefill=DefaultValue(60),
                     custom_validate=(NumberInRange(min_value=1),),

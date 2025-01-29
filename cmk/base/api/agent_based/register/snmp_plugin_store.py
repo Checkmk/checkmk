@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
+
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import BackendSNMPTree  # pylint: disable=cmk-module-layer-violation
-from cmk.snmplib import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import (
+    BackendSNMPTree,  # pylint: disable=cmk-module-layer-violation
+    SNMPDetectSpec,  # pylint: disable=cmk-module-layer-violation
+)
 
 from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
     SNMPPluginStore,
@@ -14,28 +18,30 @@ from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
 )
 
 from ._config import (
-    get_relevant_raw_sections,
-    is_registered_snmp_section_plugin,
-    iter_all_inventory_plugins,
-    iter_all_snmp_sections,
+    AgentBasedPlugins,
+)
+from .utils import (
+    filter_relevant_raw_sections,
 )
 
 __all__ = ["make_plugin_store"]
 
 
-def _make_inventory_sections() -> frozenset[SectionName]:
+def _make_inventory_sections(plugins: AgentBasedPlugins) -> frozenset[SectionName]:
     return frozenset(
         s
-        for s in get_relevant_raw_sections(
-            check_plugin_names=(),
-            inventory_plugin_names=(p.name for p in iter_all_inventory_plugins()),
+        for s in filter_relevant_raw_sections(
+            consumers=plugins.inventory_plugins.values(),
+            sections=itertools.chain(
+                plugins.agent_sections.values(), plugins.snmp_sections.values()
+            ),
         )
-        if is_registered_snmp_section_plugin(s)
+        if s in plugins.snmp_sections
     )
 
 
-def make_plugin_store() -> SNMPPluginStore:
-    inventory_sections = _make_inventory_sections()
+def make_plugin_store(plugins: AgentBasedPlugins) -> SNMPPluginStore:
+    inventory_sections = _make_inventory_sections(plugins)
     return SNMPPluginStore(
         {
             s.name: SNMPPluginStoreItem(
@@ -43,6 +49,6 @@ def make_plugin_store() -> SNMPPluginStore:
                 SNMPDetectSpec(s.detect_spec),
                 s.name in inventory_sections,
             )
-            for s in iter_all_snmp_sections()
+            for s in plugins.snmp_sections.values()
         }
     )

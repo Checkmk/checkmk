@@ -20,7 +20,7 @@ configure_make(
     # without "configure_in_place = True"
     configure_in_place = True,
     configure_options = [
-        "--with-ssl=$EXT_BUILD_DEPS/openssl",
+        "--with-ssl=$$EXT_BUILD_DEPS/openssl",
     ],
     lib_source = ":all_srcs",
     out_bin_dir = "lib/nagios/plugins",
@@ -40,4 +40,6 @@ configure_make(
     targets = [
         "-C src check_nrpe",
     ],
+    visibility = ["//visibility:public"],
+    deps = ["@openssl"],
 )

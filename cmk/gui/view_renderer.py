@@ -8,14 +8,13 @@ import collections
 import json
 from collections.abc import Callable, Iterator
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
-import cmk.gui.sites as sites
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
-import cmk.gui.weblib as weblib
+from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -94,15 +93,17 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
-    page_menu_dropdowns_hook: Callable[[View, Rows, list[PageMenuDropdown]], None] = (
-        lambda v, r, p: None
-    )
-
-    def __init__(self, view: View, show_buttons: bool) -> None:
+    def __init__(
+        self,
+        view: View,
+        show_buttons: bool,
+        page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
+    ) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
+        self._page_menu_dropdowns_callback = page_menu_dropdowns_callback
 
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -115,7 +116,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if transactions.transaction_valid() and html.do_actions():
             html.browser_reload = 0.0
 
-        # Show/Hide the header with page title, MK logo, etc.
+        # Show/hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
             html.body_start(view_title(view_spec, self.view.context))
 
@@ -234,7 +235,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for message in self.view.warning_messages:
             html.show_warning(message)
 
-        call_hooks("view_banner", self.view.name)
+        call_hooks("rmk_view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
@@ -353,7 +354,7 @@ class GUIViewRenderer(ABCViewRenderer):
             + export_dropdown
         )
 
-        GUIViewRenderer.page_menu_dropdowns_hook(self.view, rows, page_menu_dropdowns)
+        self._page_menu_dropdowns_callback(self.view, rows, page_menu_dropdowns)
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
@@ -401,7 +402,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for _group_class, commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
             for command in commands:
                 yield PageMenuEntry(
-                    title=command.title,
+                    title=str(command.title),
                     icon_name=command.icon_name,
                     item=(
                         PageMenuPopup(self._render_command_form(info_name, command))
@@ -457,7 +458,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
-        if cmk_version.edition() is cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
             return
 
         if not user.may("general.instant_reports"):
@@ -595,22 +596,22 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F):
-            return HTML()
+            return HTML.empty()
 
         with output_funnel.plugged():
             show_filter_form(self.view, show_filters)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
             painter_options.show_form(self.view.spec, self.view.painter_options)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:
         with output_funnel.plugged():
             if not should_show_command_form(self.view.datasource):
-                return HTML()
+                return HTML.empty()
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
@@ -623,7 +624,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
                 html.hidden_fields()
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO

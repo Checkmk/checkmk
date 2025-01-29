@@ -20,12 +20,14 @@ DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_$(VERSION)-1_all.deb
 DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
+HOST_PACKAGES_DIR := $(REPO_PATH)/packages/host
+
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
-AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
+AGENT_CTL_DIR := $(HOST_PACKAGES_DIR)/cmk-agent-ctl
 
 MK_SQL := $(AGENTS_DIR)/linux/mk-sql
-MK_SQL_DIR := $(REPO_PATH)/packages/mk-sql
+MK_SQL_DIR := $(HOST_PACKAGES_DIR)/mk-sql
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -82,7 +84,6 @@ setversion:
 	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
 		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
 		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
-		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
 		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/include/common/wnx_version.h
 	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/include/wnx/install_api.h
@@ -96,7 +97,7 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 $(AGENT_CTL):
 	$(AGENT_CTL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
+	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
@@ -105,7 +106,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(MK_SQL):
 	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(MK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
+	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

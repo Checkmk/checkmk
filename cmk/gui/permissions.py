@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 from collections.abc import Callable, Sequence
 
-import cmk.utils.plugin_registry
+import cmk.ccc.plugin_registry
 
 from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.speaklater import LazyString
@@ -40,7 +39,7 @@ class PermissionSection(abc.ABC):
         return False
 
 
-class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[type[PermissionSection]]):
+class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[type[PermissionSection]]):
     def plugin_name(self, instance):
         return instance().name
 
@@ -109,7 +108,7 @@ class Permission(abc.ABC):
         self._sort_index = value
 
 
-class PermissionRegistry(cmk.utils.plugin_registry.Registry[Permission]):
+class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
     def __init__(self) -> None:
         super().__init__()
         # TODO: Better make the sorting explicit in the future

@@ -82,7 +82,7 @@ def levels_absolute_or_dynamic(name, value):
 
 def _parameter_valuespec_mssql_datafiles():
     return Dictionary(
-        title=_("File Size Levels"),
+        title=_("File size levels"),
         help=_(
             "Specify levels for datafiles of a database. Please note that relative "
             "levels will only work if there is a max_size set for the file on the database "
@@ -106,6 +106,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_database_file,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_datafiles,
-        title=lambda: _("MSSQL Datafile Sizes"),
+        title=lambda: _("MSSQL datafile sizes"),
     )
 )

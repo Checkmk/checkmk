@@ -11,16 +11,21 @@ SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-pipenv run pip wheel --no-deps --wheel-dir build .
+BAZEL_TARGET=":wheel"
+../../scripts/run-bazel.sh build "${BAZEL_TARGET}"
+
+WHEEL=$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")
 
 # pip installs the package in the user directory in case of missing permissions
 # this might be surprising and hard to spot, so we force the global installation.
 # hint: use `omd-setup-version-for-dev` to fix permissions of the checkmk site
 export PYTHONNOUSERSITE=1
 
+# NOTE: the wild card for the wheel is potentially dangerous: there might be multiple wheels in bazel-bin (e.g. for different versions)
+# But it also seems pip will the complain about... so let's go with it for now.
 "/omd/sites/${SITE}/bin/python3" -m pip install \
     --no-deps \
     --upgrade \
     --force-reinstall \
     --isolated \
-    ./build/*-*-py3-none-any.whl
+    "${WHEEL}"

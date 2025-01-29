@@ -8,13 +8,19 @@ import socket
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
+from pydantic import BaseModel
+
+from cmk.ccc import version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition_supports_nagvis
+
+from cmk.utils import paths
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.version import edition_supports_nagvis
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
+from cmk.gui import forms
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -33,6 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
@@ -59,11 +66,11 @@ from cmk.gui.watolib.host_rename import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
+    folder_tree,
     Host,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.site_changes import SiteChanges
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -127,6 +134,8 @@ class ModeBulkRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         try:
@@ -151,7 +160,7 @@ class ModeBulkRenameHost(WatoMode):
                     HTMLWriter.render_td(host_name) + HTMLWriter.render_td(" → %s" % target_name)
                 )
             )
-        message += HTMLWriter.render_table(HTML().join(rows))
+        message += HTMLWriter.render_table(HTML.empty().join(rows))
 
         nr_rename = len(renamings)
         c = _confirm(
@@ -161,11 +170,13 @@ class ModeBulkRenameHost(WatoMode):
         if c:
             title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob()
-
-            try:
-                host_renaming_job.start(
-                    lambda job_interface: rename_hosts_background_job(renamings, job_interface),
-                    background_job.InitialStatusArgs(
+            if (
+                result := host_renaming_job.start(
+                    JobTarget(
+                        callable=rename_hosts_job_entry_point,
+                        args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                    ),
+                    InitialStatusArgs(
                         title=title,
                         lock_wato=True,
                         stoppable=False,
@@ -173,8 +184,8 @@ class ModeBulkRenameHost(WatoMode):
                         user=str(user.id) if user.id else None,
                     ),
                 )
-            except background_job.BackgroundJobAlreadyRunning as e:
-                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+            ).is_error():
+                raise MKGeneralException(str(result.error))
 
             return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
@@ -194,6 +205,7 @@ class ModeBulkRenameHost(WatoMode):
         invalid_names = set()
         name_collisions = set()
         seen_names = set()
+        locked_by_quick_setup = set()
         all_host_names = Host.all().keys()
         updated_renamings = []
         for folder, old_name, new_name in renamings:
@@ -205,6 +217,9 @@ class ModeBulkRenameHost(WatoMode):
             except ValueError:
                 invalid_names.add(new_name)
 
+            if (host := folder.host(old_name)) and is_locked_by_quick_setup(host.locked_by()):
+                locked_by_quick_setup.add(old_name)
+
         warning = ""
         if invalid_names:
             warning += self._format_renamings_warning(
@@ -215,6 +230,14 @@ class ModeBulkRenameHost(WatoMode):
             warning += self._format_renamings_warning(
                 _("You cannot do this renaming since the following host names would collide:"),
                 name_collisions,
+            )
+        if locked_by_quick_setup:
+            warning += self._format_renamings_warning(
+                _(
+                    "You cannot do this renaming since the following hosts are locked by "
+                    "Quick setup:"
+                ),
+                locked_by_quick_setup,
             )
         if warning:
             raise HostRenamingException(warning)
@@ -408,28 +431,34 @@ def _confirm(html_title, message):
     return confirm_with_preview(message, confirm_options)
 
 
-def rename_hosts_background_job(
-    renamings: Sequence[tuple[Folder, HostName, HostName]],
-    job_interface: background_job.BackgroundProcessInterface,
+class RenameHostsJobArgs(BaseModel, frozen=True):
+    renamings: Sequence[tuple[str, HostName, HostName]]
+
+
+def rename_hosts_job_entry_point(
+    job_interface: BackgroundProcessInterface,
+    args: RenameHostsJobArgs,
 ) -> None:
-    actions, auth_problems = rename_hosts(
-        renamings, job_interface=job_interface
-    )  # Already activates the changes!
+    with job_interface.gui_context():
+        renamings = _renamings_from_job_args(args.renamings)
+        actions, auth_problems = _rename_hosts(
+            renamings, job_interface
+        )  # Already activates the changes!
 
-    for site_id in group_renamings_by_site(renamings):
-        ActivateChanges().confirm_site_changes(site_id)
+        for site_id in group_renamings_by_site(renamings):
+            ActivateChanges().confirm_site_changes(site_id)
 
-    action_txt = "".join(["<li>%s</li>" % a for a in actions])
-    message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
-        len(renamings),
-        ungettext("host", "hosts", len(renamings)),
-        action_txt,
-    )
-    if auth_problems:
-        message += _(
-            "The following hosts could not be renamed because of missing permissions: %s"
-        ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
-    job_interface.send_result_message(message)
+        action_txt = "".join(["<li>%s</li>" % a for a in actions])
+        message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
+            len(renamings),
+            ungettext("host", "hosts", len(renamings)),
+            action_txt,
+        )
+        if auth_problems:
+            message += _(
+                "The following hosts could not be renamed because of missing permissions: %s"
+            ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
+        job_interface.send_result_message(message)
 
 
 class ModeRenameHost(WatoMode):
@@ -506,7 +535,7 @@ class ModeRenameHost(WatoMode):
 
     def action(self) -> ActionResult:
         renamed_host_site = self._host.site_id()
-        if SiteChanges(renamed_host_site).read():
+        if ActivateChanges().get_pending_changes_info().has_changes():
             raise MKUserError(
                 "newname",
                 _(
@@ -514,6 +543,12 @@ class ModeRenameHost(WatoMode):
                     "pending changes on the site the host is monitored on (%s)."
                 )
                 % renamed_host_site,
+            )
+        if is_locked_by_quick_setup(self._host.locked_by()):
+            raise MKUserError(
+                "host",
+                _('You cannot rename host "%s", because it is managed by Quick setup.')
+                % self._host.name(),
             )
 
         newname = request.get_validated_type_input_mandatory(HostName, "newname")
@@ -524,10 +559,13 @@ class ModeRenameHost(WatoMode):
         host_renaming_job = RenameHostBackgroundJob(self._host)
         renamings = [(folder, self._host.name(), newname)]
 
-        try:
-            host_renaming_job.start(
-                lambda job_interface: rename_hosts_background_job(renamings, job_interface),
-                background_job.InitialStatusArgs(
+        if (
+            result := host_renaming_job.start(
+                JobTarget(
+                    callable=rename_hosts_job_entry_point,
+                    args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                ),
+                InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
                     lock_wato=True,
                     stoppable=False,
@@ -535,8 +573,8 @@ class ModeRenameHost(WatoMode):
                     user=str(user.id) if user.id else None,
                 ),
             )
-        except background_job.BackgroundJobAlreadyRunning as e:
-            raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+        ).is_error():
+            raise MKGeneralException(str(result.error))
 
         return redirect(host_renaming_job.detail_url())
 
@@ -573,7 +611,7 @@ class ModeRenameHost(WatoMode):
         ):
             forms.header(_("Rename host %s") % self._host.name())
             forms.section(_("Current name"))
-            html.write_text(self._host.name())
+            html.write_text_permissive(self._host.name())
             forms.section(_("New name"))
             html.text_input("newname", "")
             forms.end()
@@ -581,8 +619,26 @@ class ModeRenameHost(WatoMode):
             html.hidden_fields()
 
 
-# renamings is a list of tuples of (folder, oldname, newname)
-def rename_hosts(renamings, job_interface=None):
+def _renamings_to_job_args(
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
+) -> Sequence[tuple[str, HostName, HostName]]:
+    return [(folder.path(), old_name, new_name) for folder, old_name, new_name in renamings]
+
+
+def _renamings_from_job_args(
+    rename_args: Sequence[tuple[str, HostName, HostName]],
+) -> Sequence[tuple[Folder, HostName, HostName]]:
+    tree = folder_tree()
+    return [
+        (tree.folder(folder_path), old_name, new_name)
+        for folder_path, old_name, new_name in rename_args
+    ]
+
+
+def _rename_hosts(
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
+    job_interface: BackgroundProcessInterface,
+) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
     action_counts, auth_problems = perform_rename_hosts(renamings, job_interface)
     action_texts = render_renaming_actions(action_counts)
     return action_texts, auth_problems
@@ -614,12 +670,12 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "pnpspool": _("Spool files of PNP4Nagios"),
         "history": _("Monitoring history entries (events and availability)"),
         "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
-        "inv": _("Recent hardware/software inventory"),
-        "invarch": _("History of hardware/software inventory"),
+        "inv": _("HW/SW Inventory"),
+        "invarch": _("HW/SW Inventory history"),
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 
-    if edition_supports_nagvis():
+    if edition_supports_nagvis(version.edition(paths.omd_root)):
         action_titles["nagvis"] = _("NagVis map")
 
     texts = []

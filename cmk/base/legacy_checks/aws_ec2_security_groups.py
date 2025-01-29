@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_aws_ec2_security_groups(parsed):
@@ -30,6 +32,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
 
 
 check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
+    name="aws_ec2_security_groups",
     parse_function=parse_aws,
     service_name="AWS/EC2 Security Groups",
     discovery_function=inventory_aws_ec2_security_groups,

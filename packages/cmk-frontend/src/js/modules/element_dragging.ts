@@ -4,7 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {
+    add_class,
+    add_event_handler,
+    get_button,
+    has_class,
+    mouse_position,
+    prevent_default_events,
+    remove_class,
+} from "./utils";
 
 //#   .-ElementDrag--------------------------------------------------------.
 //#   |     _____ _                           _   ____                     |
@@ -30,9 +38,9 @@ export function start(
     event: Event,
     dragger: HTMLAnchorElement,
     dragging_tag: string,
-    drop_handler: (index: number) => void
+    drop_handler: (index: number) => void,
 ) {
-    const button = utils.get_button(event as MouseEvent);
+    const button = get_button(event as MouseEvent);
 
     // Skip calls when already dragging or other button than left mouse
     if (g_element_dragging !== null || button != "LEFT") return true;
@@ -51,7 +59,7 @@ export function start(
             dragging_tag
         );
 
-    utils.add_class(dragging as HTMLElement, "dragging");
+    add_class(dragging as HTMLElement, "dragging");
 
     g_element_dragging = {
         dragging: dragging,
@@ -59,7 +67,7 @@ export function start(
         drop_handler: drop_handler,
     };
 
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function element_dragging(event: MouseEvent): true | void {
@@ -84,7 +92,7 @@ function position_dragging_object(event: MouseEvent) {
         )
             return null;
         // Do not move above the action rows of tables rendered with "table.py"
-        if (previous && utils.has_class(previous as HTMLElement, "actions"))
+        if (previous && has_class(previous as HTMLElement, "actions"))
             return null;
 
         return previous;
@@ -114,7 +122,7 @@ function position_dragging_object(event: MouseEvent) {
 // mouse offset to the middle coordinates of an object
 function mouse_offset_to_middle(obj: Element, event: MouseEvent) {
     const obj_pos = obj.getBoundingClientRect();
-    const mouse_pos = utils.mouse_position(event);
+    const mouse_pos = mouse_position(event);
     return {
         x: mouse_pos.x - (obj_pos.left + obj_pos.width / 2),
         y: mouse_pos.y - (obj_pos.top + obj_pos.height / 2),
@@ -127,12 +135,12 @@ function element_drag_stop(event: Event) {
     finalize_dragging();
     g_element_dragging = null;
 
-    return utils.prevent_default_events(event);
+    return prevent_default_events(event);
 }
 
 function finalize_dragging() {
     const dragging = g_element_dragging?.dragging;
-    utils.remove_class(dragging, "dragging");
+    remove_class(dragging, "dragging");
 
     if (!g_element_dragging?.moved) return; // Nothing changed. Fine.
 
@@ -148,7 +156,7 @@ function finalize_dragging() {
 
     // - possible existing "table.py" second header (actions in tables)
     const has_action_row =
-        elements.length > 1 && utils.has_class(elements[1], "actions");
+        elements.length > 1 && has_class(elements[1], "actions");
     if (has_action_row) index -= 1;
 
     g_element_dragging.drop_handler(index);
@@ -160,11 +168,11 @@ export function url_drop_handler(base_url: string, index: number) {
 }
 
 export function register_event_handlers() {
-    utils.add_event_handler("mousemove", function (event: Event) {
+    add_event_handler("mousemove", function (event: Event) {
         return element_dragging(event as MouseEvent);
     });
 
-    utils.add_event_handler("mouseup", function (event: Event) {
+    add_event_handler("mouseup", function (event: Event) {
         return element_drag_stop(event);
     });
 }

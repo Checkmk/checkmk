@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "vue_formspec_components",
+    "properties": {
+        "components": {
+            "type": "object",
+            "$ref": "vue_formspec/components.json#/$defs/components"
+        },
+        "validation_message": {
+            "type": "object",
+            "$ref": "vue_formspec/validation_message.json#/$defs/validation_message"
+        },
+        "values": {
+            "type": "object",
+            "$ref": "vue_formspec/values.json#/$defs/values"
+        }
+    }
+}

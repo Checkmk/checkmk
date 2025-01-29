@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<table align="center"
+       width="100%"
+       style="border: 1px solid #e5e5e5;
+              border-collapse: separate;
+              min-width: 220px;
+              max-width: 536px;
+              border-top: 8px solid {% if service_notification %} {{ state_mapping[data.SERVICESTATE].split("background-color: ")[1] .split(';
+              ')[0] }} {% else %} {{ state_mapping[data.HOSTSTATE].split("background-color: ")[1] .split(';
+              ')[0] }} {% endif %}">
+    <tr>
+        <td align="center" style="padding: 10px 0 5px 0;">
+            <table width="100%"
+                   height="124"
+                   style="border-collapse: collapse;
+                          border-spacing: 0;
+                          max-width: 512px;
+                          min-width: 220px">
+                <tr>
+                    <td width="80"
+                        height="33"
+                        style="font-size:14px;
+                               font-weight:600;
+                               padding:8px;
+                               border-bottom: 1px solid #e5e5e5;
+                               color: #2c3844">Event:</td>
+                    <td height="33"
+                        style="font-size:14px;
+                               font-weight:600;
+                               border-bottom: 1px solid #e5e5e5;
+                               color: #2c3844">
+                        <table style="border-collapse: collapse;">
+                            <tr>
+                                <td style=" line-height: 45px; padding: 0; ">
+                                    <div style="{{ macros.event_marker_style() }};
+                                                {% if service_notification %} {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }} {% endif %};
+                                                display: inline-block;
+                                                /* Inline block to respect width */">
+                                        {% if service_notification %}
+                                            {{ data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                        {% else %}
+                                            {{ data.PREVIOUSHOSTHARDSHORTSTATE[:4] }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 0 5px;
+                                           vertical-align: middle;
+                                           text-align: center;
+                                           line-height: 1;
+                                           height: 33px">
+                                    <!--[if mso]>
+                                    <div style="margin-top: 5px;">
+                                    <![endif]-->
+                                    <div style="font-size: 14px;
+                                                font-weight: 600;
+                                                line-height: 1.5;
+                                                display: inline-block">&#8211;&#8250;</div>
+                                    <!--[if mso]>
+                                    </div>
+                                    <![endif]-->
+                                </td>
+                                <td style=" line-height: 45px; padding: 0; ">
+                                    <div style="{{ macros.event_marker_style() }};
+                                                {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %};
+                                                display: inline-block;
+                                                /* Inline block to respect width */">
+                                        {% if service_notification %}
+                                            {{ data.SERVICESTATE[:4] }}
+                                        {% else %}
+                                            {{ data.HOSTSTATE[:4] }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% if service_notification %}
+                    <tr style="border-bottom: 1px solid #e5e5e5;">
+                        <td width="80"
+                            style="font-size:14px;
+                                   font-weight:600;
+                                   padding:8px;
+                                   border-bottom: 1px solid #e5e5e5;
+                                   height:33px;
+                                   color: #2c3844">Service:</td>
+                        <td style="font-size:14px;
+                                   border-bottom: 1px solid #e5e5e5;
+                                   height:33px;
+                                   color: #2c3844">{{ data.LINKEDSERVICEDESC | safe }}</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td {{ macros.td_first_child(width='80px', padding='8px') }}>
+                        Host:
+                    </td>
+                    <td {{ macros.td_last_child() }}>
+                        {{ data.LINKEDHOSTNAME | safe }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
+        </td>
+    </tr>
+</table>

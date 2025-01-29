@@ -10,10 +10,23 @@
 # TCPIP$FTP - - - 1
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_vms_users(info):
@@ -45,6 +58,7 @@ def parse_vms_users(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_users"] = LegacyCheckDefinition(
+    name="vms_users",
     parse_function=parse_vms_users,
     service_name="VMS Users",
     discovery_function=inventory_vms_users,

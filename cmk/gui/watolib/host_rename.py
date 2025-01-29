@@ -14,20 +14,17 @@ from pydantic import BaseModel
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
+
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import userdb
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -71,42 +68,41 @@ rename_host_hook_registry = RenameHostHookRegistry()
 
 def perform_rename_hosts(
     renamings: Iterable[tuple[Folder, HostName, HostName]],
-    job_interface: BackgroundProcessInterface | None = None,
+    job_interface: BackgroundProcessInterface,
 ) -> tuple[dict[str, int], list[tuple[HostName, MKAuthException]]]:
-    """Rename hosts mechanism
-
-    Args:
-        renamings:
-            tuple consisting of folder, oldname, newname
-
-        job_interface:
-            only relevant for Setup interaction, allows to update the interface with the current
-            update info
-    """
-
     def update_interface(message: str) -> None:
-        if job_interface is None:
-            return
         job_interface.send_progress_update(message)
 
     actions: list[str] = []
-    all_hosts = list(Host.all().values())
 
     # 1. Fix Setup configuration itself ----------------
     auth_problems = []
     successful_renamings = []
     update_interface(_("Renaming Setup configuration..."))
-    for folder, oldname, newname in renamings:
+
+    setup_actions: dict[tuple[Folder, HostName, HostName], list[str]] = {}
+    for renaming in renamings:
+        folder, oldname, newname = renaming
         try:
-            this_host_actions = []
             update_interface(_("Renaming host(s) in folders..."))
-            this_host_actions += _rename_host_in_folder(folder, oldname, newname)
+            setup_actions[renaming] = _rename_host_in_folder(folder, oldname, newname)
+        except MKAuthException as e:
+            auth_problems.append((oldname, e))
+
+    # Precompute cluster host list for node renaming due to expensive Host.all()
+    # call. This currently also needs to be done after the host renaming as the
+    # folder_tree cache_invalidation still misses some caches.
+    cluster_hosts = [host for host in Host.all().values() if host.is_cluster()]
+
+    for renaming, this_host_actions in setup_actions.items():
+        folder, oldname, newname = renaming
+        try:
             update_interface(_("Renaming host(s) in cluster nodes..."))
-            this_host_actions += _rename_host_as_cluster_node(all_hosts, oldname, newname)
+            this_host_actions.extend(_rename_host_as_cluster_node(cluster_hosts, oldname, newname))
             update_interface(_("Renaming host(s) in parents..."))
-            this_host_actions += _rename_parents(oldname, newname)
+            this_host_actions.extend(_rename_parents(oldname, newname))
             update_interface(_("Renaming host(s) in rulesets..."))
-            this_host_actions += _rename_host_in_rulesets(oldname, newname)
+            this_host_actions.extend(_rename_host_in_rulesets(oldname, newname))
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
                 update_interface(_("Renaming host(s) in %s...") % hook.title)
@@ -156,16 +152,13 @@ def _rename_host_in_folder(folder: Folder, oldname: HostName, newname: HostName)
 
 
 def _rename_host_as_cluster_node(
-    all_hosts: Iterable[Host], oldname: HostName, newname: HostName
+    cluster_hosts: list[Host], oldname: HostName, newname: HostName
 ) -> list[str]:
-    clusters = []
-    for somehost in all_hosts:
-        if somehost.is_cluster():
-            if somehost.rename_cluster_node(oldname, newname):
-                clusters.append(somehost.name())
-    if clusters:
-        return ["cluster_nodes"] * len(clusters)
-    return []
+    renamed_cluster_nodes = 0
+    for cluster_host in cluster_hosts:
+        if cluster_host.rename_cluster_node(oldname, newname):
+            renamed_cluster_nodes += 1
+    return ["cluster_nodes"] * renamed_cluster_nodes
 
 
 def _rename_parents(
@@ -178,7 +171,7 @@ def _rename_parents(
     # Needed because hosts.mk in folders with parent as effective attribute
     # would not be updated
     for folder in folder_parent_renamed:
-        folder.rewrite_hosts_files()
+        folder.recursively_save_hosts()
 
     return parent_renamed
 
@@ -375,7 +368,7 @@ def _merge_action_counts(action_counts: dict[str, int], new_counts: Mapping[str,
 
 
 def group_renamings_by_site(
-    renamings: Iterable[tuple[Folder, HostName, HostName]]
+    renamings: Iterable[tuple[Folder, HostName, HostName]],
 ) -> dict[SiteId, list[tuple[HostName, HostName]]]:
     renamings_per_site: dict[SiteId, list[tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:
@@ -415,7 +408,7 @@ class _RenameHostsUUIDLinkRequest(BaseModel):
     renamings: Sequence[tuple[HostName, HostName]]
 
 
-class AutomationRenameHostsUUIDLink(AutomationCommand):
+class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkRequest]):
     def command_name(self) -> str:
         return "rename-hosts-uuid-link"
 
@@ -441,11 +434,6 @@ class RenameHostsBackgroundJob(BackgroundJob):
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
-
-        if self.is_active():
-            raise BackgroundJobAlreadyRunning(
-                _("Another renaming operation is currently in progress")
-            )
 
     def _back_url(self) -> str:
         return makeuri(request, [])

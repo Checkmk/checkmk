@@ -287,7 +287,7 @@ class Scriptlet:
             )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(" f"step={self.step!r}, " f"lines={self.lines!r})"
+        return f"{self.__class__.__name__}(step={self.step!r}, lines={self.lines!r})"
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__

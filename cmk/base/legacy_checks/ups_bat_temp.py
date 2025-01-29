@@ -4,18 +4,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+
+check_info = {}
 
 
 def format_item_ups_bat_temp(name, new_format):
     if new_format:
         return "Battery %s" % name
     return name
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def inventory_ups_bat_temp(info):
@@ -43,6 +57,7 @@ def parse_ups_bat_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_bat_temp"] = LegacyCheckDefinition(
+    name="ups_bat_temp",
     parse_function=parse_ups_bat_temp,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(

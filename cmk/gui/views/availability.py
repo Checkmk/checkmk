@@ -11,14 +11,14 @@ from collections.abc import Iterator
 
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 
-import cmk.gui.availability as availability
-import cmk.gui.bi as bi
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import availability, bi
 from cmk.gui.availability import (
     AVData,
     AVEntry,
@@ -57,6 +57,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -180,7 +181,7 @@ def _show_availability_options_controls() -> None:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def show_availability_page(  # pylint: disable=too-many-branches
+def show_availability_page(
     view: View,
     filterheaders: FilterHeader,
 ) -> None:
@@ -250,7 +251,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     # Deletion must take place before computation, since it affects the outcome
     with output_funnel.plugged():
         handle_delete_annotations()
-        confirmation_html_code = HTML(output_funnel.drain())
+        confirmation_html_code = HTML.without_escaping(output_funnel.drain())
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     request.del_vars("anno_")
@@ -436,7 +437,7 @@ def _render_avoptions_form(
 ) -> HTML:
     with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _page_menu_entries_av_mode(
@@ -477,7 +478,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
-    if cmk_version.edition() is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
         return
 
     if not user.may("general.reporting") or not user.may("general.instant_reports"):
@@ -787,7 +788,7 @@ def render_timeline_bar(
 # get the list of BI aggregates from the statehist table but use the views
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
-def show_bi_availability(  # pylint: disable=too-many-branches
+def show_bi_availability(
     view: View,
     aggr_rows: Rows,
 ) -> None:
@@ -831,9 +832,6 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                 "availability",
                 deflt=PageMenuDropdown(name="availability", title=_("Availability"), topics=[]),
             )
-            if not dropdown:
-                raise RuntimeError('Dropdown "availability" missing')
-
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
             timeline_url = makeuri(
@@ -869,7 +867,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
 
     if not user_errors:
         # iterate all aggregation rows
-        timewarpcode = HTML()
+        timewarpcode = HTML.empty()
         timewarp = request.get_integer_input("timewarp")
 
         # The timewarp is used to display an aggregation at a specific timestamp
@@ -966,13 +964,13 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
-                    html.write_text(" &nbsp; ")
+                    html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
                         makeuri(request, [], delvars=["timewarp"]),
                         _("Close timewarp"),
                         "closetimewarp",
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         "%s %s"
                         % (
                             _("Timewarp to "),
@@ -989,7 +987,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode += HTML(output_funnel.drain())
+                    timewarpcode += HTML.without_escaping(output_funnel.drain())
 
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
@@ -1044,7 +1042,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),
@@ -1118,7 +1116,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
-            if cmk_version.edition() is not cmk_version.Edition.CRE:
+            if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
                 table.cell(
                     _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")
                 )
@@ -1229,7 +1227,7 @@ def _validate_reclassify_of_states(value, varprefix):
         if not value.get("service"):
             raise MKUserError(
                 "_editanno_p_service_value",
-                _("Please set a service description for service state reclassification"),
+                _("Please set a service name for service state reclassification"),
             )
 
 
@@ -1252,7 +1250,7 @@ def _vs_annotation():
                 valuespec=TextInput(allow_empty=False),
                 sameline=True,
                 title=_("Service"),
-                label=_("Service description"),
+                label=_("Service name"),
             ),
         ),
         (
@@ -1283,7 +1281,7 @@ def _vs_annotation():
     ]
     extra_elements: list[DictionaryEntry] = (
         []
-        if cmk_version.edition() is cmk_version.Edition.CRE
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
     )
     return Dictionary(

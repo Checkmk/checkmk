@@ -17,11 +17,11 @@ import {
 } from "@jest/globals";
 
 import {activate_tracking} from "@/modules/tracking";
+import type {repeatUrlsEntry} from "@/modules/tracking_database";
 import {
     getRecord,
     openDatabase,
     putRecord,
-    repeatUrlsEntry,
     repeatUrlsTable,
 } from "@/modules/tracking_database";
 
@@ -65,7 +65,7 @@ describe("When the indexeddb is empty", () => {
         await putRecord(store, entry);
         const storedEntry = await getRecord<repeatUrlsEntry>(
             store,
-            "localhost"
+            "localhost",
         );
         expect(storedEntry).not.toBeNull();
         expect(storedEntry?.url).toBe("localhost");
@@ -82,7 +82,7 @@ describe("When the indexeddb is empty", () => {
         const store = await getStore();
         const storedEntry = await getRecord<repeatUrlsEntry>(
             store,
-            "localhost"
+            "localhost",
         );
         expect(storedEntry).not.toBeNull();
         expect(storedEntry?.url).toBe("localhost");

@@ -29,6 +29,14 @@ from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 SiteProgramStart = tuple[SiteId, int]
 
+
+# Livestatus delivers strings with incorrectly encoded special characters
+# (e.g. emoticons) if JSON output format is used
+# This function fixes the encoding for such strings
+def fix_encoding(value: str) -> str:
+    return value.encode("utf-16", "surrogatepass").decode("utf-16")
+
+
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |
 #   |                 |  _ \  ___ / _(_)_ __   ___  ___                    |
@@ -121,7 +129,14 @@ class BIStructureFetcher:
             output_format=LivestatusOutputFormat.JSON,
             fetch_full_data=True,
         ):
-            host_service_lookup.setdefault(row[1], []).append(row[2:])
+            description, tags, labels = row[2:]
+            host_service_lookup.setdefault(row[1], []).append(
+                [
+                    fix_encoding(description),
+                    tags,
+                    {fix_encoding(k): fix_encoding(v) for k, v in labels.items()},
+                ]
+            )
 
         site_data: dict[SiteId, dict] = {x: {} for x in only_sites}
         for (
@@ -156,12 +171,12 @@ class BIStructureFetcher:
             site_data[site][host_name] = (
                 site,
                 set(host_tags.items()),
-                host_labels,
+                {fix_encoding(k): fix_encoding(v) for k, v in host_labels.items()},
                 cleaned_host_filename,
                 services,
                 tuple(host_childs),
                 tuple(host_parents),
-                host_alias,
+                fix_encoding(host_alias),
                 host_name,
             )
 
@@ -273,7 +288,7 @@ class BIStructureFetcher:
 
     def _marshal_load_data(self, filepath: Path) -> dict:
         with open(filepath, "rb") as f:
-            return marshal.load(f)
+            return marshal.load(f)  # nosec B302 # BNS:ccacbd
 
 
 #   .--BIState Fetcher-----------------------------------------------------.
@@ -408,7 +423,8 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         for row in rows:
             # Convert services_with_fullstate to dict
             services_with_fullstate = {
-                e[0]: BIServiceWithFullState(*e[1:]) for e in row[idx_svc_full_state]
+                fix_encoding(e[0]): BIServiceWithFullState(e[1], e[2], fix_encoding(e[3]), *e[4:])
+                for e in row[idx_svc_full_state]
             }
             remaining_row_keys = {}
             if extra_columns:

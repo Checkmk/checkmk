@@ -6,7 +6,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.diagnostics as diagnostics
+from cmk.utils import diagnostics
 
 
 def test_diagnostics_serialize_wato_parameters_boolean() -> None:
@@ -16,8 +16,7 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
                 "opt_info": {
                     diagnostics.OPT_LOCAL_FILES: "ANY",
                     diagnostics.OPT_OMD_CONFIG: "ANY",
-                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
-                    diagnostics.OPT_CHECKMK_OVERVIEW: "ANY",
+                    diagnostics.OPT_CHECKMK_CRASH_REPORTS: "ANY",
                 },
             }
         )
@@ -26,11 +25,61 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
             [
                 diagnostics.OPT_LOCAL_FILES,
                 diagnostics.OPT_OMD_CONFIG,
-                diagnostics.OPT_PERFORMANCE_GRAPHS,
-                diagnostics.OPT_CHECKMK_OVERVIEW,
+                diagnostics.OPT_CHECKMK_CRASH_REPORTS,
             ]
         )
     ]
+
+
+@pytest.mark.parametrize(
+    "wato_parameters, expected_parameters",
+    [
+        (
+            {
+                "checkmk_server_host": "",
+                "opt_info": {},
+            },
+            [[]],
+        ),
+        (
+            {
+                "checkmk_server_host": "",
+                "opt_info": {
+                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
+                },
+            },
+            [[diagnostics.OPT_PERFORMANCE_GRAPHS, ""]],
+        ),
+        (
+            {
+                "checkmk_server_host": "myhost",
+                "opt_info": {
+                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
+                },
+            },
+            [[diagnostics.OPT_PERFORMANCE_GRAPHS, "myhost"]],
+        ),
+        (
+            {
+                "checkmk_server_host": "myhost",
+                "opt_info": {
+                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
+                    diagnostics.OPT_CHECKMK_OVERVIEW: "ANY",
+                },
+            },
+            [
+                [diagnostics.OPT_PERFORMANCE_GRAPHS, "myhost"],
+                [diagnostics.OPT_CHECKMK_OVERVIEW, "myhost"],
+            ],
+        ),
+    ],
+)
+def test_diagnostics_serialize_wato_parameters_with_host(
+    mocker: MockerFixture,
+    wato_parameters: diagnostics.DiagnosticsParameters,
+    expected_parameters: list[list[str]],
+) -> None:
+    assert diagnostics.serialize_wato_parameters(wato_parameters) == expected_parameters
 
 
 @pytest.mark.parametrize(
@@ -122,20 +171,17 @@ def test_diagnostics_serialize_wato_parameters_files(
             [
                 diagnostics.OPT_LOCAL_FILES,
                 diagnostics.OPT_OMD_CONFIG,
-                diagnostics.OPT_PERFORMANCE_GRAPHS,
-                diagnostics.OPT_CHECKMK_OVERVIEW,
+                diagnostics.OPT_CHECKMK_CRASH_REPORTS,
             ],
             {
                 diagnostics.OPT_LOCAL_FILES: True,
                 diagnostics.OPT_OMD_CONFIG: True,
-                diagnostics.OPT_PERFORMANCE_GRAPHS: True,
-                diagnostics.OPT_CHECKMK_OVERVIEW: True,
+                diagnostics.OPT_CHECKMK_CRASH_REPORTS: True,
             },
             {
                 diagnostics.OPT_LOCAL_FILES: True,
                 diagnostics.OPT_OMD_CONFIG: True,
-                diagnostics.OPT_PERFORMANCE_GRAPHS: True,
-                diagnostics.OPT_CHECKMK_OVERVIEW: True,
+                diagnostics.OPT_CHECKMK_CRASH_REPORTS: True,
             },
         ),
         # files
@@ -153,6 +199,23 @@ def test_diagnostics_serialize_wato_parameters_files(
             {
                 diagnostics.OPT_CHECKMK_CONFIG_FILES: ["a", "b"],
                 diagnostics.OPT_CHECKMK_LOG_FILES: ["a", "b"],
+            },
+        ),
+        # with host
+        (
+            [
+                diagnostics.OPT_PERFORMANCE_GRAPHS,
+                "myhost",
+                diagnostics.OPT_CHECKMK_OVERVIEW,
+                "myhost",
+            ],
+            {
+                diagnostics.OPT_PERFORMANCE_GRAPHS: "myhost",
+                diagnostics.OPT_CHECKMK_OVERVIEW: "myhost",
+            },
+            {
+                diagnostics.OPT_PERFORMANCE_GRAPHS: "myhost",
+                diagnostics.OPT_CHECKMK_OVERVIEW: "myhost",
             },
         ),
     ],

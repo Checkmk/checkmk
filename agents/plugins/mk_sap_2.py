@@ -52,12 +52,12 @@ import sys
 import time
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any
 except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):
-    RecursionError = RuntimeError  # pylint: disable=redefined-builtin
+    RecursionError = RuntimeError
 
 # #############################################################################
 
@@ -427,7 +427,7 @@ def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
     return logs
 
 
-def check(sapnwrfc, cfg_entry):  # pylint: disable=too-many-branches
+def check(sapnwrfc, cfg_entry):
     global conn
     conn = sapnwrfc.base.rfc_connect(cfg_entry)
     login()
@@ -535,7 +535,7 @@ def check(sapnwrfc, cfg_entry):  # pylint: disable=too-many-branches
     conn.close()
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     global state_file_changed
 
     # sapnwrfc needs to know where the libs are located. During

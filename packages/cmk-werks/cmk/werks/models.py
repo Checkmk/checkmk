@@ -9,13 +9,13 @@ import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
 
 from .markup import markdown_to_html, nowiki_to_markdown
 
 
 class Edition(Enum):
-    # would love to use cmk.utils.version.Edition
+    # would love to use cmk.ccc.version.Edition
     # but pydantic does not understand it.
     CRE = "cre"
     CSE = "cse"
@@ -121,10 +121,28 @@ class WerkV1(BaseModel):
             date=datetime.datetime.fromtimestamp(self.date, tz=datetime.UTC),
             description=markdown_to_html(nowiki_to_markdown(self.description)),
             level=Level(self.level),
-            class_=Class(self.class_),  # type: ignore[call-arg]
+            class_=Class(self.class_),
             component=self.component,
             edition=Edition(self.edition),
         )
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True)
+
+
+class WebsiteWerk(WerkV2Base):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+    """
+    This Model is used to built up a file containing all werks.
+    The file is called all_werks.json or all_werks_v2.json
+    """
+
+    versions: dict[str, str]
+    product: Literal["cmk", "cma", "checkmk_kube_agent"]
+
+
+# ATTENTION! If you change this model, you have to inform
+# the website team first! They rely on those fields.
+# The key of the dict is the werk id
+AllWerks = TypeAdapter(dict[str, WebsiteWerk])

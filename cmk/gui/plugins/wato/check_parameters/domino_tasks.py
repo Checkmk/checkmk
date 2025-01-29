@@ -5,9 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
     HostRulespec,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupEnforcedServicesApplications,
 )
@@ -63,10 +65,10 @@ def _valuespec_inv_domino_tasks_rules() -> Dictionary:
             (
                 "descr",
                 TextInput(
-                    title=_("Service Description"),
+                    title=_("Service description"),
                     allow_empty=False,
                     help=_(
-                        "<p>The service description may contain one or more occurances of <tt>%s</tt>. In this "
+                        "<p>The service name may contain one or more occurances of <tt>%s</tt>. In this "
                         "case, the pattern must be a regular expression prefixed with ~. For each "
                         '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
                         "is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or "
@@ -154,13 +156,12 @@ def _item_spec_domino_tasks():
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _.-]*$",
         regex_error=_(
-            "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot and hyphen for your service description"
+            "Please use only a-z, A-Z, 0-9, space, underscore, dot and hyphen for your service name"
         ),
     )
 
 
-def _parameter_valuespec_domino_tasks() -> Dictionary:
+def _parameter_valuespec_enforced_domino_tasks() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -210,6 +211,31 @@ rulespec_registry.register(
         check_group_name="domino_tasks",
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_domino_tasks,
+        parameter_valuespec=_parameter_valuespec_enforced_domino_tasks,
+        title=lambda: _("Lotus Domino Tasks"),
+    )
+)
+
+
+def _parameter_valuespec_domino_tasks() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                _vs_levels(
+                    _("Specify levels on the minimum and maximum number of tasks."),
+                ),
+            ),
+        ],
+        optional_keys=False,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="domino_tasks",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextInput(title=_("Name of service")),
         parameter_valuespec=_parameter_valuespec_domino_tasks,
         title=lambda: _("Lotus Domino Tasks"),
     )

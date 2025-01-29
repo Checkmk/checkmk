@@ -8,6 +8,7 @@
 """
 Special Agent for Allnet IP-Sensoric monitoring
 """
+
 import argparse
 import re
 import sys

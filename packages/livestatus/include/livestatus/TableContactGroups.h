@@ -8,11 +8,7 @@
 
 #include <string>
 
-#include "livestatus/Row.h"
 #include "livestatus/Table.h"
-class ICore;
-class Query;
-class User;
 
 class TableContactGroups : public Table {
 public:

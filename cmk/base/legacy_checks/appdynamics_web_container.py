@@ -14,10 +14,10 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
+
+check_info = {}
 
 Section = Mapping[str, Mapping[str, int]]
 
@@ -105,6 +105,7 @@ def check_appdynamics_web_container(
 
 
 check_info["appdynamics_web_container"] = LegacyCheckDefinition(
+    name="appdynamics_web_container",
     service_name="AppDynamics Web Container %s",
     parse_function=parse_appdynamics_web_container,
     discovery_function=discover_appdynamics_web_container,

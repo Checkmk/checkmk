@@ -5,19 +5,20 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-from cmk.base.plugins.agent_based.liebert_system import (
+from cmk.plugins.liebert.agent_based.lib import SystemSection
+from cmk.plugins.liebert.agent_based.liebert_system import (
     check_liebert_system,
     discover_liebert_system,
     parse_liebert_system,
 )
-
-from cmk.plugins.liebert.agent_based.lib import SystemSection
 
 
 @pytest.mark.parametrize(

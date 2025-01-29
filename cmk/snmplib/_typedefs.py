@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import copy
@@ -14,7 +13,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol, Self
 
-from cmk.utils.exceptions import MKSNMPError
+from cmk.ccc.exceptions import MKSNMPError
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
@@ -99,6 +99,24 @@ class SNMPContextConfig:
     def default(cls) -> Self:
         return cls(section=None, contexts=[""], timeout_policy="stop")
 
+    def serialize(self) -> tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]:
+        return (
+            str(self.section) if self.section is not None else None,
+            self.contexts,
+            self.timeout_policy,
+        )
+
+    @classmethod
+    def deserialize(
+        cls, serialized: tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]
+    ) -> Self:
+        section, contexts, timeout = serialized
+        return cls(
+            section=SectionName(section) if section is not None else None,
+            contexts=contexts,
+            timeout_policy=timeout,
+        )
+
 
 # Wraps the configuration of a host into a single object for the SNMP code
 @dataclass(frozen=True, kw_only=True)
@@ -139,10 +157,7 @@ class SNMPHostConfig:
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
-        serialized["snmpv3_contexts"] = [
-            (str(sn) if sn is not None else None, rl, eh)
-            for sn, rl, eh in serialized["snmpv3_contexts"]
-        ]
+        serialized["snmpv3_contexts"] = [c.serialize() for c in self.snmpv3_contexts]
         return serialized
 
     @classmethod
@@ -154,8 +169,7 @@ class SNMPHostConfig:
             SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
         serialized_["snmpv3_contexts"] = [
-            (SectionName(sn) if sn is not None else None, rl, eh)
-            for sn, rl, eh in serialized_["snmpv3_contexts"]
+            SNMPContextConfig.deserialize(c) for c in serialized_["snmpv3_contexts"]
         ]
         return cls(**serialized_)
 
@@ -165,6 +179,10 @@ class SNMPBackend(abc.ABC):
         super().__init__()
         self._logger = logger
         self.config = snmp_config
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
 
     @property
     def hostname(self) -> HostName:

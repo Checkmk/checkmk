@@ -530,7 +530,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         return expr_to_tree(self.table, self.filter_expr)
 
     @classmethod
-    def from_string(  # pylint: disable=too-many-branches
+    def from_string(
         cls,
         string_query: str,
     ) -> "Query":

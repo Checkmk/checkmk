@@ -6,10 +6,11 @@
 from collections.abc import Iterable, Sequence
 from re import Pattern
 
-import cmk.utils.debug
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 
 # Conveniance macros for legacy tuple based host and service rules
@@ -36,7 +37,7 @@ def get_rule_options(entry):
     return entry, {}
 
 
-def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branches
+def in_extraconf_hostlist(hostlist, hostname):
     """Whether or not the given host matches the hostlist.
 
     Entries in list are hostnames that must equal the hostname.
@@ -91,7 +92,7 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
                 if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:
-            if cmk.utils.debug.enabled():
+            if cmk.ccc.debug.enabled():
                 raise
 
     return False
@@ -140,19 +141,16 @@ def convert_pattern_list(patterns: list[str]) -> Pattern[str] | None:
     if not patterns:
         return None
 
-    pattern_parts = []
+    pattern_parts: list[tuple[bool, str]] = []
 
     for pattern in patterns:
         negate, pattern = _parse_negated(pattern)
         # Skip ALL_SERVICES from end of negated lists
-        if negate:
-            if pattern == ALL_SERVICES[0]:
-                continue
-            pattern_parts.append("(?!%s)" % pattern)
-        else:
-            pattern_parts.append("(?:%s)" % pattern)
+        if negate and pattern == ALL_SERVICES[0]:
+            continue
+        pattern_parts.append((negate, pattern))
 
-    return regex("(?:%s)" % "|".join(pattern_parts))
+    return regex(combine_patterns(pattern_parts))
 
 
 def _parse_negated(pattern):

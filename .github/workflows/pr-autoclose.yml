@@ -10,7 +10,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/stale@v5
+      - uses: actions/stale@v9
         with:
           #
           # Leave all issues alone
@@ -19,12 +19,12 @@ jobs:
           #
           # We autoclose PRs marked as "Stale" (which is the default label for this)
           stale-pr-label: "Stale"
-          # We only set the label manually for now.
-          days-before-pr-stale: -1
-          stale-pr-message: "This issue has been marked stale."
-          #stale-pr-message: "This issue is stale because it has been open for 30 days with no activity."
-          # Autoclose stale PRs after 3 weeks.
-          days-before-pr-close: 21
-          close-pr-message: "This issue was closed because it has been inactive for 3 weeks since being marked as stale."
+          # Issues that are internally tracked in Jira are not marked as "Stale"
+          exempt-pr-labels: 'tracked'
+          # After 14 days of inactivity, mark PRs as "Stale"
+          days-before-pr-stale: 14
+          stale-pr-message: "Thank you for your contribution. This pull request has been marked as stale as it has not passed the automated tests and there was no activity for the last 14 days.\nPlease take a look at the ‘Checks’ section for details on the test results and make the necessary changes.\n\nThis pull request will be closed due to inactivity after 60 days, if no action is taken."
+          # Autoclose stale PRs after 60 days.
+          days-before-pr-close: 60
+          close-pr-message: "This pull request has been stale for 60 days and no action has been taken by the author. Unfortunately we have to close this contribution due to inactivity."
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-

@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {add_class, has_class, remove_class} from "./utils";
 
 //#   .-Help Toggle--------------------------------------------------------.
 //#   |          _   _      _         _____                 _              |
@@ -16,11 +16,10 @@ import * as utils from "./utils";
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
+const SHOW_HELP_CLASS = "show_help";
+
 function is_help_active() {
-    const helpdivs = document.getElementsByClassName(
-        "help"
-    ) as HTMLCollectionOf<HTMLElement>;
-    return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
+    return has_class(document.body, SHOW_HELP_CLASS);
 }
 
 export function toggle() {
@@ -33,33 +32,10 @@ export function toggle() {
 }
 
 function switch_help(how: boolean) {
-    // recursive scan for all div class=help elements
-    const helpdivs = document.getElementsByClassName(
-        "help"
-    ) as HTMLCollectionOf<HTMLElement>;
-    let i;
-    for (i = 0; i < helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "flex" : "none";
-    }
+    if (how) add_class(document.body, SHOW_HELP_CLASS);
+    else remove_class(document.body, SHOW_HELP_CLASS);
 
-    // small hack for wato ruleset lists, toggle the "float" and "nofloat"
-    // classes on those objects to make the layout possible
-    const rulesetdivs = utils.querySelectorAllByClassName("ruleset");
-    for (i = 0; i < rulesetdivs.length; i++) {
-        if (how) {
-            if (utils.has_class(rulesetdivs[i], "float")) {
-                utils.remove_class(rulesetdivs[i], "float");
-                utils.add_class(rulesetdivs[i], "nofloat");
-            }
-        } else {
-            if (utils.has_class(rulesetdivs[i], "nofloat")) {
-                utils.remove_class(rulesetdivs[i], "nofloat");
-                utils.add_class(rulesetdivs[i], "float");
-            }
-        }
-    }
-
-    ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+    call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
 function toggle_help_page_menu_icon() {

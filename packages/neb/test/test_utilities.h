@@ -6,6 +6,8 @@
 #ifndef test_utilities_h
 #define test_utilities_h
 
+#include <functional>
+#include <string>
 #include <vector>
 
 #include "livestatus/Interface.h"

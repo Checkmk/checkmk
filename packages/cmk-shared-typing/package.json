@@ -3,7 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "json2ts": "json2ts",
+    "prettier": "prettier"
+  },
   "devDependencies": {
-    "json-schema-to-typescript": "^13.1.2"
+    "json-schema-to-typescript": "^13.1.2",
+    "prettier": "~3"
   }
 }

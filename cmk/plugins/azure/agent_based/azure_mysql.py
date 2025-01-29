@@ -19,7 +19,7 @@ from cmk.plugins.lib.azure import (
     Section,
 )
 
-DB_MYSQL_RESOURCE_NAME = "Microsoft.DBforMySQL/servers"
+DB_MYSQL_RESOURCE_TYPES = ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"]
 
 
 check_plugin_azure_mysql_memory = CheckPlugin(
@@ -27,7 +27,7 @@ check_plugin_azure_mysql_memory = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Memory",
     discovery_function=create_discover_by_metrics_function(
-        "average_memory_percent", resource_type=DB_MYSQL_RESOURCE_NAME
+        "average_memory_percent", resource_types=DB_MYSQL_RESOURCE_TYPES
     ),
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
@@ -39,7 +39,7 @@ check_plugin_azure_mysql_cpu = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s CPU",
     discovery_function=create_discover_by_metrics_function(
-        "average_cpu_percent", resource_type=DB_MYSQL_RESOURCE_NAME
+        "average_cpu_percent", resource_types=DB_MYSQL_RESOURCE_TYPES
     ),
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization_with_item",
@@ -51,12 +51,19 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return create_check_metrics_function(
         [
             MetricData(
-                "maximum_seconds_behind_master",
+                "maximum_seconds_behind_master",  # single server metric name
                 "replication_lag",
                 "Replication lag",
                 render.timespan,
                 upper_levels_param="levels",
-            )
+            ),
+            MetricData(
+                "maximum_replication_lag",  # flexible server metric name
+                "replication_lag",
+                "Replication lag",
+                render.timespan,
+                upper_levels_param="levels",
+            ),
         ]
     )
 
@@ -66,7 +73,9 @@ check_plugin_azure_mysql_replication = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Replication",
     discovery_function=create_discover_by_metrics_function(
-        "maximum_seconds_behind_master", resource_type=DB_MYSQL_RESOURCE_NAME
+        "maximum_seconds_behind_master",  # single server metric name
+        "maximum_replication_lag",  # flexible server metric name
+        resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
@@ -79,8 +88,9 @@ check_plugin_azure_mysql_connections = CheckPlugin(
     service_name="Azure/DB for MySQL %s Connections",
     discovery_function=create_discover_by_metrics_function(
         "average_active_connections",
-        "total_connections_failed",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        "total_connections_failed",  # single server metric name
+        "total_aborted_connections",  # flexible server metric name
+        resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_connections(),
     check_ruleset_name="database_connections",
@@ -94,7 +104,7 @@ check_plugin_azure_mysql_network = CheckPlugin(
     discovery_function=create_discover_by_metrics_function(
         "total_network_bytes_ingress",
         "total_network_bytes_egress",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_network(),
     check_ruleset_name="network_io",
@@ -109,7 +119,7 @@ check_plugin_azure_mysql_storage = CheckPlugin(
         "average_io_consumption_percent",
         "average_serverlog_storage_percent",
         "average_storage_percent",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_storage(),
     check_ruleset_name="azure_db_storage",

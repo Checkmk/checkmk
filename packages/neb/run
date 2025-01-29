@@ -6,8 +6,9 @@
 set -e
 
 JOBS=6
-readonly CLANG_VERSION=${CLANG_VERSION:-17}
-COMPILED_SOURCES=()
+readonly CLANG_VERSION=${CLANG_VERSION:-19}
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+readonly ALL_LINTERS=iwyu,clang-tidy
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -20,14 +21,11 @@ usage() {
     echo "given, run any formatting, IWYU, or clang-tidy steps only on these."
     echo
     echo "  -c, --clean             remove artifacts first"
-    echo "  -F, --check-format      check for correct formatting"
-    echo "  -b, --build             build $(grep ' DESCRIPTION ' CMakeLists.txt | sed 's/.* DESCRIPTION "\([^"]*\)".*/\1/')"
-    echo "  -U, --build-unit-tests  build unit tests"
+    echo "  -b, --build             build package"
     echo "  -u, --unit-tests        run unit tests"
-    echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
-    echo "  -t, --clang-tidy        check sources with clang-tidy linter"
-    echo "  -a, --all               shortcut for -F -b -U -u -i -t"
-    echo "  -A, --build-all         shortcut for -b -U"
+    echo "  -F, --check-format      check for correct formatting"
+    echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -a, --all               shortcut for -b -u -F -l all"
     echo "  -f, --format            format sources"
     echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -37,17 +35,16 @@ usage() {
 parse_options() {
     # Yes, all those option variables are global.
     RUN_CLEAN=no
-    RUN_CHECK_FORMAT=no
     RUN_BUILD=no
-    RUN_BUILD_UNIT_TESTS=no
     RUN_UNIT_TESTS=no
+    RUN_CHECK_FORMAT=no
     RUN_IWYU=no
     RUN_CLANG_TIDY=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cFbUuitaAfDj:h' --long 'clean,check-format,build,build-unit-tests,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbuFl:afDj:h' --long 'clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -59,67 +56,51 @@ parse_options() {
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
-                continue
-                ;;
-            '-F' | '--check-format')
-                RUN_CHECK_FORMAT=yes
-                shift
-                continue
                 ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
-                continue
-                ;;
-            '-U' | '--build-unit-tests')
-                RUN_BUILD_UNIT_TESTS=yes
-                shift
-                continue
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
                 shift
-                continue
                 ;;
-            '-i' | '--iwyu')
-                RUN_IWYU=yes
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
                 shift
-                continue
                 ;;
-            '-t' | '--clang-tidy')
-                RUN_CLANG_TIDY=yes
-                shift
-                continue
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
                 ;;
             '-a' | '--all')
-                RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
+                RUN_CHECK_FORMAT=yes
                 RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift
-                continue
-                ;;
-            '-A' | '--build-all')
-                RUN_BUILD=yes
-                RUN_BUILD_UNIT_TESTS=yes
-                shift
-                continue
                 ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
-                continue
                 ;;
             '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
-                continue
                 ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
-                continue
                 ;;
             '-h' | '--help')
                 usage
@@ -134,31 +115,7 @@ parse_options() {
         esac
     done
 
-    # To run IWYU and/or clang-tidy incrementally, we need to know which sources
-    # have to be built. This information is gathered as a side-effect during the
-    # respective build steps. This coupling is a bit unfortunate, but with the
-    # Makefiles generated by CMake, there seems to be no way to use the standard
-    # "make --dry-run --what-if ..." way to figure this out without actually
-    # building things.
-    if [ ${#FILES[@]} -eq 0 ] && { [ ${RUN_IWYU} = yes ] || [ ${RUN_CLANG_TIDY} = yes ]; }; then
-        RUN_BUILD=yes
-        RUN_BUILD_UNIT_TESTS=yes
-    fi
-
-    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
-}
-
-update_cmake_artifacts() {
-    test "${UPDATE_CMAKE_ARTIFACTS_RAN}" = "yes" && return
-    # We depend on all CMakeLists.txt, all the external dependencies pulled in
-    # via FetchContent, and all the patches applied to those dependencies. We
-    # could guard the configuration call below with a timestamp comparison
-    # against e.g. build/compile_commands.json, but let's play safe and always
-    # run it. Currently, configuration takes only about 120ms in a no-op
-    # scenario, which is fast enough. We can reconsider a guard when this gets
-    # worse.
-    cmake -S . -B build
-    UPDATE_CMAKE_ARTIFACTS_RAN=yes
+    readonly RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
 }
 
 run_clean() {
@@ -173,94 +130,33 @@ run_clang_format() {
         xargs --no-run-if-empty --null "clang-format-${CLANG_VERSION}" -style=file "$@"
 }
 
-run_cmake_format() {
-    # NOTE: Should we actually require the cmake-format distro package? Probably yes...
-    if command -v cmake-format >/dev/null 2>&1; then
-        # shellcheck disable=SC2068 # Yes, we want splitting for FILES.
-        find ${FILES[@]:-.} -type f -name CMakeLists.txt -not -path "./build/*" -print0 |
-            xargs --no-run-if-empty --null cmake-format "$@"
+run_build() {
+    "${BAZEL_CMD}" build :all
+}
+
+run_unit_tests() {
+    if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
+        VALGRIND="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42"
     fi
+    "${BAZEL_CMD}" test ${VALGRIND:+--run_under="${VALGRIND}"} :all
 }
 
 run_check_format() {
     run_clang_format --dry-run -Werror
-    run_cmake_format --check
+    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=check -lint=warn "$(realpath BUILD)"
+}
+
+run_iwyu() {
+    "${BAZEL_CMD}" build --config iwyu :all
+}
+
+run_clang_tidy() {
+    "${BAZEL_CMD}" build --config clang-tidy :all
 }
 
 run_format() {
     run_clang_format -i
-    run_cmake_format --in-place
-
-}
-
-run_build() {
-    update_cmake_artifacts
-    touch build/.run-build-stamp
-    cmake --build build --parallel "${JOBS}" --target build
-    # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
-    while IFS= read -r line; do
-        COMPILED_SOURCES+=("$line")
-    done < <(find build/src/CMakeFiles -name "*.o" -newer build/.run-build-stamp |
-        sed 's,^build/src/CMakeFiles/[^/]*\.dir/\(.*\)\.o$,src/\1,' |
-        grep -v '\.pb\.cc$' |
-        sort)
-}
-
-run_build_unit_tests() {
-    test "${RUN_BUILD_UNIT_TESTS_RAN}" = "yes" && return
-    update_cmake_artifacts
-    touch build/.run-build-unit-tests-stamp
-    cmake --build build --parallel "${JOBS}" --target test
-    # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
-    while IFS= read -r line; do
-        COMPILED_SOURCES+=("$line")
-    done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
-        sed 's,^build/test/CMakeFiles/[^/]*\.dir/\(.*\)\.o$,test/\1,' |
-        grep -v '\.pb\.cc$' |
-        sort)
-    RUN_BUILD_UNIT_TESTS_RAN=yes
-}
-
-calculate_files_to_use() {
-    if [ ${#FILES[@]} -eq 0 ]; then
-        FILES_TO_USE=("${COMPILED_SOURCES[@]}")
-    else
-        FILES_TO_USE=("${FILES[@]}")
-    fi
-}
-
-run_unit_tests() {
-    run_build_unit_tests
-    if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
-        VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
-    fi
-    (
-        cd build/test && GTEST_OUTPUT=xml ${VALGRIND} ./test
-    )
-}
-
-run_iwyu() {
-    test ${#FILES_TO_USE[@]} -eq 0 && return
-    update_cmake_artifacts
-    python3 "$(command -v iwyu_tool.py)" \
-        --jobs="${JOBS}" \
-        -p=build \
-        --output-format=clang \
-        "${FILES_TO_USE[@]}" -- \
-        -Xiwyu --error \
-        -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
-        ${GCC_TOOLCHAIN:+"--gcc-toolchain=${GCC_TOOLCHAIN}"}
-}
-
-run_clang_tidy() {
-    test ${#FILES_TO_USE[@]} -eq 0 && return
-    update_cmake_artifacts
-    python3 "$(command -v "run-clang-tidy-${CLANG_VERSION}.py")" \
-        -j "${JOBS}" \
-        -p=build \
-        -quiet \
-        ${GCC_TOOLCHAIN:+"-extra-arg-before=--gcc-toolchain=${GCC_TOOLCHAIN}"} \
-        "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames
+    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
 }
 
 run_documentation() {
@@ -273,11 +169,9 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_BUILD} = yes && run_build
-    test ${RUN_BUILD_UNIT_TESTS} = yes && run_build_unit_tests
-    calculate_files_to_use
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
     test ${RUN_FORMAT} = yes && run_format

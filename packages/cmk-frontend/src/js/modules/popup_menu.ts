@@ -8,9 +8,20 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
-import * as valuespecs from "./valuespecs";
+import {call_ajax} from "./ajax";
+import type {Nullable} from "./utils";
+import {
+    add_class,
+    add_event_handler,
+    del_event_handler,
+    get_computed_style,
+    has_class,
+    is_visible,
+    querySelectorAllByClassName,
+    reload_whole_page,
+    remove_class,
+} from "./utils";
+import {add_color_picker} from "./valuespecs";
 
 interface PopUpSpec {
     id: string;
@@ -49,7 +60,7 @@ class PopUp {
         this.remove_on_close = spec.remove_on_close || false;
 
         if (this.id) {
-            utils.add_event_handler("click", handle_popup_close);
+            add_event_handler("click", handle_popup_close);
         }
 
         if (spec.trigger_obj) {
@@ -60,29 +71,31 @@ class PopUp {
         }
 
         if (this.container) {
-            utils.add_class(this.container, "active");
+            add_class(this.container, "active");
         }
     }
 
     open() {
         if (this.onopen) {
+            /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
             eval(this.onopen);
         }
     }
 
     close() {
         if (this.container) {
-            utils.remove_class(this.container, "active");
+            remove_class(this.container, "active");
             if (this.remove_on_close && this.popup) {
                 this.container.removeChild(this.popup);
             }
         }
 
         if (this.id) {
-            utils.del_event_handler("click", handle_popup_close);
+            del_event_handler("click", handle_popup_close);
         }
 
         if (this.onclose) {
+            /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
             eval(this.onclose);
         }
 
@@ -182,7 +195,7 @@ export function toggle_popup(
     data: any,
     onclose: string | null,
     onopen: string | null,
-    resizable: boolean
+    resizable: boolean,
 ) {
     if (active_popup.id) {
         if (active_popup.id === ident) {
@@ -202,18 +215,18 @@ export function toggle_popup(
         }
         const content = generate_menu(
             trigger_obj.parentNode as HTMLElement,
-            resizable
+            resizable,
         );
         generate_colorpicker_body(content, method.varprefix!, method.value!);
     } else if (method.type === "ajax") {
         const content = generate_menu(
             trigger_obj.parentNode as HTMLElement,
-            resizable
+            resizable,
         );
         content.innerHTML =
             '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
-        ajax.call_ajax("ajax_popup_" + method.endpoint + ".py" + url_vars, {
+        call_ajax("ajax_popup_" + method.endpoint + ".py" + url_vars, {
             response_handler: handle_render_popup_contents,
             handler_data: {
                 ident: ident,
@@ -242,22 +255,22 @@ let switch_popup_timeout: null | number = null;
 export function switch_popup_menu_group(
     trigger: HTMLElement,
     group_cls: string,
-    delay: number | null
+    delay: number | null,
 ) {
     const popup = trigger.nextSibling;
 
-    utils.remove_class(popup!.parentNode as HTMLElement, "delayed");
+    remove_class(popup!.parentNode as HTMLElement, "delayed");
 
     // When the new focucssed dropdown is already open, leave it open
-    if (utils.has_class(popup!.parentNode as HTMLElement, "active")) {
+    if (has_class(popup!.parentNode as HTMLElement, "active")) {
         return;
     }
 
     // Do not open the menu when no other dropdown is open at the moment
     const popups = Array.prototype.slice.call(
-        document.getElementsByClassName(group_cls)
+        document.getElementsByClassName(group_cls),
     );
-    if (!popups.some(elem => utils.has_class(elem.parentNode, "active"))) {
+    if (!popups.some(elem => has_class(elem.parentNode, "active"))) {
         return;
     }
 
@@ -268,17 +281,17 @@ export function switch_popup_menu_group(
 
     stop_popup_menu_group_switch(trigger);
 
-    utils.add_class(popup!.parentNode as HTMLElement, "delayed");
+    add_class(popup!.parentNode as HTMLElement, "delayed");
     switch_popup_timeout = window.setTimeout(
         () => switch_popup_menu_group(trigger, group_cls, null),
-        delay
+        delay,
     );
 }
 
 export function stop_popup_menu_group_switch(trigger: HTMLElement) {
     if (switch_popup_timeout !== null) {
         const popup = trigger.nextSibling;
-        utils.remove_class(popup!.parentNode as HTMLElement, "delayed");
+        remove_class(popup!.parentNode as HTMLElement, "delayed");
 
         clearTimeout(switch_popup_timeout);
     }
@@ -299,7 +312,7 @@ function generate_menu(container: HTMLElement, resizable: boolean) {
     wrapper.appendChild(content);
 
     if (resizable) {
-        utils.add_class(menu, "resizable");
+        add_class(menu, "resizable");
     }
 
     container.appendChild(menu);
@@ -311,7 +324,7 @@ function generate_menu(container: HTMLElement, resizable: boolean) {
 function generate_colorpicker_body(
     content: HTMLElement,
     varprefix: string,
-    value: string
+    value: string,
 ) {
     const picker = document.createElement("div");
     picker.className = "cp-small";
@@ -328,7 +341,7 @@ function generate_colorpicker_body(
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
 
-    valuespecs.add_color_picker(varprefix, value);
+    add_color_picker(varprefix, value);
 }
 
 function rgb2hex(rgb: string) {
@@ -349,9 +362,10 @@ function handle_render_popup_contents(
         content: HTMLElement;
         event: Event;
     },
-    response_text: string
+    response_text: string,
 ) {
     if (data.content) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
         data.content.innerHTML = response_text;
         const menu = data.content.closest("div#popup_menu") as HTMLElement;
         fix_popup_menu_position(data.event, menu);
@@ -419,7 +433,7 @@ export function add_to_visual(visual_type: string, visual_name: string) {
         "&type=" +
         element_type;
 
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         method: "POST",
         post_data: "create_info=" + encodeURIComponent(create_info_json),
         plain_error: true,
@@ -437,7 +451,7 @@ export function add_to_visual(visual_type: string, visual_name: string) {
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 export function pagetype_add_to_container(
     page_type: string,
-    page_name: string
+    page_name: string,
 ) {
     const element_type = active_popup.data![0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
@@ -458,7 +472,7 @@ export function pagetype_add_to_container(
         "&element_type=" +
         element_type;
 
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         method: "POST",
         post_data: "create_info=" + encodeURIComponent(create_info_json),
         response_handler: function (_handler_data: any, response_body: string) {
@@ -468,8 +482,8 @@ export function pagetype_add_to_container(
             if (response_body) {
                 const parts = response_body.split("\n");
                 if (parts[1] == "true") {
-                    if (parts[0]) utils.reload_whole_page(parts[0]);
-                    else utils.reload_whole_page();
+                    if (parts[0]) reload_whole_page(parts[0]);
+                    else reload_whole_page();
                 }
                 if (parts[0]) window.location.href = parts[0];
             }
@@ -499,14 +513,12 @@ export function initialize_mega_menus() {
 }
 
 function resize_all_mega_menu_popups() {
-    for (const popup of utils.querySelectorAllByClassName("main_menu_popup")) {
+    for (const popup of querySelectorAllByClassName("main_menu_popup")) {
         resize_mega_menu_popup(popup);
     }
 }
 
-export function resize_mega_menu_popup(
-    menu_popup: utils.Nullable<HTMLElement>
-) {
+export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
     /* Resize a mega menu to the size of its content. Three cases are considered here:
      *   1) The overview of all topics is opened.
      *   2) The extended menu that shows all items of a topic is opened.
@@ -514,7 +526,7 @@ export function resize_mega_menu_popup(
      */
     if (!menu_popup) throw new Error("menu_popup shouldn't be null!");
     const topics = menu_popup.getElementsByClassName(
-        "topic"
+        "topic",
     ) as HTMLCollectionOf<HTMLElement>;
     if (topics.length === 0) {
         return;
@@ -524,12 +536,12 @@ export function resize_mega_menu_popup(
     const search_results = menu_popup.getElementsByClassName("hidden").length;
     const extended_topic = Array.prototype.slice
         .call(topics)
-        .find(e => utils.has_class(e, "extended"));
+        .find(e => has_class(e, "extended"));
 
     if (!extended_topic || search_results) {
         const visible_topics = Array.prototype.slice
             .call(topics)
-            .filter(e => utils.is_visible(e));
+            .filter(e => is_visible(e));
         if (visible_topics.length === 0) {
             return;
         }
@@ -540,14 +552,14 @@ export function resize_mega_menu_popup(
         // the more button needs to have enough space
         if (ncol === 1) {
             Array.from(topics).forEach(topic =>
-                utils.add_class(topic, "single_column")
+                add_class(topic, "single_column"),
             );
-            utils.add_class(menu_popup, "single_column");
-        } else if (utils.has_class(menu_popup, "single_column")) {
+            add_class(menu_popup, "single_column");
+        } else if (has_class(menu_popup, "single_column")) {
             Array.from(topics).forEach(topic =>
-                utils.remove_class(topic, "single_column")
+                remove_class(topic, "single_column"),
             );
-            utils.remove_class(menu_popup, "single_column");
+            remove_class(menu_popup, "single_column");
             resize_mega_menu_popup(menu_popup);
             return;
         }
@@ -557,7 +569,7 @@ export function resize_mega_menu_popup(
         const items = extended_topic.getElementsByTagName("ul")[0];
         const visible_items = Array.prototype.slice
             .call(items.children)
-            .filter(e => utils.is_visible(e));
+            .filter(e => is_visible(e));
         if (visible_items.length === 0) {
             return;
         }
@@ -565,7 +577,7 @@ export function resize_mega_menu_popup(
         /* account for the padding of 20px on both sides  */
         const items_width = Math.min(
             maximum_popup_width(),
-            last_item.offsetLeft + last_item.offsetWidth - 20
+            last_item.offsetLeft + last_item.offsetWidth - 20,
         );
         items.style.width = items_width + "px";
         menu_popup.style.width = items_width + 40 + "px";
@@ -582,22 +594,22 @@ function mega_menu_last_topic_grow(topics: HTMLCollectionOf<HTMLElement>) {
     let ncol = 1;
     let previous_node: null | HTMLElement = null;
     Array.from(topics).forEach(function (node) {
-        if (utils.get_computed_style(node, "display") == "none") {
-            utils.remove_class(node, "grow");
+        if (get_computed_style(node, "display") == "none") {
+            remove_class(node, "grow");
             return;
         }
 
         if (previous_node) {
             if (previous_node.offsetTop > node.offsetTop) {
-                utils.add_class(previous_node, "grow");
+                add_class(previous_node, "grow");
                 ncol += 1;
             } else {
-                utils.remove_class(previous_node, "grow");
+                remove_class(previous_node, "grow");
             }
         }
         previous_node = node;
     });
-    if (previous_node) utils.add_class(previous_node, "grow"); // last node needs to grow, too
+    if (previous_node) add_class(previous_node, "grow"); // last node needs to grow, too
 
     return ncol;
 }
@@ -611,16 +623,16 @@ function maximum_popup_width() {
 
 export function mega_menu_show_all_items(current_topic_id: string) {
     const current_topic = document.getElementById(current_topic_id);
-    utils.remove_class(current_topic, "extendable");
-    utils.add_class(current_topic, "extended");
-    utils.add_class(current_topic!.closest(".main_menu"), "extended_topic");
+    remove_class(current_topic, "extendable");
+    add_class(current_topic, "extended");
+    add_class(current_topic!.closest(".main_menu"), "extended_topic");
     resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
 }
 
 export function mega_menu_show_all_topics(current_topic_id: string) {
     const current_topic = document.getElementById(current_topic_id);
-    utils.remove_class(current_topic, "extended");
-    utils.remove_class(current_topic!.closest(".main_menu"), "extended_topic");
+    remove_class(current_topic, "extended");
+    remove_class(current_topic!.closest(".main_menu"), "extended_topic");
     mega_menu_hide_entries(current_topic!.closest(".main_menu")!.id);
     current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
     resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
@@ -630,7 +642,7 @@ export function mega_menu_hide_entries(menu_id: string) {
     const menu = document.getElementById(menu_id);
     const more_is_active = menu?.classList.contains("more");
     const topics = menu?.getElementsByClassName(
-        "topic"
+        "topic",
     ) as HTMLCollectionOf<HTMLElement>;
     Array.from(topics!).forEach(topic => {
         if (topic.classList.contains("extended")) return;
@@ -650,14 +662,12 @@ export function mega_menu_hide_entries(menu_id: string) {
                     entry == show_all_items_entry
                 )
                     return;
-                if (counter >= max_entry_number)
-                    utils.add_class(entry, "extended");
-                else utils.remove_class(entry, "extended");
+                if (counter >= max_entry_number) add_class(entry, "extended");
+                else remove_class(entry, "extended");
                 counter++;
             });
-            if (counter > max_entry_number)
-                utils.add_class(topic, "extendable");
-            else utils.remove_class(topic, "extendable");
+            if (counter > max_entry_number) add_class(topic, "extendable");
+            else remove_class(topic, "extendable");
         }
     });
     resize_mega_menu_popup(menu!.parentElement!);

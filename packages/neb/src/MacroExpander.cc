@@ -6,6 +6,7 @@
 #include "neb/MacroExpander.h"
 
 #include <cstdlib>
+#include <functional>
 #include <unordered_map>
 #include <utility>
 
@@ -61,6 +62,7 @@ std::optional<std::string> UserMacroExpander::expand(
     if (str.starts_with("USER")) {
         const int n = atoi(str.substr(4).c_str());
         if (1 <= n && n <= MAX_USER_MACROS) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
             return from_ptr(macro_user[n - 1]);
         }
     }

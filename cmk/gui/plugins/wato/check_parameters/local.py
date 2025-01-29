@@ -23,7 +23,7 @@ rulespec_registry.register(
     )
 )
 
-# We only need the above, there are no "true" parameters to this check plugin.
+# We only need the above, there are no "true" parameters to this check plug-in.
 
 
 def _deprecation_message() -> str:

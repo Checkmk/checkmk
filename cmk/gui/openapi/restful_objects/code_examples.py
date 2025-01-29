@@ -8,22 +8,29 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+
 import functools
 import json
 import re
+from collections.abc import Sequence
 from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
+from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore]
+    resolve_schema_instance,
+)
 from marshmallow import Schema
 
-from cmk.utils.site import omd_site
+from cmk.ccc.site import omd_site
+
+from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
+from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
-from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
+from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -134,13 +141,13 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 curl {%- if includes_redirect %} -L {%- endif %} \\
-  {%- if query_params %}
-  -G \\
+  {%- if query_params and request_method|upper == 'GET' %}
+  --get \\
   {%- endif %}
   {%- if downloadable %}
   -JO \\
   {%- endif %}
-  {%- if not includes_redirect %}
+  {%- if not includes_redirect and request_method | upper != 'GET' %}
   --request {{ request_method | upper }} \\
   {%- endif %}
   --write-out "\\nxxx-status_code=%{http_code}\\n" \\
@@ -155,10 +162,10 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- if param.example is defined and param.example %}
     {%- if param.example is iterable and param.example is not string %}
     {%- for example in param.example %}
-  --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ example) | repr }} \\
     {%- endfor %}
     {%- else %}
-  --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ param.example) | repr }} \\
     {%- endif %}
   {%- endif %}
  {%- endfor %}
@@ -285,7 +292,7 @@ TEMPLATES = {
 }
 
 
-def _to_env(value) -> str:  # type: ignore[no-untyped-def]
+def _to_env(value: list | dict | str) -> str:
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -388,14 +395,14 @@ def _transform_params(param_list):
     }
 
 
-JsonObject: TypeAlias = dict[
-    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
-]
+JsonObject: TypeAlias = dict[str, JsonSerializable]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
     for key, example in field.items():
         match example:
+            case None:
+                lines.append(prefix + key + ":=null")
             case bool():
                 lines.append(prefix + key + ":=" + str(example).lower())
             case int() | float():
@@ -428,6 +435,8 @@ def httpie_request_body(examples: JsonObject) -> str:
     "foo='bar bar bar'"
     >>> httpie_request_body({"foo": 5})
     'foo:=5'
+    >>> httpie_request_body({"foo": None})
+    'foo:=null'
     >>> httpie_request_body({"foo": False})
     'foo:=false'
     >>> httpie_request_body({"foo": [1,2,3]})
@@ -439,12 +448,12 @@ def httpie_request_body(examples: JsonObject) -> str:
     return "\\\n".join(_httpie_request_body_lines("", examples, []))
 
 
-def code_samples(  # type: ignore[no-untyped-def]
-    spec,
-    endpoint,
-    header_params,
-    path_params,
-    query_params,
+def code_samples(
+    spec: APISpec,
+    endpoint: Endpoint,
+    header_params: Sequence[RawParameter],
+    path_params: Sequence[RawParameter],
+    query_params: Sequence[RawParameter],
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
@@ -491,7 +500,7 @@ def code_samples(  # type: ignore[no-untyped-def]
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
                     formatted_if_statement=formatted_if_statement_for_responses(
-                        endpoint.expected_status_codes,
+                        list(endpoint.expected_status_codes),
                         endpoint.content_type == "application/octet-stream",
                         example.label,
                     ),
@@ -673,7 +682,7 @@ def formatted_if_statement_for_responses(
                     formatted_str += retrieve_data_code
             elif status_code == 204:
                 formatted_str += "    print('Done')\n"
-            elif status_code == 302:
+            elif status_code >= 300:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"
 
     if target_requests:
@@ -708,7 +717,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type: ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

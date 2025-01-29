@@ -10,14 +10,14 @@ output the sums of all individual connection types
 see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/ClientCounts@_docs.html
 """
 
-
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 Section = Mapping
 
@@ -78,9 +78,13 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
 
 check_info["cisco_prime_wifi_connections"] = LegacyCheckDefinition(
+    name="cisco_prime_wifi_connections",
     parse_function=parse_cisco_prime_wifi_connections,
     service_name="Cisco Prime WiFi Connections",
     discovery_function=discover_cisco_prime_wifi_connections,
     check_function=check_cisco_prime_wifi_connections,
     check_ruleset_name="cisco_prime_wifi_connections",
+    check_default_parameters={
+        "levels_lower": None,
+    },
 )

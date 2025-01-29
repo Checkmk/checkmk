@@ -1,0 +1,193 @@
+repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
+
+repo_license(name = "repo_license")
+
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    # No tags, no releases.  Let's go with today's head.
+    commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+)
+
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+git_override(
+    module_name = "bazel_clang_tidy",
+    # No tags, no releases.  Live on head.
+    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
+
+bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_rust", version = "0.49.3")
+bazel_dep(name = "rules_python", version = "0.37.0")
+bazel_dep(name = "rules_uv", version = "0.44.0")
+single_version_override(
+    module_name = "rules_uv",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_uv_rm_venv.patch",
+        "//bazel/patches:rules_uv_quiet.patch",
+        "//bazel/patches:rules_uv_create_venv_whls.patch",
+    ],
+)
+
+# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
+PYTHON_VERSION = "3.12.3"
+
+# TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
+UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    # We can specify the exact version.
+    python_version = PYTHON_VERSION,
+)
+
+bazel_dep(name = "rules_mypy", version = "0.23.0")
+
+bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+
+# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
+git_override(
+    module_name = "aspect_rules_py",
+    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
+    remote = "https://github.com/TimotheusBachinger/rules_py",
+)
+
+# NOTE: We should better keep the used ruff versions in sync, here and in the venv!
+bazel_dep(name = "aspect_rules_lint", version = "1.0.9")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    environment = {
+        # Hack for building extensions from source.
+        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
+        "CC": "gcc-13",
+    },
+    hub_name = "cmk_requirements",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "@//:requirements_all_lock.txt": "linux_*",
+    },
+)
+use_repo(pip, "cmk_requirements")
+
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "cmk_types",
+    pip_requirements = "@cmk_requirements//:requirements.bzl",
+    requirements_txt = "//:requirements_all_lock.txt",
+)
+use_repo(types, "cmk_types")
+
+# Keep in synch with Pipfile---will work automatically when we drop pipenv
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
+
+fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
+
+fork_cc_toolchain_config(
+    name = "forked_cc_toolchain_config",
+)
+
+register_toolchains("//bazel/toolchains/cc:linux_gcc13")
+
+# bazel_skylib: Required for setting up rules_foreign_cc
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+single_version_override(
+    module_name = "rules_foreign_cc",
+    patch_strip = 1,
+    patches = ["//omd/packages/foreign_cc:symlink.patch"],
+)
+
+bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+PATCH_VERSION = "2.7.6"
+
+PATCH_FILENAME = "patch-" + PATCH_VERSION + ".tar.gz"
+
+http_archive(
+    name = "patch",
+    build_file = "//omd/packages/patch:BUILD.patch.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/patch/patches:ed-style-01-missing-input-files.patch.dif",
+        "//omd/packages/patch/patches:ed-style-02-fix-arbitrary-command-execution.patch.dif",
+        "//omd/packages/patch/patches:ed-style-03-update-test-Makefile.patch.dif",
+        "//omd/packages/patch/patches:ed-style-04-invoke-ed-directly.patch.dif",
+        "//omd/packages/patch/patches:ed-style-05-minor-cleanups.patch.dif",
+        "//omd/packages/patch/patches:ed-style-06-fix-test-failure.patch.dif",
+        "//omd/packages/patch/patches:ed-style-07-dont-leak-tmp-file.patch.dif",
+        "//omd/packages/patch/patches:ed-style-08-dont-leak-tmp-file-multi.patch.dif",
+        "//omd/packages/patch/patches:fix-segfault-mangled-rename.patch.dif",
+    ],
+    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    strip_prefix = "patch-" + PATCH_VERSION,
+    urls = [
+        "https://ftp.gnu.org/gnu/patch/patch-" + PATCH_FILENAME,
+        UPSTREAM_MIRROR_URL + PATCH_FILENAME,
+    ],
+)
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "otel-collector",
+    executable = True,
+    sha256 = "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
+    url = "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
+)
+
+SHELLCHECK_VERSION = "v0.10.0"
+
+http_archive(
+    name = "shellcheck",
+    build_file_content = """
+exports_files([
+    "shellcheck",
+])
+""",
+    sha256 = "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87",
+    strip_prefix = "shellcheck-" + SHELLCHECK_VERSION,
+    urls = [
+        "https://github.com/koalaman/shellcheck/releases/download/" + SHELLCHECK_VERSION + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+        UPSTREAM_MIRROR_URL + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+    ],
+)
+
+SHFMT_VERSION = "v3.10.0"
+
+http_file(
+    name = "shfmt",
+    executable = True,
+    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
+    urls = [
+        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+    ],
+)
+
+TAPLO_VERSION = "0.9.3"
+
+http_file(
+    name = "taplo.gz",
+    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+    urls = [
+        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
+    ],
+)
+
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
+)

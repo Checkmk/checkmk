@@ -9,10 +9,10 @@
 import ast
 import re
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, state_markers
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -115,7 +115,7 @@ def check_filestats_extremes(files, params, show_files=False):
         if not files_with_metric:
             continue
 
-        files_with_metric.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
+        files_with_metric.sort(key=lambda f: f.get(key))
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
             levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
                 f"min{key}_{label}", (None, None)
@@ -146,7 +146,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 
@@ -165,7 +165,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 
@@ -231,26 +231,25 @@ def check_filestats(item, params, parsed):
         show_files,
     )
 
-    if additional_rules:
+    if count is not None and additional_rules:
         yield 0, "Additional rules enabled"
 
-    remaining_files_count = count  # for display in service details
+        remaining_files_count = count  # for display in service details
 
-    for file_expression, file_details in matching_files.items():
-        file_list = file_details["file_list"]
-        file_count = len(file_list)
-        remaining_files_count -= file_count
-        yield 0, "\n%s" % file_details["display_name"]
-        yield 0, "Pattern: %r" % file_expression
-        yield 0, "Files in total: %d" % file_count
-        output = yield from check_filestats_extremes(
-            file_list,
-            file_details["rules"],
-            show_files,
-        )
-        yield 0, "\n".join(output)
+        for file_expression, file_details in matching_files.items():
+            file_list = file_details["file_list"]
+            file_count = len(file_list)
+            remaining_files_count -= file_count
+            yield 0, "\n%s" % file_details["display_name"]
+            yield 0, "Pattern: %r" % file_expression
+            yield 0, "Files in total: %d" % file_count
+            output = yield from check_filestats_extremes(
+                file_list,
+                file_details["rules"],
+                show_files,
+            )
+            yield 0, "\n".join(output)
 
-    if additional_rules:
         yield 0, "\nRemaining files: %d" % remaining_files_count
 
     yield 0, "\n" + "\n".join(remaining_files_output)
@@ -261,11 +260,14 @@ def check_filestats_single(item, params, parsed):
         return
     _output_variety, reported_lines = data
     if len(reported_lines) != 1:
-        yield 1, "Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service."
+        yield (
+            1,
+            "Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service.",
+        )
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
-        yield 0, f'Status: {single_stat.get("stat_status")}'
+        yield 0, f"Status: {single_stat.get('stat_status')}"
         return
 
     for key, hr_function in (("size", render.disksize), ("age", render.timespan)):
@@ -295,6 +297,7 @@ def discover_filestats_single(section):
 
 
 check_info["filestats.single"] = LegacyCheckDefinition(
+    name="filestats_single",
     service_name="File %s",
     sections=["filestats"],
     discovery_function=discover_filestats_single,
@@ -303,6 +306,7 @@ check_info["filestats.single"] = LegacyCheckDefinition(
 )
 
 check_info["filestats"] = LegacyCheckDefinition(
+    name="filestats",
     parse_function=parse_filestats,
     service_name="File group %s",
     discovery_function=discover_filestats,

@@ -38,6 +38,11 @@ configure_make(
     # No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
     # entries will be prepended to the existing variable.
     env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
         #
         # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
         # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -60,9 +65,22 @@ configure_make(
 
     # without this bazel complains about missing .a files, lol
     out_headers_only = True,
+    postfix_script = """
+    set -x
+    mkdir -p $BUILD_TMPDIR/tar/freetds/lib
+    cp -a "$BUILD_TMPDIR/$INSTALL_PREFIX"/lib/libsybdb.so* "$BUILD_TMPDIR"/tar/freetds/lib/
+    """,
     targets = [
         "all",
         "install",
     ],
+    visibility = ["//visibility:public"],
     deps = [],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":freetds"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

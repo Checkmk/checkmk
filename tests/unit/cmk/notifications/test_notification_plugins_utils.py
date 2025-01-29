@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import binascii
+import json
 from collections.abc import Mapping, Sequence
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -498,3 +500,107 @@ def test_process_by_matchers(
         utils.process_by_matchers(response, matchers)
     assert sys_exit.value.code == expected_exit_code
     assert capsys.readouterr().err == expected_exit_msg
+
+
+class SiteMock:
+    def get_apache_port(self, _omd_root: object) -> int:
+        return 80
+
+
+class ResponseMock:
+    def __init__(self, data: str) -> None:
+        self.data = data
+
+    @property
+    def text(self) -> str:
+        return self.data
+
+    def json(self) -> dict | list:
+        try:
+            return json.loads(self.data)
+        except json.JSONDecodeError:
+            raise requests.exceptions.JSONDecodeError("Expecting value", "doc", 0)
+
+
+class RequestsSessionMock:
+    def __init__(self) -> None:
+        self.data: str = ""
+        self.side_effect: type[Exception] | None = None
+
+    def __call__(self) -> object:
+        return self
+
+    def send(self, request: object, timeout: int) -> ResponseMock:
+        if self.side_effect:
+            # pylint thinks this could be None here but it cannot...
+            raise self.side_effect
+        return ResponseMock(self.data)
+
+
+@patch("cmk.notification_plugins.utils.site", new=SiteMock())
+def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
+    context = {
+        "HOSTNAME": "heute",
+        "PARAMETER_GRAPHS_PER_NOTIFICATION": "1",
+        "WHAT": "HOST",
+    }
+    with patch("cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()):
+        assert utils.render_cmk_graphs(context=context) == []
+
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.side_effect = requests.exceptions.ReadTimeout
+        assert utils.render_cmk_graphs(context=context) == []
+        assert capsys.readouterr().err == (
+            "ERROR: Timed out fetching graphs (10 sec)\n"
+            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
+        )
+
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.data = "foo"
+        assert utils.render_cmk_graphs(context=context) == []
+        assert capsys.readouterr().err == (
+            "ERROR: Failed to decode graphs: Expecting value: line 1 column 1 (char 0)\n"
+            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
+            "Data: 'foo'\n"
+        )
+
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.data = '["foo"]'
+        with pytest.raises(binascii.Error):
+            utils.render_cmk_graphs(context=context)
+
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.data = '[""]'
+        assert utils.render_cmk_graphs(context=context) == [utils.Graph("heute-_HOST_-0.png", b"")]
+        assert capsys.readouterr().err == ""
+
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.data = '["YQ==", "Yg==", "Yw=="]'
+        assert utils.render_cmk_graphs(context=context) == [
+            utils.Graph("heute-_HOST_-0.png", b"a"),
+            utils.Graph("heute-_HOST_-1.png", b"b"),
+            utils.Graph("heute-_HOST_-2.png", b"c"),
+        ]
+        assert capsys.readouterr().err == ""
+
+    context["WHAT"] = "SERVICE"
+    context["SERVICEDESC"] = "Filesystem /boot"
+    with patch(
+        "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
+    ) as mock:
+        mock.data = '["YQ==", "Yg=="]'
+        assert utils.render_cmk_graphs(context=context) == [
+            utils.Graph("heute-Filesystem_x47boot-0.png", b"a"),
+            utils.Graph("heute-Filesystem_x47boot-1.png", b"b"),
+        ]
+        assert capsys.readouterr().err == ""

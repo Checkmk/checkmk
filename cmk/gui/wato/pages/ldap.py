@@ -5,9 +5,9 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from copy import deepcopy
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -40,6 +40,7 @@ from cmk.gui.userdb.ldap_connector import (
     LDAPAttributePluginGroupsToRoles,
     LDAPUserConnector,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -352,7 +353,7 @@ class LDAPConnectionValuespec(Dictionary):
                         (
                             "failover_servers",
                             ListOfStrings(
-                                title=_("Failover Servers"),
+                                title=_("Failover servers"),
                                 help=_(
                                     "When the connection to the first server fails with connect specific errors "
                                     "like timeouts or some other network related problems, the connect mechanism "
@@ -602,9 +603,9 @@ class LDAPConnectionValuespec(Dictionary):
                 Dictionary(
                     title=_("Attribute sync plug-ins"),
                     help=_(
-                        "It is possible to fetch several attributes of users, like Email or full names, "
-                        "from the LDAP directory. This is done by plug-ins which can individually enabled "
-                        "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
+                        "It is possible to fetch several attributes of users, like email or full names, "
+                        "from the LDAP directory. This is done by plug-ins which can be individually enabled "
+                        "or disabled. When enabling a plug-in, it is used upon the next synchronization of "
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),
@@ -655,7 +656,7 @@ class LDAPConnectionValuespec(Dictionary):
                         varprefix,
                         _(
                             "You need to configure the group base DN to be able to "
-                            "use the roles synchronization plugin."
+                            "use the roles synchronization plug-in."
                         ),
                     )
 
@@ -803,6 +804,8 @@ class ModeEditLDAPConnection(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 
@@ -866,7 +869,7 @@ class ModeEditLDAPConnection(WatoMode):
         html.h2(_("Diagnostics"))
         if not request.var("_test") or not self._connection_id:
             html.show_message(
-                HTML(
+                HTML.without_escaping(
                     "<p>%s</p><p>%s</p>"
                     % (
                         _(
@@ -925,7 +928,7 @@ class ModeEditLDAPConnection(WatoMode):
             (_("Count Users"), self._test_user_count),
             (_("Group Base-DN"), self._test_group_base_dn),
             (_("Count Groups"), self._test_group_count),
-            (_("Sync-Plugin: Roles"), self._test_groups_to_roles),
+            (_("Sync-Plug-in: Roles"), self._test_groups_to_roles),
         ]
 
     def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
@@ -1027,7 +1030,7 @@ class ModeEditLDAPConnection(WatoMode):
     ) -> tuple[bool, str | None]:
         active_plugins = connection.active_plugins()
         if "groups_to_roles" not in active_plugins:
-            return True, _("Skipping this test (Plugin is not enabled)")
+            return True, _("Skipping this test (plug-in is not enabled)")
 
         params = active_plugins["groups_to_roles"]
         connection.connect(enforce_new=True, enforce_server=address)

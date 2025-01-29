@@ -18,13 +18,14 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from dataclasses import asdict, dataclass, fields, replace
+from dataclasses import dataclass, fields, replace
 from functools import partial
 from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
 import pydantic
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -42,9 +43,11 @@ from cmk.agent_based.v2 import (
 
 ServiceLabels = dict[str, str]
 
+_ItemAppearance = Literal["index", "descr", "alias"]
+
 
 class SingleInterfaceDiscoveryParams(TypedDict, total=False):
-    item_appearance: str
+    item_appearance: _ItemAppearance
     pad_portnumbers: bool
     labels: ServiceLabels
 
@@ -92,6 +95,13 @@ CHECK_DEFAULT_PARAMETERS = {
         "both": ("perc", (0.01, 0.1)),
     },
 }
+
+
+def _to_item_appearance(value: str) -> _ItemAppearance:
+    match value:
+        case "index" | "descr" | "alias":
+            return value
+    raise ValueError(f"Invalid item appearance: {value}")
 
 
 class IndependentMapping(pydantic.BaseModel, frozen=True):
@@ -197,7 +207,7 @@ class InterfaceWithCounters:
     counters: Counters
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Rates:
     in_octets: float | None = None
     in_mcast: float | None = None
@@ -227,7 +237,7 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> "InterfaceWithRates":
         return cls(
             iface_counters.attributes,
@@ -244,42 +254,137 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
-        rates: dict[str, float | None] = {}
-        rate_errors = []
-        for rate_name, counter_value in (
-            ("in_octets", (counters := iface_counters.counters).in_octets),
-            ("in_ucast", counters.in_ucast),
-            ("in_mcast", counters.in_mcast),
-            ("in_bcast", counters.in_bcast),
-            ("in_nucast", counters.in_nucast),
-            ("in_disc", counters.in_disc),
-            ("in_err", counters.in_err),
-            ("out_octets", counters.out_octets),
-            ("out_ucast", counters.out_ucast),
-            ("out_mcast", counters.out_mcast),
-            ("out_bcast", counters.out_bcast),
-            ("out_nucast", counters.out_nucast),
-            ("out_disc", counters.out_disc),
-            ("out_err", counters.out_err),
-        ):
-            try:
-                rates[rate_name] = (
-                    get_rate(
-                        value_store=value_store,
-                        key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
-                        time=timestamp,
-                        value=counter_value,
-                        raise_overflow=True,
-                    )
-                    if counter_value is not None
-                    else None
-                )
-            except GetRateError as get_rate_error:
-                rates[rate_name] = None
-                rate_errors.append((rate_name, get_rate_error))
-        return Rates(**rates), rate_errors
+        rate_errors = {}
+        in_octets, rate_errors["in_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.in_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_ucast, rate_errors["in_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_mcast, rate_errors["in_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_bcast, rate_errors["in_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_nucast, rate_errors["in_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_disc, rate_errors["in_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.in_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_err, rate_errors["in_err"] = cls._compute_rate(
+            counter=iface_counters.counters.in_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_octets, rate_errors["out_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.out_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_ucast, rate_errors["out_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_mcast, rate_errors["out_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_bcast, rate_errors["out_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_nucast, rate_errors["out_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_disc, rate_errors["out_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.out_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_err, rate_errors["out_err"] = cls._compute_rate(
+            counter=iface_counters.counters.out_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        return Rates(
+            in_octets=in_octets,
+            in_mcast=in_mcast,
+            in_bcast=in_bcast,
+            in_nucast=in_nucast,
+            in_ucast=in_ucast,
+            in_disc=in_disc,
+            in_err=in_err,
+            out_octets=out_octets,
+            out_mcast=out_mcast,
+            out_bcast=out_bcast,
+            out_nucast=out_nucast,
+            out_ucast=out_ucast,
+            out_disc=out_disc,
+            out_err=out_err,
+        ), [
+            (rate_name, get_rate_error)
+            for rate_name, get_rate_error in rate_errors.items()
+            if get_rate_error
+        ]
+
+    @staticmethod
+    def _compute_rate(
+        *,
+        counter: float | None,
+        timestamp: float,
+        value_store: MutableMapping[str, object],
+        value_store_key: str,
+    ) -> tuple[float | None, GetRateError | None]:
+        if counter is None:
+            return None, None
+        try:
+            return (
+                get_rate(
+                    value_store=value_store,
+                    key=value_store_key,
+                    time=timestamp,
+                    value=counter,
+                    raise_overflow=True,
+                ),
+                None,
+            )
+        except GetRateError as get_rate_error:
+            return None, get_rate_error
 
 
 @dataclass(frozen=True)
@@ -312,7 +417,7 @@ class RateWithAverage:
         )
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RatesWithAverages:
     in_octets: RateWithAverage | None = None
     in_mcast: RateWithAverage | None = None
@@ -344,6 +449,14 @@ class RatesWithAverages:
         )
 
 
+@dataclass(frozen=True, kw_only=True)
+class _AveragingParams:
+    value_store: MutableMapping[str, object]
+    value_store_key: str
+    timestamp: float
+    backlog_minutes: int
+
+
 @dataclass
 class InterfaceWithRatesAndAverages:
     attributes: Attributes
@@ -356,7 +469,7 @@ class InterfaceWithRatesAndAverages:
         iface: InterfaceWithCounters | InterfaceWithRates,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
     ) -> "InterfaceWithRatesAndAverages":
         iface_rates = (
@@ -368,115 +481,181 @@ class InterfaceWithRatesAndAverages:
                 value_store=value_store,
             )
         )
-        averages = cls._compute_averages(
-            iface_rates,
-            timestamp=timestamp,
-            value_store=value_store,
-            average_backlog_octets=params.get("average"),
-            average_backlog_bmcast=params.get("average_bm"),
-        )
-        rates_with_averages = RatesWithAverages(
-            **{
-                rate_name: (
-                    None
-                    if rate is None
-                    else RateWithAverage(
-                        rate=rate,
-                        average=averages.get(rate_name),
-                    )
+        in_octets = cls._rate_with_average(
+            rate=iface_rates.rates.in_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_in_octets,
                 )
-                for rate_name, rate in asdict(iface_rates.rates).items()
-            }
-        )
-        if rates_with_averages.in_nucast is None:
-            rates_with_averages.in_nucast = cls._add_rates_and_averages(
-                *(
-                    (
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                    )
-                    for rate_name in ("in_mcast", "in_bcast")
-                ),
-            )
-        if rates_with_averages.out_nucast is None:
-            rates_with_averages.out_nucast = cls._add_rates_and_averages(
-                *(
-                    (
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                    )
-                    for rate_name in ("out_mcast", "out_bcast")
-                ),
-            )
-        rates_with_averages.total_octets = cls._add_rates_and_averages(
-            *(
-                (
-                    None
-                    if (rate := getattr(iface_rates.rates, rate_name)) is None
-                    else RateWithAverage(
-                        rate,
-                        averages.get(rate_name),
-                    )
-                )
-                for rate_name in ("in_octets", "out_octets")
+                if (backlog_minutes_in_octets := params.get("average")) is not None
+                else None
             ),
+        )
+        out_octets = cls._rate_with_average(
+            rate=iface_rates.rates.out_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_out_octets,
+                )
+                if (backlog_minutes_out_octets := params.get("average")) is not None
+                else None
+            ),
+        )
+        in_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_ucast,
+            averaging_params=None,
+        )
+        out_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_ucast,
+            averaging_params=None,
+        )
+        in_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_mcast,
+                )
+                if (average_backlog_in_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_mcast,
+                )
+                if (average_backlog_out_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_bcast,
+                )
+                if (average_backlog_in_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_bcast,
+                )
+                if (average_backlog_out_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            in_mcast,
+            in_bcast,
+        )
+        out_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            out_mcast,
+            out_bcast,
+        )
+        in_disc = cls._rate_with_average(
+            rate=iface_rates.rates.in_disc,
+            averaging_params=None,
+        )
+        out_disc = cls._rate_with_average(
+            rate=iface_rates.rates.out_disc,
+            averaging_params=None,
+        )
+        in_err = cls._rate_with_average(
+            rate=iface_rates.rates.in_err,
+            averaging_params=None,
+        )
+        out_err = cls._rate_with_average(
+            rate=iface_rates.rates.out_err,
+            averaging_params=None,
+        )
+        total_octets = cls._add_rates_and_averages(
+            in_octets,
+            out_octets,
         )
         return cls(
             attributes=iface.attributes,
-            rates_with_averages=rates_with_averages,
+            rates_with_averages=RatesWithAverages(
+                in_octets=in_octets,
+                in_mcast=in_mcast,
+                in_bcast=in_bcast,
+                in_nucast=in_nucast,
+                in_ucast=in_ucast,
+                in_disc=in_disc,
+                in_err=in_err,
+                out_octets=out_octets,
+                out_mcast=out_mcast,
+                out_bcast=out_bcast,
+                out_nucast=out_nucast,
+                out_ucast=out_ucast,
+                out_disc=out_disc,
+                out_err=out_err,
+                total_octets=total_octets,
+            ),
             get_rate_errors=iface_rates.get_rate_errors,
         )
 
     @staticmethod
-    def _compute_averages(
-        iface_rates: InterfaceWithRates,
+    def _rate_with_average(
         *,
-        timestamp: float,
-        value_store: MutableMapping[str, Any],
-        average_backlog_octets: int | None,
-        average_backlog_bmcast: int | None,
-    ) -> Mapping[str, Average]:
-        return {
-            rate_name: Average(
-                value=get_average(
-                    value_store=value_store,
-                    key=f"{rate_name}.{iface_rates.attributes.id_for_value_store}.average",
-                    time=timestamp,
-                    value=rate,
-                    backlog_minutes=average_backlog,
-                ),
-                backlog=average_backlog,
+        rate: float | None,
+        averaging_params: _AveragingParams | None,
+    ) -> RateWithAverage | None:
+        if rate is None:
+            return None
+        if averaging_params is None:
+            return RateWithAverage(
+                rate=rate,
+                average=None,
             )
-            for average_backlog, rate_names in (
-                (
-                    average_backlog_octets,
-                    (
-                        "in_octets",
-                        "out_octets",
-                    ),
-                ),
-                (
-                    average_backlog_bmcast,
-                    (
-                        "in_mcast",
-                        "in_bcast",
-                        "out_mcast",
-                        "out_bcast",
-                    ),
-                ),
-            )
-            for rate_name in rate_names
-            if average_backlog is not None
-            and (rate := getattr(iface_rates.rates, rate_name)) is not None
-        }
+        return RateWithAverage(
+            rate=rate,
+            average=(
+                Average(
+                    value=average,
+                    backlog=averaging_params.backlog_minutes,
+                )
+                if (
+                    average := get_average(
+                        value_store=averaging_params.value_store,
+                        key=averaging_params.value_store_key,
+                        time=averaging_params.timestamp,
+                        value=rate,
+                        backlog_minutes=averaging_params.backlog_minutes,
+                    )
+                )
+                is not None
+                else None
+            ),
+        )
 
     @staticmethod
     def _add_rates_and_averages(
@@ -569,21 +748,23 @@ def render_mac_address(phys_address: Iterable[int] | str) -> str:
 def matching_interfaces_for_item(
     item: str,
     section: Section[TInterfaceType],
+    appearance: _ItemAppearance | None = None,
 ) -> Iterator[TInterfaceType]:
     if not section:
         return
 
     if section[0].attributes.node:
-        yield from _matching_clustered_interfaces_for_item(item, section)
+        yield from _matching_clustered_interfaces_for_item(item, section, appearance)
         return
 
-    if match := _matching_unclustered_interface_for_item(item, section):
+    if match := _matching_unclustered_interface_for_item(item, section, appearance):
         yield match
 
 
 def _matching_clustered_interfaces_for_item(
     item: str,
     section: Section[TInterfaceType],
+    appearance: _ItemAppearance | None,
 ) -> Iterator[TInterfaceType]:
     for _node, node_interfaces in itertools.groupby(
         # itertools.groupby needs the input to be sorted accordingly. This is most likely already
@@ -595,32 +776,45 @@ def _matching_clustered_interfaces_for_item(
         ),
         key=lambda iface: iface.attributes.node,
     ):
-        if match := _matching_unclustered_interface_for_item(item, list(node_interfaces)):
+        if match := _matching_unclustered_interface_for_item(
+            item, list(node_interfaces), appearance
+        ):
             yield match
 
 
 def _matching_unclustered_interface_for_item(
     item: str,
     section: Section[TInterfaceType],
+    appearance: _ItemAppearance | None,
 ) -> TInterfaceType | None:
     return (
         simple_match
-        if (simple_match := _matching_interface_for_simple_item(item, section))
-        else _matching_interface_for_compound_item(item, section)
+        if (simple_match := _matching_interface_for_simple_item(item, section, appearance))
+        else _matching_interface_for_compound_item(item, section, appearance)
     )
 
 
 def _matching_interface_for_simple_item(
     item: str,
     ifaces: Iterable[TInterfaceType],
+    appearance: _ItemAppearance | None,
 ) -> TInterfaceType | None:
+    # Use old matching logic if service has not been rediscovered
+    # and appearance is missing from discovered params
+    use_old_matching = appearance is None
     return next(
         (
             interface
             for interface in ifaces
-            if item.lstrip("0") == interface.attributes.index
-            or (item == "0" * len(item) and saveint(interface.attributes.index) == 0)
-            or item in (interface.attributes.alias, interface.attributes.descr)
+            if (
+                (appearance == "index" or use_old_matching)
+                and (
+                    (item.lstrip("0") == interface.attributes.index)
+                    or (item == "0" * len(item) and saveint(interface.attributes.index) == 0)
+                )
+            )
+            or ((appearance == "alias" or use_old_matching) and item == interface.attributes.alias)
+            or ((appearance == "descr" or use_old_matching) and item == interface.attributes.descr)
         ),
         None,
     )
@@ -629,15 +823,22 @@ def _matching_interface_for_simple_item(
 def _matching_interface_for_compound_item(
     item: str,
     ifaces: Iterable[TInterfaceType],
+    appearance: _ItemAppearance | None,
 ) -> TInterfaceType | None:
+    # Use old matching logic if service has not been rediscovered
+    # and appearance is missing from discovered params
+    use_old_matching = appearance is None
     return next(
         (
             interface
             for interface in ifaces
-            if item
-            in (
-                f"{interface.attributes.alias} {interface.attributes.index}",
-                f"{interface.attributes.descr} {interface.attributes.index}",
+            if (
+                (appearance == "alias" or use_old_matching)
+                and item == f"{interface.attributes.alias} {interface.attributes.index}"
+            )
+            or (
+                (appearance == "descr" or use_old_matching)
+                and item == f"{interface.attributes.descr} {interface.attributes.index}"
             )
         ),
         None,
@@ -756,7 +957,7 @@ def _scaled_bandwidth_thresholds(
 
 
 def _finalize_bandwidth_levels(
-    merged_direction_levels: PredictiveLevels | Mapping[str, tuple[float, float] | None]
+    merged_direction_levels: PredictiveLevels | Mapping[str, tuple[float, float] | None],
 ) -> FixedLevels | PredictiveLevels:
     return (
         merged_direction_levels
@@ -772,7 +973,7 @@ GeneralPacketLevels = dict[str, dict[str, tuple[float, float] | None]]
 
 
 def _get_packet_levels(
-    params: Mapping[str, Any]
+    params: Mapping[str, Any],
 ) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
     PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast", "discards")
@@ -785,7 +986,7 @@ def _get_packet_levels(
         "abs": none_levels(),
     }
 
-    # Second iteration: seperate by perc and abs for easier further processing
+    # Second iteration: separate by perc and abs for easier further processing
     for name in PACKET_TYPES:
         for direction in DIRECTIONS:
             levels = params.get(name, {})
@@ -796,28 +997,36 @@ def _get_packet_levels(
     return levels_per_type["abs"], levels_per_type["perc"]
 
 
-def _uses_description_and_alias(item_appearance: str) -> tuple[bool, bool]:
-    if item_appearance == "descr":
-        return True, False
-    if item_appearance == "alias":
-        return False, True
-    return False, False
+@dataclass(frozen=True)
+class ItemInfo:
+    used_appearance: _ItemAppearance
+    item: str
 
 
 def _compute_item(
-    item_appearance: str,
+    configured_item_appearance: _ItemAppearance,
     attributes: Attributes,
     section: Section[TInterfaceType],
     pad_portnumbers: bool,
-) -> str:
-    uses_description, uses_alias = _uses_description_and_alias(item_appearance)
-    if uses_description and attributes.descr:
-        item = attributes.descr
-    elif uses_alias and attributes.alias:
-        item = attributes.alias
-    else:
-        item = _pad_with_zeroes(section, attributes.index, pad_portnumbers)
-    return item
+) -> ItemInfo:
+    match configured_item_appearance:
+        case "descr":
+            if attributes.descr:
+                return ItemInfo(
+                    used_appearance="descr",
+                    item=attributes.descr,
+                )
+        case "alias":
+            if attributes.alias:
+                return ItemInfo(
+                    used_appearance="alias",
+                    item=attributes.alias,
+                )
+
+    return ItemInfo(
+        used_appearance="index",
+        item=_pad_with_zeroes(section, attributes.index, pad_portnumbers),
+    )
 
 
 def check_regex_match_conditions(
@@ -861,7 +1070,7 @@ def _check_single_matching_conditions(
 
 
 class GroupConfiguration(TypedDict, total=False):
-    member_appearance: str
+    member_appearance: _ItemAppearance
     inclusion_condition: MatchingConditions
     exclusion_conditions: Iterable[MatchingConditions]
     labels: ServiceLabels
@@ -926,7 +1135,7 @@ def _groups_from_params(
     return groups
 
 
-def discover_interfaces(  # pylint: disable=too-many-branches
+def discover_interfaces(
     params: Sequence[Mapping[str, Any]],
     section: Section[TInterfaceType],
 ) -> DiscoveryResult:
@@ -961,34 +1170,35 @@ def discover_interfaces(  # pylint: disable=too-many-branches
             DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["pad_portnumbers"],
         )
 
-        for item_appearance in (
+        for appearance in (
             ["index", "descr", "alias"]
             if interface.attributes.descr != interface.attributes.alias
             else ["index", "descr"]
         ):
             n_times_item_seen[
                 _compute_item(
-                    item_appearance,
+                    _to_item_appearance(appearance),
                     interface.attributes,
                     section,
                     pad_portnumbers,
-                )
+                ).item
             ] += 1
 
         # compute actual item name
-        item = _compute_item(
-            single_interface_settings.get(
-                "item_appearance",
-                DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"],
-            ),
+        item_info = _compute_item(
+            _to_item_appearance(single_interface_settings["item_appearance"])
+            if "item_appearance" in single_interface_settings
+            else (DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"]),
             interface.attributes,
             section,
             pad_portnumbers,
         )
+        item = item_info.item
 
         # discover single interface
         if discover_single_interface and interface.attributes.index not in seen_indices:
-            discovered_params_single = {
+            discovered_params_single: dict[str, object] = {
+                "item_appearance": item_info.used_appearance,
                 "discovered_oper_status": [interface.attributes.oper_status],
                 "discovered_speed": interface.attributes.speed,
             }
@@ -1020,9 +1230,10 @@ def discover_interfaces(  # pylint: disable=too-many-branches
             interface_groups.setdefault(
                 interface.attributes.group,
                 {
-                    "member_appearance": single_interface_settings.get(
-                        "item_appearance",
-                        "index",
+                    "member_appearance": (
+                        _to_item_appearance(single_interface_settings["item_appearance"])
+                        if "item_appearance" in single_interface_settings
+                        else "index"
                     ),
                 },
             )
@@ -1036,7 +1247,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         group_oper_status = "2"  # operation status, default is down (2)
         group_speed = 0.0  # total maximum speed of all interfaces in this group
 
-        # Extract labels, they will be handled seperately.
+        # Extract labels, they will be handled separately.
         group_labels = group_configuration.pop("labels", None)
 
         # find all interfaces matching the group to compute state and speed
@@ -1086,7 +1297,7 @@ def _check_ungrouped_ifs(
     item: str,
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
-    timestamp: float,
+    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1098,8 +1309,12 @@ def _check_ungrouped_ifs(
     last_results = None
     results_from_fastest_interface = None
     max_out_traffic = -1.0
-
-    for interface in matching_interfaces_for_item(item, section):
+    item_appearance = (
+        _to_item_appearance(params["item_appearance"]) if "item_appearance" in params else None
+    )
+    for timestamp, interface in zip(
+        timestamps, matching_interfaces_for_item(item, section, item_appearance)
+    ):
         last_results = list(
             check_single_interface(
                 item,
@@ -1133,23 +1348,6 @@ def _check_ungrouped_ifs(
     if last_results:
         yield from last_results
         return
-
-
-def _filter_matching_interfaces(
-    *,
-    item: str,
-    group_config: GroupConfiguration,
-    section: Section[TInterfaceType],
-) -> Iterable[InterfaceWithCounters | InterfaceWithRates]:
-    yield from (
-        interface
-        for interface in section
-        if _check_group_matching_conditions(
-            interface.attributes,
-            item,
-            group_config,
-        )
-    )
 
 
 def _accumulate_attributes(
@@ -1247,24 +1445,25 @@ def _group_members(
         groups_node = group_members.setdefault(attributes.node, [])
         member_info = MemberInfo(
             name=_compute_item(
-                group_config.get(
-                    "member_appearance",
-                    # This happens when someones upgrades from v1.6 to v2,0, where the structure of the
-                    # discovered parameters changed. Interface groups defined by the user will stop
-                    # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
-                    # However, we can still support groups defined already in the agent output, since
-                    # these work purley by the group name.
+                # This happens when someones upgrades from v1.6 to v2,0, where the structure of the
+                # discovered parameters changed. Interface groups defined by the user will stop
+                # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
+                # However, we can still support groups defined already in the agent output, since
+                # these work purley by the group name.
+                group_config["member_appearance"]
+                if "member_appearance" in group_config
+                else _to_item_appearance(
                     str(
                         group_config.get(
                             "item_type",
                             DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"],
                         )
-                    ),
+                    )
                 ),
                 attributes,
                 section,
                 item[0] == "0",
-            ),
+            ).item,
             oper_status_name=attributes.oper_status_name,
             admin_status_name=(
                 None
@@ -1281,7 +1480,7 @@ def _check_grouped_ifs(
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
     group_name: str,
-    timestamp: float,
+    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1295,10 +1494,11 @@ def _check_grouped_ifs(
             value_store=value_store,
             params=params,
         )
-        for iface in _filter_matching_interfaces(
-            item=item,
-            group_config=params["aggregate"],
-            section=section,
+        for timestamp, iface in zip(timestamps, section)
+        if _check_group_matching_conditions(
+            iface.attributes,
+            item,
+            params["aggregate"],
         )
     ]
     yield from check_single_interface(
@@ -1332,11 +1532,14 @@ def check_multiple_interfaces(
     section: Section[TInterfaceType],
     *,
     group_name: str = "Interface group",
-    timestamp: float | None = None,
+    timestamps: Sequence[float] | None = None,
     value_store: MutableMapping[str, Any] | None = None,
 ) -> CheckResult:
-    if timestamp is None:
-        timestamp = time.time()
+    if timestamps is not None:
+        timestamps_f = timestamps
+    else:
+        now = time.time()
+        timestamps_f = [now] * len(section)
     if value_store is None:
         value_store = get_value_store()
 
@@ -1346,7 +1549,7 @@ def check_multiple_interfaces(
             params,
             section,
             group_name,
-            timestamp,
+            timestamps_f,
             value_store,
         )
     else:
@@ -1354,7 +1557,7 @@ def check_multiple_interfaces(
             item,
             params,
             section,
-            timestamp,
+            timestamps_f,
             value_store,
         )
 
@@ -1431,7 +1634,7 @@ _METRICS_TO_LEGACY_MAP = {
 # corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
 # case, we can remove _rename_metrics_to_legacy.
 def _rename_metrics_to_legacy(
-    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult]
+    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult],
 ) -> Callable[_TCheckInterfaceParams, CheckResult]:
     def rename_metrics_to_legacy(
         *args: _TCheckInterfaceParams.args,
@@ -1560,7 +1763,6 @@ def check_single_interface(
     )
 
     if interface.get_rate_errors:
-
         overflows_human_readable = "\n".join(
             f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in interface.get_rate_errors
         )
@@ -1570,7 +1772,7 @@ def check_single_interface(
         )
 
 
-def _interface_name(  # pylint: disable=too-many-branches
+def _interface_name(
     *,
     group_name: str | None,
     item: str,
@@ -1599,32 +1801,28 @@ def _interface_name(  # pylint: disable=too-many-branches
             info_interface = "[%s]" % bracket_info
         else:
             info_interface = ""
+    # Display port number or alias in summary_interface if that is not part of the service
+    # description anyway
+    elif (
+        (item == attributes.index or item.lstrip("0") == attributes.index)
+        and attributes.alias in (item, "")
+        and attributes.descr in (item, "")
+    ):  # description trivial
+        info_interface = ""
+    elif (
+        item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
+    ):  # non-unique Alias
+        info_interface = f"[{attributes.alias}/{attributes.descr}]"
+    elif attributes.alias not in (item, ""):  # alias useful
+        info_interface = "[%s]" % attributes.alias
+    elif attributes.descr not in (item, ""):  # description useful
+        info_interface = "[%s]" % attributes.descr
     else:
-        # Display port number or alias in summary_interface if that is not part
-        # of the service description anyway
-        if (
-            (item == attributes.index or item.lstrip("0") == attributes.index)
-            and attributes.alias in (item, "")
-            and attributes.descr in (item, "")
-        ):  # description trivial
-            info_interface = ""
-        elif (
-            item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
-        ):  # non-unique Alias
-            info_interface = f"[{attributes.alias}/{attributes.descr}]"
-        elif attributes.alias not in (item, ""):  # alias useful
-            info_interface = "[%s]" % attributes.alias
-        elif attributes.descr not in (item, ""):  # description useful
-            info_interface = "[%s]" % attributes.descr
-        else:
-            info_interface = "[%s]" % attributes.index
+        info_interface = "[%s]" % attributes.index
 
     if attributes.node is not None:
         if info_interface:
-            info_interface = "{} on {}".format(
-                info_interface,
-                attributes.node,
-            )
+            info_interface = f"{info_interface} on {attributes.node}"
         else:
             info_interface = "On %s" % attributes.node
 
@@ -1644,7 +1842,7 @@ def _interface_mac(attributes: Attributes) -> Iterable[Result]:
 
 
 def _parse_params(
-    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any]
+    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any],
 ) -> StateMappings:
     match state_mappings:
         case "independent_mappings", mapping:
@@ -1773,7 +1971,7 @@ def _output_group_members(
     )
 
 
-def _output_bandwidth_rates(  # pylint: disable=too-many-branches
+def _output_bandwidth_rates(
     *,
     rates: RatesWithAverages,
     speed_b_in: float | None,
@@ -1819,7 +2017,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
         )
 
 
-def _check_single_bandwidth(  # pylint: disable=too-many-branches
+def _check_single_bandwidth(
     *,
     direction: str,
     traffic: RateWithAverage,
@@ -1861,7 +2059,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     else:
         # The metric already got yielded, so it's only the result that is
         # needed here.
-        (result,) = check_levels(
+        (result,) = check_levels_v1(
             filtered_traffic,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -1913,7 +2111,7 @@ def _render_floating_point(value: float, precision: int, unit: str) -> str:
     if round(value) == value:
         return f"{value:.0f}{unit}"
 
-    if abs(value) < float(tol := f"0.{'0'*(precision-1)}1"):
+    if abs(value) < float(tol := f"0.{'0' * (precision - 1)}1"):
         return f"{'<' if value > 0 else '>-'}{tol}{unit}"
 
     return f"{value:.{precision}f}".rstrip("0.") + unit
@@ -2034,7 +2232,7 @@ def _output_packet_rates(
         ]:
             if packets is None:
                 continue
-            yield from check_levels(
+            yield from check_levels_v1(
                 packets.rate,
                 levels_upper=levels,
                 metric_name=f"if_{direction}_{metric_name}",
@@ -2084,7 +2282,7 @@ def _check_single_packet_rate(
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
         perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
-        (result,) = check_levels(
+        (result,) = check_levels_v1(
             perc_value,
             levels_upper=perc_levels,
             render_func=partial(_render_floating_point, precision=3, unit="%"),
@@ -2093,7 +2291,7 @@ def _check_single_packet_rate(
         )
         yield result
     else:
-        (result,) = check_levels(
+        (result,) = check_levels_v1(
             rate_check,
             levels_upper=abs_levels,
             render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),

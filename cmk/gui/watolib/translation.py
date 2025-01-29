@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -48,8 +48,8 @@ def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
         plural = "hostnames"
 
     elif what == "service":
-        singular = "service description"
-        plural = "service descriptions"
+        singular = "service name"
+        plural = "service names"
 
     else:
         raise MKGeneralException("No translations found for %s." % what)

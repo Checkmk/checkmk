@@ -8,12 +8,13 @@ to hosts and that is the basis of the rules."""
 import abc
 from collections.abc import Collection
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.tags
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
@@ -29,6 +30,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -47,7 +49,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
+from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -274,7 +276,7 @@ class ModeTags(ABCTagMode):
         return redirect(mode_url("tags"))
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
+    def _move_tag_group(self) -> ActionResult:
         move_nr = request.get_integer_input_mandatory("_move")
         move_to = request.get_integer_input_mandatory("_index")
 
@@ -754,6 +756,8 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
@@ -920,10 +924,6 @@ def _rename_tags_after_confirmation(
         if mode == TagCleanupMode.ABORT:
             raise MKUserError("id_0", _("Aborting change."))
 
-        # make attribute unknown to system, important for save() operations
-        if isinstance(operation, OperationRemoveTagGroup):
-            undeclare_host_tag_attribute(operation.tag_group_id)
-
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(operation, mode)
 
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % (
@@ -932,14 +932,14 @@ def _rename_tags_after_confirmation(
             len(affected_rulesets),
         )
 
-    message = HTML()
+    message = HTML.empty()
     affected_folders, affected_hosts, affected_rulesets = change_host_tags(
         operation, TagCleanupMode.CHECK
     )
 
     if affected_folders:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Affected folders with an explicit reference to this tag "
                     "group and that are affected by the change"
@@ -947,11 +947,11 @@ def _rename_tags_after_confirmation(
                 + ":"
             )
             _show_affected_folders(affected_folders)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if affected_hosts:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Hosts where this tag group is explicitly set "
                     "and that are effected by the change"
@@ -959,23 +959,23 @@ def _rename_tags_after_confirmation(
                 + ":"
             )
             _show_affected_hosts(affected_hosts)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if affected_rulesets:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _("Rulesets that contain rules with references to the changed tags") + ":"
             )
             _show_affected_rulesets(affected_rulesets)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if message:
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)
         html.open_div(class_="really")
         html.h3(_("Your modifications affect some objects"))
-        html.write_text(message)
+        html.write_text_permissive(message)
         html.br()
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Setup can repair things for you. It can rename tags in folders, host and rules. "
                 "Removed tag groups will be removed from hosts and folders, removed tags will be "
@@ -1033,11 +1033,11 @@ def _show_aux_tag_used_by_tags(tags: set[cmk.utils.tags.GroupedTag]) -> None:
     builtin_config = cmk.utils.tags.BuiltinTagConfig()
     for index, tag in enumerate(sorted(tags, key=lambda t: t.choice_title)):
         if index > 0:
-            html.write_text(", ")
+            html.write_text_permissive(", ")
 
         # Built-in tag groups can not be edited
         if builtin_config.tag_group_exists(tag.group.id):
-            html.write_text(_u(tag.choice_title))
+            html.write_text_permissive(_u(tag.choice_title))
         else:
             edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag.group.id)])
             html.a(_u(tag.choice_title), href=edit_url)
@@ -1059,11 +1059,11 @@ def _show_affected_hosts(affected_hosts: list[Host]) -> None:
     html.open_li()
     for nr, host in enumerate(affected_hosts):
         if nr > 20:
-            html.write_text(_("... (%d more)") % (len(affected_hosts) - 20))
+            html.write_text_permissive(_("... (%d more)") % (len(affected_hosts) - 20))
             break
 
         if nr > 0:
-            html.write_text(", ")
+            html.write_text_permissive(", ")
 
         html.a(host.name(), href=host.edit_url())
     html.close_li()

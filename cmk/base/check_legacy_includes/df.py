@@ -3,15 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=chained-comparison,unused-import
+from typing import Literal
 
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS  # noqa: F401
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.df import INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS
+from cmk.plugins.lib.df import (
+    FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS,  # ruff: ignore[unused-import]
+)
+from cmk.plugins.lib.df import (
+    FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS,  # ruff: ignore[unused-import]
+)
+from cmk.plugins.lib.df import (
+    INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS,  # ruff: ignore[unused-import]
+)
 from cmk.plugins.lib.df import mountpoints_in_group as mountpoints_in_group
-from cmk.plugins.lib.df import TREND_DEFAULT_PARAMS as TREND_DEFAULT_PARAMS
+from cmk.plugins.lib.df import (
+    TREND_DEFAULT_PARAMS as TREND_DEFAULT_PARAMS,  # ruff: ignore[unused-import]
+)
 
 from .size_trend import size_trend
 
@@ -108,7 +116,7 @@ def df_check_filesystem_list_coroutine(
 # RESIDING IN
 # cmk.plugins.lib/df.py
 # ==================================================================================================
-def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
+def df_check_filesystem_single_coroutine(
     mountpoint,
     size_mb,
     avail_mb,
@@ -123,15 +131,16 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         return
 
     # params might still be a tuple
+    show_levels: Literal["onmagic", "always", "onproblem"]
     show_levels, subtract_reserved, show_reserved = (
         (
             params.get("show_levels", "onproblem"),
             params.get("subtract_reserved", False) and reserved_mb > 0,
             params.get("show_reserved") and reserved_mb > 0,
         )
-        # params might still be a tuple
+        # params might still be a tuple  # (mo): I don't think so.
         if isinstance(params, dict)
-        else (False, False, False)
+        else ("onproblem", False, False)
     )
 
     used_mb = size_mb - avail_mb
@@ -166,7 +175,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = render.disksize(reserved_mb * 1024**2)
+        reserved_hr = render.bytes(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved
@@ -199,9 +208,11 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
     metric, result = check_inodes(params, inodes_total, inodes_avail)
     assert isinstance(metric, Metric)
     assert isinstance(result, Result)
-    yield int(result.state), result.summary, [
-        (metric.name, metric.value) + metric.levels + metric.boundaries
-    ]
+    yield (
+        int(result.state),
+        result.summary,
+        [(metric.name, metric.value) + metric.levels + metric.boundaries],
+    )
 
 
 def _aggregate(generator):

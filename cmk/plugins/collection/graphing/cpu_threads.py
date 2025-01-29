@@ -7,13 +7,6 @@ from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
-metric_thread_usage = metrics.Metric(
-    name="thread_usage",
-    title=Title("Thread usage"),
-    unit=metrics.Unit(metrics.DecimalNotation("%")),
-    color=metrics.Color.YELLOW,
-)
-
 metric_threads = metrics.Metric(
     name="threads",
     title=Title("Threads"),
@@ -39,20 +32,6 @@ perfometer_threads = perfometers.Perfometer(
     name="threads",
     focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(700)),
     segments=["threads"],
-)
-
-graph_thread_usage = graphs.Graph(
-    name="thread_usage",
-    title=Title("Thread usage"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=["thread_usage"],
-    simple_lines=[
-        metrics.WarningOf("thread_usage"),
-        metrics.CriticalOf("thread_usage"),
-    ],
 )
 
 graph_threads = graphs.Graph(

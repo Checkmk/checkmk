@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 checkname = "varnish"
@@ -24,7 +23,7 @@ mock_item_state = {
     "backend": {
         "varnish.backend_busy": (0.0, 0.0),
         "varnish.backend_unhealthy": (0.0, 0.0),
-        "varnish.backend_req": (0.0,15543010),
+        "varnish.backend_req": (0.0, 15543010),
         "varnish.backend_recycle": (0.0, 15535904),
         "varnish.backend_retry": (0.0, 46),
         "varnish.backend_fail": (0.0, 0),
@@ -67,7 +66,6 @@ mock_item_state = {
         "varnish.n_wrk_drop": (0.0, 0),
     },
 }
-
 
 
 info = [

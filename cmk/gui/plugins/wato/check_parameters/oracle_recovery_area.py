@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_recovery_area,
-        title=lambda: _("Oracle Recovery Area"),
+        title=lambda: _("Oracle recovery area"),
     )
 )

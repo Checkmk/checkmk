@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+
+check_info = {}
 
 # Example output:
 # Overall memory
@@ -60,6 +61,7 @@ def check_f5_bigip_mem(item, params, parsed):
 
 
 check_info["f5_bigip_mem"] = LegacyCheckDefinition(
+    name="f5_bigip_mem",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1",

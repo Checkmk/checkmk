@@ -9,11 +9,17 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupEnforcedServicesStorage,
 )
+from cmk.gui.valuespec import Dictionary
 
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="zpool_status",
         group=RulespecGroupEnforcedServicesStorage,
+        parameter_valuespec=lambda: Dictionary(
+            elements=(),
+            title=_("This plug-in has no paramaters"),
+            empty_text=_("This plug-in has no paramaters"),
+        ),
         title=lambda: _("ZFS storage pool status"),
     )
 )

@@ -6,11 +6,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
+
+check_info = {}
 
 
 def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
@@ -18,6 +18,7 @@ def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["emc_isilon"] = LegacyCheckDefinition(
+    name="emc_isilon",
     parse_function=parse_emc_isilon,
     detect=DETECT_ISILON,
     fetch=[
@@ -54,6 +55,7 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 
 check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
+    name="emc_isilon_clusterhealth",
     service_name="Cluster Health",
     sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_clusterhealth,
@@ -83,6 +85,7 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
 
 
 check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
+    name="emc_isilon_nodehealth",
     service_name="Node Health",
     sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_nodehealth,
@@ -107,6 +110,7 @@ def check_emc_isilon_nodes(item, _no_params, info):
 
 
 check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
+    name="emc_isilon_nodes",
     service_name="Nodes",
     sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_nodes,
@@ -126,6 +130,7 @@ def check_emc_isilon_names(item, _no_params, info):
 
 
 check_info["emc_isilon.names"] = LegacyCheckDefinition(
+    name="emc_isilon_names",
     service_name="Isilon Info",
     sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_names,

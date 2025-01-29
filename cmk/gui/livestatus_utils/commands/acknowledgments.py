@@ -2,8 +2,8 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module contains helpers to trigger acknowledgments.
-"""
+"""This module contains helpers to trigger acknowledgments."""
+
 from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
@@ -39,7 +39,7 @@ def acknowledge_service_problem(
             The host-name for which this acknowledgement is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         sticky:
             If set, only a state-change of the service to an OK state will discard the

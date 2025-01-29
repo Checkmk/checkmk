@@ -17,7 +17,9 @@ def main() {
             ).split("\n").collect({target -> target.trim()})
             targets.each({target ->
                 stage(target) {
-                    sh("make -C tests ${target}");
+                    lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
+                        sh("make -C tests ${target}");
+                    }
                 }
             })
         }

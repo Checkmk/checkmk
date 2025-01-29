@@ -8,13 +8,14 @@ import abc
 import functools
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any, final, TYPE_CHECKING
+from typing import final
+from wsgiref.types import StartResponse, WSGIEnvironment
+
+import cmk.ccc.store
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import url_prefix
 
 import cmk.utils.paths
-import cmk.utils.profile
-import cmk.utils.store
-import cmk.utils.version as cmk_version
-from cmk.utils.site import url_prefix
 
 import cmk.gui.auth
 import cmk.gui.session
@@ -22,18 +23,16 @@ from cmk.gui import login, pages, userdb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInSuperUser, user
+from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.session import session
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIEnvironment
+from cmk import trace
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -62,27 +61,44 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             if not authenticated:
                 return _handle_not_authenticated()
 
-            if isinstance(session.user, LoggedInSuperUser):
+            if isinstance(session.user, (LoggedInRemoteSite, LoggedInSuperUser)):
                 func()
                 return response
 
             user_id = session.user.ident
-            two_factor_ok = requested_file_name(request) in (
+
+            trace.get_current_span().set_attribute("cmk.auth.user_id", str(user_id))
+
+            two_factor_login_pages = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",
                 "user_webauthn_login_complete",
             )
 
-            if (
-                not two_factor_ok
-                and userdb.is_two_factor_login_enabled(user_id)
-                and not session.session_info.two_factor_completed
-            ):
+            two_factor_registration_pages = requested_file_name(request) in (
+                "user_two_factor_enforce",
+                "user_totp_register",
+                "user_webauthn_register_begin",
+                "user_webauthn_register_complete",
+            )
+
+            # Two factor login
+            if not two_factor_login_pages and session.two_factor_pending():
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
-            if not two_factor_ok and requested_file_name(request) != "user_change_pw":
+            # Enforce Two Factor
+            if (
+                not two_factor_registration_pages
+                and session.session_info.two_factor_required
+                and not session.session_info.two_factor_completed
+            ):
+                raise HTTPRedirect(
+                    "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                )
+
+            if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":
                 if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
                     raise HTTPRedirect(
                         f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
@@ -133,10 +149,7 @@ def _ensure_general_access() -> None:
         return
 
     reason = [
-        _(
-            "You are not authorized to use the Checkmk GUI. Sorry. "
-            "You are logged in as <b>%s</b>."
-        )
+        _("You are not authorized to use the Checkmk GUI. Sorry. You are logged in as <b>%s</b>.")
         % user.id
     ]
 
@@ -184,8 +197,8 @@ def _handle_not_authenticated() -> Response:
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
-    if cmk_version.edition() == cmk_version.Edition.CSE:
-        from cmk.gui.cse.userdb.cognito.pages import (  # pylint: disable=no-name-in-module
+    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
+        from cmk.gui.cse.userdb.cognito.pages import (
             SingleSignOn,
         )
 
@@ -213,27 +226,3 @@ def handle_unhandled_exception() -> Response:
     )
     # This needs to be cleaned up.
     return response
-
-
-def load_gui_log_levels() -> dict[str, int]:
-    """Load the GUI log-level global setting from the Setup GUI config"""
-    return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
-
-
-def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
-    """Load a single config option from Setup globals (Only for special use)
-
-    This is a small hack to get access to the current configuration without
-    the need to load the whole GUI config.
-
-    The problem is: The profiling setting is needed before the GUI config
-    is loaded regularly. This is needed, because we want to be able to
-    profile our whole WSGI app, including the config loading logic.
-
-    We only process the Setup written global settings file to get the WATO
-    settings, which should be enough for most cases.
-    """
-    settings = cmk.utils.store.load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
-    )
-    return settings.get(varname, deflt)

@@ -53,7 +53,7 @@ class FilterRange(Filter):
         html.javascript(
             f"""
             cmk.nodevis.utils.render_input_range(
-                    d3.select("#{self._filter_range_config.column}"),
+                    cmk.d3.select("#{self._filter_range_config.column}"),
                     {{
                         'id': "{self._filter_range_config.column}",
                         'title': "",
@@ -70,9 +70,7 @@ class FilterRange(Filter):
         )
 
     def _update_label(self) -> str:
-        return (
-            f"d3.select('label#{self._filter_range_config.column}_label').text(event.target.value);"
-        )
+        return f"cmk.d3.select('label#{self._filter_range_config.column}_label').text(event.target.value);"
 
 
 class FilterTopologyMeshDepth(FilterRange):

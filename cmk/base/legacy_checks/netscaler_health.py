@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 
-from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
@@ -39,6 +41,7 @@ def parse_netscaler_health(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_health"] = LegacyCheckDefinition(
+    name="netscaler_health",
     parse_function=parse_netscaler_health,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
@@ -72,6 +75,7 @@ def check_netscaler_health_fan(item, params, info):
 
 
 check_info["netscaler_health.fan"] = LegacyCheckDefinition(
+    name="netscaler_health_fan",
     service_name="FAN %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_fan,
@@ -79,7 +83,6 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (3500, 3000),
-        "upper": (None, None),
     },
 )
 # .
@@ -108,6 +111,7 @@ def check_netscaler_health_temp(item, params, info):
 
 
 check_info["netscaler_health.temp"] = LegacyCheckDefinition(
+    name="netscaler_health_temp",
     service_name="Temperature %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_temp,
@@ -128,11 +132,12 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
 #   |                          |_|                                         |
 #   +----------------------------------------------------------------------+
 
+PSU_STATE_PATTERN = re.compile(r"PowerSupply([\d])(Failure|)Status")
+
 
 def inventory_netscaler_health_psu(info):
     for name, state in info:
-        r = regex(r"PowerSupply([\d])(Failure|)Status")
-        m = r.match(name)
+        m = PSU_STATE_PATTERN.match(name)
         if m:
             if int(state) > 0:
                 yield m.group(1), None
@@ -155,6 +160,7 @@ def check_netscaler_health_psu(item, _no_params, info):
 
 
 check_info["netscaler_health.psu"] = LegacyCheckDefinition(
+    name="netscaler_health_psu",
     service_name="Power Supply %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_psu,

@@ -206,7 +206,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "holding_time_incoming",
                 Dictionary(
-                    title=_("Average holding time For incoming messages"),
+                    title=_("Average holding time for incoming messages"),
                     elements=[
                         (
                             "upper",

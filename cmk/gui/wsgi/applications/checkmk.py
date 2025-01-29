@@ -8,16 +8,17 @@ import functools
 import http.client as http_client
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from wsgiref.types import StartResponse, WSGIEnvironment
 
 import flask
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
+import cmk.ccc.store
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.paths
-import cmk.utils.profile
-import cmk.utils.store
-from cmk.utils.exceptions import MKException
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -33,7 +34,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.urls import requested_file_name
@@ -46,9 +47,10 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIEnvironment
+from cmk import trace
+from cmk.crypto import MKCryptoException
+
+tracer = trace.get_tracer()
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -60,9 +62,7 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # however have to make sure all errors get written out in plaintext, without HTML.
     #
     # Currently these are:
-    #  * noauth:run_cron
     #  * noauth:deploy_agent
-    #  * noauth:ajax_graph_images
     #  * noauth:automation
     #
     @functools.wraps(func)
@@ -72,9 +72,9 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
         except HTTPRedirect:
             raise
         except Exception as e:
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
             if active_config.debug:
-                html.write_text(traceback.format_exc())
+                html.write_text_permissive(traceback.format_exc())
 
         return response
 
@@ -85,7 +85,7 @@ def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if request.has_var("_plain_error"):
-        html.write_text(_("Page not found"))
+        html.write_text_permissive(_("Page not found"))
     else:
         title = _("Page not found")
         make_header(
@@ -122,7 +122,13 @@ def _render_exception(e: Exception, title: str) -> Response:
 
     if not fail_silently():
         make_header(html, title, Breadcrumb())
+        html.open_ts_container(
+            container="div",
+            function_name="insert_before",
+            arguments={"targetElementId": "main_page_content"},
+        )
         html.show_error(str(e))
+        html.close_div()
         html.footer()
 
     return response
@@ -156,13 +162,14 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
+    @tracer.instrument("CheckmkApp.wsgi_app")
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
-        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
+        with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(  # pylint: disable=too-many-branches
+def _process_request(
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
@@ -216,9 +223,12 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except MKException as e:
+    except (MKException, MKCryptoException) as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
+
+    except RequestEntityTooLarge as e:
+        resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
         resp = handle_unhandled_exception()

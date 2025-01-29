@@ -23,6 +23,7 @@ class CmkInvParams(BaseModel):
     hw_changes: int = 0
     sw_changes: int = 0
     sw_missing: int = 0
+    nw_changes: int = 0
 
 
 def generate_cmk_inv_commands(
@@ -36,6 +37,7 @@ def generate_cmk_inv_commands(
             f"--hw-changes={params.hw_changes}",
             f"--sw-changes={params.sw_changes}",
             f"--sw-missing={params.sw_missing}",
+            f"--nw-changes={params.nw_changes}",
             host_config.name,
         ],
     )

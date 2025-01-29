@@ -5,16 +5,18 @@
 """Modes for creating and editing hosts"""
 
 import abc
+import copy
 from collections.abc import Collection, Iterator
-from typing import overload
+from typing import Final, overload
+
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.tags
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
-import cmk.gui.watolib.bakery as bakery
 import cmk.gui.watolib.sites as watolib_sites
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -30,6 +32,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -38,6 +41,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
@@ -46,6 +50,7 @@ from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
+    folder_tree,
     Host,
     validate_all_hosts,
 )
@@ -62,6 +67,8 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ABCHostMode(WatoMode, abc.ABC):
+    VAR_HOST: Final = "host"
+
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
@@ -96,7 +103,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
     def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
         if folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         ).locked_hosts():
             return
 
@@ -142,7 +149,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
             Host(
-                folder_from_request(request.var("folder"), request.get_ascii_input("host")),
+                folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST)),
                 self._host.name(),
                 collect_attributes("cluster", new=False),
                 [],
@@ -158,7 +165,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                     "nodes_%d" % nr,
                     _(
                         "The node <b>%s</b> does not exist "
-                        " (must be a host that is configured with WATO)"
+                        " (must be a host that is configured via Setup)"
                     )
                     % cluster_node,
                 )
@@ -208,7 +215,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         errors = None
         if self._mode == "edit":
             errors = (
-                validate_all_hosts([self._host.name()]).get(self._host.name(), [])
+                validate_all_hosts(folder_tree(), [self._host.name()]).get(self._host.name(), [])
                 + self._host.validation_errors()
             )
 
@@ -241,7 +248,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         lock_message = ""
         locked_hosts = folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         ).locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
@@ -250,6 +257,8 @@ class ABCHostMode(WatoMode, abc.ABC):
                 lock_message = locked_hosts
         if lock_message:
             html.div(lock_message, class_="info")
+
+        self._page_form_quick_setup_warning()
 
         with html.form_context("edit_host", method="POST"):
             html.prevent_password_auto_completion()
@@ -260,21 +269,20 @@ class ABCHostMode(WatoMode, abc.ABC):
             ]
 
             if self._is_cluster():
-                if self._host:
-                    nodes = self._host.cluster_nodes()
-                    assert nodes is not None
-                else:
-                    nodes = []
+                nodes = self._host.cluster_nodes()
+                assert nodes is not None
                 basic_attributes += [
                     # attribute name, valuepec, default value
-                    ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
+                    ("nodes", self._vs_cluster_nodes(), nodes),
                 ]
 
             configure_attributes(
                 new=self._mode != "edit",
                 hosts={self._host.name(): self._host} if self._mode != "new" else {},
                 for_what="host" if not self._is_cluster() else "cluster",
-                parent=folder_from_request(request.var("folder"), request.get_ascii_input("host")),
+                parent=folder_from_request(
+                    request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+                ),
                 basic_attributes=basic_attributes,
             )
 
@@ -283,6 +291,14 @@ class ABCHostMode(WatoMode, abc.ABC):
 
             forms.end()
             html.hidden_fields()
+
+    def _page_form_quick_setup_warning(self) -> None:
+        if (
+            (locked_by := self._host.locked_by())
+            and is_locked_by_quick_setup(locked_by)
+            and request.get_ascii_input("mode") != "edit_configuration_bundle"
+        ):
+            quick_setup_locked_warning(locked_by, "host")
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
@@ -319,8 +335,7 @@ class ModeEditHost(ABCHostMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, host: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, host: str) -> str: ...
 
     @overload
     @classmethod
@@ -333,11 +348,19 @@ class ModeEditHost(ABCHostMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(host=self._host.name())
 
+    @classmethod
+    def set_vars(cls, host: HostName) -> None:
+        request.set_var(cls.VAR_HOST, host)
+
+    @property
+    def host(self) -> Host:
+        return self._host
+
     def _init_host(self) -> Host:
-        hostname = request.get_validated_type_input_mandatory(HostName, "host")
+        hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
         folder = folder_from_request(request.var("folder"), hostname)
         if not folder.has_host(hostname):
-            raise MKUserError("host", _("You called this page with an invalid host name."))
+            raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
         return host
 
@@ -367,7 +390,7 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -452,7 +475,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Properties"),
             icon_name="edit",
             item=make_simple_link(
-                folder_preserving_link([("mode", "edit_host"), ("host", host.name())])
+                folder_preserving_link([("mode", "edit_host"), (ABCHostMode.VAR_HOST, host.name())])
             ),
         )
 
@@ -461,7 +484,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Run service discovery"),
             icon_name="services",
             item=make_simple_link(
-                folder_preserving_link([("mode", "inventory"), ("host", host.name())])
+                folder_preserving_link([("mode", "inventory"), (ABCHostMode.VAR_HOST, host.name())])
             ),
         )
 
@@ -470,7 +493,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Test connection"),
             icon_name="analysis",
             item=make_simple_link(
-                folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
+                folder_preserving_link([("mode", "diag_host"), (ABCHostMode.VAR_HOST, host.name())])
             ),
         )
 
@@ -481,7 +504,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host.name()),
                     ("_test_host_notifications", 1),
                 ],
@@ -495,7 +518,9 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Effective parameters"),
             icon_name="rulesets",
             item=make_simple_link(
-                folder_preserving_link([("mode", "object_parameters"), ("host", host.name())])
+                folder_preserving_link(
+                    [("mode", "object_parameters"), (ABCHostMode.VAR_HOST, host.name())]
+                )
             ),
         )
 
@@ -534,12 +559,15 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
-        if user.may("wato.rename_hosts"):
+        locked_by_quick_setup = is_locked_by_quick_setup(host.locked_by())
+        if user.may("wato.rename_hosts") and not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Rename"),
                 icon_name="rename_host",
                 item=make_simple_link(
-                    folder_preserving_link([("mode", "rename_host"), ("host", host.name())])
+                    folder_preserving_link(
+                        [("mode", "rename_host"), (ABCHostMode.VAR_HOST, host.name())]
+                    )
                 ),
             )
 
@@ -550,17 +578,18 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 item=make_simple_link(host.clone_url()),
             )
 
-        yield PageMenuEntry(
-            title=_("Delete"),
-            icon_name="delete",
-            item=make_simple_link(
-                make_confirm_delete_link(
-                    url=makeactionuri(request, transactions, [("delete", "1")]),
-                    title=_("Delete host"),
-                    suffix=host.name(),
-                )
-            ),
-        )
+        if not locked_by_quick_setup:
+            yield PageMenuEntry(
+                title=_("Delete"),
+                icon_name="delete",
+                item=make_simple_link(
+                    make_confirm_delete_link(
+                        url=makeactionuri(request, transactions, [("delete", "1")]),
+                        title=_("Delete host"),
+                        suffix=host.name(),
+                    )
+                ),
+            )
 
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
@@ -619,13 +648,25 @@ class CreateHostMode(ABCHostMode):
             self._mode = "new"
 
     def _init_host(self) -> Host:
-        clonename = request.get_ascii_input("clone")
-        if not clonename:
+        self._clone_source: Host | None = None
+        clone_source_name = request.get_ascii_input("clone")
+        if not clone_source_name:
             return self._init_new_host_object()
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        if not folder.has_host(HostName(clonename)):
-            raise MKUserError("host", _("You called this page with an invalid host name."))
-        host = folder.load_host(HostName(clonename))
+
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST))
+        if not folder.has_host(HostName(clone_source_name)):
+            raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
+
+        # save the original host
+        self._clone_source = folder.load_host(HostName(clone_source_name))
+
+        host = copy.deepcopy(self._clone_source)
+
+        # remove the quick setup lock from the clone
+        if is_locked_by_quick_setup(host.locked_by()):
+            host.attributes.pop("locked_by", None)
+            host.attributes.pop("locked_attributes", None)
+
         self._verify_host_type(host)
         return host
 
@@ -636,8 +677,8 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        Hostname().validate_value(hostname, "host")
+        hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
+        Hostname().validate_value(hostname, self.VAR_HOST)
 
         folder = folder_from_request(request.var("folder"), hostname)
         if transactions.check_transaction():
@@ -680,6 +721,14 @@ class CreateHostMode(ABCHostMode):
 
         return redirect(mode_url("folder", folder=folder.path()))
 
+    def _page_form_quick_setup_warning(self) -> None:
+        if (
+            self._clone_source
+            and (locked_by := self._clone_source.locked_by())
+            and is_locked_by_quick_setup(locked_by)
+        ):
+            quick_setup_duplication_warning(locked_by, "host")
+
     def _vs_host_name(self):
         return Hostname(
             title=_("Host name"),
@@ -698,7 +747,9 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
-        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+        host_name = request.get_validated_type_input_mandatory(
+            HostName, cls.VAR_HOST, deflt=HostName("")
+        )
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,
@@ -731,7 +782,9 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
-        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+        host_name = request.get_validated_type_input_mandatory(
+            HostName, cls.VAR_HOST, deflt=HostName("")
+        )
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,

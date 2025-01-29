@@ -24,8 +24,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def add_key_values(data_dict, line):
@@ -122,16 +123,16 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
 
         if nodes:
             infotext = "{}: {}".format(role, ", ".join(nodes))
+        elif role != "Standby MDMs":
+            state, infotext = 2, "%s not found in agent output" % role
         else:
-            if role != "Standby MDMs":
-                state, infotext = 2, "%s not found in agent output" % role
-            else:
-                infotext = "%s: no" % role
+            infotext = "%s: no" % role
 
         yield state, infotext
 
 
 check_info["scaleio_mdm"] = LegacyCheckDefinition(
+    name="scaleio_mdm",
     parse_function=parse_scaleio_mdm,
     service_name="ScaleIO cluster status",
     discovery_function=inventory_scaleio_mdm,

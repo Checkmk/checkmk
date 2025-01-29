@@ -11,15 +11,15 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.watolib.mode import mode_registry
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
@@ -82,7 +82,7 @@ def mk_eval(s: bytes | str) -> Any:
     try:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
-        raise MKGeneralException(_("Unable to parse provided data: %s") % escape_to_html(repr(s)))
+        raise MKGeneralException(_("Unable to parse provided data: %s") % repr(s))
 
 
 def site_neutral_path(path: str | Path) -> str:

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 
 import sys
 from typing import Mapping
@@ -12,9 +11,9 @@ from typing import Mapping
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_jolokia_2 as mk_jolokia  # pylint: disable=syntax-error
+    import agents.plugins.mk_jolokia_2 as mk_jolokia
 else:
-    import agents.plugins.mk_jolokia as mk_jolokia
+    from agents.plugins import mk_jolokia
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
@@ -115,7 +114,7 @@ def test_jolokia_yield_configured_instances() -> None:
     assert next(yci) == {"server": "s2", "port": 1234}
 
 
-class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
+class _MockHttpResponse(object):
     def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
         self.headers = {}  # type: dict

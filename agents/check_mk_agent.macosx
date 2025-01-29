@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: This agent has beed adapted from the Checkmk linux agent.
+# NOTE: This agent has been adapted from the Checkmk linux agent.
 
 inpath() {
     # replace "if type [somecmd]" idiom
@@ -36,7 +36,7 @@ fi
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b1"
+    echo "Version: 2.5.0b1"
     echo "AgentOS: macosx"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

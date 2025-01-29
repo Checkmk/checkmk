@@ -19,6 +19,7 @@ using namespace std::string_view_literals;
 namespace column::attribute_list {
 
 // see MODATTR_FOO in nagios/common.h
+// NOLINTNEXTLINE(cert-err58-cpp)
 const std::map<std::string_view, unsigned long> known_attributes = {
     {"notifications_enabled"sv, 0},    {"active_checks_enabled"sv, 1},
     {"passive_checks_enabled"sv, 2},   {"event_handler_enabled"sv, 3},
@@ -63,6 +64,7 @@ unsigned long decode(const std::vector<AttributeBit> &mask) {
 std::vector<AttributeBit> encode(unsigned long mask) {
     std::vector<AttributeBit> out;
     modified_attributes values{mask};
+    out.reserve(values.size());
     for (std::size_t ii = 0; ii < values.size(); ++ii) {
         out.emplace_back(ii, values[ii]);
     }

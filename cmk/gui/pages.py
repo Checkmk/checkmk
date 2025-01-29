@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import functools
@@ -12,8 +11,8 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-import cmk.utils.plugin_registry
-from cmk.utils.exceptions import MKException
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKException
 
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
@@ -83,7 +82,7 @@ class AjaxPage(Page, abc.ABC):
             method()
         except MKException as e:
             response.status_code = http_client.BAD_REQUEST
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
             if active_config.debug:
@@ -93,7 +92,7 @@ class AjaxPage(Page, abc.ABC):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
 
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
@@ -119,7 +118,7 @@ class AjaxPage(Page, abc.ABC):
         response.set_data(json.dumps(resp))
 
 
-class PageRegistry(cmk.utils.plugin_registry.Registry[type[Page]]):
+class PageRegistry(cmk.ccc.plugin_registry.Registry[type[Page]]):
     def plugin_name(self, instance: type[Page]) -> str:
         return instance.ident()
 

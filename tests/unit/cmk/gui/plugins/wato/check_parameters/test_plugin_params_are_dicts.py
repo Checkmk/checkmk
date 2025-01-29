@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -31,11 +29,9 @@ def test_plugin_parameters_are_dict() -> None:
     findings = set()
     for element in rulespec_registry.values():
         if not (
-            element.group == RulespecGroupCheckParametersDiscovery
-            or element.group == RulespecGroupInventory
+            element.group in {RulespecGroupCheckParametersDiscovery, RulespecGroupInventory}
             or isinstance(
-                element,
-                (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem),
+                element, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
             )
         ):
             continue

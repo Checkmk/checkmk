@@ -80,7 +80,7 @@ PERMISSIONS = permissions.AllPerm(
     method="post",
     status_descriptions={
         200: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
-        302: (
+        303: (
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
         ),
@@ -93,7 +93,7 @@ PERMISSIONS = permissions.AllPerm(
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
     },
-    additional_status_codes=[302, 401, 403, 409, 422, 423],
+    additional_status_codes=[303, 401, 403, 409, 422, 423],
     etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
@@ -131,7 +131,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
 
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
-        response = Response(status=302)
+        response = Response(status=303)
         response.location = urlparse(wait_for["href"]).path
         return response
 
@@ -175,7 +175,7 @@ def _activation_run_domain_object(
     status_descriptions={
         204: "The activation has been completed.",
         302: (
-            "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
+            "The activation is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
         404: "There is no running activation with this activation_id.",
     },
@@ -201,8 +201,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
             detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
-    done = manager.wait_for_completion(timeout=request.request_timeout - 10)
-    if not done:
+    if manager.is_running():
         response = Response(status=302)
         response.location = urlparse(request.url).path
         return response
@@ -251,15 +250,16 @@ def show_activation(params: Mapping[str, Any]) -> Response:
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
 
-    return serve_json(
-        constructors.collection_object(
-            domain_type="activation_run",
-            value=[
+    value = []
+    for activation_id in get_activation_ids():
+        try:
+            value.append(
                 _activation_run_domain_object(get_restapi_response_for_activation_id(activation_id))
-                for activation_id in get_activation_ids()
-            ],
-        )
-    )
+            )
+        except MKUserError:
+            pass
+
+    return serve_json(constructors.collection_object(domain_type="activation_run", value=value))
 
 
 @Endpoint(

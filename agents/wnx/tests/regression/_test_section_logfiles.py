@@ -189,26 +189,29 @@ def verify_logstate():
             sorted(expected_logstate.items()), sorted(actual_logstate.items())
         ):
             assert expected_log == actual_log
-            assert (
-                expected_state[0] == actual_state[0]
-            ), "expected file id for log '%s' is %d but actual file id %d" % (
-                expected_log,
-                expected_state[0],
-                actual_state[0],
+            assert expected_state[0] == actual_state[0], (
+                "expected file id for log '%s' is %d but actual file id %d"
+                % (
+                    expected_log,
+                    expected_state[0],
+                    actual_state[0],
+                )
             )
-            assert (
-                expected_state[1] == actual_state[1]
-            ), "expected file size for log '%s' is %d but actual file size %d" % (
-                expected_log,
-                expected_state[1],
-                actual_state[1],
+            assert expected_state[1] == actual_state[1], (
+                "expected file size for log '%s' is %d but actual file size %d"
+                % (
+                    expected_log,
+                    expected_state[1],
+                    actual_state[1],
+                )
             )
-            assert (
-                expected_state[2] == actual_state[2]
-            ), "expected offset for log '%s' is %d but actual offset number %d" % (
-                expected_log,
-                expected_state[2],
-                actual_state[2],
+            assert expected_state[2] == actual_state[2], (
+                "expected offset for log '%s' is %d but actual offset number %d"
+                % (
+                    expected_log,
+                    expected_state[2],
+                    actual_state[2],
+                )
             )
 
 

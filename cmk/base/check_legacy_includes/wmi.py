@@ -6,12 +6,10 @@
 from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
-from cmk.base.check_api import check_levels, CheckResult
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
-from cmk.plugins.lib.wmi import get_wmi_time
+from cmk.plugins.lib.wmi import get_wmi_time, required_tables_missing, WMISection, WMITable
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -39,11 +37,11 @@ class WMITableLegacy(WMITable):
     Needed since WMITable.get raises IgnoreResultsError
     """
 
-    def get(  # type: ignore[no-untyped-def]
+    def get(
         self,
         row: str | int,
         column: str | int,
-        silently_skip_timed_out=False,
+        silently_skip_timed_out: bool = False,
     ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
             raise IgnoreResultsError("WMI query timed out")
@@ -97,12 +95,12 @@ def wmi_filter_global_only(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
+def inventory_wmi_table_instances(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
     levels: Mapping[str, object] | None = None,
-):
+) -> list[tuple]:
     if required_tables is None:
         required_tables = tables
 
@@ -124,11 +122,11 @@ def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     return [(row, levels or {}) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
+def inventory_wmi_table_total(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-):
+) -> list[tuple[None, dict]]:
     if required_tables is None:
         required_tables = tables
 
@@ -170,14 +168,14 @@ def get_levels_quadruple(params: tuple | dict[str, tuple] | None) -> tuple | Non
     return upper + lower
 
 
-def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_persec(
     table: WMITable,
     row: str | int,
     column: str | int,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
-) -> CheckResult:
+    levels: tuple | dict[str, tuple] | None = None,
+) -> LegacyCheckResult:
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
         # We expect to get `None` in this case.
@@ -208,15 +206,15 @@ def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_counter(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_counter(
     table: WMITable,
     row: str | int,
     column: str | int,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
     unit: str = "",
-) -> CheckResult:
+) -> LegacyCheckResult:
     if row == "":
         row = 0
 
@@ -312,7 +310,7 @@ def wmi_yield_raw_average(
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
     perfscale: float = 1.0,
-) -> CheckResult:
+) -> LegacyCheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
@@ -334,7 +332,7 @@ def wmi_yield_raw_average_timer(
     infoname: str | None,
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
-) -> CheckResult:
+) -> LegacyCheckResult:
     assert table.frequency
     try:
         average = (
@@ -363,7 +361,7 @@ def wmi_yield_raw_fraction(
     infoname: str | None,
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
-) -> CheckResult:
+) -> LegacyCheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:

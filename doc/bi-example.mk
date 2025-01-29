@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code=name-defined
-# pylint: disable=undefined-variable
+
+# ruff: noqa: F821
 
 aggregation_rules["host"] = (
     "Host $HOST$",

@@ -10,7 +10,9 @@ from typing import Any, NewType
 
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
@@ -148,7 +150,7 @@ def render_connections_page(
             table.row()
 
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(display_index)
+            html.write_text_permissive(display_index)
 
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
@@ -190,7 +192,7 @@ def render_connections_page(
             table.cell(_("ID"), connection_id)
             table.cell(_("Name"), connection.get("name", connection_id))
 
-            if cmk_version.edition() is cmk_version.Edition.CME:
+            if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
                 table.cell(_("Customer"), customer.get_customer_name(connection))
 
             table.cell(_("Description"))
@@ -199,16 +201,16 @@ def render_connections_page(
                 html.icon_button(
                     url, _("Context information about this connection"), "url", target="_blank"
                 )
-                html.write_text("&nbsp;")
-            html.write_text(connection["description"])
+                html.write_text_permissive("&nbsp;")
+            html.write_text_permissive(connection["description"])
 
 
 def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
-    _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
+    _changes.add_change(action_name, text, domains=[ConfigDomainGUI()], sites=sites)
 
 
 def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         # TODO CMK-14203
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)

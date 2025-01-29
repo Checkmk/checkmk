@@ -11,9 +11,9 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: 
-    #    - 127.0.0.1 
-    #    - 192.168.56.0/24 
+    only_from:
+    #    - 127.0.0.1
+    #    - 192.168.56.0/24
     #    - ::1
 
     # Change port where the agent is listening ( default 6556 )
@@ -39,7 +39,7 @@ global:
     # Restrict the following configuration variables
     # in [global] to the following hosts
     # ?????????
-    host: 
+    host:
         - '*'
 
     # Just output certain sections (e.g. for upper hosts)
@@ -60,7 +60,7 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
-        # enable/disable encryption of regular agent output (default: disabled) 
+        # enable/disable encryption of regular agent output (default: disabled)
         # yes or no
         encrypted: no
         # passphrase for encrypted communication.
@@ -74,14 +74,14 @@ global:
     # Disabling this may (very) slightly reduce network traffic.
     section_flush: no
 
-    # -------------------------------------------------------------- 
+    # --------------------------------------------------------------
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
         # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
-        location: 
+        location:
         # name of file log, default is check_mk.log
-        file : 
+        file :
         # log in file also internal debug messages, recommended when we have problems
         debug: no
         # you may send logging messages in realtime in windows debug sink, default is yes
@@ -96,7 +96,7 @@ winperf:
     # id is OS is
     # name is check mk name, should be
     counters:
-        - id: 10332 
+        - id: 10332
           name: msx_queues
         - id: 638
           name: tcp_conn
@@ -112,7 +112,7 @@ logfiles:
           observe:
               - 'C:\tmp': # this is folder
                   # below list of file to view on location
-                  - 'logfiles\message_*.log' 
+                  - 'logfiles\message_*.log'
                   - 'logfile\my*.log'
               - 'D:\log': #this is folder
                   - 'sample1.txt'
@@ -124,20 +124,20 @@ logfiles:
               warn:   'Unable to contact*'
               ignore: 'Backup * saved'
         - name: My special logs
-          observe: 
+          observe:
               - 'C:\tmp\memo.udf':
           patterns:
               ok:     '*mail sent*'
               warn:   '*overdue*'
         - name: My interesting logs
-          description: > 
-                this is my description which I can add to almost any iten 
+          description: >
+                this is my description which I can add to almost any iten
                 item ib the config file and see it in the log
-          observe: 
+          observe:
               - 'C:\tmp\memo.crit':
           # below is default
-          rotated: no     
-          context: yes      
+          rotated: no
+          context: yes
           from_start: no
           patterns:
               ok:     '*mail sent*'

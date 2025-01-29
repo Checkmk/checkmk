@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import {select} from "d3";
 
 import {BIForceConfig} from "./aggregations";
 import {
@@ -19,19 +19,18 @@ import {layout_style_class_registry} from "./layout_utils";
 import {link_type_class_registry} from "./link_utils";
 import {get_custom_node_settings, node_type_class_registry} from "./node_utils";
 import {SearchNodes} from "./search";
-import * as texts from "./texts";
-import {TranslationKey} from "./texts";
+import type {TranslationKey} from "./texts";
+import {get, set_translations} from "./texts";
 import {TopologyForceConfig} from "./topology";
-import {
+import type {
     BackendResponse,
     d3SelectionDiv,
     DatasourceType,
-    NodevisWorld,
     OverlayConfig,
-    OverlaysConfig,
     TopologyBackendResponse,
     TopologyFrontendConfig,
 } from "./type_defs";
+import {NodevisWorld, OverlaysConfig} from "./type_defs";
 import {LiveSearch, render_input_range, SearchFilters} from "./utils";
 import {Viewport} from "./viewport";
 
@@ -53,14 +52,14 @@ export class NodeVisualization {
     constructor(
         div_id: string,
         datasource: DatasourceType,
-        translations: Record<TranslationKey, string> | null = null
+        translations: Record<TranslationKey, string> | null = null,
     ) {
         this._div_id = div_id;
-        this._div_selection = d3
-            .select<HTMLDivElement, null>("#" + this._div_id)
-            .append("div");
+        this._div_selection = select<HTMLDivElement, null>(
+            "#" + this._div_id,
+        ).append("div");
 
-        if (translations) texts.set_translations(translations);
+        if (translations) set_translations(translations);
         this._world = this._create_world(datasource);
         this._world.datasource_manager.schedule(true);
     }
@@ -92,7 +91,7 @@ export class NodeVisualization {
             viewport_selection,
             datasource,
             this._get_force_config(),
-            () => this.update_browser_url()
+            () => this.update_browser_url(),
         );
 
         const world = new NodevisWorld(
@@ -103,7 +102,7 @@ export class NodeVisualization {
             () => this.update_data(),
             () => this.update_browser_url(),
             () => this.save_layout(),
-            () => this.delete_layout()
+            () => this.delete_layout(),
         );
 
         new SearchNodes(world, search_result_selection);
@@ -142,11 +141,11 @@ export class BIVisualization extends NodeVisualization {
 
     show_aggregations(list_of_aggregations: string[], use_layout_id: string) {
         const aggr_ds = this._world.datasource_manager.get_datasource(
-            AggregationsDatasource.id()
+            AggregationsDatasource.id(),
         ) as AggregationsDatasource;
         aggr_ds.enable();
         aggr_ds.subscribe_new_data(() =>
-            this._show_aggregations(list_of_aggregations)
+            this._show_aggregations(list_of_aggregations),
         );
         aggr_ds.fetch_aggregations(list_of_aggregations, use_layout_id);
     }
@@ -157,12 +156,10 @@ export class BIVisualization extends NodeVisualization {
 
     _show_aggregations(list_of_aggregations: string[]): void {
         if (list_of_aggregations.length > 0)
-            d3.select("table.header td.heading a").text(
-                list_of_aggregations[0]
-            );
+            select("table.header td.heading a").text(list_of_aggregations[0]);
 
         const aggr_ds = this._world.datasource_manager.get_datasource(
-            AggregationsDatasource.id()
+            AggregationsDatasource.id(),
         );
         const fetched_data = aggr_ds.get_data() as BackendResponse;
         this._world.viewport.feed_data(fetched_data);
@@ -185,7 +182,7 @@ class TopologySettings {
         display_mode = "parent_child",
         max_nodes = 2000,
         mesh_depth = 2,
-        overlays_config: {[name: string]: any} = {}
+        overlays_config: {[name: string]: any} = {},
     ) {
         this.growth_root_nodes = growth_root_nodes;
         this.growth_forbidden_nodes = growth_forbidden_nodes;
@@ -204,7 +201,7 @@ function _parse_topology_settings(data: TopologySettings): TopologySettings {
         data.growth_continue_nodes,
         data.display_mode,
         data.max_nodes,
-        data.mesh_depth
+        data.mesh_depth,
     );
 }
 
@@ -221,17 +218,17 @@ export class TopologyVisualization extends NodeVisualization {
     constructor(
         div_id: string,
         topology_type: string,
-        translations: Record<TranslationKey, string>
+        translations: Record<TranslationKey, string>,
     ) {
         super(div_id, "topology", translations);
         this._topology_type = topology_type;
         this._topology_datasource =
             this._world.datasource_manager.get_datasource(
-                TopologyDatasource.id()
+                TopologyDatasource.id(),
             ) as TopologyDatasource;
 
         this._livesearch = new LiveSearch("form#form_filter", () =>
-            this.update_data()
+            this.update_data(),
         );
         this._custom_node_settings_memory = {};
 
@@ -240,7 +237,7 @@ export class TopologyVisualization extends NodeVisualization {
 
         this._topology_datasource.enable();
         this._topology_datasource.subscribe_new_data(() =>
-            this._fetched_topology_data()
+            this._fetched_topology_data(),
         );
     }
 
@@ -267,7 +264,7 @@ export class TopologyVisualization extends NodeVisualization {
     update_filters(settings: TopologyFrontendConfig) {
         // Update filter form
         new SearchFilters().add_hosts_to_host_regex(
-            new Set(settings.growth_root_nodes)
+            new Set(settings.growth_root_nodes),
         );
     }
 
@@ -302,7 +299,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     toggle_compare_history(): boolean {
-        const div_compare = d3.select(".suggestion.topology_compare_history");
+        const div_compare = select(".suggestion.topology_compare_history");
         const icon = div_compare.select("img");
         const new_state = !icon.classed("on");
         icon.classed("on", new_state);
@@ -324,8 +321,8 @@ export class TopologyVisualization extends NodeVisualization {
             ]);
         });
         const data: SpanConfig[] = [
-            [texts.get("reference"), "reference", reference_options],
-            [texts.get("compare_to"), "compare_to", compare_to_options],
+            [get("reference"), "reference", reference_options],
+            [get("compare_to"), "compare_to", compare_to_options],
         ];
 
         if (!new_state) {
@@ -396,23 +393,22 @@ export class TopologyVisualization extends NodeVisualization {
 
     _fetched_topology_data() {
         this.show_topology(
-            this._topology_datasource.get_data() as TopologyBackendResponse
+            this._topology_datasource.get_data() as TopologyBackendResponse,
         );
     }
 
     show_topology(data: TopologyBackendResponse) {
-        if (data.headline)
-            d3.select("div.titlebar a.title").text(data.headline);
+        if (data.headline) select("div.titlebar a.title").text(data.headline);
 
         this._show_topology_errors(data.errors);
         this._frontend_configuration = data.frontend_configuration;
         this._world.viewport.finalize_status_message(
             "topology_fetch",
-            "Topology: Received data"
+            "Topology: Received data",
         );
 
         const overlays_configs = OverlaysConfig.create_from_json(
-            data.frontend_configuration.overlays_config
+            data.frontend_configuration.overlays_config,
         );
         this._world.viewport.set_overlays_config(overlays_configs);
         this._world.viewport.feed_data(data);
@@ -428,7 +424,7 @@ export class TopologyVisualization extends NodeVisualization {
             if (this._custom_node_settings_memory[node_id]) {
                 for (const [key, value] of Object.entries(
                     //@ts-ignore
-                    this._custom_node_settings_memory[node_id]
+                    this._custom_node_settings_memory[node_id],
                 )) {
                     //@ts-ignore
                     node.data[key] = value;
@@ -441,7 +437,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     _show_topology_errors(errors: string): void {
-        d3.select("label#max_nodes_error_text").text(errors);
+        select("label#max_nodes_error_text").text(errors);
     }
 
     override _get_force_config(): typeof ForceConfig {
@@ -477,7 +473,7 @@ export class TopologyVisualization extends NodeVisualization {
 
     _update_data(
         fetch_params: Record<string, string>,
-        frontend_config: TopologyFrontendConfig | null = null
+        frontend_config: TopologyFrontendConfig | null = null,
     ) {
         fetch_params["topology_type"] = this._topology_type;
         if (frontend_config)
@@ -485,14 +481,14 @@ export class TopologyVisualization extends NodeVisualization {
                 JSON.stringify(frontend_config);
         else
             fetch_params["topology_frontend_configuration"] = JSON.stringify(
-                this._compute_frontend_config()
+                this._compute_frontend_config(),
             );
         fetch_params["layout"] = JSON.stringify(
-            this._world.viewport.get_layout_manager().get_layout().serialize()
+            this._world.viewport.get_layout_manager().get_layout().serialize(),
         );
         this._world.viewport.add_status_message(
             "topology_fetch",
-            "Topology: Fetching data.."
+            "Topology: Fetching data..",
         );
         this._topology_datasource.fetch_hosts(fetch_params);
     }
@@ -501,7 +497,7 @@ export class TopologyVisualization extends NodeVisualization {
         for (const idx in overlays_config) {
             this._world.viewport.set_overlay_layer_config(
                 idx,
-                overlays_config[idx]
+                overlays_config[idx],
             );
         }
     }

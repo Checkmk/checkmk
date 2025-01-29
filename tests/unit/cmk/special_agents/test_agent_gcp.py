@@ -13,11 +13,11 @@ from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 
+from cmk.plugins.gcp.special_agents import agent_gcp
+
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = Aggregation.Aligner
 Reducer = Aggregation.Reducer
-
-from cmk.plugins.gcp.special_agents import agent_gcp
 
 METRIC_TYPE = "compute.googleapis.com/instance/uptime"
 METRIC_LABELS = {"instance_name": "instance-1"}
@@ -279,9 +279,9 @@ def test_asset_serialization(
 
 
 @pytest.fixture(name="asset_and_piggy_back_sections")
-def asset_and_piggy_back_sections_fixture() -> (
-    Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection]
-):
+def asset_and_piggy_back_sections_fixture() -> Sequence[
+    agent_gcp.PiggyBackSection | agent_gcp.AssetSection
+]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)

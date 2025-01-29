@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -94,13 +93,11 @@ def test_related_display_hints() -> None:
             == set(related_legacy_hints.by_key) - ignored_keys
         )
 
-    assert all(
-        _check_path(path)
-        and _check_legacy_hints(related_legacy_hints)
-        and _check_table_key_order(path, related_legacy_hints)
-        and _check_attributes_key_order(path, related_legacy_hints)
-        for path, related_legacy_hints in _get_related_legacy_hints(inventory_displayhints).items()
-    )
+    for path, related_legacy_hints in _get_related_legacy_hints(inventory_displayhints).items():
+        assert _check_path(path)
+        assert _check_legacy_hints(related_legacy_hints)
+        assert _check_table_key_order(path, related_legacy_hints)
+        assert _check_attributes_key_order(path, related_legacy_hints)
 
 
 def test_missing_table_keyorder() -> None:
@@ -144,11 +141,11 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             NodeDisplayHint(
                 path=(),
                 icon="",
-                title="Inventory Tree",
-                short_title="Inventory Tree",
-                long_title="Inventory Tree",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                title="Inventory tree",
+                short_title="Inventory tree",
+                long_title="Inventory tree",
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -161,8 +158,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Hardware",
                 short_title="Hardware",
                 long_title="Hardware",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -176,63 +173,63 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Processor",
                 long_title="Hardware ➤ Processor",
                 # The single attribute hints are not checked here
-                attributes=OrderedDict(
-                    arch=AttributeDisplayHint(
+                attributes={
+                    SDKey("arch"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    max_speed=AttributeDisplayHint(
+                    SDKey("max_speed"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    model=AttributeDisplayHint(
+                    SDKey("model"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    type=AttributeDisplayHint(
+                    SDKey("type"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    threads=AttributeDisplayHint(
+                    SDKey("threads"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    smt_threads=AttributeDisplayHint(
+                    SDKey("smt_threads"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cpu_max_capa=AttributeDisplayHint(
+                    SDKey("cpu_max_capa"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cpus=AttributeDisplayHint(
+                    SDKey("cpus"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    logical_cpus=AttributeDisplayHint(
+                    SDKey("logical_cpus"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cores=AttributeDisplayHint(
+                    SDKey("cores"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cores_per_cpu=AttributeDisplayHint(
+                    SDKey("cores_per_cpu"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    threads_per_cpu=AttributeDisplayHint(
+                    SDKey("threads_per_cpu"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cache_size=AttributeDisplayHint(
+                    SDKey("cache_size"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    bus_speed=AttributeDisplayHint(
+                    SDKey("bus_speed"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    voltage=AttributeDisplayHint(
+                    SDKey("voltage"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    sharing_mode=AttributeDisplayHint(
+                    SDKey("sharing_mode"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    implementation_mode=AttributeDisplayHint(
+                    SDKey("implementation_mode"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    entitlement=AttributeDisplayHint(
+                    SDKey("entitlement"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                ),
-                columns=OrderedDict(),
+                },
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -250,31 +247,31 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Docker images",
                 short_title="Docker images",
                 long_title="Docker ➤ Docker images",
-                attributes=OrderedDict(),
+                attributes={},
                 # The single column hints are not checked here
-                columns=OrderedDict(
-                    id=ColumnDisplayHint(
+                columns={
+                    SDKey("id"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    creation=ColumnDisplayHint(
+                    SDKey("creation"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    size=ColumnDisplayHint(
+                    SDKey("size"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    labels=ColumnDisplayHint(
+                    SDKey("labels"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    amount_containers=ColumnDisplayHint(
+                    SDKey("amount_containers"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    repotags=ColumnDisplayHint(
+                    SDKey("repotags"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    repodigests=ColumnDisplayHint(
+                    SDKey("repodigests"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                ),
+                },
                 table_view_name="invdockerimages",
                 table_is_show_more=False,
             ),
@@ -287,8 +284,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Node",
                 short_title="Node",
                 long_title="To ➤ Node",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -322,8 +319,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_is_show_more=True,
                 table_view_name="",
             ),
@@ -336,8 +333,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_is_show_more=True,
                 table_view_name="",
             ),
@@ -350,8 +347,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Software",
                 short_title="Software",
                 long_title="Software",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -369,28 +366,28 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Docker containers",
                 short_title="Docker containers",
                 long_title="Docker ➤ Docker containers",
-                attributes=OrderedDict(),
+                attributes={},
                 # The single column hints are not checked here
-                columns=OrderedDict(
-                    id=ColumnDisplayHint(
+                columns={
+                    SDKey("id"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    creation=ColumnDisplayHint(
+                    SDKey("creation"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    name=ColumnDisplayHint(
+                    SDKey("name"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    labels=ColumnDisplayHint(
+                    SDKey("labels"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    status=ColumnDisplayHint(
+                    SDKey("status"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    image=ColumnDisplayHint(
+                    SDKey("image"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                ),
+                },
                 table_view_name="invdockercontainers",
                 table_is_show_more=False,
             ),
@@ -401,7 +398,7 @@ def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
     node_hint = inv_display_hints.get_node_hint(
-        cmk.gui.inventory.InventoryPath.parse(raw_path).path
+        cmk.gui.inventory.parse_inventory_path(raw_path).path
     )
 
     assert node_hint.ident == "_".join(("inv",) + node_hint.path)
@@ -436,9 +433,9 @@ def test_make_node_displayhint_from_hint(
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
-                title="Operational Status",
-                short_title="Operational Status",
-                long_title="Network interfaces ➤ Operational Status",
+                title="Operational status",
+                short_title="Operational status",
+                long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
@@ -497,9 +494,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
-                title="Package Version",
-                short_title="Package Version",
-                long_title="Software packages ➤ Package Version",
+                title="Package version",
+                short_title="Package version",
+                long_title="Software packages ➤ Package version",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableText,
@@ -530,9 +527,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
-                title="Operational Status",
-                short_title="Operational Status",
-                long_title="Network interfaces ➤ Operational Status",
+                title="Operational status",
+                short_title="Operational status",
+                long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
@@ -541,7 +538,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     ],
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
-    inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
+    inventory_path = cmk.gui.inventory.parse_inventory_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
@@ -575,7 +572,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             AttributeDisplayHint(
                 title="Size",
                 short_title="Size",
-                long_title="Block Devices ➤ Size",
+                long_title="Block devices ➤ Size",
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 data_type="size",
@@ -626,9 +623,9 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
-                title="CPU Architecture",
-                short_title="CPU Architecture",
-                long_title="Processor ➤ CPU Architecture",
+                title="CPU architecture",
+                short_title="CPU architecture",
+                long_title="Processor ➤ CPU architecture",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 data_type="str",
@@ -652,7 +649,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
-    inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
+    inventory_path = cmk.gui.inventory.parse_inventory_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )

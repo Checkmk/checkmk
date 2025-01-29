@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.cisco import DETECT_CISCO
+
+check_info = {}
 
 # .1.3.6.1.4.1.9.9.117.1.1.1.1.2.16  "centiAmpsAt12V"
 #  some more examples (but we dont know all):
@@ -78,6 +79,7 @@ def inventory_cisco_fru_powerusage(parsed):
 
 
 check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
+    name="cisco_fru_powerusage",
     detect=DETECT_CISCO,
     fetch=[
         SNMPTree(

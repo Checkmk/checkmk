@@ -7,12 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 # pylint: disable=cmk-module-layer-violation
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 
 @pytest.mark.parametrize(
@@ -35,10 +35,10 @@ from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_det
     ],
 )
 def test_safenet_hsm_snmp_detection(
-    fix_register: FixRegister, oid_data: Mapping[str, str], detected: set[str]
+    agent_based_plugins: AgentBasedPlugins, oid_data: Mapping[str, str], detected: set[str]
 ) -> None:
     for name in detected:
-        section = fix_register.snmp_sections.get(SectionName(name))
+        section = agent_based_plugins.snmp_sections[SectionName(name)]
 
         assert (
             evaluate_snmp_detection(

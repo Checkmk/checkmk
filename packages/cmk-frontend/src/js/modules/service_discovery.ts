@@ -4,9 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as async_progress from "./async_progress";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {hide_msg, monitor, show_error, show_info} from "./async_progress";
+import {
+    add_class,
+    add_event_handler,
+    content_scrollbar,
+    execute_javascript_by_object,
+    has_class,
+    is_in_viewport,
+    remove_class,
+    time,
+    update_pending_changes,
+} from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -66,7 +76,7 @@ interface ServiceDiscoveryHandlerData {
     error_function: (response: AjaxServiceDiscovery) => void;
     update_function: (
         update_data: ServiceDiscoveryHandlerData,
-        response: AjaxServiceDiscovery
+        response: AjaxServiceDiscovery,
     ) => void;
     is_finished_function: (response: AjaxServiceDiscovery) => void;
     finish_function: (response: AjaxServiceDiscovery) => void;
@@ -82,23 +92,23 @@ export function start(
     folder_path: string,
     discovery_options: DiscoveryOptions,
     transid: string,
-    request_vars: Record<string, any> | null
+    request_vars: Record<string, any> | null,
 ) {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = window.setTimeout(function () {
-        async_progress.show_info("Updating...");
+        show_info("Updating...");
     }, 2000);
 
     lock_controls(
         true,
-        get_state_independent_controls().concat(get_page_menu_controls())
+        get_state_independent_controls().concat(get_page_menu_controls()),
     );
-    async_progress.monitor({
+    monitor({
         update_url: "ajax_service_discovery.py",
         host_name: host_name,
         folder_path: folder_path,
         transid: transid,
-        start_time: utils.time(),
+        start_time: time(),
         is_finished_function: (response: AjaxServiceDiscovery) =>
             response.is_finished,
         update_function: update,
@@ -109,7 +119,7 @@ export function start(
             folder_path,
             discovery_options,
             transid,
-            request_vars
+            request_vars,
         ),
     });
 }
@@ -119,7 +129,7 @@ function get_post_data(
     folder_path: string,
     discovery_options: DiscoveryOptions,
     transid: string,
-    request_vars: Record<string, any> | null
+    request_vars: Record<string, any> | null,
 ) {
     let request: Record<string, any> = {
         host_name: host_name,
@@ -135,7 +145,7 @@ function get_post_data(
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         const checked_checkboxes: string[] = [];
         const checkboxes = document.getElementsByClassName(
-            "service_checkbox"
+            "service_checkbox",
         ) as HTMLCollectionOf<HTMLInputElement>;
         for (let i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
@@ -157,7 +167,7 @@ function get_post_data(
 
 function finish(response: AjaxServiceDiscovery) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
-        async_progress.show_error(response.message!);
+        show_error(response.message!);
     } else {
         //async_progress.hide_msg();
     }
@@ -171,21 +181,21 @@ function error(response: string) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
-    async_progress.show_error(response);
+    show_error(response);
 }
 
 function update(
     handler_data: ServiceDiscoveryHandlerData,
-    response: AjaxServiceDiscovery
+    response: AjaxServiceDiscovery,
 ) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
 
     if (response.message) {
-        async_progress.show_info(response.message);
+        show_info(response.message);
     } else {
-        async_progress.hide_msg();
+        hide_msg();
     }
 
     g_service_discovery_result = response.discovery_result;
@@ -194,7 +204,7 @@ function update(
         handler_data.folder_path,
         response.discovery_options,
         handler_data.transid,
-        null
+        null,
     );
 
     // Save values not meant for update
@@ -202,8 +212,9 @@ function update(
 
     // Update the page menu
     const page_menu_bar = document.getElementById("page_menu_bar")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     page_menu_bar.outerHTML = response.page_menu;
-    utils.execute_javascript_by_object(page_menu_bar);
+    execute_javascript_by_object(page_menu_bar);
 
     // Set saved values to old value
     document
@@ -212,24 +223,27 @@ function update(
 
     // Update datasources
     const ds_container = document.getElementById("datasources_container")!;
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     ds_container.innerHTML = response.datasources;
 
     // Update fix all button
     const fixall_container = document.getElementById("fixall_container")!;
     fixall_container.style.display = response.fixall ? "block" : "none";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     fixall_container.innerHTML = response.fixall;
-    utils.execute_javascript_by_object(fixall_container);
+    execute_javascript_by_object(fixall_container);
 
     // Update the content table
     const container = document.getElementById("service_container")!;
     container.style.display = "block";
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.innerHTML = response.body;
-    utils.execute_javascript_by_object(container);
+    execute_javascript_by_object(container);
 
     if (response.pending_changes_info) {
-        utils.update_pending_changes(
+        update_pending_changes(
             response.pending_changes_info,
-            response.pending_changes_tooltip
+            response.pending_changes_tooltip,
         );
     }
 
@@ -242,21 +256,21 @@ function get_state_independent_controls() {
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_checkbox"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_button"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call<
             HTMLCollectionOf<Element>,
             [number],
             HTMLElement[]
-        >(document.getElementsByClassName("toggle"), 0)
+        >(document.getElementsByClassName("toggle"), 0),
     );
     return elements;
 }
@@ -275,8 +289,8 @@ function lock_controls(lock: boolean, elements: HTMLElement[]) {
         element = elements[i];
         if (!element) continue;
 
-        if (lock) utils.add_class(element, "disabled");
-        else utils.remove_class(element, "disabled");
+        if (lock) add_class(element, "disabled");
+        else remove_class(element, "disabled");
 
         //@ts-ignore
         element.disabled = lock;
@@ -291,16 +305,16 @@ export function register_delayed_active_check(
     hostname: string,
     checktype: string,
     item: string | null,
-    divid: string
+    divid: string,
 ) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
-        utils
-            //@ts-ignore
-            .content_scrollbar()!
+        //2531: Object is possibly 'null'
+        // @ts-ignore
+        content_scrollbar("")!
             .getScrollElement()
             .addEventListener("scroll", trigger_delayed_active_checks);
-        utils.add_event_handler("resize", trigger_delayed_active_checks);
+        add_event_handler("resize", trigger_delayed_active_checks);
     }
 
     g_delayed_active_checks.push({
@@ -322,7 +336,7 @@ function trigger_delayed_active_checks() {
     let i = num_delayed;
     while (i--) {
         const entry = g_delayed_active_checks[i];
-        if (utils.is_in_viewport(document.getElementById(entry.divid)!)) {
+        if (is_in_viewport(document.getElementById(entry.divid)!)) {
             execute_active_check(entry);
             g_delayed_active_checks.splice(i, 1);
         }
@@ -332,7 +346,7 @@ function trigger_delayed_active_checks() {
 
 export function execute_active_check(entry: Check) {
     const div = document.getElementById(entry.divid)!;
-    ajax.call_ajax("wato_ajax_execute_check.py", {
+    call_ajax("wato_ajax_execute_check.py", {
         post_data:
             "site=" +
             encodeURIComponent(entry.site) +
@@ -365,19 +379,21 @@ function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
         output = response.result.output;
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     oDiv.innerHTML = output;
 
     // Change name and class of status columns
     const oTr = oDiv.parentNode!.parentNode as HTMLElement;
-    if (utils.has_class(oTr, "even0")) utils.add_class(oTr, "even" + state);
-    else utils.add_class(oTr, "odd" + state);
+    if (has_class(oTr, "even0")) add_class(oTr, "even" + state);
+    else add_class(oTr, "odd" + state);
 
     const oTdState = oTr.getElementsByClassName("state")[0] as HTMLElement;
-    utils.remove_class(oTdState, "statep");
-    utils.add_class(oTdState, "state" + state);
+    remove_class(oTdState, "statep");
+    add_class(oTdState, "state" + state);
 
     const span = document.createElement("span");
-    utils.add_class(span, "state_rounded_fill");
+    add_class(span, "state_rounded_fill");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     span.innerHTML = statename;
     oTdState.replaceChild(span, oTdState.firstChild!);
 }

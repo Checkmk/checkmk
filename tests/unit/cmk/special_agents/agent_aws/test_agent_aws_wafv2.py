@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
-
+from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Literal, Protocol
 
@@ -105,7 +103,9 @@ def create_sections(
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+    )
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -200,7 +200,7 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
     # TODO: This is plainly wrong, the client can't be None.

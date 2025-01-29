@@ -69,8 +69,8 @@ def _parameter_valuespec_azure_agent_info():
                 Tuple(
                     title=_("Lower levels for remaining API reads"),
                     elements=[
-                        Integer(title=_("Warning below"), default_value=6000),
-                        Integer(title=_("Critical below"), default_value=3000),
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
                     ],
                 ),
             ),
@@ -252,14 +252,14 @@ rulespec_registry.register(
 
 def _item_spec_azure_databases():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_("Specify database names that the rule should apply to"),
     )
 
 
 def _parameter_valuespec_azure_databases():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "storage_percent_levels",
@@ -290,6 +290,10 @@ def _parameter_valuespec_azure_databases():
                         Float(title=_("Critical at"), unit=_("%"), default_value=50.0),
                     ],
                 ),
+            ),
+            (
+                "deadlocks_levels",
+                SimpleLevels(Float, title=_("Average deadlock count")),
             ),
         ],
     )
@@ -366,7 +370,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
-        title=lambda: _("Azure Virtual Machines"),
+        title=lambda: _("Azure virtual machines"),
     )
 )
 
@@ -470,7 +474,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure Virtual Machines Summary"),
+        title=lambda: _("Azure virtual machines summary"),
     )
 )
 

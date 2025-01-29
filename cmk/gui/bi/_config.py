@@ -9,20 +9,21 @@ import json
 from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
-import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import GroupName
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.site import omd_site
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
-import cmk.gui.forms as forms
-import cmk.gui.utils.escaping as escaping
+from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
+
 import cmk.gui.watolib.changes as _changes
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
+from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -47,6 +48,8 @@ from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, Icon, PermissionName
+from cmk.gui.utils import escaping
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
@@ -252,7 +255,7 @@ class ABCBIMode(WatoMode):
 
     def _add_change(self, action_name: str, text: LogMessage) -> None:
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
-        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=site_ids)
+        _changes.add_change(action_name, text, domains=[ConfigDomainGUI()], sites=site_ids)
 
     def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])
@@ -283,7 +286,7 @@ class ABCBIMode(WatoMode):
         if not sub_rule_ids:
             html.open_li()
             html.open_a(href=edit_url)
-            html.write_text(title)
+            html.write_text_permissive(title)
             html.close_a()
             html.close_li()
         else:
@@ -346,6 +349,8 @@ class ModeBIEditPack(ABCBIMode):
         return _("Add BI Pack")
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, "bi_pack")
@@ -440,13 +445,13 @@ class ModeBIEditPack(ABCBIMode):
                     "contact_groups",
                     ListOf(
                         valuespec=ContactGroupSelection(),
-                        title=_("Permitted Contact Groups"),
+                        title=_("Permitted contact groups"),
                         help=_(
                             "The rules and aggregations in this pack can be edited by all members of the "
                             "contact groups specified here - even if they have no administrator priviledges."
                         ),
                         movable=False,
-                        add_label=_("Add Contact Group"),
+                        add_label=_("Add contact group"),
                     ),
                 ),
                 (
@@ -593,7 +598,7 @@ class ModeBIPacks(ABCBIMode):
 
                 table.row()
                 table.cell("#", css=["narrow", "nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
@@ -622,7 +627,9 @@ class ModeBIPacks(ABCBIMode):
                 table.cell(_("Rules"), str(len(pack.rules)), css=["number"])
                 table.cell(
                     _("Contact groups"),
-                    HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
+                    HTML.without_escaping(", ").join(
+                        map(self._render_contact_group, pack.contact_groups)
+                    ),
                 )
 
     def _render_contact_group(self, c: GroupName) -> HTML:
@@ -670,8 +677,7 @@ class ModeBIRules(ABCBIMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, pack: str) -> str: ...
 
     @overload
     @classmethod
@@ -744,7 +750,7 @@ class ModeBIRules(ABCBIMode):
                                         button_name="_bulk_delete_bi_rules",
                                         title=_("Delete selected rules"),
                                     ),
-                                    is_enabled=bool(self.bi_pack and self.bi_pack.num_rules() > 0),
+                                    is_enabled=bool(self.bi_pack.num_rules() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move rules"),
@@ -752,8 +758,7 @@ class ModeBIRules(ABCBIMode):
                                     name="move_rules",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_rules() > 0
+                                        self.bi_pack.num_rules() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),
@@ -924,7 +929,7 @@ class ModeBIRules(ABCBIMode):
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return HTML()
+                return HTML.empty()
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
@@ -945,7 +950,7 @@ class ModeBIRules(ABCBIMode):
                 "_bulk_move_bi_rules", _("Bulk move"), "submit", form="form_bulk_action_form"
             )
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _show_bulk_move_choices(self) -> list[tuple[str, str]]:
         return [
@@ -984,7 +989,7 @@ class ModeBIRules(ABCBIMode):
                     html.checkbox("_c_rule_%s" % rule_id)
 
                     table.cell("#", css=["narrow nowrap"])
-                    html.write_text(nr)
+                    html.write_text_permissive(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     edit_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("id", rule_id)], self.bi_pack
@@ -1041,11 +1046,11 @@ class ModeBIRules(ABCBIMode):
                     if bi_rule.properties.icon:
                         cell_title: HTML | str = (
                             html.render_icon(bi_rule.properties.icon)
-                            + HTML("&nbsp;")
-                            + escaping.escape_to_html(bi_rule.properties.title)
+                            + HTMLWriter.render_nbsp()
+                            + HTML.with_escaping(bi_rule.properties.title)
                         )
                     else:
-                        cell_title = escaping.escape_to_html(bi_rule.properties.title)
+                        cell_title = HTML.with_escaping(bi_rule.properties.title)
                     table.cell(_("Title"), cell_title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(
@@ -1170,6 +1175,8 @@ class ModeBIEditRule(ABCBIMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
@@ -1177,7 +1184,11 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
-        schema_validated_config = BIRuleSchema().dump(vs_rule_config)
+        # We use the schema only for validation here. We need this schema.load(schema.dump(...))
+        # call, because the value for label conditions as given in the schema format cannot be
+        # processed later on, e.g. in the BI searcher's label filtering
+        schema_inst = BIRuleSchema()
+        schema_validated_config = schema_inst.load(schema_inst.dump(vs_rule_config))
         self._validate_rule_id(schema_validated_config["id"])
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
@@ -1239,6 +1250,7 @@ class ModeBIEditRule(ABCBIMode):
 
     def page(self) -> None:
         self.verify_pack_permission(self.bi_pack)
+        schema_inst = BIRuleSchema()
 
         if self._new:
             cloneid = request.var("clone")
@@ -1249,7 +1261,7 @@ class ModeBIEditRule(ABCBIMode):
                 except KeyError:
                     raise MKGeneralException(_("This BI rule does not exist"))
             else:
-                default_value = BIRuleSchema().dump({"pack_id": self.bi_pack.id})
+                default_value = schema_inst.dump({"pack_id": self.bi_pack.id})
                 bi_rule = BIRule(default_value)
         else:
             bi_rule = self.bi_pack.get_rule_mandatory(self.rule_id)
@@ -1257,7 +1269,10 @@ class ModeBIEditRule(ABCBIMode):
         self._may_use_rules_from_packs(bi_rule)
 
         with html.form_context("birule", method="POST"):
-            rule_vs_config = BIRuleSchema().dump(bi_rule)
+            # For rendering of the BI rule valuespecs we need this schema.load(schema.dump(...))
+            # call, because the value for label conditions as given in the schema format cannot be
+            # rendered by the LabelGroups valuespec
+            rule_vs_config = schema_inst.load(schema_inst.dump(bi_rule))
             self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
             forms.end()
             html.hidden_fields()
@@ -1338,7 +1353,7 @@ class ModeBIEditRule(ABCBIMode):
                 "docu_url",
                 TextInput(
                     title=_("Documentation URL"),
-                    help=HTML(
+                    help=HTML.without_escaping(
                         _(
                             "An optional URL pointing to documentation or any other page. This will be "
                             "displayed as an icon %s and open "
@@ -1424,9 +1439,9 @@ class ModeBIEditRule(ABCBIMode):
                     help=_(
                         # xgettext: no-python-format
                         "This option allows you to display an additional, freely configurable text, to the rule outcome, "
-                        "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
+                        "which may describe the state in more detail. For example, instead of <tt>CRIT</tt>, the rule can now "
                         "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
-                        "check plugins."
+                        "check plug-ins."
                     ),
                     label=_("Add messages"),
                 ),
@@ -1599,7 +1614,7 @@ def _finalize_preview_response(response: list[dict]) -> list[dict]:
 
 
 class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         *,
         type: str | None = "hierarchy",
@@ -1688,7 +1703,10 @@ class BIModeEditAggregation(ABCBIMode):
             try:
                 bi_aggregation = self.bi_pack.get_aggregation_mandatory(clone_id)
                 self._bi_aggregation = bi_aggregation.clone()
-                self._bi_aggregation.id = ""
+                self._bi_aggregation.id = unique_clone_increment_suggestion(
+                    self._bi_aggregation.id,
+                    list(self.bi_pack.get_aggregations()),
+                )
             except KeyError:
                 raise MKUserError("id", _("This BI aggregation does not exist"))
         elif aggr_id == "":
@@ -1729,15 +1747,25 @@ class BIModeEditAggregation(ABCBIMode):
         return ids
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction():
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
-        vs_aggregation = self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id)
+        vs_aggregation = self.get_vs_aggregation(
+            aggregation_id=request.get_str_input_mandatory(
+                varname="aggr_p_id", deflt=self._bi_aggregation.id
+            )
+        )
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
 
-        schema_validated_config = BIAggregationSchema().dump(vs_aggregation_config)
+        # We use the schema only for validation here. We need this schema.load(schema.dump(...))
+        # call, because the value for label conditions as given in the schema format cannot be
+        # processed later on, e.g. in the BI searcher's label filtering
+        schema_inst = BIAggregationSchema()
+        schema_validated_config = schema_inst.load(schema_inst.dump(vs_aggregation_config))
         new_bi_aggregation = BIAggregation(schema_validated_config)
 
         aggregation_ids = self._get_aggregations_by_id()
@@ -1778,10 +1806,16 @@ class BIModeEditAggregation(ABCBIMode):
 
     def page(self) -> None:
         with html.form_context("biaggr", method="POST"):
-            aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
-            self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
-                "aggr", aggr_vs_config
-            )
+            # For rendering of the BI aggregation valuespecs we need this
+            # schema.load(schema.dump(...)) call, because the value for label conditions as given in
+            # the schema format cannot be rendered by the LabelGroups valuespec
+            schema_inst = BIAggregationSchema()
+            aggr_vs_config = schema_inst.load(schema_inst.dump(self._bi_aggregation))
+
+            self.get_vs_aggregation(
+                aggregation_id=self._bi_aggregation.id,
+                aggregation_exists=(self._bi_aggregation.id in self.bi_pack.get_aggregations()),
+            ).render_input("aggr", aggr_vs_config)
             forms.end()
             html.hidden_fields()
             html.set_focus("aggr_p_groups_0")
@@ -1789,11 +1823,13 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
+    def get_vs_aggregation(
+        cls, aggregation_id: str | None, aggregation_exists: bool = True
+    ) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
 
-        if aggregation_id:
+        if aggregation_id and aggregation_exists:
             id_valuespec: ValueSpec = FixedValue(
                 value=aggregation_id,
                 title=_("Aggregation ID"),
@@ -1828,7 +1864,7 @@ class BIModeEditAggregation(ABCBIMode):
         if value.endswith(".new"):
             raise MKUserError(
                 varprefix,
-                _("The suffix .new is a reserved keyword an cannot be used as aggregation id"),
+                _("The suffix .new is a reserved keyword and cannot be used as aggregation id"),
             )
 
     @classmethod
@@ -2000,8 +2036,7 @@ class BIModeAggregations(ABCBIMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, pack: str) -> str: ...
 
     @overload
     @classmethod
@@ -2119,9 +2154,7 @@ class BIModeAggregations(ABCBIMode):
                                         button_name="_bulk_delete_bi_aggregations",
                                         title=_("Delete selected aggregations"),
                                     ),
-                                    is_enabled=bool(
-                                        self.bi_pack and self.bi_pack.num_aggregations() > 0
-                                    ),
+                                    is_enabled=bool(self.bi_pack.num_aggregations() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move aggregations"),
@@ -2129,8 +2162,7 @@ class BIModeAggregations(ABCBIMode):
                                     name="move_aggregations",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_aggregations() > 0
+                                        self.bi_pack.num_aggregations() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),
@@ -2185,7 +2217,7 @@ class BIModeAggregations(ABCBIMode):
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return HTML()
+                return HTML.empty()
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
@@ -2205,7 +2237,7 @@ class BIModeAggregations(ABCBIMode):
             html.button(
                 "_bulk_move_bi_aggregations", _("Bulk move"), "submit", form="form_bulk_action_form"
             )
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _show_bulk_move_choices(self) -> Choices:
         return [
@@ -2235,7 +2267,7 @@ class BIModeAggregations(ABCBIMode):
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell("#", css=["narrow", "nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = makeuri_contextless(
                     request,
@@ -2262,10 +2294,12 @@ class BIModeAggregations(ABCBIMode):
 
                 table.cell(_("ID"), aggregation_id)
 
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
-                        html.write_text(customer.get_customer_name_by_id(bi_aggregation.customer))
+                        html.write_text_permissive(
+                            customer.get_customer_name_by_id(bi_aggregation.customer)
+                        )
 
                 table.cell(_("Options"), css=["buttons"])
 

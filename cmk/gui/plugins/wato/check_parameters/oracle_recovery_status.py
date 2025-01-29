@@ -30,9 +30,9 @@ def _parameter_valuespec_oracle_recovery_status():
                 Tuple(
                     title=_("Levels for user managed backup files"),
                     help=_(
-                        "Important! This checks is only for monitoring of datafiles "
-                        "who were left in backup mode. "
-                        "(alter database datafile ... begin backup;) "
+                        "Important! This check is only for monitoring datafiles "
+                        "which were left in backup mode. "
+                        "(alter database datafile ... begin backup;)"
                     ),
                     elements=[
                         Age(title=_("warning if higher then"), default_value=1800),
@@ -51,6 +51,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_recovery_status,
-        title=lambda: _("Oracle Recovery Status"),
+        title=lambda: _("Oracle recovery status"),
     )
 )

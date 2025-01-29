@@ -4,112 +4,105 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,arg-type"
-
 import time
+from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
 from cmk.agent_based.v2 import render, StringTable
 
+check_info = {}
 
-def inventory_plesk_backups(info):
-    inventory = []
-    for line in info:
-        inventory.append((line[0], {}))
-    return inventory
+Section = Mapping[str, Sequence[str]]
 
 
-def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branches
-    for line in info:
-        if item != line[0]:
-            continue
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
 
-        if len(line) != 5 or line[1] != "0":
-            if line[1] == "2":
-                return (3, "Error in agent (%s)" % " ".join(line[1:]))
-
-            if line[1] == "4":
-                state = params.get("no_backup_configured_state", 1)
-                return (state, "No backup configured")
-
-            if line[1] == "5":
-                state = params.get("no_backup_found_state", 1)
-                return (state, "No backup found")
-
-            return (3, "Unexpected line %r" % line)
-
-        _domain, _rc, timestamp, size, total_size = line
-        size = saveint(size)
-        total_size = saveint(total_size)
-        timestamp = saveint(timestamp)
-
-        status = 0
-        output = []
-        perfdata = []
-
-        # 1. check last backup size not 0 bytes
-        status_txt = ""
-        if size == 0:
-            status = 2
-            status_txt = " (!!)"
-        output.append(f"Last Backup - Size: {render.disksize(size)}{status_txt}")
-        perfdata.append(("last_backup_size", size))
-
-        age_seconds = int(time.time()) - timestamp
-        seconds = age_seconds % 60
-        rem = int(age_seconds / 60.0)
-        minutes = rem % 60
-        hours = int((rem % 1440) / 60)
-        days = int(rem / 1440)
-
-        # 2. check age of last backup < 24h
-        status_txt = ""
-        warn, crit = None, None
-        if "backup_age" in params:
-            warn, crit = params["backup_age"]
-            if age_seconds > params["backup_age"][1]:
-                status = max(status, 2)
-                status_txt = " (!!)"
-            elif age_seconds > params["backup_age"][0]:
-                status = max(status, 1)
-                status_txt = " (!)"
-
-        backup_time = time.strftime("%c", time.localtime(timestamp))
-        output.append(
-            "Age: %s (%dd %02d:%02d:%02d)%s"
-            % (backup_time, days, hours, minutes, seconds, status_txt)
-        )
-        perfdata.append(("last_backup_age", age_seconds, warn, crit))
-
-        # 3. check total size of directory above configured threshold
-        status_txt = ""
-        warn, crit = None, None
-        if "total_size" in params:
-            warn, crit = params["total_size"]
-            if total_size > params["total_size"][1]:
-                status = max(status, 2)
-                status_txt = " (!!)"
-            elif total_size > params["total_size"][0]:
-                status = max(status, 1)
-                status_txt = " (!)"
-        output.append(f"Total Size: {render.disksize(total_size)}{status_txt}")
-        perfdata.append(("total_size", total_size))
-
-        return (status, ", ".join(output), perfdata)
-
-    return (3, "Domain not found")
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
-def parse_plesk_backups(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_plesk_backups(string_table: StringTable) -> Section:
+    return {line[0]: line for line in string_table}
+
+
+def inventory_plesk_backups(section: Section) -> Iterable[tuple[str, Mapping]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_plesk_backups(
+    item: str, params: Mapping[str, object], section: Section
+) -> LegacyCheckResult:
+    if (line := section.get(item)) is None:
+        return
+
+    if len(line) != 5 or line[1] != "0":
+        match line[1]:
+            case "2":
+                yield 3, "Error in agent (%s)" % " ".join(line[1:])
+            case "4":
+                yield int(params.get("no_backup_configured_state", 1)), "No backup configured"  # type: ignore[call-overload]
+            case "5":
+                yield int(params.get("no_backup_found_state", 1)), "No backup found"  # type: ignore[call-overload]
+            case _:
+                yield 3, "Unexpected line %r" % line
+        return
+
+    _domain, _rc, r_timestamp, r_size, r_total_size = line
+    size = saveint(r_size)
+    total_size = saveint(r_total_size)
+    timestamp = saveint(r_timestamp)
+
+    # 1. check last backup size not 0 bytes
+    yield check_levels(
+        size,
+        "last_backup_size",
+        (None, None, 0, 0),
+        infoname="Last Backup - Size",
+        human_readable_func=render.disksize,
+    )
+    # 2. check age of last backup < 24h
+    age_seconds = int(time.time()) - timestamp
+    yield check_levels(
+        age_seconds,
+        "last_backup_age",
+        params.get("backup_age"),
+        infoname="Age",
+        human_readable_func=render.timespan,
+    )
+    yield 0, "Backup time: %s" % time.strftime("%c", time.localtime(timestamp))
+    # 3. check total size of directory above configured threshold
+    yield check_levels(
+        total_size,
+        "total_size",
+        params.get("total_size"),
+        infoname="Total size",
+        human_readable_func=render.disksize,
+    )
+    return
 
 
 check_info["plesk_backups"] = LegacyCheckDefinition(
+    name="plesk_backups",
     parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
     discovery_function=inventory_plesk_backups,
     check_function=check_plesk_backups,
     check_ruleset_name="plesk_backups",
+    check_default_parameters={
+        "backup_age": None,
+        "total_size": None,
+        "no_backup_configured_state": 1,
+        "no_backup_found_state": 1,
+    },
 )

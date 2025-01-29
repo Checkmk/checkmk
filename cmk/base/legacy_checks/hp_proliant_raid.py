@@ -6,12 +6,11 @@
 
 import typing
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_proliant import sanitize_item
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
-from cmk.plugins.lib.hp_proliant import DETECT
+from cmk.plugins.lib.hp_proliant import DETECT, sanitize_item
+
+check_info = {}
 
 
 class HpProRaid(typing.NamedTuple):
@@ -87,6 +86,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 
 check_info["hp_proliant_raid"] = LegacyCheckDefinition(
+    name="hp_proliant_raid",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.3.1.1",

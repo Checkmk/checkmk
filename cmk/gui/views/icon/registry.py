@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.plugin_registry import Registry
+from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission
 
 from .base import Icon
+from .config_icons import config_based_icons, update_builtin_icons_from_config
 
 
 class IconRegistry(Registry[type[Icon]]):
@@ -29,10 +30,8 @@ class IconRegistry(Registry[type[Icon]]):
 icon_and_action_registry = IconRegistry()
 
 
-def get_multisite_icons() -> dict[str, Icon]:
-    icons = {}
-
-    for icon_class in icon_and_action_registry.values():
-        icons[icon_class.ident()] = icon_class()
-
-    return icons
+def all_icons() -> dict[str, Icon]:
+    return update_builtin_icons_from_config(
+        {ident: cls() for ident, cls in icon_and_action_registry.items()},
+        active_config.builtin_icon_visibility,
+    ) | config_based_icons(active_config.user_icons_and_actions)

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.version import Edition
+from cmk.ccc.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 

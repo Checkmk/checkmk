@@ -4,26 +4,25 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import type {Selection} from "d3";
+import {html, select} from "d3";
 
-import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
-import {
-    DynamicToggleableLayer,
-    layer_class_registry,
-    LayerSelections,
-} from "./layer_utils";
-import {StyleOptionSpecRange} from "./layout_utils";
+import type {ForceOptions, SimulationForce} from "./force_utils";
+import {ForceConfig} from "./force_utils";
+import type {LayerSelections} from "./layer_utils";
+import {DynamicToggleableLayer, layer_class_registry} from "./layer_utils";
+import type {StyleOptionSpecRange} from "./layout_utils";
 import {AbstractLink, link_type_class_registry} from "./link_utils";
 import {TopologyNode} from "./node_types";
+import type {AbstractGUINode} from "./node_utils";
 import {
-    AbstractGUINode,
     get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
 } from "./node_utils";
-import * as texts from "./texts";
-import {TranslationKey} from "./texts";
-import {
+import type {TranslationKey} from "./texts";
+import {get} from "./texts";
+import type {
     ContextMenuElement,
     d3SelectionDiv,
     d3SelectionG,
@@ -38,7 +37,7 @@ import {
     render_save_delete,
     show_tooltip,
 } from "./utils";
-import {Viewport} from "./viewport";
+import type {Viewport} from "./viewport";
 
 interface TopologyForceOptions extends ForceOptions {
     charge_host: number;
@@ -53,11 +52,11 @@ interface TopologyForceOptions extends ForceOptions {
 
 function render_hierarchy_flat(
     viewport: Viewport,
-    toggle_panel: d3SelectionDiv
+    toggle_panel: d3SelectionDiv,
 ) {
     const options = [
-        new RadioGroupOption("flat", texts.get("flat")),
-        new RadioGroupOption("full", texts.get("full")),
+        new RadioGroupOption("flat", get("flat")),
+        new RadioGroupOption("full", get("full")),
     ];
 
     const hierarchy_div = toggle_panel
@@ -66,11 +65,11 @@ function render_hierarchy_flat(
         .join(enter =>
             enter
                 .insert("div", "table#overlay_configuration")
-                .classed("radio_group hierarchy_flat", true)
+                .classed("radio_group hierarchy_flat", true),
         );
     render_radio_group(
         hierarchy_div,
-        texts.get("hierarchy"),
+        get("hierarchy"),
         "hierarchy_depth",
         options,
         viewport.get_overlays_config().computation_options.hierarchy,
@@ -80,18 +79,18 @@ function render_hierarchy_flat(
             viewport.get_overlays_config().computation_options.enforce_hierarchy_update =
                 true;
             viewport.try_fetch_data();
-        }
+        },
     );
 }
 
 function render_toggle_services(
     viewport: Viewport,
-    toggle_panel: d3SelectionDiv
+    toggle_panel: d3SelectionDiv,
 ) {
     const options = [
-        new RadioGroupOption("all", texts.get("all")),
-        new RadioGroupOption("only_problems", texts.get("only_problems")),
-        new RadioGroupOption("none", texts.get("none")),
+        new RadioGroupOption("all", get("all")),
+        new RadioGroupOption("only_problems", get("only_problems")),
+        new RadioGroupOption("none", get("none")),
     ];
 
     const services_div = toggle_panel
@@ -100,11 +99,11 @@ function render_toggle_services(
         .join(enter =>
             enter
                 .insert("div", "table#overlay_configuration")
-                .classed("radio_group services", true)
+                .classed("radio_group services", true),
         );
     render_radio_group(
         services_div,
-        texts.get("services"),
+        get("services"),
         "service_visibility",
         options,
         "all",
@@ -112,14 +111,14 @@ function render_toggle_services(
             viewport.get_overlays_config().computation_options.show_services =
                 new_option as "all" | "only_problems" | "none";
             viewport.try_fetch_data();
-        }
+        },
     );
 }
 
 function render_toggle_panel(
     overlays_config: OverlaysConfig,
     layer_toggled_callback: (layer_id: string, enabled: boolean) => void,
-    viewport: Viewport
+    viewport: Viewport,
 ): void {
     const toggle_panel = viewport
         .get_div_selection()
@@ -147,7 +146,7 @@ function render_toggle_panel(
     const data: [string, string, (new_value: boolean) => void, boolean][] = [];
     data.push([
         "merge_nodes",
-        texts.get("merge_data"),
+        get("merge_data"),
         new_value => {
             viewport.get_overlays_config().computation_options.merge_nodes =
                 new_value;
@@ -179,7 +178,7 @@ function render_toggle_panel(
 
     option_td
         .selectAll<HTMLDivElement, string>(
-            "div.nodevis.toggle_switch_container"
+            "div.nodevis.toggle_switch_container",
         )
         .data(d => [d])
         .join(enter =>
@@ -187,11 +186,11 @@ function render_toggle_panel(
                 .append("div")
                 .classed("nodevis toggle_switch_container", true)
                 .on("click", (event, d) => {
-                    const node = d3.select(event.target);
+                    const node = select(event.target);
                     const new_value = !node.classed("on");
                     node.classed("on", new_value);
                     d[2](new_value);
-                })
+                }),
         )
         .classed("on", d => d[3]);
 
@@ -204,9 +203,7 @@ function render_toggle_panel(
         .text(d => d[1])
         .style("pointer-events", "all")
         .on("click", (event, d) => {
-            const node = d3.select(
-                event.target.parentNode.firstChild.firstChild
-            );
+            const node = select(event.target.parentNode.firstChild.firstChild);
             const new_value = !node.classed("on");
             node.classed("on", new_value);
             d[2](new_value);
@@ -225,7 +222,7 @@ export class LayoutTopology {
         render_toggle_panel(
             this._world.viewport.get_overlays_config(),
             (layer_id, enabled) => this._toggle_layer(layer_id, enabled),
-            this._world.viewport
+            this._world.viewport,
         );
     }
 
@@ -237,17 +234,17 @@ export class LayoutTopology {
     }
 
     _render_save_delete_layout(
-        into_selection: d3.Selection<HTMLDivElement, null, any, unknown>
+        into_selection: Selection<HTMLDivElement, null, any, unknown>,
     ): void {
         const buttons: [string, string, string, () => void][] = [
             [
-                texts.get("save"),
+                get("save"),
                 "button save_delete save",
                 "",
                 this._world.save_layout,
             ],
             [
-                texts.get("delete_layout"),
+                get("delete_layout"),
                 "button save_delete delete",
                 "",
                 this._world.delete_layout,
@@ -265,7 +262,7 @@ export class GenericNetworkLayer extends DynamicToggleableLayer {
         world: NodevisWorld,
         selections: LayerSelections,
         ident: string,
-        name: string
+        name: string,
     ) {
         super(world, selections);
         this._ident = ident;
@@ -335,10 +332,10 @@ class TopologyCoreEntity extends TopologyNode {
         super.render_into(selection);
         this.selection()
             .on("mouseover.network", () =>
-                this.highlight_connection(new Set<string>(), true)
+                this.highlight_connection(new Set<string>(), true),
             )
             .on("mouseout.network", () =>
-                this.hide_connection(new Set<string>(), true)
+                this.hide_connection(new Set<string>(), true),
             );
     }
 }
@@ -356,7 +353,7 @@ class TopologyHost extends TopologyCoreEntity {
             .data(
                 this.node.data.type_specific.core.num_services_warn > 0
                     ? [this.node.data.type_specific.core.num_services_warn]
-                    : []
+                    : [],
             )
             .join("circle")
             .attr("r", this.radius + 6)
@@ -367,7 +364,7 @@ class TopologyHost extends TopologyCoreEntity {
             .data(
                 this.node.data.type_specific.core.num_services_crit > 0
                     ? [this.node.data.type_specific.core.num_services_crit]
-                    : []
+                    : [],
             )
             .join("circle")
             .attr("r", this.radius + 8)
@@ -381,10 +378,10 @@ class TopologyHost extends TopologyCoreEntity {
         const custom_settings = get_custom_node_settings(this.node);
         const current_setting = custom_settings.show_services || "default";
         const options: [string, string][] = [
-            ["default", texts.get("global_default")],
-            ["all", texts.get("all")],
-            ["only_problems", texts.get("only_problems")],
-            ["none", texts.get("none")],
+            ["default", get("global_default")],
+            ["all", get("all")],
+            ["only_problems", get("only_problems")],
+            ["none", get("none")],
         ];
 
         function changed_option(world: NodevisWorld, new_option: string) {
@@ -396,7 +393,7 @@ class TopologyHost extends TopologyCoreEntity {
         }
 
         const service_choice: ContextMenuElement = {
-            text: texts.get("show_services"),
+            text: get("show_services"),
             children: [],
         };
 
@@ -421,7 +418,7 @@ class TopologyHost extends TopologyCoreEntity {
 
     override _get_node_type_specific_force(
         force_name: SimulationForce,
-        force_options: TopologyForceOptions
+        force_options: TopologyForceOptions,
     ): number {
         switch (force_name) {
             case "charge": {
@@ -430,7 +427,7 @@ class TopologyHost extends TopologyCoreEntity {
             default:
                 return super._get_node_type_specific_force(
                     force_name,
-                    force_options
+                    force_options,
                 );
         }
     }
@@ -469,14 +466,14 @@ class TopologyService extends TopologyCoreEntity {
             encodeURIComponent(service) +
             "&datasource=" +
             encodeURIComponent(this._world.datasource);
-        d3.html(view_url, {credentials: "include"}).then(html =>
-            this._got_quickinfo(html)
+        html(view_url, {credentials: "include"}).then(html =>
+            this._got_quickinfo(html),
         );
     }
 
     override _get_node_type_specific_force(
         force_name: SimulationForce,
-        force_options: TopologyForceOptions
+        force_options: TopologyForceOptions,
     ): number {
         switch (force_name) {
             case "charge": {
@@ -485,7 +482,7 @@ class TopologyService extends TopologyCoreEntity {
             default:
                 return super._get_node_type_specific_force(
                     force_name,
-                    force_options
+                    force_options,
                 );
         }
     }
@@ -512,11 +509,11 @@ class TopologyUnknownHost extends TopologyHost {
     override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
-                name: texts.get("unknown_host"),
+                name: get("unknown_host"),
                 value: "",
             },
             {
-                name: texts.get("host"),
+                name: get("host"),
                 value: get_core_info(this.node)!.hostname,
             },
         ];
@@ -542,15 +539,15 @@ class TopologyUnknownService extends TopologyService {
     override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
-                name: texts.get("unknown_service"),
+                name: get("unknown_service"),
                 value: "",
             },
             {
-                name: texts.get("host"),
+                name: get("host"),
                 value: this.node.data.type_specific.core.hostname,
             },
             {
-                name: texts.get("service"),
+                name: get("service"),
                 value: this.node.data.type_specific.core.service,
             },
         ];
@@ -606,7 +603,7 @@ class NetworkLink extends AbstractLink {
         traversed_ids.add(this.id());
 
         this.selection().each((_d, idx, nodes) => {
-            const line = d3.select(nodes[idx]);
+            const line = select(nodes[idx]);
             if (line.classed("halo_line")) return;
             line.classed("highlight", true);
         });
@@ -650,7 +647,7 @@ class NetworkLink extends AbstractLink {
                     .data([entry[0]])
                     .join("title")
                     .classed("topology_info", true)
-                    .text(d => texts.get(d));
+                    .text(d => get(d));
             }
         });
     }
@@ -661,11 +658,11 @@ class NetworkLink extends AbstractLink {
         if (!core_source || !core_target) return;
         this._root_selection!.classed(
             "local_link",
-            core_source.hostname == core_target.hostname
+            core_source.hostname == core_target.hostname,
         );
         this._root_selection!.classed(
             "foreign_link",
-            core_source.hostname != core_target.hostname
+            core_source.hostname != core_target.hostname,
         );
     }
 
@@ -688,7 +685,7 @@ class NetworkLink extends AbstractLink {
     override render_into(selection: d3SelectionG) {
         super.render_into(selection, true);
         this.selection().each((_d, idx, nodes) => {
-            const line = d3.select(nodes[idx]);
+            const line = select(nodes[idx]);
             if (!line.classed("halo_line")) return;
             line.style("stroke-dasharray", "none");
             line.on("mouseover", event => {
@@ -696,7 +693,7 @@ class NetworkLink extends AbstractLink {
                 show_tooltip(
                     event,
                     this._link_data.config.tooltip || {},
-                    this._world.viewport
+                    this._world.viewport,
                 );
             })
                 .on("mouseout", event => {
@@ -707,7 +704,7 @@ class NetworkLink extends AbstractLink {
                     show_tooltip(
                         event,
                         this._link_data.config.tooltip || {},
-                        this._world.viewport
+                        this._world.viewport,
                     );
                 });
         });
@@ -724,7 +721,7 @@ export class HostServiceLink extends NetworkLink {
 
     override _get_link_type_specific_force(
         force_name: SimulationForce,
-        force_options: TopologyForceOptions
+        force_options: TopologyForceOptions,
     ): number {
         switch (force_name) {
             case "link_distance":
@@ -734,7 +731,7 @@ export class HostServiceLink extends NetworkLink {
             default:
                 return super._get_link_type_specific_force(
                     force_name,
-                    force_options
+                    force_options,
                 );
         }
     }
@@ -747,7 +744,7 @@ export class HostHostLink extends NetworkLink {
 
     override _get_link_type_specific_force(
         force_name: SimulationForce,
-        force_options: TopologyForceOptions
+        force_options: TopologyForceOptions,
     ): number {
         switch (force_name) {
             case "link_distance":
@@ -757,7 +754,7 @@ export class HostHostLink extends NetworkLink {
             default:
                 return super._get_link_type_specific_force(
                     force_name,
-                    force_options
+                    force_options,
                 );
         }
     }
@@ -770,7 +767,7 @@ export class ServiceServiceLink extends NetworkLink {
 
     override _get_link_type_specific_force(
         force_name: SimulationForce,
-        force_options: TopologyForceOptions
+        force_options: TopologyForceOptions,
     ): number {
         switch (force_name) {
             case "link_distance":
@@ -780,7 +777,7 @@ export class ServiceServiceLink extends NetworkLink {
             default:
                 return super._get_link_type_specific_force(
                     force_name,
-                    force_options
+                    force_options,
                 );
         }
     }

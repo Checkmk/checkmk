@@ -10,6 +10,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     Metric,
     Result,
     Service,
@@ -179,11 +180,7 @@ def check_cmctc_lcp(item: str, params: Params, section: Section, sensortype: str
         if sensor.has_levels():
             if sensor.reading >= sensor.high or sensor.reading <= sensor.low:
                 extra_state = 2
-                extra_info += " (device lower/upper crit at {}/{}{})".format(
-                    sensor.low,
-                    sensor.high,
-                    unit,
-                )
+                extra_info += f" (device lower/upper crit at {sensor.low}/{sensor.high}{unit})"
 
     yield Result(state=State(extra_state), summary=extra_info)
 
@@ -200,6 +197,7 @@ def check_cmctc_lcp_temp(item: str, params: TempParamType, section: Section) -> 
     yield from check_temperature(
         reading=sensor.reading,
         params=params,
+        value_store=get_value_store(),
         unique_name="cmctc_lcp_temp_%s" % item,
         dev_levels=sensor.levels,
         dev_levels_lower=sensor.levels_lower,

@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+
+check_info = {}
 
 
 def inventory_ibm_imm_fan(info):
@@ -16,7 +16,7 @@ def inventory_ibm_imm_fan(info):
             yield descr, {}
 
 
-def check_ibm_imm_fan(item, params, info):  # pylint: disable=too-many-branches
+def check_ibm_imm_fan(item, params, info):
     for descr, speed_text in info:
         if descr == item:
             if speed_text.lower() in ["offline", "unavailable"]:
@@ -57,6 +57,7 @@ def parse_ibm_imm_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_fan"] = LegacyCheckDefinition(
+    name="ibm_imm_fan",
     parse_function=parse_ibm_imm_fan,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

@@ -87,7 +87,7 @@ def testconfig_engine(request, testconfig_drive):
         testconfig_drive["global"]["sections"] = [Globals.section, "systemtime"]
 
     path_array = []
-    if request.param[0] != Globals.paths.tempdir1:  # pylint: disable=comparison-with-callable
+    if request.param[0] != Globals.paths.tempdir1:
         path_array.append(Globals.paths.tempfile1())
         path_array.append(
             os.path.join(

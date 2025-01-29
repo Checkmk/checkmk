@@ -30,9 +30,8 @@ def test_dcd_version(site: Site) -> None:
 
 @skip_if_raw_edition
 def test_dcd_daemon(site: Site) -> None:
-    p = site.execute(["omd", "status", "--bare", "dcd"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    assert p.stdout.read() == "dcd 0\nOVERALL 0\n" if p.stdout else False
+    p = site.run(["omd", "status", "--bare", "dcd"])
+    assert p.stdout == "dcd 0\nOVERALL 0\n" if p.stdout else False
 
 
 @skip_if_raw_edition

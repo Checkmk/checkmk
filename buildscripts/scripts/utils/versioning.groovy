@@ -6,6 +6,9 @@
 import groovy.transform.Field
 
 /* groovylint-disable DuplicateListLiteral */
+// ATTENTION: The paths added here for removal MUST NOT include slashes, because
+//            the command used in the function patch_folders will then fail and
+//            paths will not be removed as expected.
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -22,9 +25,8 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+        "cmk.cee.dcd.plugins.connectors.connectors_api"],\
+    "folders_to_be_created": []], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -35,10 +37,8 @@ def REPO_PATCH_RULES = [\
         "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "managed": [\
     "paths_to_be_removed": [\
         "saas", \
@@ -52,23 +52,35 @@ def REPO_PATCH_RULES = [\
         "cme.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
-        "cme.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cme.py"], \
+    "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
 
+def branch_name_is_branch_version(String git_dir=".") {
+    dir(git_dir) {
+        return cmd_output("make --no-print-directory -f defines.make print-BRANCH_NAME_IS_BRANCH_VERSION") ? true : false;
+    }
+}
+
 def branch_name(scm) {
-    return env.GERRIT_BRANCH ?: scm.branches[0].name;
+    if (params.CUSTOM_GIT_REF) {
+        if (branch_name_is_branch_version("${checkout_dir}")) {
+            // this is only required as "master" is called "stable branch + 0.1.0"
+            // e.g. 2.3.0 (stable) + 0.1.0 = 2.4.0
+            return env.GERRIT_BRANCH ?: get_branch_version("${checkout_dir}")
+        } else {
+            return env.GERRIT_BRANCH ?: "master"
+        }
+    } else {
+        return env.GERRIT_BRANCH ?: scm.branches[0].name;
+    }
 }
 
 def safe_branch_name(scm) {
@@ -87,6 +99,17 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
+def get_package_name(base_dir, package_type, edition, cmk_version) {
+    print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
+    dir(base_dir) {
+        def file_pattern = (package_type == "deb" ?
+            "check-mk-$edition-${cmk_version}_*.${package_type}" :  // FIXME do we need this?
+            "check-mk-$edition-${cmk_version}-*.${package_type}");
+        return (cmd_output("ls ${file_pattern}")
+                ?: error("Found no package matching ${file_pattern} in ${base_dir}"));
+    }
+}
+
 def get_distros(Map args) {
     def override_distros = args.override.trim() ?: "";
 
@@ -101,43 +124,37 @@ def get_distros(Map args) {
     }
 
     /// read distros from edition.yml otherwise.
-    inside_container() {
-        dir("${checkout_dir}") {
-            return cmd_output("""scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "${checkout_dir}/editions.yml" \
-                  use_cases \
-                  --edition "${edition}" \
-                  --use_case "${use_case}"
-            """).split().grep();
-        }
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              use_cases \
+              --edition "${edition}" \
+              --use_case "${use_case}"
+        """).split().grep();
     }
 }
 
 def get_editions() {
     /// read editions from edition.yml
-    inside_container() {
-        dir("${checkout_dir}") {
-            return cmd_output("""scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "${checkout_dir}/editions.yml" \
-                  editions
-            """).split().grep();
-        }
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              editions
+        """).split().grep();
     }
 }
 
 def get_internal_artifacts_pattern() {
-    inside_container() {
-        dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "editions.yml" \
-                  internal_build_artifacts \
-                  --as-codename \
-                  --as-rsync-exclude-pattern;
-            """, returnStdout: true).trim();
-        }
+    dir("${checkout_dir}") {
+        return sh(script: """python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "editions.yml" \
+              internal_build_artifacts \
+              --as-codename \
+              --as-rsync-exclude-pattern;
+        """, returnStdout: true).trim();
     }
 }
 
@@ -171,8 +188,9 @@ def get_docker_artifact_name(edition, cmk_version) {
     return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
-def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
-    return BUILD_TAG ?: FOLDER_TAG ?: "${BRANCH}-latest";
+def select_docker_tag(build_tag, branch_name) {
+    // build_tag > branch_name
+    return build_tag ?: "${branch_name}-latest";
 }
 
 def print_image_tag() {
@@ -189,24 +207,6 @@ def patch_folders(edition) {
     }
 }
 
-def patch_themes(EDITION) {
-    def THEME_LIST = ["facelift", "modern-dark"]
-    switch(EDITION) {
-        case 'raw':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh """
-                    echo '@mixin graphs_cee {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_graphs_cee.scss
-                    echo '@mixin reporting {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_reporting.scss
-                    echo '@mixin ntop {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_ntop.scss
-                    echo '@mixin license_usage {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_license_usage.scss
-                    echo '@mixin robotmk {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_robotmk.scss
-                """
-            }
-            break
-    }
-}
-
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
         sh('''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make''');
@@ -220,13 +220,13 @@ def set_version(cmk_version) {
 def configure_checkout_folder(edition, cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
-    patch_themes(edition);
     patch_demo(edition);
     set_version(cmk_version);
 }
 
 def delete_non_cre_files() {
     non_cre_paths = [
+        "non-free",
         "enterprise",
         "managed",
         "cloud",
@@ -253,6 +253,14 @@ def delete_non_cre_files() {
 
 def strip_rc_number_from_version(VERSION) {
     return VERSION.split("-rc")[0];
+}
+
+def is_official_release(version) {
+    if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 return this;

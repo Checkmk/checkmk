@@ -13,13 +13,20 @@ configure_make(
     args = ["-j4"],
     configure_in_place = True,
     configure_options = [
-        "--with-nagios-user=\\$\\$\\(id\\ -un\\)",
-        "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
+        "--with-nagios-user=$$(id -un)",
+        "--with-nagios-group=$$(id -gn)",
         "--with-perlcache",
         "--enable-embedded-perl",
     ],
     copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
-    env = {"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+    },
     lib_source = ":all_srcs",
     out_binaries = [
         "nagios",
@@ -43,6 +50,7 @@ configure_make(
         "all",
         "install-base",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

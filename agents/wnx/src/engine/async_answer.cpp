@@ -1,5 +1,7 @@
-
-// provides basic api to start and stop service
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "stdafx.h"
 
@@ -61,15 +63,12 @@ bool AddVectorGracefully(std::vector<uint8_t> &out_data,
 
     const auto old_size = out_data.size();
     try {
-        // a bit of optimization
         out_data.reserve(out_data.size() + in_data.size());
         out_data.insert(out_data.end(), in_data.begin(), in_data.end());
 
-        // divider after every section with data
         out_data.push_back(static_cast<uint8_t>('\n'));
         return true;
     } catch (const std::exception &e) {
-        // return to invariant...
         XLOG::l(XLOG_FLINE + "- disaster '{}'", e.what());
         out_data.resize(old_size);
     }
@@ -160,8 +159,6 @@ bool AsyncAnswer::addSegment(
     received_segments_++;
 
     if (awaited_segments_ <= received_segments_) {
-        // theoretically on answer may wait many threads
-        // so notify all.
         cv_ready_.notify_all();
     }
 

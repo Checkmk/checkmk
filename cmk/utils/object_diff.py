@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
 
-from cmk.utils.i18n import _
+from cmk.ccc.i18n import _
 
 __all__ = [
     "make_diff",
@@ -47,7 +47,7 @@ def _format_value(value: object) -> str:
 
 
 def _iter_path_components(
-    components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...]
+    components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...],
 ) -> Iterable[PATH_COMPONENT]:
     for component in components:
         if isinstance(component, (str, int)):

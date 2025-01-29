@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Sequence
 
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs
@@ -119,7 +119,7 @@ def _expected_rulespec_group_choices():
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
         ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
         ("agents", "Agent rules"),
-        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic Options"),
+        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic agent options"),
         ("checkparams", "Service discovery rules"),
         ("checkparams/discovery", "&nbsp;&nbsp;\u2319 Discovery of individual services"),
         (
@@ -128,7 +128,7 @@ def _expected_rulespec_group_choices():
         ),
         ("datasource_programs", "Other integrations"),
         ("eventconsole", "Event Console rules"),
-        ("inventory", "Hardware / Software Inventory"),
+        ("inventory", "HW/SW Inventory"),
         ("host_monconf", "Host monitoring rules"),
         ("host_monconf/host_checks", "&nbsp;&nbsp;\u2319 Host checks"),
         ("host_monconf/host_notifications", "&nbsp;&nbsp;\u2319 Notifications"),
@@ -168,12 +168,12 @@ def _expected_rulespec_group_choices():
         ("vm_cloud_container", "VM, cloud, container"),
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
-            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux Agent"),
-            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows Agent"),
+            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux/UNIX agent options"),
+            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows agent options"),
             ("agents/windows_modules", "&nbsp;&nbsp;\u2319 Windows Modules"),
         ]
 
@@ -296,12 +296,11 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
-        "datasource_programs/testing",
         "inventory",
         "eventconsole",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_rulespec_groups += [
             "agents/automatic_updates",
             "agents/linux_agent",
@@ -346,7 +345,7 @@ def test_rulespec_get_host_groups() -> None:
         "vm_cloud_container",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_rulespec_host_groups += [
             "agents/agent_plugins",
             "agents/automatic_updates",
@@ -524,13 +523,13 @@ def test_register_check_parameters(patch_rulespec_registries: None) -> None:
     assert rulespec.item_help is None
     # The item_spec of the ManualCheckParameterRulespec fetched differently,
     # since it is no actual item spec
-    assert isinstance(rulespec._get_item_spec(), TextInput)
+    assert isinstance(rulespec._get_item_valuespec(), TextInput)
     assert rulespec.is_deprecated is False
     assert rulespec.is_optional is False
 
     # Static checks wrap the valuespec into a 3-element tuple
     # - check type selection
-    # - item spec for the service description
+    # - item spec for the service name
     # - original valuespec (TimeperiodSelection)
     assert isinstance(rulespec.valuespec, Tuple)
     assert len(rulespec.valuespec._elements) == 3
@@ -659,16 +658,16 @@ def test_match_item_generator_rules() -> None:
         HostRulespec(
             name="some_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
         )
     )
     rulespec_reg.register(
         HostRulespec(
             name="some_deprecated_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
             is_deprecated=True,
         )
     )

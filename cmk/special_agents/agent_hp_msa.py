@@ -8,6 +8,7 @@ import hashlib
 import logging
 import sys
 import xml.etree.ElementTree as ET
+from collections.abc import Callable, Sequence
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
@@ -20,7 +21,7 @@ from cmk.utils.password_store import replace_passwords
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
 
     # flags
@@ -50,7 +51,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections: dict = {}
+sections: dict[str, list[str]] = {}
 
 # Which objects to get
 api_get_objects = [
@@ -88,7 +89,7 @@ property_to_section = {
 }
 
 
-def store_property(prop):
+def store_property(prop: list[str]) -> None:
     if prop[0] in property_to_section:
         LOGGER.info("property (stored): %r", (prop,))
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
@@ -97,12 +98,12 @@ def store_property(prop):
 
 
 class HTMLObjectParser(HTMLParser):
-    def feed(self, data):
-        self.current_object_key = None
-        self.current_property = None
+    def feed(self, data: str) -> None:
+        self.current_object_key: list[str | None] | None = None
+        self.current_property: list[str | None] | None = None
         HTMLParser.feed(self, data)
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs: Sequence[tuple[str, str | None]]) -> None:
         if tag == "object":
             keys = dict(attrs)
             self.current_object_key = [keys["basetype"], keys["oid"]]
@@ -111,15 +112,15 @@ class HTMLObjectParser(HTMLParser):
             if self.current_object_key:
                 self.current_property = self.current_object_key + [keys["name"]]
 
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
         if tag in ["property", "object"]:
             if self.current_property:
-                store_property(self.current_property)
+                store_property([k for k in self.current_property if k is not None])
             self.current_property = None
             if tag == "object":
                 self.current_object_key = None
 
-    def handle_data(self, data):
+    def handle_data(self, data: str) -> None:
         if self.current_property:
             self.current_property.append(data.replace("\n", "").replace("\r", ""))
 
@@ -129,7 +130,7 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, hostaddress, opt_timeout, debug) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, hostaddress: str, opt_timeout: int) -> None:
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
@@ -139,9 +140,8 @@ class HPMSAConnection:
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self._debug = debug
 
-    def login(self, username, password):
+    def login(self, username: str, password: str) -> None:
         try:
             session_key = self._get_session_key(hashlib.sha256, username, password)
         except (requests.exceptions.ConnectionError, AuthError):
@@ -151,7 +151,7 @@ class HPMSAConnection:
 
         self._session.headers.update(sessionKey=session_key)
 
-    def _get_session_key(self, hash_class, username, password):
+    def _get_session_key(self, hash_class: Callable, username: str, password: str) -> str:
         login_hash = hash_class()
         login_hash.update(f"{username}_{password}".encode())
         login_url = "login/%s" % login_hash.hexdigest()
@@ -170,7 +170,7 @@ class HPMSAConnection:
             )
         return session_key
 
-    def get(self, url_suffix):
+    def get(self, url_suffix: str) -> requests.Response:
         url = urljoin(self._base_url, url_suffix)
         LOGGER.info("GET %r", url)
         # we must provide the verify keyword to every individual request call!
@@ -183,12 +183,12 @@ class HPMSAConnection:
         return response
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
-    connection = HPMSAConnection(args.hostaddress, opt_timeout, args.debug)
+    connection = HPMSAConnection(args.hostaddress, opt_timeout)
     connection.login(args.username, args.password)
     parser = HTMLObjectParser()
 
@@ -202,7 +202,7 @@ def main(argv=None):
 
     # Output sections
     for section, lines in sections.items():
-        print("<<<hp_msa_%s>>>" % section)
-        print("\n".join(x for x in lines))
+        sys.stdout.write("<<<hp_msa_%s>>>\n" % section)
+        sys.stdout.write("\n".join(x for x in lines) + "\n")
 
     return 0

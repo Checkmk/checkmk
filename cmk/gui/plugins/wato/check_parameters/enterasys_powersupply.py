@@ -37,10 +37,10 @@ rulespec_registry.register(
         check_group_name="enterasys_powersupply",
         group=RulespecGroupCheckParametersNetworking,
         item_spec=lambda: TextInput(
-            title=_("Number of Powersupply"),
+            title=_("Number of power supply"),
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_enterasys_powersupply,
-        title=lambda: _("Enterasys Power Supply Settings"),
+        title=lambda: _("Enterasys power supply settings"),
     )
 )

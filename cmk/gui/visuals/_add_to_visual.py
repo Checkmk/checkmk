@@ -10,7 +10,9 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
@@ -51,7 +53,9 @@ def ajax_popup_add() -> None:
             html.open_li()
 
             if not isinstance(entry.item, PageMenuLink):
-                html.write_text(f"Unhandled entry type '{type(entry.item)}': {entry.name}")
+                html.write_text_permissive(
+                    f"Unhandled entry type '{type(entry.item)}': {entry.name}"
+                )
                 continue
 
             html.open_a(
@@ -60,7 +64,7 @@ def ajax_popup_add() -> None:
                 target=entry.item.link.target,
             )
             html.icon(entry.icon_name or "trans")
-            html.write_text(entry.title)
+            html.write_text_permissive(entry.title)
             html.close_a()
             html.close_li()
 
@@ -91,7 +95,10 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuD
             )
         )
 
-    if add_type == "pnpgraph" and cmk_version.edition() is not cmk_version.Edition.CRE:
+    if (
+        add_type == "pnpgraph"
+        and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE
+    ):
         visual_topics.append(
             PageMenuTopic(
                 title=_("Export"),
@@ -181,7 +188,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
             )
         ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         entries.append(
             PageMenuEntry(
                 title=_("Add to report"),
@@ -205,25 +212,18 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
 
 
 def add_to_dashboard_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
+    return get_visual_choices(
         visual_type="dashboards",
         value=value,
     )
 
 
-def add_to_report_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
-        visual_type="reports",
-        value=value,
-    )
-
-
-def _get_visual_choices(visual_type: str, value: str) -> Choices:
+def get_visual_choices(visual_type: str, value: str) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
     for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
         if match_pattern.search(content["title"]) is not None:
-            matching_visuals.append((name, f'{content["title"]} ({name})'))
+            matching_visuals.append((name, f"{content['title']} ({name})"))
     return matching_visuals
 
 
@@ -246,8 +246,8 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_typ
             f'"{add_to_type}",'
             f'"{request.var("view_name")}",'
             f'"{source_type}",'
-            f'{g.get("page_context", {})}'
+            f"{g.get('page_context', {})}"
             f")",
             cssclass="hot",
         )
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())

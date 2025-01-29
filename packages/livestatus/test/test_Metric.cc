@@ -4,7 +4,6 @@
 // source code package.
 
 #include <algorithm>
-#include <compare>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -16,11 +15,8 @@
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
 
-bool operator<(const Metric::MangledName &x, const Metric::MangledName &y) {
-    return x.string() < y.string();
-}
-
 namespace {
+// NOLINTBEGIN(cert-err58-cpp)
 const std::filesystem::path basepath{std::filesystem::temp_directory_path() /
                                      "metric_tests"};
 const std::string ext = ".xml";
@@ -34,6 +30,7 @@ const std::string desc_other = "Service Description Other";
 const Metric::Names metrics_other = {Metric::MangledName{"jkl 4"},
                                      Metric::MangledName{"mno 5"},
                                      Metric::MangledName{"pqr 6"}};
+// NOLINTEND(cert-err58-cpp)
 }  // namespace
 
 class MetricFixture : public ::testing::Test {
@@ -67,16 +64,16 @@ public:
     void TearDown() override { std::filesystem::remove_all(basepath); }
 };
 
-/// Return sorted string vectors to make the diff readable.
-std::vector<std::string> human_readable(const Metric::Names &in) {
-    std::vector<std::string> out(in.size());
-    std::transform(std::begin(in), std::end(in), std::begin(out),
-                   [](auto &&elem) { return elem.string(); });
-    std::sort(std::begin(out), std::end(out));
-    return out;
-}
-
 TEST_F(MetricFixture, ScanRRDFindsMetrics) {
+    /// Return sorted string vectors to make the diff readable.
+    auto human_readable = [](const Metric::Names &in) {
+        std::vector<std::string> out(in.size());
+        std::ranges::transform(in, std::begin(out),
+                               [](auto &&elem) { return elem.string(); });
+        std::ranges::sort(out);
+        return out;
+    };
+
     ASSERT_TRUE(std::filesystem::exists(basepath));
     ASSERT_FALSE(std::filesystem::is_empty(basepath));
     Logger *const logger{Logger::getLogger("test")};

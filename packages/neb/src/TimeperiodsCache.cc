@@ -6,7 +6,6 @@
 #include "neb/TimeperiodsCache.h"
 
 #include <compare>
-#include <ratio>
 #include <utility>
 
 #include "livestatus/Logger.h"
@@ -24,7 +23,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
     auto now =
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        bool is_in = check_time_against_period(now, tp) == 0;
+        const bool is_in = check_time_against_period(now, tp) == 0;
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
@@ -49,8 +48,9 @@ void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
     // a timed event broker message arrives *before* the start of the event
     // loop.
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        bool is_in = check_time_against_period(
-                         std::chrono::system_clock::to_time_t(now), tp) == 0;
+        const bool is_in =
+            check_time_against_period(std::chrono::system_clock::to_time_t(now),
+                                      tp) == 0;
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
@@ -61,9 +61,9 @@ void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
             it->second = is_in;
         }
     }
-    if (timeperiod_list != nullptr) {
+    if (_cache.empty()) {
         Informational(_logger)
-            << "Timeperiod cache not updated, there are no timeperiods (yet)";
+            << "time period cache not updated, there are no time periods (yet)";
     }
 }
 

@@ -40,10 +40,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 
 def inventory_winperf_mem(info):
@@ -85,6 +85,7 @@ def parse_winperf_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf_mem"] = LegacyCheckDefinition(
+    name="winperf_mem",
     parse_function=parse_winperf_mem,
     service_name="Memory Pages",
     discovery_function=inventory_winperf_mem,

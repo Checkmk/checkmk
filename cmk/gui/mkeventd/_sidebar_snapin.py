@@ -14,9 +14,9 @@ from livestatus import (
     SiteId,
 )
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent

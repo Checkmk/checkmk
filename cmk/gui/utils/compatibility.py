@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils import version as cmk_version
-from cmk.utils.i18n import _
+from cmk.ccc import version as cmk_version
+from cmk.ccc.i18n import _
+
 from cmk.utils.licensing.handler import LicenseState
 
 

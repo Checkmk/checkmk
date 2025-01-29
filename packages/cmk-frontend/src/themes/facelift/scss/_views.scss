@@ -1,7 +1,10 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
+
+@use "_mixins" as *;
 
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
@@ -643,7 +646,7 @@ table.data.matrix {
   }
 
   tr.even0 td.minority {
-    background-color: lighten($table-highlight-color, 5%);
+    background-color: color.adjust($table-highlight-color, $lightness: 5%);
   }
 
   tr.odd0 td.minority {
@@ -906,7 +909,7 @@ div.avlegend {
 |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |                 |
 |                                                   |___/                  |
 +--------------------------------------------------------------------------+
-| Styles for displaying HW/SW-Inventory data                               |
+| Styles for displaying HW/SW Inventory data                               |
 '-------------------------------------------------------------------------*/
 
 td.invtree {

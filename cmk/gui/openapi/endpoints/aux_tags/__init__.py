@@ -15,10 +15,12 @@ tag for resolving conditions.
 
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
 from cmk.gui.http import Response

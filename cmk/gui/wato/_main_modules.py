@@ -8,9 +8,11 @@
 # fields: mode, title, icon, permission, help
 
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
-import cmk.utils.version as cmk_version
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
@@ -46,17 +48,20 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleHostCustomAttributes)
     main_module_registry.register(MainModuleServiceGroups)
     main_module_registry.register(MainModuleUsers)
-    if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CSE:  # disabled in CSE
         main_module_registry.register(MainModuleRoles)
         main_module_registry.register(MainModuleLDAP)
         main_module_registry.register(MainModuleSites)
     main_module_registry.register(MainModuleUserCustomAttributes)
     main_module_registry.register(MainModuleContactGroups)
     main_module_registry.register(MainModuleNotifications)
+    main_module_registry.register(MainModuleAnalyzeNotifications)
+    main_module_registry.register(MainModuleTestNotifications)
     main_module_registry.register(MainModuleTimeperiods)
     main_module_registry.register(MainModulePasswords)
     main_module_registry.register(MainModuleAuditLog)
     main_module_registry.register(MainModuleAnalyzeConfig)
+    main_module_registry.register(MainModuleCertificateOverview)
     main_module_registry.register(MainModuleDiagnostics)
     main_module_registry.register(MainModuleMonitoringRules)
     main_module_registry.register(MainModuleDiscoveryRules)
@@ -70,7 +75,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
 
     # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
     # does not exist (e.g. when using CRE)
-    if cmk_version.edition() in (cmk_version.Edition.CRE, cmk_version.Edition.CSE):
+    if cmk_version.edition(paths.omd_root) in (cmk_version.Edition.CRE,):
         main_module_registry.register(MainModuleAgentsWindows)
         main_module_registry.register(MainModuleAgentsLinux)
 
@@ -326,7 +331,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("HW/SW inventory rules")
+        return _("HW/SW Inventory rules")
 
     @property
     def icon(self) -> Icon:
@@ -347,6 +352,10 @@ class MainModuleHWSWInventory(ABCMainModule):
     @property
     def is_show_more(self) -> bool:
         return True
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["hardware", "software"]
 
 
 class MainModuleNetworkingServices(ABCMainModule):
@@ -373,7 +382,7 @@ class MainModuleNetworkingServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Configure monitoring of networking services using classical nagios plug-ins"
+            "Configure monitoring of networking services using classical Nagios plug-ins"
             " (so called active checks)"
         )
 
@@ -763,6 +772,74 @@ class MainModuleNotifications(ABCMainModule):
         return False
 
 
+class MainModuleAnalyzeNotifications(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return "analyze_notifications"
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicEvents
+
+    @property
+    def title(self) -> str:
+        return _("Analyze recent notifications")
+
+    @property
+    def icon(self) -> Icon:
+        return "analyze"
+
+    @property
+    def permission(self) -> None | str:
+        return "notifications"
+
+    @property
+    def description(self) -> str:
+        return _("Analyze recent notifications with your current ruleset")
+
+    @property
+    def sort_index(self) -> int:
+        return 11
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleTestNotifications(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return "test_notifications"
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicEvents
+
+    @property
+    def title(self) -> str:
+        return _("Test notifications")
+
+    @property
+    def icon(self) -> Icon:
+        return "analysis"
+
+    @property
+    def permission(self) -> None | str:
+        return "notifications"
+
+    @property
+    def description(self) -> str:
+        return _("Test custom notifications with your current ruleset")
+
+    @property
+    def sort_index(self) -> int:
+        return 12
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
 class MainModuleTimeperiods(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -929,6 +1006,40 @@ class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def sort_index(self) -> int:
         return 40
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleCertificateOverview(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return "certificate_overview"
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicMaintenance
+
+    @property
+    def title(self) -> str:
+        return _("Certificate overview")
+
+    @property
+    def icon(self) -> Icon:
+        return "certificate_overview"
+
+    @property
+    def permission(self) -> None | str:
+        return "certificate_overview"
+
+    @property
+    def description(self) -> str:
+        return _("Displays details of the certificates used by Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 35
 
     @property
     def is_show_more(self) -> bool:

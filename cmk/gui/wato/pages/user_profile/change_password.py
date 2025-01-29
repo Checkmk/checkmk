@@ -6,7 +6,6 @@
 import time
 from datetime import datetime
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
@@ -14,16 +13,19 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
+
+from cmk.crypto.password import Password
 
 from .abstract_page import ABCUserProfilePage
 
@@ -86,12 +88,15 @@ class UserChangePasswordPage(ABCUserProfilePage):
             user_spec["serial"] += 1
 
         userdb.save_users(users, now)
-
+        connection_id = user_spec.get("connector", None)
+        connection = get_connection(connection_id)
         log_security_event(
             UserManagementEvent(
                 event="password changed",
                 affected_user=user.id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 
@@ -142,14 +147,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
             html.open_div(class_="wato")
             forms.header(self._page_title())
 
-            forms.section(_("Current Password"))
+            forms.section(_("Current password"))
             html.password_input("cur_password", autocomplete="new-password")
 
-            forms.section(_("New Password"))
+            forms.section(_("New password"))
             html.password_input("password", autocomplete="new-password")
             html.password_meter()
 
-            forms.section(_("New Password Confirmation"))
+            forms.section(_("New password confirmation"))
             html.password_input("password2", autocomplete="new-password")
 
             html.hidden_field("_origtarget", request.get_str_input("_origtarget"))

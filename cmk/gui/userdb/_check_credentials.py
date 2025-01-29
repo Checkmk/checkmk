@@ -8,10 +8,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
-from cmk.utils.crypto.password import Password
-from cmk.utils.store.htpasswd import Htpasswd
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
@@ -21,6 +21,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.utils.security_log_events import UserManagementEvent
+
+from cmk.crypto.password import Password
 
 from ._connections import active_connections, get_connection
 from ._user_spec import new_user_template
@@ -58,9 +62,8 @@ def check_credentials(
         # We have the cases where users exist "partially"
         # a) The htpasswd file of the site may have a username:pwhash data set
         #    and Checkmk does not have a user entry yet
-        # b) LDAP authenticates a user and Checkmk does not have a user entry yet
         #
-        # In these situations a user account with the "default profile" should be created
+        # In this situation a user account with the "default profile" should be created
         create_non_existing_user(connection_id, user_id, now)
 
         if not is_customer_user_allowed_to_login(user_id):
@@ -91,6 +94,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
+    users[username].setdefault("alias", username)
     save_users(users, now)
 
     # Call the sync function for this new user
@@ -98,6 +102,16 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
     try:
         if connection is None:
             raise MKUserError(None, _("Invalid user connection: %s") % connection_id)
+
+        log_security_event(
+            UserManagementEvent(
+                event="user created",
+                affected_user=username,
+                acting_user=None,
+                connector=connection.type(),
+                connection_id=connection_id,
+            )
+        )
 
         connection.do_sync(
             add_to_changelog=False,
@@ -130,7 +144,7 @@ def user_exists_according_to_profile(username: UserId) -> bool:
 
 
 def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
-    if cmk_version.edition() is not cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CME:
         return True
 
     user = LoggedInUser(user_id)

@@ -7,10 +7,10 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping[str, float]
 
@@ -57,6 +57,7 @@ def check_cadvisor_cpu(_item, params, parsed):
 
 
 check_info["cadvisor_cpu"] = LegacyCheckDefinition(
+    name="cadvisor_cpu",
     parse_function=parse_cadvisor_cpu,
     service_name="CPU utilization",
     discovery_function=discover_cadvisor_cpu,

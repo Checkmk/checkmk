@@ -45,16 +45,15 @@
 #   (PackageHub/12.5/x86_64)
 
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.suseconnect import get_data, Section
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
+
+check_info = {}
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
@@ -62,7 +61,9 @@ def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_suseconnect(_no_item, params, section: Section):
+def check_suseconnect(
+    _no_item: str, params: Mapping[str, Any], section: Section
+) -> Iterable[tuple[int, str]]:
     # we assume here that the parsed data contains all required keys
 
     if (specs := get_data(section)) is None:
@@ -81,10 +82,14 @@ def check_suseconnect(_no_item, params, section: Section):
         state = 2
     yield state, infotext
 
-    yield 0, (
-        "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
-        "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
-    ) % specs
+    yield (
+        0,
+        (
+            "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
+            "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
+        )
+        % specs,
+    )
 
     expiration_date = time.strptime(specs["expires_at"], "%Y-%m-%d %H:%M:%S %Z")
     expiration_time = time.mktime(expiration_date) - time.time()
@@ -110,6 +115,7 @@ def check_suseconnect(_no_item, params, section: Section):
 
 
 check_info["suseconnect"] = LegacyCheckDefinition(
+    name="suseconnect",
     service_name="SLES license",
     # section is migrated already!,
     discovery_function=inventory_suseconnect,

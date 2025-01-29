@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
 
 import socket
 from codecs import BOM_UTF8
@@ -144,9 +145,15 @@ class StructuredDataName:
         return hash(self.name)
 
     def __eq__(self, o: object) -> bool:
-        if not isinstance(o, StructuredDataName):
-            raise NotImplementedError
-        return self.name == o.name
+        if isinstance(o, StructuredDataName):
+            return self.name == o.name
+        return NotImplemented
+
+    def __ne__(self, other: object) -> bool:
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        return not result
 
 
 class StructuredDataID:
@@ -169,7 +176,7 @@ class StructuredDataID:
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, StructuredDataID):
-            raise NotImplementedError
+            return NotImplemented
         return self.id == o.id
 
     @staticmethod

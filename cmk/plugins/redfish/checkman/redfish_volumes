@@ -1,0 +1,13 @@
+title: Redfish volumes
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about volumes of Redfish compatible devices.
+
+discovery:
+ One service per volume is created.
+
+item:
+ The ID of the volume.

@@ -9,10 +9,10 @@
 # (yes, thats all)
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_windows_multipath(info):
@@ -57,6 +57,7 @@ def parse_windows_multipath(string_table: StringTable) -> StringTable:
 
 
 check_info["windows_multipath"] = LegacyCheckDefinition(
+    name="windows_multipath",
     parse_function=parse_windows_multipath,
     service_name="Multipath",
     discovery_function=inventory_windows_multipath,

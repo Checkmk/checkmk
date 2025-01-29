@@ -6,7 +6,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
 from enum import auto, Enum
-from typing import Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, override, Self
 
 
 class IPAddressFamily(Enum):
@@ -40,6 +40,7 @@ class IPConfig:
             raise RuntimeError("Host address lookup failed")
         return self._address
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -47,6 +48,7 @@ class IPConfig:
             f"additional_addresses={self.additional_addresses!r})"
         )
 
+    @override
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, self.__class__):
             return NotImplemented
@@ -62,6 +64,7 @@ class IPv4Config(IPConfig):
     """
 
     @property
+    @override
     def family(self) -> Literal[IPAddressFamily.IPV4]:
         return IPAddressFamily.IPV4
 
@@ -72,6 +75,7 @@ class IPv6Config(IPConfig):
     """
 
     @property
+    @override
     def family(self) -> Literal[IPAddressFamily.IPV6]:
         return IPAddressFamily.IPV6
 
@@ -119,7 +123,7 @@ class HostConfig:
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -149,6 +153,7 @@ class HostConfig:
             raise ValueError("Host has no IP stack configured")
         return self._primary_ip_config
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -160,6 +165,7 @@ class HostConfig:
             f"macros={self.macros!r})"
         )
 
+    @override
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, self.__class__):
             return NotImplemented
@@ -253,6 +259,7 @@ class Secret(NamedTuple):
         >>> argv = ["--basicauth", my_secret.unsafe("user:%s")]
 
     """
+
     id: int
     format: str = "%s"
     pass_safely: bool = True

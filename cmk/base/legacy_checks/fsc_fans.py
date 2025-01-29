@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_fsc_fans(string_table):
@@ -37,6 +38,7 @@ def check_fsc_fans(item, params, parsed):
 
 
 check_info["fsc_fans"] = LegacyCheckDefinition(
+    name="fsc_fans",
     detect=all_of(
         all_of(
             any_of(

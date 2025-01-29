@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 
-import cmk.gui.visuals as visuals
-from cmk.gui import forms
+from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -39,7 +37,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals.info import visual_info_registry
 
 from .dashlet import Dashlet, dashlet_registry, DashletConfig, DashletId
-from .store import get_permitted_dashboards, save_all_dashboards
+from .store import get_permitted_dashboards, save_and_replicate_all_dashboards
 from .title_macros import title_help_text_for_macros
 from .type_defs import DashboardConfig
 
@@ -62,7 +60,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return,too-many-branches
+    def page(self) -> PageResult:
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"
@@ -162,9 +160,9 @@ class EditDashletPage(Page):
         if isinstance(vs_type, Dictionary):
             settings_elements = {el[0] for el in vs_general._get_elements()}
             properties_elements = {el[0] for el in vs_type._get_elements()}
-            assert settings_elements.isdisjoint(
-                properties_elements
-            ), "Dashboard element settings and properties have a shared option name"
+            assert settings_elements.isdisjoint(properties_elements), (
+                "Dashboard element settings and properties have a shared option name"
+            )
 
         if request.var("_save") and transactions.transaction_valid():
             try:
@@ -189,7 +187,7 @@ class EditDashletPage(Page):
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
                     # We have to trust from_html_vars and validate_value for now
-                    new_dashlet_spec.update(type_properties)  # type: ignore[typeddict-item]
+                    new_dashlet_spec.update(type_properties)
 
                 elif handle_input_func:
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
@@ -204,7 +202,7 @@ class EditDashletPage(Page):
                 else:
                     self._dashboard["dashlets"][self._ident] = new_dashlet_spec
 
-                save_all_dashboards()
+                save_and_replicate_all_dashboards()
                 html.footer()
                 raise HTTPRedirect(request.get_url_input("next", request.get_url_input("back")))
 
@@ -280,7 +278,7 @@ def dashlet_vs_general_settings(
                         (
                             _(
                                 "Most elements have a hard coded static title and some are aware of their "
-                                "content and set the title dynamically, like the view snapin, which "
+                                "content and set the title dynamically, like the view snap-in, which "
                                 "displays the title of the view. If you like to use any other title, set it "
                                 "here."
                             ),

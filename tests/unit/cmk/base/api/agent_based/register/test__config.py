@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from pytest import MonkeyPatch
 
@@ -11,6 +10,8 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+
+from cmk.discover_plugins import PluginLocation
 
 
 def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
@@ -26,14 +27,13 @@ def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
         None,
         None,
         None,
-        None,
+        PluginLocation(module="not-relevant"),
     )
 
     monkeypatch.setattr(
         agent_based_register._config, "registered_check_plugins", {test_plugin.name: test_plugin}
     )
 
-    assert agent_based_register.is_registered_check_plugin(test_plugin.name)
     assert agent_based_register.get_check_plugin(test_plugin.name) is test_plugin
     assert (
         agent_based_register.get_check_plugin(CheckPluginName("mgmt_this_should_not_exists"))

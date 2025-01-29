@@ -343,16 +343,12 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     converter = (DateConverter(), DateConverter())
 
     start = Time(
-        description=(
-            "The start time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
-        ),
+        description=("The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped."),
         required=True,
         pattern=r"^\d\d:\d\d(:\d\d)?$",
     )
     end = Time(
-        description=(
-            "The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
-        ),
+        description=("The end time of day. Inclusive. Use ISO8601 format. Seconds are stripped."),
         required=True,
         pattern=r"^\d\d:\d\d(:\d\d)?$",
     )
@@ -805,7 +801,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
     )
     privacy_password = String(
         description=(
-            "Privacy pass phrase. " "If filled, privacy_protocol needs to be selected as well."
+            "Privacy pass phrase. If filled, privacy_protocol needs to be selected as well."
         ),
         required=True,
         minLength=8,
@@ -925,16 +921,16 @@ class HostAttributeManagementBoardField(String):
             enum=["none", "snmp", "ipmi"],
         )
 
-    def _deserialize(  # type: ignore[no-untyped-def]
-        self, value, attr, data, **kwargs
-    ) -> typing.Any:
+    def _deserialize(
+        self, value: object, attr: object, data: object, **kwargs: typing.Any
+    ) -> str | None:
         # get value from api, convert it to cmk/python
         deserialized = super()._deserialize(value, attr, data, **kwargs)
         if deserialized == "none":
             return None
         return deserialized
 
-    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+    def _serialize(self, value: str | None, attr: object, obj: object, **kwargs: typing.Any) -> str:
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

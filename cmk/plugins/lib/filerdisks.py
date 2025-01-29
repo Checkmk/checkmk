@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 
 
@@ -38,7 +38,7 @@ def _check_total_capacity(disks: Sequence[FilerDisk]) -> CheckResult:
 def _check_spare_disks(spare_disks: int, spare_disk_levels: Any) -> CheckResult:
     if spare_disk_levels:
         warn, crit = spare_disk_levels
-        yield from check_levels(
+        yield from check_levels_v1(
             value=float(spare_disks),
             levels_lower=(float(crit), float(warn)),
             label=f"Spare disks: {spare_disks}",
@@ -98,11 +98,7 @@ def _check_failed_offline_disks(
             if return_state is not None:
                 yield Result(
                     state=return_state,
-                    summary="Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
-                        disk_state,
-                        warn,
-                        crit,
-                    ),
+                    summary=f"Too many {disk_state} disks (warn/crit at {warn:.1f}%/{crit:.1f}%)",
                 )
 
 
@@ -122,9 +118,9 @@ def check_filer_disks(disks: Sequence[FilerDisk], params: Mapping[str, Any]) -> 
     }
 
     for disk in disks:
-        for what in state:
+        for what, disks_in_state in state.items():
             if disk.state == what:
-                state[what].append(disk)
+                disks_in_state.append(disk)
 
     unavail_disks = len(state["prefailed"] + state["failed"] + state["offline"])
     yield Result(state=State.OK, summary=f"Total disks: {len(disks) - unavail_disks}")

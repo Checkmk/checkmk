@@ -4,23 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Sequence
-from typing import Iterable
+from collections.abc import Iterable, Sequence
 
 from livestatus import LivestatusResponse, OnlySites
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import RetentionInterval, SDValue
 
-import cmk.gui.sites as sites
-from cmk.gui import inventory
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.inventory._history import get_history
+from cmk.gui.inventory._tree import (
+    get_short_inventory_filepath,
+    InventoryPath,
+    load_filtered_and_merged_tree,
+)
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals import get_livestatus_filter_headers
@@ -34,7 +38,7 @@ class ABCDataSourceInventory(ABCDataSource):
 
     @property
     @abc.abstractmethod
-    def inventory_path(self) -> inventory.InventoryPath:
+    def inventory_path(self) -> InventoryPath:
         raise NotImplementedError()
 
 
@@ -76,7 +80,7 @@ class ABCRowTable(RowTable):
         ):
             html.open_div(class_="livestatus message", onmouseover="this.style.display='none';")
             html.open_tt()
-            html.write_text(query.replace("\n", "<br>\n"))
+            html.write_text_permissive(query.replace("\n", "<br>\n"))
             html.close_tt()
             html.close_div()
 
@@ -106,8 +110,8 @@ class ABCRowTable(RowTable):
 
 
 class RowTableInventory(ABCRowTable):
-    def __init__(self, info_name: str, inventory_path: inventory.InventoryPath) -> None:
-        super().__init__([info_name], ["host_structured_status"])
+    def __init__(self, info_name: str, inventory_path: InventoryPath) -> None:
+        super().__init__([info_name], ["host_structured_status", "host_childs"])
         self._inventory_path = inventory_path
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
@@ -116,16 +120,18 @@ class RowTableInventory(ABCRowTable):
 
         try:
             table_rows = (
-                inventory.load_filtered_and_merged_tree(hostrow)
+                load_filtered_and_merged_tree(hostrow)
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
             )
-        except inventory.LoadStructuredDataError:
+        except Exception as e:
+            if active_config.debug:
+                html.show_warning("%s" % e)
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",
-                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                    % inventory.get_short_inventory_filepath(hostrow.get("host_name", "")),
+                    _("Cannot load HW/SW Inventory tree %s. Please remove the corrupted file.")
+                    % get_short_inventory_filepath(hostrow.get("host_name", "")),
                 )
             )
             return
@@ -145,13 +151,13 @@ class RowTableInventoryHistory(ABCRowTable):
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
-        history, corrupted_history_files = inventory.get_history(hostname)
+        history, corrupted_history_files = get_history(hostname)
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
                     "load_inventory_delta_tree",
                     _(
-                        "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                        "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted files."
                     )
                     % ", ".join(sorted(corrupted_history_files)),
                 )
@@ -173,7 +179,7 @@ class DataSourceInventoryHistory(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("Inventory: History")
+        return _("HW/SW Inventory history")
 
     @property
     def table(self) -> RowTable:

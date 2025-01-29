@@ -11,5 +11,6 @@ item:
  The name of the resource.
 
 discovery:
- One service is created for each database if all required metrics
- (maximum_pg_replica_log_delay_in_seconds) are given.
+ One service is created for each database if any of the required metrics
+ (maximum_pg_replica_log_delay_in_seconds,
+ maximum_physical_replication_delay_in_seconds) are given.

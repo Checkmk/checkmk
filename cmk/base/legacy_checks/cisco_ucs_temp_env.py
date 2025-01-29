@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+
+check_info = {}
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -44,6 +45,7 @@ def check_cisco_ucs_temp_env(item, params, info):
 
 
 check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
+    name="cisco_ucs_temp_env",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.44.1",

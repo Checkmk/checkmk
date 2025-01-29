@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 checkname = "ucs_bladecenter_psu"
@@ -70,10 +69,10 @@ checks = {
             "Ambient Chassis 1",
             {"levels": (35, 40)},
             [
-                ( 0, "Sensors: 1", []),
-                ( 0, "Highest: 17.0 \xb0C", [("temp", 17.0, None, None, None, None)]),
-                ( 0, "Average: 17.0 \xb0C", []),
-                ( 0, "Lowest: 17.0 \xb0C", []),
+                (0, "Sensors: 1", []),
+                (0, "Highest: 17.0 \xb0C", [("temp", 17.0, None, None, None, None)]),
+                (0, "Average: 17.0 \xb0C", []),
+                (0, "Lowest: 17.0 \xb0C", []),
             ],
         )
     ],

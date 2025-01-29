@@ -31,7 +31,7 @@
     ],
     "Recurring downtimes for hosts": [
         {
-            "locator": "[name='ve_p_comment']",
+            "locator": "input[name*='_p_comment']",
             "action": "fill",
             "value": "test"
         }

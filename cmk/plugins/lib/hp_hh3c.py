@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from enum import Enum
 
 from cmk.agent_based.v1.type_defs import StringTable
@@ -22,7 +23,7 @@ class DeviceStatus(Enum):
 Section = dict[str, int]
 
 
-def parse_hp_hh3c_device(string_table: list[StringTable]) -> Section:
+def parse_hp_hh3c_device(string_table: Sequence[StringTable]) -> Section:
     return {s[0]: int(s[1]) for s in string_table[0]}
 
 

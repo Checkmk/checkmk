@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
+from collections.abc import Iterator
 from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.utils.version as cmk_version
-from cmk.utils.plugin_registry import Registry
+from tests.testlib.unit.utils import reset_registries
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
+
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.config import default_authorized_builtin_role_ids
@@ -41,7 +45,13 @@ class DummyDashlet(Dashlet[DummyDashletConfig]):
         return 123
 
     def show(self):
-        html.write_text("dummy")
+        html.write_text_permissive("dummy")
+
+
+@pytest.fixture(name="reset_dashlet_registry")
+def fixture_reset_dashlet_registry() -> Iterator[None]:
+    with reset_registries([dashlet_registry]):
+        yield
 
 
 @pytest.fixture(name="registry_list", scope="module")
@@ -59,7 +69,8 @@ def fixture_dummy_config() -> DummyDashletConfig:
     )
 
 
-def test_dashlet_registry_plugins(reset_gui_registries: None) -> None:
+@pytest.mark.usefixtures("reset_dashlet_registry")
+def test_dashlet_registry_plugins() -> None:
     expected_plugins = [
         "hoststats",
         "servicestats",
@@ -75,7 +86,7 @@ def test_dashlet_registry_plugins(reset_gui_registries: None) -> None:
         "snapin",
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -118,7 +129,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),
@@ -159,11 +170,11 @@ TEST_DASHBOARD = DashboardConfig(
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
 @pytest.mark.usefixtures("mock_livestatus")
 @pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("reset_dashlet_registry")
 def test_dashlet_refresh_intervals(
     type_name: str,
     expected_refresh_interval: Literal[False] | int,
     monkeypatch: MonkeyPatch,
-    reset_gui_registries: None,
 ) -> None:
     dashlet_type = dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
@@ -396,7 +407,8 @@ def test_refresh_interval(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
 
 
-def test_dashlet_context_inheritance(reset_gui_registries: None) -> None:
+@pytest.mark.usefixtures("reset_dashlet_registry")
+def test_dashlet_context_inheritance() -> None:
     test_dashboard = TEST_DASHBOARD.copy()
     test_dashboard["context"] = {
         "wato_folder": {"wato_folder": "/aaa/eee"},

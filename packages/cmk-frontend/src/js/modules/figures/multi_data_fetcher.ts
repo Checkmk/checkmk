@@ -12,10 +12,10 @@
 // - force_update
 // - suspend_for (seconds)
 // - update_if_older_than (seconds)
-import * as d3 from "d3";
+import {json} from "d3";
 
-import {CMKAjaxReponse} from "../types";
-import * as utils from "../utils";
+import type {CMKAjaxReponse} from "@/modules/types";
+import {is_window_active} from "@/modules/utils";
 
 export class Scheduler {
     _scheduled_function: () => void;
@@ -70,7 +70,7 @@ export class Scheduler {
 
     _schedule() {
         if (!this._enabled) return;
-        if (!utils.is_window_active()) return;
+        if (!is_window_active()) return;
         const now = Math.floor(new Date().getTime() / 1000);
         if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
@@ -119,7 +119,7 @@ export class MultiDataFetcher {
     subscribe_hook(
         post_url: string,
         post_body: string,
-        subscriber_func: (data?: any) => void
+        subscriber_func: (data?: any) => void,
     ) {
         // New url and body
         if (this._fetch_hooks[post_url] == undefined) {
@@ -154,7 +154,7 @@ export class MultiDataFetcher {
     }
 
     _schedule_operations() {
-        if (!utils.is_window_active()) return;
+        if (!is_window_active()) return;
         for (const url_id in this._fetch_operations) {
             for (const body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);
@@ -177,7 +177,7 @@ export class MultiDataFetcher {
 
     _fetch(post_url: string, post_body: string) {
         // TODO: improve error handling, d3js supports promises
-        d3.json(encodeURI(post_url), {
+        json(encodeURI(post_url), {
             credentials: "include",
             method: "POST",
             body: post_body,
@@ -188,15 +188,15 @@ export class MultiDataFetcher {
             this._fetch_callback(
                 post_url,
                 post_body,
-                response as CMKAjaxReponse<{figure_response: any}>
-            )
+                response as CMKAjaxReponse<{figure_response: any}>,
+            ),
         );
     }
 
     _fetch_callback(
         post_url: string,
         post_body: string,
-        api_response: CMKAjaxReponse<{figure_response: any}>
+        api_response: CMKAjaxReponse<{figure_response: any}>,
     ) {
         const response = api_response.result;
         const data = response.figure_response;
@@ -216,7 +216,7 @@ export class MultiDataFetcher {
         this._fetch_hooks[post_url][post_body].forEach(
             (subscriber_func: (data: any) => void) => {
                 subscriber_func(data);
-            }
+            },
         );
     }
 }

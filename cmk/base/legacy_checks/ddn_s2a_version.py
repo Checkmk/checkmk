@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_ddn_s2a_version(string_table):
@@ -24,6 +26,7 @@ def check_ddn_s2a_version(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_version"] = LegacyCheckDefinition(
+    name="ddn_s2a_version",
     parse_function=parse_ddn_s2a_version,
     service_name="DDN S2A Version",
     discovery_function=inventory_ddn_s2a_version,

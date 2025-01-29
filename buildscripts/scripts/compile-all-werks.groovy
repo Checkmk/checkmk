@@ -29,10 +29,10 @@ def main() {
             dir("${checkout_dir}") {
                 /* groovylint-disable LineLength */
                 sh("""
-                    scripts/run-pipenv run echo build venv...
-                    scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk ./ > cmk.json
-                    scripts/run-pipenv run python3 -m cmk.utils.werks collect cma ${WORKSPACE}/cma > cma.json
-                    scripts/run-pipenv run python3 -m cmk.utils.werks collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
+                    scripts/run-uvenv echo build venv...
+                    scripts/run-uvenv python3 -m cmk.utils.werks collect cmk ./ > cmk.json
+                    scripts/run-uvenv python3 -m cmk.utils.werks collect cma ${WORKSPACE}/cma > cma.json
+                    scripts/run-uvenv python3 -m cmk.utils.werks collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
 
                     # jq -s '.[0] * .[1] * .[2]' cma.json cmk.json kube.json > all_werks.json
                     # no need to install jq!!!!!
@@ -58,7 +58,7 @@ def main() {
                 try {
                     /* groovylint-disable LineLength */
                     sh(script: """
-                        (cd packages/cmk-frontend && ./run --setup-environment)
+                        ./packages/cmk-frontend/run --clean --build  # we just want to install the dependencies, but there is no target for that
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
                         # still no need for jq!
                         python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html

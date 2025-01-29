@@ -8,12 +8,13 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.utils.plugin_registry
-import cmk.utils.render
-from cmk.utils.exceptions import MKGeneralException
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
 
-import cmk.gui.log as log
+import cmk.utils.render
+
 from cmk.gui import background_job as background_job
+from cmk.gui import log
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -125,7 +126,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         return self._filter_available_jobs(job_ids)
 
     def get_all_job_ids(
-        self, job_class: type[background_job.BackgroundJob]
+        self, job_class: type[background_job.BackgroundJob] | None = None
     ) -> list[background_job.JobId]:
         job_ids = super().get_all_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
@@ -291,7 +292,7 @@ class JobRenderer:
                 continue
             html.open_tr()
             html.th(left)
-            html.td(HTML(right))
+            html.td(HTML.without_escaping(right))
             html.close_tr()
 
         # Exceptions
@@ -315,8 +316,8 @@ class JobRenderer:
         html.th(_("Progress info"))
         html.open_td()
         html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre(HTML("\n").join(loginfo["JobProgressUpdate"]))
-        html.pre(HTML("\n".join(loginfo["JobResult"])))
+        html.pre(HTML.without_escaping("\n").join(loginfo["JobProgressUpdate"]))
+        html.pre(HTML.without_escaping("\n".join(loginfo["JobResult"])))
         html.close_div()
         html.close_td()
         html.close_tr()
@@ -450,14 +451,19 @@ class JobRenderer:
         loginfo = job_status.loginfo
         if loginfo:
             if job_status.state == background_job.JobStatusStates.EXCEPTION:
-                html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
+                html.td(
+                    HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress"
+                )
             else:
                 progress_text = ""
                 if loginfo["JobProgressUpdate"]:
                     progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
-                html.td(HTML(progress_text), css="job_last_progress")
+                html.td(HTML.without_escaping(progress_text), css="job_last_progress")
 
-            html.td(HTML("<br>".join(loginfo["JobResult"])), css="job_result")
+            html.td(
+                HTML.without_escaping("<br>".join(loginfo["JobResult"])),
+                css="job_result",
+            )
         else:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")

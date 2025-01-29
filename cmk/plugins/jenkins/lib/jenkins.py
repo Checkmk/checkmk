@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
-from enum import auto, StrEnum
+from contextlib import suppress
 from typing import NamedTuple
 
 import requests
@@ -16,17 +16,10 @@ from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
-class HttpMethod(StrEnum):
-    GET = auto()
-    POST = auto()
-
-
 class Section(NamedTuple):
     name: str
     key: str | None
     uri: str
-    method: HttpMethod
-    post_body: str | None = None
 
 
 def main() -> int:
@@ -35,7 +28,7 @@ def main() -> int:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
-    sections = ["instance", "jobs", "nodes", "queue"]
+    sections = ["instance", "jobs", "nodes", "queue", "system_metrics"]
 
     parser = create_default_argument_parser(description=__doc__)
 
@@ -51,7 +44,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
     )
     parser.add_argument(
-        "--path", default="", help="Add (sub) path to the URI, ie. <proto>://<host>:<port>/<path>"
+        "--path", default="", help="Add (sub) path to the URI, i.e. <proto>://<host>:<port>/<path>"
     )
     parser.add_argument(
         "-m",
@@ -62,7 +55,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
+        "hostname", metavar="HOSTNAME", help="Name of the Jenkins instance to query."
     )
 
     return parser.parse_args(argv)
@@ -75,25 +68,26 @@ def agent_jenkins_main(args: Args) -> int:
             name="instance",
             key=None,
             uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown",
-            method=HttpMethod.GET,
         ),
         Section(
             name="jobs",
             key="jobs",
             uri="/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]",
-            method=HttpMethod.GET,
         ),
         Section(
             name="nodes",
             key="computer",
             uri="/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors,nodes[mode],name],offline,offlineCause,temporarilyOffline,monitorData[*]]",
-            method=HttpMethod.GET,
         ),
         Section(
             name="queue",
             key="items",
             uri="/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]",
-            method=HttpMethod.GET,
+        ),
+        Section(
+            name="system_metrics",
+            key="items",
+            uri="/metrics/currentUser/metrics",
         ),
     ]
 
@@ -124,12 +118,7 @@ def handle_request(args, sections):
 
         url = url_base + section.uri
         try:
-            match section.method:
-                case HttpMethod.GET:
-                    response = session.get(url)
-                case HttpMethod.POST:
-                    assert section.post_body is not None
-                    response = session.post(url, data=section.post_body)
+            response = session.get(url)  # nosec B113 # BNS:0b0eac
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:
@@ -152,6 +141,15 @@ def handle_request(args, sections):
 
         if section.name == "instance":
             value = response.json()
+        elif section.name == "system_metrics":
+            value = response.json()
+
+            # Historic information is huge and not interesting for this
+            with suppress(KeyError):
+                del value["histograms"]
+            # Timers contain values we can compute ourselfs
+            with suppress(KeyError):
+                del value["timers"]
         else:
             value = response.json()[section.key]
 

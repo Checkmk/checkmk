@@ -167,7 +167,14 @@ def _parameter_valuespec_temperature() -> Dictionary:
                 ),
             ),
         ],
-        ignored_keys=["_item_key"],
+        ignored_keys=[
+            "_item_key",  # ?
+            "levels_battery",  # funny default construct, see apc_symmetra_temp
+            "levels_sensors",  # funny default construct, see apc_symmetra_temp
+            "cpu",  # funny default construct, see openhardwaremonitor
+            "hdd",  # funny default construct, see openhardwaremonitor
+            "_default",  # funny default construct, see openhardwaremonitor
+        ],
     )
 
 

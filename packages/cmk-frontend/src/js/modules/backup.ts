@@ -4,15 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "./ajax";
-import * as utils from "./utils";
+import {call_ajax} from "./ajax";
+import {reload_whole_page} from "./utils";
 
 type BackupHandlerData = {url: string; ident: string; is_site: boolean};
 
 export function refresh_job_details(
     url: string,
     ident: string,
-    is_site: boolean
+    is_site: boolean,
 ) {
     setTimeout(function () {
         do_job_detail_refresh(url, ident, is_site);
@@ -20,7 +20,7 @@ export function refresh_job_details(
 }
 
 function do_job_detail_refresh(url: string, ident: string, is_site: boolean) {
-    ajax.call_ajax(url, {
+    call_ajax(url, {
         method: "GET",
         post_data: "job=" + encodeURIComponent(ident),
         response_handler: handle_job_detail_response,
@@ -35,7 +35,7 @@ function do_job_detail_refresh(url: string, ident: string, is_site: boolean) {
 
 function handle_job_detail_response(
     handler_data: BackupHandlerData,
-    response_body: string
+    response_body: string,
 ) {
     // when a message was shown and now not anymore, assume the job has finished
     const had_message = document.getElementById("job_detail_msg")
@@ -43,23 +43,24 @@ function handle_job_detail_response(
         : false;
 
     const container = document.getElementById("job_details");
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container!.innerHTML = response_body;
 
     if (!had_message) {
         refresh_job_details(
             handler_data["url"],
             handler_data["ident"],
-            handler_data["is_site"]
+            handler_data["is_site"],
         );
     } else {
-        utils.reload_whole_page();
+        reload_whole_page();
     }
 }
 
 function handle_job_detail_error(
     handler_data: BackupHandlerData,
     status_code: number,
-    error_msg: string
+    error_msg: string,
 ) {
     hide_job_detail_msg();
 
@@ -88,12 +89,13 @@ function handle_job_detail_error(
     txt += "<br><br>HTTP status code: " + status_code;
     if (error_msg) txt += ", Error: " + error_msg;
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     msg.innerHTML = txt;
 
     refresh_job_details(
         handler_data["url"],
         handler_data["ident"],
-        handler_data["is_site"]
+        handler_data["is_site"],
     );
 }
 

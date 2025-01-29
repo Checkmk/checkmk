@@ -2,23 +2,33 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     DefaultValue,
     DictElement,
     Dictionary,
+    InputHint,
     Integer,
     migrate_to_password,
     Password,
     String,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
 def _form_spec() -> Dictionary:
+    def _pre_24_to_formspec_migration(values: object) -> dict:
+        assert isinstance(values, dict)
+        if "no_cert_check" not in values:
+            values["no_cert_check"] = False
+        return values
+
     return Dictionary(
+        migrate=_pre_24_to_formspec_migration,
         elements={
             "port": DictElement(
                 parameter_form=Integer(
@@ -40,7 +50,21 @@ def _form_spec() -> Dictionary:
                 ),
                 required=True,
             ),
-        }
+            "no_cert_check": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Skip TLS certificate verification"),
+                    prefill=DefaultValue(False),
+                ),
+                required=True,
+            ),
+            "timeout": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Connection timeout"),
+                    displayed_magnitudes=(TimeMagnitude.SECOND,),
+                    prefill=InputHint(10.0),
+                ),
+            ),
+        },
     )
 
 

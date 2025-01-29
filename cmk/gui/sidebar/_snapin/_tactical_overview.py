@@ -8,9 +8,7 @@ from typing import Literal, NamedTuple
 
 import livestatus
 
-import cmk.gui.notifications as notifications
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
+from cmk.gui import notifications, sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -351,21 +349,21 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         query: str | livestatus.Query
         if what == "hosts":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="hosts", infos=["host"], context=context
+                infos=["host"], context=context
             )
 
             query = self._get_host_stats_query(context_filters)
 
         elif what == "services":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="services", infos=["host", "service"], context=context
+                infos=["host", "service"], context=context
             )
 
             query = self._get_service_stats_query(context_filters)
 
         elif what == "events":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="eventconsoleevents", infos=["host", "event"], context=context
+                infos=["host", "event"], context=context
             )
 
             query = self._get_event_stats_query(context_filters)
@@ -545,6 +543,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.a(message, target="main", href=url)
         else:
             html.icon("sites", tooltip)
-            html.write_text(message)
+            html.write_text_permissive(message)
         html.close_div()
         html.close_div()

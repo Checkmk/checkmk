@@ -4,7 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "./utils";
+import {
+    content_wrapper_size,
+    execute_javascript_by_object,
+    get_content_wrapper_object,
+} from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Mouseover hover menu, used for performance graph popups            |
@@ -45,8 +49,9 @@ export function update_content(code: string, event_: MouseEvent) {
         return;
     }
 
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     g_hover_menu.innerHTML = code;
-    utils.execute_javascript_by_object(g_hover_menu);
+    execute_javascript_by_object(g_hover_menu);
     update_position(event_);
 }
 
@@ -75,7 +80,7 @@ export function update_position(event_: MouseEvent) {
 
     let x = event_.clientX;
     let y = event_.clientY;
-    const content_wrapper = utils.get_content_wrapper_object();
+    const content_wrapper = get_content_wrapper_object();
     if (content_wrapper) {
         x = x - content_wrapper.offsetLeft;
         y = y - content_wrapper.offsetTop;
@@ -87,7 +92,7 @@ export function update_position(event_: MouseEvent) {
     g_hover_menu.style.top = scrollTop + y + hoverSpacer + "px";
 
     const hoverLeft = parseInt(g_hover_menu.style.left.replace("px", ""));
-    const container_size = utils.content_wrapper_size();
+    const container_size = content_wrapper_size();
     let covers_full_width = false;
 
     if (
@@ -106,7 +111,7 @@ export function update_position(event_: MouseEvent) {
                 g_hover_menu,
                 container_size,
                 scrollLeft,
-                hoverSpacer
+                hoverSpacer,
             );
             covers_full_width = true;
         }
@@ -144,7 +149,7 @@ export function update_position(event_: MouseEvent) {
                     g_hover_menu,
                     container_size,
                     scrollLeft,
-                    hoverSpacer
+                    hoverSpacer,
                 );
             }
         } else {
@@ -152,7 +157,7 @@ export function update_position(event_: MouseEvent) {
                 g_hover_menu,
                 container_size,
                 scrollLeft,
-                hoverSpacer
+                hoverSpacer,
             );
         }
     }
@@ -164,7 +169,7 @@ function stretch_to_full_width(
     _hover_menu: HTMLDivElement,
     container_size: ContainerSize,
     scrollLeft: number,
-    hoverSpacer: number
+    hoverSpacer: number,
 ) {
     g_hover_menu!.style.left = hoverSpacer + scrollLeft + "px";
     g_hover_menu!.style.width = container_size.width! - 2 * hoverSpacer + "px";
@@ -174,13 +179,13 @@ function hover_container() {
     // Return the simplebar wrapper div (if it exists) to avoid the default browser scrollbar for
     // long hover menu contents. If it doesn't exist try the content wrapper div. If that doesn't
     // exist either, fall back to the document body.
-    const container = utils.get_content_wrapper_object();
+    const container = get_content_wrapper_object();
     if (!container) {
         return document.body;
     }
 
     const simplebar_wrapper = container.getElementsByClassName(
-        "simplebar-content-wrapper"
+        "simplebar-content-wrapper",
     );
     if (simplebar_wrapper.length == 0) {
         return container;

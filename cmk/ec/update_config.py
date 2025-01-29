@@ -9,7 +9,7 @@ import time
 from datetime import timedelta
 from pathlib import Path
 
-from cmk.utils.store import save_mk_file
+from cmk.ccc.store import save_mk_file
 
 from .history_file import parse_history_file_python
 from .history_sqlite import SQLiteHistory

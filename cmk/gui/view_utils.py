@@ -13,16 +13,16 @@ from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
@@ -63,8 +63,13 @@ _URL_PATTERN = (
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
-def format_plugin_output(  # pylint: disable=redefined-outer-name
-    output: str, *, request: Request, row: Row | None = None, shall_escape: bool = True
+def format_plugin_output(
+    output: str,
+    *,
+    request: Request,
+    row: Row | None = None,
+    shall_escape: bool = True,
+    newlineishs_to_brs: bool = False,
 ) -> HTML:
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
@@ -78,7 +83,9 @@ def format_plugin_output(  # pylint: disable=redefined-outer-name
 
     output = _render_host_links(output, row, request=request)
 
-    return HTML(output)
+    if newlineishs_to_brs:
+        output = output.replace("\\n", "<br>").replace("\n", "<br>")
+    return HTML.without_escaping(output)
 
 
 def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
@@ -96,9 +103,7 @@ def _render_url_icons(row: Row | None) -> bool:
     return row is None or row.get("service_check_command", "") != "check_mk-checkmk_agent"
 
 
-def _render_host_links(  # pylint: disable=redefined-outer-name
-    output: str, row: Row | None, *, request: Request
-) -> str:
+def _render_host_links(output: str, row: Row | None, *, request: Request) -> str:
     if not row or "[running on" not in output:
         return output
 
@@ -106,7 +111,7 @@ def _render_host_links(  # pylint: disable=redefined-outer-name
     e = output.index("]", a)
     hosts = output[a + 12 : e].replace(" ", "").split(",")
     h = get_host_list_links(row["site"], hosts, request=request)
-    return output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
+    return output[:a] + "running on " + ", ".join(map(str, h)) + output[e + 1 :]
 
 
 def _normalize_check_http_link(output: str) -> str:
@@ -148,9 +153,7 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
         yield escaping.escape_attribute(rest)
 
 
-def get_host_list_links(  # pylint: disable=redefined-outer-name
-    site: SiteId, hosts: list[str], *, request: Request
-) -> list[str]:
+def get_host_list_links(site: SiteId, hosts: list[str], *, request: Request) -> list[HTML]:
     entries = []
     for host in hosts:
         args: HTTPVariables = [
@@ -163,7 +166,7 @@ def get_host_list_links(  # pylint: disable=redefined-outer-name
             args.append(("display_options", request.var("display_options")))
 
         url = makeuri_contextless(request, args, filename="view.py")
-        link = str(HTMLWriter.render_a(host, href=url))
+        link = HTMLWriter.render_a(host, href=url)
         entries.append(link)
     return entries
 
@@ -174,7 +177,7 @@ def row_limit_exceeded(row_count: int, limit: int | None) -> bool:
 
 def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> None:
     """Compare query reply against limits, warn in the GUI about incompleteness"""
-    text = HTML(_("Your query produced more than %d results. ") % limit)
+    text = HTML.with_escaping(_("Your query produced more than %d results. ") % limit)
 
     if request.get_ascii_input("limit", "soft") == "soft" and user_config.may(
         "general.ignore_soft_limit"
@@ -207,7 +210,7 @@ def get_labels(row: "Row", what: str) -> Labels:
     return labels
 
 
-def render_labels(  # pylint: disable=redefined-outer-name
+def render_labels(
     labels: Labels,
     object_type: str,
     with_links: bool,
@@ -228,22 +231,20 @@ def render_labels(  # pylint: disable=redefined-outer-name
 
 
 def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
-    overall_html = HTML()
+    overall_html = HTML.empty()
 
     is_first_group: bool = True
     for group_op, label_group in label_groups:
-        group_html = HTML()
+        group_html = HTML.empty()
 
         # Render group operator
         if not is_first_group:
             group_op_str = "and not" if group_op == "not" else group_op  # prepend "not" with "and "
             overall_html += (
-                HTML(" ")
-                + HTMLWriter.render_i(group_op_str, class_="andornot_operator")
-                + HTML(" ")
+                " " + HTMLWriter.render_i(group_op_str, class_="andornot_operator") + " "
             )
 
-        group_html += HTML("[")  # open group
+        group_html += "["  # open group
 
         is_first_label: bool = True
         for label_op, label in label_group:
@@ -273,14 +274,14 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
             )
             is_first_label = False
 
-        group_html += HTML("]")  # close group
+        group_html += "]"  # close group
         overall_html += HTMLWriter.render_div(group_html, class_="label_group")
         is_first_group = False
 
     return overall_html
 
 
-def render_tag_groups(  # pylint: disable=redefined-outer-name
+def render_tag_groups(
     tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool, *, request: Request
 ) -> HTML:
     return _render_tag_groups_or_labels(
@@ -293,7 +294,7 @@ def render_tag_groups(  # pylint: disable=redefined-outer-name
     )
 
 
-def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
+def _render_tag_groups_or_labels(
     entries: Mapping[TagGroupID, TagID] | Labels,
     object_type: str,
     with_links: bool,
@@ -320,11 +321,13 @@ def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
     return HTMLWriter.render_tags(
-        HTML(" ").join(elements), class_=["tagify", label_type, "display"], readonly="true"
+        HTML.without_escaping(" ").join(elements),
+        class_=["tagify", label_type, "display"],
+        readonly="true",
     )
 
 
-def _render_tag_group(  # pylint: disable=redefined-outer-name
+def _render_tag_group(
     tag_group_id_or_label_key: TagGroupID | str,
     tag_id_or_label_value: TagID | str,
     object_type: str,

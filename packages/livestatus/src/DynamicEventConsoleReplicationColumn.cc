@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <iterator>
+#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "livestatus/BlobColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"

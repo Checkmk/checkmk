@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
+import type {BaseType, Path, Selection} from "d3";
+import {extent, path, select} from "d3";
 
-import {FigureBase} from "./cmk_figures";
-import {
+import type {FigureBase} from "./cmk_figures";
+import type {
     Bounds,
     Domain,
     ElementSize,
@@ -15,25 +16,25 @@ import {
     Levels,
     TransformedData,
 } from "./figure_types";
-import {Scheduler} from "./multi_data_fetcher";
+import type {Scheduler} from "./multi_data_fetcher";
 
 /**
  * Draw an individual shape
  *
  * @callback pathCallback
- * @param {d3.path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
+ * @param {path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
  */
 
 interface BackgroundStatueOptions {
     size?: {width: number; height: number};
-    path_callback?: (path: d3.Path) => void;
+    path_callback?: (path: Path) => void;
     css_class: string;
     visible: boolean;
 }
 
 /**
  * Component to draw a background color on a dashlet
- * @param {d3.selection} selection - d3 object to draw on
+ * @param {selection} selection - d3 object to draw on
  * @param {Object} options - Configuration of the background
  * @param {Object} options.size - When path_callback is not given draw a rect
  * @param {number} options.size.height - Height of the background rect
@@ -42,9 +43,9 @@ interface BackgroundStatueOptions {
  * @param {string} options.css_class - Css classes to append to the background
  * @param {boolean} options.visible - Whether to draw the background at all
  */
-export function background_status_component<GType extends d3.BaseType, Data>(
-    selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
-    options: BackgroundStatueOptions
+export function background_status_component<GType extends BaseType, Data>(
+    selection: Selection<GType, Data, BaseType, unknown>,
+    options: BackgroundStatueOptions,
 ) {
     const data = options.visible ? [null] : [];
 
@@ -54,7 +55,7 @@ export function background_status_component<GType extends d3.BaseType, Data>(
             path.rect(0, 0, options.size!.width, options.size!.height);
         };
 
-    const background_path = d3.path();
+    const background_path = path();
     path_callback(background_path);
 
     selection
@@ -78,7 +79,7 @@ interface MetricValueComponentOptions {
 
 export function calculate_domain(data: TransformedData[]): [number, number] {
     // @ts-ignore
-    const [lower, upper] = d3.extent(data, d => d.value);
+    const [lower, upper] = extent(data, d => d.value);
     // @ts-ignore
     return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
 }
@@ -97,7 +98,7 @@ export function clamp(value: number, domain: Domain) {
 
 export function make_levels(
     domain: Domain,
-    bounds: Bounds
+    bounds: Bounds,
 ): [Levels, Levels, Levels] | [] {
     let dmin = domain[0];
     const dmax = domain[1];
@@ -120,7 +121,7 @@ export function make_levels(
 
 /**
  * Component to draw a big centered value on a dashlet
- * @param {d3.selection} selection - d3 object to draw on
+ * @param {selection} selection - d3 object to draw on
  * @param {Object} options - Configuration of the value
  * @param {Object} options.value - Configuration of the text to draw
  * @param {string} options.value.url - When given, add a link to the text
@@ -132,9 +133,9 @@ export function make_levels(
  * @param {number} options.font_size - Size of the font, clamped to [12, 50]
  * @param {boolean} options.visible - Whether to draw the value at all
  */
-export function metric_value_component<GType extends d3.BaseType, Data>(
-    selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
-    options: MetricValueComponentOptions
+export function metric_value_component<GType extends BaseType, Data>(
+    selection: Selection<GType, Data, BaseType, unknown>,
+    options: MetricValueComponentOptions,
 ) {
     const font_size = clamp(options.font_size!, [12, 50]);
     const data = options.visible ? [options.value] : [];
@@ -193,7 +194,7 @@ interface BigCenteredTextOptions {
  */
 export function metric_value_component_options_big_centered_text(
     size: ElementSize,
-    options: BigCenteredTextOptions
+    options: BigCenteredTextOptions,
 ) {
     if (options == undefined) {
         options = {};
@@ -245,7 +246,7 @@ interface StateComponentOptions {
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(
     figurebase: FigureBase<FigureData>,
-    options: StateComponentOptions
+    options: StateComponentOptions,
 ) {
     // TODO: use figurebase.svg as first parameter and move size to options
     if (!options.visible) {
@@ -265,7 +266,7 @@ export function state_component(
                 (figurebase.figure_size.width - font_size * 8) / 2 +
                 ", " +
                 (figurebase.figure_size.height - font_size * 2) +
-                ")"
+                ")",
         );
     state_component
         .selectAll("rect.status_label")
@@ -304,7 +305,7 @@ export function plot_render_function(plot: any) {
     if (js_render) return get_function(js_render);
     //TODO: replace this function from string with a better solution
     return get_function(
-        "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }"
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }",
     );
 }
 
@@ -353,14 +354,14 @@ export function getEmptyBasicFigureData(): FigureData {
 export function svg_text_overflow_ellipsis(
     node: SVGTextElement | SVGTSpanElement,
     width: number,
-    padding: number
+    padding: number,
 ) {
     let length = node.getComputedTextLength();
     if (length <= width - padding) return;
 
-    const node_sel = d3.select(node);
+    const node_sel = select(node);
     let text = node_sel.text();
-    d3.select(node.parentNode as HTMLElement)
+    select(node.parentNode as HTMLElement)
         .selectAll("title")
         .data(() => [text])
         .join("title")
@@ -375,9 +376,9 @@ export function svg_text_overflow_ellipsis(
     node_sel.attr("x", padding).attr("text-anchor", "left");
 }
 
-export function add_scheduler_debugging<GType extends d3.BaseType, Data>(
-    selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
-    scheduler: Scheduler
+export function add_scheduler_debugging<GType extends BaseType, Data>(
+    selection: Selection<GType, Data, BaseType, unknown>,
+    scheduler: Scheduler,
 ) {
     const debugging = selection.append("div");
     // Stop button

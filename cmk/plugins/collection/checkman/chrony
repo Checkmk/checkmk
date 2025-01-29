@@ -12,6 +12,11 @@ description:
  You can set levels for the maximum stratum and for the time offset
  in milliseconds. The configuration is compatible with {ntp}.
 
+ The default {WARN} alert is set to 1025 seconds
+ (default chrony's {maxpoll} values is 1024 seconds,
+ see https://chrony-project.org/examples.html#_client_using_public_servers)
+ and thus differs from the default {WARN} alert of the {NTP} check.
+
  When {chrony} is not found running, the check goes to {CRIT}.
 
 discovery:

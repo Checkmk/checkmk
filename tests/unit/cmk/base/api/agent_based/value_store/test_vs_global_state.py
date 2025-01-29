@@ -5,7 +5,8 @@
 
 from pytest import MonkeyPatch
 
-import cmk.utils.store as store
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
@@ -14,17 +15,17 @@ from cmk.base.api.agent_based.value_store import ValueStoreManager
 
 from cmk.agent_based.v1.value_store import get_value_store, set_value_store_manager
 
-_TEST_KEY = ("check", "item", "user-key")
-
 
 def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
     service_id = ServiceID(CheckPluginName("test_service"), None)
+    raw_content = (
+        '[[["test_load_host_value_store_loads_file", "test_service", null, "loaded_file"], "True"]]'
+    )
 
     monkeypatch.setattr(
         store,
         "load_text_from_file",
-        lambda *_a, **_kw: "{('test_load_host_value_store_loads_file', '%s', %r, 'loaded_file'): True}"
-        % service_id,
+        lambda *_a, **_kw: raw_content,
     )
 
     with set_value_store_manager(
@@ -32,4 +33,4 @@ def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
         store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):
-            assert get_value_store()["loaded_file"]
+            assert get_value_store()["loaded_file"] is True  # trueish is not enough

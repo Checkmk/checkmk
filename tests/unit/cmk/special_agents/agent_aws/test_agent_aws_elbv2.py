@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from typing import NamedTuple, Protocol
 
@@ -126,7 +126,7 @@ def get_elbv2_sections() -> ELBv2Sections:
     ) -> ELBv2SectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("elbv2_names", names)
         config.add_service_tags("elbv2_tags", tags)
@@ -139,16 +139,24 @@ def get_elbv2_sections() -> ELBv2Sections:
         # TODO: FakeELBv2Client shoud actually subclass ELBv2Client, etc.
         elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, distributor)  # type: ignore[arg-type]
         elbv2_summary = ELBSummaryGeneric(
-            fake_elbv2_client, region, config, distributor, resource="elbv2"  # type: ignore[arg-type]
+            fake_elbv2_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            resource="elbv2",
         )
         elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource="elbv2")  # type: ignore[arg-type]
         elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)  # type: ignore[arg-type]
         elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
         elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
-            fake_cloudwatch_client, region, config  # type: ignore[arg-type]
+            fake_cloudwatch_client,  # type: ignore[arg-type]
+            region,
+            config,
         )
         elbv2_application_target_groups_lambda = ELBv2ApplicationTargetGroupsLambda(
-            fake_cloudwatch_client, region, config  # type: ignore[arg-type]
+            fake_cloudwatch_client,  # type: ignore[arg-type]
+            region,
+            config,
         )
         elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 

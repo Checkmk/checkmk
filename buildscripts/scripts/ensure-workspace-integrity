@@ -5,7 +5,9 @@
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PREVIOUS_IMAGE_FILENAME="${REPO_PATH}/version_txt_from_previous_run"
-CURRENT_IMAGE_IDENTIFICATION="$(lsb_release --codename --short)-$(cat /version.txt)"
+# Please note: the following line does not work on all distros (e.g. Centos etc.) but we use this mechanism currently
+# anyway only in the gerrit jobs
+CURRENT_IMAGE_IDENTIFICATION="$(lsb_release --codename --short)"
 
 log() {
     echo "ensure-workspace-integrity: ${1}"
@@ -18,14 +20,14 @@ update_previous_used_image() {
 
 if ! test -f "${PREVIOUS_IMAGE_FILENAME}"; then
     log "${PREVIOUS_IMAGE_FILENAME} does not exists (yet)"
-    make -C "${REPO_PATH}" docker-context-clean
+    make -C "${REPO_PATH}" mrproper
     update_previous_used_image
     exit 0
 fi
 
 if ! echo "${CURRENT_IMAGE_IDENTIFICATION}" | diff "${PREVIOUS_IMAGE_FILENAME}" -; then
     log "Previously used image in this WORKSPACE does not match current image (${CURRENT_IMAGE_IDENTIFICATION})!"
-    make -C "${REPO_PATH}" docker-context-clean
+    make -C "${REPO_PATH}" mrproper
     update_previous_used_image
     exit 0
 fi

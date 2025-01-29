@@ -8,8 +8,9 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
     _Label,

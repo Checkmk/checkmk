@@ -9,8 +9,8 @@ from typing import Any
 
 from cmk.utils import oracle_constants  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -248,11 +248,10 @@ def _check_oracle_db_time(
         ("oracle_db_cpu", "DB CPU", cpu_time_rate),
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
-        metric_params = params.get(metric, (None, None))
-        yield from check_levels_v1(
+        yield from check_levels(
             rate,
             metric_name=metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(metric),
             render_func=_unit_formatter("/s"),
             label=infoname,
         )
@@ -296,11 +295,10 @@ def _check_oracle_memory_info(
         if value is None:
             continue
 
-        metric_params = params.get(ga_field.metric, (None, None))
-        yield from check_levels_v1(
+        yield from check_levels(
             value,
             metric_name=ga_field.metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(ga_field.metric),
             render_func=render.bytes,
             label=ga_field.name,
             notice_only=ga_field.name not in sticky_fields,
@@ -371,11 +369,10 @@ def _check_oracle_performance_iostat_file(
 
             totals[i] += rate
 
-            metric_params = params.get(metric_name, (None, None))
-            yield from check_levels_v1(
+            yield from check_levels(
                 rate,
                 metric_name=metric_name,
-                levels_upper=metric_params,
+                levels_upper=params.get(metric_name),
                 render_func=_unit_formatter(unit),
                 label=iofile.name + " " + field_name,
                 notice_only=True,
@@ -508,11 +505,10 @@ def check_oracle_performance_waitclasses(
             else:
                 total_waited_sum_fg += rate
 
-            metric_params = params.get(metric_name, (None, None))
-            yield from check_levels_v1(
+            yield from check_levels(
                 rate,
                 metric_name=metric_name,
-                levels_upper=metric_params,
+                levels_upper=params.get(metric_name),
                 render_func=_unit_formatter("/s"),
                 label=f"{waitclass.name} {infotext_suffix}",
                 notice_only=True,
@@ -523,11 +519,10 @@ def check_oracle_performance_waitclasses(
         ("Total waited", total_waited_sum, "oracle_wait_class_total"),
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg"),
     ]:
-        metric_params = params.get(total_metric, (None, None))
-        yield from check_levels_v1(
+        yield from check_levels(
             total_value,
             metric_name=total_metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(total_metric),
             render_func=_unit_formatter("/s"),
             label=infoname,
         )

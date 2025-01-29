@@ -76,7 +76,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pylint test-pylint-docker test-ruff test-ruff-docker \
+	test-mypy test-mypy-raw test-mypy-docker test-packaging test-pylint test-pylint-docker test-ruff test-ruff-docker \
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \

@@ -406,6 +406,102 @@ EXAMPLE_50: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_51: Mapping[str, object] = {
+    "name": "post_data",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "method": "GET",
+            "post_data": {"data": "da", "content_type": "text/html"},
+        },
+    ),
+}
+
+EXAMPLE_52: Mapping[str, object] = {
+    "name": "post_data",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "method": "POST",
+            "post_data": {"data": "da", "content_type": "video"},
+        },
+    ),
+}
+
+EXAMPLE_53: Mapping[str, object] = {
+    "name": "post_data",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "method": "PUT",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+EXAMPLE_54: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "GET"}),
+}
+
+EXAMPLE_55: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "DELETE"}),
+}
+
+EXAMPLE_56: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "HEAD"}),
+}
+
+EXAMPLE_57: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "PUT"}),
+}
+
+EXAMPLE_58: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "POST"}),
+}
+
+EXAMPLE_59: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "OPTIONS"}),
+}
+
+EXAMPLE_60: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "TRACE"}),
+}
+
+EXAMPLE_61: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "CONNECT"}),
+}
+
+EXAMPLE_62: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "CONNECT_POST"}),
+}
+
+EXAMPLE_63: Mapping[str, object] = {
+    "name": "method",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"method": "PROP_FIND"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -432,6 +528,13 @@ EXAMPLE_50: Mapping[str, object] = {
         EXAMPLE_47,
         EXAMPLE_48,
         EXAMPLE_50,
+        EXAMPLE_52,
+        EXAMPLE_53,
+        EXAMPLE_54,
+        EXAMPLE_55,
+        EXAMPLE_56,
+        EXAMPLE_57,
+        EXAMPLE_58,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -481,9 +584,53 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
                 ),
             ),
         ),
+        (
+            EXAMPLE_52,
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(
+                        content="da",
+                        content_type=(SendDataType.CUSTOM, "video"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_53,
+            (
+                HttpMethod.PUT,
+                SendData(
+                    send_data=SendDataInner(
+                        content="",
+                        content_type=(SendDataType.CUSTOM, "gif"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_54,
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_55,
+            (HttpMethod.DELETE, None),
+        ),
+        (
+            EXAMPLE_56,
+            (HttpMethod.HEAD, None),
+        ),
+        (
+            EXAMPLE_57,
+            (HttpMethod.PUT, SendData(send_data=None)),
+        ),
+        (
+            EXAMPLE_58,
+            (HttpMethod.POST, SendData(send_data=None)),
+        ),
     ],
 )
-def test_migrate_post_data(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
     value = V1Value.model_validate(rule_value)
     # Act
@@ -573,6 +720,12 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_35,
         EXAMPLE_43,
         EXAMPLE_49,
+        EXAMPLE_51,
+        EXAMPLE_59,
+        EXAMPLE_60,
+        EXAMPLE_61,
+        EXAMPLE_62,
+        EXAMPLE_63,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

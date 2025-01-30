@@ -94,6 +94,18 @@ class V1Url(BaseModel, extra="forbid"):
     expect_string: str | None = None
     expect_regex: V1Regex | None = None
     post_data: V1PostData | None = None
+    method: (
+        Literal[
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "HEAD",
+            # Not supported by V2
+            # "OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND",
+        ]
+        | None
+    ) = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -111,6 +123,12 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
             # TODO: Redirects behave differently in V1 and V2.
             return False
         if value.mode[1].expect_regex is not None and value.mode[1].expect_string is not None:
+            return False
+        if value.mode[1].post_data is not None and value.mode[1].method in (
+            "GET",
+            "DELETE",
+            "HEAD",
+        ):
             return False
         type_ = _classify(value.host.address[1])
         if type_ is HostType.EMBEDDABLE:
@@ -218,21 +236,32 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             }
         case _, _:
             raise NotImplementedError()
-    match url_params.post_data:
-        case None:
+    match url_params.method, url_params.post_data:
+        case None, None:
             method: Mapping[str, object] = {"method": ("get", None)}
-        case post_data:
-            method = {
-                "method": (
-                    "post",  # TODO: Is this truly the default?
-                    {
-                        "send_data": {
-                            "content": post_data.data,
-                            "content_type": ("custom", post_data.content_type),
-                        }
-                    },
-                )
-            }
+        case "GET", None:
+            method = {"method": ("get", None)}
+        case "HEAD", None:
+            method = {"method": ("head", None)}
+        case "DELETE", None:
+            method = {"method": ("delete", None)}
+        case "POST" | "PUT" | None, post_data:
+            method_type = {
+                "POST": "post",
+                "PUT": "put",
+                None: "post",  # TODO: Is this truly the default?
+            }[url_params.method]
+            send_data = (
+                {}
+                if post_data is None
+                else {
+                    "send_data": {
+                        "content": post_data.data,
+                        "content_type": ("custom", post_data.content_type),
+                    }
+                }
+            )
+            method = {"method": (method_type, send_data)}
     return {
         "endpoints": [
             {

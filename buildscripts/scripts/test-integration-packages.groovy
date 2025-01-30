@@ -90,20 +90,25 @@ def main() {
                 raiseOnError: false,
             ) {
                 def build_instance = smart_build(
-                    job: relative_job_name,
-                    parameters: [
-                        stringParam(name: "DISTRO", value: distro),
-                        stringParam(name: "EDITION", value: EDITION),
-                        stringParam(name: "VERSION", value: VERSION),
-                        stringParam(name: "DOCKER_TAG", value: docker_tag),
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: relative_job_name,
+                    build_params: [
+                        DISTRO: distro,
+                        EDITION: EDITION,
+                        VERSION: VERSION,
+                        CUSTOM_GIT_REF: effective_git_ref,
                     ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
                 copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
+                    projectName: relative_job_name,
                     selector: specific(build_instance.getId()), // buildNumber shall be a string
                     target: "${checkout_dir}/test-results",
                     fingerprintArtifacts: true
@@ -111,7 +116,15 @@ def main() {
             }
         }]
     }
-    currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+
+    def image_name = "minimal-alpine-checkmk-ci-master:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
+    minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+        currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
 
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {
@@ -121,7 +134,7 @@ def main() {
             xunit([Custom(
                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                 deleteOutputFiles: true,
-                failIfNotNew: true,
+                failIfNotNew: false,    // as they are copied from the single tests
                 pattern: "**/junit.xml",
                 skipNoTestFiles: false,
                 stopProcessingIfError: true

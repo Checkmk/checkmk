@@ -64,6 +64,24 @@ def archive_logs(params: Mapping[str, Any]) -> Response:
 
 @Endpoint(
     constructors.collection_href("audit_log"),
+    ".../delete",
+    method="delete",
+    output_empty=True,
+    permissions_required=CLEAR_PERMISSION,
+    update_config_generation=False,
+    deprecated_urls={"/domain-types/audit_log/collections/all": 16367},
+)
+def clear_logs(params: Mapping[str, Any]) -> Response:
+    """Move audit log entries to archive"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.auditlog")
+    user.need_permission("wato.clear_auditlog")
+    AuditLogStore().clear()
+    return Response(status=204)
+
+
+@Endpoint(
+    constructors.collection_href("audit_log"),
     ".../collection",
     method="get",
     response_schema=AuditLogEntryCollection,
@@ -130,3 +148,4 @@ def _get_start_end_day_timestamp(value: datetime.date) -> tuple[int, int]:
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_all)
     endpoint_registry.register(archive_logs)
+    endpoint_registry.register(clear_logs)

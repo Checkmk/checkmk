@@ -5,7 +5,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.testlib.utils import reset_registries
 

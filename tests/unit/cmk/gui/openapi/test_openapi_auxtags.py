@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_create_auxtag_invalid_data(clients: ClientRegistry) -> None:

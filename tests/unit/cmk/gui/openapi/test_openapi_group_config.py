@@ -10,7 +10,7 @@ import string
 import pytest
 from pytest import FixtureRequest
 
-from tests.testlib.rest_api_client import ClientRegistry, GroupConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

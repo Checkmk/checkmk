@@ -26,7 +26,7 @@ from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ, TestResponse
 
-from tests.testlib.rest_api_client import (
+from tests.testlib.unit.rest_api_client import (
     assert_and_delete_rest_crash_report,
     ClientRegistry,
     expand_rel,

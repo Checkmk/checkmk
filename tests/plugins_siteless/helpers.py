@@ -13,7 +13,7 @@ import re
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
-from tests.testlib.repo import qa_test_data_path
+from tests.testlib.common.repo import qa_test_data_path
 
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName

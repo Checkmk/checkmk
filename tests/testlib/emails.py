@@ -15,7 +15,7 @@ from typing import Final, IO
 
 from faker import Faker
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 

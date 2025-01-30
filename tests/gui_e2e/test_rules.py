@@ -22,7 +22,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.host_effective_parameters import
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import makedirs
 

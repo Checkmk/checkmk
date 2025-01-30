@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_enterprise_repo
 
 from cmk.utils.hostaddress import HostAddress, HostName
 

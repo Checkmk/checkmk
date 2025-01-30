@@ -6,8 +6,8 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.common.repo import current_base_branch_name
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.repo import current_base_branch_name
 from tests.testlib.site import get_site_factory, Site
 
 

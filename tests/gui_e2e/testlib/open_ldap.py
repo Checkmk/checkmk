@@ -8,7 +8,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import NamedTuple, Self
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)

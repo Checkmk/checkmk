@@ -15,8 +15,8 @@ import requests
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
+from tests.testlib.common.repo import add_python_paths, current_base_branch_name
 from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.repo import add_python_paths, current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.ccc.version import Edition

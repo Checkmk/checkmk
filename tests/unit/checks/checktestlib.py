@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from cmk.ccc import store
 

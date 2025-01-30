@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from livestatus import RRDResponse
 

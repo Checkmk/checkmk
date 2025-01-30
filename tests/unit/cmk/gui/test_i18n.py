@@ -11,7 +11,7 @@ from pathlib import Path
 import flask
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 import cmk.utils.paths
 

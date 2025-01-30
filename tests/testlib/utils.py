@@ -22,7 +22,7 @@ from typing import Any, assert_never, overload
 import pexpect  # type: ignore[import-untyped]
 import yaml
 
-from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
+from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.ccc.version import Edition
 

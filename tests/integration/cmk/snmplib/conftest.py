@@ -26,7 +26,7 @@ from pysnmp.hlapi import (  # type: ignore[import-untyped]
     UdpTransportTarget,
 )
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 

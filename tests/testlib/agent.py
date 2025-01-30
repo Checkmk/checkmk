@@ -15,7 +15,7 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any, assert_never, Literal
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import (
     daemon,

@@ -1,0 +1,21 @@
+diff --git a/modules/python/python_proto_library.bzl b/modules/python/python_proto_library.bzl
+index 7689735c..55f93939 100644
+--- a/modules/python/python_proto_library.bzl
++++ b/modules/python/python_proto_library.bzl
+@@ -38,7 +38,7 @@ def python_proto_library(name, **kwargs):
+     py_library(
+         name = name,
+         srcs = [name_pb],
+-        deps = PROTO_DEPS + kwargs.get("deps", []),
++        deps = kwargs.get("deps", []),
+         data = kwargs.get("data", []),  # See https://github.com/rules-proto-grpc/rules_proto_grpc/issues/257 for use case
+         imports = imports,
+         **{
+@@ -47,7 +47,3 @@ def python_proto_library(name, **kwargs):
+             if k in bazel_build_rule_common_attrs
+         }  # Forward Bazel common args
+     )
+-
+-PROTO_DEPS = [
+-    Label(requirement("protobuf")),
+-]

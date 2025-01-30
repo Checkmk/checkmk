@@ -1,0 +1,54 @@
+diff --git a/modules/python/BUILD.bazel b/modules/python/BUILD.bazel
+index 1f05eba3..40a41c47 100644
+--- a/modules/python/BUILD.bazel
++++ b/modules/python/BUILD.bazel
+@@ -39,3 +39,13 @@ proto_plugin(
+     tool = "//grpclib:plugin",
+     visibility = ["//visibility:public"],
+ )
++
++proto_plugin(
++    name = "pyi_proto_plugin",
++    exclusions = [
++        "google/protobuf",
++    ],
++    outputs = ["{protopath|python}_pb2.pyi"],
++    protoc_plugin_name = "pyi",
++    visibility = ["//visibility:public"],
++)
+diff --git a/modules/python/python_grpc_compile.bzl b/modules/python/python_grpc_compile.bzl
+index d7678e31..b4b0ef80 100644
+--- a/modules/python/python_grpc_compile.bzl
++++ b/modules/python/python_grpc_compile.bzl
+@@ -18,6 +18,7 @@ python_grpc_compile = rule(
+             default = [
+                 Label("//:proto_plugin"),
+                 Label("//:grpc_plugin"),
++                Label("//:pyi_proto_plugin"),
+             ],
+             cfg = "exec",
+             doc = "List of protoc plugins to apply",
+diff --git a/modules/python/python_grpclib_compile.bzl b/modules/python/python_grpclib_compile.bzl
+index 524fedc5..05fb93ee 100644
+--- a/modules/python/python_grpclib_compile.bzl
++++ b/modules/python/python_grpclib_compile.bzl
+@@ -18,6 +18,7 @@ python_grpclib_compile = rule(
+             default = [
+                 Label("//:proto_plugin"),
+                 Label("//:grpclib_plugin"),
++                Label("//:pyi_proto_plugin"),
+             ],
+             cfg = "exec",
+             doc = "List of protoc plugins to apply",
+diff --git a/modules/python/python_proto_compile.bzl b/modules/python/python_proto_compile.bzl
+index 4c099904..74b07dd2 100644
+--- a/modules/python/python_proto_compile.bzl
++++ b/modules/python/python_proto_compile.bzl
+@@ -17,6 +17,7 @@ python_proto_compile = rule(
+             providers = [ProtoPluginInfo],
+             default = [
+                 Label("//:proto_plugin"),
++                Label("//:pyi_proto_plugin"),
+             ],
+             cfg = "exec",
+             doc = "List of protoc plugins to apply",

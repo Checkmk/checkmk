@@ -22,7 +22,7 @@ git_override(
 
 bazel_dep(name = "rules_cc", version = "0.0.17")
 bazel_dep(name = "rules_rust", version = "0.49.3")
-bazel_dep(name = "rules_python", version = "0.37.0")
+bazel_dep(name = "rules_python", version = "0.37.2")
 bazel_dep(name = "rules_uv", version = "0.44.0")
 single_version_override(
     module_name = "rules_uv",
@@ -86,7 +86,21 @@ use_repo(types, "cmk_types")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
+bazel_dep(name = "rules_proto_grpc_python", version = "5.0.1")
+single_version_override(
+    module_name = "rules_proto_grpc_python",
+    patch_strip = 3,
+    patches = [
+        # https://github.com/rules-proto-grpc/rules_proto_grpc/commit/155b8fe1028d9284670ff9fa0cb9168c72faf6e6
+        "//bazel/patches:rules_proto_grpc_python-generate_pyi.patch",
+        # Provide our own `requirement("protobuf")` dependency to avoid
+        # package collisions.
+        # See also: https://github.com/rules-proto-grpc/rules_proto_grpc/issues/394
+        "//bazel/patches:rules_proto_grpc_python-no_protobuf_dep.patch",
+    ],
+)
 
 fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
 

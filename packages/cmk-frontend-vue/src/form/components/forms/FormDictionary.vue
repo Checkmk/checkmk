@@ -188,6 +188,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     v-if="props.spec.elements.length > 0"
     class="dictionary"
     :class="dictionaryVariants({ variant })"
+    :aria-label="props.spec.title"
+    role="group"
   >
     <tbody>
       <tr v-for="group in getElementsInGroupsFromProps()" :key="`${componentId}.${group.groupKey}`">
@@ -237,7 +239,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
               <FormIndent
                 v-if="dict_element.is_active"
                 :indent="indentRequired(dict_element.dict_config, group.layout)"
-                :aria-label="dict_element.dict_config.parameter_form.title"
               >
                 <FormEditDispatcher
                   v-if="!dict_element.dict_config.render_only"

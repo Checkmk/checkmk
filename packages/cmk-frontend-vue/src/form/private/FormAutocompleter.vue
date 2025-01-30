@@ -89,7 +89,12 @@ const vClickOutside = useClickOutside()
         :size="props.size"
         :placeholder="props.placeholder"
         @keydown.enter.prevent="selectFirstSuggestion"
-        @focus="() => (showSuggestions = true)"
+        @focus="
+          () => {
+            if (autocompleterInput === undefined) autocompleterInput = ''
+            showSuggestions = true
+          }
+        "
         @input="
           (ev: Event) => {
             autocompleterInput = (ev.target as HTMLInputElement).value

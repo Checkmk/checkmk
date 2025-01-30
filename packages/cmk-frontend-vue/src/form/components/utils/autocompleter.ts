@@ -66,10 +66,10 @@ export async function fetchData<OutputType>(
 }
 
 export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompleter | null): {
-  input: Ref<string>
+  input: Ref<string | undefined>
   output: Ref<OutputType | undefined>
 } {
-  const input = ref<string>('')
+  const input = ref<string>()
   const output = ref<OutputType>()
 
   watch([input, getAutocompleter], async ([_, autocompleter]) => {

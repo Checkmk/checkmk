@@ -155,7 +155,7 @@ function indentRequired(
   layout: FormSpec.DictionaryGroupLayout
 ): boolean {
   return (
-    labelRequired(element) &&
+    titleRequired(element) &&
     variant === 'one_column' &&
     !(element.group && layout === 'horizontal') &&
     !(
@@ -166,11 +166,14 @@ function indentRequired(
   )
 }
 
-function labelRequired(element: FormSpec.DictionaryElement): boolean {
-  return !(
-    element.required &&
-    element.parameter_form.title === '' &&
-    element.parameter_form.type === 'boolean_choice'
+function titleRequired(element: FormSpec.DictionaryElement): boolean {
+  return (
+    (!element.required || element.parameter_form.title !== '') &&
+    !(
+      element.required &&
+      element.parameter_form.title === '' &&
+      element.parameter_form.type === 'boolean_choice'
+    )
   )
 }
 
@@ -197,53 +200,52 @@ const { FormEditDispatcher } = useFormEditDispatcher()
               :key="`${componentId}.${dict_element.dict_config.name}`"
               class="form-dictionary__group_elem"
             >
-              <template v-if="labelRequired(dict_element.dict_config)">
+              <span
+                v-if="titleRequired(dict_element.dict_config)"
+                class="form-dictionary__group-elem__title"
+              >
                 <span
-                  v-if="
-                    !dict_element.dict_config.required ||
-                    dict_element.dict_config.parameter_form.title
-                  "
-                  class="checkbox"
+                  v-if="dict_element.dict_config.required"
+                  :class="{
+                    'form-dictionary__required-without-indent': !indentRequired(
+                      dict_element.dict_config,
+                      group.layout
+                    )
+                  }"
                 >
-                  <span v-if="dict_element.dict_config.required">
-                    <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
-                      v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
-                      :spec="dict_element.dict_config.parameter_form"
-                      :i18n-required="spec.i18n_base.required"
-                      :space="'before'"
-                    />
-                  </span>
-                  <CmkCheckbox
-                    v-else
-                    v-model="dict_element.is_active"
-                    :label="dict_element.dict_config.parameter_form.title"
-                    @update:model-value="toggleElement(dict_element.dict_config.name)"
+                  <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
+                    v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
+                    :spec="dict_element.dict_config.parameter_form"
+                    :i18n-required="spec.i18n_base.required"
+                    :space="'before'"
                   />
-                  <CmkSpace size="small" />
-                  <HelpText :help="dict_element.dict_config.parameter_form.help" />
                 </span>
-              </template>
+                <CmkCheckbox
+                  v-else
+                  v-model="dict_element.is_active"
+                  :label="dict_element.dict_config.parameter_form.title"
+                  @update:model-value="toggleElement(dict_element.dict_config.name)"
+                />
+                <CmkSpace size="small" />
+                <HelpText :help="dict_element.dict_config.parameter_form.help" />
+              </span>
               <FormIndent
+                v-if="dict_element.is_active"
                 :indent="indentRequired(dict_element.dict_config, group.layout)"
                 :aria-label="dict_element.dict_config.parameter_form.title"
-                :class="{
-                  'group-with-more-items': group.elems.length > 1
-                }"
               >
-                <template v-if="dict_element.is_active">
-                  <FormEditDispatcher
-                    v-if="!dict_element.dict_config.render_only"
-                    v-model:data="data[dict_element.dict_config.name]"
-                    :spec="dict_element.dict_config.parameter_form"
-                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                  />
-                  <FormReadonly
-                    v-else
-                    :data="data[dict_element.dict_config.name]"
-                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                    :spec="dict_element.dict_config.parameter_form"
-                  ></FormReadonly>
-                </template>
+                <FormEditDispatcher
+                  v-if="!dict_element.dict_config.render_only"
+                  v-model:data="data[dict_element.dict_config.name]"
+                  :spec="dict_element.dict_config.parameter_form"
+                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                />
+                <FormReadonly
+                  v-else
+                  :data="data[dict_element.dict_config.name]"
+                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                  :spec="dict_element.dict_config.parameter_form"
+                ></FormReadonly>
               </FormIndent>
             </div>
           </div>
@@ -260,13 +262,16 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   margin: 1em 0 0.2em 0;
 }
 
-span.checkbox {
-  display: inline-block;
-  margin: 0 var(--spacing-half) var(--spacing-half) 0;
+.form-dictionary--one_column > .form-dictionary__group_elem {
+  margin-bottom: var(--spacing);
+}
+tr:last-of-type > td > .form-dictionary--one_column > .form-dictionary__group_elem:last-of-type {
+  margin-bottom: 0;
+}
 
-  input + .form-dictionary__label {
-    cursor: pointer;
-  }
+.form-dictionary__required-without-indent {
+  display: inline-block;
+  margin-bottom: var(--spacing-half);
 }
 
 /* Variants */
@@ -277,7 +282,7 @@ span.checkbox {
   justify-content: flex-start;
   align-items: start;
 
-  > span.checkbox {
+  > .form-dictionary__group-elem__title {
     display: inline-block;
     flex-shrink: 0;
     width: 180px;
@@ -287,13 +292,6 @@ span.checkbox {
     word-wrap: break-word;
     white-space: normal;
   }
-}
-
-.group-with-more-items {
-  border: none;
-  margin-left: 0;
-  margin-right: 8px;
-  padding-left: 0;
 }
 
 .form-dictionary--one_column {

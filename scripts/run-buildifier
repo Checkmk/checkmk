@@ -31,4 +31,4 @@ get_bazel_files() {
         \) -print
 }
 
-get_bazel_files | xargs echo "${BAZEL_CMD}" run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"
+get_bazel_files | xargs "${BAZEL_CMD}" run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"

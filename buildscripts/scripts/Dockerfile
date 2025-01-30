@@ -16,7 +16,7 @@ FROM python:3.12-alpine3.21
 
 # bash is required to be used in Jenkins with image.inside(), requires +3MB
 # git is required to use checkmk-dev-tools, requires +13MB
-RUN apk update && apk add bash git
+RUN apk update && apk add bash git make
 
 # install checkmk-dev-tools
 RUN pip3 install --break-system-packages \

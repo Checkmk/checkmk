@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-01-29 10:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -14317,6 +14317,25 @@ msgstr "Verbindungstimeout in Sekunden"
 msgid "Connection to central Agent Bakery"
 msgstr "Verbindung zur zentralen Agentenbäckerei"
 
+#, fuzzy, python-format
+msgid "Connection to port %s refused"
+msgstr "Geöffnete Verbindungen"
+
+#, python-format
+msgid ""
+"Connection to port %s refused. The site is using a self-signed certificate. "
+"Are you logged in?"
+msgstr ""
+
+#, python-format
+msgid ""
+"Connection to port %s refused. You are probably connecting to the wrong site."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Connection to port %s refused: Invalid certificate"
+msgstr "Legt fest, wie ein ungültiges Zertifikat zu behandeln ist"
+
 msgid "Connection to remote Agent Bakery"
 msgstr "Verbindung zur Remote-Agentenbäckerei"
 
@@ -23496,6 +23515,10 @@ msgstr ""
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Ursprungsregel von %s / %s konnte nicht ermittelt werden"
+
+#, fuzzy, python-format
+msgid "Failed to establish connection: %s"
+msgstr "Level für bestehende Verbindungen"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Schätzung der Apache-Prozessgröße fehlgeschlagen"
@@ -43504,6 +43527,9 @@ msgstr "Die Offline-Verifizierungsprozedur war nicht erfolgreich"
 
 msgid "Offline verification procedure was successful"
 msgstr "Die Offline-Verifizierungsprozedur war erfolgreich"
+
+msgid "Offline: No valid multisite URL configured"
+msgstr ""
 
 msgid "Offset"
 msgstr "Offset"
@@ -74211,6 +74237,10 @@ msgstr "Unbekannter Nutzer: %s"
 
 msgid "Unknown/Unreach"
 msgstr "Unknown/Unreach"
+
+#, fuzzy, python-format
+msgid "Unkown error: %s"
+msgstr "Unbekannter Nutzer: %s"
 
 msgid "Unlicensed"
 msgstr "Unlizenziert"

@@ -14806,6 +14806,25 @@ msgstr "Timeout de conectare în secunde"
 msgid "Connection to central Agent Bakery"
 msgstr "Conexiune la brutăria agentului central"
 
+#, fuzzy, python-format
+msgid "Connection to port %s refused"
+msgstr "Conexiuni deschise"
+
+#, python-format
+msgid ""
+"Connection to port %s refused. The site is using a self-signed certificate. "
+"Are you logged in?"
+msgstr ""
+
+#, python-format
+msgid ""
+"Connection to port %s refused. You are probably connecting to the wrong site."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Connection to port %s refused: Invalid certificate"
+msgstr "Determină modul de tratare a certificatului invalid"
+
 #, fuzzy
 msgid "Connection to remote Agent Bakery"
 msgstr "Conexiune la brutăria agentului de la distanță"
@@ -24345,6 +24364,10 @@ msgstr ""
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Nu s-a reușit determinarea regulii de origine a %s / %s."
+
+#, fuzzy, python-format
+msgid "Failed to establish connection: %s"
+msgstr "Niveluri pentru conexiunile stabilite"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Nu a reușit să estimeze dimensiunea procesului Apache"
@@ -45253,6 +45276,9 @@ msgstr "Procedura de verificare online nu a avut succes"
 #, fuzzy
 msgid "Offline verification procedure was successful"
 msgstr "Procedura de verificare online a avut succes"
+
+msgid "Offline: No valid multisite URL configured"
+msgstr ""
 
 msgid "Offset"
 msgstr "Offset"
@@ -77233,6 +77259,10 @@ msgstr "Utilizator necunoscut: %s."
 
 msgid "Unknown/Unreach"
 msgstr "Necunoscut/neîncercat"
+
+#, fuzzy, python-format
+msgid "Unkown error: %s"
+msgstr "Utilizator necunoscut: %s."
 
 msgid "Unlicensed"
 msgstr "Fără licență"

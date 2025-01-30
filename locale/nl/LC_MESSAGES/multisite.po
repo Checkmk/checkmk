@@ -14793,6 +14793,25 @@ msgstr "Time-out van de verbinding in seconden"
 msgid "Connection to central Agent Bakery"
 msgstr "Verbinding met centrale agent bakkerij"
 
+#, fuzzy, python-format
+msgid "Connection to port %s refused"
+msgstr "Verbindingen geopend"
+
+#, python-format
+msgid ""
+"Connection to port %s refused. The site is using a self-signed certificate. "
+"Are you logged in?"
+msgstr ""
+
+#, python-format
+msgid ""
+"Connection to port %s refused. You are probably connecting to the wrong site."
+msgstr ""
+
+#, python-format
+msgid "Connection to port %s refused: Invalid certificate"
+msgstr ""
+
 #, fuzzy
 msgid "Connection to remote Agent Bakery"
 msgstr "Verbinding met remote agent bakkerij"
@@ -24298,6 +24317,10 @@ msgstr ""
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Kan de oorsprongsregel van %s / %s niet bepalen"
+
+#, fuzzy, python-format
+msgid "Failed to establish connection: %s"
+msgstr "Niveaus voor gevestigde verbindingen"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Kan de grootte van het Apache proces niet schatten"
@@ -45195,6 +45218,9 @@ msgstr "De online verificatieprocedure was niet succesvol"
 #, fuzzy
 msgid "Offline verification procedure was successful"
 msgstr "De online verificatieprocedure was succesvol"
+
+msgid "Offline: No valid multisite URL configured"
+msgstr ""
 
 msgid "Offset"
 msgstr "Offset"
@@ -77060,6 +77086,10 @@ msgstr "Onbekende gebruiker: %s"
 
 msgid "Unknown/Unreach"
 msgstr "Onbekend/Onbereikbaar"
+
+#, fuzzy, python-format
+msgid "Unkown error: %s"
+msgstr "Onbekende gebruiker: %s"
 
 msgid "Unlicensed"
 msgstr "Zonder vergunning"

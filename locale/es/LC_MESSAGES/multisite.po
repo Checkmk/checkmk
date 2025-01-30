@@ -14908,6 +14908,25 @@ msgstr "Tiempo de espera de la conexión en segundos"
 msgid "Connection to central Agent Bakery"
 msgstr "Conexión con el agente central bakery"
 
+#, fuzzy, python-format
+msgid "Connection to port %s refused"
+msgstr "Conexiones abiertas"
+
+#, python-format
+msgid ""
+"Connection to port %s refused. The site is using a self-signed certificate. "
+"Are you logged in?"
+msgstr ""
+
+#, python-format
+msgid ""
+"Connection to port %s refused. You are probably connecting to the wrong site."
+msgstr ""
+
+#, python-format
+msgid "Connection to port %s refused: Invalid certificate"
+msgstr ""
+
 #, fuzzy
 msgid "Connection to remote Agent Bakery"
 msgstr "Conexión con el agente remoto bakery"
@@ -24495,6 +24514,10 @@ msgstr ""
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "No se ha podido determinar la regla de origen de %s / %s"
+
+#, fuzzy, python-format
+msgid "Failed to establish connection: %s"
+msgstr "Niveles para las conexiones establecidas"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Fallo en la estimación del tamaño del proceso de Apache"
@@ -45567,6 +45590,9 @@ msgstr ""
 msgid "Offline verification procedure was successful"
 msgstr ""
 "El procedimiento de verificación en línea se ha realizado correctamente"
+
+msgid "Offline: No valid multisite URL configured"
+msgstr ""
 
 msgid "Offset"
 msgstr "Desplazamiento"
@@ -77704,6 +77730,10 @@ msgstr "Usuario desconocido: %s"
 
 msgid "Unknown/Unreach"
 msgstr "Desconocido/desconocido"
+
+#, fuzzy, python-format
+msgid "Unkown error: %s"
+msgstr "Usuario desconocido: %s"
 
 msgid "Unlicensed"
 msgstr "Sin licencia"

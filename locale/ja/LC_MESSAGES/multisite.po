@@ -14155,6 +14155,25 @@ msgstr "秒単位の接続タイムアウト"
 msgid "Connection to central Agent Bakery"
 msgstr "セントラルエージェントベーカリーへの接続"
 
+#, fuzzy, python-format
+msgid "Connection to port %s refused"
+msgstr "接続開始"
+
+#, python-format
+msgid ""
+"Connection to port %s refused. The site is using a self-signed certificate. "
+"Are you logged in?"
+msgstr ""
+
+#, python-format
+msgid ""
+"Connection to port %s refused. You are probably connecting to the wrong site."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Connection to port %s refused: Invalid certificate"
+msgstr "無効な証明書の扱い方を決める"
+
 msgid "Connection to remote Agent Bakery"
 msgstr "リモートエージェントベーカリーへの接続"
 
@@ -23302,6 +23321,10 @@ msgstr ""
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "%s / %sのオリジナルルールを決定できませんでした"
+
+#, fuzzy, python-format
+msgid "Failed to establish connection: %s"
+msgstr "確立された接続のレベル"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Apacheプロセスサイズの見積もりに失敗しました"
@@ -43869,6 +43892,9 @@ msgstr "オンライン認証に失敗しました"
 #, fuzzy
 msgid "Offline verification procedure was successful"
 msgstr "オンライン認証成功"
+
+msgid "Offline: No valid multisite URL configured"
+msgstr ""
 
 msgid "Offset"
 msgstr "オフセット"
@@ -75117,6 +75143,10 @@ msgstr "不明なユーザー: %s"
 
 msgid "Unknown/Unreach"
 msgstr "不明/未到達"
+
+#, fuzzy, python-format
+msgid "Unkown error: %s"
+msgstr "不明なユーザー: %s"
 
 msgid "Unlicensed"
 msgstr "ライセンスがありません"

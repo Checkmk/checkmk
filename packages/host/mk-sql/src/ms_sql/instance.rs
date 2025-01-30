@@ -1995,7 +1995,7 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
         instances.len(),
         instances
             .iter()
-            .map(|i| format!("{}", i))
+            .map(|i| format!("{}", i.name))
             .collect::<Vec<_>>()
             .join(", ")
     );
@@ -2080,15 +2080,7 @@ pub async fn find_all_instance_builders(
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let detected = if ms_sql.discovery().detect() {
         let builders = detect_instance_builders(ms_sql).await;
-        log::info!(
-            "Found {} instances by discovery: [ {} ]",
-            builders.len(),
-            builders
-                .iter()
-                .map(|i| format!("{}", i.get_name()))
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
+        print_builders("Discovery", &builders);
         builders
     } else {
         ms_sql
@@ -2113,7 +2105,27 @@ pub async fn find_all_instance_builders(
         })
         .collect();
     let builders = apply_customizations(detected, &customizations);
-    add_custom_instance_builders(builders, &customizations).await
+    print_builders("Builders", &builders);
+    let reconnects = determine_reconnect(builders, &customizations);
+    print_reconnects(&reconnects);
+
+    add_custom_instance_builders(reconnects).await
+}
+
+fn print_reconnects(reconnects: &[(SqlInstanceBuilder, Option<Endpoint>)]) {
+    log::info!(
+        "Reconnects: found {} instances: [ {} ]",
+        reconnects.len(),
+        reconnects
+            .iter()
+            .map(|i| format!(
+                "{}[{}] ",
+                i.0.get_name(),
+                i.1.clone().map(|e| e.dump_compact()).unwrap_or_default()
+            ))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 }
 
 /// find instances described in the config but not detected by the discovery
@@ -2129,11 +2141,8 @@ async fn detect_instance_builders(ms_sql: &config::ms_sql::Config) -> Vec<SqlIns
 /// find instances described in the config but not detected by the discovery
 /// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
-    input_builders: Vec<SqlInstanceBuilder>,
-    customizations: &HashMap<&InstanceName, &CustomInstance>,
+    reconnects: Vec<(SqlInstanceBuilder, Option<Endpoint>)>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let reconnects = determine_reconnect(input_builders, customizations);
-
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
         if let Some(endpoint) = endpoint {
@@ -2144,7 +2153,21 @@ async fn add_custom_instance_builders(
             builders.push(builder);
         }
     }
+    print_builders("Customization", &builders);
     Ok(builders)
+}
+
+fn print_builders(title: &str, builders: &[SqlInstanceBuilder]) {
+    log::info!(
+        "{}: found {} instances: [ {} ]",
+        title,
+        builders.len(),
+        builders
+            .iter()
+            .map(|i| format!("{}", i.get_name()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 }
 
 async fn get_custom_instance_builder(

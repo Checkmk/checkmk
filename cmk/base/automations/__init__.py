@@ -11,7 +11,7 @@ from contextlib import nullcontext, redirect_stdout, suppress
 
 import cmk.ccc.debug
 from cmk.ccc import version as cmk_version
-from cmk.ccc.exceptions import MKException, MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 from cmk.utils import log, paths
 from cmk.utils.log import console
@@ -27,8 +27,7 @@ from cmk import trace
 tracer = trace.get_tracer()
 
 
-# TODO: Inherit from MKGeneralException
-class MKAutomationError(MKException):
+class MKAutomationError(MKGeneralException):
     pass
 
 
@@ -93,7 +92,7 @@ class Automations:
             with tracer.span(f"execute_automation[{cmd}]"):
                 result = automation.execute(args, called_from_automation_helper)
 
-        except (MKGeneralException, MKAutomationError, MKTimeout) as e:
+        except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
             if cmk.ccc.debug.enabled():
                 raise

@@ -73,6 +73,7 @@ class FrontendIpConfiguration(BaseModel):
 
 
 Section = Mapping[str, Resource]
+CheckFunction = Callable[[str, Mapping[str, Any], Section], CheckResult]
 
 
 def parse_azure_datetime(datetime_string: str) -> datetime:
@@ -323,7 +324,7 @@ def create_check_metrics_function_single(
     return check_metric
 
 
-def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_memory() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -337,7 +338,7 @@ def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_cpu() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -351,7 +352,7 @@ def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_connections() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -381,7 +382,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     )
 
 
-def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_network() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -402,7 +403,7 @@ def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_storage() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(

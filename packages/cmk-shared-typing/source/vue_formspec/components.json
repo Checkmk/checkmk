@@ -1562,14 +1562,7 @@
                             ]
                         },
                         "autocompleter": {
-                            "oneOf": [
-                                {
-                                    "$ref": "#/$defs/autocompleter"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ]
+                            "$ref": "#/$defs/autocompleter"
                         },
                         "max_labels": {
                             "type": ["integer", "null"]

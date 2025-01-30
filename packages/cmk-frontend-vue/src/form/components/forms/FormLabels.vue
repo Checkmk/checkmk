@@ -127,13 +127,7 @@ const deleteItem = (item: string) => {
       </span>
     </li>
   </ul>
-  <div
-    v-if="
-      !props.spec.autocompleter ||
-      !props.spec.max_labels ||
-      keyValuePairs.length < props.spec.max_labels
-    "
-  >
+  <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
     <!-- In formLabel, the size on input is a fixed size -->
     <FormAutocompleter
       :size="inputSizes['MEDIUM'].width"
@@ -168,7 +162,7 @@ const deleteItem = (item: string) => {
     width: fit-content;
     border-radius: 5px;
     background-color: var(--default-form-element-bg-color);
-    margin: 5px 0;
+    margin-bottom: 5px;
     padding: 2px;
 
     &:focus-within {

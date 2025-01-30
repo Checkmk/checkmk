@@ -10,6 +10,7 @@ import logging
 import os
 import shutil
 import tempfile
+import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -73,6 +74,7 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
 
     inotify = INotify()
     watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
+    watch_for_deleted_status_files = inotify.add_watch(source_status_dir(omd_root), Masks.DELETE)
     for folder in _get_piggybacked_host_folders(omd_root):
         inotify.add_watch(folder, Masks.MOVED_TO)
 
@@ -83,6 +85,20 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
                 inotify.add_watch(event.watchee.path / event.name, Masks.MOVED_TO)
                 # Handle all files already in the folder (we rather have duplicates than missing files)
                 yield from get_messages_for(HostAddress(event.name), omd_root)
+            continue
+        if event.watchee == watch_for_deleted_status_files:
+            if event.type & Masks.DELETE:
+                source = HostName(event.name)
+                for piggybacked_host in _get_piggybacked_hosts_for_source(omd_root, source):
+                    yield PiggybackMessage(
+                        PiggybackMetaData(
+                            source=source,
+                            piggybacked=piggybacked_host,
+                            last_update=int(time.time()),
+                            last_contact=None,
+                        ),
+                        b"",
+                    )
             continue
 
         if message := _make_message_from_event(event, omd_root):
@@ -144,6 +160,14 @@ def get_piggybacked_host_with_sources(
         for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
+
+
+def _get_piggybacked_hosts_for_source(omd_root: Path, source: HostName) -> Sequence[HostName]:
+    return [
+        HostName(piggybacked_host.name)
+        for piggybacked_host in _get_piggybacked_host_folders(omd_root)
+        if (piggybacked_host / source).exists()
+    ]
 
 
 def _remove_piggyback_file(piggyback_file_path: Path) -> bool:

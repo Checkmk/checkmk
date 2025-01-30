@@ -99,7 +99,11 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
-        LOGGER.info("[automation] %s with args: %s received.", payload.name, payload.args)
+        LOGGER.info(
+            '[automation] Processing automation command "%s" with args: %s',
+            payload.name,
+            payload.args,
+        )
         if cache.reload_required(request.app.state.last_reload_at):
             request.app.state.last_reload_at = time.time()
             reload_config()
@@ -128,14 +132,22 @@ def get_application(
                     called_from_automation_helper=True,
                 )
             except SystemExit as system_exit:
-                LOGGER.error("[automation] command raised a system exit exception.")
+                LOGGER.error(
+                    '[automation] Encountered SystemExit exception while processing automation "%s" with args: %s',
+                    payload.name,
+                    payload.args,
+                )
                 exit_code = (
                     system_exit_code
                     if isinstance(system_exit_code := system_exit.code, int)
                     else AutomationExitCode.UNKNOWN_ERROR
                 )
             else:
-                LOGGER.info("[automation] %s with args: %s processed.", payload.name, payload.args)
+                LOGGER.info(
+                    '[automation] Processed automation command "%s" with args: %s',
+                    payload.name,
+                    payload.args,
+                )
 
             return AutomationResponse(
                 exit_code=exit_code,

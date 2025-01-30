@@ -30,7 +30,7 @@ class RestSessionException(Exception):
 class UnexpectedResponse(RestSessionException):
     @classmethod
     def from_response(cls, response: requests.Response) -> "UnexpectedResponse":
-        return cls(status_code=response.status_code, response_text=response.text)
+        return cls(status_code=response.status_code, response_text=response.text or repr(response))
 
     def __init__(self, status_code: int, response_text: str) -> None:
         super().__init__(f"[{status_code}] {response_text}")

@@ -34,7 +34,7 @@ const emit = defineEmits(['close'])
       <DialogOverlay class="slide-in__overlay" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <DialogContent
-        class="cmk-vue-app slide-in__content"
+        class="cmk-vue-app slide-in__container"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
       >
@@ -45,7 +45,7 @@ const emit = defineEmits(['close'])
           </DialogClose>
         </DialogTitle>
 
-        <CmkScrollContainer type="outer">
+        <CmkScrollContainer type="outer" class="slide-in__content">
           <slot />
         </CmkScrollContainer>
       </DialogContent>
@@ -54,11 +54,10 @@ const emit = defineEmits(['close'])
 </template>
 
 <style scoped>
-.slide-in__content {
+.slide-in__container {
   max-width: 80%;
   display: flex;
   flex-direction: column;
-  padding: 20px;
   position: fixed;
   top: 0;
   right: 0;
@@ -67,15 +66,15 @@ const emit = defineEmits(['close'])
   background: var(--default-bg-color);
 
   &[data-state='open'] {
-    animation: slide-in__content-show 0.2s ease-in-out;
+    animation: slide-in__container-show 0.2s ease-in-out;
   }
 
   &[data-state='closed'] {
-    animation: slide-in__content-hide 0.2s ease-in-out;
+    animation: slide-in__container-hide 0.2s ease-in-out;
   }
 }
 
-@keyframes slide-in__content-show {
+@keyframes slide-in__container-show {
   from {
     opacity: 0;
     transform: translate(50%, 0%);
@@ -86,7 +85,7 @@ const emit = defineEmits(['close'])
   }
 }
 
-@keyframes slide-in__content-hide {
+@keyframes slide-in__container-hide {
   from {
     opacity: 1;
     transform: translate(0%, 0%);
@@ -117,11 +116,15 @@ const emit = defineEmits(['close'])
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 20px;
 
   label {
     margin-right: 10px;
   }
+}
+
+.slide-in__content {
+  padding: 0 20px;
 }
 
 .slide-in__close {

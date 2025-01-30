@@ -17,7 +17,6 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 export type Payload = Record<string, unknown>
 
@@ -113,18 +112,16 @@ const { ErrorBoundary } = useErrorBoundary()
           {{ i18n.validation_error }}
         </CmkAlertBox>
       </div>
-      <CmkScrollContainer>
-        <div v-if="schema !== undefined && data !== undefined">
-          <FormEditDispatcher
-            v-model:data="data"
-            :spec="schema"
-            :backend-validation="backendValidation"
-          />
-        </div>
-        <div v-if="schema === undefined">
-          <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
-        </div>
-      </CmkScrollContainer>
+      <div v-if="schema !== undefined && data !== undefined">
+        <FormEditDispatcher
+          v-model:data="data"
+          :spec="schema"
+          :backend-validation="backendValidation"
+        />
+      </div>
+      <div v-if="schema === undefined">
+        <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+      </div>
     </ErrorBoundary>
   </div>
 </template>

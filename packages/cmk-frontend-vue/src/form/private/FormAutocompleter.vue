@@ -19,6 +19,7 @@ const props = defineProps<{
   filterOn: string[]
   size: number
   resestInputOnAdd: boolean
+  allowNewValueInput?: boolean
 }>()
 
 type Suggestion = [string, string]
@@ -70,17 +71,50 @@ watch(autocompleterOutput, (newValue) => {
   if (newValue === undefined) {
     return
   }
-  filteredSuggestions.value = newValue.choices
-    .filter((element: Suggestion) => element[0].length > 0 && element[1].length > 0)
-    .filter((element: Suggestion) => !props.filterOn.includes(element[0]))
+  filteredSuggestions.value = []
+
+  // If new value input is allowed and the input is not the title to one of the given autocompleter
+  // choices, add the input as a new choice
+  if (props.allowNewValueInput && visibleInputValue.value.length > 0) {
+    filteredSuggestions.value = newValue.choices.find(
+      (choice) => choice[1] === visibleInputValue.value
+    )
+      ? []
+      : [[visibleInputValue.value, visibleInputValue.value]]
+  }
+
+  filteredSuggestions.value.push(
+    ...newValue.choices
+      .filter((element: Suggestion) => element[0].length > 0 && element[1].length > 0)
+      .filter((element: Suggestion) => !props.filterOn.includes(element[0]))
+  )
 })
+
+const updateInput = (ev: Event) => {
+  const value = (ev.target as HTMLInputElement).value
+  autocompleterInput.value = value
+  if (props.allowNewValueInput) {
+    inputValue.value = value
+  }
+  showSuggestions.value = true
+}
 
 const vClickOutside = useClickOutside()
 const componentId = useId()
 </script>
 
 <template>
-  <div v-click-outside="() => (showSuggestions = false)" class="form-autocompleter">
+  <div
+    v-click-outside="
+      () => {
+        showSuggestions = false
+        if (inputValue === '') {
+          visibleInputValue = ''
+        }
+      }
+    "
+    class="form-autocompleter"
+  >
     <span style="display: flex; align-items: center">
       <input
         :id="props.id ?? componentId"
@@ -97,12 +131,7 @@ const componentId = useId()
             showSuggestions = true
           }
         "
-        @input="
-          (ev: Event) => {
-            autocompleterInput = (ev.target as HTMLInputElement).value
-            showSuggestions = true
-          }
-        "
+        @input="updateInput"
         @keydown.down.prevent="
           () => {
             suggestionsRef?.focus()

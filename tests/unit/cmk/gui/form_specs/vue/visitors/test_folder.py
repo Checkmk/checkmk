@@ -12,6 +12,7 @@ from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, VisitorOptions
 
 from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DefaultValue
 
 
 @pytest.fixture(scope="module", name="folder_spec")
@@ -19,7 +20,7 @@ def spec() -> Folder:
     return Folder(
         title=Title("folder title"),
         help_text=Help("folder help"),
-        input_hint="folder input hint",
+        prefill=DefaultValue("folder default prefill"),
     )
 
 
@@ -27,7 +28,7 @@ def spec() -> Folder:
 @pytest.mark.parametrize(
     ["raw_value", "expected_value"],
     [
-        [DEFAULT_VALUE, "folder input hint"],
+        [DEFAULT_VALUE, "folder default prefill"],
         [""] * 2,
         ["some/folder/path"] * 2,
     ],

@@ -500,6 +500,14 @@ function getFolder(name: string, options?: Partial<Omit<Folder, 'type'>>): Folde
     type: 'folder',
     ...getFormSpecDefaults(name),
     input_hint: `input hint ${name}`,
+    autocompleter: {
+      fetch_method: 'ajax_vs_autocomplete',
+      data: {
+        ident: 'wato_folder_choices',
+        params: {}
+      }
+    },
+    allow_new_folder_path: true,
     ...options
   }
 }

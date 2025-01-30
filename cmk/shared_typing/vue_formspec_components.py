@@ -553,8 +553,10 @@ class ListOfStrings(FormSpec):
 
 @dataclass(kw_only=True)
 class Folder(FormSpec):
+    input_hint: Optional[str]
+    autocompleter: Autocompleter
+    allow_new_folder_path: bool
     type: str = "folder"
-    input_hint: Optional[str] = None
 
 
 @dataclass(kw_only=True)

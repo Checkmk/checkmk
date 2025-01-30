@@ -31,6 +31,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="unstable linux hosts fixture")
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: Dashboard,

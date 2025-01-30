@@ -71,11 +71,13 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         _setup_console_logging()
 
+        # This is only an intermediate handler until gunicorn run_server sets its own handler
         signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
         daemonize()
 
         _setup_file_logging(log_path / "ui-job-scheduler.log")
+        logger.info("--- Starting ui-job-scheduler (Checkmk %s) ---", cmk_version.__version__)
 
         with pid_file_lock(_pid_file(omd_root)):
             init_span_processor(
@@ -113,10 +115,17 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                         registered_jobs=dict(job_registry.items()),
                         executor=ThreadedJobExecutor(logger),
                     ),
+                    logger,
                 )
+            except SystemExit as exc:
+                logger.info("Process terminated (Exit code: %d)", exc.code)
+                raise
             finally:
+                logger.info("Stopping application")
                 stop_event.set()
                 scheduler_thread.join()
+    except SystemExit:
+        raise
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
         logger.error("Unhandled exception (Crash ID: %s)", crash_msg, exc_info=True)
@@ -136,5 +145,6 @@ def _setup_file_logging(log_file: Path) -> None:
         logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s")
     )
     logger = logging.getLogger()
+    del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)

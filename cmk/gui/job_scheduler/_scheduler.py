@@ -26,6 +26,7 @@ tracer = trace.get_tracer()
 def run_scheduler_threaded(
     crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
 ) -> threading.Thread:
+    logger.info("Starting scheduler thread")
     t = threading.Thread(
         target=_run_scheduler,
         args=(crash_report_callback, stop_event),
@@ -39,6 +40,7 @@ def _run_scheduler(
     crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
 ) -> None:
     job_threads: dict[str, threading.Thread] = {}
+    logger.info("Started scheduler")
     while not stop_event.is_set():
         try:
             cycle_start = time.time()
@@ -59,7 +61,9 @@ def _run_scheduler(
             # in case there were some locks left over
             store.release_all_locks()
 
+    logger.info("Waiting for jobs to finish")
     _wait_for_job_threads(job_threads)
+    logger.info("Stopped scheduler")
 
 
 def _load_last_job_runs() -> dict[str, datetime.datetime]:

@@ -11,13 +11,20 @@ const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
   label?: string
+  padding?: 'top' | 'bottom' | 'both'
 }
 
-const props = defineProps<CmkCheckboxProps>()
+const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
 </script>
 
 <template>
-  <label class="cmk-checkbox">
+  <label
+    class="cmk-checkbox"
+    :class="{
+      'cmk-checkbox__pad_top': padding !== 'bottom',
+      'cmk-checkbox__pad_bottom': padding !== 'top'
+    }"
+  >
     <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button">
       <CheckboxIndicator class="cmk-checkbox__indicator">
         <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
@@ -27,7 +34,7 @@ const props = defineProps<CmkCheckboxProps>()
         </svg>
       </CheckboxIndicator>
     </CheckboxRoot>
-    <span v-if="props.label"><CmkSpace size="small" /><CmkHtml :html="label" /></span>
+    <span v-if="label"><CmkSpace size="small" /><CmkHtml :html="label" /></span>
   </label>
 </template>
 
@@ -35,7 +42,12 @@ const props = defineProps<CmkCheckboxProps>()
 .cmk-checkbox {
   cursor: pointer;
   display: inline-block;
-  padding: 2px 0;
+  &.cmk-checkbox__pad_top {
+    padding-top: 2px;
+  }
+  &.cmk-checkbox__pad_bottom {
+    padding-bottom: 2px;
+  }
 
   & :deep(.cmk-checkbox__button) {
     background-color: var(--default-form-element-bg-color);

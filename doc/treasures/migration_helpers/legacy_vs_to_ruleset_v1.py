@@ -432,13 +432,20 @@ class RegistrationTransformer(cst.CSTTransformer):
             return self._construct_check_parameters(old_ruleset.args)
 
         args = {k.value: arg.value for arg in old_ruleset.args if (k := arg.keyword) is not None}
-        group = cst.ensure_type(
-            cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
-        ).attr.value
+        group = (
+            name.value
+            if isinstance(name := args["name"], cst.SimpleString)
+            else cst.ensure_type(
+                cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
+            ).attr.value
+        )
         if rule_type == "HostRulespec" and group == "SpecialAgents":
             return self._construct_special_agent(old_ruleset.args)
         if rule_type == "HostRulespec" and group == "ActiveChecks":
             return self._construct_active_check(old_ruleset.args)
+        if rule_type == "HostRulespec":
+            # a guess, but most of the time it's a discovery rule
+            return self._construct_discovery_parameters(group, old_ruleset.args)
 
         print(f"not yet implemented rulespec type: {rule_type}", file=sys.stderr)
         return cst.SimpleStatementLine(
@@ -461,6 +468,33 @@ class RegistrationTransformer(cst.CSTTransformer):
                     targets=(cst.AssignTarget(cst.Name(f"rule_spec_{name}")),),
                     value=cst.Call(
                         func=cst.Name("CheckParameters"),
+                        args=(
+                            cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
+                            *_extract("title", old),
+                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(form_spec, cst.Name("parameter_form")),
+                            cst.Arg(
+                                self._make_condition(args.get("item_spec")),
+                                cst.Name("condition"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    def _construct_discovery_parameters(
+        self, name: str, old: Sequence[cst.Arg]
+    ) -> cst.SimpleStatementLine:
+        args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
+        form_spec = args["parameter_valuespec"]
+
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name(f"rule_spec_{name}")),),
+                    value=cst.Call(
+                        func=cst.Name("DiscoveryParameters"),
                         args=(
                             cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
                             *_extract("title", old),

@@ -28,7 +28,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Literal, NewType, TypeGuard
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator, RootModel
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from pydantic.fields import Field
 
 CronJobUID = NewType("CronJobUID", str)
@@ -482,14 +482,6 @@ class KubeletVolumeMetricSample(OpenMetricSample):
 
 class UnusedKubeletMetricSample(BaseModel):
     pass
-
-
-_KubeletMetrics = KubeletVolumeMetricSample | UnusedKubeletMetricSample
-
-
-class KubeletMetricSample(RootModel):
-    # https://github.com/pydantic/pydantic/issues/675#issuecomment-513029543
-    root: _KubeletMetrics
 
 
 class NodeInfo(ClientModel):

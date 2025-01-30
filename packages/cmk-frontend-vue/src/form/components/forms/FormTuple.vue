@@ -15,6 +15,7 @@ import HelpText from '@/components/HelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { capitalizeFirstLetter } from '@/lib/utils'
 import { useFormEditDispatcher } from '@/form/private'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: FormSpec.Tuple
@@ -57,10 +58,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     <tbody>
       <tr>
         <template v-for="(element, index) in spec.elements" :key="index">
-          <td class="tuple_td">
-            <span v-if="spec.show_titles && element.title" class="title">{{
+          <td class="form-tuple__td">
+            <FormLabel v-if="spec.show_titles && element.title" class="title">{{
               capitalizeFirstLetter(element.title)
-            }}</span>
+            }}</FormLabel>
             <CmkSpace
               v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
               size="small"
@@ -83,13 +84,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <table v-if="spec.layout === 'vertical'" class="valuespec_tuple vertical">
     <tbody>
       <tr v-for="(element, index) in spec.elements" :key="index">
-        <td v-if="spec.show_titles" class="tuple_left">
-          <span v-if="element.title" class="vs_floating_text">{{
-            capitalizeFirstLetter(element.title)
-          }}</span>
+        <td v-if="spec.show_titles" class="form-tuple__td tuple_left">
+          <FormLabel v-if="element.title">{{ capitalizeFirstLetter(element.title) }}</FormLabel>
           <CmkSpace v-if="spec.show_titles && element.title" size="small" />
         </td>
-        <td :class="{ tuple_right: true, has_title: element.title }">
+        <td class="form-tuple__td tuple_right" :class="{ has_title: element.title }">
           <FormEditDispatcher
             v-model:data="data[index]"
             :spec="element"
@@ -115,10 +114,27 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-td.tuple_td:first-child {
-  padding-left: 0;
+.valuespec_tuple.horizontal {
+  td.form-tuple__td:first-child {
+    padding-left: 0;
+  }
+
+  td.form-tuple__td {
+    padding-left: var(--spacing);
+    margin-bottom: var(--spacing-half);
+  }
 }
-td.tuple_td {
-  padding-left: var(--spacing);
+
+.valuespec_tuple.vertical {
+  td.form-tuple__td {
+    padding-left: 0;
+    padding-bottom: var(--spacing-half);
+  }
+
+  tr:last-child {
+    td.form-tuple__td {
+      padding-bottom: 0;
+    }
+  }
 }
 </style>

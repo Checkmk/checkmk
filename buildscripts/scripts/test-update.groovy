@@ -73,13 +73,10 @@ def main() {
     def build_for_parallel = [:];
     def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
 
-    all_distros.each { item ->
-        def distro = item;
-        def stepName = "Update test for ${distro}";
-
-        build_for_parallel[stepName] = { ->
+    def test_stages = all_distros.collectEntries { distro -> [
+        ("Test ${distro}") : {
+            def stepName = "Test ${distro}";
             def run_condition = distro in distros;
-            println("Should ${distro} be tested? ${run_condition}");
 
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition){
@@ -91,25 +88,50 @@ def main() {
                 condition: run_condition,
                 raiseOnError: true,
             ) {
-                build(
-                    job: relative_job_name,
-                    propagate: true,  // Raise any errors
-                    parameters: [
-                        string(name: "DISTRO", value: item),
-                        string(name: "EDITION", value: edition),
-                        string(name: "VERSION", value: version),
-                        string(name: "DOCKER_TAG", value: docker_tag),
-                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
-                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                def build_instance = smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: relative_job_name,
+                    build_params: [
+                        DISTRO: distro,
+                        EDITION: edition,
+                        VERSION: version,
+                        CUSTOM_GIT_REF: CUSTOM_GIT_REF,
                     ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
+                );
+
+                copyArtifacts(
+                    projectName: relative_job_name,
+                    selector: specific(build_instance.getId()), // buildNumber shall be a string
+                    target: "${checkout_dir}/test-results",
+                    fingerprintArtifacts: true
                 );
             }
-        }
+        }]
     }
 
-    stage('Run update tests') {
-        parallel build_for_parallel;
+    def image_name = "minimal-alpine-checkmk-ci-master:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
+    minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+        currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    stage("Archive / process test reports") {
+        dir("${checkout_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+            }
+        }
     }
 }
 

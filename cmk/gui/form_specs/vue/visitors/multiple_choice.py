@@ -112,6 +112,8 @@ class MultipleChoiceVisitor(
             remove=_("< Remove"),
             available_options=_("Available options"),
             selected_options=_("Selected options"),
+            search_available_options=_("Search available options"),
+            search_selected_options=_("Search selected options"),
             selected=_("Selected"),
             no_elements_available=_("No elements available"),
             no_elements_selected=_("No elements selected"),

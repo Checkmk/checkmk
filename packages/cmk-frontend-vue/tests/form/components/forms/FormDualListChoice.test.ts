@@ -28,6 +28,8 @@ const spec: FormSpec.DualListChoice = {
     no_elements_available: 'No elements available',
     no_elements_selected: 'No elements selected',
     autocompleter_loading: 'Loading',
+    search_selected_options: 'i18n search selected options',
+    search_available_options: 'i18n search available options',
     and_x_more: 'and %s more'
   },
   validators: [],
@@ -45,11 +47,15 @@ describe('FormDualListChoice', () => {
     })
 
     // check active elements
-    const activeElement = screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' })
+    const activeElement = screen.getByRole<HTMLSelectElement>('listbox', {
+      name: 'Selected options'
+    })
     expect(activeElement.options.length).equal(3)
 
     // check inactive elements
-    const inactiveElement = screen.getByRole<HTMLSelectElement>('listbox', { name: 'available' })
+    const inactiveElement = screen.getByRole<HTMLSelectElement>('listbox', {
+      name: 'Available options'
+    })
     expect(inactiveElement.options.length).equal(1)
 
     const choice3 = screen.getByRole<HTMLSelectElement>('option', { name: 'Choice 3' })
@@ -66,13 +72,18 @@ describe('FormDualListChoice', () => {
       }
     })
 
-    const filterActiveElements = screen.getByTestId('search-active')
+    const filterActiveElements = screen.getByRole('textbox', {
+      name: 'i18n search selected options'
+    })
     await fireEvent.update(filterActiveElements, 'Choice 1')
-    expect(screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' }).options.length).equal(
-      1
-    )
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
+    ).equal(1)
 
-    const filterInactiveElements = screen.getByTestId('search-inactive')
+    const filterInactiveElements = screen.getByRole('textbox', {
+      name: 'i18n search available options'
+    })
+
     await fireEvent.update(filterInactiveElements, 'Choice 1')
     expect(screen.getByText('No elements available')).toBeInTheDocument()
   })
@@ -86,13 +97,15 @@ describe('FormDualListChoice', () => {
       }
     })
 
-    const filterInactiveElements = screen.getByTestId('search-inactive')
+    const filterInactiveElements = screen.getByRole('textbox', {
+      name: 'i18n search available options'
+    })
     await fireEvent.update(filterInactiveElements, 'Choice 1')
     const addAll = screen.getByRole<HTMLButtonElement>('button', { name: 'Add all' })
     await fireEvent.click(addAll)
-    expect(screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' }).options.length).equal(
-      3
-    )
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
+    ).equal(3)
   })
 
   test('remove all while filter on selected options', async () => {
@@ -104,12 +117,14 @@ describe('FormDualListChoice', () => {
       }
     })
 
-    const filterActiveElements = screen.getByTestId('search-active')
+    const filterActiveElements = screen.getByRole('textbox', {
+      name: 'i18n search selected options'
+    })
     await fireEvent.update(filterActiveElements, 'Choice 1')
     const removeAll = screen.getByRole<HTMLButtonElement>('button', { name: 'Remove all' })
     await fireEvent.click(removeAll)
     expect(
-      screen.getByRole<HTMLSelectElement>('listbox', { name: 'available' }).options.length
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Available options' }).options.length
     ).equal(2)
 
     expect(screen.getByText('No elements selected')).toBeInTheDocument()
@@ -126,9 +141,9 @@ describe('FormDualListChoice', () => {
 
     const choice2 = screen.getByRole<HTMLSelectElement>('option', { name: 'Choice 2' })
     await fireEvent.dblClick(choice2)
-    expect(screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' }).options.length).equal(
-      4
-    )
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
+    ).equal(4)
   })
 
   test('remove by double click on selected item', async () => {
@@ -142,9 +157,9 @@ describe('FormDualListChoice', () => {
 
     const choice3 = screen.getByRole<HTMLSelectElement>('option', { name: 'Choice 3' })
     await fireEvent.dblClick(choice3)
-    expect(screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' }).options.length).equal(
-      2
-    )
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
+    ).equal(2)
   })
 
   describe('style', () => {
@@ -170,7 +185,7 @@ describe('FormDualListChoice', () => {
         }
       })
 
-      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' })
+      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' })
       expect(list.style.height).toBe('200px')
     })
 
@@ -198,7 +213,7 @@ describe('FormDualListChoice', () => {
         }
       })
 
-      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' })
+      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' })
       expect(list.style.height).toBe('165px')
     })
     test('list max height must be 400px when there is lots of items', async () => {
@@ -243,7 +258,7 @@ describe('FormDualListChoice', () => {
           backendValidation: []
         }
       })
-      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'active' })
+      const list = screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' })
       expect(list.style.height).toBe('400px')
     })
   })

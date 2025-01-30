@@ -160,7 +160,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" role="group" :aria-label="props.spec.title">
     <div v-if="loading" class="form-duallist-choice__loading">
       <CmkIcon name="load-graph" variant="inline" size="xlarge" />
       <span>{{ props.spec.i18n.autocompleter_loading }}</span>
@@ -180,7 +180,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <input
                 ref="search-inactive-input"
                 class="search"
-                data-testid="search-inactive"
+                :aria-label="props.spec.i18n.search_available_options"
                 @input="
                   (e: Event) => {
                     searchInactive = (e.target as HTMLInputElement).value
@@ -206,7 +206,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <input
                 ref="search-active-input"
                 class="search"
-                data-testid="search-active"
+                :aria-label="props.spec.i18n.search_selected_options"
                 @input="
                   (e: Event) => {
                     searchActive = (e.target as HTMLInputElement).value
@@ -228,7 +228,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <select
                 :id="`${componentId}_available`"
                 v-model="availableSelected"
-                aria-label="available"
+                :aria-label="props.spec.i18n.available_options"
                 multiple
                 :style="selectStyle"
               >
@@ -271,7 +271,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <select
                 :id="`${componentId}_active`"
                 v-model="activeSelected"
-                aria-label="active"
+                :aria-label="props.spec.i18n.selected_options"
                 multiple
                 :style="selectStyle"
               >

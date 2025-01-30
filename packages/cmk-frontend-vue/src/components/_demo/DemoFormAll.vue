@@ -355,6 +355,8 @@ function getDualListChoice(
       no_elements_available: 'i18n no_elements_available',
       no_elements_selected: 'i18n no_elements_selected',
       autocompleter_loading: 'i18n autocompleter_loading',
+      search_selected_options: 'i18n search selected options',
+      search_available_options: 'i18n search available options',
       and_x_more: 'i18n and_x_more'
     },
     ...options
@@ -383,6 +385,8 @@ function getCheckboxListChoice(
       no_elements_available: 'i18n no_elements_available',
       no_elements_selected: 'i18n no_elements_selected',
       autocompleter_loading: 'i18n autocompleter_loading',
+      search_selected_options: 'i18n search selected options',
+      search_available_options: 'i18n search available options',
       and_x_more: 'i18n and_x_more'
     },
     ...options

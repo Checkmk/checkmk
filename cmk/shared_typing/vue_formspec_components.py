@@ -123,6 +123,8 @@ class DualListChoiceI18n:
     no_elements_available: str
     no_elements_selected: str
     autocompleter_loading: str
+    search_available_options: str
+    search_selected_options: str
     and_x_more: str
 
 

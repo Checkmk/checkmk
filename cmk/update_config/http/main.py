@@ -65,6 +65,11 @@ class V1Regex(BaseModel, extra="forbid"):
     multiline: bool
 
 
+class V1PostData(BaseModel, extra="forbid"):
+    data: str
+    content_type: str
+
+
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
     ssl: (
@@ -88,6 +93,7 @@ class V1Url(BaseModel, extra="forbid"):
     expect_response: list[str] | None = None
     expect_string: str | None = None
     expect_regex: V1Regex | None = None
+    post_data: V1PostData | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -212,6 +218,21 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             }
         case _, _:
             raise NotImplementedError()
+    match url_params.post_data:
+        case None:
+            method: Mapping[str, object] = {"method": ("get", None)}
+        case post_data:
+            method = {
+                "method": (
+                    "post",  # TODO: Is this truly the default?
+                    {
+                        "send_data": {
+                            "content": post_data.data,
+                            "content_type": ("custom", post_data.content_type),
+                        }
+                    },
+                )
+            }
     return {
         "endpoints": [
             {
@@ -224,8 +245,8 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 "url": f"{scheme}://{rule_value.host.address[1]}{port}{path}",
                 "individual_settings": {
                     "connection": {
-                        # TODO: revisit this, it might be inconsistent with V1
-                        "method": ("get", None),
+                        # TODO: Proxy sets this to CONNECT.
+                        **method,
                         **tls_versions,
                         **timeout,
                         **user_agent,

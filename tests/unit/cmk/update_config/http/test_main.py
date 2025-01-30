@@ -9,9 +9,13 @@ import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
     BodyRegex,
+    HttpMethod,
     LevelsType,
     MatchType,
     parse_http_params,
+    SendData,
+    SendDataInner,
+    SendDataType,
     ServerResponse,
     TlsVersion,
 )
@@ -391,6 +395,17 @@ EXAMPLE_49: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_50: Mapping[str, object] = {
+    "name": "post_data",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "post_data": {"data": "da", "content_type": "text/html"},
+        },
+    ),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -416,6 +431,7 @@ EXAMPLE_49: Mapping[str, object] = {
         EXAMPLE_46,
         EXAMPLE_47,
         EXAMPLE_48,
+        EXAMPLE_50,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -444,6 +460,39 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].url == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (
+            EXAMPLE_27,
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_50,
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(
+                        content="da",
+                        content_type=(SendDataType.CUSTOM, "text/html"),
+                    )
+                ),
+            ),
+        ),
+    ],
+)
+def test_migrate_post_data(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.method == expected
 
 
 @pytest.mark.parametrize(

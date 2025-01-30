@@ -6,8 +6,8 @@
 import logging
 from pathlib import Path
 
+from tests.testlib.common.utils import run
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
-from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from types import TracebackType
 from typing import NamedTuple, Self
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.utils import run
+from tests.testlib.common.utils import run
 
 logger = logging.getLogger(__name__)
 

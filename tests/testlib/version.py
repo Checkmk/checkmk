@@ -20,7 +20,7 @@ from tests.testlib.common.repo import (
     current_branch_version,
     repo_path,
 )
-from tests.testlib.utils import (
+from tests.testlib.common.utils import (
     edition_from_env,
     version_spec_from_env,
 )

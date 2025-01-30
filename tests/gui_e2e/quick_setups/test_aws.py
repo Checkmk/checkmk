@@ -20,8 +20,8 @@ from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 
+from tests.testlib.common.utils import run
 from tests.testlib.site import Site
-from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 

@@ -30,12 +30,7 @@ import pytest
 import pytest_check  # type: ignore[import-untyped]
 
 from tests.testlib.common.repo import current_base_branch_name, repo_path
-from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
-    create_cse_initial_config,
-    cse_openid_oauth_provider,
-)
-from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import (
+from tests.testlib.common.utils import (
     check_output,
     execute,
     is_containerized,
@@ -48,6 +43,11 @@ from tests.testlib.utils import (
     wait_until,
     write_file,
 )
+from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
+    create_cse_initial_config,
+    cse_openid_oauth_provider,
+)
+from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 from tests.testlib.web_session import CMKWebSession
 

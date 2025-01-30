@@ -13,7 +13,7 @@ import pytest
 from opentelemetry import trace as otel_trace
 from pydantic import BaseModel
 
-from tests.testlib.utils import wait_until
+from tests.testlib.common.utils import wait_until
 
 import cmk.ccc.version as cmk_version
 

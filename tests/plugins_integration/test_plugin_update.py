@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
+from tests.testlib.common.utils import get_services_with_status
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import get_services_with_status
 
 from tests.plugins_integration.checks import (
     get_host_names,

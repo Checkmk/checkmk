@@ -15,8 +15,8 @@ from playwright.sync_api import expect, FilePayload, Locator
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-from tests.testlib.utils import wait_until
 
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.crypto.hash import HashAlgorithm

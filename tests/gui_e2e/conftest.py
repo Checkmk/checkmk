@@ -29,10 +29,10 @@ from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_use
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 
 from tests.testlib.common.repo import repo_path
+from tests.testlib.common.utils import run
 from tests.testlib.emails import EmailManager
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
-from tests.testlib.utils import run
 
 from cmk.ccc.version import Edition
 

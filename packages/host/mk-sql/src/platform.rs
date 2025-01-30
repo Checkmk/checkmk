@@ -310,7 +310,12 @@ pub mod registry {
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         );
         if let Err(e) = result {
-            log::error!("Failed to open registry key: {:?}", e);
+            let key = sql_key.to_owned() + r"Instance Names\SQL";
+            if e.kind() == std::io::ErrorKind::NotFound {
+                log::info!("Registry key '{key}' is not found, it's ok");
+            } else {
+                log::error!("Error opening registry key '{key}': {e:?}",);
+            }
             return vec![];
         }
         let names_map: HashMap<String, String> = result

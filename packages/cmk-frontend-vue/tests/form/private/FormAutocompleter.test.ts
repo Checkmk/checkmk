@@ -11,18 +11,16 @@ import userEvent from '@testing-library/user-event'
 
 vi.mock('@/form/components/utils/autocompleter', () => ({
   setupAutocompleter: vi.fn(() => {
-    const input = ref('')
+    const input = ref()
     const output = ref()
 
     watch(input, async (newVal) => {
-      if (newVal) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        output.value = {
-          choices: [
-            ['os:windows', 'OS Windows'],
-            ['os:linux', 'OS Linux']
-          ].filter((item) => item[0]?.includes(newVal))
-        }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      output.value = {
+        choices: [
+          ['os:windows', 'OS Windows'],
+          ['os:linux', 'OS Linux']
+        ].filter((item) => item[0]?.includes(newVal))
       }
     })
 
@@ -71,6 +69,27 @@ describe('FormAutocompleter', () => {
     await fireEvent.keyDown(input, { key: 'Enter' })
 
     expect(selectedValue).toBe('os:windows')
+  })
+
+  test('on focus should open dropdown list with items', async () => {
+    render(FormAutocompleter, {
+      props: {
+        placeholder: 'Add some labels',
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        filterOn: [],
+        resestInputOnAdd: false,
+        size: 7,
+        id: 'test'
+      }
+    })
+
+    const input = screen.getByPlaceholderText('Add some labels')
+    await fireEvent.focus(input)
+
+    await waitFor(() => {
+      expect(screen.getByText('OS Windows')).toBeInTheDocument()
+      expect(screen.getByText('OS Linux')).toBeInTheDocument()
+    })
   })
 
   test('on input should open dropdown list with items', async () => {

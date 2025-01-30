@@ -76,6 +76,7 @@ class V1Url(BaseModel, extra="forbid"):
     add_headers: list[str] | None = None
     auth: V1Auth | None = None
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
+    expect_response_header: str | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -88,6 +89,9 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
     try:
         value = V1Value.model_validate(rule_value)
         if any(": " not in header for header in value.mode[1].add_headers or []):
+            return False
+        if value.mode[1].expect_response_header is not None:
+            # TODO: Redirects behave differently in V1 and V2.
             return False
         type_ = _classify(value.host.address[1])
         if type_ is HostType.EMBEDDABLE:

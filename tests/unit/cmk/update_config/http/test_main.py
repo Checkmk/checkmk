@@ -308,6 +308,12 @@ EXAMPLE_42: Mapping[str, object] = {
     "mode": ("url", {"onredirect": "stickyport"}),
 }
 
+EXAMPLE_43: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response_header": "yes:no"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -403,6 +409,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_33,
         EXAMPLE_34,
         EXAMPLE_35,
+        EXAMPLE_43,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

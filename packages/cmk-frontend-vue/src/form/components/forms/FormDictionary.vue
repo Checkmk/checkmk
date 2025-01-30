@@ -223,6 +223,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 <CmkCheckbox
                   v-else
                   v-model="dict_element.is_active"
+                  :padding="
+                    dict_element.is_active && indentRequired(dict_element.dict_config, group.layout)
+                      ? 'top'
+                      : 'both'
+                  "
                   :label="dict_element.dict_config.parameter_form.title"
                   @update:model-value="toggleElement(dict_element.dict_config.name)"
                 />

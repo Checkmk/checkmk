@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 const { indent = true } = defineProps<{
   indent?: boolean
 }>()
+
+const LINE_OVERHANG = '5px'
 </script>
 
 <template>
@@ -17,15 +19,19 @@ const { indent = true } = defineProps<{
 
 <style scoped>
 .form-indent {
+  --line-overhang: v-bind(LINE_OVERHANG);
   float: none;
-  margin-top: 3px;
-  margin-bottom: 10px;
   margin-left: 6px;
-  padding-left: 10px;
+  padding-top: var(--line-overhang);
+  padding-bottom: var(--line-overhang);
+  margin-top: calc(var(--spacing) - var(--line-overhang));
+  margin-bottom: calc(var(--spacing) - var(--line-overhang));
+  padding-left: var(--spacing);
   border-left: 2px solid var(--ux-theme-5);
 }
 
 .form-indent:empty {
   margin: 0;
+  padding: 0;
 }
 </style>

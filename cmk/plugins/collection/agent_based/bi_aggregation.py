@@ -7,8 +7,6 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
-from cmk.checkengine.checkresults import state_markers  # pylint: disable=cmk-module-layer-violation
-
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -50,7 +48,9 @@ class Aggregation:
 
 @dataclass
 class AggregationError:
-    output: str
+    state: State
+    notice: str
+    details: str
     affects_state: bool
 
 
@@ -90,22 +90,35 @@ def get_aggregation_errors(
 
     if aggr.error_state is not None:
         yield AggregationError(
-            output=f"{state_markers[aggr.error_state]} {aggr.error_output}",
+            state=State(aggr.error_state),
+            notice=aggr.error_output or "",
+            details=aggr.error_output or "",
             affects_state=affects_state,
         )
 
     if aggr.custom_output is not None:
-        yield AggregationError(output=aggr.custom_output, affects_state=affects_state)
+        yield AggregationError(
+            state=State.OK,
+            notice=aggr.custom_output,
+            details=aggr.custom_output,
+            affects_state=affects_state,
+        )
 
     for child in aggr.children:
         if errors := list(get_aggregation_errors(child, affects_state)):
             yield AggregationError(
-                output=f"+-- {errors[0].output}", affects_state=errors[0].affects_state
+                state=errors[0].state,
+                notice=errors[0].notice,
+                details=f"+-- {errors[0].details}",
+                affects_state=errors[0].affects_state,
             )
 
             for error in errors[1:]:
                 yield AggregationError(
-                    output=f"| {error.output}", affects_state=error.affects_state
+                    state=error.state,
+                    notice=error.notice,
+                    details=f"| {error.details}",
+                    affects_state=error.affects_state,
                 )
 
 
@@ -136,23 +149,22 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         summary="Acknowledged: %s" % ("yes" if bi_data["acknowledged"] else "no"),
     )
 
-    if bi_data["infos"]:
-        aggregations = get_aggregations(bi_data["infos"])
-        errors = list(get_aggregation_errors(aggregations, bool(overall_state)))
+    if not bi_data["infos"]:
+        return
 
-        errors_affecting_state = [error.output for error in errors if error.affects_state]
-        other_errors = [error.output for error in errors if not error.affects_state]
+    aggregations = get_aggregations(bi_data["infos"])
+    errors = list(get_aggregation_errors(aggregations, bool(overall_state)))
 
-        infos = []
-        if errors_affecting_state:
-            infos.extend(["", "Aggregation problems affecting the state:"])
-            infos.extend(errors_affecting_state)
+    if errors_affecting_state := [e for e in errors if e.affects_state]:
+        yield Result(state=State.OK, notice="Aggregation problems affecting the state:")
+        yield from (
+            Result(state=e.state, notice=e.notice, details=e.details)
+            for e in errors_affecting_state
+        )
 
-        if other_errors:
-            infos.extend(["", "Aggregation problems not affecting the state:"])
-            infos.extend(other_errors)
-
-        yield Result(state=State.OK, notice="\n".join(infos))
+    if other_errors := [e for e in errors if not e.affects_state]:
+        yield Result(state=State.OK, notice="Aggregation problems not affecting the state:")
+        yield from (Result(state=e.state, notice=e.notice, details=e.details) for e in other_errors)
 
 
 check_plugin_bi_aggregation = CheckPlugin(

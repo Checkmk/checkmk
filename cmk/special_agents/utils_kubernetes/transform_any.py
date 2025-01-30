@@ -13,6 +13,8 @@ import json
 import re
 from collections.abc import Iterator, Mapping
 
+from pydantic import ValidationError
+
 from .schemata import api
 
 
@@ -30,24 +32,50 @@ def parse_open_metric_samples(
             continue
 
         open_metric_sample = _parse_metric_sample_with_labels(raw_open_metric)
-        if not isinstance(open_metric_sample.root, api.UnusedKubeletMetricSample):
-            yield open_metric_sample.root
+        if not isinstance(open_metric_sample, api.UnusedKubeletMetricSample):
+            yield open_metric_sample
 
 
 def _parse_metric_sample_with_labels(
     raw_open_metric_sample: str,
-) -> api.KubeletMetricSample:
+) -> api.KubeletVolumeMetricSample | api.UnusedKubeletMetricSample:
+    """
+    Notes:
+        We had a previous iteration based on:
+
+        _KubeletMetrics = KubeletVolumeMetricSample | UnusedKubeletMetricSample
+
+        class KubeletMetricSample(RootModel):
+            # https://github.com/pydantic/pydantic/issues/675#issuecomment-513029543
+            root: _KubeletMetrics
+
+        KubeletMetricSample.model_validate(...)
+
+        This approach doesn't seem to work reliably due to the enum usage instead of strings for
+        metric name
+
+    Examples:
+
+        >>> _parse_metric_sample_with_labels('apiserver_seconds_bucket{le="0"} 0')
+        UnusedKubeletMetricSample()
+
+        >>> _parse_metric_sample_with_labels('kubelet_volume_stats_available_bytes{namespace="test",persistentvolumeclaim="test"} 1')
+        KubeletVolumeMetricSample(metric_name=<KubeletVolumeMetricName.available: 'kubelet_volume_stats_available_bytes'>, labels=KubeletVolumeLabels(namespace='test', persistentvolumeclaim='test'), value=1.0)
+    """
     metric_name, rest = raw_open_metric_sample.split("{", 1)
     labels_string, timestamped_value = rest.rsplit("}", 1)
     value_string, *_optional_timestamp = timestamped_value.strip().split()
     labels = _parse_labels(labels_string)
-    return api.KubeletMetricSample.model_validate(
-        {
-            "metric_name": metric_name,
-            "labels": labels,
-            "value": float(value_string),
-        }
-    )
+    try:
+        return api.KubeletVolumeMetricSample.model_validate(
+            {
+                "metric_name": metric_name,
+                "labels": labels,
+                "value": float(value_string),
+            }
+        )
+    except ValidationError:
+        return api.UnusedKubeletMetricSample()
 
 
 def _parse_labels(raw_labels: str) -> Mapping[str, str]:

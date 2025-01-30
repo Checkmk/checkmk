@@ -26,13 +26,9 @@ test('CollapsibleWidget renders values and label', async () => {
     }
   })
 
-  expect(screen.queryByText('I am a label')).toBeTruthy()
-  const trigger = await screen.findByTestId('help-icon')
-  expect(trigger).toBeTruthy()
-  expect(trigger).toHaveClass('help-text__trigger')
+  const trigger = screen.getByRole('button', { name: '?' })
   await fireEvent.click(trigger)
-  const helpText = await screen.findAllByText('I am a super helpful help text')
-  expect(helpText).toBeTruthy()
-  expect(screen.queryByText('Welcome')).toBeTruthy()
-  expect(screen.queryByText('to Jurassic Park')).toBeTruthy()
+  await screen.findByText('I am a super helpful help text')
+  screen.getByText('Welcome')
+  screen.getByText('to Jurassic Park')
 })

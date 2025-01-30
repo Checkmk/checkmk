@@ -13,7 +13,7 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-icon')
+    const trigger = await screen.findByRole('button')
     await fireEvent.click(trigger)
     const helpText = await screen.findAllByText('fooHelp')
     expect(helpText).toBeTruthy()
@@ -25,11 +25,26 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-icon')
+    const trigger = await screen.findByRole('button')
     await fireEvent.click(trigger)
     const helpTooltip = await screen.findByRole('tooltip')
     await fireEvent.click(helpTooltip)
     await screen.findByRole('tooltip')
+  })
+
+  test('close open tooltip when clicking on icon', async () => {
+    render(HelpText, {
+      props: {
+        help: 'fooHelp'
+      }
+    })
+    const trigger = await screen.findByRole('button')
+    await fireEvent.click(trigger)
+    expect(screen.queryByRole('tooltip')).toBeInTheDocument()
+    await fireEvent.click(trigger)
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    })
   })
 
   test('close tooltip when pressing escape key', async () => {
@@ -38,7 +53,7 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-icon')
+    const trigger = await screen.findByRole('button')
     await fireEvent.click(trigger)
     await screen.findByRole('tooltip')
 

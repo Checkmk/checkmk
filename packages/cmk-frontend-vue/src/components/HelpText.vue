@@ -4,8 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { ref } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+import CmkButton from './CmkButton.vue'
 import CmkIcon from './CmkIcon.vue'
 import CmkHtml from './CmkHtml.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
@@ -15,12 +16,12 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
-const helpIcon = useTemplateRef('helpIcon')
+const triggerRef = ref<InstanceType<typeof CmkIcon> | null>(null)
 
 const checkClosing = (e: MouseEvent) => {
   e.preventDefault()
   e.stopPropagation()
-  if (e.target !== helpIcon.value) {
+  if (triggerRef.value && (e.target as HTMLElement) !== triggerRef.value.$el) {
     open.value = false
   }
 }
@@ -44,13 +45,15 @@ const closeHelp = () => {
         as-child
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
-        <CmkIcon
-          ref="helpIcon"
-          :name="open ? 'icon_help_activated' : 'icon_info_circle'"
-          size="medium"
-          class="help-text__icon"
-          data-testid="help-icon"
-      /></TooltipTrigger>
+        <CmkButton :variant="'transparent'" aria-label="?">
+          <CmkIcon
+            ref="triggerRef"
+            :name="open ? 'icon_help_activated' : 'icon_info_circle'"
+            size="medium"
+            class="help-text__icon"
+          />
+        </CmkButton>
+      </TooltipTrigger>
       <TooltipContent
         side="top"
         align="start"

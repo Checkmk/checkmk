@@ -21,7 +21,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        requirements_all_lock.txt protobuf-files frontend-vue .venv
+        requirements_all_lock.txt frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -63,7 +63,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-frontend frontend-vue
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) cmk-frontend frontend-vue
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -187,11 +187,6 @@ setup:
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
-
-protobuf-files:
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C non-free/packages/cmc-protocols protobuf-files
-endif
 
 format: format-python format-c format-shell format-bazel
 

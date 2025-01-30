@@ -64,7 +64,7 @@ PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-chec
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
+.PHONY: clean format-shell help prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
@@ -225,9 +225,6 @@ test-bandit-docker:
 test-bandit-nosec-markers:
 	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
-prepare-protobuf-files:
-	$(MAKE) -C .. protobuf-files
-
 prepare-playwright:
 	../scripts/run-uvenv playwright install-deps "chromium";
 	../scripts/run-uvenv playwright install "chromium";
@@ -365,7 +362,7 @@ test-plugins-siteless:
 	plugins_siteless/test_plugins.py
 
 test-plugins-siteless-docker:
-	../scripts/run-in-docker.sh 'make -C .. protobuf-files; make test-plugins-siteless'
+	../scripts/run-in-docker.sh 'make test-plugins-siteless'
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
@@ -408,7 +405,7 @@ test-code-quality: test-license-headers test-requirements test-file-content test
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
-test-mypy: prepare-protobuf-files
+test-mypy:
 	cd .. && $(UVENV) mypy \
 	    $(MYPY_ADDOPTS) \
 	    $(ADDITIONAL_MYPY_ARGS) \
@@ -424,7 +421,7 @@ test-mypy-docker:
 test-packaging:
 	$(PYTEST) -T packaging packaging
 
-test-pylint: prepare-protobuf-files
+test-pylint:
 	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST_UV) \
 	    -T unit \
@@ -440,7 +437,7 @@ test-pylint: prepare-protobuf-files
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
-test-ruff: prepare-protobuf-files
+test-ruff:
 	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check $(RUFF_ARGS)
 
 test-ruff-docker:

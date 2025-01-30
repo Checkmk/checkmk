@@ -206,7 +206,14 @@ create_venv(
     destination_folder = ".venv",
     requirements_txt = "@//:requirements_all_lock.txt",
     site_packages_extra_files = [":sitecustomize.py"],
-    whls = ["@rrdtool_native//:rrdtool_python_wheel"],
+    whls = [
+        "@rrdtool_native//:rrdtool_python_wheel",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "//non-free/packages/cmc-protocols:wheel",
+        ],
+    }),
 )
 
 copy_file(

@@ -111,7 +111,7 @@
                                 {% if elements_without_graph %}
                                     {% include 'additional.html' %}
                                 {% endif %}
-                                {% if data.PARAMETER_CONTACT_GROUPS %}
+                                {% if data.PARAMETER_CONTACT_GROUPS and data.HOSTCONTACTGROUPNAMES|default(false) %}
                                     {% include 'contact_groups.html' %}
                                 {% endif %}
                                 {% if service_notification and data.PARAMETER_SVC_LABELS %}

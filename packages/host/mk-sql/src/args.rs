@@ -44,6 +44,9 @@ pub struct Args {
     /// Use custom config file
     #[arg(short, long)]
     pub config_file: Option<PathBuf>,
+
+    #[arg(long)]
+    pub detect_only: bool,
 }
 
 impl Args {

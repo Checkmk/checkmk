@@ -21,6 +21,8 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
 
 from tests.testlib.site import Site
 
+from cmk.piggyback.backend._paths import source_status_dir
+
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"
 
@@ -335,3 +337,50 @@ def test_piggyback_host_removal(
     assert not piggybacked_data_gets_updated(
         central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     )
+
+
+def test_piggyback_status_file_deletion_transport(
+    central_site: Site,
+    remote_site: Site,
+    prepare_piggyback_environment: None,
+) -> None:
+    """
+    Scenario: Deletion of status file on a piggybacked host is transported to target host so that
+              the dcd can remove the host
+        Given piggybacked data on central_site for a host monitored on remote_site
+        When source status file on central_site is removed
+        Then source status file is removed on remote_site as well
+    """
+    # given
+    piggybacked_host_name = "remote_host_removal"
+
+    with (
+        create_local_check(
+            central_site,
+            [_HOSTNAME_SOURCE_CENTRAL],
+            [piggybacked_host_name],
+        ),
+        _setup_piggyback_host(central_site, remote_site.id, piggybacked_host_name),
+    ):
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name)
+        assert piggybacked_data_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name
+        )
+        assert remote_site.file_exists(
+            source_status_dir(remote_site.root) / _HOSTNAME_SOURCE_CENTRAL
+        )
+
+        # when
+        central_site.delete_file(source_status_dir(central_site.root) / _HOSTNAME_SOURCE_CENTRAL)
+        assert (
+            central_site.file_exists(
+                source_status_dir(central_site.root) / _HOSTNAME_SOURCE_CENTRAL
+            )
+            is False
+        )
+
+        # then
+        assert (
+            remote_site.file_exists(source_status_dir(remote_site.root) / _HOSTNAME_SOURCE_CENTRAL)
+            is False
+        )

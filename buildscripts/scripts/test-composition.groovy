@@ -71,15 +71,16 @@ def main() {
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {
+            def stepName = "Test ${distro}";
             def run_condition = distro in selected_distros;
 
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition){
-                Utils.markStageSkippedForConditional("Test ${distro}");
+                Utils.markStageSkippedForConditional(stepName);
             }
 
             smart_stage(
-                name: "Test ${distro}",
+                name: stepName,
                 condition: run_condition,
                 raiseOnError: false,
             ) {

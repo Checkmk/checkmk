@@ -277,7 +277,8 @@ def _do_remote_automation_serialized(
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", sanitize_site_configuration(site), command)
+    auto_logger.info("RUN [%s]: %s", site["id"], command)
+    auto_logger.debug("Site config: %r", sanitize_site_configuration(site))
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]

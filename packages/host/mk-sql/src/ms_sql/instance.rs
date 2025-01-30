@@ -250,6 +250,36 @@ impl fmt::Display for SqlInstance {
 }
 
 impl SqlInstance {
+    pub fn dump(&self) -> String {
+        format!(
+            "{:30}{:14}{:32}[{:5}:{:5}] `{}` id:{:32} '{}' {:3} '{:?}' u: {} <{:?}> @ {}:{}",
+            self.full_name(),
+            self.version,
+            self.edition,
+            self.port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string()),
+            self.dynamic_port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string()),
+            self.alias.clone().unwrap_or_default(),
+            &self.id,
+            if self.tcp { "TCP" } else { "---" },
+            self.version_table
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<String>>()
+                .join("."),
+            self.cluster,
+            self.endpoint.auth().username(),
+            self.endpoint.auth().auth_type(),
+            self.endpoint.conn().hostname(),
+            self.endpoint.conn().port(),
+        )
+    }
+
     pub fn generate_leading_entry(&self, sep: char) -> String {
         format!(
             "{}{sep}config{sep}{}{sep}{}{sep}{}\n",
@@ -1969,6 +1999,18 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
             .collect::<Vec<_>>()
             .join(", ")
     );
+    if environment.detect_only() {
+        let rows = instances
+            .iter()
+            .map(|i| i.dump())
+            .collect::<Vec<String>>()
+            .join("\n");
+        return Ok(format!(
+            "{}\nTotal instances found: {}\n",
+            rows,
+            instances.len()
+        ));
+    }
 
     let sections = ms_sql
         .valid_sections()

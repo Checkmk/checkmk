@@ -25,6 +25,9 @@ pub struct Env {
 
     /// disable caching
     disable_caching: bool,
+
+    /// detect instances and stop
+    detect_only: bool,
 }
 
 impl Env {
@@ -40,6 +43,7 @@ impl Env {
             log_dir,
             state_dir,
             disable_caching: args.no_spool,
+            detect_only: args.detect_only,
         }
     }
 
@@ -60,6 +64,10 @@ impl Env {
 
     pub fn disable_caching(&self) -> bool {
         self.disable_caching
+    }
+
+    pub fn detect_only(&self) -> bool {
+        self.detect_only
     }
 
     /// guaranteed to return cache dir or None

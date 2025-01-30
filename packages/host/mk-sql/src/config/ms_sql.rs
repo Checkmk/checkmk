@@ -563,6 +563,16 @@ impl Endpoint {
     pub fn hostname(&self) -> HostName {
         self.conn().hostname().clone()
     }
+
+    pub fn dump_compact(&self) -> String {
+        format!(
+            "host: {} port: {} user: {} auth: {:?}",
+            self.hostname(),
+            self.port(),
+            self.auth().username(),
+            self.auth().auth_type()
+        )
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]

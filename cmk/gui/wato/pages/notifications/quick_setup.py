@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Any, assert_never, cast, Literal
+from typing import Any, assert_never, cast, get_args, Literal
 
+from cmk.utils.notify_types import HostEventType, ServiceEventType
 from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.user import UserId
@@ -70,8 +71,10 @@ from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato.pages.notifications.migrate import (
+    host_event_mapper,
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
+    service_event_mapper,
 )
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
@@ -160,6 +163,16 @@ def _get_states(what: Literal["host", "service"]) -> Sequence[tuple[int, Title]]
             raise ValueError(f"Invalid value for 'what': {what}")
 
 
+def _validate_host_state_change(state_change: tuple) -> None:
+    if host_event_mapper(state_change) not in list(get_args(get_args(HostEventType)[0])):
+        raise ValidationError(Message("Invalid status change for host"))
+
+
+def _validate_service_state_change(state_change: tuple) -> None:
+    if service_event_mapper(state_change) not in list(get_args(get_args(ServiceEventType)[0])):
+        raise ValidationError(Message("Invalid status change for service"))
+
+
 def _event_choices(
     what: Literal["host", "service"],
 ) -> Sequence[UniqueCascadingSingleChoiceElement]:
@@ -189,7 +202,11 @@ def _event_choices(
                             ],
                         ),
                     ],
-                    custom_validate=[_validate_from_to],
+                    custom_validate=[
+                        _validate_host_state_change
+                        if what == "host"
+                        else _validate_service_state_change,
+                    ],
                 ),
             ),
         ),
@@ -229,14 +246,6 @@ def _event_choices(
             ),
         ),
     ]
-
-
-# TODO maybe introduce a real validator
-def _validate_from_to(p):
-    if p[0] == p[1]:
-        raise ValidationError(
-            Message("Source state can not be equal to target state."),
-        )
 
 
 def _validate_at_least_one_event(

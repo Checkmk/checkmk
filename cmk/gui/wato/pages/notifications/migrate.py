@@ -54,6 +54,31 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
 )
 
 
+def host_event_mapper(
+    host_event_state_change: tuple[StatusChangeStateHost, StatusChangeStateHost],
+) -> str:
+    _state_map: Mapping[StatusChangeStateHost, str] = {
+        -1: "?",
+        0: "r",
+        1: "d",
+        2: "u",
+    }
+    return "".join([_state_map[state] for state in host_event_state_change])
+
+
+def service_event_mapper(
+    service_event_state_change: tuple[StatusChangeStateService, StatusChangeStateService],
+) -> str:
+    _state_map: Mapping[StatusChangeStateService, str] = {
+        -1: "?",
+        0: "r",
+        1: "w",
+        2: "c",
+        3: "u",
+    }
+    return "".join([_state_map[state] for state in service_event_state_change])
+
+
 def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
     def _non_status_change_events(event: NonStatusChangeEventType) -> OtherTriggerEvent:
         status_map: Mapping[NonStatusChangeEventType, OtherTriggerEvent] = {
@@ -381,25 +406,6 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
         }
         return status_map[event]
 
-    def _host_event_mapper(host_event: StatusChangeHost) -> HostEventType:
-        _state_map: Mapping[StatusChangeStateHost, str] = {
-            -1: "?",
-            0: "r",
-            1: "d",
-            2: "u",
-        }
-        return cast(HostEventType, "".join([_state_map[state] for state in host_event[1]]))
-
-    def _service_event_mapper(service_event: StatusChangeService) -> ServiceEventType:
-        _state_map: Mapping[StatusChangeStateService, str] = {
-            -1: "?",
-            0: "r",
-            1: "w",
-            2: "c",
-            3: "u",
-        }
-        return cast(ServiceEventType, "".join([_state_map[state] for state in service_event[1]]))
-
     trigger_events = notification["triggering_events"]
     if trigger_events[0] == "all_events":
         return
@@ -407,7 +413,7 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
         specific_events = trigger_events[1]
         if "host_events" in specific_events:
             event_rule["match_host_event"] = [
-                _host_event_mapper(ev)
+                cast(HostEventType, host_event_mapper(ev[1]))
                 if ev[0] == "status_change"
                 else _non_status_change_events(ev)
                 for ev in specific_events["host_events"]
@@ -415,7 +421,7 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
 
         if "service_events" in specific_events:
             event_rule["match_service_event"] = [
-                _service_event_mapper(ev)
+                cast(ServiceEventType, service_event_mapper(ev[1]))
                 if ev[0] == "status_change"
                 else _non_status_change_events(ev)
                 for ev in specific_events["service_events"]

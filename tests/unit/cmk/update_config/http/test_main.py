@@ -9,6 +9,7 @@ import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
     LevelsType,
+    MatchType,
     parse_http_params,
     ServerResponse,
     TlsVersion,
@@ -334,6 +335,12 @@ EXAMPLE_45: Mapping[str, object] = {
     "mode": ("url", {"expect_response": []}),
 }
 
+EXAMPLE_46: Mapping[str, object] = {
+    "name": "expect_string",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_string": "example"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -356,6 +363,7 @@ EXAMPLE_45: Mapping[str, object] = {
         EXAMPLE_36,
         EXAMPLE_37,
         EXAMPLE_45,
+        EXAMPLE_46,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -454,6 +462,25 @@ def test_migrate_response_time(rule_value: Mapping[str, object], expected: objec
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].settings.response_time == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (EXAMPLE_46, (MatchType.STRING, "example")),
+    ],
+)
+def test_migrate_expect_string(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.content is not None
+    assert ssc_value[0].settings.content.body == expected
 
 
 @pytest.mark.parametrize(

@@ -79,6 +79,7 @@ class V1Url(BaseModel, extra="forbid"):
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
     expect_response_header: str | None = None
     expect_response: list[str] | None = None
+    expect_string: str | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -180,6 +181,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             redirects: Mapping[str, object] = {}
         case onredirect:
             redirects = {"redirects": onredirect}
+    match url_params.expect_string:
+        case None:
+            body: Mapping[str, object] = {}
+        case expect_string:
+            body = {"body": ("string", expect_string)}
     return {
         "endpoints": [
             {
@@ -203,6 +209,9 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                     },
                     **server_response,
                     **response_time,
+                    "content": {
+                        **body,
+                    },
                 },
             }
         ],

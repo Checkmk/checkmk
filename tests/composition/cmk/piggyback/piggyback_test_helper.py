@@ -45,9 +45,11 @@ def create_local_check(
         },
     )
     try:
+        site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
         site.openapi.rules.delete(rule_id)
+        site.openapi.changes.activate_and_wait_for_completion()
 
 
 def _get_piggybacked_service(

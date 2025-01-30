@@ -106,6 +106,7 @@ class V1Url(BaseModel, extra="forbid"):
         ]
         | None
     ) = None
+    no_body: Literal[True, None] = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -262,6 +263,12 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 }
             )
             method = {"method": (method_type, send_data)}
+    match url_params.no_body:
+        case None:
+            document: Mapping[str, object] = {}
+        case True:
+            # TODO: What happens to the searching document bodies here?
+            document = {"document": {"document_body": "ignore"}}
     return {
         "endpoints": [
             {
@@ -288,6 +295,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                     "content": {
                         **body,
                     },
+                    **document,
                 },
             }
         ],

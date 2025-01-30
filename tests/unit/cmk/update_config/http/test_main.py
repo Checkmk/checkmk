@@ -9,6 +9,8 @@ import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
     BodyRegex,
+    Document,
+    DocumentBodyOption,
     HttpMethod,
     LevelsType,
     MatchType,
@@ -503,6 +505,13 @@ EXAMPLE_63: Mapping[str, object] = {
 }
 
 
+EXAMPLE_64: Mapping[str, object] = {
+    "name": "no_body",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"no_body": True}),
+}
+
+
 @pytest.mark.parametrize(
     "rule_value",
     [
@@ -535,6 +544,7 @@ EXAMPLE_63: Mapping[str, object] = {
         EXAMPLE_56,
         EXAMPLE_57,
         EXAMPLE_58,
+        EXAMPLE_64,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -563,6 +573,30 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].url == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (
+            EXAMPLE_27,
+            None,
+        ),
+        (
+            EXAMPLE_64,
+            Document(document_body=DocumentBodyOption.IGNORE, max_age=None, page_size=None),
+        ),
+    ],
+)
+def test_migrate_no_body(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.document == expected
 
 
 @pytest.mark.parametrize(

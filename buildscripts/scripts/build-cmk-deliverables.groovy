@@ -99,21 +99,26 @@ def main() {
                 raiseOnError: false,
             ) {
                 def build_instance = smart_build(
-                    job: "${branch_base_folder}/builders/build-cmk-source_tgz",
-                    parameters: [
-                        stringParam(name: "EDITION", value: params.EDITION),
-                        stringParam(name: "VERSION", value: params.VERSION),
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/builders/build-cmk-source_tgz",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: params.VERSION,
+                        EDITION: params.EDITION,
+                        DISABLE_CACHE: params.DISABLE_CACHE,
+                    ],
 
-                        // default parameters
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                    ]
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
                 copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
+                    projectName: "${branch_base_folder}/builders/build-cmk-source_tgz",
                     selector: specific(build_instance.getId()),
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
@@ -128,20 +133,24 @@ def main() {
                 raiseOnError: false,
             ) {
                 def build_instance = smart_build(
-                    job: "${branch_base_folder}/builders/build-cmk-bom",
-                    parameters: [
-                        stringParam(name: "VERSION", value: params.VERSION),
-
-                        // default parameters
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                    ]
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: params.VERSION,
+                        DISABLE_CACHE: params.DISABLE_CACHE,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
                 copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
+                    projectName: "${branch_base_folder}/builders/build-cmk-bom",
                     selector: specific(build_instance.getId()),
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
@@ -165,23 +174,27 @@ def main() {
                 raiseOnError: false,
             ) {
                 def build_instance = smart_build(
-                    job: "${branch_base_folder}/builders/build-cmk-distro-package",
-                    parameters: [
-                        stringParam(name: "EDITION", value: params.EDITION),
-                        stringParam(name: "DISTRO", value: distro),
-                        stringParam(name: "VERSION", value: params.VERSION),
-                        stringParam(name: "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", value: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD),
-
-                        // default parameters
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        booleanParam(name: "DISABLE_CACHE", value: params.DISABLE_CACHE),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                    ]
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: params.VERSION,
+                        EDITION: params.EDITION,
+                        DISTRO: distro,
+                        DISABLE_CACHE: params.DISABLE_CACHE,
+                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
                 copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
+                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
                     selector: specific(build_instance.getId()),
                     target: relative_deliverables_dir,
                     fingerprintArtifacts: true,
@@ -190,7 +203,14 @@ def main() {
         }]
     }
 
-    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    def image_name = "minimal-alpine-checkmk-ci-master:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
+    minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
 
     smart_stage(name: "Archive artifacts") {
         dir("${deliverables_dir}") {

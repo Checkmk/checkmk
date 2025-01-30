@@ -9,6 +9,7 @@ import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormString from './FormString.vue'
 import { computed, ref } from 'vue'
 import FormIndent from '@/form/private/FormIndent.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
   spec: FormSpec.Metric
@@ -99,6 +100,7 @@ const metricSpec = computed<FormSpec.String>(() => ({
   <FormString v-model:data="data" :backend-validation="backendValidation" :spec="metricSpec" />
   <FormIndent>
     <FormString v-model:data="filterHostContext" :backend-validation="[]" :spec="filterHostSpec" />
+    <CmkSpace size="small" direction="vertical" />
     <FormString
       v-model:data="filterServiceContext"
       :backend-validation="[]"

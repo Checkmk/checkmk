@@ -356,7 +356,7 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
             r"|\[Errno -5\] No address associated with hostname)\n"
         ),
         expect_stdout="",
-        expect_exit_code=2,
+        expect_exit_code=1,
         parse_data=False,
     )
 

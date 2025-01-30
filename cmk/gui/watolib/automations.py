@@ -148,6 +148,10 @@ def check_mk_local_automation_serialized(
                 out=result.output,
                 err=result.error,
             )
+
+            if result.exit_code == 1:
+                raise MKUserError(None, msg)
+
             raise MKAutomationException(msg)
 
         # On successful "restart" command execute the activate changes hook

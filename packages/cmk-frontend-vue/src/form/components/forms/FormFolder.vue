@@ -4,10 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
 import { type Folder } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
+import CmkIcon from '@/components/CmkIcon.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { inputSizes } from '@/form/components/utils/sizes'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 
 const props = defineProps<{
   spec: Folder
@@ -26,12 +29,15 @@ const [validation, value] = useValidation<string>(
   <span class="form-folder">
     <CmkIcon name="folder_blue" size="small" />
     <span>Main/</span>
-    <input
+    <FormAutocompleter
       v-model="value"
-      :placeholder="spec.input_hint || ''"
+      :size="inputSizes['MEDIUM'].width"
+      :autocompleter="spec.autocompleter"
+      :placeholder="spec.input_hint ?? ''"
       :aria-label="spec.title"
-      type="text"
-      size="27"
+      :filter-on="['@main']"
+      :resest-input-on-add="false"
+      :allow-new-value-input="spec.allow_new_folder_path"
     />
   </span>
   <FormValidation :validation="validation"></FormValidation>
@@ -40,22 +46,18 @@ const [validation, value] = useValidation<string>(
 <style scoped>
 .form-folder {
   display: flex;
+  align-items: center;
   width: fit-content;
   height: 15px;
-  padding: 0 6px 6px;
-  align-items: baseline;
+  padding: 4px 0 4px 6px;
   background-color: var(--default-form-element-bg-color);
   border-radius: var(--border-radius);
-
-  img {
-    position: relative;
-    top: 1px;
-  }
 
   span {
     z-index: 1;
     position: relative;
-    right: -6px;
+    right: -3px;
+    margin-left: 2px;
   }
 }
 </style>

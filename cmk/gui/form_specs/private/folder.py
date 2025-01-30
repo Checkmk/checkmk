@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from cmk.rulesets.v1 import form_specs
+from cmk.rulesets.v1.form_specs import FormSpec, InputHint, Prefill
 
 
 @dataclass(frozen=True, kw_only=True)
-class Folder(form_specs.FormSpec[str]):
+class Folder(FormSpec[str]):
     """A prefix of "Main/" is always rendered in front of the input field to indicate that the
     folder will be located under the root folder.
     Set an input_hint to suggest a specific folder under the root one. The input_hint will be
     rendered within the input field.
     """
 
-    input_hint: str | None = None
+    prefill: Prefill[str] = InputHint("")
+    allow_new_folder_path: bool = False

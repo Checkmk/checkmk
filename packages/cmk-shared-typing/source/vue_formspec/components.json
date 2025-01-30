@@ -1426,10 +1426,21 @@
                             "default": "folder"
                         },
                         "input_hint": {
-                            "type": "string"
+                            "type": ["string", "null"]
+                        },
+                        "autocompleter": {
+                            "$ref": "#/$defs/autocompleter"
+                        },
+                        "allow_new_folder_path": {
+                            "type": "boolean"
                         }
                     },
-                    "required": ["type"]
+                    "required": [
+                        "type",
+                        "input_hint",
+                        "autocompleter",
+                        "allow_new_folder_path"
+                    ]
                 }
             ]
         },

@@ -187,6 +187,8 @@ describe('FormAutocompleter', () => {
 
     await userEvent.keyboard('[ArrowDown][Enter]')
 
-    expect(selectedValue).toBe('os:linux')
+    await waitFor(() => {
+      expect(selectedValue).toBe('os:linux')
+    })
   })
 })

@@ -599,6 +599,12 @@
                 "autocompleter_loading": {
                     "type": "string"
                 },
+                "search_available_options": {
+                    "type": "string"
+                },
+                "search_selected_options": {
+                    "type": "string"
+                },
                 "and_x_more": {
                     "type": "string"
                 }
@@ -608,6 +614,8 @@
                 "remove",
                 "add_all",
                 "remove_all",
+                "search_available_options",
+                "search_selected_options",
                 "available_options",
                 "selected_options",
                 "selected",

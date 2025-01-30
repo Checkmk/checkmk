@@ -389,6 +389,8 @@ export interface DualListChoiceI18N {
   no_elements_available: string;
   no_elements_selected: string;
   autocompleter_loading: string;
+  search_available_options: string;
+  search_selected_options: string;
   and_x_more: string;
 }
 export interface TimeSpanI18N {

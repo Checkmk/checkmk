@@ -20,6 +20,7 @@ import type {
 import { useFormEditDispatcher } from '@/form/private'
 import { useId } from '@/form/utils'
 import { immediateWatch } from '@/lib/watch'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -133,10 +134,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <span class="form-cascading-single-choice__choice">
-    <label v-if="$props.spec.label" :for="componentId">
+    <FormLabel v-if="$props.spec.label" :for="componentId">
       {{ props.spec.label }}
       <CmkSpace size="small" />
-    </label>
+    </FormLabel>
     <template v-if="!layoutSettings.side_by_side">
       <CmkDropdown
         v-model:selected-option="selectedOption"

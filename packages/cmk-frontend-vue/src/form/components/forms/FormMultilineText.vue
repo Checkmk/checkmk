@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: FormSpec.MultilineText
@@ -32,7 +33,7 @@ const style = computed(() => {
 <template>
   <div style="flex">
     <div v-if="spec.label">
-      <label> {{ spec.label }}</label
+      <FormLabel> {{ spec.label }}</FormLabel
       ><br />
     </div>
     <textarea

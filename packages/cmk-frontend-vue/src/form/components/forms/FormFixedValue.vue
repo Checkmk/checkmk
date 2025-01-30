@@ -8,6 +8,7 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import { computed } from 'vue'
 import type { FixedValue } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: FixedValue
@@ -27,6 +28,6 @@ const fixedValue = computed(() => {
 </script>
 
 <template>
-  <label v-if="fixedValue">{{ fixedValue }}</label>
+  <FormLabel v-if="fixedValue">{{ fixedValue }}</FormLabel>
   <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
 </template>

@@ -10,6 +10,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -28,9 +29,9 @@ const componentId = useId()
 
 <template>
   <div>
-    <label v-if="$props.spec.label" :for="componentId"
+    <FormLabel v-if="$props.spec.label" :for="componentId"
       >{{ spec.label }}<CmkSpace size="small"
-    /></label>
+    /></FormLabel>
     <CmkDropdown
       v-model:selected-option="value"
       :options="props.spec.elements"

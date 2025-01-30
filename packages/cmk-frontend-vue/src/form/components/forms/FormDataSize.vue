@@ -11,6 +11,7 @@ import { useId } from '@/form/utils'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { computed } from 'vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: DataSize
@@ -37,7 +38,7 @@ const magnitudeOptions = computed(() => {
 </script>
 
 <template>
-  <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+  <FormLabel v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</FormLabel>
   <CmkSpace size="small" />
   <input
     :id="componentId"

@@ -9,6 +9,7 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import { useId } from '@/form/utils'
 import CmkButton from '@/components/CmkButton.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: FileUpload
@@ -39,7 +40,7 @@ const componentId = useId()
       <CmkButton variant="secondary" size="small" @click="value.file_name = null">{{
         spec.i18n.replace_file
       }}</CmkButton>
-      <label class="filename"> {{ value.file_name }}</label>
+      <FormLabel class="filename"> {{ value.file_name }}</FormLabel>
     </div>
     <FormValidation :validation="validation"></FormValidation>
   </span>

@@ -13,6 +13,7 @@ import {
   joinToSeconds,
   splitToUnits as utilsSplitToUnits
 } from '../utils/timeSpan'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 type Magnitude = TimeSpan['displayed_magnitudes'][number]
 
@@ -91,7 +92,7 @@ const localValidation = ref<Array<string>>([])
 </script>
 
 <template>
-  <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
+  <FormLabel v-for="magnitude in selectedMagnitudes" :key="magnitude">
     <input
       v-model="values[magnitude]"
       :placeholder="getPlaceholder(magnitude)"
@@ -101,7 +102,7 @@ const localValidation = ref<Array<string>>([])
       type="number"
     />
     {{ spec.i18n[magnitude] }}
-  </label>
+  </FormLabel>
   <FormValidation :validation="[...validation, ...localValidation]" />
 </template>
 

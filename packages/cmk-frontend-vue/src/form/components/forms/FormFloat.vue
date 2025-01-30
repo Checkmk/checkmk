@@ -10,6 +10,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{
   spec: Float
@@ -28,7 +29,7 @@ const componentId = useId()
 
 <template>
   <template v-if="props.spec.label">
-    <label :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </label>
+    <FormLabel :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
     <FormRequired
       :spec="props.spec"
       :i18n-required="props.spec.i18n_base.required"

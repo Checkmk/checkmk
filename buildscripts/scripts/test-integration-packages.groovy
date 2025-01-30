@@ -96,7 +96,6 @@ def main() {
                     build_params: [
                         DISTRO: distro,
                         EDITION: EDITION,
-                        VERSION: VERSION,
                         CUSTOM_GIT_REF: effective_git_ref,
                     ],
                     build_params_no_check: [

@@ -10,10 +10,18 @@ import pytest
 from cmk.plugins.collection.server_side_calls.httpv2 import (
     LevelsType,
     parse_http_params,
+    ServerResponse,
     TlsVersion,
 )
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
-from cmk.update_config.http.main import _classify, _migratable, _migrate, HostType, V1Value
+from cmk.update_config.http.main import (
+    _classify,
+    _migratable,
+    _migrate,
+    _migrate_expect_response,
+    HostType,
+    V1Value,
+)
 
 EXAMPLE_1 = {
     "name": "My web page",
@@ -314,6 +322,18 @@ EXAMPLE_43: Mapping[str, object] = {
     "mode": ("url", {"expect_response_header": "yes:no"}),
 }
 
+EXAMPLE_44: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response": ["no"]}),
+}
+
+EXAMPLE_45: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response": []}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -335,6 +355,7 @@ EXAMPLE_43: Mapping[str, object] = {
         EXAMPLE_32,
         EXAMPLE_36,
         EXAMPLE_37,
+        EXAMPLE_45,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -562,3 +583,25 @@ def test_migrate_redirect(rule_value: Mapping[str, object], expected: object) ->
 )
 def test_classify(host: str, type_: HostType) -> None:
     assert _classify(host) == type_
+
+
+def test_helper_migrate_expect_response() -> None:
+    assert _migrate_expect_response(["HTTP/1.1 200 OK", "302 REDIRECT", "404"]) == [200, 302, 404]
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (EXAMPLE_45, ServerResponse(expected=[])),
+    ],
+)
+def test_migrate_expect_response(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.server_response == expected

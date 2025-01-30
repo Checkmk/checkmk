@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import re
 import sys
 from collections.abc import Mapping
 from contextlib import suppress
@@ -77,6 +78,7 @@ class V1Url(BaseModel, extra="forbid"):
     auth: V1Auth | None = None
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
     expect_response_header: str | None = None
+    expect_response: list[str] | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -106,6 +108,16 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
 def _migrate_header(header: str) -> dict[str, object]:
     name, value = header.split(": ", 1)
     return {"header_name": name, "header_value": value}
+
+
+def _migrate_expect_response(response: list[str]) -> list[int]:
+    result = []
+    for item in response:
+        if (status := re.search(r"\d{3}", item)) is not None:
+            result.append(int(status.group()))
+        else:
+            raise ValueError(f"Invalid status code: {item}")
+    return result
 
 
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
@@ -154,6 +166,13 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             auth: Mapping[str, object] = {}
         case user_auth:
             auth = {"auth": ("user_auth", user_auth.model_dump())}
+    match url_params.expect_response:
+        case None:
+            server_response: Mapping[str, object] = {}
+        case expect_response:
+            server_response = {
+                "server_response": {"expected": _migrate_expect_response(expect_response)}
+            }
     match url_params.onredirect:
         # TODO: V1 and V2 work differently, if searching for strings in documents, also need to test
         # with http codes.
@@ -182,6 +201,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                         **auth,
                         **redirects,
                     },
+                    **server_response,
                     **response_time,
                 },
             }

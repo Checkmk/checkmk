@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
+    BodyRegex,
     LevelsType,
     MatchType,
     parse_http_params,
@@ -341,6 +342,55 @@ EXAMPLE_46: Mapping[str, object] = {
     "mode": ("url", {"expect_string": "example"}),
 }
 
+EXAMPLE_47: Mapping[str, object] = {
+    "name": "regex",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "expect_regex": {
+                "regex": "example",
+                "case_insensitive": True,
+                "crit_if_found": True,
+                "multiline": True,
+            }
+        },
+    ),
+}
+
+EXAMPLE_48: Mapping[str, object] = {
+    "name": "regex",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "expect_regex": {
+                "regex": "",
+                "case_insensitive": False,
+                "crit_if_found": False,
+                "multiline": False,
+            }
+        },
+    ),
+}
+
+EXAMPLE_49: Mapping[str, object] = {
+    "name": "regex",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "expect_string": "example",
+            "expect_regex": {
+                "regex": "example",
+                "case_insensitive": True,
+                "crit_if_found": True,
+                "multiline": True,
+            },
+        },
+    ),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -364,6 +414,8 @@ EXAMPLE_46: Mapping[str, object] = {
         EXAMPLE_37,
         EXAMPLE_45,
         EXAMPLE_46,
+        EXAMPLE_47,
+        EXAMPLE_48,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -392,6 +444,38 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].url == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (
+            EXAMPLE_47,
+            (
+                MatchType.REGEX,
+                BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
+            ),
+        ),
+        (
+            EXAMPLE_48,
+            (
+                MatchType.REGEX,
+                BodyRegex(regex="", case_insensitive=False, multiline=False, invert=False),
+            ),
+        ),
+    ],
+)
+def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.content is not None
+    assert ssc_value[0].settings.content.body == expected
 
 
 @pytest.mark.parametrize(
@@ -439,6 +523,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_34,
         EXAMPLE_35,
         EXAMPLE_43,
+        EXAMPLE_49,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

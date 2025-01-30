@@ -58,6 +58,13 @@ class V1Auth(BaseModel, extra="forbid"):
     password: object
 
 
+class V1Regex(BaseModel, extra="forbid"):
+    regex: str
+    case_insensitive: bool
+    crit_if_found: bool
+    multiline: bool
+
+
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
     ssl: (
@@ -80,6 +87,7 @@ class V1Url(BaseModel, extra="forbid"):
     expect_response_header: str | None = None
     expect_response: list[str] | None = None
     expect_string: str | None = None
+    expect_regex: V1Regex | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -95,6 +103,8 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
             return False
         if value.mode[1].expect_response_header is not None:
             # TODO: Redirects behave differently in V1 and V2.
+            return False
+        if value.mode[1].expect_regex is not None and value.mode[1].expect_string is not None:
             return False
         type_ = _classify(value.host.address[1])
         if type_ is HostType.EMBEDDABLE:
@@ -181,11 +191,27 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             redirects: Mapping[str, object] = {}
         case onredirect:
             redirects = {"redirects": onredirect}
-    match url_params.expect_string:
-        case None:
+    match url_params.expect_string, url_params.expect_regex:
+        case None, None:
             body: Mapping[str, object] = {}
-        case expect_string:
+        case expect_string, None:
+            assert expect_string is not None
             body = {"body": ("string", expect_string)}
+        case None, expect_regex:
+            assert expect_regex is not None
+            body = {
+                "body": (
+                    "regex",
+                    {
+                        "regex": expect_regex.regex,
+                        "case_insensitive": expect_regex.case_insensitive,
+                        "multiline": expect_regex.multiline,
+                        "invert": expect_regex.crit_if_found,
+                    },
+                )
+            }
+        case _, _:
+            raise NotImplementedError()
     return {
         "endpoints": [
             {

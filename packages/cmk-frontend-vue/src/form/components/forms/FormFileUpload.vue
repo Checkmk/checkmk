@@ -35,7 +35,13 @@ const componentId = useId()
 
 <template>
   <span>
-    <input v-if="value.file_name === null" :id="componentId" :name="data.input_uuid" type="file" />
+    <input
+      v-if="value.file_name === null"
+      :id="componentId"
+      :name="data.input_uuid"
+      type="file"
+      :aria-label="spec.title"
+    />
     <div v-if="value.file_name" class="replace">
       <CmkButton variant="secondary" size="small" @click="value.file_name = null">{{
         spec.i18n.replace_file

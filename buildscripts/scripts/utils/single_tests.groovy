@@ -80,11 +80,11 @@ def fetch_package(Map args) {
             CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
             EDITION: args.edition,
             DISTRO: args.distro,
-            CIPARAM_BISECT_COMMENT: args.bisect_comment,
             FAKE_WINDOWS_ARTIFACTS: args.fake_windows_artifacts,
         ],
         build_params_no_check: [
             CIPARAM_OVERRIDE_BUILD_NODE: build_node,
+            CIPARAM_BISECT_COMMENT: args.bisect_comment,
         ],
         dest: args.download_dir,
     );

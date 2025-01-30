@@ -159,6 +159,7 @@ function selectOption(option: DropdownOption): void {
   background-color: var(--default-form-element-bg-color);
   margin: 0;
   padding: 3px 2.5em 4px 6px;
+  vertical-align: baseline;
 
   .cmk-dropdown__button_arrow {
     position: absolute;

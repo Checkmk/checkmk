@@ -14,7 +14,7 @@ from typing import NoReturn
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base_configuration_scenario import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import MKSNMPError
 

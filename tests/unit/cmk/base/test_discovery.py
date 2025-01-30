@@ -13,7 +13,7 @@ from typing import NamedTuple
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base_configuration_scenario import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import OnError
 

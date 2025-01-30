@@ -536,7 +536,15 @@ function getLabels(name: string, options?: Partial<Omit<Labels, 'type'>>): Label
   return {
     type: 'labels',
     ...getFormSpecDefaults(name),
-    autocompleter: null,
+    autocompleter: {
+      fetch_method: 'ajax_vs_autocomplete',
+      data: {
+        ident: 'label',
+        params: {
+          world: 'CONFIG'
+        }
+      }
+    },
     max_labels: null,
     label_source: 'explicit',
     i18n: {

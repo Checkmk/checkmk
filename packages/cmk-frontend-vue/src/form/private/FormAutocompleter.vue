@@ -10,6 +10,7 @@ import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_co
 import { X } from 'lucide-vue-next'
 import CmkSuggestions from '@/components/CmkSuggestions.vue'
 import useClickOutside from '@/lib/useClickOutside'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   id?: string
@@ -75,13 +76,14 @@ watch(autocompleterOutput, (newValue) => {
 })
 
 const vClickOutside = useClickOutside()
+const componentId = useId()
 </script>
 
 <template>
-  <div v-click-outside="() => (showSuggestions = false)" class="autocomplete">
+  <div v-click-outside="() => (showSuggestions = false)" class="form-autocompleter">
     <span style="display: flex; align-items: center">
       <input
-        :id="props.id ?? 'autocomplete'"
+        :id="props.id ?? componentId"
         v-model="visibleInputValue"
         class="item new-item"
         type="text"
@@ -131,20 +133,6 @@ const vClickOutside = useClickOutside()
 </template>
 
 <style scoped>
-.label-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-
-  li {
-    width: fit-content;
-    border-radius: 5px;
-    background-color: var(--default-form-element-bg-color);
-    margin: 5px 0;
-    padding: 2px;
-  }
-}
-
 table.nform input {
   margin: 0 5px;
   padding: 2px;
@@ -163,14 +151,6 @@ table.nform input {
   padding: 4px;
 }
 
-.error {
-  margin: 0;
-  padding: 5px;
-  background-color: rgb(247, 65, 65);
-  color: var(--default-text-color);
-  display: block;
-}
-
 .item-delete-btn {
   cursor: pointer;
   margin: 0 5px;
@@ -185,7 +165,7 @@ table.nform input {
   }
 }
 
-.autocomplete {
+.form-autocompleter {
   position: relative;
   width: fit-content;
   border-radius: 5px;
@@ -196,30 +176,6 @@ table.nform input {
 
   &:focus-within {
     background-color: var(--default-form-element-border-color);
-  }
-}
-
-.suggestions {
-  position: absolute;
-  z-index: 1;
-  color: var(--default-text-color);
-  background-color: var(--default-form-element-bg-color);
-  border-radius: 4px;
-  max-height: 200px;
-  width: 100%;
-  overflow-y: auto;
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-
-  li {
-    padding: 4px 8px;
-    cursor: pointer;
-
-    &:hover,
-    &.selected {
-      color: var(--default-select-hover-color);
-    }
   }
 }
 </style>

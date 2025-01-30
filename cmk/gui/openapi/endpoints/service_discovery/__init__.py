@@ -344,6 +344,9 @@ class DiscoverServices(BaseSchema):
     mode = _discovery_mode(default_mode="fix_all")
 
 
+_DISCOVERY_RUNNING_MSG = "A service discovery background job is currently running"
+
+
 @Endpoint(
     constructors.domain_type_action_href("service_discovery_run", "start"),
     ".../update",
@@ -352,7 +355,7 @@ class DiscoverServices(BaseSchema):
     status_descriptions={
         303: "The service discovery background job has been initialized. Redirecting to the "
         "'Wait for service discovery completion' endpoint.",
-        409: "A service discovery background job is currently running",
+        409: _DISCOVERY_RUNNING_MSG,
     },
     additional_status_codes=[303, 409],
     request_schema=DiscoverServices,
@@ -371,7 +374,11 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
 def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
-        return Response(status=409)
+        return problem(
+            status=409,
+            title="Conflict",
+            detail=_DISCOVERY_RUNNING_MSG,
+        )
 
     discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
     if not has_discovery_action_specific_permissions(discovery_action, None):

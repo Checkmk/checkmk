@@ -12,6 +12,7 @@ import { ref, computed } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import HelpText from '@/components/HelpText.vue'
 import { useFormEditDispatcher } from '@/form/private'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
   spec: FormSpec.TimeSpecific
@@ -65,9 +66,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <span>
     <CmkButton size="small" @click.prevent="toggleTimeSpecific">
-      {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }}
-    </CmkButton>
+      {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }} </CmkButton
+    ><CmkSpace size="small" /><HelpText :help="spec.help" />
     <br />
+    <CmkSpace size="small" direction="vertical" />
     <template v-if="timespecificActive">
       <FormEditDispatcher
         v-model:data="data"
@@ -83,8 +85,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       />
     </template>
     <br />
-
-    <HelpText :help="spec.help" />
     <FormValidation :validation="localValidation"></FormValidation>
   </span>
 </template>

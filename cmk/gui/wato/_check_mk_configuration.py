@@ -146,7 +146,6 @@ def register(
     config_variable_registry.register(ConfigVariableHardQueryLimit)
     config_variable_registry.register(ConfigVariableQuicksearchDropdownLimit)
     config_variable_registry.register(ConfigVariableQuicksearchSearchOrder)
-    config_variable_registry.register(ConfigVariableExperimentalFeatures)
     config_variable_registry.register(ConfigVariableInjectJsProfiling)
     config_variable_registry.register(ConfigVariableLoadFrontendVue)
     config_variable_registry.register(ConfigVariableTableRowLimit)
@@ -829,42 +828,6 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
             ),
             title=_("Quicksearch search order"),
             add_label=_("Add search filter"),
-        )
-
-
-class ConfigVariableExperimentalFeatures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupDeveloperTools
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "vue_experimental_features"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Vue experimental features"),
-            help=_("These settings only affect features that are currently under development."),
-            elements=[
-                (
-                    "rule_render_mode",
-                    DropdownChoice(
-                        title=_("Rule rendering mode"),
-                        help=_(
-                            "Enable experimental rendering modes for form specs. Keep in mind that"
-                            "some form specs are always rendered in the frontend, regardless "
-                            "of this setting."
-                        ),
-                        choices=[
-                            ("backend", "Backend (legacy rendering)"),
-                            ("frontend", "Frontend (vue rendering)"),
-                            ("backend_and_frontend", "Backend and Frontend"),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys=False,
         )
 
 

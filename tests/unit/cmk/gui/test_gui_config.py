@@ -151,7 +151,6 @@ def test_default_config_from_plugins() -> None:
         "enable_deprecated_automation_user_authentication",
         "enable_community_translations",
         "default_temperature_unit",
-        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
         "configuration_bundles",

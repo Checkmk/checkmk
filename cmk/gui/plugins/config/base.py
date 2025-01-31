@@ -653,5 +653,3 @@ class CREConfig:
 
     inject_js_profiling_code: bool = False
     load_frontend_vue: Literal["static_files", "inject"] = "static_files"
-    # Vue experimental feature settings
-    vue_experimental_features: dict[str, Any] = field(default_factory=dict)

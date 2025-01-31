@@ -16,8 +16,6 @@ from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteId
 
-from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups
@@ -3257,18 +3255,4 @@ class ModeExportRule(ABCEditRuleMode):
 
 @request_memoize()
 def _get_rule_render_mode() -> RenderMode:
-    # Settings via url overwrite config based settings
-    if (rendering_mode := html.request.var("rule_render_mode", None)) is None:
-        rendering_mode = active_config.vue_experimental_features.get(
-            "rule_render_mode", RenderMode.BACKEND.value
-        )
-
-    match rendering_mode:
-        case RenderMode.BACKEND.value:
-            return RenderMode.BACKEND
-        case RenderMode.FRONTEND.value:
-            return RenderMode.FRONTEND
-        case RenderMode.BACKEND_AND_FRONTEND.value:
-            return RenderMode.BACKEND_AND_FRONTEND
-        case _:
-            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
+    return RenderMode.BACKEND

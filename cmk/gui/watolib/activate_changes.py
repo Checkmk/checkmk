@@ -1753,7 +1753,7 @@ class ActivateChangesManager(ActivateChanges):
         self._log_activation()
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(self._activation_id)
-        job.start(
+        result = job.start(
             JobTarget(
                 callable=activate_changes_scheduler_job_entry_point,
                 args=ActivateChangesSchedulerJobArgs(
@@ -1770,6 +1770,8 @@ class ActivateChangesManager(ActivateChanges):
                 user=str(user.id) if user.id else None,
             ),
         )
+        if result.is_error():
+            raise result.error
 
     def _log_activation(self):
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)

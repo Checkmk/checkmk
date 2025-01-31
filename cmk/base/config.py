@@ -558,14 +558,10 @@ def register(name: str, default_value: Any) -> None:
 def load(
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-    *,
-    changed_vars_handler: Callable[[set[str]], None] | None = None,
 ) -> None:
     _initialize_config()
 
-    changed_var_names = _load_config(with_conf_d)
-    if changed_vars_handler is not None:
-        changed_vars_handler(changed_var_names)
+    _changed_var_names = _load_config(with_conf_d)
 
     _initialize_derived_config_variables()
 

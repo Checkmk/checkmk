@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL]
+"MSSQLSERVER"="MSSQL16.MSSQLSERVER"
+"SQLEXPRESS_NAME"="MSSQL13.SQLEXPRESS_ID"
+

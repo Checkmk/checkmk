@@ -1,0 +1,325 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL]
+"INSTANCE1"="MSSQL15.INSTANCE1"
+"INSTANCE2"="MSSQL15.INSTANCE2"
+
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1]
+@="INSTANCE1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\ClusterState]
+"MPT_AGENT_CORE_CNI"=dword:00000000
+"SQL_Engine_Core_Inst"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\ConfigurationState]
+"MPT_AGENT_CORE_CNI"=dword:00000001
+"SQL_Engine_Core_Inst"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\CPE]
+"CollectorParameters"="SQL MSSQL15.INSTANCE1"
+"TimeOfReporting"=dword:0000003c
+"ErrorDumpDir"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\LOG\\"
+"EnableErrorReporting"=dword:00000001
+"CustomerFeedback"=dword:00000001
+"InstallID"="1b83d712-8bbd-4fc7-b872-cda884ca5bd7"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer]
+"SysDb"=dword:00000001
+"AuditLevel"=dword:00000002
+"BackupDirectory"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\Backup"
+"DefaultLogin"="guest"
+"LoginMode"=dword:00000002
+"Tapeloadwaittime"=dword:ffffffff
+"SetHostName"=dword:00000000
+"FirstStart"=dword:00000000
+"uptime_pid"=dword:00000964
+"uptime_time_utc"=hex:12,b8,87,12,da,73,db,01
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\CurrentVersion]
+"RegisteredOwner"=""
+"SerialNumber"=""
+"CurrentVersion"="15.0.2000.5"
+"Language"=dword:00000409
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\Filestream]
+"RsFxVersion"="0600"
+"RsFxVersionBase"="0600"
+"RsFxVersionPcu"="0600"
+"InstanceGuid"="{fa06988e-28b3-40ef-b761-17e98891398f}"
+"ShareName"="INSTANCE1"
+"EnableLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\HADR]
+"HADR_Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\Parameters]
+"SQLArg0"="-dC:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\DATA\\master.mdf"
+"SQLArg1"="-eC:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\Log\\ERRORLOG"
+"SQLArg2"="-lC:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\DATA\\mastlog.ldf"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib]
+"ForceEncryption"=dword:00000000
+"HideInstance"=dword:00000000
+"Certificate"=""
+"ExtendedProtection"=dword:00000000
+"AcceptedSPNs"=hex(7):00,00
+"DisplayName"="SQL Server Network Configuration"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\AdminConnection]
+"DisplayName"="Dedicated Administrative Connection"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\AdminConnection\Tcp]
+"TcpDynamicPorts"="49715"
+"DisplayName"="TCP/IP"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Np]
+"Enabled"=dword:00000000
+"PipeName"="\\\\.\\pipe\\MSSQL$INSTANCE1\\sql\\query"
+"DisplayName"="Named Pipes"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Sm]
+"Enabled"=dword:00000000
+"DisplayName"="Shared Memory"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp]
+"Enabled"=dword:00000001
+"ListenOnAllIPs"=dword:00000000
+"KeepAlive"=dword:00007530
+"DisplayName"="TCP/IP"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP1]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="fe80::456d:a7d1:e02:8c82%8"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP2]
+"Enabled"=dword:00000001
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="192.168.121.170"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP3]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="fe80::c34c:33ed:5e21:2115%3"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP4]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="10.200.3.192"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP5]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="fe80::4c69:cf17:ae5a:31e3%7"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP6]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="192.168.125.75"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP7]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="::1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP8]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Specific IP Address"
+"IpAddress"="127.0.0.1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IP9]
+"Active"=dword:00000001
+"DisplayName"="Specific IP Address"
+"Enabled"=dword:00000000
+"IpAddress"="192.168.125.175"
+"TcpDynamicPorts"=""
+"TcpPort"="1433"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+"DisplayName"="Any IP Address"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\MSSQLServer\SuperSocketNetLib\Via]
+"Enabled"=dword:00000000
+"DefaultServerPort"="0:1433"
+"ListenInfo"="0:1433"
+"DisplayName"="VIA"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\ADSDSOObject]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\DB2OLEDB]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSDASQL]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSIDXS]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSOLAP]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSOLEDBSQL]
+"AllowInProcess"=dword:00000001
+"DisallowAdhocAccess"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSQLImpProv]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\MSSEARCHSQL]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Providers\SQLNCLI11]
+"AllowInProcess"=dword:00000001
+"DisallowAdhocAccess"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Security]
+"Entropy"=hex:01,2e,3e,b8,87,86,b4,0d,32,ec,41,ce,57,38,4f,d7,37,e8,b4,31,08,\
+  92,c7,19,93,3e,5e,ed,76,cb,5f,7b,56,77,a6,8f,0e,25,aa,73,55,a1,b4,88,3d,da,\
+  d4,25,a6,09,95,28,43,4f,23,57,90,cb,3d,7b,d0,aa,5f,52,e9,7e,d1,96,13,a7,26,\
+  e6,86,22,39,bf,6b,30,d9,ff,1e,6c,73,40,ea,33,94,54,6c,8d,67,3f,a6,3d,bd,01,\
+  0c,33,ab,6d,de,d1,c3,53,62,a7,ca,7f,0c,04,fa,0c,69,5c,ce,71,b0,de,9f,b4,1b,\
+  4b,7f,24,9c,d0,71,f7,af,e2,e3,eb,ef,03,80,04,bd,c5,66,a1,1b,3f,a6,a3,60,29,\
+  60,8b,44,38,75,91,b6,4d,df,dd,16,ce,b3,3f,d9,49,71,2a,41,44,87,af,d9,af,da,\
+  83,f1,b2,62,2a,9b,7c,a2,f3,67,c4,7b,5d,99,2b,75,0f,c0,b9,f0,19,af,94,4d,62,\
+  31,af,72,8b,42,03,00,10,df,23,8f,6d,e8,a2,80,0d,08,a2,bb,c6,27,9e,17,f6,47,\
+  f2,c9,6f,fc,2c,5e,30,9e,f4,ac,72,93,e3,bf,4d,9f,a0,fd,3d,dc,bf,99,35,3b,19,\
+  d4,f5,e2,1c,d4,06,f4,d9,2e,17
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Setup]
+"Version"="15.0.2000.5"
+"SP"=dword:00000000
+"SQLPath"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL"
+"ProductCode"="{A60B3D8E-5311-4BF1-AF7A-D1AC15F9152E}"
+"SqlProgramDir"="C:\\Program Files\\Microsoft SQL Server\\"
+"FeatureList"="SQL_Engine_Core_Inst=3 SQL_DataFiles_Core_Inst=3 SQL_ENGINE_DB_CNI=3 SQL_CMDLINETOOLS_CNI=3 SQL_DUMPER_CNI=3 SQL_Engine_CNI=3 SQL_ENGINE_CORE_CNI=3 SQL_LEGACYTOOLS_CNI=3 SQL_REPL_ENGINE_SUPPORT_CNI=3 SQL_SLP_ENGINE_SUPPORT_CNI=3 MPT_AGENT_CORE_CNI=3 MPT_AGENT_CORE_MNGD_CNI=3 SQL_AGENT_FNI=3 SQL_DATA_COLLECTOR_FNI=3 SQL_LEGACYTOOLS_FNI=3 SQL_MAIL_FNI=3 SQL_REPL_ENGINE_SUPPORT_FNI=3 SQL_UPGRADESCRIPTS_FNI=3"
+"PatchLevel"="15.0.2000.5"
+"SQLBinRoot"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\Binn"
+"Language"=dword:00000409
+"checksum"=hex:38,37,33,66,66,66,30,65,62,38,32,62,30,34,37,62,31,30,35,31,36,\
+  38,32,31,30,30,63,66,30,32,66,37,61,64,63,31,61,34,37,31,37,34,35,39,38,64,\
+  62,66,38,32,39,35,63,63,32,39,34,32,64,37,61,33,62,63,30,32,39,63,65,62,61,\
+  35,31,65,62,35,65,34,64,38,39,33,65,34,65,64,35,64,64,34,35,31,66,66,30,62,\
+  33,39,63,32,32,35,64,62,37,35,63,36,33,32,35,32,39,36,62,62,65,36,38,32,32,\
+  65,61,38,63,36,32,31,36,63,34,30,37,36,65,61,65,36,37,33,66,61,64,64,31,32,\
+  30,30,62,62,35,39,61,64,32,34,39,32,36,66,31,35,63,31,34,61,38,66,30,31,66,\
+  64,63,63,31,37,00
+"EditionType"="Developer Edition"
+"Edition"="Developer Edition"
+"SQLGroup"="S-1-5-80-1325646931-1668223460-2616288874-3803874631-88261924"
+"Collation"="SQL_Latin1_General_CP1_CI_AS"
+"SQLDataRoot"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL"
+"AGTGroup"="S-1-5-80-3024047842-3839136557-614332326-824808386-3085223873"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Setup\SQL_Engine_Core_Inst]
+"ProductCode"="{A60B3D8E-5311-4BF1-AF7A-D1AC15F9152E}"
+"FeatureList"="SQL_Engine_Core_Inst=3 SQL_DataFiles_Core_Inst=3 SQL_ENGINE_DB_CNI=3 SQL_CMDLINETOOLS_CNI=3 SQL_DUMPER_CNI=3 SQL_Engine_CNI=3 SQL_ENGINE_CORE_CNI=3 SQL_LEGACYTOOLS_CNI=3 SQL_REPL_ENGINE_SUPPORT_CNI=3 SQL_SLP_ENGINE_SUPPORT_CNI=3 MPT_AGENT_CORE_CNI=3 MPT_AGENT_CORE_MNGD_CNI=3 SQL_AGENT_FNI=3 SQL_DATA_COLLECTOR_FNI=3 SQL_LEGACYTOOLS_FNI=3 SQL_MAIL_FNI=3 SQL_REPL_ENGINE_SUPPORT_FNI=3 SQL_UPGRADESCRIPTS_FNI=3"
+"Version"="15.0.2000.5"
+"PatchLevel"="15.0.2000.5"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\Setup\SQL_Engine_Core_Inst\1033]
+"ProductCode"="{E3E84B2C-FCF6-469F-9FE7-5E8934DB69AD}"
+"FeatureList"="SQL_Engine_Core_Inst_Loc=3 SQL_ENGINE_CORE_CLI=3 MPT_AGENT_CORE_CLI=3 MPT_AGENT_CORE_MNGD_CLI=3 SQL_AGENT_FLI=3 SQL_DATA_COLLECTOR_FLI=3 SQL_LEGACYTOOLS_FLI=3 SQL_MAIL_FLI=3"
+"Version"="15.0.2000.5"
+"PatchLevel"="15.0.2000.5"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\SQLServerAgent]
+"ErrorLogFile"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\Log\\SQLAGENT.OUT"
+"WorkingDirectory"="C:\\Program Files\\Microsoft SQL Server\\MSSQL15.INSTANCE1\\MSSQL\\JOBS"
+"RestartServer"="1"
+"ErrorLoggingLevel"=dword:00000003
+"JobHistoryMaxRows"=dword:000003e8
+"JobHistoryMaxRowsPerJob"=dword:00000064
+"NonAlertableErrors"="1204,4002"
+"MSXServerName"=""
+"SysAdminOnly"="1"
+"ServerHost"=""
+"DownloadedMaxRows"=dword:00000064
+"AlertFailSafeEmailAddress"=""
+"AlertFailSafeNetSendAddress"=""
+"AlertFailSafeOperator"=""
+"AlertFailSafePagerAddress"=""
+"AlertForwardAlways"=dword:00000000
+"AlertForwardingServer"=""
+"AlertForwardingSeverity"=dword:00000083
+"AlertNotificationMethod"=dword:00000000
+"AlertPagerCCTemplate"=""
+"AlertPagerSendSubjectOnly"=dword:00000000
+"AlertReplaceRuntimeTokens"=dword:00000000
+"AllowDownloadedJobsToMatchProxyName"=dword:00000000
+"AssertPopupMask"=dword:00000003
+"AutoRegistryRefresh"=dword:00000001
+"CoreEngineMask"=dword:00000020
+"DatabaseMailProfile"=""
+"ErrorMonitor"=""
+"EventLogPeekInterval"=dword:00000014
+"EventWMILimit"=dword:00000005
+"EventWMIPeekInterval"=dword:0000001e
+"EventlogSweeping"=dword:00000000
+"IdleCPUDuration"=dword:00000258
+"IdleCPUPercent"=dword:0000000a
+"JobShutdownTimeout"=dword:0000000f
+"JobStartDelay"=dword:00000000
+"LogTSQLStepErrors"=dword:00000000
+"LoginTimeout"=dword:0000001e
+"MSXDownloadBatchSize"=dword:00000032
+"MSXPollInterval"=dword:0000003c
+"MaxCachedOperations"=dword:00000000
+"MonitorAutoStart"=dword:00000001
+"MsxEncryptChannelOptions"=dword:00000002
+"OemErrorLog"=dword:00000000
+"PerformanceSamplingInterval"=dword:00000014
+"PersistentJMConnection"=dword:00000000
+"PingConnection"=dword:00000001
+"RecoveredDatabasesForAgentStartup"=hex(7):6d,00,73,00,64,00,62,00,00,00
+"RegularMSXConnections"=dword:00000000
+"RestartSQLServer"=dword:00000001
+"ShowFailedMSXJobSQL"=dword:00000000
+"ShutdownLoginTimeout"=dword:00000005
+"SkipScheduleCheck"=dword:00000000
+"SkipVersionCheck"=dword:00000000
+"TSQLRowBatchSize"=dword:00000032
+"TSQLWaitTime"=dword:0000000a
+"TraceCritSecs"=dword:00000000
+"TraceMemory"=dword:00000000
+"UseDatabaseMail"=dword:00000000
+"UseUserLocale"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\SQLServerSCP]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-not-all\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1\UpgradeIncompleteState]
+"MPT_AGENT_CORE_CNI"=dword:00000000
+"SQL_Engine_Core_Inst"=dword:00000000
+

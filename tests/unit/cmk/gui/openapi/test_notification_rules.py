@@ -1423,6 +1423,12 @@ def test_update_notification_method(
         "option": PluginOptions.WITH_PARAMS,
         "plugin_params": plugin_data,
     }
+    if config["notification_method"]["notify_plugin"]["plugin_params"]["plugin_name"] not in (
+        "mail",
+        "asciimail",
+    ):
+        del config["notification_method"]["notification_bulking"]
+
     r2 = clients.RuleNotification.edit(
         rule_id=r1.json["id"],
         rule_config=config,
@@ -1598,6 +1604,7 @@ def test_service_now_management_incident_types_200(
     service_now["management_type"] = service_now_incident
     service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
+    del config["notification_method"]["notification_bulking"]
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
         "plugin_params": service_now,
@@ -1659,6 +1666,7 @@ def test_service_now_management_case_types_200(
     service_now["management_type"] = service_now_case
     service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
+    del config["notification_method"]["notification_bulking"]
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
         "plugin_params": service_now,
@@ -2147,6 +2155,7 @@ def test_create_rules_with_basic_and_token_auth(
     setup_site_data(clients)
     plugin["auth"] = auth_method
     config = notification_rule_request_example()
+    del config["notification_method"]["notification_bulking"]
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
         "plugin_params": plugin,

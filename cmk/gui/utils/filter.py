@@ -16,9 +16,13 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
 
         mandatory_not_found = [x for x in mandatory.keys()]
 
-        for key in (request.var("_active") or "").split(";"):
-            sub_keys = [x for x in request.args.keys() if re.match(key, x)]
+        sub_keys = [
+            x
+            for x in request.args.keys()
+            if x not in ["_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name"]
+        ]
 
+        for key in (request.var("_active") or "").split(";"):
             if key in mandatory:
                 mandatory_not_found = [x for x in mandatory_not_found if key != x]
                 sub_keys = [x for x in sub_keys if x != key]

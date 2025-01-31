@@ -115,6 +115,7 @@ class V1Url(BaseModel, extra="forbid"):
     page_size: V1PageSize | None = None
     max_age: int | None = None
     urlize: Literal[True, None] = None
+    extended_perfdata: Literal[True, None] = None
 
 
 class V1Value(BaseModel, extra="forbid"):

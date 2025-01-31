@@ -538,6 +538,18 @@ EXAMPLE_67: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_68: Mapping[str, object] = {
+    "name": "max_age",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "urlize": True,
+            "extended_perfdata": True,
+        },
+    ),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -575,6 +587,7 @@ EXAMPLE_67: Mapping[str, object] = {
         EXAMPLE_65,
         EXAMPLE_66,
         EXAMPLE_67,
+        EXAMPLE_68,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:

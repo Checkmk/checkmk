@@ -10,7 +10,6 @@ from typing import Any, NamedTuple, TypeVar
 from livestatus import SiteId
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
@@ -32,7 +31,7 @@ from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automati
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
-    local_automation_failure,
+    get_local_automation_failure_message,
     MKAutomationException,
 )
 
@@ -95,14 +94,15 @@ def _automation_serialized(
 def _automation_failure(
     response: AutomationResponse,
     exception: SyntaxError,
-) -> MKGeneralException:
+) -> MKAutomationException:
     if response.local:
-        return local_automation_failure(
+        msg = get_local_automation_failure_message(
             command=response.command,
             cmdline=response.cmdline,
             out=response.serialized_result,
             exc=exception,
         )
+        return MKAutomationException(msg)
     return MKAutomationException(
         "%s: <pre>%s</pre>"
         % (

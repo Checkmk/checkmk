@@ -22,16 +22,16 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
         "specific_events",
         SpecificEvents(
             host_events=[
-                ("status_change", (-1, 0)),
-                ("status_change", (1, 2)),
+                ("state_change", (-1, 0)),
+                ("state_change", (1, 2)),
                 ("flapping_state", None),
                 ("acknowledgement", None),
                 ("alert_handler", "failure"),
             ],
             service_events=[
-                ("status_change", (-1, 0)),
-                ("status_change", (1, 2)),
-                ("status_change", (3, 0)),
+                ("state_change", (-1, 0)),
+                ("state_change", (1, 2)),
+                ("state_change", (3, 0)),
                 ("downtime", None),
                 ("alert_handler", "success"),
             ],

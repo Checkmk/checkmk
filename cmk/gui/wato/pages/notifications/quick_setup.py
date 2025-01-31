@@ -1555,12 +1555,14 @@ def save_and_test_action(
     match mode:
         case QuickSetupActionMode.SAVE:
             _save(all_stages_form_data)
+            result_msg = _("New notification rule successfully created!")
         case QuickSetupActionMode.EDIT:
             assert object_id is not None
             _edit(all_stages_form_data, object_id)
+            result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
-    return mode_url("test_notifications", result=_("New notification rule successfully created!"))
+    return mode_url("test_notifications", result=result_msg)
 
 
 def save_and_new_action(

@@ -10,6 +10,7 @@ from tests.testlib.unit.utils import reset_registries
 
 from cmk.ccc.version import edition
 
+import cmk.utils.resulttype as result
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -56,7 +57,10 @@ def test_activate_changes(
     clients.HostConfig.create(host_name="foobar", folder="/")
 
     # do not start the activation/background job, this doesn't test the "wait-for-completion" endpoint
-    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSchedulerBackgroundJob.start")
+    mocker.patch(
+        "cmk.gui.watolib.activate_changes.ActivateChangesSchedulerBackgroundJob.start",
+        return_value=result.OK(None),
+    )
 
     restart_rabbitmq_when_changed = mocker.patch(
         "cmk.gui.watolib.activate_changes.rabbitmq.update_and_activate_rabbitmq_definitions",

@@ -48,7 +48,7 @@ class JobExecutor(Protocol):
 
     def terminate(self, job_id: str) -> None: ...
 
-    def is_alive(self, job_id: str) -> bool: ...
+    def is_alive(self, job_id: str) -> result.Result[bool, StartupError]: ...
 
     def all_running_jobs(self) -> dict[str, int]: ...
 
@@ -118,11 +118,11 @@ class ThreadedJobExecutor(JobExecutor):
         except KeyError:
             pass
 
-    def is_alive(self, job_id: str) -> bool:
+    def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         try:
-            return bool(ThreadedJobExecutor.running_jobs[job_id].thread.is_alive())
+            return result.OK(bool(ThreadedJobExecutor.running_jobs[job_id].thread.is_alive()))
         except KeyError:
-            return False
+            return result.OK(False)
 
     def all_running_jobs(self) -> dict[str, int]:
         ThreadedJobExecutor.clean_up_finished_jobs()

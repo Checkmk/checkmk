@@ -145,18 +145,18 @@ class BackgroundJob:
     def _is_foreign(self) -> bool:
         return self.get_status().user != user.id
 
-    def _verify_running(self, job_status: JobStatusSpec) -> bool:
-        try:
-            return self._executor.is_alive(self._job_id)
-        except KeyError:
-            return False
-
     def is_active(self) -> bool:
         if not self.exists():
             return False
 
         job_status = self.get_status()
-        return job_status.is_active and self._verify_running(job_status)
+        if not job_status.is_active:
+            return False
+
+        result = self._executor.is_alive(self._job_id)
+        if result.is_error():
+            return False
+        return result.ok
 
     def stop(self) -> None:
         if not self.is_active():

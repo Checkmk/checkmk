@@ -89,15 +89,15 @@ class JobSchedulerExecutor(JobExecutor):
         if r.is_error():
             raise r.error
 
-    def is_alive(self, job_id: str) -> bool:
+    def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/is_alive",
             json=IsAliveRequest(job_id=job_id).model_dump(mode="json"),
         )
         if r.is_error():
-            raise r.error
+            return result.Error(r.error)
         response_data = r.ok.json()
-        return IsAliveResponse.model_validate(response_data).is_alive
+        return result.OK(IsAliveResponse.model_validate(response_data).is_alive)
 
     def health(self) -> HealthResponse:
         r = self._get(JOB_SCHEDULER_BASE_URL + "/health")

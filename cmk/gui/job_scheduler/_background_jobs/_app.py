@@ -89,7 +89,10 @@ def get_application(
 
     @app.post("/is_alive")
     async def is_alive(request: Request, payload: IsAliveRequest) -> IsAliveResponse:
-        return IsAliveResponse(is_alive=executor.is_alive(payload.job_id))
+        result = executor.is_alive(payload.job_id)
+        if result.is_error():
+            raise result.error
+        return IsAliveResponse(is_alive=executor.is_alive(payload.job_id).ok)
 
     @app.get("/health")
     async def check_health(request: Request) -> HealthResponse:

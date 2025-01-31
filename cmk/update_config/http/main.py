@@ -138,6 +138,10 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
             "HEAD",
         ):
             return False
+        try:
+            _migrate_expect_response(value.mode[1].expect_response or [])
+        except ValueError:
+            return False
         type_ = _classify(value.host.address[1])
         if type_ is HostType.EMBEDDABLE:
             # This might have some issues, since customers can put a port, uri, and really mess with

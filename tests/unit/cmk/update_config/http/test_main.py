@@ -572,6 +572,9 @@ EXAMPLE_67: Mapping[str, object] = {
         EXAMPLE_57,
         EXAMPLE_58,
         EXAMPLE_64,
+        EXAMPLE_65,
+        EXAMPLE_66,
+        EXAMPLE_67,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -633,6 +636,14 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
             EXAMPLE_66,
             Document(
                 document_body=DocumentBodyOption.FETCH,
+                max_age=111.0,
+                page_size=None,
+            ),
+        ),
+        (
+            EXAMPLE_67,
+            Document(
+                document_body=DocumentBodyOption.IGNORE,
                 max_age=111.0,
                 page_size=None,
             ),
@@ -804,6 +815,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_34,
         EXAMPLE_35,
         EXAMPLE_43,
+        EXAMPLE_44,
         EXAMPLE_49,
         EXAMPLE_51,
         EXAMPLE_59,

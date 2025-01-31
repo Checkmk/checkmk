@@ -2227,8 +2227,10 @@ class CheckboxNotificationBulking:
         return cls(when_to_bulk=when_to_bulk, bulk=bulk)
 
     @classmethod
-    def from_api_request(cls, data: NotificationBulkingAPIValueType) -> CheckboxNotificationBulking:
-        if data["state"] == "disabled":
+    def from_api_request(
+        cls, data: NotificationBulkingAPIValueType | None
+    ) -> CheckboxNotificationBulking:
+        if data is None or data["state"] == "disabled":
             return cls()
 
         value = data["value"]

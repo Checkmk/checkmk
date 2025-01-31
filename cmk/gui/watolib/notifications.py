@@ -227,7 +227,7 @@ class NotificationMethod:
     def from_api_request(cls, incoming: APINotificationMethod) -> NotificationMethod:
         return cls(
             notification_bulking=CheckboxNotificationBulking.from_api_request(
-                incoming["notification_bulking"]
+                incoming.get("notification_bulking")
             ),
             notify_plugin=get_plugin_from_api_request(incoming["notify_plugin"]),
         )
@@ -235,27 +235,29 @@ class NotificationMethod:
     def api_response(self) -> APINotificationMethod:
         r: APINotificationMethod = {
             "notify_plugin": self.notify_plugin.api_response(),
-            "notification_bulking": self.notification_bulking.api_response(),
         }
+        if self._bulking_allowed():
+            r["notification_bulking"] = self.notification_bulking.api_response()
+
         return r
 
     def to_mk_file_format(self) -> NotificationMethodMkFormat:
         r = NotificationMethodMkFormat(notify_plugin=self.notify_plugin.to_mk_file_format())
-        notification_scripts = load_notification_scripts()
-        if r["notify_plugin"][0] in notification_scripts:
-            bulk_allowed = notification_scripts[r["notify_plugin"][0]]["bulk"]
-        else:
-            bulk_allowed = False
-
         if (bulk := self.notification_bulking.to_mk_file_format()) is not None:
-            if not bulk_allowed:
+            if not self._bulking_allowed():
                 raise BulkNotAllowedException(
-                    _("The notification script %s does not allow bulking.") % r["notify_plugin"][0]
+                    _("The notification script %s does not allow bulking.")
+                    % self.notify_plugin.plugin_name
                 )
 
             r["bulk"] = bulk
 
         return r
+
+    def _bulking_allowed(self) -> bool:
+        return self.notify_plugin.plugin_name in (
+            plugin_name for plugin_name, info in load_notification_scripts().items() if info["bulk"]
+        )
 
 
 @dataclass

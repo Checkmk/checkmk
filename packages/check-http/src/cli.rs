@@ -126,8 +126,8 @@ pub struct Cli {
 
     /// Text to send in HTTP body.
     ///
-    /// This will set the HTTP method to POST if unset,
-    /// but will not overwrite the method specified with --method.
+    /// If --body is used, then the HTTP method defaults to POST instead of GET.
+    /// However, the method specified via --method overwrites this default.
     /// Also, no encoding (like url-encoding) will be applied.
     #[arg(long, verbatim_doc_comment)]
     pub body: Option<String>,

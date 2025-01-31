@@ -14,22 +14,18 @@ from cmk.utils.notify_types import (
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 
-StatusChangeStateHost = Literal[-1, 0, 1, 2]
-StatusChangeStateService = Literal[-1, 0, 1, 2, 3]
-StatusChangeHost = tuple[
-    Literal["status_change"], tuple[StatusChangeStateHost, StatusChangeStateHost]
-]
-StatusChangeService = tuple[
-    Literal["status_change"], tuple[StatusChangeStateService, StatusChangeStateService]
-]
+HostIntState = Literal[-1, 0, 1, 2]
+ServiceIntState = Literal[-1, 0, 1, 2, 3]
+StateChangeHost = tuple[Literal["state_change"], tuple[HostIntState, HostIntState]]
+StateChangeService = tuple[Literal["state_change"], tuple[ServiceIntState, ServiceIntState]]
 Downtime = tuple[Literal["downtime"], None]
 Acknowledgement = tuple[Literal["acknowledgement"], None]
 FlappingState = tuple[Literal["flapping_state"], None]
 AlertHandler = tuple[Literal["alert_handler"], Literal["success", "failure"]]
 OtherTriggerEvent = Downtime | Acknowledgement | FlappingState | AlertHandler
 
-HostEvent = StatusChangeHost | OtherTriggerEvent
-ServiceEvent = StatusChangeService | OtherTriggerEvent
+HostEvent = StateChangeHost | OtherTriggerEvent
+ServiceEvent = StateChangeService | OtherTriggerEvent
 
 
 class SpecificEvents(TypedDict):

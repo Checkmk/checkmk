@@ -12,8 +12,8 @@ from cmk.utils.notify_types import (
     EventRule,
     GroupBy,
     HostEventType,
-    is_non_status_change_event_type,
-    NonStatusChangeEventType,
+    is_non_state_change_event_type,
+    NonStateChangeEventType,
     NotificationParameterID,
     NotificationRuleID,
     ServiceEventType,
@@ -32,6 +32,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     GeneralProperties,
     HostEvent,
     HostFilters,
+    HostIntState,
     Method,
     NotificationMethod,
     NotificationQuickSetupSpec,
@@ -42,12 +43,11 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     SendingConditions,
     ServiceEvent,
     ServiceFilters,
+    ServiceIntState,
     Settings,
     SpecificEvents,
-    StatusChangeHost,
-    StatusChangeService,
-    StatusChangeStateHost,
-    StatusChangeStateService,
+    StateChangeHost,
+    StateChangeService,
     TimeperiodBulk,
     TimeperiodBulkTuple,
     TriggeringEvents,
@@ -55,9 +55,9 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
 
 
 def host_event_mapper(
-    host_event_state_change: tuple[StatusChangeStateHost, StatusChangeStateHost],
+    host_event_state_change: tuple[HostIntState, HostIntState],
 ) -> str:
-    _state_map: Mapping[StatusChangeStateHost, str] = {
+    _state_map: Mapping[HostIntState, str] = {
         -1: "?",
         0: "r",
         1: "d",
@@ -67,9 +67,9 @@ def host_event_mapper(
 
 
 def service_event_mapper(
-    service_event_state_change: tuple[StatusChangeStateService, StatusChangeStateService],
+    service_event_state_change: tuple[ServiceIntState, ServiceIntState],
 ) -> str:
-    _state_map: Mapping[StatusChangeStateService, str] = {
+    _state_map: Mapping[ServiceIntState, str] = {
         -1: "?",
         0: "r",
         1: "w",
@@ -80,43 +80,43 @@ def service_event_mapper(
 
 
 def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
-    def _non_status_change_events(event: NonStatusChangeEventType) -> OtherTriggerEvent:
-        status_map: Mapping[NonStatusChangeEventType, OtherTriggerEvent] = {
+    def _non_state_change_events(event: NonStateChangeEventType) -> OtherTriggerEvent:
+        state_map: Mapping[NonStateChangeEventType, OtherTriggerEvent] = {
             "f": ("flapping_state", None),
             "s": ("downtime", None),
             "x": ("acknowledgement", None),
             "as": ("alert_handler", "success"),
             "af": ("alert_handler", "failure"),
         }
-        return status_map[event]
+        return state_map[event]
 
     def _migrate_host_event(event: HostEventType) -> HostEvent:
-        state_map: Mapping[str, StatusChangeStateHost] = {
+        state_map: Mapping[str, HostIntState] = {
             "?": -1,
             "r": 0,
             "d": 1,
             "u": 2,
         }
-        status_change_host: StatusChangeHost = (
-            "status_change",
+        state_change_host: StateChangeHost = (
+            "state_change",
             (state_map[event[0]], state_map[event[1]]),
         )
 
-        return status_change_host
+        return state_change_host
 
     def _migrate_service_event(event: ServiceEventType) -> ServiceEvent:
-        state_map: Mapping[str, StatusChangeStateService] = {
+        state_map: Mapping[str, ServiceIntState] = {
             "?": -1,
             "r": 0,
             "w": 1,
             "c": 2,
             "u": 3,
         }
-        status_change_service: StatusChangeService = (
-            "status_change",
+        state_change_service: StateChangeService = (
+            "state_change",
             (state_map[event[0]], state_map[event[1]]),
         )
-        return status_change_service
+        return state_change_service
 
     if (
         "match_host_event" not in event_rule
@@ -129,16 +129,16 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
 
     if "match_host_event" in event_rule:
         specific_events["host_events"] = [
-            _non_status_change_events(ev)
-            if is_non_status_change_event_type(ev)
+            _non_state_change_events(ev)
+            if is_non_state_change_event_type(ev)
             else _migrate_host_event(ev)
             for ev in event_rule["match_host_event"]
         ]
 
     if "match_service_event" in event_rule:
         specific_events["service_events"] = [
-            _non_status_change_events(ev)
-            if is_non_status_change_event_type(ev)
+            _non_state_change_events(ev)
+            if is_non_state_change_event_type(ev)
             else _migrate_service_event(ev)
             for ev in event_rule["match_service_event"]
         ]
@@ -396,15 +396,15 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
 
 
 def _set_triggering_events(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:
-    def _non_status_change_events(event: OtherTriggerEvent) -> NonStatusChangeEventType:
-        status_map: Mapping[OtherTriggerEvent, NonStatusChangeEventType] = {
+    def _non_state_change_events(event: OtherTriggerEvent) -> NonStateChangeEventType:
+        state_map: Mapping[OtherTriggerEvent, NonStateChangeEventType] = {
             ("flapping_state", None): "f",
             ("downtime", None): "s",
             ("acknowledgement", None): "x",
             ("alert_handler", "success"): "as",
             ("alert_handler", "failure"): "af",
         }
-        return status_map[event]
+        return state_map[event]
 
     trigger_events = notification["triggering_events"]
     if trigger_events[0] == "all_events":
@@ -414,16 +414,16 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
         if "host_events" in specific_events:
             event_rule["match_host_event"] = [
                 cast(HostEventType, host_event_mapper(ev[1]))
-                if ev[0] == "status_change"
-                else _non_status_change_events(ev)
+                if ev[0] == "state_change"
+                else _non_state_change_events(ev)
                 for ev in specific_events["host_events"]
             ]
 
         if "service_events" in specific_events:
             event_rule["match_service_event"] = [
                 cast(ServiceEventType, service_event_mapper(ev[1]))
-                if ev[0] == "status_change"
-                else _non_status_change_events(ev)
+                if ev[0] == "state_change"
+                else _non_state_change_events(ev)
                 for ev in specific_events["service_events"]
             ]
 

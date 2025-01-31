@@ -154,41 +154,39 @@ def _service_states() -> Sequence[tuple[int, Title]]:
 
 
 def _host_from_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
-    return [
-        SingleChoiceElementExtended(name=status, title=title) for status, title in _host_states()
-    ]
+    return [SingleChoiceElementExtended(name=state, title=title) for state, title in _host_states()]
 
 
 def _host_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
     return [
-        SingleChoiceElementExtended(name=status, title=title)
-        for status, title in _host_states()
-        if status != -1
+        SingleChoiceElementExtended(name=state, title=title)
+        for state, title in _host_states()
+        if state != -1
     ]
 
 
 def _service_from_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
     return [
-        SingleChoiceElementExtended(name=status, title=title) for status, title in _service_states()
+        SingleChoiceElementExtended(name=state, title=title) for state, title in _service_states()
     ]
 
 
 def _service_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
     return [
-        SingleChoiceElementExtended(name=status, title=title)
-        for status, title in _service_states()
-        if status != -1
+        SingleChoiceElementExtended(name=state, title=title)
+        for state, title in _service_states()
+        if state != -1
     ]
 
 
 def _validate_host_state_change(state_change: tuple) -> None:
     if host_event_mapper(state_change) not in list(get_args(get_args(HostEventType)[0])):
-        raise ValidationError(Message("Invalid status change for host"))
+        raise ValidationError(Message("Invalid state change for host"))
 
 
 def _validate_service_state_change(state_change: tuple) -> None:
     if service_event_mapper(state_change) not in list(get_args(get_args(ServiceEventType)[0])):
-        raise ValidationError(Message("Invalid status change for service"))
+        raise ValidationError(Message("Invalid state change for service"))
 
 
 def _event_choices(
@@ -198,8 +196,8 @@ def _event_choices(
         UniqueCascadingSingleChoiceElement(
             unique=False,
             parameter_form=CascadingSingleChoiceElementExtended(
-                name="status_change",
-                title=Title("Status change"),
+                name="state_change",
+                title=Title("State change"),
                 parameter_form=Tuple(
                     layout="horizontal",
                     elements=[
@@ -295,13 +293,13 @@ def triggering_events() -> QuickSetupStage:
                                 prefill=DefaultValue(
                                     {
                                         "host_events": [
-                                            ("status_change", (-1, HostState.DOWN)),
-                                            ("status_change", (-1, HostState.UP)),
+                                            ("state_change", (-1, HostState.DOWN)),
+                                            ("state_change", (-1, HostState.UP)),
                                         ],
                                         "service_events": [
-                                            ("status_change", (-1, ServiceState.CRIT)),
-                                            ("status_change", (-1, ServiceState.WARN)),
-                                            ("status_change", (-1, ServiceState.OK)),
+                                            ("state_change", (-1, ServiceState.CRIT)),
+                                            ("state_change", (-1, ServiceState.WARN)),
+                                            ("state_change", (-1, ServiceState.OK)),
                                         ],
                                     }
                                 ),

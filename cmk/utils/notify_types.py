@@ -145,11 +145,11 @@ GroupbyType = Literal[
     "ec_comment",
 ]
 
-NonStatusChangeEventType = Literal["f", "s", "x", "as", "af"]
+NonStateChangeEventType = Literal["f", "s", "x", "as", "af"]
 
 
-def is_non_status_change_event_type(value: str) -> TypeGuard[NonStatusChangeEventType]:
-    return value in get_args(NonStatusChangeEventType)
+def is_non_state_change_event_type(value: str) -> TypeGuard[NonStateChangeEventType]:
+    return value in get_args(NonStateChangeEventType)
 
 
 HostEventType = (
@@ -164,7 +164,7 @@ HostEventType = (
         "?d",
         "?u",
     ]
-    | NonStatusChangeEventType
+    | NonStateChangeEventType
 )
 
 ServiceEventType = (
@@ -187,7 +187,7 @@ ServiceEventType = (
         "?c",
         "?u",
     ]
-    | NonStatusChangeEventType
+    | NonStateChangeEventType
 )
 SysLogFacilityIntType = Literal[
     0,

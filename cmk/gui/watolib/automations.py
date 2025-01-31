@@ -126,11 +126,12 @@ def check_mk_local_automation_serialized(
         try:
             result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=command,
                 cmdline=executor.command_description(command, args, logger, timeout),
                 exc=e,
             )
+            raise MKAutomationException(msg)
 
         span.set_attribute("cmk.automation.exit_code", result.exit_code)
         auto_logger.info("FINISHED: %d" % result.exit_code)
@@ -140,13 +141,14 @@ def check_mk_local_automation_serialized(
             auto_logger.error(
                 "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
             )
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=command,
                 cmdline=result.command_description,
                 code=result.exit_code,
                 out=result.output,
                 err=result.error,
             )
+            raise MKAutomationException(msg)
 
         # On successful "restart" command execute the activate changes hook
         if command in ["restart", "reload"]:
@@ -155,14 +157,15 @@ def check_mk_local_automation_serialized(
         return result.command_description, SerializedResult(result.output)
 
 
-def local_automation_failure(
+def get_local_automation_failure_message(
+    *,
     command: str,
     cmdline: Iterable[str],
     code: int | None = None,
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
-) -> MKAutomationException:
+) -> str:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -173,7 +176,7 @@ def local_automation_failure(
         msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
     if exc:
         msg += ": %s" % exc
-    return MKAutomationException(msg)
+    return msg
 
 
 def _hilite_errors(outdata: str) -> str:
@@ -759,12 +762,13 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 .serialize(cmk_version_of_remote_automation_source(request)),
             )
         except SyntaxError as e:
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=automation_cmd,
                 cmdline=cmdline_cmd,
                 out=serialized_result,
                 exc=e,
             )
+            raise MKAutomationException(msg)
 
     def execute_automation(
         self,

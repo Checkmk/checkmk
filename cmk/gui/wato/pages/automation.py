@@ -38,9 +38,10 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
+    get_local_automation_failure_message,
     LastKnownCentralSiteVersion,
     LastKnownCentralSiteVersionStore,
-    local_automation_failure,
+    MKAutomationException,
     verify_request_compatibility,
 )
 
@@ -197,12 +198,13 @@ class PageAutomation(AjaxPage):
                 .serialize(cmk_version_of_remote_automation_source(request))
             )
         except SyntaxError as e:
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=cmk_command,
                 cmdline=cmdline_cmd,
                 out=serialized_result,
                 exc=e,
             )
+            raise MKAutomationException(msg)
 
     def _execute_cmk_automation(self) -> None:
         cmk_command = request.get_str_input_mandatory("automation")

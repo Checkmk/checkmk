@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: rrdtool is missing type hints
+import rrdtool  # type: ignore[import-not-found]
+
 from cmk.utils.config_path import LATEST_CONFIG
 
 from cmk.base import config  # pylint: disable=cmk-module-layer-violation
@@ -20,4 +23,4 @@ def create_rrd() -> None:
         return config_cache
 
     register_sigint_handler()
-    RRDCreator().create_rrds_keepalive(reload_config=reload_config)
+    RRDCreator(rrdtool).create_rrds_keepalive(reload_config=reload_config)

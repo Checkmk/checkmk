@@ -6,6 +6,9 @@
 
 import itertools
 
+# NOTE: rrdtool is missing type hints
+import rrdtool  # type: ignore[import-not-found]
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.base import config  # pylint: disable=cmk-module-layer-violation
@@ -30,7 +33,7 @@ def convert_rrds(options: dict, hostnames: list[HostName]) -> None:
         )
 
     for hostname in hostnames:
-        RRDConverter(hostname).convert_rrds_of_host(
+        RRDConverter(rrdtool, hostname).convert_rrds_of_host(
             config_cache,
             split=options.get("split-rrds", False),
             delete=options.get("delete-rrds", False),

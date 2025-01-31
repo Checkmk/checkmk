@@ -25,9 +25,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import assert_never, cast, Literal, NewType, Protocol, Self, TypedDict
 
-# NOTE: rrdtool is missing type hints
-import rrdtool  # type: ignore[import-not-found]
-
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import (
@@ -46,6 +43,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
+
+from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 
 _Seconds = NewType("_Seconds", int)
 
@@ -194,7 +193,9 @@ def _parse_cmc_rrd_info(info_file_path: str) -> RRDInfo:
         raise Exception(f"Invalid RRD info file {info_file_path}: {e}")
 
 
-def _create_rrd(config: _RRDConfig, spec: RRDSpec, log: Callable[[str], None]) -> str:
+def _create_rrd(
+    rrd_interface: RRDInterface, config: _RRDConfig, spec: RRDSpec, log: Callable[[str], None]
+) -> str:
     """Create a new RRD. Automatically reuses data from an existing RRD if the
     type is CMC SINGLE. This mode is for extending existing RRDs by new metrics."""
     # We get the configured rrd_format here as well. But we rather trust what CMC
@@ -256,7 +257,7 @@ def _create_rrd(config: _RRDConfig, spec: RRDSpec, log: Callable[[str], None]) -
     # is no way to handle this here. Or can we catch the signal 6? In any case it does not
     # make sense to check the size of the RRD for 0 after this command since our process
     # will not exist anymore by then...
-    rrdtool.create(*args)
+    rrd_interface.create(*args)
 
     if spec.format == "cmc_single":
         _create_cmc_rrd_info_file(spec)
@@ -287,7 +288,8 @@ RRDXMLInfo = dict
 
 
 class RRDConverter:
-    def __init__(self, hostname: HostName):
+    def __init__(self, rrd_interface: RRDInterface, hostname: HostName):
+        self._rrd_interface = rrd_interface
         self._hostname = hostname
 
     def convert_rrds_of_host(self, config: _RRDConfig, *, split: bool, delete: bool) -> None:
@@ -378,7 +380,7 @@ class RRDConverter:
                 existing_metrics = _read_existing_metrics(base_path + ".info")
                 target_rrdconf = _get_rrd_conf(config, self._hostname, servicedesc)[1:]
                 rrd_file_path = base_path + ".rrd"
-                _convert_cmc_rrd_of(
+                self._convert_cmc_rrd_of(
                     config,
                     RRDSpec(
                         "cmc_single",
@@ -465,7 +467,7 @@ class RRDConverter:
         # is no way to handle this here. Or can we catch the signal 6? In any case it does not
         # make sense to check the size of the RRD for 0 after this command since our process
         # will not exist anymore by then...
-        rrdtool.create(*args)
+        self._rrd_interface.create(*args)
 
         # Create information file for CMC format RRDs. Problem is that RRD
         # limits variable names to 19 characters and to just alphanumeric
@@ -542,7 +544,7 @@ class RRDConverter:
                     raise Exception("storage type single, use --split-rrds to split this up.")
 
             console.verbose_no_lf(f"    - {ds['name']}{'(split)' if need_split else ''}..")
-            result = _convert_pnp_rrd(old_rrd_path, new_rrd_path, old_ds_name, rrdconf)
+            result = self._convert_pnp_rrd(old_rrd_path, new_rrd_path, old_ds_name, rrdconf)
             if result is True:
                 new_size = os.stat(new_rrd_path).st_size
                 console.verbose(
@@ -557,6 +559,110 @@ class RRDConverter:
             _fixup_pnp_xml_file(host_dir + "/" + file_prefix + ".xml")
             os.remove(old_rrd_path)
             console.verbose(f"    deleted {old_rrd_path}")
+
+    def _convert_cmc_rrd_of(
+        self,
+        config: _RRDConfig,
+        spec: RRDSpec,
+        rrd_file_path: str,
+        target_rrdconf: _RRDFileConfig,
+    ) -> None:
+        old_rrdconf = self._get_old_rrd_config(rrd_file_path, "1")
+        if old_rrdconf == target_rrdconf:
+            console.verbose(f"..{tty.blue}{tty.bold}uptodate{tty.normal}")
+        else:
+            try:
+                old_size = os.stat(rrd_file_path).st_size
+                _create_rrd(self._rrd_interface, config, spec, _write_line)
+                new_size = os.stat(rrd_file_path).st_size
+                console.verbose(
+                    f"..{tty.green}{tty.bold}converted{tty.normal}, {_render_rrd_size(old_size)} -> {_render_rrd_size(new_size)}"
+                )
+            except Exception:
+                if cmk.ccc.debug.enabled():
+                    raise
+                console.verbose(f"..{tty.red}{tty.bold}failed{tty.normal}")
+
+    def _convert_pnp_rrd(
+        self,
+        old_rrd_path: str,
+        new_rrd_path: str,
+        old_ds_name: MetricName,
+        new_rrdconf: _RRDFileConfig,
+    ) -> bool | None:
+        if not os.path.exists(old_rrd_path):
+            raise Exception("RRD %s is missing" % old_rrd_path)
+
+        # Our problem here: We must not convert files that already
+        # have the correct configuration. We we try to extract
+        # the existing configuration and compare with the new one.
+        try:
+            old_rrdconf = self._get_old_rrd_config(old_rrd_path, old_ds_name)
+            if old_rrdconf is None:
+                return None  # DS not contained in old RRD
+
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                raise
+            raise Exception(f"Existing RRD {old_rrd_path} is incompatible: {e}")
+
+        # Beware: we use /opt/omd always because of bug in rrdcached
+        if old_rrd_path.startswith("/omd"):
+            old_rrd_path = "/opt" + old_rrd_path
+
+        if old_rrdconf == new_rrdconf and old_rrd_path == new_rrd_path:
+            return False  # Nothing to do
+
+        new_rra_config, new_step, new_heartbeat = new_rrdconf
+        args = [
+            new_rrd_path,
+            "--step",
+            str(new_step),
+            "DS:1=%s:GAUGE:%d:U:U" % (old_ds_name, new_heartbeat),
+            "--source",
+            old_rrd_path,
+        ] + new_rra_config
+        try:
+            self._rrd_interface.create(*args)
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                console.error(f"COMMAND: rrdtool create {' '.join(args)}", file=sys.stderr)
+                raise
+            raise Exception(f"Error on running rrdtool create {' '.join(args)}: {e}")
+        return True
+
+    def _get_old_rrd_config(
+        self, rrd_file_path: str, old_ds_name: MetricName
+    ) -> _RRDFileConfig | None:
+        old_config_raw = self._rrd_interface.info(rrd_file_path)
+        rra_defs: dict = {}
+        heartbeat = None
+        step = None
+        for varname, value in old_config_raw.items():
+            if varname == "ds[%s].minimal_heartbeat" % old_ds_name:
+                heartbeat = value
+            elif varname.startswith("ds["):
+                pass  # other values are not relevant
+            elif varname == "step":
+                step = value
+            elif varname.startswith("rra["):
+                conf_nr = int(varname[4:].split("]")[0])
+                conf = rra_defs.setdefault(conf_nr, {})
+                subvar = varname.split(".")[1]
+                conf[subvar] = value
+
+        rra_items = sorted(rra_defs.items())
+        rra_config: _RRAConfig = []
+        for _unused_nr, rra in rra_items:
+            rra_config.append("RRA:%(cf)s:%(xff).2f:%(pdp_per_row)d:%(rows)d" % rra)
+
+        rra_config.sort()
+        if heartbeat is None or step is None:
+            console.verbose_no_lf(
+                f"({tty.red}missing {rrd_file_path.split('/')[-1]}:{old_ds_name}{tty.normal})"
+            )
+            return None
+        return rra_config, _Seconds(step), _RRDHeartbeat(heartbeat)
 
 
 def _parse_pnp_xml_file(xml_path: str) -> RRDXMLInfo:
@@ -587,77 +693,6 @@ def _text_attr(node: ET.Element, attr_name: str) -> str | None:
     if attr is None:
         raise AttributeError()
     return attr.text
-
-
-def _convert_cmc_rrd_of(
-    config: _RRDConfig,
-    spec: RRDSpec,
-    rrd_file_path: str,
-    target_rrdconf: _RRDFileConfig,
-) -> None:
-    old_rrdconf = _get_old_rrd_config(rrd_file_path, "1")
-    if old_rrdconf == target_rrdconf:
-        console.verbose(f"..{tty.blue}{tty.bold}uptodate{tty.normal}")
-    else:
-        try:
-            old_size = os.stat(rrd_file_path).st_size
-            _create_rrd(config, spec, _write_line)
-            new_size = os.stat(rrd_file_path).st_size
-            console.verbose(
-                f"..{tty.green}{tty.bold}converted{tty.normal}, {_render_rrd_size(old_size)} -> {_render_rrd_size(new_size)}"
-            )
-        except Exception:
-            if cmk.ccc.debug.enabled():
-                raise
-            console.verbose(f"..{tty.red}{tty.bold}failed{tty.normal}")
-
-
-def _convert_pnp_rrd(
-    old_rrd_path: str,
-    new_rrd_path: str,
-    old_ds_name: MetricName,
-    new_rrdconf: _RRDFileConfig,
-) -> bool | None:
-    if not os.path.exists(old_rrd_path):
-        raise Exception("RRD %s is missing" % old_rrd_path)
-
-    # Our problem here: We must not convert files that already
-    # have the correct configuration. We we try to extract
-    # the existing configuration and compare with the new one.
-    try:
-        old_rrdconf = _get_old_rrd_config(old_rrd_path, old_ds_name)
-        if old_rrdconf is None:
-            return None  # DS not contained in old RRD
-
-    except Exception as e:
-        if cmk.ccc.debug.enabled():
-            raise
-        raise Exception(f"Existing RRD {old_rrd_path} is incompatible: {e}")
-
-    # Beware: we use /opt/omd always because of bug in rrdcached
-    if old_rrd_path.startswith("/omd"):
-        old_rrd_path = "/opt" + old_rrd_path
-
-    if old_rrdconf == new_rrdconf and old_rrd_path == new_rrd_path:
-        return False  # Nothing to do
-
-    new_rra_config, new_step, new_heartbeat = new_rrdconf
-    args = [
-        new_rrd_path,
-        "--step",
-        str(new_step),
-        "DS:1=%s:GAUGE:%d:U:U" % (old_ds_name, new_heartbeat),
-        "--source",
-        old_rrd_path,
-    ] + new_rra_config
-    try:
-        rrdtool.create(*args)
-    except Exception as e:
-        if cmk.ccc.debug.enabled():
-            console.error(f"COMMAND: rrdtool create {' '.join(args)}", file=sys.stderr)
-            raise
-        raise Exception(f"Error on running rrdtool create {' '.join(args)}: {e}")
-    return True
 
 
 def _render_rrd_size(x: int | float) -> str:
@@ -708,45 +743,14 @@ def _write_line(text: str) -> None:
     sys.stdout.flush()
 
 
-def _get_old_rrd_config(rrd_file_path: str, old_ds_name: MetricName) -> _RRDFileConfig | None:
-    old_config_raw = rrdtool.info(rrd_file_path)
-    rra_defs: dict = {}
-    heartbeat = None
-    step = None
-    for varname, value in old_config_raw.items():
-        if varname == "ds[%s].minimal_heartbeat" % old_ds_name:
-            heartbeat = value
-        elif varname.startswith("ds["):
-            pass  # other values are not relevant
-        elif varname == "step":
-            step = value
-        elif varname.startswith("rra["):
-            conf_nr = int(varname[4:].split("]")[0])
-            conf = rra_defs.setdefault(conf_nr, {})
-            subvar = varname.split(".")[1]
-            conf[subvar] = value
-
-    rra_items = sorted(rra_defs.items())
-    rra_config: _RRAConfig = []
-    for _unused_nr, rra in rra_items:
-        rra_config.append("RRA:%(cf)s:%(xff).2f:%(pdp_per_row)d:%(rows)d" % rra)
-
-    rra_config.sort()
-    if heartbeat is None or step is None:
-        console.verbose_no_lf(
-            f"({tty.red}missing {rrd_file_path.split('/')[-1]}:{old_ds_name}{tty.normal})"
-        )
-        return None
-    return rra_config, step, heartbeat
-
-
 ####################################################################################################
 # CREATE RRDS
 ####################################################################################################
 
 
 class RRDCreator:
-    def __init__(self):
+    def __init__(self, rrd_interface: RRDInterface):
+        self._rrd_interface = rrd_interface
         self._rrd_helper_output_buffer = b""
 
     def create_rrds_keepalive(self, *, reload_config: Callable[[], _RRDConfig]) -> None:
@@ -804,7 +808,7 @@ class RRDCreator:
                         spec = job_queue[0].decode("utf-8")
                         try:
                             self._create_rrd_from_spec(config, RRDSpec.parse(spec))
-                        except rrdtool.OperationalError as exc:
+                        except self._rrd_interface.OperationalError as exc:
                             self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
                         except OSError as exc:
                             self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
@@ -845,7 +849,9 @@ class RRDCreator:
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
 
     def _create_rrd_from_spec(self, config: _RRDConfig, spec: RRDSpec) -> None:
-        rrd_file_name = _create_rrd(config, spec, self._queue_rrd_helper_response)
+        rrd_file_name = _create_rrd(
+            self._rrd_interface, config, spec, self._queue_rrd_helper_response
+        )
 
         # Do first update right now
         now = time.time()
@@ -860,7 +866,7 @@ class RRDCreator:
                 ),
             ),
         ]
-        rrdtool.update(*args)
+        self._rrd_interface.update(*args)
 
         self._queue_rrd_helper_response(
             f"CREATED {spec.format} {spec.host};{spec.service};{';'.join(spec.metric_names)}",

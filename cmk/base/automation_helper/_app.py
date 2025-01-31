@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
-from cmk.utils import paths
+from cmk.utils import paths, tty
 from cmk.utils.caching import cache_manager
 
 from cmk.base import config
@@ -90,6 +90,7 @@ def get_application(
         config.load_all_plugins(
             local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
         )
+        tty.reinit()
         reload_config()
         yield
 

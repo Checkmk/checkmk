@@ -645,7 +645,6 @@ table.form-readonly__table {
   border-spacing: 0px;
 
   > tr:not(:first-child) {
-    box-shadow: 0 -1px 0 0 var(--default-form-element-border-color);
     > td.dict_title {
       min-width: 20ch;
       max-width: 70ch;
@@ -739,6 +738,10 @@ table.form-readonly__table {
 
 .form-readonly__tuple > span > * {
   display: inline;
+}
+
+.form-readonly__tuple__layout-horizontal > span {
+  margin-right: 5px;
 }
 
 .form-readonly__tuple__layout-vertical > span {

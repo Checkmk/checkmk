@@ -11,7 +11,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.base import config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import CEEConfigCache  # pylint: disable=cmk-module-layer-violation
 
-from . import rrd  # pylint: disable=cmk-module-layer-violation
+from .rrd import RRDConverter  # pylint: disable=cmk-module-layer-violation
 
 
 def convert_rrds(options: dict, hostnames: list[HostName]) -> None:
@@ -30,9 +30,8 @@ def convert_rrds(options: dict, hostnames: list[HostName]) -> None:
         )
 
     for hostname in hostnames:
-        rrd.convert_rrds_of_host(
+        RRDConverter(hostname).convert_rrds_of_host(
             config_cache,
-            hostname,
             split=options.get("split-rrds", False),
             delete=options.get("delete-rrds", False),
         )

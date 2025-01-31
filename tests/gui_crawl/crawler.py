@@ -188,6 +188,17 @@ class Crawler:
         self._todos = deque([Url(self.site.internal_url)])
 
     async def batch_test_urls(self, urls: Sequence[Url]) -> int:
+        """
+        Asynchronously tests a batch of URLs using Playwright.
+        There's no parallelism within this batch, but multiple batches can be tested concurrently.
+        -> see Crawler.crawl
+
+        Args:
+            urls (Sequence[Url]): A sequence of URLs to be visited and checked for errors
+
+        Returns:
+            int: The number of URLs successfully tested.
+        """
         num_done = 0
         async with async_playwright() as pw:
             browser = await pw.chromium.launch()
@@ -208,14 +219,12 @@ class Crawler:
         return num_done
 
     async def crawl(self, max_tasks: int, max_url_batch_size: int = 100) -> None:
-        """Crawl through URLs using simultaneously using tasks / coroutines.
+        """Crawl through URLs using simultaneous tasks / coroutines.
 
-        A group of tasks / coroutines is added every `rate_create_crawl_task` seconds.
-        Crawling stop when URLs are not found for last `memory_size_urls_exist` iterations.
-
-        debug-mode: Crawling URLs stop when at least `--max-urls` number of URLs have been crawled.
+        Crawling stops when
+            * no new URLs are found
+            * (debug mode) at least `--max-urls` number of URLs have been crawled.
         """
-        memory_size_urls_exist = 25  # iterations
         search_limited_urls: bool = self._max_urls > 0
         # special-case
         if search_limited_urls and self._max_urls < max_tasks:
@@ -223,12 +232,24 @@ class Crawler:
         # ----
         with Progress() as progress:
             find_more_urls = True
-            track_todo_status = deque([True] * memory_size_urls_exist)
             while find_more_urls:
-                # body
+                # body --
+                # a BFS approach (graph of nodes=pages/URLs and edges=links/URLs in pages)
+                #   0. the queue is Crawler._todos (deque)
+                #   1. start with site URL (in __init__)
+                #   2. each iteration:
+                #       a. pop some batches (max_tasks*max_url_batch_size) of URLs from the queue
+                #       b. for all URLs in the batches (tasks are run concurrently):
+                #           visit each URL -> visit_url -> ... -> handle_new_reference
+                #           handle_new_reference adds new URL(s) found in the page to the queue
                 tasks: set = set()
                 async with asyncio.TaskGroup() as task_group:
+                    # run multiple batches of URLs concurrently (up to max_tasks),
+                    # the task_group both ensures
+                    #   * that all tasks are finished within the context manager
+                    #   * that exceptions are collected and reported - at least here
                     for _ in range(max_tasks):
+                        # get a batch of URLs to test
                         urls = [
                             self._todos.popleft() for _ in range(max_url_batch_size) if self._todos
                         ]
@@ -238,17 +259,22 @@ class Crawler:
                         "Task group comprises of: %s",
                         " ".join(task.get_name() for task in tasks),
                     )
+                # log progress of URLs visited (without skipped or erroneous URLs)
                 progress.done(done=sum(task.result() for task in tasks))
                 self.duration = progress.duration
                 # ----
 
-                # condition
-                track_todo_status.popleft()
-                track_todo_status.append(bool(self._todos))
+                # terminating/continuation condition
+                # rationale:
+                #   The queue Crawler._todos will only be repopulated
+                #       * inside task_group AND
+                #       * if it still has URLs
+                #   (since the task_group ensures that all tasks are finished)
+                #   -> we can thus check here for size of Crawler._todos
                 find_more_urls = (
-                    progress.done_total < self._max_urls
+                    progress.done_total < self._max_urls  # (not yet reached max URLs - debug mode)
                     if search_limited_urls
-                    else any(track_todo_status)
+                    else bool(self._todos)  # default condition: still new URLs to visit
                 )
                 if not find_more_urls:
                     logger.info("No more URLs to crawl. Stopping ...")
@@ -393,6 +419,15 @@ class Crawler:
         browser_context: playwright.async_api.BrowserContext,
         url: Url,
     ) -> bool:
+        """Visit a URL and check for errors.
+
+        Args:
+            browser_context: previously initiated browser context to be used
+            url: URL to visit
+
+        Returns:
+            bool: True if the URL was visited successfully, False otherwise
+        """
         start = time.time()
 
         content_type = self.requests_session.head(url.url).headers["content-type"]

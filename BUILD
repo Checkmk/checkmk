@@ -218,31 +218,31 @@ create_venv(
 
 copy_file(
     name = "_cmc_config_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/config/types.proto",
-    out = "cmc_proto/config/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/config.proto",
+    out = "cmc_proto/config.proto",
 )
 
 copy_file(
     name = "_cmc_cycletime_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/cycletime/types.proto",
-    out = "cmc_proto/cycletime/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/cycletime.proto",
+    out = "cmc_proto/cycletime.proto",
 )
 
 copy_file(
     name = "_cmc_state_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/state/types.proto",
-    out = "cmc_proto/state/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/state.proto",
+    out = "cmc_proto/state.proto",
 )
 
 proto_library(
     name = "cycletime_proto",
-    srcs = ["cmc_proto/cycletime/types.proto"],
+    srcs = ["cmc_proto/cycletime.proto"],
     visibility = ["//visibility:public"],
 )
 
 proto_library(
     name = "config_proto",
-    srcs = ["cmc_proto/config/types.proto"],
+    srcs = ["cmc_proto/config.proto"],
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
@@ -253,7 +253,7 @@ proto_library(
 
 proto_library(
     name = "state_proto",
-    srcs = ["cmc_proto/state/types.proto"],
+    srcs = ["cmc_proto/state.proto"],
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",

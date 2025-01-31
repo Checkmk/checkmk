@@ -9,7 +9,7 @@ from cmk.base import config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import CEEConfigCache  # pylint: disable=cmk-module-layer-violation
 from cmk.base.utils import register_sigint_handler  # pylint: disable=cmk-module-layer-violation
 
-from . import rrd  # pylint: disable=cmk-module-layer-violation
+from .rrd import RRDCreator  # pylint: disable=cmk-module-layer-violation
 
 
 def create_rrd() -> None:
@@ -20,4 +20,4 @@ def create_rrd() -> None:
         return config_cache
 
     register_sigint_handler()
-    rrd.create_rrds_keepalive(reload_config=reload_config)
+    RRDCreator().create_rrds_keepalive(reload_config=reload_config)

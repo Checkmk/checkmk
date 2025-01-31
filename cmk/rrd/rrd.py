@@ -750,132 +750,130 @@ def _get_old_rrd_config(rrd_file_path: str, old_ds_name: MetricName) -> _RRDFile
 # CREATE RRDS
 ####################################################################################################
 
-_rrd_helper_output_buffer = b""
 
+class RRDCreator:
+    def __init__(self):
+        self._rrd_helper_output_buffer = b""
 
-def create_rrds_keepalive(*, reload_config: Callable[[], _RRDConfig]) -> None:
-    global _rrd_helper_output_buffer
-    input_buffer = b""
-    _rrd_helper_output_buffer = b""
+    def create_rrds_keepalive(self, *, reload_config: Callable[[], _RRDConfig]) -> None:
+        input_buffer = b""
+        self._rrd_helper_output_buffer = b""
 
-    job_queue: list[bytes] = []
+        job_queue: list[bytes] = []
 
-    console.verbose("Started Check_MK RRD creator.")
-    config = reload_config()
-    try:
-        # We read asynchronously from stdin and put the jobs into a queue.
-        # That way the cmc main process will not be blocked by IO wait.
-        while True:
-            if job_queue:
-                timeout: int | None = 0
-            else:
-                timeout = None
-
-            if _rrd_helper_output_buffer:
-                wait_for_write = [1]
-            else:
-                wait_for_write = []
-
-            readable, writeable = select.select([0], wait_for_write, [], timeout)[:-1]
-            if 1 in writeable:
-                _write_rrd_helper_response()
-
-            if 0 in readable:
-                try:
-                    new_bytes = os.read(0, 4096)
-                except Exception:
-                    new_bytes = b""
-
-                if not new_bytes and not job_queue:
-                    console.verbose("Core closed stdin, all jobs finished. Exiting.")
-                    break
-
-                input_buffer += new_bytes
-                parts: list[bytes] = input_buffer.split(b"\n")
-                if parts[-1] != b"":  # last job not terminated
-                    input_buffer = parts[-1]
+        console.verbose("Started Check_MK RRD creator.")
+        config = reload_config()
+        try:
+            # We read asynchronously from stdin and put the jobs into a queue.
+            # That way the cmc main process will not be blocked by IO wait.
+            while True:
+                if job_queue:
+                    timeout: int | None = 0
                 else:
-                    input_buffer = b""
+                    timeout = None
 
-                parts = parts[:-1]
-                job_queue += parts
-
-            # Create *one* RRD file
-            if job_queue:
-                if job_queue[0] == b"*":
-                    console.verbose("Reloading configuration.")
-                    config = reload_config()
+                if self._rrd_helper_output_buffer:
+                    wait_for_write = [1]
                 else:
-                    spec = job_queue[0].decode("utf-8")
+                    wait_for_write = []
+
+                readable, writeable = select.select([0], wait_for_write, [], timeout)[:-1]
+                if 1 in writeable:
+                    self._write_rrd_helper_response()
+
+                if 0 in readable:
                     try:
-                        _create_rrd_from_spec(config, RRDSpec.parse(spec))
-                    except rrdtool.OperationalError as exc:
-                        _queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
-                    except OSError as exc:
-                        _queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
-                    except Exception as e:
-                        if cmk.ccc.debug.enabled():
-                            raise
-                        crash = CMKBaseCrashReport(
-                            cmk.utils.paths.crash_dir,
-                            CMKBaseCrashReport.make_crash_info(
-                                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
-                            ),
-                        )
-                        CrashReportStore().save(crash)
-                        _queue_rrd_helper_response(
-                            f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
-                        )
-                del job_queue[0]
+                        new_bytes = os.read(0, 4096)
+                    except Exception:
+                        new_bytes = b""
 
-    except Exception:
-        if cmk.ccc.debug.enabled():
-            raise
-        crash = CMKBaseCrashReport(
-            cmk.utils.paths.crash_dir,
-            CMKBaseCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+                    if not new_bytes and not job_queue:
+                        console.verbose("Core closed stdin, all jobs finished. Exiting.")
+                        break
+
+                    input_buffer += new_bytes
+                    parts: list[bytes] = input_buffer.split(b"\n")
+                    if parts[-1] != b"":  # last job not terminated
+                        input_buffer = parts[-1]
+                    else:
+                        input_buffer = b""
+
+                    parts = parts[:-1]
+                    job_queue += parts
+
+                # Create *one* RRD file
+                if job_queue:
+                    if job_queue[0] == b"*":
+                        console.verbose("Reloading configuration.")
+                        config = reload_config()
+                    else:
+                        spec = job_queue[0].decode("utf-8")
+                        try:
+                            self._create_rrd_from_spec(config, RRDSpec.parse(spec))
+                        except rrdtool.OperationalError as exc:
+                            self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
+                        except OSError as exc:
+                            self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
+                        except Exception as e:
+                            if cmk.ccc.debug.enabled():
+                                raise
+                            crash = CMKBaseCrashReport(
+                                cmk.utils.paths.crash_dir,
+                                CMKBaseCrashReport.make_crash_info(
+                                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+                                ),
+                            )
+                            CrashReportStore().save(crash)
+                            self._queue_rrd_helper_response(
+                                f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
+                            )
+                    del job_queue[0]
+
+        except Exception:
+            if cmk.ccc.debug.enabled():
+                raise
+            crash = CMKBaseCrashReport(
+                cmk.utils.paths.crash_dir,
+                CMKBaseCrashReport.make_crash_info(
+                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+                ),
+            )
+            CrashReportStore().save(crash)
+            self._queue_rrd_helper_response(
+                f"Check_MK RRD creator failed: {traceback.format_exc()}"
+            )
+
+        console.verbose("Stopped Check_MK RRD creator.")
+
+    def _write_rrd_helper_response(self) -> None:
+        size = min(4096, len(self._rrd_helper_output_buffer))
+        written = os.write(1, self._rrd_helper_output_buffer[:size])
+        self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
+
+    def _create_rrd_from_spec(self, config: _RRDConfig, spec: RRDSpec) -> None:
+        rrd_file_name = _create_rrd(config, spec, self._queue_rrd_helper_response)
+
+        # Do first update right now
+        now = time.time()
+
+        args = [
+            rrd_file_name,
+            "%d:%s"
+            % (
+                now,
+                ":".join(
+                    [_float_or_nan(first_value) for (_unused_varname, first_value) in spec.metrics]
+                ),
             ),
+        ]
+        rrdtool.update(*args)
+
+        self._queue_rrd_helper_response(
+            f"CREATED {spec.format} {spec.host};{spec.service};{';'.join(spec.metric_names)}",
         )
-        CrashReportStore().save(crash)
-        _queue_rrd_helper_response(f"Check_MK RRD creator failed: {traceback.format_exc()}")
 
-    console.verbose("Stopped Check_MK RRD creator.")
-
-
-def _write_rrd_helper_response() -> None:
-    global _rrd_helper_output_buffer
-    size = min(4096, len(_rrd_helper_output_buffer))
-    written = os.write(1, _rrd_helper_output_buffer[:size])
-    _rrd_helper_output_buffer = _rrd_helper_output_buffer[written:]
-
-
-def _create_rrd_from_spec(config: _RRDConfig, spec: RRDSpec) -> None:
-    rrd_file_name = _create_rrd(config, spec, _queue_rrd_helper_response)
-
-    # Do first update right now
-    now = time.time()
-
-    args = [
-        rrd_file_name,
-        "%d:%s"
-        % (
-            now,
-            ":".join(
-                [_float_or_nan(first_value) for (_unused_varname, first_value) in spec.metrics]
-            ),
-        ),
-    ]
-    rrdtool.update(*args)
-
-    _queue_rrd_helper_response(
-        f"CREATED {spec.format} {spec.host};{spec.service};{';'.join(spec.metric_names)}",
-    )
-
-
-def _queue_rrd_helper_response(response: str) -> None:
-    global _rrd_helper_output_buffer
-    _rrd_helper_output_buffer += (response + "\n").encode("utf-8")
+    def _queue_rrd_helper_response(self, response: str) -> None:
+        self._rrd_helper_output_buffer += (response + "\n").encode("utf-8")
 
 
 def _float_or_nan(s: str | None) -> str:

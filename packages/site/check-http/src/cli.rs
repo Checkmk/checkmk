@@ -71,7 +71,7 @@ pub struct Cli {
     #[arg(short, long, default_value = "10", value_parser=parse_seconds)]
     pub timeout: Duration,
 
-    /// Wait for document body
+    /// Don't wait for document body
     #[arg(long, default_value_t = false)]
     pub without_body: bool,
 

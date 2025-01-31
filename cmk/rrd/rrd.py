@@ -715,7 +715,7 @@ def _write_line(text: str) -> None:
 
 
 def _get_old_rrd_config(rrd_file_path: str, old_ds_name: MetricName) -> _RRDFileConfig | None:
-    old_config_raw = rrdtool.info([rrd_file_path])
+    old_config_raw = rrdtool.info(rrd_file_path)
     rra_defs: dict = {}
     heartbeat = None
     step = None

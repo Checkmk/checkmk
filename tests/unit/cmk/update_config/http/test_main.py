@@ -14,6 +14,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     HttpMethod,
     LevelsType,
     MatchType,
+    PageSize,
     parse_http_params,
     SendData,
     SendDataInner,
@@ -512,6 +513,13 @@ EXAMPLE_64: Mapping[str, object] = {
 }
 
 
+EXAMPLE_65: Mapping[str, object] = {
+    "name": "page_size",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"page_size": {"minimum": 42, "maximum": 0}}),
+}
+
+
 @pytest.mark.parametrize(
     "rule_value",
     [
@@ -580,15 +588,31 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     [
         (
             EXAMPLE_27,
-            None,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=None,
+                page_size=None,
+            ),
         ),
         (
             EXAMPLE_64,
-            Document(document_body=DocumentBodyOption.IGNORE, max_age=None, page_size=None),
+            Document(
+                document_body=DocumentBodyOption.IGNORE,
+                max_age=None,
+                page_size=None,
+            ),
+        ),
+        (
+            EXAMPLE_65,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=None,
+                page_size=PageSize(min=42, max=0),
+            ),
         ),
     ],
 )
-def test_migrate_no_body(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
     value = V1Value.model_validate(rule_value)
     # Act

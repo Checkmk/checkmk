@@ -70,6 +70,11 @@ class V1PostData(BaseModel, extra="forbid"):
     content_type: str
 
 
+class V1PageSize(BaseModel, extra="forbid"):
+    minimum: int
+    maximum: int
+
+
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
     ssl: (
@@ -107,6 +112,7 @@ class V1Url(BaseModel, extra="forbid"):
         | None
     ) = None
     no_body: Literal[True, None] = None
+    page_size: V1PageSize | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -265,10 +271,15 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             method = {"method": (method_type, send_data)}
     match url_params.no_body:
         case None:
-            document: Mapping[str, object] = {}
+            document_body: Mapping[str, object] = {"document_body": "fetch"}
         case True:
             # TODO: What happens to the searching document bodies here?
-            document = {"document": {"document_body": "ignore"}}
+            document_body = {"document_body": "ignore"}
+    match url_params.page_size:
+        case None:
+            page_size_new: Mapping[str, object] = {}
+        case page_size:
+            page_size_new = {"page_size": {"min": page_size.minimum, "max": page_size.maximum}}
     return {
         "endpoints": [
             {
@@ -295,7 +306,10 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                     "content": {
                         **body,
                     },
-                    **document,
+                    "document": {
+                        **document_body,
+                        **page_size_new,
+                    },
                 },
             }
         ],

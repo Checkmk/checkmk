@@ -81,6 +81,7 @@ def fetch_package(Map args) {
             EDITION: args.edition,
             DISTRO: args.distro,
             CIPARAM_BISECT_COMMENT: args.bisect_comment,
+            FAKE_WINDOWS_ARTIFACTS: args.fake_windows_artifacts,
         ],
         build_params_no_check: [
             CIPARAM_OVERRIDE_BUILD_NODE: build_node,

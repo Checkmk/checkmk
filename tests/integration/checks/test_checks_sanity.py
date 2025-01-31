@@ -61,8 +61,13 @@ def _host_services(
         register_controller(agent_ctl, site, hostname, site_address="127.0.0.1")
         wait_until_host_receives_data(site, hostname)
         wait_for_agent_cache_omd_status(site)
+
         site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([str(hostname)])
         site.openapi.changes.activate_and_wait_for_completion()
+        # discover again, this time taking the new host labels into account
+        site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([str(hostname)])
+        site.openapi.changes.activate_and_wait_for_completion()
+
         if active_mode:
             site.reschedule_services(hostname)
         else:
@@ -116,3 +121,29 @@ def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
 
     """
     assert host_services
+
+
+def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site) -> None:
+    expected_ps_services = {  # compare cmk.gui.watolib.sample_config
+        f"Process {site.id} active check helpers",
+        f"Process {site.id} agent receiver",
+        # f"Process {site.id} alert helper",  # FIXME
+        f"Process {site.id} apache",
+        # f"Process {site.id} checker helpers",  # FIXME
+        f"Process {site.id} cmc",
+        f"Process {site.id} dcd",
+        f"Process {site.id} event console",
+        f"Process {site.id} fetcher helpers",
+        # jaeger is not enabled in this test
+        # f"Process {site.id} jaeger",
+        f"Process {site.id} livestatus proxy",
+        f"Process {site.id} notification spooler",
+        f"Process {site.id} notify helper",
+        f"Process {site.id} piggyback hub",
+        f"Process {site.id} rabbitmq",
+        # f"Process {site.id} real-time helper",  # not enabled
+        f"Process {site.id} redis-server",
+        # f"Process {site.id} rrd helper",  # TODO are these expected?
+        f"Process {site.id} rrdcached",
+    }
+    assert {k for k in host_services if k.startswith("Process")} == expected_ps_services

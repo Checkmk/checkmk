@@ -11,6 +11,7 @@ from typing import Any, NamedTuple
 from pydantic import BaseModel, Field
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import Metric, Result
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -274,6 +275,7 @@ def check_resource_metrics(
     params: Mapping[str, Any],
     metrics_data: Sequence[MetricData],
     suppress_error: bool = False,
+    check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> CheckResult:
     metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
     if not any(metrics) and not suppress_error:
@@ -283,7 +285,7 @@ def check_resource_metrics(
         if not metric:
             continue
 
-        yield from check_levels_v1(
+        yield from check_levels(
             metric.value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),
@@ -295,7 +297,9 @@ def check_resource_metrics(
 
 
 def create_check_metrics_function(
-    metrics_data: Sequence[MetricData], suppress_error: bool = False
+    metrics_data: Sequence[MetricData],
+    suppress_error: bool = False,
+    check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
         resource = section.get(item)
@@ -304,7 +308,9 @@ def create_check_metrics_function(
                 return
             raise IgnoreResultsError("Data not present at the moment")
 
-        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
+        yield from check_resource_metrics(
+            resource, params, metrics_data, suppress_error, check_levels
+        )
 
     return check_metric
 

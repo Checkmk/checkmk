@@ -153,14 +153,32 @@ def _service_states() -> Sequence[tuple[int, Title]]:
     ]
 
 
-def _get_states(what: Literal["host", "service"]) -> Sequence[tuple[int, Title]]:
-    match what:
-        case "host":
-            return _host_states()
-        case "service":
-            return _service_states()
-        case _:
-            raise ValueError(f"Invalid value for 'what': {what}")
+def _host_from_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
+    return [
+        SingleChoiceElementExtended(name=status, title=title) for status, title in _host_states()
+    ]
+
+
+def _host_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
+    return [
+        SingleChoiceElementExtended(name=status, title=title)
+        for status, title in _host_states()
+        if status != -1
+    ]
+
+
+def _service_from_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
+    return [
+        SingleChoiceElementExtended(name=status, title=title) for status, title in _service_states()
+    ]
+
+
+def _service_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
+    return [
+        SingleChoiceElementExtended(name=status, title=title)
+        for status, title in _service_states()
+        if status != -1
+    ]
 
 
 def _validate_host_state_change(state_change: tuple) -> None:
@@ -188,18 +206,16 @@ def _event_choices(
                         SingleChoiceExtended(
                             label=Label("From"),
                             prefill=DefaultValue(-1),
-                            elements=[
-                                SingleChoiceElementExtended(name=state, title=title)
-                                for state, title in _get_states(what)
-                            ],
+                            elements=_host_from_state_choices()
+                            if what == "host"
+                            else _service_from_state_choices(),
                         ),
                         SingleChoiceExtended(
                             label=Label("to"),
                             prefill=DefaultValue(1) if what == "host" else DefaultValue(2),
-                            elements=[
-                                SingleChoiceElementExtended(name=state, title=title)
-                                for state, title in _get_states(what)
-                            ],
+                            elements=_host_to_state_choices()
+                            if what == "host"
+                            else _service_to_state_choices(),
                         ),
                     ],
                     custom_validate=[

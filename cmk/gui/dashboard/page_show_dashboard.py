@@ -514,7 +514,7 @@ def _page_menu(
         enable_suggestions=False,
     )
 
-    _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
+    _extend_display_dropdown(name, menu, board, board_context, unconfigured_single_infos)
 
     return menu
 
@@ -710,6 +710,7 @@ def _minimal_context(
 
 
 def _extend_display_dropdown(
+    name: str,
     menu: PageMenu,
     board: DashboardConfig,
     board_context: VisualContext,
@@ -724,7 +725,7 @@ def _extend_display_dropdown(
     info_list = ["host", "service"]
 
     is_filter_set = requested_filter_is_not_default(
-        AjaxInitialDashboardFilters().get_context(page_name=board["name"])
+        AjaxInitialDashboardFilters().get_context(page_name=name)
     )
 
     display_dropdown.topics.insert(

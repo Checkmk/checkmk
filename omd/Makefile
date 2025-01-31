@@ -297,35 +297,29 @@ debian/control: debian/control.in
 #
 # Check out "man debuild" and "man dpkg-buildpackage" to get a description of
 # the build mechanism.
-# Please keep in bind that we are building for multiple Ubuntu/Debian version
+# Please keep in mind that we are building for multiple Ubuntu/Debian version
 # and need to be compatible to all of the tool chains shipped with them.
 #
 # In case we want to have fast package creation without need to rebuild
 # everything, we'd have to
-# a) add -nc fo jessie/trusty/xenial
-# b) drop the "clean" argument for newer distros
-# c) remove the dh_prep from debian/rules
+# a) drop the "clean" argument for newer distros
+# b) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
-	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
-	    TARGET="-us -uc -B" ; \
-	else \
-	    TARGET="--no-sign -- clean build-arch binary-arch" ; \
-	fi && \
-	    debuild \
-	    --preserve-envvar="NEXUS_*" \
-	    --preserve-envvar="BAZEL_*" \
-	    --preserve-envvar="MAKE" \
-	    --preserve-envvar="CI" \
-	    --preserve-envvar="RUSTUP_HOME" \
-	    --prepend-path $$HOME/.cargo/bin \
-	    --prepend-path=/usr/local/bin \
-	    --prepend-path=`dirname $$(which python3)` \
-	    --set-envvar EDITION=$(EDITION) \
-	    --no-lintian \
-	    -i\.git -I\.git \
-	    -i.gitignore -I.gitignore \
-	    -rfakeroot \
-	    $$TARGET
+	debuild \
+	--preserve-envvar="NEXUS_*" \
+	--preserve-envvar="BAZEL_*" \
+	--preserve-envvar="MAKE" \
+	--preserve-envvar="CI" \
+	--preserve-envvar="RUSTUP_HOME" \
+	--prepend-path $$HOME/.cargo/bin \
+	--prepend-path=/usr/local/bin \
+	--prepend-path=`dirname $$(which python3)` \
+	--set-envvar EDITION=$(EDITION) \
+	--no-lintian \
+	-i\.git -I\.git \
+	-i.gitignore -I.gitignore \
+	-rfakeroot \
+	--no-sign -- clean build-arch binary-arch
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)

@@ -113,6 +113,7 @@ class V1Url(BaseModel, extra="forbid"):
     ) = None
     no_body: Literal[True, None] = None
     page_size: V1PageSize | None = None
+    max_age: int | None = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -280,6 +281,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             page_size_new: Mapping[str, object] = {}
         case page_size:
             page_size_new = {"page_size": {"min": page_size.minimum, "max": page_size.maximum}}
+    match url_params.max_age:
+        case None:
+            max_age_new: Mapping[str, object] = {}
+        case max_age:
+            max_age_new = {"max_age": max_age}
     return {
         "endpoints": [
             {
@@ -309,6 +315,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                     "document": {
                         **document_body,
                         **page_size_new,
+                        **max_age_new,
                     },
                 },
             }

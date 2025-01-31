@@ -520,6 +520,25 @@ EXAMPLE_65: Mapping[str, object] = {
 }
 
 
+EXAMPLE_66: Mapping[str, object] = {
+    "name": "max_age",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"max_age": 111}),
+}
+
+EXAMPLE_67: Mapping[str, object] = {
+    "name": "max_age",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "no_body": True,
+            "max_age": 111,
+        },
+    ),
+}
+
+
 @pytest.mark.parametrize(
     "rule_value",
     [
@@ -608,6 +627,14 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
                 document_body=DocumentBodyOption.FETCH,
                 max_age=None,
                 page_size=PageSize(min=42, max=0),
+            ),
+        ),
+        (
+            EXAMPLE_66,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=111.0,
+                page_size=None,
             ),
         ),
     ],

@@ -21,6 +21,7 @@ git_override(
 )
 
 bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_multitool", version = "0.4.0")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "0.37.2")
 bazel_dep(name = "rules_uv", version = "0.44.0")
@@ -33,6 +34,9 @@ single_version_override(
         "//bazel/patches:rules_uv_create_venv_whls.patch",
     ],
 )
+
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+use_repo(multitool, "multitool")
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
 PYTHON_VERSION = "3.12.3"

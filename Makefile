@@ -114,7 +114,6 @@ announcement:
 packages:
 	$(MAKE) -C agents packages
 
-
 version:
 	[ "$$(head -c 6 /etc/issue)" = "Ubuntu" \
           -o "$$(head -c 16 /etc/issue)" = "Debian GNU/Linux" ] \

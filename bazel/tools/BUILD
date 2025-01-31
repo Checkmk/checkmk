@@ -98,3 +98,8 @@ alias(
     name = "buildifier",
     actual = "@buildifier_prebuilt//:buildifier",
 )
+
+alias(
+    name = "uv",
+    actual = "@multitool//tools/uv",
+)

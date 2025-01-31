@@ -186,3 +186,8 @@
 .cmk-vue-app ::-webkit-scrollbar-corner {
   background-color: var(--ux-theme-6);
 }
+
+.cmk-vue-app table.nform input {
+  margin: 0;
+  vertical-align: baseline;
+}

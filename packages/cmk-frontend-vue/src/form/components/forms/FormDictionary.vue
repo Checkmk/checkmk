@@ -264,7 +264,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <style scoped>
 .form-dictionary__group-title {
   font-weight: bold;
-  margin: 1em 0 0.2em 0;
+  margin: var(--spacing) 0;
+}
+tr:first-of-type > td > .form-dictionary__group-title {
+  margin-top: var(--spacing) 0;
 }
 
 .form-dictionary--one_column > .form-dictionary__group_elem {

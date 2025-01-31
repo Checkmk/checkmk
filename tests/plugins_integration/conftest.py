@@ -294,4 +294,4 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
     for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
         if rule["id"] not in existing_rules_ids:
             test_site_update.openapi.rules.delete(rule["id"])
-    test_site_update.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+    test_site_update.openapi.changes.activate_and_wait_for_completion()

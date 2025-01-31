@@ -390,6 +390,7 @@ def setup_site(site: Site, dump_path: str) -> None:
             folder=host_folder,
         )
         logger.info('Rule "%s" created!', ruleset_name)
+    site.openapi.changes.activate_and_wait_for_completion()
 
 
 @contextmanager

@@ -563,6 +563,18 @@ EXAMPLE_70: Mapping[str, object] = {
     "mode": ("cert", {"cert_days": ("no_levels", None)}),
 }
 
+EXAMPLE_71: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": [":tail"]}),
+}
+
+EXAMPLE_72: Mapping[str, object] = {
+    "name": "headers",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"add_headers": ["head:  tail  "]}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -583,6 +595,8 @@ EXAMPLE_70: Mapping[str, object] = {
         EXAMPLE_30,
         EXAMPLE_31,
         EXAMPLE_32,
+        EXAMPLE_34,
+        EXAMPLE_35,
         EXAMPLE_36,
         EXAMPLE_37,
         EXAMPLE_45,
@@ -604,6 +618,8 @@ EXAMPLE_70: Mapping[str, object] = {
         EXAMPLE_68,
         EXAMPLE_69,
         EXAMPLE_70,
+        EXAMPLE_71,
+        EXAMPLE_72,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -840,8 +856,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_23,
         EXAMPLE_24,
         EXAMPLE_33,
-        EXAMPLE_34,
-        EXAMPLE_35,
         EXAMPLE_43,
         EXAMPLE_44,
         EXAMPLE_49,
@@ -945,6 +959,22 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
                 {"header_name": "mop", "header_value": ""},
                 {"header_name": "a", "header_value": "b: c"},
             ],
+        ),
+        (
+            EXAMPLE_34,
+            [{"header_name": "head", "header_value": "tail"}],
+        ),
+        (
+            EXAMPLE_35,
+            [{"header_name": "head", "header_value": ""}],
+        ),
+        (
+            EXAMPLE_71,
+            [{"header_name": "", "header_value": "tail"}],
+        ),
+        (
+            EXAMPLE_72,
+            [{"header_name": "head", "header_value": "tail"}],
         ),
     ],
 )

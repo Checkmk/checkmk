@@ -129,7 +129,7 @@ class V1Value(BaseModel, extra="forbid"):
 
 
 def _migratable_url_params(url_params: V1Url) -> bool:
-    if any(": " not in header for header in url_params.add_headers or []):
+    if any(":" not in header for header in url_params.add_headers or []):
         return False
     if url_params.expect_response_header is not None:
         # TODO: Redirects behave differently in V1 and V2.
@@ -161,8 +161,8 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
 
 
 def _migrate_header(header: str) -> dict[str, object]:
-    name, value = header.split(": ", 1)
-    return {"header_name": name, "header_value": value}
+    name, value = header.split(":", 1)
+    return {"header_name": name, "header_value": value.strip()}  # TODO: This is not a 1:1 mapping.
 
 
 def _migrate_expect_response(response: list[str]) -> list[int]:

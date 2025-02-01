@@ -131,7 +131,10 @@ class V1Value(BaseModel, extra="forbid"):
 def _migratable_url_params(url_params: V1Url) -> bool:
     if any(":" not in header for header in url_params.add_headers or []):
         return False
-    if url_params.expect_response_header is not None:
+    if (
+        url_params.expect_response_header is not None
+        and "\r\n" in url_params.expect_response_header.strip("\r\n")
+    ):
         # TODO: Redirects behave differently in V1 and V2.
         return False
     if url_params.expect_regex is not None and url_params.expect_string is not None:
@@ -221,6 +224,13 @@ def _migrate_url_params(
             auth: Mapping[str, object] = {}
         case user_auth:
             auth = {"auth": ("user_auth", user_auth.model_dump())}
+    match url_params.expect_response_header:
+        case None:
+            content_header: Mapping[str, object] = {}
+        case expect_response_header:
+            content_header = {
+                "header": ("string", _migrate_header(expect_response_header.strip("\r\n")))
+            }
     match url_params.expect_response:
         case None:
             server_response: Mapping[str, object] = {}
@@ -314,6 +324,7 @@ def _migrate_url_params(
             **server_response,
             **response_time,
             "content": {
+                **content_header,
                 **body,
             },
             "document": {

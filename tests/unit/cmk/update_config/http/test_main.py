@@ -12,6 +12,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     CertificateValidity,
     Document,
     DocumentBodyOption,
+    HeaderSpec,
     HttpMethod,
     LevelsType,
     MatchType,
@@ -575,6 +576,18 @@ EXAMPLE_72: Mapping[str, object] = {
     "mode": ("url", {"add_headers": ["head:  tail  "]}),
 }
 
+EXAMPLE_73: Mapping[str, object] = {
+    "name": "expect_response_header",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response_header": "\r\nyes:no\r\n"}),
+}
+
+EXAMPLE_74: Mapping[str, object] = {
+    "name": "expect_response_header",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response_header": "a:b\r\nyes:no"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -599,6 +612,7 @@ EXAMPLE_72: Mapping[str, object] = {
         EXAMPLE_35,
         EXAMPLE_36,
         EXAMPLE_37,
+        EXAMPLE_43,
         EXAMPLE_45,
         EXAMPLE_46,
         EXAMPLE_47,
@@ -856,7 +870,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_23,
         EXAMPLE_24,
         EXAMPLE_33,
-        EXAMPLE_43,
         EXAMPLE_44,
         EXAMPLE_49,
         EXAMPLE_51,
@@ -865,6 +878,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_61,
         EXAMPLE_62,
         EXAMPLE_63,
+        EXAMPLE_74,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -1092,3 +1106,23 @@ def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> Non
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].settings.cert == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (EXAMPLE_43, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+        (EXAMPLE_73, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+    ],
+)
+def test_migrate_expect_response_header(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.content is not None
+    assert ssc_value[0].settings.content.header == expected

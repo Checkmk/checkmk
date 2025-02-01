@@ -588,6 +588,13 @@ EXAMPLE_74: Mapping[str, object] = {
     "mode": ("url", {"expect_response_header": "a:b\r\nyes:no"}),
 }
 
+EXAMPLE_75: Mapping[str, object] = {
+    "name": "cert_no_levels",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("cert", {"cert_days": ("no_levels", None)}),
+    "disable_sni": True,
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -879,6 +886,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_62,
         EXAMPLE_63,
         EXAMPLE_74,
+        EXAMPLE_75,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

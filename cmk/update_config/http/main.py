@@ -126,6 +126,7 @@ class V1Value(BaseModel, extra="forbid"):
     name: str
     host: V1Host
     mode: tuple[Literal["url"], V1Url] | tuple[Literal["cert"], V1Cert]
+    disable_sni: Literal[True, None] = None
 
 
 def _migratable_url_params(url_params: V1Url) -> bool:
@@ -157,6 +158,8 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
     if type_ is not HostType.EMBEDDABLE:
         # This might have some issues, since customers can put a port, uri, and really mess with
         # us in a multitude of ways.
+        return False
+    if value.disable_sni:
         return False
     if isinstance(value.mode[1], V1Cert):
         return True

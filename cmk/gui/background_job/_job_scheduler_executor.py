@@ -7,11 +7,9 @@
 
 import logging
 import socket
-from collections.abc import Sequence
 from typing import Final
 
 import requests
-from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
@@ -40,7 +38,7 @@ class JobSchedulerExecutor(JobExecutor):
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
         self._session = requests.Session()
-        self._session.mount(JOB_SCHEDULER_BASE_URL, _LocalAutomationAdapter())
+        self._session.mount(JOB_SCHEDULER_BASE_URL, _JobSchedulerAdapter())
 
     def start(
         self,
@@ -138,14 +136,7 @@ class JobSchedulerExecutor(JobExecutor):
         return result.OK(response)
 
 
-class _AutomationPayload(BaseModel, frozen=True):
-    name: str
-    args: Sequence[str]
-    stdin: str
-    log_level: int
-
-
-class _LocalAutomationConnection(HTTPConnection):
+class _JobSchedulerConnection(HTTPConnection):
     def __init__(self) -> None:
         super().__init__(JOB_SCHEDULER_HOST)
 
@@ -154,14 +145,14 @@ class _LocalAutomationConnection(HTTPConnection):
         self.sock.connect(str(paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET)))
 
 
-class _LocalAutomationConnectionPool(HTTPConnectionPool):
+class _JobSchedulerConnectionPool(HTTPConnectionPool):
     def __init__(self) -> None:
         super().__init__(JOB_SCHEDULER_HOST)
 
-    def _new_conn(self) -> _LocalAutomationConnection:
-        return _LocalAutomationConnection()
+    def _new_conn(self) -> _JobSchedulerConnection:
+        return _JobSchedulerConnection()
 
 
-class _LocalAutomationAdapter(HTTPAdapter):
+class _JobSchedulerAdapter(HTTPAdapter):
     def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):  # type: ignore[no-untyped-def]
-        return _LocalAutomationConnectionPool()
+        return _JobSchedulerConnectionPool()

@@ -113,25 +113,22 @@ class JobSchedulerExecutor(JobExecutor):
         return self.health().background_jobs.job_executions
 
     def _get(self, url: str) -> result.Result[requests.Response, StartupError]:
-        try:
-            response = self._session.get(url, timeout=30)
-        except requests.ConnectionError as e:
-            return result.Error(StartupError(f"Could not connect to ui-job-scheduler: {e}"))
-
-        if response.status_code != 200:
-            return result.Error(
-                StartupError(f"Got response: HTTP {response.status_code}: {response.text}")
-            )
-
-        return result.OK(response)
+        return self._request("GET", url)
 
     def _post(
         self, url: str, json: dict[str, object]
     ) -> result.Result[requests.Response, StartupError]:
+        return self._request("POST", url, json)
+
+    def _request(
+        self, method: str, url: str, json: dict[str, object] | None = None
+    ) -> result.Result[requests.Response, StartupError]:
         try:
-            response = self._session.post(url, json=json, timeout=30)
+            response = self._session.request(method, url, json=json, timeout=30)
         except requests.ConnectionError as e:
             return result.Error(StartupError(f"Could not connect to ui-job-scheduler: {e}"))
+        except requests.RequestException as e:
+            return result.Error(StartupError(f"Communication with ui-job-scheduler failed: {e}"))
 
         if response.status_code != 200:
             return result.Error(

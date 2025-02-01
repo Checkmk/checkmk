@@ -22,6 +22,8 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     SendDataInner,
     SendDataType,
     ServerResponse,
+    ServiceDescription,
+    ServicePrefix,
     TlsVersion,
 )
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
@@ -595,6 +597,30 @@ EXAMPLE_75: Mapping[str, object] = {
     "disable_sni": True,
 }
 
+EXAMPLE_76: Mapping[str, object] = {
+    "name": "name",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_77: Mapping[str, object] = {
+    "name": "^name",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_78: Mapping[str, object] = {
+    "name": "name",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("cert", {"cert_days": ("no_levels", None)}),
+}
+
+EXAMPLE_79: Mapping[str, object] = {
+    "name": "name",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_1_3"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -641,6 +667,10 @@ EXAMPLE_75: Mapping[str, object] = {
         EXAMPLE_70,
         EXAMPLE_71,
         EXAMPLE_72,
+        EXAMPLE_76,
+        EXAMPLE_77,
+        EXAMPLE_78,
+        EXAMPLE_79,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -1134,3 +1164,23 @@ def test_migrate_expect_response_header(rule_value: Mapping[str, object], expect
     # Assert
     assert ssc_value[0].settings.content is not None
     assert ssc_value[0].settings.content.header == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_76, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (EXAMPLE_77, ServiceDescription(prefix=ServicePrefix.NONE, name="name")),
+        (EXAMPLE_78, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (EXAMPLE_79, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+    ],
+)
+def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].service_name == expected

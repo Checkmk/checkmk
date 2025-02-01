@@ -187,6 +187,7 @@ def _migrate_url_params(
     path = url_params.uri or ""
     match url_params.ssl:
         # In check_http.c (v1), this also determines the port.
+        # If this logic is adapted, then `_migrate_name` needs to be fixed.
         case None:
             scheme: Literal["http", "https"] = "http"
             tls_versions = {}
@@ -348,16 +349,24 @@ def _migrate_cert_params(cert_params: V1Cert) -> Mapping[str, object]:
     }
 
 
+def _migrate_name(name: str) -> Mapping[str, object]:
+    # Currently, this implementation is consistent with V1.
+    if name.startswith("^"):
+        return {"prefix": "none", "name": name[1:]}
+    return {"prefix": "auto", "name": name}
+
+
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
     port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
     if isinstance(rule_value.mode[1], V1Cert):
         scheme, path, settings = "https", "", _migrate_cert_params(rule_value.mode[1])
     else:
         scheme, path, settings = _migrate_url_params(rule_value.mode[1])
+
     return {
         "endpoints": [
             {
-                "service_name": {"prefix": "auto", "name": rule_value.name},
+                "service_name": _migrate_name(name=rule_value.name),
                 # Risk: We can't be sure the active checks and the config cache use the same IP look
                 # up (but both of them are based on the same user data. Moreover,
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently

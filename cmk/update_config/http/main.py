@@ -124,34 +124,34 @@ class V1Value(BaseModel, extra="forbid"):
     mode: tuple[Literal["url"], V1Url]
 
 
+def _migratable_url_params(url_params: V1Url) -> bool:
+    if any(": " not in header for header in url_params.add_headers or []):
+        return False
+    if url_params.expect_response_header is not None:
+        # TODO: Redirects behave differently in V1 and V2.
+        return False
+    if url_params.expect_regex is not None and url_params.expect_string is not None:
+        return False
+    if url_params.post_data is not None and url_params.method in ("GET", "DELETE", "HEAD"):
+        return False
+    try:
+        _migrate_expect_response(url_params.expect_response or [])
+    except ValueError:
+        return False
+    return True
+
+
 def _migratable(rule_value: Mapping[str, object]) -> bool:
     try:
         value = V1Value.model_validate(rule_value)
-        if any(": " not in header for header in value.mode[1].add_headers or []):
-            return False
-        if value.mode[1].expect_response_header is not None:
-            # TODO: Redirects behave differently in V1 and V2.
-            return False
-        if value.mode[1].expect_regex is not None and value.mode[1].expect_string is not None:
-            return False
-        if value.mode[1].post_data is not None and value.mode[1].method in (
-            "GET",
-            "DELETE",
-            "HEAD",
-        ):
-            return False
-        try:
-            _migrate_expect_response(value.mode[1].expect_response or [])
-        except ValueError:
-            return False
-        type_ = _classify(value.host.address[1])
-        if type_ is HostType.EMBEDDABLE:
-            # This might have some issues, since customers can put a port, uri, and really mess with
-            # us in a multitude of ways.
-            return True
-        return False
     except ValidationError:
         return False
+    type_ = _classify(value.host.address[1])
+    if type_ is not HostType.EMBEDDABLE:
+        # This might have some issues, since customers can put a port, uri, and really mess with
+        # us in a multitude of ways.
+        return False
+    return _migratable_url_params(value.mode[1])
 
 
 def _migrate_header(header: str) -> dict[str, object]:
@@ -169,14 +169,14 @@ def _migrate_expect_response(response: list[str]) -> list[int]:
     return result
 
 
-def _migrate(rule_value: V1Value) -> Mapping[str, object]:
-    port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
-    url_params = rule_value.mode[1]
+def _migrate_url_params(
+    url_params: V1Url,
+) -> tuple[Literal["http", "https"], str, Mapping[str, object]]:
     path = url_params.uri or ""
     match url_params.ssl:
         # In check_http.c (v1), this also determines the port.
         case None:
-            scheme = "http"
+            scheme: Literal["http", "https"] = "http"
             tls_versions = {}
         case "auto":
             scheme = "https"
@@ -292,6 +292,36 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
             max_age_new: Mapping[str, object] = {}
         case max_age:
             max_age_new = {"max_age": max_age}
+    return (
+        scheme,
+        path,
+        {
+            "connection": {
+                **method,  # TODO: Proxy sets this to CONNECT.
+                **tls_versions,
+                **timeout,
+                **user_agent,
+                **add_headers,
+                **auth,
+                **redirects,
+            },
+            **server_response,
+            **response_time,
+            "content": {
+                **body,
+            },
+            "document": {
+                **document_body,
+                **page_size_new,
+                **max_age_new,
+            },
+        },
+    )
+
+
+def _migrate(rule_value: V1Value) -> Mapping[str, object]:
+    port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
+    scheme, path, settings = _migrate_url_params(rule_value.mode[1])
     return {
         "endpoints": [
             {
@@ -302,29 +332,8 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
                 "url": f"{scheme}://{rule_value.host.address[1]}{port}{path}",
-                "individual_settings": {
-                    "connection": {
-                        # TODO: Proxy sets this to CONNECT.
-                        **method,
-                        **tls_versions,
-                        **timeout,
-                        **user_agent,
-                        **add_headers,
-                        **auth,
-                        **redirects,
-                    },
-                    **server_response,
-                    **response_time,
-                    "content": {
-                        **body,
-                    },
-                    "document": {
-                        **document_body,
-                        **page_size_new,
-                        **max_age_new,
-                    },
-                },
-            }
+                "individual_settings": settings,
+            },
         ],
     }
 

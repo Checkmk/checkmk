@@ -9,6 +9,7 @@ import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
     BodyRegex,
+    CertificateValidity,
     Document,
     DocumentBodyOption,
     HttpMethod,
@@ -550,11 +551,24 @@ EXAMPLE_68: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_69: Mapping[str, object] = {
+    "name": "cert_fixed",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("cert", {"cert_days": ("fixed", (0.0, 0.0))}),
+}
+
+EXAMPLE_70: Mapping[str, object] = {
+    "name": "cert_no_levels",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("cert", {"cert_days": ("no_levels", None)}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
     [
         EXAMPLE_1,
+        EXAMPLE_12,
         EXAMPLE_15,
         EXAMPLE_16,
         EXAMPLE_17,
@@ -588,6 +602,8 @@ EXAMPLE_68: Mapping[str, object] = {
         EXAMPLE_66,
         EXAMPLE_67,
         EXAMPLE_68,
+        EXAMPLE_69,
+        EXAMPLE_70,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -817,7 +833,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_9,
         EXAMPLE_10,
         EXAMPLE_11,
-        EXAMPLE_12,
         EXAMPLE_13,
         EXAMPLE_14,
         EXAMPLE_20,
@@ -1029,3 +1044,21 @@ def test_migrate_expect_response(rule_value: Mapping[str, object], expected: obj
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].settings.server_response == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_69, (CertificateValidity.VALIDATE, (LevelsType.FIXED, (0.0, 0.0)))),
+        (EXAMPLE_70, (CertificateValidity.VALIDATE, (LevelsType.NO_LEVELS, None))),
+    ],
+)
+def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.cert == expected

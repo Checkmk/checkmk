@@ -75,6 +75,10 @@ class V1PageSize(BaseModel, extra="forbid"):
     maximum: int
 
 
+class V1Cert(BaseModel, extra="forbid"):
+    cert_days: tuple[Literal["fixed"], tuple[float, float]] | tuple[Literal["no_levels"], None]
+
+
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
     ssl: (
@@ -121,7 +125,7 @@ class V1Url(BaseModel, extra="forbid"):
 class V1Value(BaseModel, extra="forbid"):
     name: str
     host: V1Host
-    mode: tuple[Literal["url"], V1Url]
+    mode: tuple[Literal["url"], V1Url] | tuple[Literal["cert"], V1Cert]
 
 
 def _migratable_url_params(url_params: V1Url) -> bool:
@@ -151,6 +155,8 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
         # This might have some issues, since customers can put a port, uri, and really mess with
         # us in a multitude of ways.
         return False
+    if isinstance(value.mode[1], V1Cert):
+        return True
     return _migratable_url_params(value.mode[1])
 
 
@@ -319,9 +325,21 @@ def _migrate_url_params(
     )
 
 
+def _migrate_cert_params(cert_params: V1Cert) -> Mapping[str, object]:
+    return {
+        "connection": {
+            "method": ("get", None),
+        },
+        "cert": ("validate", cert_params.cert_days),
+    }
+
+
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
     port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
-    scheme, path, settings = _migrate_url_params(rule_value.mode[1])
+    if isinstance(rule_value.mode[1], V1Cert):
+        scheme, path, settings = "https", "", _migrate_cert_params(rule_value.mode[1])
+    else:
+        scheme, path, settings = _migrate_url_params(rule_value.mode[1])
     return {
         "endpoints": [
             {

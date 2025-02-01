@@ -432,10 +432,9 @@ def _slow_view_logging_help():
     )
 
 
-def _add_saml_log_level(params: dict[str, int]) -> dict[str, int]:
-    """Update version 2.1 -> 2.2"""
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
-        params.setdefault("cmk.web.saml2", 30)
+def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
+    """Update version 2.3 -> 2.4"""
+    params.setdefault("cmk.web.ui-job-scheduler", 20)
     return params
 
 
@@ -461,7 +460,7 @@ class ConfigVariableLogLevels(ConfigVariable):
                 elements=self._web_log_level_elements(),
                 optional_keys=[],
             ),
-            migrate=_add_saml_log_level,
+            migrate=_add_job_scheduler_log_level,
         )
 
     def _web_log_level_elements(self):
@@ -495,6 +494,17 @@ class ConfigVariableLogLevels(ConfigVariable):
                 _(
                     "Communication between different components of Checkmk (e.g. GUI and check engine) "
                     "will be logged in this log level."
+                ),
+            ),
+            (
+                "cmk.web.ui-job-scheduler",
+                _("Job scheduler"),
+                _(
+                    "The job scheduler manages regularly running tasks and the execution of "
+                    "background jobs. Log entries of this component are written to <tt>%s</tt>."
+                )
+                % site_neutral_path(
+                    f"{cmk.utils.paths.log_dir}/ui-job-scheduler/ui-job-scheduler.log"
                 ),
             ),
             (

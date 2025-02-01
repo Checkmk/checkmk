@@ -978,6 +978,7 @@ class Site:
                 "cmk.web.bi.compilation": 15,
                 "cmk.web.automations": 15,
                 "cmk.web.background-job": 15,
+                "cmk.web.ui-job-scheduler": 10,
             },
         )
 

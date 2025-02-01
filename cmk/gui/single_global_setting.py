@@ -12,7 +12,21 @@ import cmk.utils.paths
 
 def load_gui_log_levels() -> dict[str, int]:
     """Load the GUI log-level global setting from the Setup GUI config"""
-    return _load_single_global_wato_setting("log_levels", {"cmk.web": 30})
+    return _load_single_global_wato_setting(
+        "log_levels",
+        {
+            "cmk.web": 30,
+            "cmk.web.ldap": 30,
+            "cmk.web.saml2": 30,
+            "cmk.web.auth": 30,
+            "cmk.web.bi.compilation": 30,
+            "cmk.web.automations": 30,
+            "cmk.web.background-job": 30,
+            "cmk.web.ui-job-scheduler": 20,
+            "cmk.web.slow-views": 30,
+            "cmk.web.agent_registration": 30,
+        },
+    )
 
 
 def load_profiling_mode() -> Literal[True, False, "enable_by_var"]:

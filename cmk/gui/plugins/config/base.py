@@ -122,6 +122,7 @@ class CREConfig:
             "cmk.web.bi.compilation": 30,
             "cmk.web.automations": 30,
             "cmk.web.background-job": 30,
+            "cmk.web.ui-job-scheduler": 20,
             "cmk.web.slow-views": 30,
             "cmk.web.agent_registration": 30,
         }

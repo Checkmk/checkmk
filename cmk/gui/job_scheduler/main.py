@@ -22,8 +22,8 @@ from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_conf
 
 from cmk.utils import paths
 
+from cmk.gui import log, single_global_setting
 from cmk.gui.background_job import job_registry, ThreadedJobExecutor
-from cmk.gui.log import logger
 from cmk.gui.utils import get_failed_plugins
 
 from cmk import trace
@@ -75,6 +75,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         daemonize()
 
         _setup_file_logging(log_path / "ui-job-scheduler.log")
+        logger = logging.getLogger("cmk.web.ui-job-scheduler")
         logger.info("--- Starting ui-job-scheduler (Checkmk %s) ---", cmk_version.__version__)
 
         with pid_file_lock(_pid_file(omd_root)):
@@ -134,7 +135,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 def _setup_console_logging() -> None:
     handler = logging.StreamHandler(stream=sys.stderr)
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
-    logger.addHandler(handler)
+    logging.getLogger().addHandler(handler)
 
 
 def _setup_file_logging(log_file: Path) -> None:
@@ -142,7 +143,8 @@ def _setup_file_logging(log_file: Path) -> None:
     handler.setFormatter(
         logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s")
     )
-    logger = logging.getLogger()
-    del logger.handlers[:]  # Remove all previously existing handlers
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    root_logger = logging.getLogger()
+    del root_logger.handlers[:]  # Remove all previously existing handlers
+    root_logger.addHandler(handler)
+    # Will be overwritten later by set_log_levels calls made during the gui_context initialization
+    log.set_log_levels(single_global_setting.load_gui_log_levels())

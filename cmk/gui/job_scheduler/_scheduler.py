@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import logging
 import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -14,12 +15,12 @@ from cmk.ccc import store
 from cmk.utils import paths
 
 from cmk.gui.cron import cron_job_registry, CronJob
-from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
 from cmk import trace
 
+logger = logging.getLogger("cmk.web.ui-job-scheduler")
 tracer = trace.get_tracer()
 
 

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-29 10:35+0000\n"
+"PO-Revision-Date: 2025-01-31 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -10742,6 +10742,10 @@ msgstr ""
 msgid "Can still edit"
 msgstr "Schreibschutz ignorieren"
 
+#, fuzzy, python-format
+msgid "Can't contact the remote site using '%s'"
+msgstr "Kann sich nicht mit Remote-Instanz %s verbinden"
+
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Kann die Version %r nicht parsen"
@@ -12334,6 +12338,10 @@ msgstr ""
 "Exklusiv (Nur Jobs mit Label-Einschränkungen laufen, die zu diesem Knoten "
 "passen). Der Status wechselt in den Warn-Zustand, wenn der Modus abweicht."
 
+#, fuzzy
+msgid "Choose condition"
+msgstr "Keine Bedingungen"
+
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -12352,6 +12360,18 @@ msgstr ""
 
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Wählen Sie, ob sich diese Regel auf Plugins oder lokale Checks bezieht"
+
+#, fuzzy
+msgid "Choose operator"
+msgstr "%s Operationen"
+
+#, fuzzy
+msgid "Choose password from store"
+msgstr "Aus dem Passwortspeicher"
+
+#, fuzzy
+msgid "Choose password type"
+msgstr "Passwort ändern"
 
 msgid "Choose single values"
 msgstr "Einzelne Werte auswählen"
@@ -12476,6 +12496,10 @@ msgid ""
 msgstr ""
 "Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
 "einem 'aktivierenden' Zustand befinden darf"
+
+#, fuzzy
+msgid "Choose unit"
+msgstr "Alle auswählen"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -14252,6 +14276,12 @@ msgstr ""
 msgid "Connection"
 msgstr "Verbindung"
 
+#, fuzzy, python-format
+msgid "Connection '%s' isn't found: consider activating changes"
+msgstr ""
+"Die DCD-Verbindung ist immer noch nicht hergestellt, prüfen Sie die "
+"Aktivierung von Änderungen"
+
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
 
@@ -14317,24 +14347,28 @@ msgstr "Verbindungstimeout in Sekunden"
 msgid "Connection to central Agent Bakery"
 msgstr "Verbindung zur zentralen Agentenbäckerei"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Connection to port %s refused"
-msgstr "Geöffnete Verbindungen"
+msgstr "Verbindung zum Port %s abgelehnt"
 
 #, python-format
 msgid ""
 "Connection to port %s refused. The site is using a self-signed certificate. "
 "Are you logged in?"
 msgstr ""
+"Verbindung zu Port %s abgelehnt. Die Instanz verwendet ein selbst signiertes "
+"Zertifikat. Sind Sie eingeloggt?"
 
 #, python-format
 msgid ""
 "Connection to port %s refused. You are probably connecting to the wrong site."
 msgstr ""
+"Verbindung zu Port %s abgelehnt. Sie sind wahrscheinlich mit der falschen "
+"Instanz verbunden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Connection to port %s refused: Invalid certificate"
-msgstr "Legt fest, wie ein ungültiges Zertifikat zu behandeln ist"
+msgstr "Verbindung zum Port %s abgelehnt: ungültiges Zertifikat"
 
 msgid "Connection to remote Agent Bakery"
 msgstr "Verbindung zur Remote-Agentenbäckerei"
@@ -16329,11 +16363,6 @@ msgstr "DCD-Batch"
 
 msgid "DCD Batches"
 msgstr "DCD-Batches"
-
-msgid "DCD Connection is still absent, consider activating changes"
-msgstr ""
-"Die DCD-Verbindung ist immer noch nicht hergestellt, prüfen Sie die "
-"Aktivierung von Änderungen"
 
 #, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -21522,14 +21551,6 @@ msgstr ""
 "verschlüsselt. Zur Wiederherstellung benötigen Sie den privaten Schlüssel "
 "und das Passwort des Schlüssels."
 
-msgid ""
-"Enable experimental rendering modes for form specs. Keep in mind thatsome "
-"form specs are always rendered in the frontend, regardless of this setting."
-msgstr ""
-"Aktivieren Sie experimentelle Rendering-Modi für Formularvorlagen. Beachten "
-"Sie, dass einige Formularvorgaben immer im Frontend gerendert werden, "
-"unabhängig von dieser Einstellung."
-
 msgid "Enable flap detection"
 msgstr "Flap-Erkennung ein"
 
@@ -23166,8 +23187,9 @@ msgstr ""
 "Zu erstellende Exportdatei, die <tt>&lt;HOST&gt;</tt> für den Host-Namen "
 "enthält"
 
-msgid "Export this connection for API"
-msgstr "Diese Verbindung für API exportieren"
+#, fuzzy, python-format
+msgid "Export this %s for API"
+msgstr "Diese Regel für API exportieren"
 
 msgid "Export this rule for API"
 msgstr "Diese Regel für API exportieren"
@@ -23516,9 +23538,9 @@ msgstr ""
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Ursprungsregel von %s / %s konnte nicht ermittelt werden"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed to establish connection: %s"
-msgstr "Level für bestehende Verbindungen"
+msgstr "Verbindungsaufbau fehlgeschlagen: %s"
 
 msgid "Failed to estimate the Apache process size"
 msgstr "Schätzung der Apache-Prozessgröße fehlgeschlagen"
@@ -33526,6 +33548,14 @@ msgstr "Ungültige Sicherung (zu klein)"
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
 
+#, fuzzy
+msgid "Invalid state change for host"
+msgstr "Ungültige Daten für die Liste"
+
+#, fuzzy
+msgid "Invalid state change for service"
+msgstr "Zustandsänderungen von Hosts/Services"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ungültige Merkmal ID. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>_</tt>, <tt>-</"
@@ -42428,6 +42458,10 @@ msgstr ""
 msgid "Notification rule of user '%s'"
 msgstr "Benachrichtigungsregel des Benutzers'%s'"
 
+#, fuzzy
+msgid "Notification rule successfully edited!"
+msgstr "Die neue Benachrichtigungsregel wurde erfolgreich erstellt!"
+
 msgid "Notification rules"
 msgstr "Benachrichtigungsregeln"
 
@@ -43530,6 +43564,7 @@ msgstr "Die Offline-Verifizierungsprozedur war erfolgreich"
 
 msgid "Offline: No valid multisite URL configured"
 msgstr ""
+"Offline: Keine gültige URL für die graphische Oberfläche (GUI) konfiguriert"
 
 msgid "Offset"
 msgstr "Offset"
@@ -47044,9 +47079,6 @@ msgstr "Physikalische Adresse (MAC)"
 msgid "Physical components"
 msgstr "Physikalische Komponenten"
 
-msgid "Physical disks"
-msgstr "Physikalische Platten"
-
 msgid "Physical port states to discover"
 msgstr "Physikalische Port-Zustände, die erkannt werden sollen"
 
@@ -48845,6 +48877,10 @@ msgstr "Proxy-URL"
 
 msgid "Proxy host"
 msgstr "Proxy Host"
+
+#, fuzzy
+msgid "Proxy host is required but not specified."
+msgstr "%s wird benötigt, ist aber nicht angegeben."
 
 msgid "Proxy server"
 msgstr "Proxy-Server"
@@ -51958,9 +51994,6 @@ msgstr "Regelpakete"
 
 msgid "Rule properties"
 msgstr "Regel-Eigenschaften"
-
-msgid "Rule rendering mode"
-msgstr "Modus zur Regeldarstellung"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -56959,9 +56992,6 @@ msgstr ""
 msgid "Source name"
 msgstr "Name der Quelle"
 
-msgid "Source state can not be equal to target state."
-msgstr "Der Ausgangszustand kann nicht gleich dem Zielzustand sein."
-
 msgid "Sources"
 msgstr "Quellen"
 
@@ -57837,8 +57867,16 @@ msgstr "gestapelte Fläche"
 msgid "Stacks"
 msgstr "Stapel"
 
+#, python-format
+msgid "Stage %s contains invalid form data. Please correct them and try again."
+msgstr ""
+
 msgid "Stage action result not found"
 msgstr "Ergebnis der Aktion dieser Stufe nicht gefunden"
+
+#, python-format
+msgid "Stages %s contain invalid form data. Please correct them and try again."
+msgstr ""
 
 msgid "Stale"
 msgstr "Veraltet"
@@ -58085,6 +58123,10 @@ msgstr "Zustand und Anzahl von Prozessen"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "Zustand und Anzahl der Prozesse (nur SNMP)"
+
+#, fuzzy
+msgid "State change"
+msgstr "Zustandsänderung"
 
 msgid "State changes of hosts / services"
 msgstr "Zustandsänderungen von Hosts/Services"
@@ -58918,6 +58960,10 @@ msgstr "Schritt wurde gestartet"
 msgid "Steps"
 msgstr "Schritte"
 
+#, python-format
+msgid "Still no data in '%s'"
+msgstr ""
+
 msgid "Still nothing happened."
 msgstr "Kein Ereignis bisher."
 
@@ -59557,6 +59603,10 @@ msgstr "Synchronisierung von Broker-Zertifikaten"
 
 msgid "Synology Updates"
 msgstr "Updates für Synology"
+
+#, fuzzy
+msgid "Synthetic KPI Kwds"
+msgstr "Synthetische Tests"
 
 msgid "Synthetic Monitoring"
 msgstr "Synthetisches Monitoring"
@@ -61010,14 +61060,6 @@ msgstr "Die Log-Datei"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
 
-#, python-format
-msgid ""
-"The MIME type of the uploaded file is not supported: %s. Supported file "
-"extensions: .tar.gz, .zip."
-msgstr ""
-"Der MIME-Typ der hochgeladenen Datei wird nicht unterstützt: %s. "
-"Unterstützte Dateierweiterungen: .tar.gz, .zip."
-
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Der MSSQL Instanzname und der Tablespacename getrennt durch ein Leerzeichen."
@@ -62358,6 +62400,14 @@ msgstr "Die Datei scheint keine gültige iCalendar-Datei zu sein."
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "Die Dateiendung muss <tt>.pdf</tt> sein"
+
+#, fuzzy, python-format
+msgid ""
+"The file extension of the uploaded file is not supported: %s. Supported file "
+"extensions: %s."
+msgstr ""
+"Der MIME-Typ der hochgeladenen Datei wird nicht unterstützt: %s. "
+"Unterstützte Dateierweiterungen: .tar.gz, .zip."
 
 msgid "The file is empty"
 msgstr "Die Datei ist leer"
@@ -65836,12 +65886,6 @@ msgstr ""
 "Diese Einstellungen legen fest, wann ein Benutzer Services und Gruppen in "
 "der Benutzeroberfläche sehen darf. <b>Hinweis:</b> Dies hat <b>keine</"
 "b>Auswirkungen auf Benachrichtigungen."
-
-msgid ""
-"These settings only affect features that are currently under development."
-msgstr ""
-"Diese Einstellungen wirken sich nur auf Funktionen aus, die sich derzeit in "
-"der Entwicklung befinden."
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -74194,10 +74238,6 @@ msgid "Unknown paths"
 msgstr "Unbekannte Pfade"
 
 #, python-format
-msgid "Unknown rendering mode %s"
-msgstr "Unbekannter Rendering-Modus %s"
-
-#, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Unbekannte Regel mit der ID %s"
 
@@ -74238,9 +74278,9 @@ msgstr "Unbekannter Nutzer: %s"
 msgid "Unknown/Unreach"
 msgstr "Unknown/Unreach"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unkown error: %s"
-msgstr "Unbekannter Nutzer: %s"
+msgstr "Unbekannter Fehler: %s"
 
 msgid "Unlicensed"
 msgstr "Unlizenziert"
@@ -77752,9 +77792,6 @@ msgstr "Freiwillige Kontextwechsel"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch Verbindung"
-
-msgid "Vue experimental features"
-msgstr "Experimentelle Funktionen von Vue"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVM volumes (Linux)"
@@ -84621,6 +84658,40 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid ""
+#~ "Enable experimental rendering modes for form specs. Keep in mind thatsome "
+#~ "form specs are always rendered in the frontend, regardless of this "
+#~ "setting."
+#~ msgstr ""
+#~ "Aktivieren Sie experimentelle Rendering-Modi für Formularvorlagen. "
+#~ "Beachten Sie, dass einige Formularvorgaben immer im Frontend gerendert "
+#~ "werden, unabhängig von dieser Einstellung."
+
+#~ msgid "Physical disks"
+#~ msgstr "Physikalische Platten"
+
+#~ msgid "Rule rendering mode"
+#~ msgstr "Modus zur Regeldarstellung"
+
+#~ msgid "Source state can not be equal to target state."
+#~ msgstr "Der Ausgangszustand kann nicht gleich dem Zielzustand sein."
+
+#~ msgid ""
+#~ "These settings only affect features that are currently under development."
+#~ msgstr ""
+#~ "Diese Einstellungen wirken sich nur auf Funktionen aus, die sich derzeit "
+#~ "in der Entwicklung befinden."
+
+#, python-format
+#~ msgid "Unknown rendering mode %s"
+#~ msgstr "Unbekannter Rendering-Modus %s"
+
+#~ msgid "Vue experimental features"
+#~ msgstr "Experimentelle Funktionen von Vue"
+
+#~ msgid "Export this connection for API"
+#~ msgstr "Diese Verbindung für API exportieren"
+
 #~ msgid "Activate automation helper"
 #~ msgstr "Automation Helper aktivieren"
 
@@ -84708,9 +84779,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Invalid conditions"
 #~ msgstr "Ungültige Bedingungen"
-
-#~ msgid "Invalid data for list"
-#~ msgstr "Ungültige Daten für die Liste"
 
 #~ msgid "Invalid file"
 #~ msgstr "Ungültige Datei"
@@ -86170,10 +86238,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Warning (Out)"
 #~ msgstr "Warnung (Ausgang)"
-
-#, python-format
-#~ msgid "%s operations"
-#~ msgstr "%s Operationen"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

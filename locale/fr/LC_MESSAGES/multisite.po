@@ -11180,6 +11180,10 @@ msgstr "On ne peut pas utiliser un ID de balise vide avec un seul choix."
 msgid "Can still edit"
 msgstr "Peut encore éditer"
 
+#, fuzzy, python-format
+msgid "Can't contact the remote site using '%s'"
+msgstr "Impossible de se connecter au site distant : %s"
+
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Impossible d'analyser la version %r"
@@ -12851,6 +12855,10 @@ msgstr ""
 "mode diffère."
 
 #, fuzzy
+msgid "Choose condition"
+msgstr "Pas de conditions"
+
+#, fuzzy
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -12871,6 +12879,18 @@ msgstr ""
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
 "Choisissez si cette règle s'applique aux plugins ou aux contrôles locaux"
+
+#, fuzzy
+msgid "Choose operator"
+msgstr "%s opérations"
+
+#, fuzzy
+msgid "Choose password from store"
+msgstr "Depuis le magasin de mots de passe"
+
+#, fuzzy
+msgid "Choose password type"
+msgstr "Modifier le mot de passe"
 
 msgid "Choose single values"
 msgstr "Choisir des valeurs individuelles"
@@ -12992,6 +13012,10 @@ msgid ""
 msgstr ""
 "Choisir les niveaux de temps pendant lesquels une unité est autorisée à être "
 "en état d'activation"
+
+#, fuzzy
+msgid "Choose unit"
+msgstr "Choisir tous"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -14818,6 +14842,10 @@ msgstr ""
 
 msgid "Connection"
 msgstr "Connexion"
+
+#, fuzzy, python-format
+msgid "Connection '%s' isn't found: consider activating changes"
+msgstr "Commentaire pour l'activation des changements"
 
 msgid "Connection ID"
 msgstr "ID de connexion"
@@ -16982,9 +17010,6 @@ msgstr "Statut DCD"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Match"
-
-msgid "DCD Connection is still absent, consider activating changes"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -22445,11 +22470,6 @@ msgstr ""
 "Vous aurez besoin de la clé privée et de la phrase de passe pour décrypter "
 "la sauvegarde."
 
-msgid ""
-"Enable experimental rendering modes for form specs. Keep in mind thatsome "
-"form specs are always rendered in the frontend, regardless of this setting."
-msgstr ""
-
 msgid "Enable flap detection"
 msgstr "Activer la détection des rabats"
 
@@ -24123,8 +24143,8 @@ msgstr ""
 "Fichier d'exportation à créer, contenant <tt>&lt;HOST&gt;</tt> pour le nom "
 "d'hôte"
 
-#, fuzzy
-msgid "Export this connection for API"
+#, fuzzy, python-format
+msgid "Export this %s for API"
 msgstr "Exporter cette règle pour l'API"
 
 msgid "Export this rule for API"
@@ -35085,6 +35105,14 @@ msgstr "Instantané non valide (trop petit)"
 msgid "Invalid start time given"
 msgstr "Heure de début non valide"
 
+#, fuzzy
+msgid "Invalid state change for host"
+msgstr "Source de données non valide : %s"
+
+#, fuzzy
+msgid "Invalid state change for service"
+msgstr "Changements d'état des hôtes / services"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID de balise non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
@@ -44418,6 +44446,10 @@ msgstr ""
 msgid "Notification rule of user '%s'"
 msgstr "Règle de notification de l'utilisateur '%s'"
 
+#, fuzzy
+msgid "Notification rule successfully edited!"
+msgstr "La collection de graphiques '%s' n'existe pas"
+
 msgid "Notification rules"
 msgstr "Règles de notification"
 
@@ -49399,9 +49431,6 @@ msgstr "Adresse physique (MAC)"
 msgid "Physical components"
 msgstr "Composants physiques"
 
-msgid "Physical disks"
-msgstr "Disques physiques"
-
 msgid "Physical port states to discover"
 msgstr "États des ports physiques à découvrir"
 
@@ -51291,6 +51320,9 @@ msgstr "URL du proxy"
 
 msgid "Proxy host"
 msgstr "Hôte proxy"
+
+msgid "Proxy host is required but not specified."
+msgstr ""
 
 msgid "Proxy server"
 msgstr "Serveur proxy"
@@ -54564,10 +54596,6 @@ msgstr "Paquets de règles"
 
 msgid "Rule properties"
 msgstr "Propriétés des règles"
-
-#, fuzzy
-msgid "Rule rendering mode"
-msgstr "Dossiers de course"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -59760,9 +59788,6 @@ msgstr ""
 msgid "Source name"
 msgstr "Nom de la source"
 
-msgid "Source state can not be equal to target state."
-msgstr ""
-
 msgid "Sources"
 msgstr "Sources"
 
@@ -60641,9 +60666,17 @@ msgstr "Zone empilée"
 msgid "Stacks"
 msgstr "Piles"
 
+#, python-format
+msgid "Stage %s contains invalid form data. Please correct them and try again."
+msgstr ""
+
 #, fuzzy
 msgid "Stage action result not found"
 msgstr "État si le tunnel n'est pas trouvé"
+
+#, python-format
+msgid "Stages %s contain invalid form data. Please correct them and try again."
+msgstr ""
 
 msgid "Stale"
 msgstr "Stale"
@@ -60904,6 +60937,10 @@ msgstr "État et nombre de processus"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "État et nombre de processus (uniquement SNMP)"
+
+#, fuzzy
+msgid "State change"
+msgstr "A changé"
 
 msgid "State changes of hosts / services"
 msgstr "Changements d'état des hôtes / services"
@@ -61772,6 +61809,10 @@ msgstr "L'étape a été lancée"
 msgid "Steps"
 msgstr "Étapes"
 
+#, python-format
+msgid "Still no data in '%s'"
+msgstr ""
+
 msgid "Still nothing happened."
 msgstr "Il ne s'est toujours rien passé."
 
@@ -62450,6 +62491,10 @@ msgstr "Certificat de routeur SAP"
 
 msgid "Synology Updates"
 msgstr "Mises à jour de Synology"
+
+#, fuzzy
+msgid "Synthetic KPI Kwds"
+msgstr "Services Systemd"
 
 #, fuzzy
 msgid "Synthetic Monitoring"
@@ -63979,12 +64024,6 @@ msgstr "Le fichier journal"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Le nom de l'objet du MBean, par exemple java.lang:type=Memory"
 
-#, python-format
-msgid ""
-"The MIME type of the uploaded file is not supported: %s. Supported file "
-"extensions: .tar.gz, .zip."
-msgstr ""
-
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Le nom de l'instance MSSQL et le nom du tablespace séparés par un espace."
@@ -65308,6 +65347,12 @@ msgstr "Le fichier ne semble pas être un fichier iCalendar valide."
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "L'extension du fichier doit être <tt>.pdf</tt>"
+
+#, python-format
+msgid ""
+"The file extension of the uploaded file is not supported: %s. Supported file "
+"extensions: %s."
+msgstr ""
 
 msgid "The file is empty"
 msgstr "Le fichier est vide"
@@ -68732,10 +68777,6 @@ msgstr ""
 "Ces paramètres contrôlent dans quelles circonstances un utilisateur est "
 "autorisé à voir les services et les groupes dans l'interface utilisateur. "
 "<b>Note:</b> Cela n'a <b>aucune</b> incidence sur les notifications."
-
-msgid ""
-"These settings only affect features that are currently under development."
-msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -77730,10 +77771,6 @@ msgid "Unknown paths"
 msgstr "Chemins inconnus"
 
 #, fuzzy, python-format
-msgid "Unknown rendering mode %s"
-msgstr "Type de métrique inconnu %s"
-
-#, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Site inconnu %s"
 
@@ -81578,10 +81615,6 @@ msgstr "Changements de contexte volontaires"
 
 msgid "Vswitch bonding"
 msgstr "Collage de Vswitch"
-
-#, fuzzy
-msgid "Vue experimental features"
-msgstr "Fonctionnalité d'entreprise"
 
 msgid "VxVM volumes (Linux)"
 msgstr "Volumes VxVM (Linux)"
@@ -88539,6 +88572,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 
+#~ msgid "Physical disks"
+#~ msgstr "Disques physiques"
+
+#, fuzzy
+#~ msgid "Rule rendering mode"
+#~ msgstr "Dossiers de course"
+
+#, fuzzy, python-format
+#~ msgid "Unknown rendering mode %s"
+#~ msgstr "Type de métrique inconnu %s"
+
+#, fuzzy
+#~ msgid "Vue experimental features"
+#~ msgstr "Fonctionnalité d'entreprise"
+
+#, fuzzy
+#~ msgid "Export this connection for API"
+#~ msgstr "Exporter cette règle pour l'API"
+
 #, fuzzy
 #~ msgid "Activate automation helper"
 #~ msgstr "Activer le planificateur de changements"
@@ -88598,10 +88650,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Invalid conditions"
 #~ msgstr "Action non valide"
-
-#, fuzzy
-#~ msgid "Invalid data for list"
-#~ msgstr "Source de données non valide : %s"
 
 #, fuzzy
 #~ msgid "Invalid file"
@@ -89915,10 +89963,6 @@ msgstr ""
 
 #~ msgid "Warning (Out)"
 #~ msgstr "Avertissement (Out)"
-
-#, python-format
-#~ msgid "%s operations"
-#~ msgstr "%s opérations"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

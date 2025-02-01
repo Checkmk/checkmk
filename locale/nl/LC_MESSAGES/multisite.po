@@ -11124,6 +11124,10 @@ msgstr "Kan geen lege tag ID gebruiken met een enkele keuze."
 msgid "Can still edit"
 msgstr "Kan nog steeds bewerken"
 
+#, fuzzy, python-format
+msgid "Can't contact the remote site using '%s'"
+msgstr "Kan geen verbinding maken met externe site: %s"
+
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Kan't parsen versie %r"
@@ -12780,6 +12784,10 @@ msgstr ""
 "De status zal veranderen in waarschuwingsstatus, als de modus afwijkt."
 
 #, fuzzy
+msgid "Choose condition"
+msgstr "Geen voorwaarden"
+
+#, fuzzy
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -12798,6 +12806,18 @@ msgstr ""
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Kies of deze regel van toepassing is op plugins of lokale controles"
+
+#, fuzzy
+msgid "Choose operator"
+msgstr "%s operaties"
+
+#, fuzzy
+msgid "Choose password from store"
+msgstr "Van wachtwoord opslag"
+
+#, fuzzy
+msgid "Choose password type"
+msgstr "Wijzig wachtwoord"
 
 msgid "Choose single values"
 msgstr "Kies enkele waarden"
@@ -12915,6 +12935,10 @@ msgid ""
 msgstr ""
 "Kies tijdsniveaus gedurende welke een eenheid in een 'activerende' toestand "
 "mag verkeren"
+
+#, fuzzy
+msgid "Choose unit"
+msgstr "Kies alle"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -14726,6 +14750,10 @@ msgstr ""
 
 msgid "Connection"
 msgstr "Aansluiting"
+
+#, fuzzy, python-format
+msgid "Connection '%s' isn't found: consider activating changes"
+msgstr "Commentaar voor activering van wijzigingen"
 
 msgid "Connection ID"
 msgstr "Verbinding ID"
@@ -16862,9 +16890,6 @@ msgstr "DCD-status"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Wedstrijd"
-
-msgid "DCD Connection is still absent, consider activating changes"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -22271,11 +22296,6 @@ msgstr ""
 "opgegeven sleutel. U hebt de private sleutel en de passphrase nodig om de "
 "backup te decoderen."
 
-msgid ""
-"Enable experimental rendering modes for form specs. Keep in mind thatsome "
-"form specs are always rendered in the frontend, regardless of this setting."
-msgstr ""
-
 msgid "Enable flap detection"
 msgstr "Klepdetectie inschakelen"
 
@@ -23933,8 +23953,8 @@ msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
 
-#, fuzzy
-msgid "Export this connection for API"
+#, fuzzy, python-format
+msgid "Export this %s for API"
 msgstr "Exporteer deze regel voor API"
 
 msgid "Export this rule for API"
@@ -34792,6 +34812,14 @@ msgstr "Ongeldige momentopname (te klein)"
 msgid "Invalid start time given"
 msgstr "Ongeldige starttijd gegeven"
 
+#, fuzzy
+msgid "Invalid state change for host"
+msgstr "Ongeldige gegevensbron: %s"
+
+#, fuzzy
+msgid "Invalid state change for service"
+msgstr "Staat wijzigingen van hosts / diensten"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
@@ -44070,6 +44098,10 @@ msgstr "Meldingsregels van gebruiker %s"
 msgid "Notification rule of user '%s'"
 msgstr "Meldingsregel van gebruiker '%s'"
 
+#, fuzzy
+msgid "Notification rule successfully edited!"
+msgstr "Host succesvol aangemaakt"
+
 msgid "Notification rules"
 msgstr "Regels voor kennisgeving"
 
@@ -49014,9 +49046,6 @@ msgstr "Fysiek adres (MAC)"
 msgid "Physical components"
 msgstr "Fysieke componenten"
 
-msgid "Physical disks"
-msgstr "Fysieke schijven"
-
 msgid "Physical port states to discover"
 msgstr "Fysieke poort toestanden om te ontdekken"
 
@@ -50871,6 +50900,9 @@ msgstr "Proxy URL"
 
 msgid "Proxy host"
 msgstr "Proxy host"
+
+msgid "Proxy host is required but not specified."
+msgstr ""
 
 msgid "Proxy server"
 msgstr "Proxyserver"
@@ -54101,10 +54133,6 @@ msgstr "Regel pakken"
 
 msgid "Rule properties"
 msgstr "Regeleigenschappen"
-
-#, fuzzy
-msgid "Rule rendering mode"
-msgstr "Lopende pods"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -59240,9 +59268,6 @@ msgstr ""
 msgid "Source name"
 msgstr "Naam van de bron"
 
-msgid "Source state can not be equal to target state."
-msgstr ""
-
 msgid "Sources"
 msgstr "Bronnen"
 
@@ -60111,9 +60136,17 @@ msgstr "Gestapeld gebied"
 msgid "Stacks"
 msgstr "Stapels"
 
+#, python-format
+msgid "Stage %s contains invalid form data. Please correct them and try again."
+msgstr ""
+
 #, fuzzy
 msgid "Stage action result not found"
 msgstr "Staat indien tunnel niet is gevonden"
+
+#, python-format
+msgid "Stages %s contain invalid form data. Please correct them and try again."
+msgstr ""
 
 msgid "Stale"
 msgstr "Stale"
@@ -60375,6 +60408,10 @@ msgstr "Staat en aantal processen"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "Staat en aantal processen (alleen SNMP)"
+
+#, fuzzy
+msgid "State change"
+msgstr "Is veranderd"
 
 msgid "State changes of hosts / services"
 msgstr "Staat wijzigingen van hosts / diensten"
@@ -61235,6 +61272,10 @@ msgstr "Stap is begonnen"
 msgid "Steps"
 msgstr "Stappen"
 
+#, python-format
+msgid "Still no data in '%s'"
+msgstr ""
+
 msgid "Still nothing happened."
 msgstr "Er gebeurde nog steeds niets."
 
@@ -61908,6 +61949,10 @@ msgstr "SAP-routercertificaat"
 
 msgid "Synology Updates"
 msgstr "Synology Updates"
+
+#, fuzzy
+msgid "Synthetic KPI Kwds"
+msgstr "Systemd diensten"
 
 #, fuzzy
 msgid "Synthetic Monitoring"
@@ -63422,12 +63467,6 @@ msgstr "Het logbestand"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "De objectnaam van de MBean, bijvoorbeeld java.lang:type=geheugen"
 
-#, python-format
-msgid ""
-"The MIME type of the uploaded file is not supported: %s. Supported file "
-"extensions: .tar.gz, .zip."
-msgstr ""
-
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "De MSSQL instance naam en de tablespace naam gescheiden door een spatie."
@@ -64741,6 +64780,12 @@ msgstr "Het bestand lijkt geen geldig iCalendar bestand te zijn.AAA"
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "De bestandsextensie moet <tt>.pdf</tt> zijn"
+
+#, python-format
+msgid ""
+"The file extension of the uploaded file is not supported: %s. Supported file "
+"extensions: %s."
+msgstr ""
 
 msgid "The file is empty"
 msgstr "Het bestand is leeg"
@@ -68135,10 +68180,6 @@ msgstr ""
 "Deze instellingen bepalen onder welke omstandigheden een gebruiker diensten "
 "en groepen in de gebruikersinterface mag zien. <b>Note:</b> Dit heeft "
 "<b>geen</b> invloed op meldingen."
-
-msgid ""
-"These settings only affect features that are currently under development."
-msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -77042,10 +77083,6 @@ msgid "Unknown paths"
 msgstr "Onbekende paden"
 
 #, fuzzy, python-format
-msgid "Unknown rendering mode %s"
-msgstr "Onbekend metriek type %s"
-
-#, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Onbekende site %s"
 
@@ -80830,10 +80867,6 @@ msgstr "Vrijwillige contextwisselingen"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch binding"
-
-#, fuzzy
-msgid "Vue experimental features"
-msgstr "Ondernemingsfunctie"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVM volumes (Linux)"
@@ -87718,6 +87751,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#~ msgid "Physical disks"
+#~ msgstr "Fysieke schijven"
+
+#, fuzzy
+#~ msgid "Rule rendering mode"
+#~ msgstr "Lopende pods"
+
+#, fuzzy, python-format
+#~ msgid "Unknown rendering mode %s"
+#~ msgstr "Onbekend metriek type %s"
+
+#, fuzzy
+#~ msgid "Vue experimental features"
+#~ msgstr "Ondernemingsfunctie"
+
+#, fuzzy
+#~ msgid "Export this connection for API"
+#~ msgstr "Exporteer deze regel voor API"
+
 #, fuzzy
 #~ msgid "Activate automation helper"
 #~ msgstr "Activeer Wijzigingen Planner"
@@ -87783,10 +87835,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Invalid conditions"
 #~ msgstr "Ongeldige actie"
-
-#, fuzzy
-#~ msgid "Invalid data for list"
-#~ msgstr "Ongeldige gegevensbron: %s"
 
 #, fuzzy
 #~ msgid "Invalid file"
@@ -89098,10 +89146,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "Warning (Out)"
 #~ msgstr "Waarschuwing (Uit)"
-
-#, python-format
-#~ msgid "%s operations"
-#~ msgstr "%s operaties"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

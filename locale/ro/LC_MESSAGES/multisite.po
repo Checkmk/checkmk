@@ -11154,6 +11154,10 @@ msgstr "Nu se poate utiliza un ID de etichetă gol cu o singură alegere."
 msgid "Can still edit"
 msgstr "Încă se poate edita"
 
+#, fuzzy, python-format
+msgid "Can't contact the remote site using '%s'"
+msgstr "Nu se poate conecta la site-ul la distanță: %s."
+
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Nu se poate analiza versiunea %r"
@@ -12792,6 +12796,10 @@ msgstr ""
 "diferă."
 
 #, fuzzy
+msgid "Choose condition"
+msgstr "Fără condiții"
+
+#, fuzzy
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -12812,6 +12820,18 @@ msgstr ""
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
 "Alegeți dacă această regulă se aplică pluginurilor sau verificărilor locale"
+
+#, fuzzy
+msgid "Choose operator"
+msgstr "%s operațiuni"
+
+#, fuzzy
+msgid "Choose password from store"
+msgstr "Din magazinul de parole"
+
+#, fuzzy
+msgid "Choose password type"
+msgstr "Modificați parola"
 
 msgid "Choose single values"
 msgstr "Alegeți valori unice"
@@ -12933,6 +12953,10 @@ msgid ""
 msgstr ""
 "Alegeți nivelurile de timp pentru care o unitate poate fi în stare de "
 "'activare'."
+
+#, fuzzy
+msgid "Choose unit"
+msgstr "Alegeți toate"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -14739,6 +14763,10 @@ msgstr ""
 
 msgid "Connection"
 msgstr "Conexiune"
+
+#, fuzzy, python-format
+msgid "Connection '%s' isn't found: consider activating changes"
+msgstr "Comentariu pentru activarea modificărilor"
 
 msgid "Connection ID"
 msgstr "ID-ul conexiunii"
@@ -16874,9 +16902,6 @@ msgstr "Starea DCD"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "Potriviri"
-
-msgid "DCD Connection is still absent, consider activating changes"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -22314,11 +22339,6 @@ msgstr ""
 "de rezervă. Veți avea nevoie de cheia privată și de fraza de acces pentru a "
 "decripta copia de rezervă."
 
-msgid ""
-"Enable experimental rendering modes for form specs. Keep in mind thatsome "
-"form specs are always rendered in the frontend, regardless of this setting."
-msgstr ""
-
 msgid "Enable flap detection"
 msgstr "Activați detectarea clapetei"
 
@@ -23982,8 +24002,8 @@ msgstr ""
 "Fișier de export care urmează să fie creat, conținând <tt>&lt;HOST&gt;</tt> "
 "pentru numele de gazdă"
 
-#, fuzzy
-msgid "Export this connection for API"
+#, fuzzy, python-format
+msgid "Export this %s for API"
 msgstr "Exportați această regulă pentru API"
 
 msgid "Export this rule for API"
@@ -34876,6 +34896,14 @@ msgstr "Instantaneu invalid (prea mic)"
 msgid "Invalid start time given"
 msgstr "Ora de începere invalidă dată"
 
+#, fuzzy
+msgid "Invalid state change for host"
+msgstr "Sursă de date invalidă: %s"
+
+#, fuzzy
+msgid "Invalid state change for service"
+msgstr "Modificări de stat ale gazdelor/serviciilor"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
@@ -44141,6 +44169,10 @@ msgstr "Reguli de notificare a utilizatorului %s."
 msgid "Notification rule of user '%s'"
 msgstr "Regula de notificare a utilizatorului \"%s"
 
+#, fuzzy
+msgid "Notification rule successfully edited!"
+msgstr "Gazdă creată cu succes"
+
 msgid "Notification rules"
 msgstr "Norme de notificare"
 
@@ -49069,9 +49101,6 @@ msgstr "Adresa fizică (MAC)"
 msgid "Physical components"
 msgstr "Componente fizice"
 
-msgid "Physical disks"
-msgstr "Discuri fizice"
-
 msgid "Physical port states to discover"
 msgstr "Stări de port fizic de descoperit"
 
@@ -50943,6 +50972,9 @@ msgstr "URL-ul Proxy"
 
 msgid "Proxy host"
 msgstr "Gazdă proxy"
+
+msgid "Proxy host is required but not specified."
+msgstr ""
 
 msgid "Proxy server"
 msgstr "Server Proxy"
@@ -54173,10 +54205,6 @@ msgstr "Pachete de reguli"
 
 msgid "Rule properties"
 msgstr "Proprietăți ale regulilor"
-
-#, fuzzy
-msgid "Rule rendering mode"
-msgstr "Poduri de rulare"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -59383,9 +59411,6 @@ msgstr ""
 msgid "Source name"
 msgstr "Numele sursei"
 
-msgid "Source state can not be equal to target state."
-msgstr ""
-
 msgid "Sources"
 msgstr "Surse"
 
@@ -60271,9 +60296,17 @@ msgstr "Suprafața stivuită"
 msgid "Stacks"
 msgstr "Stive"
 
+#, python-format
+msgid "Stage %s contains invalid form data. Please correct them and try again."
+msgstr ""
+
 #, fuzzy
 msgid "Stage action result not found"
 msgstr "Stare dacă nu se găsește tunelul"
+
+#, python-format
+msgid "Stages %s contain invalid form data. Please correct them and try again."
+msgstr ""
 
 msgid "Stale"
 msgstr "Stale"
@@ -60532,6 +60565,10 @@ msgstr "Starea și numărul de procese"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "Starea și numărul de procese (numai SNMP)"
+
+#, fuzzy
+msgid "State change"
+msgstr "Schimbare de stare"
 
 msgid "State changes of hosts / services"
 msgstr "Modificări de stat ale gazdelor/serviciilor"
@@ -61404,6 +61441,10 @@ msgstr "Etapa a fost începută"
 msgid "Steps"
 msgstr "Pași"
 
+#, python-format
+msgid "Still no data in '%s'"
+msgstr ""
+
 msgid "Still nothing happened."
 msgstr "Tot nu s-a întâmplat nimic."
 
@@ -62073,6 +62114,10 @@ msgstr "Certificat de router SAP"
 
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
+
+#, fuzzy
+msgid "Synthetic KPI Kwds"
+msgstr "Teste sintetice"
 
 msgid "Synthetic Monitoring"
 msgstr "Monitorizare sintetică"
@@ -63568,12 +63613,6 @@ msgstr "Fișierul jurnal"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Numele obiectului MBean's, de exemplu java.lang:type=Memory"
 
-#, python-format
-msgid ""
-"The MIME type of the uploaded file is not supported: %s. Supported file "
-"extensions: .tar.gz, .zip."
-msgstr ""
-
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Numele instanței MSSQL și numele tablespace-ului, separate prin câte un "
@@ -64895,6 +64934,12 @@ msgstr "Fișierul nu pare a fi un fișier iCalendar valid."
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "Extensia fișierului trebuie să fie <tt>.pdf</tt>."
+
+#, python-format
+msgid ""
+"The file extension of the uploaded file is not supported: %s. Supported file "
+"extensions: %s."
+msgstr ""
 
 msgid "The file is empty"
 msgstr "Fișierul este gol"
@@ -68328,10 +68373,6 @@ msgstr ""
 "permisiunea de a vedea serviciile și grupurile din interfața cu "
 "utilizatorul. <b>Nota: </b> Acest lucru nu are <b> nici un</b> impact asupra "
 "notificărilor."
-
-msgid ""
-"These settings only affect features that are currently under development."
-msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -77215,10 +77256,6 @@ msgstr "Tip metric necunoscut %s"
 msgid "Unknown paths"
 msgstr "Trasee necunoscute"
 
-#, python-format
-msgid "Unknown rendering mode %s"
-msgstr "Mod de redare necunoscut %s"
-
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Site necunoscut %s"
@@ -81012,10 +81049,6 @@ msgstr "Schimbarea voluntară a contextului"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch bonding"
-
-#, fuzzy
-msgid "Vue experimental features"
-msgstr "Caracteristica Enterprise"
 
 msgid "VxVM volumes (Linux)"
 msgstr "Volumele VxVM (Linux)"
@@ -87897,6 +87930,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid "Physical disks"
+#~ msgstr "Discuri fizice"
+
+#, fuzzy
+#~ msgid "Rule rendering mode"
+#~ msgstr "Poduri de rulare"
+
+#, python-format
+#~ msgid "Unknown rendering mode %s"
+#~ msgstr "Mod de redare necunoscut %s"
+
+#, fuzzy
+#~ msgid "Vue experimental features"
+#~ msgstr "Caracteristica Enterprise"
+
+#, fuzzy
+#~ msgid "Export this connection for API"
+#~ msgstr "Exportați această regulă pentru API"
+
 #, fuzzy
 #~ msgid "Activate automation helper"
 #~ msgstr "Activarea modificării Scheduler"
@@ -87961,10 +88013,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Invalid conditions"
 #~ msgstr "Acțiune invalidă"
-
-#, fuzzy
-#~ msgid "Invalid data for list"
-#~ msgstr "Sursă de date invalidă: %s"
 
 #, fuzzy
 #~ msgid "Invalid file"
@@ -89309,10 +89357,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Warning (Out)"
 #~ msgstr "Avertisment (Out)"
-
-#, python-format
-#~ msgid "%s operations"
-#~ msgstr "%s operațiuni"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

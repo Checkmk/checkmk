@@ -10678,6 +10678,10 @@ msgstr "単一の選択肢で空のタグIDを使用することはできませ�
 msgid "Can still edit"
 msgstr "まだ編集できます"
 
+#, fuzzy, python-format
+msgid "Can't contact the remote site using '%s'"
+msgstr "リモートサイトに接続できません:%s"
+
 #, python-format
 msgid "Can't parse version %r"
 msgstr "バージョン%rは使用できません"
@@ -12236,6 +12240,10 @@ msgstr ""
 "あるジョブのみをビルドする)のいずれかを選択します。モードが異なる場合、状態は"
 "警告状態に変わります。"
 
+#, fuzzy
+msgid "Choose condition"
+msgstr "条件なし"
+
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -12254,6 +12262,18 @@ msgstr ""
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr ""
 "このルールをプラグインまたはローカルチェックに適用するかどうかを選択します"
+
+#, fuzzy
+msgid "Choose operator"
+msgstr "%s操作"
+
+#, fuzzy
+msgid "Choose password from store"
+msgstr "パスワードストアから"
+
+#, fuzzy
+msgid "Choose password type"
+msgstr "パスワードを変更する"
 
 msgid "Choose single values"
 msgstr "単一の値を選択する"
@@ -12363,6 +12383,10 @@ msgstr "ユニットが[停止]状態にあることを許可する時間レベ�
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr "サービスが[起動]状態にあることを許可する時間レベルを選択します"
+
+#, fuzzy
+msgid "Choose unit"
+msgstr "すべて選択する"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -14092,6 +14116,10 @@ msgstr ""
 
 msgid "Connection"
 msgstr "接続"
+
+#, fuzzy, python-format
+msgid "Connection '%s' isn't found: consider activating changes"
+msgstr "変更のアクティブ化に関するコメント"
 
 msgid "Connection ID"
 msgstr "接続ID"
@@ -16156,9 +16184,6 @@ msgstr "DCDステータス"
 #, fuzzy
 msgid "DCD Batches"
 msgstr "一致"
-
-msgid "DCD Connection is still absent, consider activating changes"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -21312,11 +21337,6 @@ msgstr ""
 "れたtarアーカイブは、バックアップ中に指定されたキーを使用して暗号化されます。"
 "バックアップを復号化するには、秘密鍵とパスフレーズが必要になります。"
 
-msgid ""
-"Enable experimental rendering modes for form specs. Keep in mind thatsome "
-"form specs are always rendered in the frontend, regardless of this setting."
-msgstr ""
-
 msgid "Enable flap detection"
 msgstr "フラップ検出を有効にする"
 
@@ -22940,8 +22960,8 @@ msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "ホスト名に<tt>&lt;HOST&gt;</tt>を含む、作成するエクスポートファイル"
 
-#, fuzzy
-msgid "Export this connection for API"
+#, fuzzy, python-format
+msgid "Export this %s for API"
 msgstr "このルールをAPI用にエクスポートする"
 
 msgid "Export this rule for API"
@@ -33621,6 +33641,14 @@ msgstr "スナップショットが無効です(小さすぎます)"
 msgid "Invalid start time given"
 msgstr "無効な開始時刻が指定されました"
 
+#, fuzzy
+msgid "Invalid state change for host"
+msgstr "無効なデータソース: %s"
+
+#, fuzzy
+msgid "Invalid state change for service"
+msgstr "ホスト/サービスの状態変化"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
@@ -42776,6 +42804,10 @@ msgstr "ユーザー %s の通知ルール"
 msgid "Notification rule of user '%s'"
 msgstr "ユーザー '%s' の通知ルール"
 
+#, fuzzy
+msgid "Notification rule successfully edited!"
+msgstr "ホスト作成に成功しました"
+
 msgid "Notification rules"
 msgstr "通知ルール"
 
@@ -47647,9 +47679,6 @@ msgstr "物理アドレス(MAC)"
 msgid "Physical components"
 msgstr "物理コンポーネント"
 
-msgid "Physical disks"
-msgstr "物理ディスク"
-
 msgid "Physical port states to discover"
 msgstr "検出する物理ポートの状態"
 
@@ -49470,6 +49499,9 @@ msgstr "プロキシURL"
 
 msgid "Proxy host"
 msgstr "プロキシホスト"
+
+msgid "Proxy host is required but not specified."
+msgstr ""
 
 msgid "Proxy server"
 msgstr "プロキシサーバー"
@@ -52700,10 +52732,6 @@ msgstr "ルールパック"
 
 msgid "Rule properties"
 msgstr "ルールのプロパティ"
-
-#, fuzzy
-msgid "Rule rendering mode"
-msgstr "ランニング pod"
 
 #, python-format
 msgid "Rule representation: %s"
@@ -57785,9 +57813,6 @@ msgstr "アラートのソースフィールド。デフォルト値は、着信
 msgid "Source name"
 msgstr "ソース名"
 
-msgid "Source state can not be equal to target state."
-msgstr ""
-
 msgid "Sources"
 msgstr "ソース"
 
@@ -58608,9 +58633,17 @@ msgstr "スタックエリア"
 msgid "Stacks"
 msgstr "スタック"
 
+#, python-format
+msgid "Stage %s contains invalid form data. Please correct them and try again."
+msgstr ""
+
 #, fuzzy
 msgid "Stage action result not found"
 msgstr "トンネルが見つからない場合の状態"
+
+#, python-format
+msgid "Stages %s contain invalid form data. Please correct them and try again."
+msgstr ""
 
 msgid "Stale"
 msgstr "最新化要"
@@ -58877,6 +58910,10 @@ msgstr "プロセスの状態と数"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "プロセスの状態と数(SNMPのみ)"
+
+#, fuzzy
+msgid "State change"
+msgstr "変更されました"
 
 msgid "State changes of hosts / services"
 msgstr "ホスト/サービスの状態変化"
@@ -59728,6 +59765,10 @@ msgstr "ステップが開始されました"
 msgid "Steps"
 msgstr "ステップ"
 
+#, python-format
+msgid "Still no data in '%s'"
+msgstr ""
+
 msgid "Still nothing happened."
 msgstr "それでも何も起こりませんでした。"
 
@@ -60389,6 +60430,10 @@ msgstr "SAPルーター証明書"
 
 msgid "Synology Updates"
 msgstr "Synologyの更新"
+
+#, fuzzy
+msgid "Synthetic KPI Kwds"
+msgstr "Systemdサービス"
 
 #, fuzzy
 msgid "Synthetic Monitoring"
@@ -61833,12 +61878,6 @@ msgstr "ログファイル"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "MBeanのオブジェクト名 例 java.lang:type=Memory"
 
-#, python-format
-msgid ""
-"The MIME type of the uploaded file is not supported: %s. Supported file "
-"extensions: .tar.gz, .zip."
-msgstr ""
-
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr "スペースで区切られたMSSQLインスタンス名とテーブルスペース名。"
 
@@ -63088,6 +63127,12 @@ msgstr "このファイルは有効なiCalendarファイルではないようで
 
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "ファイル拡張子は<tt> .pdf </tt>である必要があります"
+
+#, python-format
+msgid ""
+"The file extension of the uploaded file is not supported: %s. Supported file "
+"extensions: %s."
+msgstr ""
 
 msgid "The file is empty"
 msgstr "ファイルが空です"
@@ -66409,10 +66454,6 @@ msgstr ""
 "これらの設定は、どのような状況でユーザーがユーザー インターフェイスでサービス"
 "やグループを見ることを許可されるかを制御します。<b>注意</b>:これは、通知には"
 "<b>全く</b>影響しません。"
-
-msgid ""
-"These settings only affect features that are currently under development."
-msgstr ""
 
 msgid ""
 "These settings tune, how sensitive the core is to state changes when it "
@@ -75099,10 +75140,6 @@ msgid "Unknown paths"
 msgstr "不明なパス"
 
 #, fuzzy, python-format
-msgid "Unknown rendering mode %s"
-msgstr "不明なメトリックのタイプ %s"
-
-#, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "不明なサイト%s"
 
@@ -78809,10 +78846,6 @@ msgstr "自発的なコンテキストスイッチ"
 
 msgid "Vswitch bonding"
 msgstr "Vswitchボンディング"
-
-#, fuzzy
-msgid "Vue experimental features"
-msgstr "エンタープライズ機能"
 
 msgid "VxVM volumes (Linux)"
 msgstr "VxVMボリューム(Linux)"
@@ -85517,6 +85550,25 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#~ msgid "Physical disks"
+#~ msgstr "物理ディスク"
+
+#, fuzzy
+#~ msgid "Rule rendering mode"
+#~ msgstr "ランニング pod"
+
+#, fuzzy, python-format
+#~ msgid "Unknown rendering mode %s"
+#~ msgstr "不明なメトリックのタイプ %s"
+
+#, fuzzy
+#~ msgid "Vue experimental features"
+#~ msgstr "エンタープライズ機能"
+
+#, fuzzy
+#~ msgid "Export this connection for API"
+#~ msgstr "このルールをAPI用にエクスポートする"
+
 #, fuzzy
 #~ msgid "Activate automation helper"
 #~ msgstr "変更スケジューラをアクティブ化する"
@@ -85592,10 +85644,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Invalid conditions"
 #~ msgstr "無効なアクション"
-
-#, fuzzy
-#~ msgid "Invalid data for list"
-#~ msgstr "無効なデータソース: %s"
 
 #, fuzzy
 #~ msgid "Invalid file"
@@ -86920,10 +86968,6 @@ msgstr ""
 
 #~ msgid "Warning (Out)"
 #~ msgstr "警告(Out)"
-
-#, python-format
-#~ msgid "%s operations"
-#~ msgstr "%s操作"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

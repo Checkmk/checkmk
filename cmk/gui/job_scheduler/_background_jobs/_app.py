@@ -7,7 +7,7 @@ import json
 import os
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
-from logging import Formatter, getLogger, Logger
+from logging import Logger
 from pathlib import Path
 from typing import get_type_hints
 
@@ -39,11 +39,6 @@ def get_application(
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-        # Setting the access log format via config did not work as intended with uvicorn. This
-        # seems to be a known issue: https://github.com/encode/uvicorn/issues/527
-        for h in getLogger("uvicorn.access").handlers:
-            h.setFormatter(Formatter("%(asctime)s %(message)s"))
-
         # The code before `yield` is executed on startup, after `yield` on shutdown
         logger.info("Starting background jobs on_scheduler_start hooks")
         for job_cls in registered_jobs.values():

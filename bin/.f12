@@ -17,6 +17,7 @@ sudo install -m 755 \
     cmk-passwd \
     cmk-piggyback-hub \
     cmk-ui-job-scheduler \
+    cmk-ui-job-scheduler-health \
     cmk-update-config \
     cmk-update-license-usage \
     cmk-validate-config \

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
@@ -12,6 +13,7 @@ from typing import get_type_hints
 
 from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from starlette.responses import Response
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -94,7 +96,7 @@ def get_application(
             raise result.error
         return IsAliveResponse(is_alive=executor.is_alive(payload.job_id).ok)
 
-    @app.get("/health")
+    @app.get("/health", response_class=PrettyJSONResponse)
     async def check_health(request: Request) -> HealthResponse:
         return HealthResponse(
             loaded_at=request.app.state.loaded_at,
@@ -106,6 +108,19 @@ def get_application(
         )
 
     return app
+
+
+class PrettyJSONResponse(Response):
+    media_type = "application/json"
+
+    def render(self, content: object) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=4,
+            separators=(", ", ": "),
+        ).encode("utf-8")
 
 
 def make_process_health() -> ProcessHealth:

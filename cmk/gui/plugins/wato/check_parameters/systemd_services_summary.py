@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -10,102 +12,119 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, ListOf, MonitoringState, RegExp
+from cmk.gui.valuespec import Age, Dictionary, ListOf, Migrate, MonitoringState, RegExp
+
+REQUIRED_STATE_KEYS_AND_STATES = {"active": 0, "inactive": 0, "failed": 2}
 
 
-def _parameter_valuespec_systemd_units_summary() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "states",
-                Dictionary(
-                    title=_("Map systemd states to monitoring states"),
-                    elements=[
-                        (
-                            "active",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is active"),
-                                default_value=0,
+def _migrate(params: dict[str, Any]) -> dict[str, Any]:
+    if "states" not in params:
+        return params
+
+    for key, value in REQUIRED_STATE_KEYS_AND_STATES.items():
+        if key not in params["states"]:
+            params["states"][key] = value
+    return params
+
+
+def _parameter_valuespec_systemd_units_summary() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "states",
+                    Dictionary(
+                        title=_("Map systemd states to monitoring states"),
+                        elements=[
+                            (
+                                "active",
+                                MonitoringState(
+                                    title=_("Monitoring state if unit is active"),
+                                    default_value=0,
+                                ),
                             ),
-                        ),
-                        (
-                            "inactive",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is inactive"),
-                                default_value=0,
+                            (
+                                "inactive",
+                                MonitoringState(
+                                    title=_("Monitoring state if unit is inactive"),
+                                    default_value=0,
+                                ),
                             ),
-                        ),
-                        (
-                            "failed",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is failed"),
-                                default_value=2,
+                            (
+                                "failed",
+                                MonitoringState(
+                                    title=_("Monitoring state if unit is failed"),
+                                    default_value=2,
+                                ),
                             ),
+                        ],
+                        required_keys=list(REQUIRED_STATE_KEYS_AND_STATES.keys()),
+                        default_keys=list(REQUIRED_STATE_KEYS_AND_STATES.keys()),
+                    ),
+                ),
+                (
+                    "states_default",
+                    MonitoringState(
+                        title=_("Monitoring state for any other unit state"),
+                        default_value=2,
+                    ),
+                ),
+                (
+                    "ignored",
+                    ListOf(
+                        valuespec=RegExp(
+                            title=_("Pattern (Regex)"),
+                            size=40,
+                            mode=RegExp.infix,
                         ),
-                    ],
-                ),
-            ),
-            (
-                "states_default",
-                MonitoringState(
-                    title=_("Monitoring state for any other unit state"),
-                    default_value=2,
-                ),
-            ),
-            (
-                "ignored",
-                ListOf(
-                    valuespec=RegExp(
-                        title=_("Pattern (Regex)"),
-                        size=40,
-                        mode=RegExp.infix,
+                        title=_("Exclude units matching provided regex patterns"),
+                        help=_(
+                            "You can optionally define one or multiple regular expressions."
+                            " Matching units are excluded."
+                            " This allows to ignore services which are known to fail beforehand."
+                        ),
+                        add_label=_("Add pattern"),
                     ),
-                    title=_("Exclude units matching provided regex patterns"),
-                    help=_(
-                        "You can optionally define one or multiple regular expressions."
-                        " Matching units are excluded."
-                        " This allows to ignore services which are known to fail beforehand."
-                    ),
-                    add_label=_("Add pattern"),
                 ),
-            ),
-            (
-                "activating_levels",
-                SimpleLevels(
-                    Age,
-                    title=_("Tolerance period for 'activating' state"),
-                    help=_(
-                        "Choose time levels for which a unit is allowed to be in an 'activating' state"
+                (
+                    "activating_levels",
+                    SimpleLevels(
+                        Age,
+                        title=_("Tolerance period for 'activating' state"),
+                        help=_(
+                            "Choose time levels for which a unit is allowed to be in an 'activating' state"
+                        ),
+                        default_levels=(30, 60),
                     ),
-                    default_levels=(30, 60),
                 ),
-            ),
-            (
-                "deactivating_levels",
-                SimpleLevels(
-                    Age,
-                    title=_("Tolerance period for 'deactivating' state"),
-                    help=_(
-                        "Choose time levels (in seconds) for which a unti is allowed to be in an 'deactivating' state"
+                (
+                    "deactivating_levels",
+                    SimpleLevels(
+                        Age,
+                        title=_("Tolerance period for 'deactivating' state"),
+                        help=_(
+                            "Choose time levels (in seconds) for which a unti is allowed to be in an 'deactivating' state"
+                        ),
+                        default_value=(30, 60),
                     ),
-                    default_value=(30, 60),
                 ),
-            ),
-            (
-                "reloading_levels",
-                SimpleLevels(
-                    Age,
-                    title=_("Tolerance period for 'reloading' state"),
-                    help=_(
-                        "Choose time levels (in seconds) for which a unit is allowed to be in a 'reloading' state"
+                (
+                    "reloading_levels",
+                    SimpleLevels(
+                        Age,
+                        title=_("Tolerance period for 'reloading' state"),
+                        help=_(
+                            "Choose time levels (in seconds) for which a unit is allowed to be in a 'reloading' state"
+                        ),
+                        default_value=(30, 60),
                     ),
-                    default_value=(30, 60),
                 ),
+            ],
+            help=_(
+                "This ruleset only applies to the summary Systemd service and not the individual one."
             ),
-        ],
-        help=_(
-            "This ruleset only applies to the summary Systemd service and not the individual one."
         ),
+        migrate=_migrate,
     )
 
 

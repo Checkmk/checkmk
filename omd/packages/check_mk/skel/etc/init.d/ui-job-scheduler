@@ -48,7 +48,7 @@ case "$1" in
         echo -n 'Starting ui-job-scheduler...'
         # shellcheck disable=SC2086 # Yes, we want splitting for OPTS.
         if process_is_running; then
-            exit_successfully 'Already running.'
+            exit_successfully 'already running.'
         fi
 
         if "$DAEMON"; then

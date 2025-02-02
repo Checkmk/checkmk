@@ -41,7 +41,7 @@ case "$1" in
     start)
         printf 'Starting redis...'
         if process_is_running; then
-            exit_successfully 'already running'
+            exit_successfully 'already running.'
         fi
 
         if "$DAEMON" "$CONF"; then

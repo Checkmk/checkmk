@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from logging import Logger
+from pathlib import Path
 
-import gunicorn.app.base  # type: ignore[import-untyped]
+import uvicorn
 from fastapi import FastAPI
 
 from ._config import ServerConfig
@@ -14,26 +17,71 @@ from ._config import ServerConfig
 def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
     logger.info("Starting background job server")
     try:
-        _ApplicationServer(app, config).run()
+        with fix_uvicorn_unix_socket_permissions(config.unix_socket):
+            uvicorn.run(
+                app,
+                uds=str(config.unix_socket),
+                log_config={
+                    "version": 1,
+                    "disable_existing_loggers": False,
+                    "formatters": {
+                        "default": {
+                            "()": "uvicorn.logging.DefaultFormatter",
+                            "fmt": "%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s",
+                            "use_colors": None,
+                        },
+                        "access": {
+                            "()": "uvicorn.logging.AccessFormatter",
+                            "fmt": "%(asctime)s %(message)s",
+                        },
+                    },
+                    "handlers": {
+                        "default": {
+                            "class": "logging.FileHandler",
+                            "filename": str(config.error_log),
+                            "formatter": "default",
+                        },
+                        "access": {
+                            "class": "logging.FileHandler",
+                            "filename": str(config.access_log),
+                            "formatter": "access",
+                        },
+                    },
+                    "loggers": {
+                        "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
+                        "uvicorn.error": {"level": "INFO"},
+                        "uvicorn.access": {
+                            "handlers": ["access"],
+                            "level": "INFO",
+                            "propagate": False,
+                        },
+                    },
+                },
+            )
     finally:
         logger.info("Stopped background job server")
 
 
-class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
-    def __init__(self, app: FastAPI, config: ServerConfig) -> None:
-        self._app = app
-        self._config = config
-        super().__init__()
+@contextmanager
+def fix_uvicorn_unix_socket_permissions(unix_socket: Path) -> Iterator[None]:
+    """Correct unix socket permissions
 
-    def load_config(self) -> None:
-        self.cfg.set("proc_name", "ui-job-scheduler")
-        self.cfg.set("umask", 0o077)
-        self.cfg.set("bind", f"unix:{self._config.unix_socket}")
-        self.cfg.set("worker_class", "uvicorn.workers.UvicornWorker")
-        self.cfg.set("accesslog", str(self._config.access_log))
-        self.cfg.set("errorlog", str(self._config.error_log))
-        # clients can dynamically set a timeout per request
-        self.cfg.set("timeout", 0)
+    Uvicorn hard codes permissions of the unix socket to 0o600 on creation, without providing a way
+    to configure this. We try to change this as soon as possible after creation of the socket.
 
-    def load(self) -> FastAPI:
-        return self._app
+    Unfortunately this is a bit of a hack which may influence other instances of uvicorn running if
+    called from the same process. Better would be to have the permissions configurable in uvicorn
+    itself. If this turns out to be a bad approach, consider doing so.
+    """
+    orig_main_loop = uvicorn.server.Server.main_loop
+
+    try:
+
+        async def new_main_loop(self: uvicorn.server.Server) -> None:
+            unix_socket.chmod(0o600)
+            await orig_main_loop(self)
+
+        uvicorn.server.Server.main_loop = new_main_loop  # type: ignore[method-assign]
+        yield
+    finally:
+        uvicorn.server.Server.main_loop = orig_main_loop  #  type: ignore[method-assign]

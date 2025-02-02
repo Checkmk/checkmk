@@ -44,11 +44,7 @@ import cmk.utils.paths
 from cmk.utils.log import console
 
 import cmk.base.utils
-from cmk.base import config, profiling
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
+from cmk.base import profiling
 from cmk.base.modes import modes
 
 from cmk import trace
@@ -132,23 +128,6 @@ try:
             raise TypeError()
         help_function()
         sys.exit(0)
-
-    # At least in case the config is needed, the checks are needed too, because
-    # the configuration may refer to check config variable names.
-    if mode_name not in modes.non_checks_options():
-        errors = config.load_all_plugins(
-            local_checks_dir=cmk.utils.paths.local_checks_dir,
-            checks_dir=cmk.utils.paths.checks_dir,
-        )
-        if sys.stderr.isatty():
-            for error_msg in errors:
-                console.error(error_msg, file=sys.stderr)
-
-    # Read the configuration files (main.mk, autochecks, etc.), but not for
-    # certain operation modes that does not need them and should not be harmed
-    # by a broken configuration
-    if mode_name not in modes.non_config_options():
-        config.load(extract_known_discovery_rulesets(get_previously_loaded_plugins()))
 
     done, exit_status = False, 0
     if mode_name is not None and mode_args is not None:

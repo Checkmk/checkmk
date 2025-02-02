@@ -136,20 +136,6 @@ class Modes:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def non_config_options(self) -> list[str]:
-        options: list[str] = []
-        for mode in self._modes:
-            if not mode.needs_config:
-                options += mode.options()
-        return options
-
-    def non_checks_options(self) -> list[str]:
-        options: list[str] = []
-        for mode in self._modes:
-            if not mode.needs_checks:
-                options += mode.options()
-        return options
-
     def parse_hostname_list(
         self,
         config_cache: ConfigCache,
@@ -356,8 +342,6 @@ class Mode(Option):
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         long_help: list[str] | None = None,
-        needs_config: bool,
-        needs_checks: bool,
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
@@ -371,8 +355,6 @@ class Mode(Option):
             handler_function=handler_function,
         )
         self.long_help = long_help
-        self.needs_config = needs_config
-        self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
     def short_getopt_specs(self) -> list[str]:

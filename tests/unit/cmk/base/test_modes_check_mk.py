@@ -12,6 +12,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.fetchers import PiggybackFetcher
 
+from cmk.base import config
 from cmk.base.modes import check_mk
 
 
@@ -27,6 +28,10 @@ class TestModeDumpAgent:
     @pytest.fixture
     def raw_data(self, hostname):
         return b"<<<check_mk>>>\nraw data"
+
+    @pytest.fixture
+    def patch_config_load(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(config, config.load.__name__, lambda *a, **kw: None)
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
@@ -48,6 +53,7 @@ class TestModeDumpAgent:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
+    @pytest.mark.usefixtures("patch_config_load")
     def test_success(
         self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
     ) -> None:

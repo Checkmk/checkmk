@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import (
+    AddressFamily,
     BodyRegex,
     CertificateValidity,
     Document,
@@ -621,6 +622,42 @@ EXAMPLE_79: Mapping[str, object] = {
     "mode": ("url", {"ssl": "ssl_1_3"}),
 }
 
+EXAMPLE_80: Mapping[str, object] = {
+    "name": "address_family",
+    "host": {
+        "address": ("direct", "[::1]"),
+        "address_family": "any",
+    },
+    "mode": ("url", {}),
+}
+
+EXAMPLE_81: Mapping[str, object] = {
+    "name": "address_family",
+    "host": {
+        "address": ("direct", "[::1]"),
+        "address_family": "ipv4_enforced",
+    },
+    "mode": ("url", {}),
+}
+
+EXAMPLE_82: Mapping[str, object] = {
+    "name": "address_family",
+    "host": {
+        "address": ("direct", "[::1]"),
+        "address_family": "primary_enforced",
+    },
+    "mode": ("url", {}),
+}
+
+EXAMPLE_83: Mapping[str, object] = {
+    "name": "address_family",
+    "host": {
+        "address": ("direct", "[::1]"),
+        "address_family": "ipv6_enforced",
+    },
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -671,6 +708,10 @@ EXAMPLE_79: Mapping[str, object] = {
         EXAMPLE_77,
         EXAMPLE_78,
         EXAMPLE_79,
+        EXAMPLE_80,
+        EXAMPLE_81,
+        EXAMPLE_82,
+        EXAMPLE_83,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -1184,3 +1225,25 @@ def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> Non
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].service_name == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, AddressFamily.ANY),
+        (EXAMPLE_80, AddressFamily.ANY),
+        (EXAMPLE_81, AddressFamily.IPV4),
+        (EXAMPLE_82, AddressFamily.PRIMARY),
+        (EXAMPLE_83, AddressFamily.IPV6),
+    ],
+)
+def test_migrate_address_family(rule_value: Mapping[str, object], expected: object) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.address_family == expected

@@ -41,9 +41,9 @@ def _classify(host: str) -> HostType:
 
 class V1Host(BaseModel, extra="forbid"):
     address: tuple[Literal["direct"], str]
-    # "ipv4_enforced", "ipv6_enforced", "primary_enforced" don't have a counter part in V2.
-    # "primary_enforced" has the additional issue, that the ssc would also need to support it.
-    address_family: Literal["any", None] = None
+    address_family: Literal["any", "ipv4_enforced", "ipv6_enforced", "primary_enforced", None] = (
+        None
+    )
     # If this field is unspecified, it will set depending on the `virtual host`, if check_cert is
     # true, if client_cert is true, client private key or -S is enabled. On redirect new ports might
     # be defined. This behaviour will not transfer to the new check, most likely.
@@ -182,7 +182,7 @@ def _migrate_expect_response(response: list[str]) -> list[int]:
 
 
 def _migrate_url_params(
-    url_params: V1Url,
+    url_params: V1Url, address_family: str
 ) -> tuple[Literal["http", "https"], str, Mapping[str, object]]:
     path = url_params.uri or ""
     match url_params.ssl:
@@ -324,6 +324,7 @@ def _migrate_url_params(
                 **add_headers,
                 **auth,
                 **redirects,
+                "address_family": address_family,
             },
             **server_response,
             **response_time,
@@ -340,10 +341,11 @@ def _migrate_url_params(
     )
 
 
-def _migrate_cert_params(cert_params: V1Cert) -> Mapping[str, object]:
+def _migrate_cert_params(cert_params: V1Cert, address_family: str) -> Mapping[str, object]:
     return {
         "connection": {
             "method": ("get", None),
+            "address_family": address_family,
         },
         "cert": ("validate", cert_params.cert_days),
     }
@@ -358,11 +360,25 @@ def _migrate_name(name: str) -> Mapping[str, object]:
 
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
     port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
+    match rule_value.host.address_family:
+        case "any":
+            address_family = "any"
+        case "ipv4_enforced":
+            address_family = "ipv4"
+        case "ipv6_enforced":
+            address_family = "ipv6"
+        case "primary_enforced":
+            address_family = "primary"
+        case None:
+            address_family = "any"
     if isinstance(rule_value.mode[1], V1Cert):
-        scheme, path, settings = "https", "", _migrate_cert_params(rule_value.mode[1])
+        scheme, path, settings = (
+            "https",
+            "",
+            _migrate_cert_params(rule_value.mode[1], address_family),
+        )
     else:
-        scheme, path, settings = _migrate_url_params(rule_value.mode[1])
-
+        scheme, path, settings = _migrate_url_params(rule_value.mode[1], address_family)
     return {
         "endpoints": [
             {

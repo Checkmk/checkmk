@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.gui.cron import CronJob
-from cmk.gui.job_scheduler._scheduler import run_scheduled_jobs
+from cmk.gui.job_scheduler._scheduler import run_scheduled_jobs, SchedulerState
 
 
 def reraise_exception(exc: Exception) -> str:
@@ -22,7 +22,7 @@ def test_run_scheduled_jobs() -> None:
         "job1": 0,
         "job2": 0,
     }
-    job_threads: dict[str, threading.Thread] = {}
+    state = SchedulerState()
     jobs = [
         CronJob(
             name="job1",
@@ -37,30 +37,33 @@ def test_run_scheduled_jobs() -> None:
     ]
 
     with time_machine.travel(datetime.fromtimestamp(0, tz=UTC), tick=False):
-        run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+        run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
     assert called["job1"] == 1
     assert called["job2"] == 1
-    assert not job_threads
+    assert not state.running_jobs
+    assert state.job_executions == {"job1": 1, "job2": 1}
 
     with time_machine.travel(datetime.fromtimestamp(60, tz=UTC), tick=False):
-        run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+        run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
     assert called["job1"] == 2
     assert called["job2"] == 1
-    assert not job_threads
+    assert not state.running_jobs
+    assert state.job_executions == {"job1": 2, "job2": 1}
 
     with time_machine.travel(datetime.fromtimestamp(300, tz=UTC), tick=False):
-        run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+        run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
     assert called["job1"] == 3
     assert called["job2"] == 2
-    assert not job_threads
+    assert not state.running_jobs
+    assert state.job_executions == {"job1": 3, "job2": 2}
 
 
 def test_run_scheduled_jobs_in_thread() -> None:
     called = threading.Event()
-    job_threads: dict[str, threading.Thread] = {}
+    state = SchedulerState()
     jobs = [
         CronJob(
             name="threaded_job",
@@ -70,11 +73,12 @@ def test_run_scheduled_jobs_in_thread() -> None:
         ),
     ]
 
-    run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+    run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
-    assert "threaded_job" in job_threads
-    job_threads["threaded_job"].join()
+    assert "threaded_job" in state.running_jobs
+    state.running_jobs["threaded_job"].join()
     assert called.is_set()
+    assert state.job_executions == {"threaded_job": 1}
 
 
 @pytest.mark.skip(reason="test is flaky")
@@ -82,7 +86,7 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     shall_terminate = threading.Event()
-    job_threads: dict[str, threading.Thread] = {}
+    state = SchedulerState()
 
     jobs = [
         CronJob(
@@ -95,16 +99,17 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
 
     try:
         with time_machine.travel(datetime.fromtimestamp(60, tz=UTC), tick=False):
-            run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+            run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
         with (
             time_machine.travel(datetime.fromtimestamp(180, tz=UTC), tick=False),
             caplog.at_level("DEBUG", "cmk.web"),
         ):
-            run_scheduled_jobs(jobs, job_threads, crash_report_callback=reraise_exception)
+            run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
         assert any("is already running" in r.message for r in caplog.records)
     finally:
         shall_terminate.set()
-        assert "threaded_job" in job_threads
-        job_threads["threaded_job"].join()
+        assert "threaded_job" in state.running_jobs
+        state.running_jobs["threaded_job"].join()
+        assert state.job_executions == {"threaded_job": 1}

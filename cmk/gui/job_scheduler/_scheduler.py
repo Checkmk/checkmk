@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import datetime
 import logging
 import threading
 import time
+from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from cmk.ccc import store
@@ -25,12 +29,14 @@ tracer = trace.get_tracer()
 
 
 def run_scheduler_threaded(
-    crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
+    crash_report_callback: Callable[[Exception], str],
+    stop_event: threading.Event,
+    state: SchedulerState,
 ) -> threading.Thread:
     logger.info("Starting scheduler thread")
     t = threading.Thread(
         target=_run_scheduler,
-        args=(crash_report_callback, stop_event),
+        args=(crash_report_callback, stop_event, state),
         name="scheduler",
     )
     t.start()
@@ -38,19 +44,18 @@ def run_scheduler_threaded(
 
 
 def _run_scheduler(
-    crash_report_callback: Callable[[Exception], str], stop_event: threading.Event
+    crash_report_callback: Callable[[Exception], str],
+    stop_event: threading.Event,
+    state: SchedulerState,
 ) -> None:
-    job_threads: dict[str, threading.Thread] = {}
     logger.info("Started scheduler")
     while not stop_event.is_set():
         try:
             cycle_start = time.time()
-            _collect_finished_threads(job_threads)
+            _collect_finished_threads(state.running_jobs)
 
             try:
-                run_scheduled_jobs(
-                    list(cron_job_registry.values()), job_threads, crash_report_callback
-                )
+                run_scheduled_jobs(list(cron_job_registry.values()), state, crash_report_callback)
             except Exception as exc:
                 crash_msg = crash_report_callback(exc)
                 logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
@@ -63,7 +68,7 @@ def _run_scheduler(
             store.release_all_locks()
 
     logger.info("Waiting for jobs to finish")
-    _wait_for_job_threads(job_threads)
+    _wait_for_job_threads(state.running_jobs)
     logger.info("Stopped scheduler")
 
 
@@ -95,14 +100,14 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
 @tracer.instrument()
 def run_scheduled_jobs(
     jobs: Sequence[CronJob],
-    job_threads: dict[str, threading.Thread],
+    state: SchedulerState,
     crash_report_callback: Callable[[Exception], str],
 ) -> None:
     logger.debug("Starting cron jobs")
 
     for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
         try:
-            if job.name in job_threads:
+            if job.name in state.running_jobs:
                 logger.debug("Skipping [%s] as it is already running", job.name)
                 continue
 
@@ -114,9 +119,10 @@ def run_scheduled_jobs(
                     "cmk.gui.job_interval": str(job.interval.total_seconds()),
                 },
             ) as span:
+                state.job_executions[job.name] += 1
                 if job.run_in_thread:
                     logger.debug("Starting [%s] in thread", job.name)
-                    job_threads[job.name] = thread = threading.Thread(
+                    state.running_jobs[job.name] = thread = threading.Thread(
                         target=job_thread_main,
                         args=(
                             job,
@@ -172,14 +178,21 @@ def job_thread_main(
 
 
 @tracer.instrument()
-def _wait_for_job_threads(job_threads: dict[str, threading.Thread]) -> None:
+def _wait_for_job_threads(running_jobs: dict[str, threading.Thread]) -> None:
     logger.debug("Waiting for threads to terminate")
-    for thread in job_threads.values():
+    for job_name, thread in list(running_jobs.items()):
         thread.join()
+        del running_jobs[job_name]
 
 
-def _collect_finished_threads(job_threads: dict[str, threading.Thread]) -> None:
-    for job_name, thread in list(job_threads.items()):
+def _collect_finished_threads(running_jobs: dict[str, threading.Thread]) -> None:
+    for job_name, thread in list(running_jobs.items()):
         if not thread.is_alive():
             logger.debug("Removing finished thread [%s]", job_name)
-            del job_threads[job_name]
+            del running_jobs[job_name]
+
+
+@dataclass
+class SchedulerState:
+    running_jobs: dict[str, threading.Thread] = field(default_factory=dict)
+    job_executions: Counter[str] = field(default_factory=Counter)

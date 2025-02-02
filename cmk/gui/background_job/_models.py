@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 from pydantic import BaseModel
 
 from ._interface import JobTarget, SpanContextModel
@@ -53,7 +55,13 @@ class BackgroundJobsHealth(BaseModel, frozen=True):
     job_executions: dict[str, int]
 
 
+class ScheduledJobsHealth(BaseModel, frozen=True):
+    running_jobs: Sequence[str]
+    job_executions: Mapping[str, int]
+
+
 class HealthResponse(BaseModel, frozen=True):
     loaded_at: int
     process: ProcessHealth
     background_jobs: BackgroundJobsHealth
+    scheduled_jobs: ScheduledJobsHealth

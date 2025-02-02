@@ -24,10 +24,12 @@ from cmk.gui.background_job import (
     JobExecutor,
     JobTarget,
     ProcessHealth,
+    ScheduledJobsHealth,
     StartRequest,
     StartResponse,
     TerminateRequest,
 )
+from cmk.gui.job_scheduler._scheduler import SchedulerState
 
 
 def get_application(
@@ -36,6 +38,7 @@ def get_application(
     registered_jobs: Mapping[str, type[BackgroundJob]],
     executor: JobExecutor,
     process_health: Callable[[], ProcessHealth],
+    scheduler_state: SchedulerState,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -99,6 +102,10 @@ def get_application(
             background_jobs=BackgroundJobsHealth(
                 running_jobs=executor.all_running_jobs(),
                 job_executions=executor.job_executions(),
+            ),
+            scheduled_jobs=ScheduledJobsHealth(
+                running_jobs=list(scheduler_state.running_jobs.keys()),
+                job_executions=dict(scheduler_state.job_executions),
             ),
         )
 

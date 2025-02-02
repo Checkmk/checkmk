@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import threading
+from collections import Counter
 
 from fastapi.testclient import TestClient
 
@@ -26,6 +28,7 @@ from cmk.gui.background_job import (
     TerminateRequest,
 )
 from cmk.gui.job_scheduler._background_jobs._app import get_application
+from cmk.gui.job_scheduler._scheduler import SchedulerState
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +94,10 @@ def _get_test_client(loaded_at: int) -> TestClient:
             ),
             registered_jobs={"hello_job": HelloJob},
             executor=DummyExecutor(logger),
+            scheduler_state=SchedulerState(
+                running_jobs={"scheduled_1": threading.Thread()},
+                job_executions=Counter({"scheduled_1": 1, "scheduled_2": 2}),
+            ),
         )
     )
 
@@ -164,6 +171,8 @@ def test_health_check() -> None:
     )
     assert response.background_jobs.running_jobs == {"job_id": 42}
     assert response.background_jobs.job_executions == {"job_1": 1, "job_2": 2}
+    assert response.scheduled_jobs.running_jobs == ["scheduled_1"]
+    assert response.scheduled_jobs.job_executions == {"scheduled_1": 1, "scheduled_2": 2}
 
 
 def test_on_scheduler_start_executed() -> None:

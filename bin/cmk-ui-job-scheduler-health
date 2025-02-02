@@ -1,0 +1,5 @@
+#!/bin/bash
+curl \
+    --silent \
+    --unix-socket "$OMD_ROOT"/tmp/run/ui-job-scheduler.sock \
+    http://localhost/health && echo

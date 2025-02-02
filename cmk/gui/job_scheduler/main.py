@@ -32,7 +32,7 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 
 from ._background_jobs import default_config, get_application, make_process_health, run_server
-from ._scheduler import run_scheduler_threaded
+from ._scheduler import run_scheduler_threaded, SchedulerState
 
 """Runs and observes regular jobs in the cmk.gui context"""
 
@@ -102,7 +102,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                 raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
 
             scheduler_thread = run_scheduler_threaded(
-                crash_report_callback, (stop_event := threading.Event())
+                crash_report_callback,
+                (stop_event := threading.Event()),
+                (scheduler_state := SchedulerState()),
             )
 
             try:
@@ -114,6 +116,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                         process_health=make_process_health,
                         registered_jobs=dict(job_registry.items()),
                         executor=ThreadedJobExecutor(logger),
+                        scheduler_state=scheduler_state,
                     ),
                     logger,
                 )

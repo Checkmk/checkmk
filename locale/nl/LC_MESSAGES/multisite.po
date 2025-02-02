@@ -35491,6 +35491,10 @@ msgstr "Klus geklaard"
 msgid "Job name"
 msgstr "Naam van de baan"
 
+#, fuzzy
+msgid "Job scheduler"
+msgstr "Rapportplanner"
+
 msgid "Job score"
 msgstr "Baan score"
 
@@ -65344,6 +65348,12 @@ msgstr "De opdracht \"%s\" is gecodeerd"
 
 msgid "The job has been deleted."
 msgstr "De opdracht is verwijderd."
+
+#, python-format
+msgid ""
+"The job scheduler manages regularly running tasks and the execution of "
+"background jobs. Log entries of this component are written to <tt>%s</tt>."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"

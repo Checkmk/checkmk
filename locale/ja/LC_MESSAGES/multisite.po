@@ -34304,6 +34304,10 @@ msgstr "ジョブ終了"
 msgid "Job name"
 msgstr "ジョブ名"
 
+#, fuzzy
+msgid "Job scheduler"
+msgstr "レポートスケジューラ"
+
 msgid "Job score"
 msgstr "ジョブスコア"
 
@@ -63661,6 +63665,12 @@ msgstr "ジョブ \"%s\" は暗号化されています"
 
 msgid "The job has been deleted."
 msgstr "ジョブが削除されました。"
+
+#, python-format
+msgid ""
+"The job scheduler manages regularly running tasks and the execution of "
+"background jobs. Log entries of this component are written to <tt>%s</tt>."
+msgstr ""
 
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"

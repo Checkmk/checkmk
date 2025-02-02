@@ -35479,6 +35479,10 @@ msgstr "Trabalho concluído"
 msgid "Job name"
 msgstr "Nome do trabalho"
 
+#, fuzzy
+msgid "Job scheduler"
+msgstr "Agendador de relatórios"
+
 msgid "Job score"
 msgstr "Nota do trabalho"
 
@@ -65322,6 +65326,12 @@ msgstr "O trabalho \"%s\" é criptografado"
 
 msgid "The job has been deleted."
 msgstr "O trabalho foi apagado."
+
+#, python-format
+msgid ""
+"The job scheduler manages regularly running tasks and the execution of "
+"background jobs. Log entries of this component are written to <tt>%s</tt>."
+msgstr ""
 
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"

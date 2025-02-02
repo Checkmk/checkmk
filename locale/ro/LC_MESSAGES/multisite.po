@@ -35574,6 +35574,10 @@ msgstr "Lucru terminat"
 msgid "Job name"
 msgstr "Numele postului"
 
+#, fuzzy
+msgid "Job scheduler"
+msgstr "Programator de rapoarte"
+
 msgid "Job score"
 msgstr "Punctaj de muncă"
 
@@ -65497,6 +65501,12 @@ msgstr "Job-ul \"%s\" este criptat"
 
 msgid "The job has been deleted."
 msgstr "Sarcina a fost ștearsă."
+
+#, python-format
+msgid ""
+"The job scheduler manages regularly running tasks and the execution of "
+"background jobs. Log entries of this component are written to <tt>%s</tt>."
+msgstr ""
 
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"

@@ -75,8 +75,11 @@ class V1PageSize(BaseModel, extra="forbid"):
     maximum: int
 
 
+SimpleLevelsFloat = tuple[Literal["fixed"], tuple[float, float]] | tuple[Literal["no_levels"], None]
+
+
 class V1Cert(BaseModel, extra="forbid"):
-    cert_days: tuple[Literal["fixed"], tuple[float, float]] | tuple[Literal["no_levels"], None]
+    cert_days: SimpleLevelsFloat
 
 
 class V1Url(BaseModel, extra="forbid"):
@@ -92,7 +95,7 @@ class V1Url(BaseModel, extra="forbid"):
         ]
         | None
     ) = None
-    response_time: tuple[float, float] | None = None
+    response_time: SimpleLevelsFloat | None = None
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: list[str] | None = None
@@ -204,8 +207,8 @@ def _migrate_url_params(
     match url_params.response_time:
         case None:
             response_time: Mapping[str, object] = {}
-        case (warn_milli, crit_milli):
-            response_time = {"response_time": ("fixed", (warn_milli / 1000, crit_milli / 1000))}
+        case levels:
+            response_time = {"response_time": levels}
     match url_params.timeout:
         case None:
             timeout: Mapping[str, object] = {}

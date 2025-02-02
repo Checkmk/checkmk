@@ -44,7 +44,7 @@ EXAMPLE_1 = {
         "url",
         {
             "ssl": "ssl_1_2",
-            "response_time": (100.0, 200.0),
+            "response_time": ("fixed", (0.1, 0.2)),
         },
     ),
 }
@@ -231,7 +231,7 @@ EXAMPLE_27: Mapping[str, object] = {
 EXAMPLE_28: Mapping[str, object] = {
     "name": "response_time",
     "host": {"address": ("direct", "[::1]")},
-    "mode": ("url", {"response_time": (0.0, 0.0)}),
+    "mode": ("url", {"response_time": ("fixed", (0.0, 0.0))}),
 }
 
 EXAMPLE_29: Mapping[str, object] = {
@@ -658,11 +658,18 @@ EXAMPLE_83: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_85: Mapping[str, object] = {
+    "name": "response_time",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"response_time": ("no_levels", None)}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
     [
         EXAMPLE_1,
+        EXAMPLE_2,
         EXAMPLE_12,
         EXAMPLE_15,
         EXAMPLE_16,
@@ -712,6 +719,7 @@ EXAMPLE_83: Mapping[str, object] = {
         EXAMPLE_81,
         EXAMPLE_82,
         EXAMPLE_83,
+        EXAMPLE_85,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -931,7 +939,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 @pytest.mark.parametrize(
     "rule_value",
     [
-        EXAMPLE_2,
         EXAMPLE_3,
         EXAMPLE_4,
         EXAMPLE_5,
@@ -968,8 +975,10 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     "rule_value, expected",
     [
         (EXAMPLE_1, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_2, (LevelsType.FIXED, (0.1, 0.2))),
         (EXAMPLE_27, None),
         (EXAMPLE_28, (LevelsType.FIXED, (0.0, 0.0))),
+        (EXAMPLE_85, (LevelsType.NO_LEVELS, None)),
     ],
 )
 def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:

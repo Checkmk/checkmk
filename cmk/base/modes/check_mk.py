@@ -408,6 +408,8 @@ modes.register(
                 short_help="Include offline hosts",
             ),
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -460,6 +462,8 @@ modes.register(
         argument_optional=True,
         short_help="List hosts having certain tags",
         long_help=["Prints all hosts that have all of the specified tags at once."],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -576,6 +580,7 @@ modes.register(
         long_option="list-checks",
         short_option="L",
         handler_function=mode_list_checks,
+        needs_checks=True,
         needs_config=False,
         short_help="List all available Check_MK checks",
     )
@@ -745,6 +750,8 @@ modes.register(
             "Does not work on clusters but only on real hosts. "
         ],
         sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -795,6 +802,8 @@ modes.register(
             "about one, several or all hosts. It shows all services, hostgroups, "
             "contacts and other information about that host.",
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -898,6 +907,8 @@ modes.register(
         long_option="update-dns-cache",
         handler_function=mode_update_dns_cache,
         short_help="Update IP address lookup cache",
+        needs_config=True,  # really?
+        needs_checks=True,  # really?
     )
 )
 
@@ -924,6 +935,8 @@ modes.register(
         long_option="cleanup-piggyback",
         handler_function=mode_cleanup_piggyback,
         short_help="Cleanup outdated piggyback files",
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1140,6 +1153,8 @@ modes.register(
                 "You can specify this option multiple times.",
             ),
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1210,6 +1225,8 @@ modes.register(
             "no host is given, all known SNMP hosts are queried."
         ],
         sub_options=[_SNMP_BACKEND_OPTION],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1322,7 +1339,6 @@ modes.register(
         argument=True,
         argument_descr="HOST1 HOST2...",
         argument_optional=True,
-        needs_config=True,
         short_help="Flush all data of some or all hosts",
         long_help=[
             "Deletes all runtime data belonging to a host. This includes "
@@ -1330,6 +1346,8 @@ modes.register(
             "cached agent output, and logfiles. Precompiled host checks "
             "are not deleted.",
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1414,6 +1432,8 @@ modes.register(
             "of hosts. In that case the configuration is generated only for "
             "that hosts (useful for debugging).",
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1475,6 +1495,8 @@ modes.register(
             "and the configuration for the Core helper processes is being created.",
             "The Agent Bakery is updating the agents.",
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1526,6 +1548,8 @@ modes.register(
         ],
         handler_function=mode_restart,
         short_help="Create core config + core restart",
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1577,6 +1601,8 @@ modes.register(
         ],
         handler_function=mode_reload,
         short_help="Create core config + core reload",
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -1977,6 +2003,8 @@ def register_mode_check_discovery(
                 "autodiscovery"
             ],
             sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
+            needs_config=True,
+            needs_checks=True,
         )
     )
 
@@ -2297,6 +2325,8 @@ modes.register(
                 short_help="Restrict discovery to host labels only",
             ),
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -2543,6 +2573,8 @@ def register_mode_check(
                 _get_plugins_option(CheckPluginName),
                 _option_detect_plugins,
             ],
+            needs_config=True,
+            needs_checks=True,
         )
     )
 
@@ -2731,6 +2763,8 @@ modes.register(
             _get_plugins_option(InventoryPluginName),
             _option_detect_plugins,
         ],
+        needs_config=True,
+        needs_checks=True,
     )
 )
 
@@ -3001,6 +3035,8 @@ def register_mode_inventory_as_check(
                     short_help="Use monitoring state S for NW changes",
                 ),
             ],
+            needs_config=True,
+            needs_checks=True,
         )
     )
 
@@ -3135,6 +3171,7 @@ modes.register(
             "in the previous run",
         ],
         sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
+        needs_checks=True,
         needs_config=False,
     )
 )

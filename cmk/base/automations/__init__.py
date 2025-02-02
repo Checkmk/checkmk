@@ -157,8 +157,8 @@ class Automations:
 
 class Automation(abc.ABC):
     cmd: str | None = None
-    needs_checks = False
-    needs_config = False
+    needs_checks: bool
+    needs_config: bool
 
     @abc.abstractmethod
     def execute(

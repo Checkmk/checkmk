@@ -356,8 +356,8 @@ class Mode(Option):
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         long_help: list[str] | None = None,
-        needs_config: bool = True,
-        needs_checks: bool = True,
+        needs_config: bool,
+        needs_checks: bool,
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(

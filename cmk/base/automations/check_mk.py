@@ -1735,6 +1735,8 @@ class ABCDeleteHosts:
 
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
+    needs_checks = False
+    needs_config = False
 
     def execute(
         self,
@@ -1782,6 +1784,8 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
     local site and are now handled by a remote site"""
 
     cmd = "delete-hosts-known-remote"
+    needs_config = False
+    needs_checks = False
 
     def execute(
         self,

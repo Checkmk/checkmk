@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 
 # * Ceph-dump containing "Systemd Service Summary" changing between 2.2.0 and 2.3.0 due to
 #   commit 7206301e6.
+# * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
 SKIPPED_DUMPS = [
     "agent-2.2.0p8-ceph-17.2.6",
+    "agent-2.2.0p14-proxmox",
 ]
 
 

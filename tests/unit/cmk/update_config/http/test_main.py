@@ -658,7 +658,7 @@ EXAMPLE_83: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
-EXAMPLE_85: Mapping[str, object] = {
+EXAMPLE_84: Mapping[str, object] = {
     "name": "response_time",
     "host": {"address": ("direct", "[::1]")},
     "mode": ("url", {"response_time": ("no_levels", None)}),
@@ -719,7 +719,7 @@ EXAMPLE_85: Mapping[str, object] = {
         EXAMPLE_81,
         EXAMPLE_82,
         EXAMPLE_83,
-        EXAMPLE_85,
+        EXAMPLE_84,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -978,7 +978,7 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         (EXAMPLE_2, (LevelsType.FIXED, (0.1, 0.2))),
         (EXAMPLE_27, None),
         (EXAMPLE_28, (LevelsType.FIXED, (0.0, 0.0))),
-        (EXAMPLE_85, (LevelsType.NO_LEVELS, None)),
+        (EXAMPLE_84, (LevelsType.NO_LEVELS, None)),
     ],
 )
 def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:

@@ -199,7 +199,7 @@ case "$1" in
     start)
          echo -n "Starting nagios..."
          if pidof_nagios >/dev/null 2>&1; then
-             echo 'Already running.'
+             echo 'already running.'
              exit 0
          fi
 

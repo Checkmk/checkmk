@@ -25,7 +25,7 @@ case "$1" in
         echo -n 'Starting nsca2mkeventd... '
 
         PID=$(pidof_nsca2mkeventd) && {
-            echo "Already running (PID: $PID)."
+            echo "already running (PID: $PID)."
             exit 1
         }
 

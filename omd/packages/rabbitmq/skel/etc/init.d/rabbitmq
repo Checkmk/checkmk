@@ -133,7 +133,7 @@ case "$1" in
     start)
         printf "Starting rabbitmq..."
         if ! flock --nonblock "${PIDFILE}" --command :; then
-            exit_successfully 'already running'
+            exit_successfully 'already running.'
         fi
 
         # set locale to avoid irrelevant warnings in log

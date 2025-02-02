@@ -19,7 +19,7 @@ fi
 case "$1" in
 
     start)
-	echo -en "Initializing Crontab..."
+	echo -en "Starting crontab..."
 	${MERGECRONTABS} ${CROND} | crontab $CRONTAB_OPTS - > /dev/null
         if [ $? -eq 0 ]; then
             echo "OK"
@@ -31,7 +31,7 @@ case "$1" in
         ;;
 
     stop)
-        echo -n "Removing Crontab..."
+        echo -n "Stopping crontab..."
         crontab $CRONTAB_OPTS -r || exit 0
         echo OK
         exit 0

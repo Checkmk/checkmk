@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_form_audiocores_alarms() -> Dictionary:
+def _parameter_form_audiocores_system_events() -> Dictionary:
     return Dictionary(
         elements={
             "severity_state_mapping": DictElement(
@@ -69,10 +69,10 @@ def _parameter_form_audiocores_alarms() -> Dictionary:
     )
 
 
-rule_spec_audiocodes_alarms = CheckParameters(
-    name="audiocodes_alarms",
+rule_spec_audiocodes_system_events = CheckParameters(
+    name="audiocodes_system_events",
     topic=Topic.APPLICATIONS,
-    parameter_form=_parameter_form_audiocores_alarms,
-    title=Title("AudioCodes Alarms"),
+    parameter_form=_parameter_form_audiocores_system_events,
+    title=Title("AudioCodes System Events"),
     condition=HostCondition(),
 )

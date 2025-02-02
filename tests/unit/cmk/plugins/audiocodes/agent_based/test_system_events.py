@@ -8,10 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
-from cmk.plugins.audiocodes.agent_based.alarms import (
-    check_audiocodes_alarms,
-    discover_audiocodes_alarms,
-    parse_audiocodes_alarms,
+from cmk.plugins.audiocodes.agent_based.system_events import (
+    check_audiocodes_system_events,
+    discover_audiocodes_system_events,
+    parse_audiocodes_system_events,
 )
 
 _STRING_TABLE = [
@@ -35,7 +35,9 @@ _DEFAULT_PARAMS = {
 
 
 def test_discovery_function() -> None:
-    assert list(discover_audiocodes_alarms(parse_audiocodes_alarms(_STRING_TABLE))) == [Service()]
+    assert list(
+        discover_audiocodes_system_events(parse_audiocodes_system_events(_STRING_TABLE))
+    ) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -88,4 +90,7 @@ def test_check_function(
     params: Mapping[str, Mapping[str, int]],
     expected: CheckResult,
 ) -> None:
-    assert list(check_audiocodes_alarms(params, parse_audiocodes_alarms(_STRING_TABLE))) == expected
+    assert (
+        list(check_audiocodes_system_events(params, parse_audiocodes_system_events(_STRING_TABLE)))
+        == expected
+    )

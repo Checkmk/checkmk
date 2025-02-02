@@ -63,7 +63,7 @@ def _parse_date_and_time(octet_string: str) -> datetime.datetime:
     )
 
 
-def parse_audiocodes_alarms(string_table: Sequence[StringTable]) -> Section | None:
+def parse_audiocodes_system_events(string_table: Sequence[StringTable]) -> Section | None:
     return (
         Section(
             alarms=[
@@ -85,8 +85,8 @@ def parse_audiocodes_alarms(string_table: Sequence[StringTable]) -> Section | No
     )
 
 
-snmp_section_audiocodes_alarms = SNMPSection(
-    name="audiocodes_alarms",
+snmp_section_audiocodes_system_events = SNMPSection(
+    name="audiocodes_system_events",
     detect=DETECT_AUDIOCODES,
     fetch=[
         SNMPTree(
@@ -108,17 +108,17 @@ snmp_section_audiocodes_alarms = SNMPSection(
             ],
         ),
     ],
-    parse_function=parse_audiocodes_alarms,
+    parse_function=parse_audiocodes_system_events,
 )
 
 
-def discover_audiocodes_alarms(section: Section | None) -> DiscoveryResult:
+def discover_audiocodes_system_events(section: Section | None) -> DiscoveryResult:
     if section is None:
         return
     yield Service()
 
 
-def check_audiocodes_alarms(
+def check_audiocodes_system_events(
     params: Mapping[str, Mapping[str, int]], section: Section | None
 ) -> CheckResult:
     if section is None:
@@ -166,12 +166,12 @@ def check_audiocodes_alarms(
     yield from results
 
 
-check_plugin_audiocodes_alarms = CheckPlugin(
-    name="audiocodes_alarms",
-    service_name="AudioCodes Alarms",
-    discovery_function=discover_audiocodes_alarms,
-    check_function=check_audiocodes_alarms,
-    check_ruleset_name="audiocodes_alarms",
+check_plugin_audiocodes_system_events = CheckPlugin(
+    name="audiocodes_system_events",
+    service_name="AudioCodes System Events",
+    discovery_function=discover_audiocodes_system_events,
+    check_function=check_audiocodes_system_events,
+    check_ruleset_name="audiocodes_system_events",
     check_default_parameters={
         "severity_state_mapping": {
             "cleared": 0,

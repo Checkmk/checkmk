@@ -664,6 +664,55 @@ EXAMPLE_84: Mapping[str, object] = {
     "mode": ("url", {"response_time": ("no_levels", None)}),
 }
 
+EXAMPLE_85: Mapping[str, object] = {
+    "name": "response_time",
+    "host": {
+        "address": (
+            "proxy",
+            {
+                "address": "http://localhost",
+                "port": 8081,
+                "auth": {
+                    "user": "user",
+                    "password": (
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        ("uuid91b27eb6-f561-468c-b929-cef0491e71d8", "cmk"),
+                    ),
+                },
+            },
+        )
+    },
+    "mode": ("url", {}),
+}
+
+EXAMPLE_86: Mapping[str, object] = {
+    "name": "response_time",
+    "host": {
+        "address": (
+            "proxy",
+            {
+                "address": "http://localhost",
+                "port": 8081,
+            },
+        )
+    },
+    "mode": ("url", {}),
+}
+
+EXAMPLE_87: Mapping[str, object] = {
+    "name": "response_time",
+    "host": {
+        "address": (
+            "proxy",
+            {
+                "address": "http://localhost",
+            },
+        )
+    },
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -965,6 +1014,9 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_63,
         EXAMPLE_74,
         EXAMPLE_75,
+        EXAMPLE_85,
+        EXAMPLE_86,
+        EXAMPLE_87,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

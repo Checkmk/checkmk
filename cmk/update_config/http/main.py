@@ -39,8 +39,14 @@ def _classify(host: str) -> HostType:
     return HostType.INVALID
 
 
+class V1Proxy(BaseModel, extra="forbid"):
+    address: str
+    port: int | None = None
+    # auth: None  # TODO: This is not supported in V2. Turn into conflict?
+
+
 class V1Host(BaseModel, extra="forbid"):
-    address: tuple[Literal["direct"], str]
+    address: tuple[Literal["direct"], str] | tuple[Literal["proxy"], V1Proxy]
     address_family: Literal["any", "ipv4_enforced", "ipv6_enforced", "primary_enforced", None] = (
         None
     )
@@ -157,11 +163,19 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
         value = V1Value.model_validate(rule_value)
     except ValidationError:
         return False
-    type_ = _classify(value.host.address[1])
-    if type_ is not HostType.EMBEDDABLE:
-        # This might have some issues, since customers can put a port, uri, and really mess with
-        # us in a multitude of ways.
-        return False
+    address = value.host.address[1]
+    if isinstance(address, str):
+        type_ = _classify(address)
+        if type_ is not HostType.EMBEDDABLE:
+            # This might have some issues, since customers can put a port, uri, and really mess with
+            # us in a multitude of ways.
+            return False
+    else:
+        type_ = _classify(address.address)
+        if type_ is not HostType.EMBEDDABLE:
+            # We have the same issue as above.
+            return False
+        return False  # TODO: We don't have a address, if proxy is specified because of the HOSTADDRESS-url conflict.
     if value.disable_sni:
         return False
     if isinstance(value.mode[1], V1Cert):
@@ -186,7 +200,7 @@ def _migrate_expect_response(response: list[str]) -> list[int]:
 
 def _migrate_url_params(
     url_params: V1Url, address_family: str
-) -> tuple[Literal["http", "https"], str, Mapping[str, object]]:
+) -> tuple[Literal["http", "https"], str, dict[str, object], Mapping[str, object]]:
     path = url_params.uri or ""
     match url_params.ssl:
         # In check_http.c (v1), this also determines the port.
@@ -319,16 +333,16 @@ def _migrate_url_params(
         scheme,
         path,
         {
-            "connection": {
-                **method,  # TODO: Proxy sets this to CONNECT.
-                **tls_versions,
-                **timeout,
-                **user_agent,
-                **add_headers,
-                **auth,
-                **redirects,
-                "address_family": address_family,
-            },
+            **method,  # TODO: Proxy sets this to CONNECT.
+            **tls_versions,
+            **timeout,
+            **user_agent,
+            **add_headers,
+            **auth,
+            **redirects,
+            "address_family": address_family,
+        },
+        {
             **server_response,
             **response_time,
             "content": {
@@ -344,14 +358,18 @@ def _migrate_url_params(
     )
 
 
-def _migrate_cert_params(cert_params: V1Cert, address_family: str) -> Mapping[str, object]:
-    return {
-        "connection": {
+def _migrate_cert_params(
+    cert_params: V1Cert, address_family: str
+) -> tuple[dict[str, object], Mapping[str, object]]:
+    return (
+        {
             "method": ("get", None),
             "address_family": address_family,
         },
-        "cert": ("validate", cert_params.cert_days),
-    }
+        {
+            "cert": ("validate", cert_params.cert_days),
+        },
+    )
 
 
 def _migrate_name(name: str) -> Mapping[str, object]:
@@ -361,8 +379,12 @@ def _migrate_name(name: str) -> Mapping[str, object]:
     return {"prefix": "auto", "name": name}
 
 
+def _build_url(scheme: str, host: str, port: int | None, path: str) -> str:
+    port_suffix = f":{port}" if port is not None else ""
+    return f"{scheme}://{host}{port_suffix}{path}"
+
+
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
-    port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
     match rule_value.host.address_family:
         case "any":
             address_family = "any"
@@ -375,13 +397,23 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
         case None:
             address_family = "any"
     if isinstance(rule_value.mode[1], V1Cert):
-        scheme, path, settings = (
+        scheme, path, connection, remaining_settings = (
             "https",
             "",
-            _migrate_cert_params(rule_value.mode[1], address_family),
+            *_migrate_cert_params(rule_value.mode[1], address_family),
         )
     else:
-        scheme, path, settings = _migrate_url_params(rule_value.mode[1], address_family)
+        scheme, path, connection, remaining_settings = _migrate_url_params(
+            rule_value.mode[1], address_family
+        )
+
+    address = rule_value.host.address[1]
+    if isinstance(address, str):
+        url = _build_url(scheme, address, rule_value.host.port, path)
+    else:
+        proxy = _build_url(scheme, address.address, address.port or rule_value.host.port, path)
+        connection["proxy"] = proxy
+
     return {
         "endpoints": [
             {
@@ -391,8 +423,11 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
-                "url": f"{scheme}://{rule_value.host.address[1]}{port}{path}",
-                "individual_settings": settings,
+                "url": url,
+                "individual_settings": {
+                    "connection": connection,
+                    **remaining_settings,
+                },
             },
         ],
     }

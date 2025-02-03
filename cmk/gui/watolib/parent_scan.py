@@ -16,14 +16,17 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
+from cmk.utils.resulttype import Result
 
 from cmk.automations.results import Gateway, GatewayResult
 
 from cmk.gui.background_job import (
+    AlreadyRunningError,
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobTarget,
+    StartupError,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -324,8 +327,8 @@ def start_parent_scan(
     hosts: Sequence[Host],
     job: ParentScanBackgroundJob,
     settings: ParentScanSettings,
-) -> None:
-    job.start(
+) -> Result[None, AlreadyRunningError | StartupError]:
+    return job.start(
         JobTarget(
             callable=parent_scan_job_entry_point,
             args=ParentScanJobArgs(

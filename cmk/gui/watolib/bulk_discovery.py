@@ -12,6 +12,7 @@ from livestatus import SiteId
 
 from cmk.ccc import store
 
+import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import configuration_lockfile
 
@@ -20,10 +21,12 @@ from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscover
 from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
 from cmk.gui.background_job import (
+    AlreadyRunningError,
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobTarget,
+    StartupError,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -438,7 +441,7 @@ def start_bulk_discovery(
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
     bulk_size: BulkSize,
-) -> None:
+) -> result.Result[None, AlreadyRunningError | StartupError]:
     """Start a bulk discovery job with the given options
 
     Args:
@@ -466,7 +469,7 @@ def start_bulk_discovery(
 
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
-    job.start(
+    return job.start(
         JobTarget(
             callable=bulk_discovery_job_entry_point,
             args=BulkDiscoveryJobArgs(

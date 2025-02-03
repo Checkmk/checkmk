@@ -637,14 +637,17 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
         update_changed_service_parameters=False,
     )
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
-    start_bulk_discovery(
-        job,
-        hosts_to_discover,
-        discovery_settings,
-        body["do_full_scan"],
-        body["ignore_errors"],
-        body["bulk_size"],
-    )
+    if (
+        result := start_bulk_discovery(
+            job,
+            hosts_to_discover,
+            discovery_settings,
+            body["do_full_scan"],
+            body["ignore_errors"],
+            body["bulk_size"],
+        )
+    ).is_error():
+        raise result.error
 
     return _serve_background_job(job)
 

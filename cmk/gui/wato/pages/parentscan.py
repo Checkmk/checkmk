@@ -148,7 +148,10 @@ class ModeParentScan(WatoMode):
 
             user.save_file("parentscan", self._settings)
 
-            start_parent_scan(self._get_selected_hosts(), self._job, self._settings)
+            if (
+                result := start_parent_scan(self._get_selected_hosts(), self._job, self._settings)
+            ).is_error():
+                raise result.error
         except Exception as e:
             if active_config.debug:
                 raise

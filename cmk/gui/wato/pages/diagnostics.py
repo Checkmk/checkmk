@@ -187,18 +187,21 @@ class ModeDiagnostics(WatoMode):
 
         params = self._diagnostics_parameters
         assert params is not None
-        self._job.start(
-            JobTarget(
-                callable=diagnostics_dump_entry_point,
-                args=DiagnosticsDumpArgs(params=params),
-            ),
-            InitialStatusArgs(
-                title=self._job.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        if (
+            result := self._job.start(
+                JobTarget(
+                    callable=diagnostics_dump_entry_point,
+                    args=DiagnosticsDumpArgs(params=params),
+                ),
+                InitialStatusArgs(
+                    title=self._job.gui_title(),
+                    lock_wato=False,
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
+        ).is_error():
+            raise result.error
 
         return redirect(self._job.detail_url())
 

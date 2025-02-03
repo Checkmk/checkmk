@@ -40,6 +40,7 @@ const componentId = useId()
     :id="componentId"
     v-model="value"
     :placeholder="spec.input_hint || ''"
+    :aria-label="props.spec.label || props.spec.title"
     class="number no-spinner"
     step="any"
     type="number"

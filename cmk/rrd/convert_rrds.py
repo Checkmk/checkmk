@@ -5,19 +5,23 @@
 
 
 import itertools
-
-# NOTE: rrdtool is missing type hints
-import rrdtool  # type: ignore[import-not-found]
+from collections.abc import Sequence
 
 from cmk.utils.hostaddress import HostName
 
 from cmk.base import config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import CEEConfigCache  # pylint: disable=cmk-module-layer-violation
 
+from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 from .rrd import RRDConverter  # pylint: disable=cmk-module-layer-violation
 
 
-def convert_rrds(options: dict, hostnames: list[HostName]) -> None:
+def convert_rrds(
+    rrd_interface: RRDInterface,
+    hostnames: Sequence[HostName],
+    split: bool,
+    delete: bool,
+) -> None:
     config.load(with_conf_d=True)
     config_cache = config.get_config_cache()
     assert isinstance(config_cache, CEEConfigCache)
@@ -33,8 +37,8 @@ def convert_rrds(options: dict, hostnames: list[HostName]) -> None:
         )
 
     for hostname in hostnames:
-        RRDConverter(rrdtool, hostname).convert_rrds_of_host(
+        RRDConverter(rrd_interface, hostname).convert_rrds_of_host(
             config_cache,
-            split=options.get("split-rrds", False),
-            delete=options.get("delete-rrds", False),
+            split=split,
+            delete=delete,
         )

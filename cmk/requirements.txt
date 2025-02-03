@@ -46,7 +46,6 @@ pydantic~=2.7
 pydantic_core~=2.18 # used by pydantic and by us
 paho-mqtt==1.6.1 # needed for MQTT special agent
 python-active-directory==2.0.1
-rrdtool==0.1.16 # Actually we ship the binding which comes with rrdtool itself...
 docstring-parser==0.16 # direct dependency
 pyprof2calltree==1.4.5 # used for GUI/API profiling
 pyparsing

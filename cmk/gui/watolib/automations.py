@@ -223,6 +223,7 @@ def check_mk_remote_automation_serialized(
         # Synchronous execution of the actual remote command in a single blocking HTTP request
         return SerializedResult(
             _do_remote_automation_serialized(
+                site_id=site_id,
                 site=get_site_config(active_config, site_id),
                 command="checkmk-automation",
                 vars_=[
@@ -271,13 +272,14 @@ def call_hook_activate_changes() -> None:
 
 def _do_remote_automation_serialized(
     *,
+    site_id: SiteId | None,
     site: SiteConfiguration,
     command: str,
     vars_: Sequence[tuple[str, str]],
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site["id"], command)
+    auto_logger.info("RUN [%s]: %s", site_id or "site id not in config", command)
     auto_logger.debug("Site config: %r", sanitize_site_configuration(site))
     auto_logger.debug("VARS: %r", vars_)
 
@@ -359,6 +361,8 @@ def do_remote_automation(
     timeout: float | None = None,
 ) -> object:
     serialized_response = _do_remote_automation_serialized(
+        # callsites currently disagree on whether it should be there.
+        site_id=site.get("id"),
         site=site,
         command=command,
         vars_=vars_,

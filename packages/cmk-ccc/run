@@ -138,7 +138,7 @@ run_check_format() {
         format --check --diff pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
         --machine \
         :all
@@ -184,7 +184,7 @@ run_format() {
         format pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --fix \
         :all
     "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"

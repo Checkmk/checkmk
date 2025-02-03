@@ -30,10 +30,3 @@ ruff = lint_ruff_aspect(
         "@@//:pyproject.toml",
     ],
 )
-
-ruff_isort = lint_ruff_aspect(
-    binary = "@multitool//tools/ruff",
-    configs = [
-        "@@//bazel/tools:pyproject.isort.toml",
-    ],
-)

@@ -6,9 +6,10 @@
 import datetime
 from zoneinfo import ZoneInfo
 
-import livestatus
 import time_machine
 from pytest import MonkeyPatch
+
+import livestatus
 
 from cmk.events.log_to_history import (
     log_to_history,

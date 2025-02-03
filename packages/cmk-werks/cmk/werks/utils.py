@@ -15,6 +15,7 @@ from pydantic import RootModel, TypeAdapter
 
 from cmk.ccc.i18n import _
 from cmk.ccc.version import __version__, parse_check_mk_version, Version
+
 from cmk.werks import load_werk
 from cmk.werks.models import Class, Compatibility, Edition, Werk, WerkV1
 

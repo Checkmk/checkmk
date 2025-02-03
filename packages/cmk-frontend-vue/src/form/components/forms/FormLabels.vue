@@ -135,7 +135,7 @@ const deleteItem = (item: string) => {
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
       :filter-on="keyValuePairs"
-      :resest-input-on-add="true"
+      :reset-input-on-add="true"
       @keydown.enter="
         (e: KeyboardEvent) => {
           const v = (e.target as HTMLInputElement).value

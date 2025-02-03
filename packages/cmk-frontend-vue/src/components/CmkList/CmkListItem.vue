@@ -54,7 +54,11 @@ const { buttonPadding = '16px' } = defineProps<{
           </CmkButton>
           <CmkSpace direction="horizontal" />
         </template>
-        <CmkButton variant="transparent" @click.prevent="() => removeElement()">
+        <CmkButton
+          variant="transparent"
+          aria-label="Remove element"
+          @click.prevent="() => removeElement()"
+        >
           <CmkIcon name="close" size="small" />
         </CmkButton>
       </div>

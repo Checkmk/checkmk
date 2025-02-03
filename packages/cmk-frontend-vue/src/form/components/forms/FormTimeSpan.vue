@@ -91,17 +91,19 @@ const localValidation = ref<Array<string>>([])
 </script>
 
 <template>
-  <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
-    <input
-      v-model="values[magnitude]"
-      :placeholder="getPlaceholder(magnitude)"
-      class="number no-spinner"
-      step="any"
-      size="5"
-      type="number"
-    />
-    {{ spec.i18n[magnitude] }}
-  </label>
+  <span role="group" :aria-label="spec.label || spec.title">
+    <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
+      <input
+        v-model="values[magnitude]"
+        :placeholder="getPlaceholder(magnitude)"
+        class="number no-spinner"
+        step="any"
+        size="5"
+        type="number"
+      />
+      {{ spec.i18n[magnitude] }}
+    </label>
+  </span>
   <FormValidation :validation="[...validation, ...localValidation]" />
 </template>
 

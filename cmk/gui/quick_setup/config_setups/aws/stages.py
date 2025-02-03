@@ -216,7 +216,7 @@ class _EC2RecapMessage:
             "Hosts for EC2 instances need to be created manually, please check the %s."
         ) % HTMLWriter.render_a(
             _("documentation"),
-            href=doc_reference_url(DocReference.AWS_EC2),
+            href=doc_reference_url(DocReference.AWS_MANUAL_VM),
         )
 
     message: Callable[[], str] = _cre_message

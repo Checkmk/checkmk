@@ -30,6 +30,14 @@ from tests.testlib.site import (
 )
 from tests.testlib.utils import is_containerized, run
 
+from cmk.base.automation_helper._config import (  # pylint: disable=cmk-module-layer-violation
+    Config,
+    default_config,
+    RELATIVE_CONFIG_PATH_FOR_TESTING,
+    ReloaderConfig,
+    ServerConfig,
+)
+
 site_factory = get_site_factory(prefix="comp_")
 
 logger = logging.getLogger(__name__)
@@ -213,3 +221,37 @@ def _run_cron() -> None:
 
     # Start cron daemon. It forks an will keep running in the background
     run([cron_cmd], check=True, sudo=True)
+
+
+# this is a temporary measure until we find a more robust implementation for the reloader
+@pytest.fixture(scope="session", autouse=True)
+def deactivate_automation_helper_reloader(
+    central_site: Site,
+    remote_site: Site,
+    remote_site_2: Site,
+) -> None:
+    for site in (central_site, remote_site, remote_site_2):
+        default_configuration = default_config(
+            omd_root=site.root,
+            run_directory=site.root / "tmp" / "run",
+            log_directory=site.root / "var" / "log" / "automation-helper",
+        )
+        site.write_text_file(
+            RELATIVE_CONFIG_PATH_FOR_TESTING,
+            Config(
+                server_config=ServerConfig(
+                    unix_socket=default_configuration.server_config.unix_socket,
+                    pid_file=default_configuration.server_config.pid_file,
+                    access_log=default_configuration.server_config.access_log,
+                    error_log=default_configuration.server_config.error_log,
+                    num_workers=1,
+                ),
+                watcher_config=default_configuration.watcher_config,
+                reloader_config=ReloaderConfig(
+                    active=False,
+                    poll_interval=default_configuration.reloader_config.poll_interval,
+                    cooldown_interval=default_configuration.reloader_config.cooldown_interval,
+                ),
+            ).model_dump_json(),
+        )
+        site.run(["omd", "restart", "automation-helper"])

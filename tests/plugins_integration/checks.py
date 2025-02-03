@@ -440,11 +440,14 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 
 
 @contextmanager
-def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
+def setup_source_host_piggyback(
+    site: Site, source_host_name: str, folder_name: str = "/"
+) -> Iterator:
     logger.info('Creating source host "%s"...', source_host_name)
     host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
     site.openapi.hosts.create(
         hostname=source_host_name,
+        folder=folder_name,
         attributes=host_attributes,
         bake_agent=False,
     )

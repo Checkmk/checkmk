@@ -1765,6 +1765,21 @@ def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> Ce
     return "", HTMLWriter.render_table(HTML().join(rows))
 
 
+def _export_custom_vars(what: str, row: Row, blacklist: list | None = None) -> str:
+    if blacklist is None:
+        blacklist = []
+
+    items = sorted(row[what + "_custom_variables"].items())
+    rows = []
+    for varname, value in items:
+        if varname not in blacklist:
+            if value:
+                rows.append(f"{varname}: {value}")
+            else:
+                rows.append(f"{varname}")
+    return ", ".join(rows)
+
+
 class PainterServiceCustomVariables(Painter):
     @property
     def ident(self) -> str:
@@ -1782,6 +1797,12 @@ class PainterServiceCustomVariables(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_custom_vars("service", row)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("service", row)
+
+    def export_for_json(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("service", row)
 
 
 class ABCPainterCustomVariable(Painter, abc.ABC):
@@ -3299,6 +3320,17 @@ class PainterHostIsStale(Painter):
 
 
 class PainterHostCustomVariables(Painter):
+    BLACKLIST: list[str] = [
+        "FILENAME",
+        "TAGS",
+        "ADDRESS_4",
+        "ADDRESS_6",
+        "ADDRESS_FAMILY",
+        "NODEIPS",
+        "NODEIPS_4",
+        "NODEIPS_6",
+    ]
+
     @property
     def ident(self) -> str:
         return "host_custom_vars"
@@ -3314,20 +3346,13 @@ class PainterHostCustomVariables(Painter):
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_vars(
-            "host",
-            row,
-            [
-                "FILENAME",
-                "TAGS",
-                "ADDRESS_4",
-                "ADDRESS_6",
-                "ADDRESS_FAMILY",
-                "NODEIPS",
-                "NODEIPS_4",
-                "NODEIPS_6",
-            ],
-        )
+        return _paint_custom_vars("host", row, self.BLACKLIST)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("host", row, self.BLACKLIST)
+
+    def export_for_json(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("host", row, self.BLACKLIST)
 
 
 def _paint_discovery_output(field: str, row: Row) -> CellSpec:

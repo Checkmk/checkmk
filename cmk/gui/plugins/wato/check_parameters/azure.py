@@ -307,6 +307,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_databases,
         title=lambda: _("Azure Databases"),
+        is_deprecated=True,
     )
 )
 

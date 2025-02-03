@@ -257,6 +257,7 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("systemd_services")),
         ("check", RuleGroup.CheckgroupParameters("temperature_trends")),
         ("check", RuleGroup.CheckgroupParameters("prism_container")),
+        ("check", RuleGroup.CheckgroupParameters("azure_databases")),  # deprecated
         ("discovery", "discovery_systemd_units_services_rules"),
         ("inventory", RuleGroup.ActiveChecks("cmk_inv")),
         ("inventory", RuleGroup.InvParameters("inv_if")),

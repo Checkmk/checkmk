@@ -2,11 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -37,9 +37,10 @@ def create_check_azure_databases_storage() -> CheckFunction:
                 "storage_percent",
                 "Storage",
                 render.percent,
-                upper_levels_param="storage_percent_levels",
+                upper_levels_param="storage_percent",
             )
-        ]
+        ],
+        check_levels=check_levels,
     )
 
 
@@ -49,13 +50,8 @@ check_plugin_azure_databases_storage = CheckPlugin(
     sections=["azure_databases"],
     discovery_function=create_discover_by_metrics_function("average_storage_percent"),
     check_function=create_check_azure_databases_storage(),
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
+    check_ruleset_name="azure_databases_storage",
+    check_default_parameters={"storage_percent": ("no_levels", None)},
 )
 
 
@@ -67,9 +63,10 @@ def create_check_azure_databases_deadlock() -> CheckFunction:
                 "deadlocks",
                 "Deadlocks",
                 lambda x: str(x),
-                upper_levels_param="deadlocks_levels",
+                upper_levels_param="deadlocks",
             )
-        ]
+        ],
+        check_levels=check_levels,
     )
 
 
@@ -79,13 +76,8 @@ check_plugin_azure_databases_deadlock = CheckPlugin(
     sections=["azure_databases"],
     discovery_function=create_discover_by_metrics_function("average_deadlock"),
     check_function=create_check_azure_databases_deadlock(),
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
+    check_ruleset_name="azure_databases_deadlock",
+    check_default_parameters={"deadlocks": ("no_levels", None)},
 )
 
 
@@ -97,9 +89,10 @@ def create_check_azure_databases_cpu() -> CheckFunction:
                 "util",
                 "CPU",
                 render.percent,
-                upper_levels_param="cpu_percent_levels",
+                upper_levels_param="cpu_percent",
             )
-        ]
+        ],
+        check_levels=check_levels,
     )
 
 
@@ -109,13 +102,8 @@ check_plugin_azure_databases_cpu = CheckPlugin(
     sections=["azure_databases"],
     discovery_function=create_discover_by_metrics_function("average_cpu_percent"),
     check_function=create_check_azure_databases_cpu(),
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
+    check_ruleset_name="azure_databases_cpu",
+    check_default_parameters={"cpu_percent": ("no_levels", None)},
 )
 
 
@@ -127,9 +115,10 @@ def create_check_azure_databases_dtu() -> CheckFunction:
                 "dtu_percent",
                 "Database throughput units",
                 render.percent,
-                upper_levels_param="dtu_percent_levels",
+                upper_levels_param="dtu_percent",
             )
-        ]
+        ],
+        check_levels=check_levels,
     )
 
 
@@ -139,13 +128,8 @@ check_plugin_azure_databases_dtu = CheckPlugin(
     sections=["azure_databases"],
     discovery_function=create_discover_by_metrics_function("average_dtu_consumption_percent"),
     check_function=create_check_azure_databases_dtu(),
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
+    check_ruleset_name="azure_databases_dtu",
+    check_default_parameters={"dtu_percent": ("no_levels", None)},
 )
 
 
@@ -157,16 +141,17 @@ def create_check_azure_databases_connections() -> CheckFunction:
                 "connections",
                 "Successful connections",
                 lambda x: str(x),
-                upper_levels_param="connections_levels",
+                upper_levels_param="successful_connections",
             ),
             MetricData(
                 "average_connection_failed",
                 "connections_failed_rate",
                 "Failed connections",
                 lambda x: str(x),
-                upper_levels_param="connections_failed_rate_levels",
+                upper_levels_param="failed_connections",
             ),
-        ]
+        ],
+        check_levels=check_levels,
     )
 
 
@@ -178,18 +163,14 @@ check_plugin_azure_databases_connections = CheckPlugin(
         "average_connection_successful", "average_connection_failed"
     ),
     check_function=create_check_azure_databases_connections(),
-    # TODO: Use the actual ruleset defining connection limits
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
+    # FYI: Using explicitly None as ruleset name in order to use the factory function without
+    # additional modification.
+    check_ruleset_name=None,
+    check_default_parameters={},
 )
 
 
-def check_azure_databases(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_azure_databases(item: str, section: Section) -> CheckResult:
     resource = section.get(item)
     if not resource:
         return
@@ -213,11 +194,4 @@ check_plugin_azure_databases = CheckPlugin(
     service_name="DB %s",
     discovery_function=discover_azure_databases,
     check_function=check_azure_databases,
-    check_ruleset_name="azure_databases",
-    check_default_parameters={
-        "storage_percent_levels": (85.0, 95.0),
-        "cpu_percent_levels": (85.0, 95.0),
-        "dtu_percent_levels": (85.0, 95.0),
-        "deadlocks_levels": None,
-    },
 )

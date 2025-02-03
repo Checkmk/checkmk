@@ -21,6 +21,7 @@ from cmk.ccc import version as cmk_version
 
 from cmk.utils import paths, tty
 from cmk.utils.caching import cache_manager
+from cmk.utils.log import logger as cmk_logger
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
@@ -169,7 +170,7 @@ def _execute_automation_endpoint(
         redirect_stdout(buffer_stdout),
         redirect_stderr(buffer_stderr),
         redirect_stdin(io.StringIO(payload.stdin)),
-        temporary_log_level(LOGGER, payload.log_level),
+        temporary_log_level(cmk_logger, payload.log_level),
     ):
         clear_caches_before_each_call()
         try:

@@ -111,6 +111,7 @@ def main() {
         );
     }
 
+    /// Run system tests in parallel.
     parallel([
         "Integration Test for Docker Container": {
             success &= smart_stage(
@@ -123,6 +124,17 @@ def main() {
                 );
             }
         },
+        "Integration Test for Packages": {
+            success &= smart_stage(
+                name: "Integration Test for Packages",
+                condition: run_int_tests,
+                raiseOnError: false,) {
+                smart_build(
+                    job: "${edition_base_folder}/test-integration-packages",
+                    parameters: job_parameters
+                );
+            }
+        },
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
@@ -130,6 +142,17 @@ def main() {
                     raiseOnError: false,) {
                 smart_build(
                     job: "${edition_base_folder}/test-composition",
+                    parameters: job_parameters
+                );
+            }
+        },
+        "Update Test": {
+            success &= smart_stage(
+                    name: "Update Test",
+                    condition: run_update_tests,
+                    raiseOnError: false,) {
+                smart_build(
+                    job: "${edition_base_folder}/test-update",
                     parameters: job_parameters
                 );
             }
@@ -157,26 +180,6 @@ def main() {
             }
         },
     ]);
-
-    success &= smart_stage(
-            name: "Integration Test for Packages",
-            condition: run_int_tests,
-            raiseOnError: false,) {
-        smart_build(
-            job: "${edition_base_folder}/test-integration-packages",
-            parameters: job_parameters
-        );
-    }
-
-    success &= smart_stage(
-            name: "Update Test",
-            condition: run_update_tests,
-            raiseOnError: false,) {
-        smart_build(
-            job: "${edition_base_folder}/test-update",
-            parameters: job_parameters
-        );
-    }
 
     success &= smart_stage(
             name: "Trigger SaaS Gitlab jobs",

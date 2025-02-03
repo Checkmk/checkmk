@@ -48,6 +48,7 @@ const componentId = useId()
     :id="componentId"
     v-model="value"
     :placeholder="spec.input_hint || ''"
+    :aria-label="spec.label || spec.title"
     type="text"
     :size="inputSizes[props.spec.field_size].width"
   />

@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import io
 import sys
 import time
-from collections.abc import AsyncGenerator, Callable, Iterator, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from logging import Formatter, getLogger
@@ -22,7 +23,8 @@ from cmk.utils.caching import cache_manager
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
-from ._cache import Cache
+from ._cache import Cache, CacheError
+from ._config import ReloaderConfig
 from ._log import LOGGER, temporary_log_level
 from ._tracer import TRACER
 
@@ -77,10 +79,14 @@ def get_application(
     *,
     engine: AutomationEngine,
     cache: Cache,
+    reloader_config: ReloaderConfig,
     reload_config: Callable[[], None],
     clear_caches_before_each_call: Callable[[], None],
 ) -> FastAPI:
-    state = _State(last_reload_at=0)
+    state = _State(
+        automation_or_reload_lock=asyncio.Lock(),
+        last_reload_at=0,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
@@ -95,7 +101,21 @@ def get_application(
         )
         tty.reinit()
         reload_config()
+
+        reloader_task = asyncio.create_task(
+            _reloader_task(
+                config=reloader_config,
+                cache=cache,
+                reload_callback=reload_config,
+                state=state,
+            )
+            if reloader_config.active
+            else asyncio.sleep(0),
+        )
+
         yield
+
+        reloader_task.cancel()
 
     app = FastAPI(lifespan=lifespan, openapi_url=None, docs_url=None, redoc_url=None)
 
@@ -103,14 +123,15 @@ def get_application(
 
     @app.post("/automation")
     async def automation(payload: AutomationPayload) -> AutomationResponse:
-        return _execute_automation_endpoint(
-            payload,
-            engine,
-            cache,
-            reload_config,
-            clear_caches_before_each_call,
-            state,
-        )
+        async with state.automation_or_reload_lock:
+            return _execute_automation_endpoint(
+                payload,
+                engine,
+                cache,
+                reload_config,
+                clear_caches_before_each_call,
+                state,
+            )
 
     @app.get("/health")
     async def check_health() -> HealthCheckResponse:
@@ -121,6 +142,7 @@ def get_application(
 
 @dataclass
 class _State:
+    automation_or_reload_lock: asyncio.Lock
     last_reload_at: float
 
 
@@ -187,3 +209,59 @@ def _execute_automation_endpoint(
             output=buffer_stdout.getvalue(),
             error=buffer_stderr.getvalue(),
         )
+
+
+async def _reloader_task(
+    config: ReloaderConfig,
+    cache: Cache,
+    reload_callback: Callable[[], None],
+    state: _State,
+    delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> None:
+    LOGGER.info("[reloader] Operational")
+    while True:
+        if (cached_last_change := _retrieve_last_change(cache)) < state.last_reload_at:
+            await delayer_factory(config.poll_interval)
+            continue
+
+        last_change = cached_last_change
+        LOGGER.info(
+            "[reloader] Change detected %.2f seconds ago",
+            time.time() - last_change,
+        )
+
+        current_cooldown = config.cooldown_interval
+        while True:
+            await delayer_factory(current_cooldown)
+
+            cached_last_change = _retrieve_last_change(cache)
+
+            if cached_last_change == last_change:
+                async with state.automation_or_reload_lock:
+                    if cached_last_change < state.last_reload_at:
+                        break
+
+                    LOGGER.info("[reloader] Triggering reload")
+                    state.last_reload_at = time.time()
+                    reload_callback()
+                    break
+
+            else:
+                current_cooldown = min(
+                    # be rebust against cache resets, just in case
+                    abs(cached_last_change - last_change),
+                    config.cooldown_interval,
+                )
+                last_change = cached_last_change
+                LOGGER.info(
+                    "[reloader] Change detected %.2f seconds ago",
+                    time.time() - last_change,
+                )
+
+
+def _retrieve_last_change(cache: Cache) -> float:
+    try:
+        return cache.get_last_detected_change()
+    except CacheError as err:
+        LOGGER.error("[reloader] Cache failure", exc_info=err)
+        return 0

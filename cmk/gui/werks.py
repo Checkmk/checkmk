@@ -71,8 +71,9 @@ from cmk.gui.valuespec import (
 )
 
 import cmk.werks.utils as werks_utils
-from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 

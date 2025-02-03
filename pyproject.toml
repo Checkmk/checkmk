@@ -86,7 +86,6 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
-  "werks",
   "cmc_proto",
   "compositiontests",
   "uitests",
@@ -107,12 +106,12 @@ section-order = [
   "cmk_gui",
   "cmk_cee",
   "cmk_notification_plugins",
+  "cmk_werks",
   "first-party",
   "local-folder",
 ]
 
 [tool.ruff.lint.isort.sections]
-werks = ["werks"]
 cmc_proto = ["cmc_proto"]
 testlib = ["tests.testlib"]
 integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
@@ -138,6 +137,7 @@ cmk_ec = ["cmk.ec"]
 cmk_gui = ["cmk.gui"]
 cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
 cmk_notification_plugins = ["cmk.notification_plugins"]
+cmk_werks = ["cmk.werks"]
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In

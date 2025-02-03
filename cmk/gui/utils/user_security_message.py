@@ -71,15 +71,14 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
 
 def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: datetime) -> None:
     timestamp = int(event_time.timestamp())
-
+    duration = int(config.active_config.user_security_notification_duration["max_duration"])
     message_gui(
         user_id,
         {
             "text": str(event.value),
             "dest": ("list", [user_id]),
             "methods": ["gui_hint"],
-            "valid_till": timestamp
-            + config.active_config.user_security_notification_duration,  # 1 week
+            "valid_till": timestamp + duration,  # 1 week
             "id": utils.gen_id(),
             "time": timestamp,
             "security": True,

@@ -53,6 +53,7 @@ const spec: FormSpec.Labels = {
     data: { ident: 'label', params: { world: 'config' } }
   },
   i18n: {
+    remove_label: 'i18n remove_label',
     add_some_labels: 'Add some labels',
     key_value_format_error:
       'Labels need to be in the format [KEY]:[VALUE]. For example os:windows.',

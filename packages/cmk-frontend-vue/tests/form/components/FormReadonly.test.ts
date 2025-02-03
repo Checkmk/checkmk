@@ -307,6 +307,7 @@ const labelsFormSpec: FormSpec.Labels = {
   title: 'fooTitle',
   help: 'fooHelp',
   i18n: {
+    remove_label: 'i18n remove_label',
     add_some_labels: 'Add some labels',
     key_value_format_error: 'Key value format error',
     max_labels_reached: 'Max labels reached',

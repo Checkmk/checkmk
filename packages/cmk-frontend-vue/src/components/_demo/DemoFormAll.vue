@@ -552,6 +552,7 @@ function getLabels(name: string, options?: Partial<Omit<Labels, 'type'>>): Label
     max_labels: null,
     label_source: 'explicit',
     i18n: {
+      remove_label: 'i18n remove_label',
       add_some_labels: 'i18n add_some_labels',
       key_value_format_error: 'i18n key_value_format_error',
       uniqueness_error: 'i18n uniqueness_error',

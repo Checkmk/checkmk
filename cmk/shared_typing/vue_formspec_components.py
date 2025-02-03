@@ -259,6 +259,7 @@ class ConditionChoicesI18n:
 @dataclass(kw_only=True)
 class LabelsI18n:
     add_some_labels: str
+    remove_label: str
     key_value_format_error: str
     uniqueness_error: str
     max_labels_reached: str

@@ -1,0 +1,15 @@
+Title: Export custom host/service attributes as CSV/JSON
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1738581601
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+When exporting custom host or service attributes in a view, the attributes were
+directly concatenated as a string, for example <code>FOO</code> and <code>BAR</code> were exported as
+<code>FOOBAR</code>.
+
+Now the exported attributes are exported as comma separated values,
+in the example this would be <code>FOO, BAR</code>.

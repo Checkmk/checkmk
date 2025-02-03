@@ -125,14 +125,17 @@ class ModeBulkDiscovery(WatoMode):
 
         try:
             transactions.check_transaction()
-            start_bulk_discovery(
-                self._job,
-                self._get_hosts_to_discover(),
-                self._mode,
-                self._do_full_scan,
-                self._ignore_errors,
-                self._bulk_size,
-            )
+            if (
+                result := start_bulk_discovery(
+                    self._job,
+                    self._get_hosts_to_discover(),
+                    self._mode,
+                    self._do_full_scan,
+                    self._ignore_errors,
+                    self._bulk_size,
+                )
+            ).is_error():
+                raise result.error
 
         except Exception as e:
             if active_config.debug:

@@ -62,20 +62,23 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
             assert_never(other)
 
     parent_scan_job = ParentScanBackgroundJob()
-    start_parent_scan(
-        hosts=[Host.load_host(name) for name in body["host_names"]],
-        job=parent_scan_job,
-        settings=ParentScanSettings(
-            where=where,
-            alias=alias,
-            timeout=body["performance"]["responses_timeout"],
-            probes=body["performance"]["hop_probes"],
-            max_ttl=body["performance"]["max_gateway_distance"],
-            force_explicit=body["configuration"]["force_explicit_parents"],
-            ping_probes=body["performance"]["ping_probes"],
-            gateway_folder_path=gateway_folder_path,
-        ),
-    )
+    if (
+        result := start_parent_scan(
+            hosts=[Host.load_host(name) for name in body["host_names"]],
+            job=parent_scan_job,
+            settings=ParentScanSettings(
+                where=where,
+                alias=alias,
+                timeout=body["performance"]["responses_timeout"],
+                probes=body["performance"]["hop_probes"],
+                max_ttl=body["performance"]["max_gateway_distance"],
+                force_explicit=body["configuration"]["force_explicit_parents"],
+                ping_probes=body["performance"]["ping_probes"],
+                gateway_folder_path=gateway_folder_path,
+            ),
+        )
+    ).is_error():
+        raise result.error
     return _serve_background_job(parent_scan_job, "parent_scan")
 
 

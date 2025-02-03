@@ -44,17 +44,20 @@ def execute_userdb_job() -> None:
         gui_logger.debug("Job shall not start")
         return
 
-    job.start(
-        JobTarget(
-            callable=sync_entry_point,
-            args=UserSyncArgs(add_to_changelog=False, enforce_sync=False),
-        ),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    if (
+        result := job.start(
+            JobTarget(
+                callable=sync_entry_point,
+                args=UserSyncArgs(add_to_changelog=False, enforce_sync=False),
+            ),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
+    ).is_error():
+        gui_logger.error("Error starting user sync job: %s", result.error)
 
 
 class UserSyncArgs(BaseModel, frozen=True):

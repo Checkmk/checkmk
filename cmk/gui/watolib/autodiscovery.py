@@ -101,15 +101,18 @@ def execute_autodiscovery() -> None:
         return
 
     job = AutodiscoveryBackgroundJob()
-    job.start(
-        simple_job_target(autodiscovery_job_entry_point),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    if (
+        result := job.start(
+            simple_job_target(autodiscovery_job_entry_point),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
+    ).is_error():
+        logger.error(str(result))
 
 
 def autodiscovery_job_entry_point(job_interface: BackgroundProcessInterface, args: NoArgs) -> None:

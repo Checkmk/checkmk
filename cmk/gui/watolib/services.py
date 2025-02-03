@@ -988,23 +988,26 @@ def execute_discovery_job(
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.start(
-            JobTarget(
-                callable=discovery_job_entry_point,
-                args=ServiceDiscoveryJobArgs(
-                    host_name=host_name,
-                    action=action,
-                    raise_errors=raise_errors,
+        if (
+            result := job.start(
+                JobTarget(
+                    callable=discovery_job_entry_point,
+                    args=ServiceDiscoveryJobArgs(
+                        host_name=host_name,
+                        action=action,
+                        raise_errors=raise_errors,
+                    ),
                 ),
-            ),
-            InitialStatusArgs(
-                title=_("Service discovery"),
-                stoppable=True,
-                host_name=str(host_name),
-                estimated_duration=job.get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+                InitialStatusArgs(
+                    title=_("Service discovery"),
+                    stoppable=True,
+                    host_name=str(host_name),
+                    estimated_duration=job.get_status().duration,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
+        ).is_error():
+            raise result.error
 
     if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()

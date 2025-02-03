@@ -605,23 +605,23 @@ class ConfigDomainOMD(ABCConfigDomain):
         # async_progress.js. Just execute the omd config change command
         if is_wato_slave_site():
             job = OMDConfigChangeBackgroundJob()
-            if job.is_active():
-                raise MKUserError(None, _("Another omd config change job is already running."))
-
-            job.start(
-                JobTarget(
-                    callable=omd_config_change_job_entry_point,
-                    args=OMDConfigChangeJobArgs(
-                        commands=config_change_commands,
+            if (
+                result := job.start(
+                    JobTarget(
+                        callable=omd_config_change_job_entry_point,
+                        args=OMDConfigChangeJobArgs(
+                            commands=config_change_commands,
+                        ),
                     ),
-                ),
-                InitialStatusArgs(
-                    title=job.gui_title(),
-                    lock_wato=False,
-                    stoppable=False,
-                    user=str(user.id) if user.id else None,
-                ),
-            )
+                    InitialStatusArgs(
+                        title=job.gui_title(),
+                        lock_wato=False,
+                        stoppable=False,
+                        user=str(user.id) if user.id else None,
+                    ),
+                )
+            ).is_error():
+                raise result.error
         else:
             _do_config_change(config_change_commands, self._logger)
 

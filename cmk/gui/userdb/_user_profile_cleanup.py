@@ -28,15 +28,18 @@ def execute_user_profile_cleanup_job() -> None:
 
     Errors are logged to var/log/web.log."""
     job = UserProfileCleanupBackgroundJob()
-    job.start(
-        simple_job_target(user_profile_cleanup_entry_point),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    if (
+        result := job.start(
+            simple_job_target(user_profile_cleanup_entry_point),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
+    ).is_error():
+        raise result.error
 
 
 class UserProfileCleanupBackgroundJob(BackgroundJob):

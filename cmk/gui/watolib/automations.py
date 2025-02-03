@@ -681,16 +681,19 @@ class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationReques
         automation_id = str(uuid.uuid4())
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
-        job.start(
-            JobTarget(
-                callable=checkmk_automation_job_entry_point,
-                args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
-            ),
-            InitialStatusArgs(
-                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        if (
+            result := job.start(
+                JobTarget(
+                    callable=checkmk_automation_job_entry_point,
+                    args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
+                ),
+                InitialStatusArgs(
+                    title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                    user=str(user.id) if user.id else None,
+                ),
+            )
+        ).is_error():
+            raise result.error
 
         return job.get_job_id()
 

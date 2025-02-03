@@ -553,6 +553,7 @@ def launch_requests_processing_background() -> None:
     if not updates_requested() or not redis_enabled():
         return
     job = SearchIndexBackgroundJob()
+    # Don't report any error from job.start() to not spam the logs
     job.start(
         simple_job_target(_process_update_requests_background),
         # We deliberately do not provide an estimated duration here, since that involves I/O.

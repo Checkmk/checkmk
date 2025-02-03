@@ -169,6 +169,7 @@ run_semgrep() {
     SEMGREP_DIR="$(bazel info workspace)/tests/semgrep"
     "${SEMGREP_DIR}"/run-semgrep scan \
         --config "${SEMGREP_DIR}/rules" \
+        --error \
         --quiet \
         --oss-only \
         --use-git-ignore \

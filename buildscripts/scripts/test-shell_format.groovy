@@ -11,8 +11,6 @@ def main() {
                 name: "Check shell format",
                 cmd: "make -C tests test-format-shell",
             ]);
-
-            test_jenkins_helper.analyse_issues("CLANG", "");
         }
     }
 }

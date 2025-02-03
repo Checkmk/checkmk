@@ -39,7 +39,13 @@ const componentId = useId()
 </script>
 
 <template>
-  <input :id="componentId" v-model="password" type="password" :placeholder="'******'" />
+  <input
+    :id="componentId"
+    v-model="password"
+    :aria-label="props.spec.title"
+    type="password"
+    :placeholder="'******'"
+  />
   <label :for="componentId" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

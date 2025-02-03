@@ -122,7 +122,7 @@ const deleteItem = (item: string) => {
           @keydown.delete="(e: KeyboardEvent) => handleDeleteCrossItems(e, item)"
         />
         <button class="item-delete-btn" @click="() => deleteItem(item)">
-          <X class="close-btn" />
+          <X :aria-label="spec.i18n.remove_label" class="close-btn" />
         </button>
       </span>
     </li>

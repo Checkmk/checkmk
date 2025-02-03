@@ -44,6 +44,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
                 title=title,
                 help=help_text,
                 i18n=shared_type_defs.LabelsI18n(
+                    remove_label=translate_to_current_language("Remove label"),
                     add_some_labels=translate_to_current_language("Add some labels"),
                     key_value_format_error=translate_to_current_language(
                         "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."

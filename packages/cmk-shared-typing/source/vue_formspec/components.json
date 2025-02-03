@@ -1552,6 +1552,9 @@
                                 "add_some_labels": {
                                     "type": "string"
                                 },
+                                "remove_label": {
+                                    "type": "string"
+                                },
                                 "key_value_format_error": {
                                     "type": "string"
                                 },
@@ -1564,6 +1567,7 @@
                             },
                             "required": [
                                 "add_some_labels",
+                                "remove_label",
                                 "key_value_format_error",
                                 "uniqueness_error",
                                 "max_labels_reached"

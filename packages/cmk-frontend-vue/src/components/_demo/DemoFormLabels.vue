@@ -29,6 +29,7 @@ const spec = computed<Labels>(() => ({
   help: 'some help',
   i18n_base: { required: 'required' },
   i18n: {
+    remove_label: 'i18n remove_label',
     add_some_labels: 'Add some labels',
     key_value_format_error: 'Key value format error',
     max_labels_reached: 'Max labels reached',

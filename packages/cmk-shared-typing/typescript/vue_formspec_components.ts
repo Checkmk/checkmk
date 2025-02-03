@@ -447,6 +447,7 @@ export interface ConditionChoicesI18N {
 }
 export interface LabelsI18N {
   add_some_labels: string;
+  remove_label: string;
   key_value_format_error: string;
   uniqueness_error: string;
   max_labels_reached: string;

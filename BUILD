@@ -1,12 +1,9 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
@@ -18,23 +15,6 @@ exports_files(
         "requirements_dev.txt",
         "requirements_all_lock.txt",
     ],
-)
-
-py_console_script_binary(
-    name = "protoc-gen-mypy",
-    pkg = requirement("mypy-protobuf"),
-    script = "protoc-gen-mypy",
-)
-
-proto_plugin(
-    name = "pyi_plugin",
-    exclusions = [
-        "google/protobuf",
-    ],
-    outputs = ["{protopath|python}_pb2.pyi"],
-    # protoc_plugin_name = "pyi",
-    tool = ":protoc-gen-mypy",
-    visibility = ["//visibility:public"],
 )
 
 copy_to_directory(

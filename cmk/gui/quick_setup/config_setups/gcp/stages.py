@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Callable
 
 from cmk.ccc.i18n import _
 
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -41,6 +43,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 from cmk.plugins.gcp.rulesets import (  # pylint: disable=cmk-module-layer-violation
     gcp,
@@ -186,6 +189,34 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
+class _GCERecapMessage:
+    @staticmethod
+    def _cre_message() -> str:
+        return _(
+            "Hosts for virtual machines need to be created manually, please check the %s."
+        ) % HTMLWriter.render_a(
+            _("documentation"),
+            href=doc_reference_url(DocReference.GCP_MANUAL_VM),
+        )
+
+    message: Callable[[], str] = _cre_message
+
+
+gce_recap_message = _GCERecapMessage()
+
+
+def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
+    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    if "gce" in parsed_data.get(FormSpecId("configure_advanced"), {}).get("piggyback", {}).get(
+        "piggyback_services", []
+    ):
+        message += " " + gce_recap_message.message()
+    return [
+        Text(text=title),
+        Text(text=message),
+    ]
+
+
 def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
@@ -203,14 +234,7 @@ def recap_found_services(
         service_discovery_result=service_discovery_result,
     )
     if len(filtered_groups_of_services[gcp_service_interest]):
-        return [
-            Text(text=_("GCP services found!")),
-            Text(
-                text=_(
-                    "Save your progress and go to the Activate Changes page to enable it. Virtual machines may take a few minutes to show up."
-                )
-            ),
-        ]
+        return _save_and_activate_recap(_("GCP services found!"), parsed_data)
     return [
         Text(text=_("No GCP services found.")),
         Text(
@@ -239,14 +263,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, ____: [
-                        Text(text=_("Skipped the configuration test.")),
-                        Text(
-                            text=_(
-                                "Save your progress and go to the Activate Changes page to enable it."
-                            )
-                        ),
-                    ]
+                    lambda __, ___, parsed_data: _save_and_activate_recap(
+                        _("Skipped the configuration test."), parsed_data
+                    )
                 ],
                 next_button_label=_("Skip test"),
             ),

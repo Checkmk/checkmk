@@ -18,6 +18,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting
 from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.daemon import daemonize, pid_file_lock
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
 from cmk.utils import paths
@@ -123,6 +124,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                 logger.info("Stopping application")
                 stop_event.set()
                 scheduler_thread.join()
+    except MKGeneralException as exc:
+        logger.error("ERROR: %s", exc)
+        return 1
     except SystemExit:
         raise
     except Exception as exc:

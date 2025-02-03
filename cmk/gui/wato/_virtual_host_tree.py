@@ -363,13 +363,12 @@ function virtual_host_tree_enter(path)
             tags_for_host,
         ) = host_row
 
+        folder_titles: list[str] = []
         if wato_folder.startswith("/wato/"):
             folder_path = wato_folder[6:-9]
             folder_path_components = folder_path.split("/")
             if folder_tree().folder_exists(folder_path):
                 folder_titles = get_folder_title_path(folder_path)[1:]  # omit main folder
-        else:
-            folder_titles = []
 
         state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
 

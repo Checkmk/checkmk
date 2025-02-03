@@ -233,7 +233,23 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 recap=[recap_found_services],
                 next_button_label=_("Test configuration"),
                 load_wait_label=_("This process may take several minutes, please wait..."),
-            )
+                run_in_background=True,
+            ),
+            QuickSetupStageAction(
+                id=ActionId("skip_configuration_test"),
+                custom_validators=[],
+                recap=[
+                    lambda __, ___, ____: [
+                        Text(text=_("Skipped the configuration test.")),
+                        Text(
+                            text=_(
+                                "Save your progress and go to the Activate Changes page to enable it."
+                            )
+                        ),
+                    ]
+                ],
+                next_button_label=_("Skip test"),
+            ),
         ],
         prev_button_label=PREV_BUTTON_LABEL,
     )

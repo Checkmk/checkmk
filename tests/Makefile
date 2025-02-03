@@ -50,11 +50,7 @@ SYSTEM_TESTS := \
     test-gui-e2e-cme \
     test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_BASE_TEST_ARGS := \
-    -p "no:cov" \
-    --log-cli-level=INFO \
-    --log-cli-format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
-PYTEST_SYSTEM_TEST_ARGS := $(PYTEST_BASE_TEST_ARGS) --session-timeout 10800
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
@@ -247,7 +243,8 @@ test-integration-agent-plugin-docker:
 	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
 
 test-integration-agent-plugin:
-	$(PYTEST) -x -T agent_plugin_integration $(realpath agent_plugin_integration) $(PYTEST_SYSTEM_TEST_ARGS)
+	$(PYTEST) -x -T agent_plugin_integration $(realpath agent_plugin_integration) \
+	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-format-python: test-format-python-sort test-format-python-format
 
@@ -298,18 +295,18 @@ test-lint-groovy-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
 test-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl $(PYTEST_BASE_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_BASE_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
 test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
 	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_BASE_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_BASE_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
 
 test-gui-e2e-cce:
 	EDITION=cce $(MAKE) test-gui-e2e-non-free
@@ -321,45 +318,51 @@ test-gui-e2e-cse:
 	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
 test-integration:
-	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
+	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+	--session-timeout 5400
 
 test-integration-redfish:
-	$(PYTEST) -T integration_redfish $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration_redfish)
+	$(PYTEST) -T integration_redfish $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(realpath integration_redfish) --session-timeout 1800
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
-	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
+	    $(realpath composition) --session-timeout 5400
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cee:
-	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
+	--session-timeout 5400
 
 test-update-cce:
-	EDITION=cce $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce
+	EDITION=cce $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
+	--session-timeout 5400
 
 test-update-cse:
-	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode
+	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
+	--session-timeout 5400
 
 test-update-cross-edition-cce: # from CEE to CCE
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
-	--latest-base-version --target-edition=CCE --disable-interactive-mode
+	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cme: # from CEE to CME
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
-	--latest-base-version --target-edition=CME --disable-interactive-mode
+	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	--ignore=plugins_integration/test_plugin_piggyback.py
+	--ignore=plugins_integration/test_plugin_piggyback.py --session-timeout 7200
 
 test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	plugins_integration/test_plugin_piggyback.py
+	plugins_integration/test_plugin_piggyback.py --session-timeout 3600
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

@@ -103,61 +103,14 @@ def get_application(
 
     @app.post("/automation")
     async def automation(payload: AutomationPayload) -> AutomationResponse:
-        LOGGER.info(
-            '[automation] Processing automation command "%s" with args: %s',
-            payload.name,
-            payload.args,
+        return _execute_automation_endpoint(
+            payload,
+            engine,
+            cache,
+            reload_config,
+            clear_caches_before_each_call,
+            state,
         )
-        if cache.reload_required(state.last_reload_at):
-            state.last_reload_at = time.time()
-            reload_config()
-            LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
-
-        buffer_stdout = io.StringIO()
-        buffer_stderr = io.StringIO()
-        with (
-            TRACER.span(
-                f"automation[{payload.name}]",
-                attributes={
-                    "cmk.automation.name": payload.name,
-                    "cmk.automation.args": payload.args,
-                },
-            ),
-            redirect_stdout(buffer_stdout),
-            redirect_stderr(buffer_stderr),
-            redirect_stdin(io.StringIO(payload.stdin)),
-            temporary_log_level(LOGGER, payload.log_level),
-        ):
-            clear_caches_before_each_call()
-            try:
-                exit_code: int = engine.execute(
-                    payload.name,
-                    list(payload.args),
-                    called_from_automation_helper=True,
-                )
-            except SystemExit as system_exit:
-                LOGGER.error(
-                    '[automation] Encountered SystemExit exception while processing automation "%s" with args: %s',
-                    payload.name,
-                    payload.args,
-                )
-                exit_code = (
-                    system_exit_code
-                    if isinstance(system_exit_code := system_exit.code, int)
-                    else AutomationExitCode.UNKNOWN_ERROR
-                )
-            else:
-                LOGGER.info(
-                    '[automation] Processed automation command "%s" with args: %s',
-                    payload.name,
-                    payload.args,
-                )
-
-            return AutomationResponse(
-                exit_code=exit_code,
-                output=buffer_stdout.getvalue(),
-                error=buffer_stderr.getvalue(),
-            )
 
     @app.get("/health")
     async def check_health() -> HealthCheckResponse:
@@ -169,3 +122,68 @@ def get_application(
 @dataclass
 class _State:
     last_reload_at: float
+
+
+def _execute_automation_endpoint(
+    payload: AutomationPayload,
+    engine: AutomationEngine,
+    cache: Cache,
+    reload_config: Callable[[], None],
+    clear_caches_before_each_call: Callable[[], None],
+    state: _State,
+) -> AutomationResponse:
+    LOGGER.info(
+        '[automation] Processing automation command "%s" with args: %s',
+        payload.name,
+        payload.args,
+    )
+    if cache.reload_required(state.last_reload_at):
+        state.last_reload_at = time.time()
+        reload_config()
+        LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
+
+    buffer_stdout = io.StringIO()
+    buffer_stderr = io.StringIO()
+    with (
+        TRACER.span(
+            f"automation[{payload.name}]",
+            attributes={
+                "cmk.automation.name": payload.name,
+                "cmk.automation.args": payload.args,
+            },
+        ),
+        redirect_stdout(buffer_stdout),
+        redirect_stderr(buffer_stderr),
+        redirect_stdin(io.StringIO(payload.stdin)),
+        temporary_log_level(LOGGER, payload.log_level),
+    ):
+        clear_caches_before_each_call()
+        try:
+            exit_code: int = engine.execute(
+                payload.name,
+                list(payload.args),
+                called_from_automation_helper=True,
+            )
+        except SystemExit as system_exit:
+            LOGGER.error(
+                '[automation] Encountered SystemExit exception while processing automation "%s" with args: %s',
+                payload.name,
+                payload.args,
+            )
+            exit_code = (
+                system_exit_code
+                if isinstance(system_exit_code := system_exit.code, int)
+                else AutomationExitCode.UNKNOWN_ERROR
+            )
+        else:
+            LOGGER.info(
+                '[automation] Processed automation command "%s" with args: %s',
+                payload.name,
+                payload.args,
+            )
+
+        return AutomationResponse(
+            exit_code=exit_code,
+            output=buffer_stdout.getvalue(),
+            error=buffer_stderr.getvalue(),
+        )

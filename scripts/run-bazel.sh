@@ -22,9 +22,9 @@ set -e
 
 ROOT_DIR="$(dirname "$(dirname "$(realpath "$0")")")"
 
-if ! command -v bazelisk &>/dev/null; then
+if ! command -v bazel &>/dev/null; then
     cat <<EOF
-bazelisk command not found in PATH. Please install bazelisk via:
+bazel command not found in PATH. Please install bazelisk via:
 https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
 
 or use the installation script:

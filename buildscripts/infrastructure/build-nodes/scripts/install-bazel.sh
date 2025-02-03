@@ -34,6 +34,8 @@ if [ "$1" != "link-only" ]; then
 fi
 
 ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZELISK_EXE_FILE}" "/usr/bin/bazel"
+# Let's also provide bazelisk in PATH, see https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
+ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZELISK_EXE_FILE}" "/usr/bin/bazelisk"
 
 export USE_BAZEL_VERSION=$BAZEL_VERSION
 test_package "bazel --version" "^bazel $BAZEL_VERSION$"

@@ -36,7 +36,7 @@ const [validation, value] = useValidation<string>(
       :placeholder="spec.input_hint ?? ''"
       :aria-label="spec.title"
       :filter-on="['@main']"
-      :resest-input-on-add="false"
+      :reset-input-on-add="false"
       :allow-new-value-input="spec.allow_new_folder_path"
     />
   </span>

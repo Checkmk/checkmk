@@ -18,7 +18,7 @@ const props = defineProps<{
   autocompleter?: Autocompleter | null
   filterOn: string[]
   size: number
-  resestInputOnAdd: boolean
+  resetInputOnAdd: boolean
   allowNewValueInput?: boolean
 }>()
 
@@ -45,7 +45,7 @@ const selectFirstSuggestion = () => {
 const selectSuggestion = (suggestion: Suggestion) => {
   inputValue.value = suggestion[0]
   visibleInputValue.value = suggestion[1]
-  if (props.resestInputOnAdd) {
+  if (props.resetInputOnAdd) {
     resetVisibleInput()
   }
   showSuggestions.value = false

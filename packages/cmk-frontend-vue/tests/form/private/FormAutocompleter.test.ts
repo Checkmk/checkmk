@@ -35,7 +35,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Search...',
         autocompleter: null,
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -50,7 +50,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Search...',
         autocompleter: null,
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -77,7 +77,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -98,7 +98,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -119,7 +119,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -141,7 +141,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -168,7 +168,7 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resestInputOnAdd: false,
+        resetInputOnAdd: false,
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {

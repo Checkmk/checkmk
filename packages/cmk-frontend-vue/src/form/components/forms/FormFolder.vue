@@ -26,7 +26,13 @@ const [validation, value] = useValidation<string>(
   <span class="form-folder">
     <CmkIcon name="folder_blue" size="small" />
     <span>Main/</span>
-    <input v-model="value" :placeholder="spec.input_hint || ''" type="text" size="27" />
+    <input
+      v-model="value"
+      :placeholder="spec.input_hint || ''"
+      :aria-label="spec.title"
+      type="text"
+      size="27"
+    />
   </span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

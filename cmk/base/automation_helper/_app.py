@@ -8,10 +8,11 @@ import sys
 import time
 from collections.abc import AsyncGenerator, Callable, Iterator, Sequence
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
+from dataclasses import dataclass
 from logging import Formatter, getLogger
 from typing import Protocol
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
@@ -79,6 +80,8 @@ def get_application(
     reload_config: Callable[[], None],
     clear_caches_before_each_call: Callable[[], None],
 ) -> FastAPI:
+    state = _State(last_reload_at=0)
+
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
         # Setting the access log format via config did not work as intended with uvicorn. This
@@ -86,7 +89,7 @@ def get_application(
         for handler in getLogger("uvicorn.access").handlers:
             handler.setFormatter(Formatter("%(asctime)s %(message)s"))
 
-        app.state.last_reload_at = time.time()
+        state.last_reload_at = time.time()
         config.load_all_plugins(
             local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
         )
@@ -99,14 +102,14 @@ def get_application(
     FastAPIInstrumentor.instrument_app(app)
 
     @app.post("/automation")
-    async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
+    async def automation(payload: AutomationPayload) -> AutomationResponse:
         LOGGER.info(
             '[automation] Processing automation command "%s" with args: %s',
             payload.name,
             payload.args,
         )
-        if cache.reload_required(request.app.state.last_reload_at):
-            request.app.state.last_reload_at = time.time()
+        if cache.reload_required(state.last_reload_at):
+            state.last_reload_at = time.time()
             reload_config()
             LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
@@ -157,7 +160,12 @@ def get_application(
             )
 
     @app.get("/health")
-    async def check_health(request: Request) -> HealthCheckResponse:
-        return HealthCheckResponse(last_reload_at=request.app.state.last_reload_at)
+    async def check_health() -> HealthCheckResponse:
+        return HealthCheckResponse(last_reload_at=state.last_reload_at)
 
     return app
+
+
+@dataclass
+class _State:
+    last_reload_at: float

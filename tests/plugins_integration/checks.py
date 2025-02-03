@@ -611,7 +611,7 @@ def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bo
         time.sleep(1)
         count += 1
     if strict:
-        assert piggyback_hosts, "No piggyback hosts found."
+        assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host}".'
 
 
 def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:

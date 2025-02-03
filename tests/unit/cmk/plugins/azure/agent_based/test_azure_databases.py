@@ -19,7 +19,9 @@ from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 LEVELS = (5.0, 20.0)
 METRIC_CONN_FAILED_OK = Metric(name="connections_failed_rate", value=10)
+METRIC_CONN_FAILED_WARN = Metric(name="connections_failed_rate", value=10, levels=LEVELS)
 METRIC_CONN_SUCCESS_OK = Metric(name="connections", value=10)
+METRIC_CONN_SUCCESS_WARN = Metric(name="connections", value=10, levels=LEVELS)
 METRIC_CPU_OK = Metric(name="util", value=10.0)
 METRIC_CPU_WARN = Metric(name="util", value=10.0, levels=LEVELS)
 METRIC_DEADLOCK_OK = Metric(name="deadlocks", value=10.0)
@@ -30,7 +32,13 @@ METRIC_STORAGE_OK = Metric(name="storage_percent", value=10.0)
 METRIC_STORAGE_WARN = Metric(name="storage_percent", value=10.0, levels=LEVELS)
 
 RESULT_CONN_SUCCESS_OK = Result(state=State.OK, summary="Successful connections: 10")
+RESULT_CONN_SUCCESS_WARN = Result(
+    state=State.WARN, summary="Successful connections: 10 (warn/crit at 5.0/20.0)"
+)
 RESULT_CONN_FAILED_OK = Result(state=State.OK, summary="Failed connections: 10")
+RESULT_CONN_FAILED_WARN = Result(
+    state=State.WARN, summary="Failed connections: 10 (warn/crit at 5.0/20.0)"
+)
 RESULT_CPU_OK = Result(state=State.OK, summary="CPU: 10.00%")
 RESULT_CPU_WARN = Result(state=State.WARN, summary="CPU: 10.00% (warn/crit at 5.00%/20.00%)")
 RESULT_DEADLOCK_OK = Result(state=State.OK, summary="Deadlocks: 10")
@@ -90,7 +98,7 @@ RESULT_STORAGE_WARN = Result(
                 )
             },
             "foo",
-            {"storage_percent_levels": LEVELS},
+            {"storage_percent": ("fixed", LEVELS)},
             [RESULT_STORAGE_WARN, METRIC_STORAGE_WARN],
             id="Storage with WARN level exceeded",
         ),
@@ -150,7 +158,7 @@ def test_check_azure_databases_storage(
                 )
             },
             "foo",
-            {"deadlocks_levels": LEVELS},
+            {"deadlocks": ("fixed", LEVELS)},
             [RESULT_DEADLOCK_WARN, METRIC_DEADLOCK_WARN],
             id="Deadlock without WARN levels exceeded",
         ),
@@ -210,9 +218,9 @@ def test_check_azure_databases_deadlock(
                 )
             },
             "foo",
-            {"cpu_percent_levels": LEVELS},
+            {"cpu_percent": ("fixed", LEVELS)},
             [RESULT_CPU_WARN, METRIC_CPU_WARN],
-            id="CPU with WARN level exceepded",
+            id="CPU with WARN level exceeded",
         ),
     ],
 )
@@ -270,7 +278,7 @@ def test_check_azure_databases_cpu(
                 )
             },
             "foo",
-            {"dtu_percent_levels": LEVELS},
+            {"dtu_percent": ("fixed", LEVELS)},
             [RESULT_DTU_WARN, METRIC_DTU_WARN],
             id="DTU with WARN level exceeded",
         ),
@@ -322,7 +330,40 @@ def test_check_azure_databases_dtu(
             ],
             id="DB connections without levels",
         ),
-        # TODO: Add a parameter set once ruleset is fixed.
+        pytest.param(
+            {
+                "foo": Resource(
+                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                    name="foo",
+                    type="foo/bar",
+                    group="group",
+                    location="westeurope",
+                    metrics={
+                        "average_connection_successful": AzureMetric(
+                            name="connection_successful",
+                            aggregation="average",
+                            value=10,
+                            unit="count",
+                        ),
+                        "average_connection_failed": AzureMetric(
+                            name="connection_failed",
+                            aggregation="average",
+                            value=10,
+                            unit="count",
+                        ),
+                    },
+                )
+            },
+            "foo",
+            {"successful_connections": ("fixed", LEVELS), "failed_connections": ("fixed", LEVELS)},
+            [
+                RESULT_CONN_SUCCESS_WARN,
+                METRIC_CONN_SUCCESS_WARN,
+                RESULT_CONN_FAILED_WARN,
+                METRIC_CONN_FAILED_WARN,
+            ],
+            id="Both DB connection metrics about WARN threshold",
+        ),
     ],
 )
 def test_check_azure_databases_connections(

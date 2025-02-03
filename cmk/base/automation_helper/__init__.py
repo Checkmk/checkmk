@@ -6,9 +6,6 @@
 """Launches automation helper application for processing automation commands."""
 
 import os
-import signal
-from contextlib import nullcontext
-from threading import Event
 
 from setproctitle import setproctitle
 
@@ -23,7 +20,6 @@ from ._app import clear_caches_before_each_call, get_application, reload_automat
 from ._cache import Cache
 from ._config import config_from_disk_or_default_config
 from ._log import configure_logger, LOGGER
-from ._reloader import run as run_reloader
 from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
@@ -53,29 +49,16 @@ def main() -> int:
         app = get_application(
             engine=automations,
             cache=cache,
+            reloader_config=config.reloader_config,
             reload_config=reload_automation_config,
             clear_caches_before_each_call=clear_caches_before_each_call,
         )
 
         daemonize()
 
-        current_pid = os.getpid()
-
-        with (
-            run_watcher(
-                config.watcher_config,
-                cache,
-            ),
-            (
-                run_reloader(
-                    config.reloader_config,
-                    cache,
-                    lambda: os.kill(current_pid, signal.SIGHUP),
-                    Event(),
-                )
-                if config.reloader_config.active
-                else nullcontext()
-            ),
+        with run_watcher(
+            config.watcher_config,
+            cache,
         ):
             try:
                 run_server(

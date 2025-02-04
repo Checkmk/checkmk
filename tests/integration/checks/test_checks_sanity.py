@@ -137,7 +137,6 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
         # f"Process {site.id} jaeger",
         f"Process {site.id} piggyback hub",
         f"Process {site.id} rabbitmq",
-        # f"Process {site.id} real-time helper",  # not enabled
         f"Process {site.id} redis-server",
         f"Process {site.id} rrdcached",
     }
@@ -146,7 +145,7 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
         expected_ps_services |= {
             f"Process {site.id} active check helpers",
             f"Process {site.id} alert helper",
-            # f"Process {site.id} checker helpers",  # FIXME
+            f"Process {site.id} checker helpers",
             f"Process {site.id} cmc",
             f"Process {site.id} fetcher helpers",
             f"Process {site.id} livestatus proxy",

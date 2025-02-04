@@ -1159,26 +1159,29 @@ class Site:
 
     def _create_automation_user(self, username: str) -> None:
         self._automation_secret = Password.random(24)
-        logger.info("Creating test-user: '%s'.", username)
-        self.openapi.users.create(
-            username=username,
-            fullname="Automation user for tests",
-            password=self._automation_secret.raw,
-            email="auomation@localhost",
-            contactgroups=[],
-            roles=["admin"],
-            is_automation_user=True,
-        )
+        if self.openapi.users.get(username):
+            logger.info("Reusing existing test-user: '%s' (REUSE=1); resetting password.", username)
+            self.execute(
+                ["bash", "-c", f'cmk-passwd "{username}" -i <<< "{self._automation_secret.raw}"']
+            )
+        else:
+            logger.info("Creating test-user: '%s'.", username)
+            self.openapi.users.create(
+                username=username,
+                fullname="Automation user for tests",
+                password=self._automation_secret.raw,
+                email="automation@localhost",
+                contactgroups=[],
+                roles=["admin"],
+                is_automation_user=True,
+            )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
 
     @tracer.start_as_current_span("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
         username = AUTOMATION_USER
-        if self.openapi.users.get(username) is None:
-            self._create_automation_user(username)
-        else:
-            logger.info("Reusing existing test-user: '%s' (REUSE=1).", username)
+        self._create_automation_user(username)
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.version.is_saas_edition():

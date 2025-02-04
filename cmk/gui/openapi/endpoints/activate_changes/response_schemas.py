@@ -64,7 +64,7 @@ class ActivationExtensionFields(BaseSchema):
         example=False,
     )
     force_foreign_changes = fields.Boolean(
-        description="If the activation is still running",
+        description="A boolean flag indicating that even changes which do not originate from the user requesting the activation shall be activated",
         example=False,
     )
     time_started = Timestamp(

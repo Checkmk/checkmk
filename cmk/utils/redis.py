@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, TypeVar
 
@@ -101,19 +103,23 @@ def query_redis(
             update_lock.release()
 
 
-_ENABLED = True
-
-
 @contextmanager
 def disable_redis() -> Iterator[None]:
-    global _ENABLED
-    last_value = _ENABLED
-    _ENABLED = False
+    last_value = _SWITCH.enabled
+    _SWITCH.enabled = False
     try:
         yield
     finally:
-        _ENABLED = last_value
+        _SWITCH.enabled = last_value
 
 
 def redis_enabled() -> bool:
-    return _ENABLED
+    return _SWITCH.enabled
+
+
+@dataclass
+class _ThreadSafeRedisSwitch(threading.local):
+    enabled: bool
+
+
+_SWITCH = _ThreadSafeRedisSwitch(enabled=True)

@@ -110,7 +110,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "65a3dca4-8d71-45d8-8887-53ef0c63d06f",
             "rabbitmq",
-            "~(/omd/versions/.*/lib/erlang|.*bin/rabbitmq)",
+            "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)",
         ),
         (
             "b0d6dc83-fd0e-4382-921b-94415b353eaf",

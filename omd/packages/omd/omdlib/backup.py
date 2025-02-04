@@ -96,7 +96,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
 
     if "no-logs" in options or "no-past" in options:
         # Logs of different components
-        excludes.append("var/log/*.log")
+        excludes.append("var/log/*.log*")
         excludes.append("var/log/*/*")
         excludes.append("var/pnp4nagios/log/*")
         excludes.append("var/pnp4nagios/perfdata.dump")

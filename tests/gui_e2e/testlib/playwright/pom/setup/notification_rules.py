@@ -237,7 +237,7 @@ class BaseNotificationPage(QuickSetupPage):
 
         logger.info("Add status event filter: status changes from ANY to WARN")
         self.delete_all_service_events()
-        self.add_service_event(0, "Status change", "Any", "WARN")
+        self.add_service_event(0, "State change", "Any", "WARN")
 
         logger.info("Apply service filter: '%s'", service)
         self.apply_services_filter(service)

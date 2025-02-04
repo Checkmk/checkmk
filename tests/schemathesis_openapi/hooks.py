@@ -246,7 +246,7 @@ def hook_after_call(
     case: schemathesis.models.Case,
     response: schemathesis.transports.responses.GenericResponse,
 ) -> None:
-    """Modify the case after execution but before validation.
+    """Modify the case response after execution but before validation.
 
     This can be used to analyze and modify the response before validation
     (e.g. to suppress response validation errors).
@@ -287,7 +287,7 @@ def hook_after_call(
         response,
         empty_content_type=True,
         valid_content_type=False,
-        update_headers={"Content-Type": "{auto}"},
+        update_headers=CaseInsensitiveDict({"Content-Type": "{auto}"}),
         ticket_id="CMK-11886",
     )
     # generic: invalid (but not empty) response Content-Type
@@ -296,7 +296,7 @@ def hook_after_call(
         response,
         empty_content_type=False,
         valid_content_type=False,
-        update_headers={"Content-Type": "{auto}"},
+        update_headers=CaseInsensitiveDict({"Content-Type": "{auto}"}),
         ticket_id="CMK-11886",
     )
     # generic: invalid 400 response Content-Type
@@ -304,7 +304,7 @@ def hook_after_call(
         case,
         response,
         status_code=400,
-        update_headers={"Content-Type": PROBLEM_CONTENT_TYPE},
+        update_headers=CaseInsensitiveDict({"Content-Type": PROBLEM_CONTENT_TYPE}),
         ticket_id=None,
     )
     # generic: invalid 404 response Content-Type
@@ -312,7 +312,7 @@ def hook_after_call(
         case,
         response,
         status_code=404,
-        update_headers={"Content-Type": PROBLEM_CONTENT_TYPE},
+        update_headers=CaseInsensitiveDict({"Content-Type": PROBLEM_CONTENT_TYPE}),
         ticket_id=None,
     )
 

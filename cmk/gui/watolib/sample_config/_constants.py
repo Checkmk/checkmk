@@ -45,12 +45,17 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "6b3a78b3-b4e9-4aca-b427-2f656809bf49",
             "alert helper",
-            "~python3 /omd/sites/[^/]+/bin/cmk --handle-alerts --keepalive$",
+            "~python3 /omd/sites/[^/]+/bin/cmk --handle-alerts",
         ),
         (
             "7eda3d76-62ff-4ff6-b84b-a26ce202c577",
             "apache",
             "~.*/omd/sites/[^/]+/etc/apache/apache.conf$",
+        ),
+        (
+            "94190e27-2836-488a-b6b4-f23f694a455e",
+            "automation helpers",
+            "~gunicorn:.*automation-helper",
         ),
         (
             "feaa2248-08b8-47a3-bc3c-a5502d2b9f3a",
@@ -110,7 +115,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "b0d6dc83-fd0e-4382-921b-94415b353eaf",
             "real-time helper",
-            "~python3 /omd/sites/[^/]+/bin/cmk --keepalive --real-time-checks$",
+            "~python3 /omd/sites/[^/]+/bin/cmk --real-time-checks",
         ),
         (
             "33e44415-a74c-4146-a6c7-65473eff71ca",
@@ -120,7 +125,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "0bd2b6cc-bc5c-4244-9658-928870f68f35",
             "rrd helper",
-            "~python3 /omd/sites/[^/]+/bin/cmk --create-rrd --keepalive$",
+            "~python3 /omd/sites/[^/]+/bin/cmk( -)?-create-rrd",
         ),
         (
             "bf1601b9-69bb-4f1d-8384-e5e057069656",

@@ -60,7 +60,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "feaa2248-08b8-47a3-bc3c-a5502d2b9f3a",
             "checker helpers",
-            "~python3 /omd/sites/[^/]+/bin/cmk --checker",
+            "~python3 /omd/sites/[^/]+/bin/cmk .*--checker",
         ),
         (
             "9440a0b2-5eb2-4f52-ac4b-17c6ddecd1f2",

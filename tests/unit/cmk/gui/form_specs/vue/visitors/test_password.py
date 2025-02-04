@@ -40,6 +40,23 @@ def test_password_encrypts_password(
 
 @patch("cmk.gui.form_specs.vue.visitors.password.passwordstore_choices", return_value=[])
 @pytest.mark.parametrize(
+    ["data_origin", "value"],
+    [
+        [DataOrigin.DISK, ("cmk_postprocessed", "explicit_password", ("", "some_password"))],
+        [DataOrigin.FRONTEND, ("explicit_password", "", "some_password", False)],
+    ],
+)
+def test_password_masks_password(
+    patch_pwstore: None, request_context: None, data_origin: DataOrigin, value: object
+) -> None:
+    visitor = get_visitor(Password(), VisitorOptions(data_origin=data_origin))
+    _, _, (_, masked_password) = visitor.mask(value)
+
+    assert masked_password == "******"
+
+
+@patch("cmk.gui.form_specs.vue.visitors.password.passwordstore_choices", return_value=[])
+@pytest.mark.parametrize(
     ["old", "new"],
     [
         pytest.param(

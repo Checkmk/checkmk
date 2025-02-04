@@ -32,6 +32,20 @@ def test_simple_password_encrypts_disk_password(
 
 
 @pytest.mark.parametrize(
+    ["data_origin", "value"],
+    [
+        [DataOrigin.DISK, "some_password"],
+        [DataOrigin.FRONTEND, ["some_password", False]],
+    ],
+)
+def test_simple_password_masks_password(data_origin: DataOrigin, value: object) -> None:
+    visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=data_origin))
+    password = visitor.mask(value)
+
+    assert password == "******"
+
+
+@pytest.mark.parametrize(
     "password",
     [
         ["some_password", False],

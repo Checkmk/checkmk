@@ -67,6 +67,15 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
             )
         return self._to_disk(parsed_value)
 
+    @final
+    def mask(self, raw_value: object) -> DataForDisk:
+        parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
+        if isinstance(parsed_value, InvalidValue):
+            raise MKGeneralException(
+                "Unable to serialize invalid value. Reason: %s" % parsed_value.reason
+            )
+        return self._mask(parsed_value)
+
     def _migrate_disk_value(self, value: object) -> object:
         if (
             not isinstance(value, FormSpecDefaultValue)
@@ -101,3 +110,11 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
     @abc.abstractmethod
     def _to_disk(self, parsed_value: ParsedValueModel) -> DataForDisk:
         """Transforms the value into a serializable format for disk storage."""
+
+    def _mask(self, parsed_value: ParsedValueModel) -> DataForDisk:
+        """Obscure any sensitive information in the provided value
+
+        Container-like ValueSpecs must recurse over their items, allow these to mask their
+        values. Other ValueSpecs that don't have a need for masking sensitive information
+        can simply return the input value."""
+        self._to_disk(parsed_value)

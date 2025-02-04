@@ -76,3 +76,6 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
 
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return parsed_value
+
+    def _mask(self, parsed_value: _ParsedValueModel) -> object:
+        return "******"

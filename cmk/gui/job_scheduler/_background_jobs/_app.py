@@ -85,7 +85,8 @@ def get_application(
 
     @app.post("/terminate")
     async def terminate(request: Request, payload: TerminateRequest) -> None:
-        executor.terminate(payload.job_id)
+        if (result := executor.terminate(payload.job_id)).is_error():
+            raise result.error
 
     @app.post("/is_alive")
     async def is_alive(request: Request, payload: IsAliveRequest) -> IsAliveResponse:

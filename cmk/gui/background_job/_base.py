@@ -197,7 +197,8 @@ class BackgroundJob:
             pass
 
     def _terminate_processes(self) -> None:
-        self._executor.terminate(self._job_id)
+        if (result := self._executor.terminate(self._job_id)).is_error():
+            raise MKGeneralException(_("Failed to stop job: %s") % result.error)
 
     def get_status(self) -> JobStatusSpec:
         status = self._jobstatus_store.read()

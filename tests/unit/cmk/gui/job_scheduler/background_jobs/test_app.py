@@ -50,7 +50,8 @@ class DummyExecutor(JobExecutor):
     ) -> result.Result[None, StartupError]:
         return result.OK(None)
 
-    def terminate(self, job_id: str) -> None: ...
+    def terminate(self, job_id: str) -> result.Result[None, StartupError]:
+        return result.OK(None)
 
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         return result.OK(True)

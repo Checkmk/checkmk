@@ -56,14 +56,14 @@ def wato_html_footer(show_body_end: bool = True) -> None:
 
 
 def _make_wato_page_state() -> PageState:
-    changes_info = ActivateChanges().get_pending_changes_info()
-    tooltip = get_pending_changes_tooltip()
+    changes_info = ActivateChanges().get_pending_changes_info(count_limit=10)
+    tooltip = get_pending_changes_tooltip(changes_info)
     changelog_url = "wato.py?mode=changelog"
     span_id = "changes_info"
     if changes_info.has_changes():
         return PageState(
             text=HTMLWriter.render_span(
-                HTMLWriter.render_span(changes_info.number, class_="changes_number")
+                HTMLWriter.render_span(changes_info.readable_number, class_="changes_number")
                 + HTMLWriter.render_span(changes_info.message_without_number, class_="changes_str"),
                 id_=span_id,
             ),

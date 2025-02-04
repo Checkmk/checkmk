@@ -412,6 +412,13 @@ class PendingChangesInfo:
         return self.number > 0
 
     @property
+    def readable_number(self) -> str | int:
+        if self.number > 10:
+            return "10+"
+
+        return self.number
+
+    @property
     def message_without_number(self) -> str | None:
         """Returns only the non-numeric (and non-"+") part of the pending changes message
         E.g.: self.message = "2 pending changes" -> "pending changes"
@@ -1080,15 +1087,16 @@ class ActivateChanges:
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     @staticmethod
-    def _get_number_of_pending_changes() -> int:
+    def _get_number_of_pending_changes(count_limit: int | None = None) -> int:
         changes_counter = 0
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-
         for site_id in activation_sites():
             changes = SiteChanges(site_id).read()
             changes_counter += len(
                 list(change for change in changes if not has_been_activated(change))
             )
+            if count_limit is not None and changes_counter > count_limit:
+                return changes_counter
         return changes_counter
 
     @staticmethod
@@ -1101,12 +1109,8 @@ class ActivateChanges:
             return _("%d changes") % number_of_changes
         return None
 
-    def get_changes_estimate(self) -> str | None:
-        number_of_changes = self._get_number_of_pending_changes()
-        return self._make_changes_message(number_of_changes)
-
-    def get_pending_changes_info(self) -> PendingChangesInfo:
-        number_of_changes = self._get_number_of_pending_changes()
+    def get_pending_changes_info(self, count_limit: int | None = None) -> PendingChangesInfo:
+        number_of_changes = self._get_number_of_pending_changes(count_limit=count_limit)
         message = self._make_changes_message(number_of_changes)
         return PendingChangesInfo(number=number_of_changes, message=message)
 
@@ -2522,8 +2526,10 @@ def has_pending_changes() -> bool:
     return ActivateChanges().get_pending_changes_info().has_changes()
 
 
-def get_pending_changes_tooltip() -> str:
-    changes_info = ActivateChanges().get_pending_changes_info()
+def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) -> str:
+    if changes_info is None:
+        changes_info = ActivateChanges().get_pending_changes_info()
+
     if changes_info.has_changes():
         n_changes = changes_info.number
         return (

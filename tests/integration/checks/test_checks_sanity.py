@@ -127,8 +127,9 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
         f"Process {site.id} active check helpers",
         f"Process {site.id} agent receiver",
-        # f"Process {site.id} alert helper",  # FIXME
+        f"Process {site.id} alert helper",
         f"Process {site.id} apache",
+        f"Process {site.id} automation helpers",
         # f"Process {site.id} checker helpers",  # FIXME
         f"Process {site.id} cmc",
         f"Process {site.id} dcd",
@@ -143,7 +144,7 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
         f"Process {site.id} rabbitmq",
         # f"Process {site.id} real-time helper",  # not enabled
         f"Process {site.id} redis-server",
-        # f"Process {site.id} rrd helper",  # TODO are these expected?
+        f"Process {site.id} rrd helper",
         f"Process {site.id} rrdcached",
     }
     assert {k for k in host_services if k.startswith("Process")} == expected_ps_services

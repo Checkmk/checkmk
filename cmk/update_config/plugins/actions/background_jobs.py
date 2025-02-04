@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import hashlib
+import json
 import os
 from logging import Logger
 from typing import Literal
@@ -34,6 +35,16 @@ def _rename_background_job_dirs(logger: Logger) -> None:
         )
         return
 
+    migrated_file_path = os.path.join(
+        background_job_path, ".migrated_service_discovery_directories.json"
+    )
+
+    if os.path.exists(migrated_file_path):
+        with open(migrated_file_path, "r") as migrated_file:
+            migrated_dirs = json.load(migrated_file)
+    else:
+        migrated_dirs = []
+
     try:
         for item in os.listdir(background_job_path):
             if not item.startswith(dir_prefix):
@@ -42,16 +53,25 @@ def _rename_background_job_dirs(logger: Logger) -> None:
             if not os.path.isdir(item_path := os.path.join(background_job_path, item)):
                 continue
 
+            if item in migrated_dirs:
+                continue
+
             new_name = rename_func(dir_prefix, item)
             new_path = os.path.join(background_job_path, new_name)
             os.rename(item_path, new_path)
             logger.debug(
                 f"       Renamed: {item_path} -> {new_path}...{tty.green}Passed{tty.normal}"
             )
+
+            migrated_dirs.append(new_name)
+
     except Exception as e:
         logger.warning(
             f"       File {item_path} could not be renamed...{tty.red}Failed{tty.normal}\nError: {e}"
         )
+
+    with open(migrated_file_path, "w") as migrated_file:
+        json.dump(migrated_dirs, migrated_file)
 
 
 def rename_func(

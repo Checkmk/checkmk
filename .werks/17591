@@ -1,0 +1,10 @@
+Title: SAP HANA: fix false positive status errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1738687045
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+With this fix, errors from previous host checks will no longer carry over to subsequent hosts.

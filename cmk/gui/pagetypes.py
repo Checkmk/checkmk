@@ -2356,7 +2356,11 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         """Returns either the requested topic or fallback to "other"."""
         instances = PagetypeTopics.load()
         other_page = instances.find_page("other")
-        assert other_page is not None
+        if not other_page:
+            raise MKUserError(
+                None,
+                _("No permission for fallback topic 'Other'. Please contact your administrator."),
+            )
         return instances.find_page(topic_id) or other_page
 
 

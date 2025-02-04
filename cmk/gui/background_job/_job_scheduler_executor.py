@@ -79,13 +79,14 @@ class JobSchedulerExecutor(JobExecutor):
 
         return result.OK(None)
 
-    def terminate(self, job_id: str) -> None:
+    def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/terminate",
             json=TerminateRequest(job_id=job_id).model_dump(mode="json"),
         )
         if r.is_error():
-            raise r.error
+            return result.Error(r.error)
+        return result.OK(None)
 
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         r = self._post(

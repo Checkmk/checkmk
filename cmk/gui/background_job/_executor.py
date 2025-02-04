@@ -46,7 +46,7 @@ class JobExecutor(Protocol):
         origin_span_context: SpanContextModel,
     ) -> result.Result[None, StartupError]: ...
 
-    def terminate(self, job_id: str) -> None: ...
+    def terminate(self, job_id: str) -> result.Result[None, StartupError]: ...
 
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]: ...
 
@@ -108,7 +108,7 @@ class ThreadedJobExecutor(JobExecutor):
         p.start()
         return result.OK(None)
 
-    def terminate(self, job_id: str) -> None:
+    def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         try:
             self._logger.debug("Stop job %s using stop event", job_id)
             ThreadedJobExecutor.running_jobs[job_id].stop_event.set()
@@ -117,6 +117,7 @@ class ThreadedJobExecutor(JobExecutor):
             del ThreadedJobExecutor.running_jobs[job_id]
         except KeyError:
             pass
+        return result.OK(None)
 
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         try:

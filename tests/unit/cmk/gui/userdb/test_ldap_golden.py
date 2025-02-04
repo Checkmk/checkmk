@@ -99,7 +99,7 @@ def test_connect(mock_ldap: MagicMock) -> None:
     assert connector._ldap_obj_config == cfg, "Connector sets config for mock"
 
     assert len(mock_ldap.call_args_list) == 2, "Connected to main and failover server"
-    mock_ldap.assert_called_with("ldap://internet", trace_level=0, trace_file=None)  # most recent
+    mock_ldap.assert_called_with("ldap://internet")  # most recent
 
     # assumes "ldap_golden_unknown_password" is not in the password store, hence the 'None'.
     connector._ldap_obj.simple_bind_s.assert_called_with(cfg["bind"][0], None)
@@ -274,4 +274,4 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(cfg)
     connector.connect()
 
-    mock_ldap.assert_called_with("ldap://lolcathorst", trace_level=0, trace_file=None)
+    mock_ldap.assert_called_with("ldap://lolcathorst")

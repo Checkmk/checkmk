@@ -950,6 +950,14 @@ td.invtree {
       height: 14px;
       padding: 2px 6px;
       background-color: $nested-table-td-bg-color;
+
+      &.muted_text {
+        background-color: $nested-table-td-inactive-bg-color;
+
+        > span {
+          opacity: $inactive-opacity;
+        }
+      }
     }
 
     th {
@@ -1219,6 +1227,6 @@ td.agent_config table.rulesets td {
   }
 }
 
-.muted_text {
+span.muted_text {
   color: $font-color-dimmed;
 }

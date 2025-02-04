@@ -67,25 +67,24 @@ class SDItem:
             or self.retention_interval is None
             or self.retention_interval.source == "current"
         ):
-            return tdclass, html_value
+            return " ".join([tdclass, "muted_text"]), html_value
 
         now = int(time.time())
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
         keep_until = valid_until + self.retention_interval.retention_interval
         if now > keep_until:
             return (
-                tdclass,
+                " ".join([tdclass, "muted_text"]),
                 HTMLWriter.render_span(
                     html_value
                     + HTMLWriter.render_nbsp()
                     + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
                     title=_("Data is outdated and will be removed with the next check execution"),
-                    css=["muted_text"],
                 ),
             )
         if now > valid_until:
             return (
-                tdclass,
+                " ".join([tdclass, "muted_text"]),
                 HTMLWriter.render_span(
                     html_value,
                     title=_("Data was provided at %s and is considered valid until %s")
@@ -93,7 +92,6 @@ class SDItem:
                         cmk.utils.render.date_and_time(self.retention_interval.cached_at),
                         cmk.utils.render.date_and_time(keep_until),
                     ),
-                    css=["muted_text"],
                 ),
             )
         return tdclass, html_value
@@ -281,7 +279,9 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 
         min_type = _MinType()
 
-        def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+        def _sanitize(
+            value: SDDeltaValue,
+        ) -> tuple[_MinType | SDValue, _MinType | SDValue]:
             return (value.old or min_type, value.new or min_type)
 
         return (
@@ -457,7 +457,10 @@ class TreeRenderer:
                     ("site", self._site_id),
                     ("host", self._host_name),
                     ("raw_path", raw_path),
-                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    (
+                        "show_internal_tree_paths",
+                        "on" if self._show_internal_tree_paths else "",
+                    ),
                     ("tree_id", tree_id),
                 ],
                 "ajax_inv_render_tree.py",

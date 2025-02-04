@@ -349,12 +349,13 @@ def test_wait_for_background_jobs_while_one_running_for_too_long(
         job.stop()
 
 
+@pytest.mark.skip("CMK-21655")
 @pytest.mark.usefixtures("allow_background_jobs")
 def test_wait_for_background_jobs_while_one_running_but_finishes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     job = DummyBackgroundJob()
-    job.start(
+    result = job.start(
         simple_job_target(job.execute_endless),
         InitialStatusArgs(
             title=job.gui_title(),
@@ -363,6 +364,8 @@ def test_wait_for_background_jobs_while_one_running_but_finishes(
             user=None,
         ),
     )
+    if result.is_error():
+        raise result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=20,

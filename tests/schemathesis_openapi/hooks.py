@@ -6,7 +6,9 @@ import json
 import logging
 from typing import Any
 
+import requests
 import schemathesis
+import schemathesis.transports.responses
 from requests.structures import CaseInsensitiveDict
 
 from tests.schemathesis_openapi import settings
@@ -242,7 +244,7 @@ def hook_before_call(
 def hook_after_call(
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
-    response: schemathesis.GenericResponse,
+    response: schemathesis.transports.responses.GenericResponse,
 ) -> None:
     """Modify the case after execution but before validation.
 
@@ -250,6 +252,7 @@ def hook_after_call(
     (e.g. to suppress response validation errors).
     """
     logger.debug("%s %s: after_call handler", case.method, case.path)
+    reason = response.reason if isinstance(response, requests.Response) else "n/a"
 
     # generic: invalid JSON response
     if "/download" not in case.path:
@@ -271,9 +274,9 @@ def hook_after_call(
                 valid_body=False,
                 body={},
                 set_body={
-                    "title": response.reason,
+                    "title": reason,
                     "status": response.status_code,
-                    "detail": response.reason,
+                    "detail": reason,
                 },
                 ticket_id="INVALID-JSON",
             )

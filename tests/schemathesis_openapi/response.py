@@ -2,15 +2,15 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import json
 import logging
 from json.decoder import JSONDecodeError
 from re import DOTALL, match
 from typing import Any
 
+import requests
 import schemathesis
+import schemathesis.transports.responses
 
 from tests.schemathesis_openapi import settings
 
@@ -23,7 +23,7 @@ PROBLEM_CONTENT_TYPE = "application/problem+json"
 
 def fix_response(
     case: schemathesis.models.Case,
-    response: schemathesis.GenericResponse,
+    response: schemathesis.transports.responses.GenericResponse,
     method: str | None = None,
     path: str | None = None,
     body: dict[str, Any] | None = None,
@@ -130,14 +130,15 @@ def fix_response(
         and (empty_content_type is None or response_content_type_empty == empty_content_type)
         and (valid_content_type is None or response_content_type_valid == valid_content_type)
     ):
+        reason = response.reason if isinstance(response, requests.Response) else "n/a"
         if set_status_code:
             logger.warning(
-                "%s %s: Suppressed invalid status code, using %s instead of %s (%s)! #%s",
+                "%s %s: Suppressed invalid status code, using %s instead of %s (reason=%s)! #%s",
                 case.method,
                 case.path,
                 set_status_code,
                 response.status_code,
-                response.reason,
+                reason,
                 ticket_id,
             )
             response.status_code = set_status_code
@@ -149,14 +150,17 @@ def fix_response(
                 )
                 if current_header_value != expected_header_value:
                     logger.warning(
-                        '%s %s: Suppressed invalid response header "%s" (got "%s"; expected "%s") on status code %s (%s)! #%s',
+                        (
+                            '%s %s: Suppressed invalid response header "%s" (got "%s"; '
+                            'expected "%s") on status code %s (reason=%s)! #%s'
+                        ),
                         case.method,
                         case.path,
                         header,
                         current_header_value,
                         expected_header_value,
                         response.status_code,
-                        response.reason,
+                        reason,
                         ticket_id,
                     )
                 response.headers[header] = expected_header_value
@@ -178,6 +182,6 @@ def fix_response(
                 case.method,
                 case.path,
                 response.status_code,
-                response.reason,
+                reason,
                 ticket_id,
             )

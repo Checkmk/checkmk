@@ -31,16 +31,13 @@ from __future__ import annotations
 
 import abc
 import copy
-import logging
-import os
 import shutil
-import sys
 import time
 import traceback
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, cast, IO, Literal
+from typing import Any, cast, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import-untyped]
@@ -304,20 +301,21 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def connect_server(self, server: str) -> tuple[ldap.ldapobject.ReconnectLDAPObject, str | None]:
         """Connects to an LDAP server using the provided server uri"""
         try:
-            # Set up debug logging if enabled
-            if self._logger.isEnabledFor(logging.DEBUG):
-                os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
-                ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
-                trace_level = 2
-                trace_file: IO[str] | None = sys.stderr
-            else:
-                trace_level = 0
-                trace_file = None
+            # We don't want this debugging possibly enabled
+            # in production as it leaks sensitive information.
+            # if self._logger.isEnabledFor(logging.DEBUG):
+            #     os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
+            #     ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
+            #     trace_level = 2
+            #     trace_file: IO[str] | None = sys.stderr
+            # else:
+            #     trace_level = 0
+            #     trace_file = None
 
             # Format the LDAP URI and create the connection object
             uri = self._format_ldap_uri(server)
             conn = ldap.ldapobject.ReconnectLDAPObject(
-                uri, trace_level=trace_level, trace_file=trace_file
+                uri,  # trace_level=trace_level, trace_file=trace_file
             )
             conn.protocol_version = self._config.get("version", 3)
             conn.network_timeout = self._config.get("connect_timeout", 2.0)

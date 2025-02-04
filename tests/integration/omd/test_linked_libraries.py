@@ -176,3 +176,20 @@ def test_linked_libraries(site: Site) -> None:
                     continue
 
                 assert False, f"Library {lib.name} was not found. Linked from {file}"
+
+
+def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
+    perl_rrd_so = (
+        Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/auto/RRDs/RRDs.so"
+    )
+    linked_rrd_libs = [
+        linked_library
+        for linked_library in _parse_ldd(_run_ldd(site, perl_rrd_so))
+        if "librrd" in linked_library.name
+    ]
+    assert (
+        len(linked_rrd_libs) == 1
+    ), f"RRDs.so should link to exactly one librrd but ldd returned: {linked_rrd_libs}"
+    assert (
+        linked_rrd_libs[0].path == Path(site.root) / "lib/librrd.so.8"
+    ), "RRDs.so should link against a librrd which is shipped with omd."

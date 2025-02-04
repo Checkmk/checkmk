@@ -13,6 +13,7 @@ from typing import Any
 import requests
 import schemathesis
 import schemathesis.transports.responses
+from requests.structures import CaseInsensitiveDict
 
 from tests.schemathesis_openapi import settings
 
@@ -36,7 +37,7 @@ def fix_response(
     empty_content_type: bool | None = None,
     valid_content_type: bool | None = None,
     set_status_code: int | None = None,
-    update_headers: dict[str, Any] | None = None,
+    update_headers: CaseInsensitiveDict | None = None,
     set_body: dict[str, Any] | None = None,
     update_body: dict[str, Any] | None = None,
     update_items: dict[str, Any] | None = None,
@@ -145,11 +146,15 @@ def fix_response(
             )
             response.status_code = set_status_code
         if update_headers:
-            for header in update_headers:
+            for header, expected_header_value in update_headers.items():
                 current_header_value = response.headers.get(header)
-                expected_header_value = update_headers[header].format(
-                    auto=auto_content_type, problem=PROBLEM_CONTENT_TYPE
-                )
+                if expected_header_value is None:
+                    del response.headers[header]
+                else:
+                    expected_header_value = expected_header_value.format(
+                        auto=auto_content_type, problem=PROBLEM_CONTENT_TYPE
+                    )
+                    response.headers[header] = expected_header_value
                 if current_header_value != expected_header_value:
                     logger.warning(
                         (
@@ -165,7 +170,6 @@ def fix_response(
                         reason,
                         ticket_id,
                     )
-                response.headers[header] = expected_header_value
 
         if set_body or update_body or update_items:
             # NOTE: Assigning to response.json will not work,

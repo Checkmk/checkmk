@@ -8,6 +8,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
+from typing import Literal
 
 from livestatus import SiteId
 
@@ -58,22 +59,26 @@ class SDItem:
     paint_function: PaintFunction
     icon_path_svc_problems: str
 
-    def compute_cell_spec(self) -> tuple[str, HTML]:
-        tdclass, code = self.paint_function(self.value)
+    def compute_cell_spec(self) -> tuple[str, Literal["", "inactive_cell"], HTML]:
+        # Returns a tuple of two css classes (alignment and coloring) and the HTML value
+        # We keep alignment and coloring classes separate as we only need the coloring within
+        # tables
+        alignment_class, code = self.paint_function(self.value)
         html_value = HTML.with_escaping(code)
         if (
             not html_value
             or self.retention_interval is None
             or self.retention_interval.source == "current"
         ):
-            return tdclass, html_value
+            return alignment_class, "", html_value
 
         now = int(time.time())
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
         keep_until = valid_until + self.retention_interval.retention_interval
         if now > keep_until:
             return (
-                tdclass,
+                alignment_class,
+                "inactive_cell",
                 HTMLWriter.render_span(
                     html_value
                     + HTMLWriter.render_nbsp()
@@ -84,7 +89,8 @@ class SDItem:
             )
         if now > valid_until:
             return (
-                tdclass,
+                alignment_class,
+                "inactive_cell",
                 HTMLWriter.render_span(
                     html_value,
                     title=_("Data was provided at %s and is considered valid until %s")
@@ -95,7 +101,7 @@ class SDItem:
                     css=["muted_text"],
                 ),
             )
-        return tdclass, html_value
+        return alignment_class, "", html_value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -106,21 +112,33 @@ class _SDDeltaItem:
     new: SDValue
     paint_function: PaintFunction
 
-    def compute_cell_spec(self) -> tuple[str, HTML]:
+    def compute_cell_spec(self) -> tuple[str, Literal["", "inactive_cell"], HTML]:
+        # Returns a tuple of two css classes (alignment and coloring) and the HTML value
+        # The coloring class is always an empty string but was added for a consistent fct signature
+        # between _SDDeltaItem and SDItem
         if self.old is None and self.new is not None:
-            tdclass, rendered_value = self.paint_function(self.new)
-            return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
-        if self.old is not None and self.new is None:
-            tdclass, rendered_value = self.paint_function(self.old)
-            return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
-        if self.old == self.new:
-            tdclass, rendered_value = self.paint_function(self.old)
-            return tdclass, HTML.with_escaping(rendered_value)
-        if self.old is not None and self.new is not None:
-            tdclass, rendered_old_value = self.paint_function(self.old)
-            tdclass, rendered_new_value = self.paint_function(self.new)
+            alignment_class, rendered_value = self.paint_function(self.new)
             return (
-                tdclass,
+                alignment_class,
+                "",
+                HTMLWriter.render_span(rendered_value, css="invnew"),
+            )
+        if self.old is not None and self.new is None:
+            alignment_class, rendered_value = self.paint_function(self.old)
+            return (
+                alignment_class,
+                "",
+                HTMLWriter.render_span(rendered_value, css="invold"),
+            )
+        if self.old == self.new:
+            alignment_class, rendered_value = self.paint_function(self.old)
+            return alignment_class, "", HTML.with_escaping(rendered_value)
+        if self.old is not None and self.new is not None:
+            _, rendered_old_value = self.paint_function(self.old)
+            alignment_class, rendered_new_value = self.paint_function(self.new)
+            return (
+                alignment_class,
+                "",
                 HTMLWriter.render_span(rendered_old_value, css="invold")
                 + " → "
                 + HTMLWriter.render_span(rendered_new_value, css="invnew"),
@@ -280,7 +298,9 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 
         min_type = _MinType()
 
-        def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+        def _sanitize(
+            value: SDDeltaValue,
+        ) -> tuple[_MinType | SDValue, _MinType | SDValue]:
             return (value.old or min_type, value.new or min_type)
 
         return (
@@ -384,9 +404,10 @@ class TreeRenderer:
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
-            # TODO separate tdclass from rendered value
-            _tdclass, rendered_value = item.compute_cell_spec()
-            html.open_td()
+
+            # TODO separate alignment_class and coloring_class from rendered value
+            _alignment_class, coloring_class, rendered_value = item.compute_cell_spec()
+            html.open_td(class_=coloring_class)
             html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
@@ -428,9 +449,9 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                # TODO separate tdclass from rendered value
-                tdclass, rendered_value = item.compute_cell_spec()
-                html.open_td(class_=tdclass)
+                # TODO separate alignment_class and coloring_class from rendered value
+                alignment_class, coloring_class, rendered_value = item.compute_cell_spec()
+                html.open_td(class_=" ".join([alignment_class, coloring_class]))
                 html.write_html(rendered_value)
                 html.close_td()
             html.close_tr()
@@ -459,7 +480,10 @@ class TreeRenderer:
                     ("site", self._site_id),
                     ("host", self._host_name),
                     ("raw_path", raw_path),
-                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    (
+                        "show_internal_tree_paths",
+                        "on" if self._show_internal_tree_paths else "",
+                    ),
                     ("tree_id", tree_id),
                 ],
                 "ajax_inv_render_tree.py",

@@ -428,7 +428,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-ruff: prepare-protobuf-files
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check $(RUFF_ARGS)
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check
 
 test-ruff-docker:
 	../scripts/run-in-docker.sh make --quiet test-ruff

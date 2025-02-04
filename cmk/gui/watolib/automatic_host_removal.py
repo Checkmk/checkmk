@@ -13,7 +13,7 @@ from typing import Literal, TypedDict
 
 from redis import ConnectionError as RedisConnectionError
 
-from livestatus import LocalConnection, SiteId
+from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import log_dir
@@ -104,7 +104,14 @@ def _hosts_to_be_removed() -> Iterator[tuple[SiteId, Iterator[Host]]]:
 
 def _hosts_to_be_removed_for_site(site_id: SiteId) -> Iterator[Host]:
     if site_is_local(active_config, site_id):
-        hostnames = _hosts_to_be_removed_local()
+        try:
+            hostnames = _hosts_to_be_removed_local()
+        except MKLivestatusSocketError:
+            _LOGGER.info(
+                f"Skipping local site {site_id}, since livestatus is not available",
+                exc_info=True,
+            )
+            return
     else:
         try:
             hostnames_serialized = str(

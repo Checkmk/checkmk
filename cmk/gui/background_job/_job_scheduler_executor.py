@@ -17,6 +17,8 @@ from urllib3.connectionpool import HTTPConnectionPool
 import cmk.utils.resulttype as result
 from cmk.utils import paths
 
+from cmk.gui.i18n import _
+
 from ._executor import JobExecutor, StartupError
 from ._interface import JobTarget, SpanContextModel
 from ._models import (
@@ -125,13 +127,25 @@ class JobSchedulerExecutor(JobExecutor):
         try:
             response = self._session.request(method, url, json=json, timeout=30)
         except requests.ConnectionError as e:
-            return result.Error(StartupError(f"Could not connect to ui-job-scheduler: {e}"))
+            return result.Error(
+                StartupError(
+                    _(
+                        "Could not connect to ui-job-scheduler. "
+                        "Possibly the service <tt>ui-job-scheduler</tt> is not started, "
+                        "please make sure that all site services are all started. "
+                        "Tried to connect via <tt>%s</tt>. Reported error was: %s."
+                    )
+                    % (paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET), e)
+                )
+            )
         except requests.RequestException as e:
-            return result.Error(StartupError(f"Communication with ui-job-scheduler failed: {e}"))
+            return result.Error(
+                StartupError(_("Communication with ui-job-scheduler failed: %s") % e)
+            )
 
         if response.status_code != 200:
             return result.Error(
-                StartupError(f"Got response: HTTP {response.status_code}: {response.text}")
+                StartupError(_("Got response: HTTP %s: %s") % (response.status_code, response.text))
             )
 
         return result.OK(response)

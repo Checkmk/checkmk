@@ -880,10 +880,15 @@ else
         INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_db_status)" "$CREDENTIALS" "$SSLOPTION")
         rc=$?
 
-        if [ $rc != 0 ]; then
-            INSTANCE_STATUS_ERROR=$INSTANCE_STATUS
-            echo "$INSTANCE_STATUS_ERROR" 1>&2
-        fi
+        case "${rc}" in
+            0)
+                INSTANCE_STATUS_ERROR=""
+                ;;
+            *)
+                INSTANCE_STATUS_ERROR=$INSTANCE_STATUS
+                echo "$INSTANCE_STATUS_ERROR" 1>&2
+                ;;
+        esac
 
         set_sap_hana_version "$INSTANCE_USER"
 
@@ -898,6 +903,5 @@ else
             echo "[[${SID} ${INSTANCE}]]"
             echo "$INSTANCE_STATUS_ERROR"
         fi
-
     done
 fi

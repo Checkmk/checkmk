@@ -137,7 +137,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                 output_funnel.drain()
         return []
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> Any:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> Any:
         if isinstance(parsed_value, DefaultValue):
             return self.form_spec.valuespec.default_value()
 

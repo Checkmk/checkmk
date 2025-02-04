@@ -77,5 +77,5 @@ class IntegerVisitor(FormSpecVisitor[Integer, _ParsedValueModel, _FrontendModel]
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> int:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> int:
         return parsed_value

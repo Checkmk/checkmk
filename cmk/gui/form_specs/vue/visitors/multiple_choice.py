@@ -121,5 +121,5 @@ class MultipleChoiceVisitor(
             and_x_more=_("and %s more"),
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> list[str]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> list[str]:
         return list(parsed_value)

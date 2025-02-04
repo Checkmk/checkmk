@@ -49,7 +49,7 @@ class FixedValueVisitor(
             self.form_spec.value,
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

@@ -37,7 +37,7 @@ class TransformVisitor(
     ) -> list[VueComponents.ValidationMessage]:
         return get_visitor(self.form_spec.wrapped_form_spec, self.options).validate(parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> object:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return self.form_spec.to_disk(
             get_visitor(self.form_spec.wrapped_form_spec, self.options).to_disk(parsed_value)
         )

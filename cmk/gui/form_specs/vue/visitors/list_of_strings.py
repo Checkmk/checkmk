@@ -77,5 +77,5 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fr
                 )
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> Sequence[str]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> Sequence[str]:
         return parsed_value

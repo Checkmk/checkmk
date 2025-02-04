@@ -83,5 +83,5 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
             unique_pairs.add(pair)
         return []
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> Mapping[str, str]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> Mapping[str, str]:
         return parsed_value

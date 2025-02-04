@@ -114,7 +114,7 @@ class CascadingSingleChoiceVisitor(
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> tuple[str, object]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> tuple[str, object]:
         selected_name, selected_value = parsed_value
 
         disk_value: Any = None

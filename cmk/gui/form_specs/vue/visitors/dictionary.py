@@ -174,7 +174,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> dict[str, object]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> dict[str, object]:
         disk_values = {}
         for key_name, dict_element in self.form_spec.elements.items():
             element_visitor = get_visitor(dict_element.parameter_form, self.options)

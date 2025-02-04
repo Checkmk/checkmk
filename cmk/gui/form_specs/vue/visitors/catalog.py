@@ -187,9 +187,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
                     )
         return element_validations
 
-    def _to_disk(
-        self, raw_value: object, parsed_value: _ParsedValueModel
-    ) -> Mapping[str, dict[str, object]]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> Mapping[str, dict[str, object]]:
         disk_values: dict[str, dict[str, object]] = {}
         for topic_name, topic in self.form_spec.elements.items():
             disk_values[topic_name] = {}

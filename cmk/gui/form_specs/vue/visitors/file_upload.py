@@ -192,7 +192,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
 
         return validators + compute_validators(self.form_spec)
 
-    def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> tuple[str, str, bytes]:
+    def _to_disk(self, parsed_value: FileUploadModel) -> tuple[str, str, bytes]:
         assert parsed_value.file_name is not None
         assert parsed_value.file_type is not None
         assert parsed_value.file_content_encrypted is not None

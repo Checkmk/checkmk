@@ -53,5 +53,5 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fr
             parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> str:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> str:
         return parsed_value

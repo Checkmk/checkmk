@@ -87,5 +87,5 @@ class SingleChoiceEditableVisitor(
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
         return parsed_value

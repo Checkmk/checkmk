@@ -138,5 +138,5 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, _ParseValueModel, _FrontendModel
     def _validators(self) -> Sequence[Callable[[int], object]]:
         return [IsInteger()] + compute_validators(self.form_spec)
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParseValueModel) -> int:
+    def _to_disk(self, parsed_value: _ParseValueModel) -> int:
         return int(parsed_value)

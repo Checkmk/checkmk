@@ -55,7 +55,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
 
         # Stage 3: Execute validators of the element itself
         return compute_validation_errors(
-            self._validators(), parsed_value, self._to_disk(raw_value, parsed_value)
+            self._validators(), parsed_value, self._to_disk(parsed_value)
         )
 
     @final
@@ -65,7 +65,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
             raise MKGeneralException(
                 "Unable to serialize invalid value. Reason: %s" % parsed_value.reason
             )
-        return self._to_disk(raw_value, parsed_value)
+        return self._to_disk(parsed_value)
 
     def _migrate_disk_value(self, value: object) -> object:
         if (
@@ -99,5 +99,5 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
         return []
 
     @abc.abstractmethod
-    def _to_disk(self, raw_value: object, parsed_value: ParsedValueModel) -> DataForDisk:
+    def _to_disk(self, parsed_value: ParsedValueModel) -> DataForDisk:
         """Transforms the value into a serializable format for disk storage."""

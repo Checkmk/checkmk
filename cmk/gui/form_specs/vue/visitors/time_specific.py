@@ -99,7 +99,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fron
     ) -> list[shared_type_defs.ValidationMessage]:
         return self._get_current_visitor(parsed_value).validate(parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> object:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         disk_value = self._get_current_visitor(parsed_value).to_disk(parsed_value)
         if self._is_active(parsed_value):
             # Convert value to ugly tuple format

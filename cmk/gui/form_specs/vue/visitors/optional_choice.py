@@ -87,7 +87,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
 
         return validation_errors
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> object:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         if parsed_value is None:
             return parsed_value
         return get_visitor(self.form_spec.parameter_form, self.options).to_disk(parsed_value)

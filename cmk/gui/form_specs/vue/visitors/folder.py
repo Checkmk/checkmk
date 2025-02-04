@@ -63,5 +63,5 @@ class FolderVisitor(FormSpecVisitor[Folder, _ParsedValueModel, _FrontendModel]):
             "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _to_disk(self, raw_value: object, parsed_value: str) -> str:
+    def _to_disk(self, parsed_value: str) -> str:
         return parsed_value

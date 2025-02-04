@@ -96,7 +96,7 @@ class ListVisitor(
                 )
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel[T]) -> list[T]:
+    def _to_disk(self, parsed_value: _ParsedValueModel[T]) -> list[T]:
         disk_values = []
         element_visitor = get_visitor(self.form_spec.element_template, self.options)
         for entry in parsed_value:

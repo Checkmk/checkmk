@@ -16,6 +16,7 @@ from cmk.utils.site import url_prefix
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -351,6 +352,13 @@ def make_topic_menu(visuals: Sequence[tuple[str, tuple[str, Visual]]]) -> list[T
         try:
             topic = topics[topic_id]
         except KeyError:
+            if "other" not in topics:
+                raise MKUserError(
+                    None,
+                    _(
+                        "No permission for fallback topic 'Other'. Please contact your administrator."
+                    ),
+                )
             topic = topics["other"]
 
         url = _visual_url(visual_type_name, name)

@@ -188,6 +188,9 @@ def special_agent_discovery_preview(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
             force_cli_interface=True,
+            # the special agent discovery preview can take a long time depending on the underlying
+            # datasource agent which can be problematic for remote setups
+            timeout=5 * 60,
         ),
         results.SpecialAgentDiscoveryPreviewResult,
     )

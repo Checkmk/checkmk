@@ -21,7 +21,7 @@ RUN apk update && apk add bash git make
 
 # install checkmk-dev-tools
 RUN pip3 install --break-system-packages \
- checkmk-dev-tools \
+ "checkmk-dev-tools>=0.4.1" \
  pyyaml
 
 # verify installation

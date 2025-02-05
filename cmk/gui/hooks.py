@@ -107,70 +107,11 @@ ClearEvent = Literal[
     "users-saved",
 ]
 
-ClearEvents = list[ClearEvent] | ClearEvent
-
-R = typing.TypeVar("R")
 P = typing.ParamSpec("P")
-F = typing.TypeVar("F")
-
-CacheWrapperArgs = typing.ParamSpec("CacheWrapperArgs")
+R = typing.TypeVar("R")
 
 
-def scoped_memoize(
-    clear_events: ClearEvents,
-    cache_impl: Callable[CacheWrapperArgs, Callable[[Callable[P, R]], Callable[P, R]]],
-    cache_impl_args: CacheWrapperArgs.args,
-    cache_impl_kwargs: CacheWrapperArgs.kwargs,
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """A scoped memoization decorator.
-
-    This caches the decorated function with a supplied implementation. The cache will be
-    explicitly cleared whenever one of the supplied events in `clear_events` is triggered.
-
-    For this to work, the return-value of the cache implementation needs to have a `cache_clear`
-    method.
-
-    Args:
-        clear_events:
-            A list of hook events, which shall trigger a clearing of the cache.
-
-        cache_impl:
-            The actual cache implementation. Is a function which returns a caching decorator.
-
-        cache_impl_args:
-            The var-args to be passed to the cache implementation.
-
-        cache_impl_kwargs:
-            The keyword arguments to be passed to the cache implementation.
-
-    Returns:
-        A wrapped function which clears the cache according to `clear_events`.
-
-    Raises:
-        ValueError - When no or unknown clear events are supplied.
-
-    """
-    if isinstance(clear_events, str):
-        clear_events = [clear_events]
-    if not clear_events:
-        raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
-
-    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
-        cached_func = cache_impl(*cache_impl_args, **cache_impl_kwargs)(func)
-        for clear_event in clear_events:
-            # Tried to generically type this such that parameters and added methods are checked,
-            # but this is not easily possible right now. lru_cache also has an incompatible
-            # type then.
-            # See: https://github.com/python/mypy/issues/5107
-            register_builtin(clear_event, cached_func.cache_clear)  # type: ignore[attr-defined]
-        return cached_func
-
-    return _decorator
-
-
-def request_memoize(
-    maxsize: int | None = 128, typed: bool = False
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
+def request_memoize(maxsize: int | None = 128) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A cache decorator which only has a scope for one request.
 
     This one uses `functools.lru_cache`, as the caching-scope can only be in one process anyway.
@@ -179,16 +120,16 @@ def request_memoize(
         maxsize:
             See `functools.lru_cache`
 
-        typed:
-            See `functools.lru_cache`
-
     Returns:
-        A `_scoped_memoize` decorator which clears on every request-end and request-context-exit.
+        A decorator which clears on every request-end and request-context-exit.
 
     """
-    return scoped_memoize(
-        clear_events=["request-end", "request-context-exit"],
-        cache_impl=functools.lru_cache,  # type: ignore[return-value]  # too specialized _lru_cache[_P, _R] ...
-        cache_impl_args=(),
-        cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
-    )
+
+    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
+        cached_func = functools.lru_cache(maxsize=maxsize)(func)
+        for clear_event in ["request-end", "request-context-exit"]:
+            register_builtin(clear_event, cached_func.cache_clear)
+        # NOTE: The args/kwargs of P must be Hashable, but we can't express that bound with ParamSpec.
+        return cached_func  # type: ignore[return-value]
+
+    return _decorator

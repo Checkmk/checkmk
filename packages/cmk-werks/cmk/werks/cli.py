@@ -962,7 +962,7 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
         bail_out("This should not have happened, werk is None during edit_werk.")
 
     git_add(werk)
-    if commit:
+    if commit and get_config().create_commit:
         git_commit(werk, custom_files)
 
 
@@ -1126,10 +1126,15 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
     )
 
-    if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
-        sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+    if get_config().create_commit:
+        if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
+            sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+        else:
+            bail_out("Cannot commit.")
     else:
-        bail_out("Cannot commit.")
+        sys.stdout.write(
+            "--> Reserved werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
+        )
 
 
 def main_preview(args: argparse.Namespace) -> None:

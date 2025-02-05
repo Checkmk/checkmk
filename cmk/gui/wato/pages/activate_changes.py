@@ -44,7 +44,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
     show_confirm_cancel_dialog,
-    show_success_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.sites import SiteStatus
@@ -543,7 +542,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
     def page(self) -> None:
         self._quick_setup_activation_msg()
-        self._quick_setup_following_step()
         self._activation_msg()
         self._activation_form()
 
@@ -578,34 +576,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             confirm_text=_("Activate on selected sites"),
             message=message,
             show_cancel_button=False,
-        )
-
-    def _quick_setup_following_step(self):
-        if not self._quick_setup_origin or self.has_pending_changes():
-            return
-
-        special_agent_name = request.get_ascii_input(self.VAR_SPECIAL_AGENT_NAME, "")
-
-        message = html.render_div(
-            (
-                html.render_div(_("The changes have been activated successfully."))
-                + html.render_div(
-                    _(
-                        "Go to the Monitor > All Hosts page or click the Go to All hosts button to start monitoring your %s services."
-                    )
-                    % special_agent_name
-                )
-            ),
-            class_="confirm_info",
-        )
-
-        show_success_dialog(
-            title=_("Changes activated"),
-            confirm_url=makeuri_contextless(
-                request, [("view_name", "allhosts")], filename="view.py"
-            ),
-            confirm_text=_('Go to "All hosts"'),
-            message=message,
         )
 
     def _activation_msg(self):

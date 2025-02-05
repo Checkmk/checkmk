@@ -38,7 +38,7 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
             mandatory_not_found = [x for x in mandatory_not_found if key != x]
             sub_keys = [x for x in sub_keys if x != key]
 
-            if len(mandatory_sub := mandatory[key].keys()) > 0:
+            if mandatory_sub := mandatory[key].keys():
                 # compare each sub_key with the default
                 for sub in mandatory_sub:
                     sub_keys = [x for x in sub_keys if x != sub]
@@ -50,16 +50,15 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
                     if given != default and not _COUNT_KEY_REGEX.match(sub):
                         return True
 
-            elif request.var(key) and request.var(key) != "":
+            elif request.var(key):
                 return True
 
         # check if non default request var has a value
-        elif request.var(key) and request.var(key) != "":
+        elif request.var(key):
             return True
 
     # check for given non default sub keys
-    sub_keys = [x for x in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(x)]
-    if len(sub_keys) > 0:
+    if sub_keys := [x for x in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(x)]:
         return True
 
     # check if non default request var has a value

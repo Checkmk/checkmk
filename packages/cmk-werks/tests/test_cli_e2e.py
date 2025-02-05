@@ -125,7 +125,7 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
         os.chdir(cmk_repo_path)
         create_werk(title="some_title")
         assert latest_commit_subject(cmk_repo_path) == "11111 some_title"
-        assert "some_title" in (cmk_repo_path / ".werks/11111").read_text()
+        assert "some_title" in (cmk_repo_path / ".werks/11111.md").read_text()
         assert read_reserved_werks() == {
             "cmk": [11112, 11113, 11114, 11115],
             "cloudmk": [1111111, 1111112],
@@ -134,7 +134,7 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
         os.chdir(cloudmk_repo_path)
         create_werk(title="some_cloud_title")
         assert latest_commit_subject(cloudmk_repo_path) == "1111111 some_cloud_title"
-        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111").read_text()
+        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111.md").read_text()
         assert read_reserved_werks() == {
             "cmk": [11112, 11113, 11114, 11115],
             "cloudmk": [1111112],
@@ -162,4 +162,4 @@ def test_commit_config(tmp_path: Path) -> None:
         create_werk(title="some_cloud_title")
         assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
         # just lets make sure that the werk was actually created:
-        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111").read_text()
+        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111.md").read_text()

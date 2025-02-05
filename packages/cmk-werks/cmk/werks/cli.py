@@ -1172,6 +1172,9 @@ def get_werk_file_version() -> WerkVersion:
     for path in Path(".").iterdir():
         if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():
             return "v2"
+    if set(p.name for p in Path(".").iterdir()) == {"config", "first_free"}:
+        # folder is empty, there are only mandatory files
+        return "v2"
     return "v1"
 
 

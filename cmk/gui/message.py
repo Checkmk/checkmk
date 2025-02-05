@@ -8,7 +8,7 @@ from collections.abc import MutableSequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any
+from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc import store
 
@@ -51,7 +51,25 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
 )
 
-Message = DictionaryModel
+MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
+
+
+class MessageMandatory(TypedDict):
+    """From dictionary valuespec"""
+
+    text: str
+    dest: tuple[str, list[UserId]]
+    methods: list[MessageMethod]
+
+
+class Message(MessageMandatory):
+    """Later added by _process_message"""
+
+    valid_till: NotRequired[int]
+    id: NotRequired[str]
+    time: NotRequired[int]
+    security: NotRequired[bool]
+    acknowledged: NotRequired[bool]
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -97,6 +115,21 @@ def delete_gui_message(msg_id: str) -> None:
     save_gui_messages(messages)
 
 
+def acknowledge_gui_message(msg_id: str) -> None:
+    messages = get_gui_messages()
+    for index, msg in enumerate(messages):
+        if msg["id"] == msg_id:
+            messages[index]["acknowledged"] = True
+    save_gui_messages(messages)
+
+
+def acknowledge_all_messages() -> None:
+    messages = get_gui_messages()
+    for index, _msg in enumerate(messages):
+        messages[index]["acknowledged"] = True
+    save_gui_messages(messages)
+
+
 def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None = None) -> None:
     if user_id is None:
         user_id = user.ident
@@ -105,7 +138,7 @@ def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None
     store.save_object_to_file(path, messages)
 
 
-def _messaging_methods() -> dict[str, dict[str, Any]]:
+def _messaging_methods() -> dict[MessageMethod, dict[str, Any]]:
     return {
         "gui_popup": {
             "title": _("Show popup message"),
@@ -159,7 +192,12 @@ def page_message() -> None:
         try:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
-            _process_message_message(msg)
+            message = Message(
+                text=msg["text"],
+                dest=msg["dest"],
+                methods=msg["methods"],
+            )
+            _process_message(message)
         except MKUserError as e:
             html.user_error(e)
 
@@ -279,7 +317,7 @@ def _vs_message() -> Dictionary:
     )
 
 
-def _validate_msg(msg: Message, _varprefix: str) -> None:
+def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
     if not msg.get("methods"):
         raise MKUserError("methods", _("Please select at least one messaging method."))
 
@@ -296,9 +334,10 @@ def _validate_msg(msg: Message, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg: Message) -> None:  # pylint: disable=R0912
+def _process_message(msg: Message) -> None:  # pylint: disable=R0912
     msg["id"] = utils.gen_id()
-    msg["time"] = time.time()
+    msg["time"] = int(time.time())
+    msg["acknowledged"] = False
 
     if isinstance(msg["dest"], str):
         dest_what = msg["dest"]
@@ -321,7 +360,7 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=R0912
         num_success[method] = 0
 
     # Now loop all messaging methods to send the messages
-    errors: dict[str, list[tuple]] = {}
+    errors: dict[MessageMethod, list[tuple]] = {}
     for user_id in recipients:
         for method in msg["methods"]:
             try:
@@ -383,7 +422,7 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
     if not user_spec:
         raise MKInternalError(_("This user does not exist."))
 
-    if not user_spec.get("email"):
+    if not (user_email := user_spec.get("email")):
         raise MKInternalError(_("This user has no mail address configured."))
 
     recipient_name = user_spec.get("alias")
@@ -402,10 +441,10 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
         msg["text"],
     )
 
-    if msg["valid_till"]:
+    if valid_till := msg.get("valid_till"):
         body += _("This message has been created at %s and is valid till %s.") % (
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["time"])),
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["valid_till"])),
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),
         )
 
     mail = MIMEMultipart(_charset="utf-8")
@@ -414,13 +453,13 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
     try:
         send_mail_sendmail(
             set_mail_headers(
-                MailString(user_spec["email"]),
+                MailString(user_email),
                 MailString("Checkmk: Message"),
                 MailString(default_from_address()),
                 MailString(reply_to),
                 mail,
             ),
-            target=MailString(user_spec["email"]),
+            target=MailString(user_email),
             from_address=MailString(default_from_address()),
         )
     except Exception as exc:

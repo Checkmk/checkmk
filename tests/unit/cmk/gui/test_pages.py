@@ -17,6 +17,7 @@ import cmk.gui.pages
 def test_registered_pages() -> None:
     expected_pages = [
         "add_bookmark",
+        "ajax_acknowledge_user_message",
         "ajax_figure_dashlet_data",
         "ajax_bi_rule_preview",
         "ajax_bi_aggregation_preview",

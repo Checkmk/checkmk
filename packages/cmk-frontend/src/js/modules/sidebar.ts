@@ -1261,7 +1261,15 @@ export function update_message_trigger(msg_text: string, msg_count: number) {
     const user_messages = document.getElementById("messages_link_to");
     if (user_messages) {
         const text_content = msg_count + " " + msg_text;
-        user_messages.textContent = text_content;
+        // We need the <a> tag where the current text is stored
+        const popup_link = document.querySelector(
+            "#user_topic_usermessages ul li a",
+        )!;
+        // We only need the initial text part, excluding the already added text_content.
+        // Otherwise it would added on each loop
+        const popup_text = popup_link.textContent!.substring(0, 17);
+        // Construct new text for the GUI hint
+        popup_link.innerHTML = `${popup_text} <span class="new_msg">${text_content}</span>`;
     }
 }
 

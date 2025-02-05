@@ -485,6 +485,13 @@ export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
     row.parentNode!.removeChild(row);
 }
 
+export function acknowledge_user_message(msg_id: string) {
+    call_ajax("ajax_acknowledge_user_message.py", {
+        method: "POST",
+        post_data: "id=" + msg_id,
+    });
+}
+
 export function add_height_to_simple_bar_content_of_iframe(
     target_iframe: string,
 ) {

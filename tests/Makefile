@@ -249,12 +249,12 @@ test-format-python: test-format-python-sort test-format-python-format
 
 test-format-python-sort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
+	xargs ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-format: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
+	xargs ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
@@ -378,7 +378,7 @@ container-debug $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-license-headers-docker:
@@ -394,7 +394,7 @@ test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-file-content-docker:
@@ -444,7 +444,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-ruff:
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(UVENV) ruff check
 
 test-ruff-docker:
 	../scripts/run-in-docker.sh make --quiet test-ruff

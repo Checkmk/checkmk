@@ -86,6 +86,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         description=request.node.name,
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
+        global_settings_update={"agent_bakery_logging": 10},
     ) as central_site:
         with _increased_logging_level(central_site):
             yield central_site

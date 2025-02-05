@@ -41,7 +41,7 @@ const style = computed(() => {
       :style="style"
       :placeholder="spec.input_hint || ''"
       :aria-label="spec.label || spec.title"
-      rows="20"
+      rows="4"
       cols="60"
       type="text"
     />

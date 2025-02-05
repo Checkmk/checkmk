@@ -19,6 +19,9 @@ _NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
         "view_name",
     }
 )
+_NON_DEFAULT_KEY_REGEX: Final = re.compile(r".*(_op|_bool|_count|_indexof_\d+)$")
+_COUNT_KEY_REGEX: Final = re.compile(r".*_count$")
+_OP_KEY_REGEX: Final = re.compile(r".*_op$")
 
 
 def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
@@ -41,10 +44,10 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
                     sub_keys = [x for x in sub_keys if x != sub]
                     given = request.var(sub) or ""
                     default = mandatory[key][sub] or ""
-                    default = "is" if re.match(r".*_op$", sub) and default == "" else default
+                    default = "is" if _OP_KEY_REGEX.match(sub) and default == "" else default
 
                     # ignore count vars, cause empty vars increase also the count
-                    if given != default and not re.match(r".*_count$", sub):
+                    if given != default and not _COUNT_KEY_REGEX.match(sub):
                         return True
 
             elif request.var(key) and request.var(key) != "":
@@ -55,7 +58,7 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
             return True
 
     # check for given non default sub keys
-    sub_keys = [x for x in sub_keys if not re.match(r".*(_op|_bool|_count|_indexof_\d+)$", x)]
+    sub_keys = [x for x in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(x)]
     if len(sub_keys) > 0:
         return True
 

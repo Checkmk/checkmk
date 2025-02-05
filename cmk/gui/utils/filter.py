@@ -23,47 +23,41 @@ _NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
 
 def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
     """Compare default filters of page with given filter parameters"""
-    if is_filter_set := request.var("filled_in") == "filter" and request.var("_active") != "":
-        value_set = False
+    if request.var("filled_in") != "filter" or request.var("_active") == "":
+        return False
 
-        mandatory_not_found = [x for x in mandatory.keys()]
+    mandatory_not_found = [x for x in mandatory.keys()]
 
-        sub_keys = [x for x in request.args.keys() if x not in _NON_DEFAULT_KEYS_TO_IGNORE]
+    sub_keys = [x for x in request.args.keys() if x not in _NON_DEFAULT_KEYS_TO_IGNORE]
 
-        for key in (request.var("_active") or "").split(";"):
-            if key in mandatory:
-                mandatory_not_found = [x for x in mandatory_not_found if key != x]
-                sub_keys = [x for x in sub_keys if x != key]
+    for key in (request.var("_active") or "").split(";"):
+        if key in mandatory:
+            mandatory_not_found = [x for x in mandatory_not_found if key != x]
+            sub_keys = [x for x in sub_keys if x != key]
 
-                if len(mandatory_sub := mandatory[key].keys()) > 0:
-                    # compare each sub_key with the default
-                    for sub in mandatory_sub:
-                        sub_keys = [x for x in sub_keys if x != sub]
-                        given = request.var(sub) or ""
-                        default = mandatory[key][sub] or ""
-                        default = "is" if re.match(r".*_op$", sub) and default == "" else default
+            if len(mandatory_sub := mandatory[key].keys()) > 0:
+                # compare each sub_key with the default
+                for sub in mandatory_sub:
+                    sub_keys = [x for x in sub_keys if x != sub]
+                    given = request.var(sub) or ""
+                    default = mandatory[key][sub] or ""
+                    default = "is" if re.match(r".*_op$", sub) and default == "" else default
 
-                        # ignore count vars, cause empty vars increase also the count
-                        if given != default and not re.match(r".*_count$", sub):
-                            value_set = True
-                elif request.var(key) and request.var(key) != "":
-                    value_set = True
+                    # ignore count vars, cause empty vars increase also the count
+                    if given != default and not re.match(r".*_count$", sub):
+                        return True
 
-            # check if non default request var has a value
             elif request.var(key) and request.var(key) != "":
-                value_set = True
-
-            # check for given non default sub keys
-            sub_keys = [
-                x for x in sub_keys if not re.match(r".*(_op|_bool|_count|_indexof_\d+)$", x)
-            ]
-            if len(sub_keys) > 0:
-                value_set = True
+                return True
 
         # check if non default request var has a value
-        if len(mandatory_not_found) > 0:
-            value_set = True
+        elif request.var(key) and request.var(key) != "":
+            return True
 
-        is_filter_set = value_set
+    # check for given non default sub keys
+    sub_keys = [x for x in sub_keys if not re.match(r".*(_op|_bool|_count|_indexof_\d+)$", x)]
+    if len(sub_keys) > 0:
+        return True
 
-    return is_filter_set
+    # check if non default request var has a value
+    return bool(mandatory_not_found)

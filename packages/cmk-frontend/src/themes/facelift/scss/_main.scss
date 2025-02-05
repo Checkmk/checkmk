@@ -113,9 +113,6 @@ form {
   }
 }
 
-input:hover,
-select:hover,
-textarea:hover,
 input[type="checkbox"]:hover + label::before {
   background-color: $input-hover-bg-color;
 }

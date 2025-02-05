@@ -10,6 +10,7 @@ import argparse
 import ast
 import datetime
 import fcntl
+import json
 import os
 import shlex
 import struct
@@ -460,7 +461,7 @@ def next_werk_id() -> WerkId:
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk.content.metadata["description"] += f"""
-{time.strftime('%F %T')}: {title}
+{time.strftime("%F %T")}: {title}
 {comment}"""
 
 
@@ -947,11 +948,15 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
 def get_werk_ids() -> list[WerkId]:
     try:
-        return [
-            WerkId(i)
-            for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8"))
-        ]
-    except Exception:  # pylint: disable=broad-exception-caught
+        content = Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8")
+        if content[0] == "[":
+            return [WerkId(i) for i in ast.literal_eval(content)]
+        return [WerkId(i) for i in json.loads(content)["ids_by_project"]["cmk"]]
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        sys.stdout.write(
+            f"\n{TTY_RED}Could not load werk ids, fall back to no ids. "
+            f"Error was:\n{e}.{TTY_NORMAL}\n\n"
+        )
         return []
 
 
@@ -964,8 +969,16 @@ def invalidate_my_werkid(wid: WerkId) -> None:
 
 
 def store_werk_ids(l: list[WerkId]) -> None:
+    content = Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8")
+    werk_ids_as_integer = [i.id for i in l]
     with open(RESERVED_IDS_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(repr([i.id for i in l]) + "\n")
+        if content[0] == "[":
+            f.write(repr(werk_ids_as_integer) + "\n")
+        else:
+            data = json.loads(content)
+            data["ids_by_project"]["cmk"] = werk_ids_as_integer
+            json.dump(data, f)
+
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
 

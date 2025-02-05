@@ -1838,18 +1838,17 @@ def layout_availability_table(  # pylint: disable=too-many-branches
                             statistics.append(("", ""))
                     cells.extend(statistics)
 
-            # If timeline == [] and states == {} then this objects has complete unmonitored state
-            if entry["timeline"] == [] and entry["states"] == {}:
-                unmonitored_objects += 1
-
-        # regardless of timeformat the percentage value should be taken for summary levels
-        # verification since the percentage value takes the considered duration as reference duration
-        if show_summary and av_levels:
-            summary["ok_level"] = sum(
-                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
-                for entry in availability_table
-                if entry["considered_duration"] > 0
-            )
+            # regardless of timeformat the percentage value should be taken for summary levels
+            # verification since the percentage value takes the considered duration as reference duration
+            if show_summary and av_levels:
+                summary["ok_level"] = sum(
+                    float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+                    for entry in availability_table
+                    if entry["considered_duration"] > 0
+                )
+        # If timeline == [] and states == {} then this objects has complete unmonitored state
+        if entry["timeline"] == [] and entry["states"] == {}:
+            unmonitored_objects += 1
 
     # Summary line. It has the same format as each entry in cells
     # We ignore unmonitored objects

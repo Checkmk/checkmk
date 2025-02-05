@@ -1925,6 +1925,7 @@ def _execute_silently(
 
 
 class AutomationGetConfiguration(Automation):
+    # Automation call to get the default configuration
     cmd = "get-configuration"
     needs_config = False
     # This needed the checks in the past. This was necessary to get the
@@ -1943,21 +1944,25 @@ class AutomationGetConfiguration(Automation):
         args: list[str],
         called_from_automation_helper: bool,
     ) -> GetConfigurationResult:
+        if called_from_automation_helper:
+            raise RuntimeError(
+                "This automation call should never be called from the automation helper "
+                "as it can only return the active config and we want the default config."
+            )
         # We read the list of variable names from stdin since
         # that could be too much for the command line
         variable_names = ast.literal_eval(sys.stdin.read())
 
-        if not called_from_automation_helper:
+        config.load(with_conf_d=False)
+
+        missing_variables = [v for v in variable_names if not hasattr(config, v)]
+
+        if missing_variables:
+            config.load_all_plugins(
+                local_checks_dir=local_checks_dir,
+                checks_dir=checks_dir,
+            )
             config.load(with_conf_d=False)
-
-            missing_variables = [v for v in variable_names if not hasattr(config, v)]
-
-            if missing_variables:
-                config.load_all_plugins(
-                    local_checks_dir=local_checks_dir,
-                    checks_dir=checks_dir,
-                )
-                config.load(with_conf_d=False)
 
         result = {}
         for varname in variable_names:

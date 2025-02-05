@@ -362,6 +362,9 @@ def get_configuration(*config_var_names: str) -> results.GetConfigurationResult:
         _automation_serialized(
             "get-configuration",
             indata=list(config_var_names),
+            # We must not call this through the automation helper,
+            # see automation call execution.
+            force_cli_interface=True,
         ),
         results.GetConfigurationResult,
     )

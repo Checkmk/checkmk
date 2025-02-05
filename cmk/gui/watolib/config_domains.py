@@ -13,6 +13,7 @@ import warnings as warnings_module
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, NewType
 
@@ -88,6 +89,14 @@ class ConfigDomainCoreSettings:
         self.validate()
 
 
+@lru_cache
+def _core_config_default_globals(*config_var_names: str) -> Mapping[str, object]:
+    # Import cycle
+    from cmk.gui.watolib.check_mk_automations import get_configuration
+
+    return get_configuration(*config_var_names).result
+
+
 class ConfigDomainCore(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -113,10 +122,7 @@ class ConfigDomainCore(ABCConfigDomain):
         return ConfigDomainCoreSettings(**activate_settings)
 
     def default_globals(self) -> Mapping[str, Any]:
-        # Import cycle
-        from cmk.gui.watolib.check_mk_automations import get_configuration
-
-        return get_configuration(*self._get_global_config_var_names()).result
+        return _core_config_default_globals(*self._get_global_config_var_names())
 
     @classmethod
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:

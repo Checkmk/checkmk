@@ -12,20 +12,13 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import (
-    DictElement,
-    Dictionary,
-    List,
-)
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, List
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, InvalidValue
-from ._utils import (
-    compute_validators,
-    get_title_and_help,
-)
+from ._utils import compute_validators, get_title_and_help
 
 _default_value_key = shared_type_defs.TimeSpecific.default_value_key
 _ts_values_key = shared_type_defs.TimeSpecific.time_specific_values_key
@@ -48,7 +41,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fron
             # At least some basic tests if both keys are present
             assert isinstance(raw_value, dict)
             if not (_ts_values_key in raw_value and _default_value_key in raw_value):
-                return InvalidValue(reason="Invalid time specific data", fallback_value={})
+                return InvalidValue(reason=_("Invalid time specific data"), fallback_value={})
 
             if self.options.data_origin == DataOrigin.DISK:
                 return {
@@ -69,7 +62,9 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fron
         return [(x["timeperiod"], x["parameters"]) for x in config]
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self,
+        raw_value: object,
+        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
     ) -> tuple[shared_type_defs.TimeSpecific, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 

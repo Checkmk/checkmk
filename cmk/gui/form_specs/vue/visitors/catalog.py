@@ -9,6 +9,7 @@ from typing import Any, Self
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic, TopicElement, TopicGroup
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
@@ -73,12 +74,12 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
 
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if not isinstance(raw_value, dict) and not isinstance(raw_value, DefaultValue):
-            return InvalidValue(reason="Invalid catalog data", fallback_value={})
+            return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
 
         raw_value = self._resolve_default_values(raw_value)
 
         if not all(topic_name in raw_value for topic_name in self.form_spec.elements.keys()):
-            return InvalidValue(reason="Invalid catalog data", fallback_value={})
+            return InvalidValue(reason=_("Invalid catalog data"), fallback_value={})
 
         return raw_value
 

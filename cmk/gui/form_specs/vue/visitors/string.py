@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.private import StringAutocompleter
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1.form_specs import FieldSize
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -36,11 +37,13 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fro
             raw_value = prefill_default
 
         if not isinstance(raw_value, str):
-            return InvalidValue(reason="Invalid string", fallback_value="")
+            return InvalidValue(reason=_("Invalid string"), fallback_value="")
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self,
+        raw_value: object,
+        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
     ) -> tuple[shared_type_defs.String, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -54,7 +57,11 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fro
                 autocompleter=self.form_spec.autocompleter,
                 i18n_base=base_i18n_form_spec(),
             ),
-            parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
+            (
+                parsed_value.fallback_value
+                if isinstance(parsed_value, InvalidValue)
+                else parsed_value
+            ),
         )
 
     def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> str:

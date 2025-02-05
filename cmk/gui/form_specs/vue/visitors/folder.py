@@ -6,6 +6,7 @@ from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.folder import Folder
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import validators
@@ -38,7 +39,7 @@ class FolderVisitor(FormSpecVisitor[Folder, _ParsedValueModel, _FrontendModel]):
             raw_value = prefill_default
 
         if not isinstance(raw_value, str):
-            return InvalidValue(reason="Invalid string", fallback_value="")
+            return InvalidValue(reason=_("Invalid string"), fallback_value="")
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[str], object]]:

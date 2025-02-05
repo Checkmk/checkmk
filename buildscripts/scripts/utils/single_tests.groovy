@@ -80,7 +80,6 @@ def fetch_package(Map args) {
             CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
             EDITION: args.edition,
             DISTRO: args.distro,
-            FAKE_WINDOWS_ARTIFACTS: args.fake_windows_artifacts,
         ],
         build_params_no_check: [
             CIPARAM_OVERRIDE_BUILD_NODE: build_node,

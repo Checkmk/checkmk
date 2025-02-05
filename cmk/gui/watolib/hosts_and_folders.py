@@ -3342,7 +3342,10 @@ class Host:
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
-    def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
+    def apply_edit(
+        self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None
+    ) -> tuple[str, list[SiteId]]:
+        """Apply the changes to the host. This method does not save the changes to file!"""
         # 1. Check preconditions
         if attributes.get("contactgroups") != self.attributes.get("contactgroups"):
             self._need_folder_write_permissions()
@@ -3363,8 +3366,10 @@ class Host:
         self.attributes = attributes
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        folder.save_hosts()
 
+        return diff, affected_sites
+
+    def add_edit_host_change(self, diff: str, affected_sites: list[SiteId]) -> None:
         add_change(
             "edit-host",
             _l("Modified host %s.") % self.name(),
@@ -3373,6 +3378,11 @@ class Host:
             diff_text=diff,
             domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
+
+    def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
+        diff, affected_sites = self.apply_edit(attributes, cluster_nodes)
+        self.folder().save_hosts()
+        self.add_edit_host_change(diff, affected_sites)
 
     def update_attributes(self, changed_attributes: HostAttributes) -> None:
         new_attributes = self.attributes.copy()

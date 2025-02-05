@@ -44,6 +44,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 from urllib.parse import urlparse
 
+from livestatus import SiteId
+
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
@@ -653,33 +655,52 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     succeeded_hosts: list[Host] = []
     failed_hosts: dict[HostName, str] = {}
 
+    hosts_by_folder: dict[Folder, list[Host]] = {}
+    host_name_to_updates: dict[HostName, list[dict[str, Any]]] = {}
     for update_detail in body["entries"]:
-        host_name = update_detail["host_name"]
-        host: Host = Host.load_host(host_name)
+        host = Host.load_host(update_detail["host_name"])
+        hosts_by_folder.setdefault(host.folder(), []).append(host)
+        host_name_to_updates.setdefault(host.name(), []).append(update_detail)
 
-        if not _validate_host_attributes_for_quick_setup(host, update_detail):
-            failed_hosts[host_name] = "Host is locked by Quick setup."
+    for folder, hosts in hosts_by_folder.items():
+        pending_changes: list[tuple[Host, str, list[SiteId]]] = []
+        for host in hosts:
+            for update_detail in host_name_to_updates[host.name()]:
+                if not _validate_host_attributes_for_quick_setup(host, update_detail):
+                    failed_hosts[host.name()] = "Host is locked by Quick setup."
+                    continue
 
-        faulty_attributes = []
+                attributes: HostAttributes = (
+                    update_detail["attributes"]
+                    if "attributes" in update_detail
+                    else host.attributes.copy()
+                )
 
-        if new_attributes := update_detail.get("attributes"):
-            host.edit(new_attributes, host.cluster_nodes())
+                if update_attributes := update_detail.get("update_attributes"):
+                    attributes.update(update_attributes)
 
-        if update_attributes := update_detail.get("update_attributes"):
-            host.update_attributes(update_attributes)
+                faulty_attributes = []
+                if remove_attributes := update_detail.get("remove_attributes"):
+                    for attribute in remove_attributes:
+                        if attribute in attributes:
+                            # mypy expects literal keys for typed dicts
+                            del attributes[attribute]  # type: ignore[misc]
+                        else:
+                            faulty_attributes.append(attribute)
 
-        if remove_attributes := update_detail.get("remove_attributes"):
-            for attribute in remove_attributes:
-                if attribute not in host.attributes:
-                    faulty_attributes.append(attribute)
+                diff, affected_sites = host.apply_edit(attributes, host.cluster_nodes())
+                pending_changes.append((host, diff, affected_sites))
 
-            host.clean_attributes(remove_attributes)
+                if faulty_attributes:
+                    failed_hosts[host.name()] = f"Failed to remove {', '.join(faulty_attributes)}"
+                else:
+                    succeeded_hosts.append(host)
 
-        if faulty_attributes:
-            failed_hosts[host_name] = f"Failed to remove {', '.join(faulty_attributes)}"
-            continue
-
-        succeeded_hosts.append(host)
+        # skip save if no changes were made, presumably due to quick setup lock
+        if pending_changes:
+            folder.save_hosts()
+            for host, diff, affected_sites in pending_changes:
+                host.add_edit_host_change(diff, affected_sites)
 
     return _bulk_host_action_response(failed_hosts, succeeded_hosts)
 

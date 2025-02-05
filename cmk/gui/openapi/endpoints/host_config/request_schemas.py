@@ -154,6 +154,7 @@ class UpdateHostEntry(UpdateHost):
         description="The hostname or IP address itself.",
         required=True,
         should_exist=True,
+        permission_type="setup_write",
     )
 
 

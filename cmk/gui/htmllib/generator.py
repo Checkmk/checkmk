@@ -54,6 +54,7 @@ KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",
     "insert_before",
+    "lock_and_redirect",
 ]
 
 

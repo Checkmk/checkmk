@@ -46,6 +46,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import render_end_tag
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -1221,12 +1222,21 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell("Message broker connection")
         if is_replication_enabled(site):
-            login_url = make_action_link([("mode", "sites"), ("_trigger_certs_creation", site_id)])
-            html.icon_button(
-                login_url,
-                _("Create remote broker certificates"),
-                "recreate_broker_certificate",
+            trigger_url = make_action_link(
+                [("mode", "sites"), ("_trigger_certs_creation", site_id)]
             )
+            html.open_ts_container(
+                container="div",
+                function_name="lock_and_redirect",
+                arguments={"redirect_url": trigger_url},
+            )
+            html.icon_button(
+                url="javascript:void(0)",
+                title=_("Create remote broker certificates"),
+                icon="recreate_broker_certificate",
+                class_=["lockable"],
+            )
+            html.write_html(render_end_tag("div"))
 
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
         if is_replication_enabled(site):

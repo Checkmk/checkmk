@@ -7574,10 +7574,6 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
-class AWSAccessCredentialsError(Exception):
-    pass
-
-
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
         if args.proxy_password:

@@ -19,6 +19,7 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
+        "FAKE_WINDOWS_ARTIFACTS",
         "VERSION",
     ]);
 
@@ -32,6 +33,7 @@ def main() {
     def version = params.VERSION;
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def make_target = build_make_target(edition);
     def download_dir = "package_download";
@@ -62,7 +64,13 @@ def main() {
 
             dir("${checkout_dir}") {
                 stage("Fetch Checkmk package") {
-                    single_tests.fetch_package(edition: edition, distro: distro, download_dir: download_dir);
+                    single_tests.fetch_package(
+                        edition: edition,
+                        distro: distro,
+                        download_dir: download_dir,
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
+                    );
                 }
                 try {
                     stage("Run `make ${make_target}`") {

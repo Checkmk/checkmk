@@ -6,6 +6,8 @@ def main() {
     check_job_parameters([
         "EDITION",
         "DISTRO",
+        "USE_CASE",
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -29,6 +31,7 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -61,7 +64,13 @@ def main() {
 
             dir("${checkout_dir}") {
                 stage("Fetch Checkmk package") {
-                    single_tests.fetch_package(edition: edition, distro: distro, download_dir: download_dir);
+                    single_tests.fetch_package(
+                        edition: edition,
+                        distro: distro,
+                        download_dir: download_dir,
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
+                    );
                 }
                 try {
                     stage("Run `make ${make_target}`") {

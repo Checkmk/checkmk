@@ -52,7 +52,6 @@ python.toolchain(
 )
 
 bazel_dep(name = "rules_mypy", version = "0.23.0")
-
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
 
 # TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
@@ -90,7 +89,12 @@ use_repo(types, "cmk_types")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
-
+bazel_dep(
+    # Transitive dependency for protobuf.
+    # Req anything with a version equal or greater than 1.64.0.
+    name = "grpc-java",
+    version = "1.64.0",
+)
 bazel_dep(
     # Transitive dep required because a dependency in the protobuf-python chain
     # expects `@rules_proto//proto/private/rules:proto_toolchain_rule.bzl`.

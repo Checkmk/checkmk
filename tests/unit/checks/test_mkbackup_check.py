@@ -172,17 +172,76 @@ info_3 = [
     ["}"],
 ]
 
+info_4 = [
+    ["[[[system:test1]]]"],
+    ["{"],
+    ['"bytes_per_second":', "123.45,"],
+    ['"finished":', "1474547810.309871,"],
+    ['"next_schedule":', "1736816400.0,"],
+    [
+        '"output":',
+        '"2025-01-13',
+        "02:00:02",
+        "---",
+        "Starting",
+        "backup",
+        "(...)---\\nAn exception occurred:\\nTraceback (most recent call last):\\n",
+        "...\\nOSError:",
+        "[Errno",
+        "28]",
+        "No",
+        "space",
+        "left",
+        "on",
+        'device\\n",',
+    ],
+    ['"pid":', "29567,"],
+    ['"started":', "1474547810.30425,"],
+    ['"state":', '"finished",'],
+    ['"success":', "false,"],
+    ['"size":', "null"],
+    ["}"],
+]
+
+info_5 = [
+    ["[[[system:test1]]]"],
+    ["{"],
+    ['"bytes_per_second":', "123.45,"],
+    ['"finished":', "1474547810.309871,"],
+    ['"next_schedule":', "1736816400.0,"],
+    [
+        '"output":',
+        '"2025-01-13',
+        "02:00:02",
+        "---",
+        "Starting",
+        'backup",',
+    ],
+    ['"pid":', "29567,"],
+    ['"started":', "1474547810.30425,"],
+    ['"state":', '"running",'],
+    ['"success":', "false,"],
+    ['"size":', "null"],
+    ["}"],
+]
+
 
 # This only tests whether the parse function crashes or not
 @pytest.mark.parametrize(
-    "info",
+    "info, expect_check_result",
     [
-        [],
-        info_1,
-        info_2,
-        info_3,
+        pytest.param([], False, id="Empty string table"),
+        pytest.param(info_1, False, id="Successful site backup"),
+        pytest.param(info_2, False, id="Multiple successful site backups"),
+        pytest.param(info_3, True, id="Failed system backup w/o size data"),
+        pytest.param(info_4, True, id="Failed system backup w/ null size data"),
+        pytest.param(info_5, True, id="Running system backup w/ null size data"),
     ],
 )
-def test_mkbackup_parse(info: StringTable) -> None:
+def test_mkbackup_parse(info: StringTable, expect_check_result: bool) -> None:
     check = Check("mkbackup")
-    check.run_parse(info)
+    parsed = check.run_parse(info)
+    check_result = check.run_check("test1", {}, parsed)
+    if expect_check_result:
+        assert check_result is not None
+        list(check_result)

@@ -108,7 +108,7 @@ def check_mkbackup(job_state):
             ],
         )
 
-        if "size" in job_state:
+        if "size" in job_state and job_state.get("success", False):
             yield (
                 0,
                 "Size: %s" % render.bytes(job_state["size"]),

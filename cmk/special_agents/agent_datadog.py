@@ -209,6 +209,13 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 class DatadogAPI(Protocol):
+    """
+    Notes:
+        * The DatadogAPI in rare occurrences can report a 503 which they described as follows:
+        'Service Unavailable, the server is not ready to handle the request probably because
+        it is overloaded, request should be retried after some time'
+    """
+
     def get_request(
         self,
         api_endpoint: str,

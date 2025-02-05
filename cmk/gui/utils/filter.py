@@ -4,58 +4,54 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Final
 
 from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
 
+_NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
+    {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name"}
+)
+_NON_DEFAULT_KEY_REGEX: Final = re.compile(r".*(_op|_bool|_count|_indexof_\d+)$")
+_COUNT_KEY_REGEX: Final = re.compile(r".*_count$")
+_OP_KEY_REGEX: Final = re.compile(r".*_op$")
 
-def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
-    """Compare default filters of page with given filter parameters"""
-    if is_filter_set := request.var("filled_in") == "filter" and request.var("_active") != "":
-        value_set = False
 
-        mandatory_not_found = [x for x in mandatory.keys()]
+def check_if_non_default_filter_in_request(ctx: VisualContext) -> bool:
+    if request.var("filled_in") != "filter" or request.var("_active") == "":
+        return False
 
-        sub_keys = [
-            x
-            for x in request.args.keys()
-            if x not in ["_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name"]
-        ]
+    ctx_keys = set(ctx.keys())
+    request_arg_keys = request.args.keys() - _NON_DEFAULT_KEYS_TO_IGNORE
 
-        for key in (request.var("_active") or "").split(";"):
-            if key in mandatory:
-                mandatory_not_found = [x for x in mandatory_not_found if key != x]
-                sub_keys = [x for x in sub_keys if x != key]
+    for active_key in (request.var("_active") or "").split(";"):
+        if active_key in ctx:
+            ctx_keys.discard(active_key)
+            request_arg_keys.discard(active_key)
 
-                if len(mandatory_sub := mandatory[key].keys()) > 0:
-                    # compare each sub_key with the default
-                    for sub in mandatory_sub:
-                        sub_keys = [x for x in sub_keys if x != sub]
-                        given = request.var(sub) or ""
-                        default = mandatory[key][sub] or ""
-                        default = "is" if re.match(r".*_op$", sub) and default == "" else default
+            if ctx_sub_keys := ctx[active_key].keys():
+                request_arg_keys -= ctx_sub_keys
+                for sub_key in ctx_sub_keys:
+                    given = request.var(sub_key) or ""
+                    default = ctx[active_key][sub_key] or ""
+                    default = "is" if _OP_KEY_REGEX.match(sub_key) and default == "" else default
 
-                        # ignore count vars, cause empty vars increase also the count
-                        if given != default and not re.match(r".*_count$", sub):
-                            value_set = True
-                elif request.var(key) and request.var(key) != "":
-                    value_set = True
+                    # Variables with the `_count` suffix and a value of "" are valid as they
+                    # can also increase the count.
+                    if given != default and not _COUNT_KEY_REGEX.match(sub_key):
+                        return True
 
-            # check if non default request var has a value
-            elif request.var(key) and request.var(key) != "":
-                value_set = True
+            # First request check: only hit if key in _active and ctx without sub keys.
+            elif request.var(active_key):
+                return True
 
-            # check for given non default sub keys
-            sub_keys = [
-                x for x in sub_keys if not re.match(r".*(_op|_bool|_count|_indexof_\d+)$", x)
-            ]
-            if len(sub_keys) > 0:
-                value_set = True
+        # Second request check: hit if key found in _active but not in context.
+        elif request.var(active_key):
+            return True
 
-        # check if non default request var has a value
-        if len(mandatory_not_found) > 0:
-            value_set = True
+    # If any request args remain and are not default keys, a filter must exist.
+    if any(key for key in request_arg_keys if not _NON_DEFAULT_KEY_REGEX.match(key)):
+        return True
 
-        is_filter_set = value_set
-
-    return is_filter_set
+    # If any context keys remain post-processing, a filter must exist.
+    return bool(ctx_keys)

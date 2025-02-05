@@ -17,6 +17,7 @@ from werkzeug.utils import import_string
 
 from livestatus import SiteId
 
+import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.site import omd_site
 
@@ -85,6 +86,11 @@ def _generate_spec(
 
     methods = ["get", "put", "post", "delete"]
 
+    undocumented_tag_groups = ["Undocumented Endpoint"]
+
+    if cmk_version.edition() is cmk_version.Edition.CRE:
+        undocumented_tag_groups.append("Checkmk Internal")
+
     def module_name(func: Any) -> str:
         return f"{func.__module__}.{func.__name__}"
 
@@ -94,7 +100,7 @@ def _generate_spec(
     seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
     for endpoint in sorted(endpoint_registry, key=sort_key):
-        if target in endpoint.blacklist_in or endpoint.tag_group == "Undocumented Endpoint":
+        if target in endpoint.blacklist_in or endpoint.tag_group in undocumented_tag_groups:
             continue
 
         for path, operation_dict in _operation_dicts(spec, endpoint):

@@ -31,20 +31,29 @@
 # }
 
 
-# mypy: disable-error-code="var-annotated"
-
+import json
 import time
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+JobData = dict[str, Any]
+BackupData = dict[str, dict[str, JobData]]
 
 
-def parse_mkbackup(string_table):
-    import json
-
-    parsed = {}
+def parse_mkbackup(string_table: StringTable) -> BackupData:
+    parsed: BackupData = {}
 
     job, json_data = None, ""
     for l in string_table:
@@ -70,99 +79,101 @@ def parse_mkbackup(string_table):
     return parsed
 
 
-def check_mkbackup(job_state):
+def check_mkbackup(job_state: JobData) -> CheckResult:
     if job_state["state"] in ["started", "running"]:
         duration = time.time() - job_state["started"]
 
-        yield (
-            0,
-            "The job is running for %s since %s"
+        yield Result(
+            state=State.OK,
+            summary="The job is running for %s since %s"
             % (
                 render.timespan(duration),
                 render.datetime(job_state["started"]),
             ),
-            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
         )
+        yield Metric(name="backup_duration", value=duration)
+        yield Metric(name="backup_avgspeed", value=job_state["bytes_per_second"])
 
     elif job_state["state"] == "finished":
         if job_state["success"] is False:
-            yield 2, "Backup failed"
+            yield Result(state=State.CRIT, summary="Backup failed")
         else:
-            yield 0, "Backup completed"
+            yield Result(state=State.OK, summary="Backup completed")
 
         duration = job_state["finished"] - job_state["started"]
-        yield (
-            0,
-            "it was running for %s from %s till %s"
+        yield Result(
+            state=State.OK,
+            summary="it was running for %s from %s till %s"
             % (
                 render.timespan(duration),
                 render.datetime(job_state["started"]),
                 render.datetime(job_state["finished"]),
             ),
-            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
         )
+        yield Metric(name="backup_duration", value=duration)
+        yield Metric(name="backup_avgspeed", value=job_state["bytes_per_second"])
 
         if "size" in job_state and job_state.get("success", False):
-            yield (
-                0,
-                "Size: %s" % render.bytes(job_state["size"]),
-                [("backup_size", job_state["size"])],
+            yield Result(
+                state=State.OK,
+                summary="Size: %s" % render.bytes(job_state["size"]),
             )
+            yield Metric(name="backup_size", value=job_state["size"])
 
         next_run = job_state["next_schedule"]
         if next_run == "disabled":
-            yield 1, "Schedule is currently disabled"
+            yield Result(state=State.WARN, summary="Schedule is currently disabled")
 
         elif next_run is not None:
             # add a 30 seconds buffer to prevent a critical when the backup is about to start
             if next_run < time.time() + 30:
-                state = 2
+                state = State.CRIT
             else:
-                state = 0
-            yield state, "Next run: %s" % render.datetime(next_run)
+                state = State.OK
+            yield Result(state=state, summary="Next run: %s" % render.datetime(next_run))
 
 
-def inventory_mkbackup_system(parsed):
-    for job_id in parsed.get("system", {}):
-        yield job_id, {}
+def discover_mkbackup_system(section: Any) -> DiscoveryResult:
+    for job_id in section.get("system", {}):
+        yield Service(item=job_id)
 
 
-def check_mkbackup_system(item, _no_params, parsed):
-    job_state = parsed.get("system", {}).get(item)
+def check_mkbackup_system(item: str, section: BackupData) -> CheckResult:
+    job_state = section.get("system", {}).get(item)
     if not job_state:
         return None
 
-    return check_mkbackup(job_state)
+    yield from check_mkbackup(job_state)
 
 
-check_info["mkbackup"] = LegacyCheckDefinition(
+agent_section_mkbackup = AgentSection(name="mkbackup", parse_function=parse_mkbackup)
+check_plugin_mkbackup = CheckPlugin(
     name="mkbackup",
-    parse_function=parse_mkbackup,
     service_name="Backup %s",
-    discovery_function=inventory_mkbackup_system,
+    discovery_function=discover_mkbackup_system,
     check_function=check_mkbackup_system,
 )
 
 
-def inventory_mkbackup_site(parsed):
-    for site_id, jobs in parsed.get("site", {}).items():
+def discover_mkbackup_site(section: Any) -> DiscoveryResult:
+    for site_id, jobs in section.get("site", {}).items():
         for job_id in jobs:
-            yield f"{site_id} backup {job_id}", {}
+            yield Service(item=f"{site_id} backup {job_id}")
 
 
-def check_mkbackup_site(item, _no_params, parsed):
+def check_mkbackup_site(item: str, section: BackupData) -> CheckResult:
     site_id, job_id = item.split(" backup ")
-    job_state = parsed.get("site", {}).get(site_id, {}).get(job_id)
+    job_state = section.get("site", {}).get(site_id, {}).get(job_id)
     if not job_state:
         return None
 
-    return check_mkbackup(job_state)
+    yield from check_mkbackup(job_state)
 
 
-check_info["mkbackup.site"] = LegacyCheckDefinition(
+check_plugin_mkbackup_site = CheckPlugin(
     name="mkbackup_site",
     service_name="OMD %s",
     sections=["mkbackup"],
-    discovery_function=inventory_mkbackup_site,
+    discovery_function=discover_mkbackup_site,
     check_function=check_mkbackup_site,
 )

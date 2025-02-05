@@ -6,8 +6,11 @@
 import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
-
-from .checktestlib import Check
+from cmk.plugins.checkmk.agent_based.mkbackup import (
+    check_mkbackup_site,
+    check_mkbackup_system,
+    parse_mkbackup,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -238,10 +241,10 @@ info_5 = [
         pytest.param(info_5, True, id="Running system backup w/ null size data"),
     ],
 )
-def test_mkbackup_parse(info: StringTable, expect_check_result: bool) -> None:
-    check = Check("mkbackup")
-    parsed = check.run_parse(info)
-    check_result = check.run_check("test1", {}, parsed)
+def test_mkbackup(info: StringTable, expect_check_result: bool) -> None:
+    parsed = parse_mkbackup(info)
+    check_function = check_mkbackup_site if "site" in parsed else check_mkbackup_system
+    check_result = check_function("test1", parsed)
     if expect_check_result:
         assert check_result is not None
         list(check_result)

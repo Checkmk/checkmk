@@ -5,6 +5,8 @@
 
 # pylint: disable=cmk-module-layer-violation
 import os
+import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -14,9 +16,9 @@ from tests.testlib.common.repo import repo_path
 from tests.plugins_siteless.helpers import (
     BasicSubmitter,
     compare_services_states,
+    discover_services,
     DUMPS_DIR,
     get_agent_data_filenames,
-    get_discovered_services,
     get_raw_data,
     LOGGER,
     parser,
@@ -47,8 +49,20 @@ os.environ["OMD_SITE"] = ""
 HOSTNAME = HostName("test_host")
 
 
+@pytest.fixture(name="setup_dirs", scope="function")
+def _setup_dirs() -> Iterator[None]:
+    var_dir = Path(os.getcwd()) / "var"
+    assert not var_dir.exists()
+    autochecks_dir = var_dir / "check_mk/autochecks/"
+    os.makedirs(autochecks_dir, exist_ok=False)
+    yield
+    shutil.rmtree(var_dir)
+
+
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
-def test_checks_executor(agent_data_filename: str, request: pytest.FixtureRequest) -> None:
+def test_checks_executor(
+    agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
+) -> None:
     encountered_errors = config.load_all_plugins(
         local_checks_dir=Path(__file__).parent,  # dummy path, not really needed for this test
         checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
@@ -60,8 +74,10 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    loaded_services = get_discovered_services(agent_data_filename)
     config_cache = config.get_config_cache()
+    discovered_services = discover_services(
+        HOSTNAME, agent_data_filename, config_cache, agent_based_plugins, source_info
+    )
 
     with (
         set_value_store_manager(
@@ -92,7 +108,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=lambda host, plugin: plugin.defaults,
             params=HWSWInventoryParameters.from_raw({}),
-            services=loaded_services,
+            services=discovered_services,
             run_plugin_names=EVERYTHING,
             get_check_period=lambda *_a, **_kw: None,
             submitter=submitter,

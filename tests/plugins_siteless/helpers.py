@@ -15,7 +15,10 @@ from pathlib import Path
 
 from tests.testlib.common.repo import qa_test_data_path
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.resulttype as result
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 from cmk.utils.resulttype import OK
 
@@ -23,6 +26,10 @@ from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 
 from cmk.checkengine.checking import ConfiguredService
+from cmk.checkengine.discovery import commandline_discovery
+from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.submitters import (
     FormattedSubmittee,
@@ -30,11 +37,15 @@ from cmk.checkengine.submitters import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 
+from cmk.base.api.agent_based.register._config import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
+    SectionPluginMapper,
 )
-from cmk.base.config import ParserFactory
+from cmk.base.config import ConfigCache, ParserFactory
 from cmk.base.modes.check_mk import (  # type: ignore[attr-defined]
     CheckPluginName,
 )
@@ -172,3 +183,75 @@ def compare_services_states(
         "Services' details:\n%s", pprint.pformat({s.name: s.details for s in checks_result})
     )
     assert actual_states == expected_services_states
+
+
+def discover_services(
+    hostname: HostName,
+    agent_data_filename: str,
+    config_cache: ConfigCache,
+    agent_based_plugins: AgentBasedPlugins,
+    source_info: SourceInfo,
+) -> Sequence[ConfiguredService]:
+    def _fetcher():
+        return lambda *a, **ka: [(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))]
+
+    commandline_discovery(
+        hostname,
+        ruleset_matcher=config_cache.ruleset_matcher,
+        parser=parser(config_cache.parser_factory()),
+        fetcher=_fetcher(),
+        section_plugins=SectionPluginMapper(
+            {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
+        ),
+        section_error_handling=lambda *a: None,  # type: ignore[arg-type]
+        host_label_plugins=HostLabelPluginMapper(
+            ruleset_matcher=config_cache.ruleset_matcher,
+            sections={
+                **agent_based_plugins.agent_sections,
+                **agent_based_plugins.snmp_sections,
+            },
+            discovery_rules={},
+        ),
+        plugins=DiscoveryPluginMapper(
+            ruleset_matcher=config_cache.ruleset_matcher,
+            check_plugins=agent_based_plugins.check_plugins,
+            discovery_rules={},
+        ),
+        run_plugin_names=EVERYTHING,
+        ignore_plugin=config_cache.check_plugin_ignored,
+        arg_only_new=False,
+        only_host_labels=False,
+        on_error=OnError.RAISE,
+    )
+
+    autochecks_store = AutochecksStore(hostname)
+    autochecks = autochecks_store.read()
+
+    discovered_services = [
+        ConfiguredService(
+            check_plugin_name=autocheck.check_plugin_name,
+            item=autocheck.item,
+            description=agent_based_plugins.check_plugins[autocheck.check_plugin_name].service_name
+            if autocheck.item is None
+            else agent_based_plugins.check_plugins[autocheck.check_plugin_name].service_name
+            % autocheck.item,
+            parameters=TimespecificParameters(
+                [
+                    TimespecificParameterSet.from_parameters(autocheck.parameters),
+                    TimespecificParameterSet.from_parameters(
+                        agent_based_plugins.check_plugins[
+                            autocheck.check_plugin_name
+                        ].check_default_parameters
+                        or {}
+                    ),
+                ]
+            ),
+            discovered_parameters=autocheck.parameters,
+            labels=autocheck.service_labels,
+            discovered_labels=autocheck.service_labels,
+            is_enforced=False,
+        )
+        for autocheck in autochecks
+    ]
+
+    return discovered_services

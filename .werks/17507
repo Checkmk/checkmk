@@ -1,0 +1,14 @@
+Title: REST-API: Update hosts no longer modifies cluster nodes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1738751024
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+This werk fixes a bug in the update (and bulk update) for hosts, which would
+remove cluster nodes from hosts, if their attributes were replaced.
+
+The <code>"update_attributes"</code> and <code>"remove_attributes"</code> ways of updating hosts were
+not affected.

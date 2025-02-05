@@ -432,7 +432,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
 
     if new_attributes := body.get("attributes"):
         new_attributes["meta_data"] = host.attribute("meta_data", {})
-        host.edit(new_attributes, None)
+        host.edit(new_attributes, host.cluster_nodes())
 
     if update_attributes := body.get("update_attributes"):
         host.update_attributes(update_attributes)
@@ -486,7 +486,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         faulty_attributes = []
 
         if new_attributes := update_detail.get("attributes"):
-            host.edit(new_attributes, None)
+            host.edit(new_attributes, host.cluster_nodes())
 
         if update_attributes := update_detail.get("update_attributes"):
             host.update_attributes(update_attributes)

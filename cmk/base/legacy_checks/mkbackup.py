@@ -102,7 +102,7 @@ def check_mkbackup(job_state):
             [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
         )
 
-        if "size" in job_state:
+        if "size" in job_state and job_state.get("success", False):
             yield (
                 0,
                 "Size: %s" % render.bytes(job_state["size"]),

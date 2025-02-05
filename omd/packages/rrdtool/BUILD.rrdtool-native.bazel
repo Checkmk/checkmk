@@ -82,7 +82,7 @@ cc_library(
 )
 
 cc_library(
-    name = "rrd",
+    name = "rrd_library",
     srcs = [
         "src/rrd_dump.c",
         "src/rrd_fetch.c",
@@ -105,6 +105,13 @@ cc_library(
     deps = [
         ":rrdupd",
     ],
+)
+
+cc_shared_library(
+    name = "rrd_shared",
+    shared_lib_name = "librrd.so",
+    visibility = ["@omd_packages//omd/packages/rrdtool:__pkg__"],
+    deps = ["rrd_library"],
 )
 
 # libbdi
@@ -137,7 +144,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":rrd",
+        ":rrd_library",
         "@glib",
     ],
 )
@@ -183,7 +190,7 @@ cc_binary(
     local_defines = ["LOCALSTATEDIR="],
     visibility = ["//visibility:public"],
     deps = [
-        ":rrd",
+        ":rrd_library",
         ":rrdupd",
         "@glib",
     ],

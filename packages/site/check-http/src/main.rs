@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use check_http::checking_types::{Bounds, LowerLevels, UpperLevels};
+use check_http::checking_types::{Bounds, CheckResult, LowerLevels, State, UpperLevels};
 use check_http::checks::{CheckParameters, RequestInformation, TextMatcher};
 use check_http::http::{self, ClientConfig, RequestConfig};
 use check_http::output::Output;
@@ -25,7 +25,23 @@ const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
 
 #[tokio::main]
 async fn main() {
-    let args = Cli::parse();
+    let args = match Cli::try_parse() {
+        Ok(args) => args,
+        Err(e) => {
+            let error_message = e
+                .to_string()
+                .lines()
+                .filter(|line| !line.trim().is_empty() && !line.contains("For more information"))
+                .collect::<Vec<&str>>()
+                .join("\n");
+            let output = Output::from_check_results(vec![
+                CheckResult::summary(State::Crit, "Error parsing arguments").unwrap(),
+                CheckResult::details(State::Crit, error_message.as_str()).unwrap(),
+            ]);
+            println!("{}", output);
+            std::process::exit(output.worst_state.into());
+        }
+    };
 
     init_tracing(args.logging_level(), args.debug_headers, args.debug_content);
 

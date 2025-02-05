@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.i18n import _
 
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
@@ -16,7 +17,9 @@ _FrontendModel = object
 
 class TransformVisitor(
     FormSpecVisitor[
-        TransformDataForLegacyFormatOrRecomposeFunction, _ParsedValueModel, _FrontendModel
+        TransformDataForLegacyFormatOrRecomposeFunction,
+        _ParsedValueModel,
+        _FrontendModel,
     ]
 ):
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
@@ -25,10 +28,12 @@ class TransformVisitor(
         try:
             return self.form_spec.from_disk(raw_value)
         except ValueError:
-            return InvalidValue(reason="Unable to transform value", fallback_value=raw_value)
+            return InvalidValue(reason=_("Unable to transform value"), fallback_value=raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self,
+        raw_value: object,
+        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
     ) -> tuple[VueComponents.FormSpec, object]:
         return get_visitor(self.form_spec.wrapped_form_spec, self.options).to_vue(parsed_value)
 

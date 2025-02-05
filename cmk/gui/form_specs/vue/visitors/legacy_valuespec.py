@@ -9,6 +9,7 @@ from typing import Any
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 
@@ -34,7 +35,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         try:
             return super()._migrate_disk_value(value)
         except MKUserError:
-            return InvalidValue(reason="Unable to migrate value", fallback_value=value)
+            return InvalidValue(reason=_("Unable to migrate value"), fallback_value=value)
 
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         return raw_value
@@ -53,7 +54,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         return input_html, str(readonly_html)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self,
+        raw_value: object,
+        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
     ) -> tuple[shared_type_defs.LegacyValuespec, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 

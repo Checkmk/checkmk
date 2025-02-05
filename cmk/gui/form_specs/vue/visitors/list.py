@@ -8,17 +8,14 @@ from typing import Any, Generic, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
-from ._utils import (
-    compute_validators,
-    get_title_and_help,
-)
+from ._utils import compute_validators, get_title_and_help
 
 T = TypeVar("T")
 
@@ -27,7 +24,8 @@ _FrontendModel = Sequence[T]
 
 
 class ListVisitor(
-    Generic[T], FormSpecVisitor[ListExtended[T], _ParsedValueModel[T], _FrontendModel[T]]
+    Generic[T],
+    FormSpecVisitor[ListExtended[T], _ParsedValueModel[T], _FrontendModel[T]],
 ):
     def _parse_value(
         self, raw_value: object
@@ -36,7 +34,7 @@ class ListVisitor(
             return self.form_spec.prefill.value
 
         if not isinstance(raw_value, list):
-            return InvalidValue(reason="Invalid data", fallback_value=[])
+            return InvalidValue(reason=_("Invalid data"), fallback_value=[])
         return raw_value
 
     def _to_vue(

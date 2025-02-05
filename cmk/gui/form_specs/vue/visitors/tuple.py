@@ -6,16 +6,14 @@ from collections.abc import Sequence
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
-from ._utils import (
-    compute_validators,
-    get_title_and_help,
-)
+from ._utils import compute_validators, get_title_and_help
 
 _ParsedValueModel = tuple[object, ...]
 _FrontendModel = list[object]
@@ -28,7 +26,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
 
         if not isinstance(raw_value, (list, tuple)):
             return InvalidValue(
-                reason="Invalid tuple",
+                reason=_("Invalid tuple"),
                 fallback_value=[
                     DEFAULT_VALUE,
                 ]
@@ -37,7 +35,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
 
         if len(raw_value) != len(self.form_spec.elements):
             return InvalidValue(
-                reason="Invalid number of tuple elements",
+                reason=_("Invalid number of tuple elements"),
                 fallback_value=[
                     DEFAULT_VALUE,
                 ]
@@ -47,7 +45,9 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
         return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self,
+        raw_value: object,
+        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
     ) -> tuple[shared_type_defs.Tuple, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         vue_specs = []

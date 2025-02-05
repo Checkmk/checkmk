@@ -11,7 +11,6 @@ from typing import IO
 
 from pydantic import RootModel, TypeAdapter
 
-from cmk.ccc.i18n import _
 from cmk.ccc.version import parse_check_mk_version
 
 from cmk.werks import load_werk
@@ -73,46 +72,46 @@ class WerkTranslator:
     def __init__(self) -> None:
         super().__init__()
         self._classes = {
-            "feature": _("New feature"),
-            "fix": _("Bug fix"),
-            "security": _("Security fix"),
+            "feature": "New feature",
+            "fix": "Bug fix",
+            "security": "Security fix",
         }
         self._components = {
             # CRE
-            "core": _("Core & setup"),
-            "checks": _("Checks & agents"),
-            "multisite": _("User interface"),
-            "wato": _("Setup"),
-            "notifications": _("Notifications"),
-            "bi": _("BI"),
-            "reporting": _("Reporting & availability"),
-            "ec": _("Event console"),
-            "livestatus": _("Livestatus"),
-            "liveproxy": _("Livestatus proxy"),
-            "inv": _("HW/SW Inventory"),
-            "rest-api": _("REST API"),
+            "core": "Core & setup",
+            "checks": "Checks & agents",
+            "multisite": "User interface",
+            "wato": "Setup",
+            "notifications": "Notifications",
+            "bi": "BI",
+            "reporting": "Reporting & availability",
+            "ec": "Event console",
+            "livestatus": "Livestatus",
+            "liveproxy": "Livestatus proxy",
+            "inv": "HW/SW Inventory",
+            "rest-api": "REST API",
             # CEE
-            "cmc": _("The Checkmk Micro Core"),
-            "setup": _("Setup, site management"),
-            "config": _("Configuration generation"),
-            "inline-snmp": _("Inline SNMP"),
-            "agents": _("Agent Bakery"),
-            "metrics": _("Metrics system"),
-            "alerts": _("Alert handlers"),
-            "dcd": _("Dynamic host configuration"),
-            "ntopng_integration": _("Ntopng integration"),
+            "cmc": "The Checkmk Micro Core",
+            "setup": "Setup, site management",
+            "config": "Configuration generation",
+            "inline-snmp": "Inline SNMP",
+            "agents": "Agent Bakery",
+            "metrics": "Metrics system",
+            "alerts": "Alert handlers",
+            "dcd": "Dynamic host configuration",
+            "ntopng_integration": "Ntopng integration",
             # CMK-OMD
-            "omd": _("Site management"),
-            "rpm": _("RPM packaging"),
-            "deb": _("DEB packaging"),
-            "nagvis": _("NagVis"),
-            "packages": _("Other components"),
-            "distros": _("Linux distributions"),
+            "omd": "Site management",
+            "rpm": "RPM packaging",
+            "deb": "DEB packaging",
+            "nagvis": "NagVis",
+            "packages": "Other components",
+            "distros": "Linux distributions",
         }
         self._levels = {
-            1: _("Trivial change"),
-            2: _("Prominent change"),
-            3: _("Major change"),
+            1: "Trivial change",
+            2: "Prominent change",
+            3: "Major change",
         }
 
     def classes(self) -> list[tuple[str, str]]:

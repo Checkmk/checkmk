@@ -12,11 +12,20 @@ from unittest import mock
 from git.repo import Repo
 
 
-def initialize_werks_project(path: Path, *, project: str, first_free: int) -> Repo:
+def initialize_werks_project(
+    path: Path,
+    *,
+    project: str,
+    first_free: int,
+    commit: bool = True,
+) -> Repo:
     path.mkdir()
     werks = path / ".werks"
     werks.mkdir()
     (werks / "first_free").write_text(f"{first_free}\n")
+    commit_option = ""
+    if commit is False:
+        commit_option = "create_commit = False"
     (werks / "config").write_text(f"""
 editions = [("cre", "CRE")]
 components = [("ccc", "CCC")]
@@ -38,6 +47,7 @@ compatible = [
 online_url = "https://checkmk.com/werk/%d"
 project = "{project}"
 current_version = "0.1.0"
+{commit_option}
     """)
     Repo.init(path)
     repo = Repo(path)
@@ -71,6 +81,16 @@ def create_werk(*, title: str) -> None:
     p.wait()
 
 
+def latest_commit_subject(repo_path: Path) -> str:
+    repo = Repo(repo_path)
+    message = repo.head.commit.message
+    if message is None:
+        raise RuntimeError("message is none")
+    if isinstance(message, bytes):
+        message = message.decode("utf-8")
+    return message.split("\n")[0]
+
+
 def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -87,6 +107,7 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
         os.chdir(cmk_repo_path)
         call("ids", "5")
+        assert latest_commit_subject(cmk_repo_path) == "Reserved 5 Werk IDS"
         assert (cmk_repo_path / ".werks/first_free").read_text().strip() == "11116"
         assert read_reserved_werks() == {
             "cmk": [11111, 11112, 11113, 11114, 11115],
@@ -94,6 +115,7 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
 
         os.chdir(cloudmk_repo_path)
         call("ids", "2")
+        assert latest_commit_subject(cloudmk_repo_path) == "Reserved 2 Werk IDS"
         assert (cloudmk_repo_path / ".werks/first_free").read_text().strip() == "1111113"
         assert read_reserved_werks() == {
             "cmk": [11111, 11112, 11113, 11114, 11115],
@@ -102,6 +124,7 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
 
         os.chdir(cmk_repo_path)
         create_werk(title="some_title")
+        assert latest_commit_subject(cmk_repo_path) == "11111 some_title"
         assert "some_title" in (cmk_repo_path / ".werks/11111").read_text()
         assert read_reserved_werks() == {
             "cmk": [11112, 11113, 11114, 11115],
@@ -110,8 +133,33 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
 
         os.chdir(cloudmk_repo_path)
         create_werk(title="some_cloud_title")
+        assert latest_commit_subject(cloudmk_repo_path) == "1111111 some_cloud_title"
         assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111").read_text()
         assert read_reserved_werks() == {
             "cmk": [11112, 11113, 11114, 11115],
             "cloudmk": [1111112],
         }
+
+
+def test_commit_config(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    cloudmk_repo_path = tmp_path / "repo_cloudmk"
+    initialize_werks_project(
+        cloudmk_repo_path, project="cloudmk", first_free=1_111_111, commit=False
+    )
+    assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(cloudmk_repo_path)
+        call("ids", "2")
+        assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+        # just lets make sure that the ids were actually reserved:
+        json.loads((home / ".cmk-werk-ids").read_text())["ids_by_project"] == {
+            "cloudmk": [1111111, 1111112]
+        }
+
+        create_werk(title="some_cloud_title")
+        assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+        # just lets make sure that the werk was actually created:
+        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111").read_text()

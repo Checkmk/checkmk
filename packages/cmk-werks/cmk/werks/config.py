@@ -18,6 +18,11 @@ class Config(BaseModel):
     compatible: list[tuple[str, str]]
     online_url: str
     project: Literal["cmk", "cloudmk", "cma"]
+    create_commit: bool = True
+    """
+    Should the werk tool automatically create a commit when reserving ids or creating a werk?
+    This option was introduced for cloudmk, they have special requirements for commit messages.
+    """
     current_version: str
 
     def all_components(self) -> list[tuple[str, str]]:

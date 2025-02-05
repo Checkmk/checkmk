@@ -4,9 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Final
 
 from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
+
+_NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
+    {
+        "_csrf_token",
+        "_active",
+        "_apply",
+        "selection",
+        "filled_in",
+        "view_name",
+    }
+)
 
 
 def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
@@ -16,11 +28,7 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
 
         mandatory_not_found = [x for x in mandatory.keys()]
 
-        sub_keys = [
-            x
-            for x in request.args.keys()
-            if x not in ["_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name"]
-        ]
+        sub_keys = [x for x in request.args.keys() if x not in _NON_DEFAULT_KEYS_TO_IGNORE]
 
         for key in (request.var("_active") or "").split(";"):
             if key in mandatory:

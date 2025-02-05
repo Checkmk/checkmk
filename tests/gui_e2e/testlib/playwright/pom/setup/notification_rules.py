@@ -90,7 +90,7 @@ class BaseNotificationPage(QuickSetupPage):
 
     @property
     def hosts_textfield(self) -> Locator:
-        return self.main_area.locator().get_by_label("Hosts").locator("input")
+        return self.main_area.locator().get_by_role("group", name="Hosts").locator("input")
 
     @property
     def _service_filters_button(self) -> Locator:
@@ -133,10 +133,12 @@ class BaseNotificationPage(QuickSetupPage):
 
     @property
     def _recipients_rows(self) -> Locator:
-        return self._stage_four_locator.get_by_label("Select recipient").locator("table > tr")
+        return self._stage_four_locator.get_by_role("group", name="Select recipient").locator(
+            "table > tr"
+        )
 
     def delete_recipient_button(self, index: int = 0) -> Locator:
-        return self._recipients_rows.nth(index).get_by_role("button").nth(0)
+        return self._recipients_rows.nth(index).get_by_role("button", name="Remove element")
 
     def select_recipient_dropdown(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("combobox").nth(0)
@@ -161,7 +163,7 @@ class BaseNotificationPage(QuickSetupPage):
     # stage 6
     @property
     def description_text_field(self) -> Locator:
-        return self.main_area.locator().get_by_label("Description").get_by_role("textbox")
+        return self.main_area.locator().get_by_role("textbox", name="Description")
 
     @property
     def _disable_rule_button(self) -> Locator:
@@ -309,7 +311,9 @@ class AddNotificationRule(BaseNotificationPage):
 
     @property
     def si_displayname_input(self) -> Locator:
-        return self.editor_slide_in.get_by_label("Display name").locator("input")
+        return self.editor_slide_in.get_by_role("group", name='Custom sender ("From")').get_by_role(
+            "textbox", name="Display name"
+        )
 
     @property
     def si_service_subject_checkbox(self) -> Locator:

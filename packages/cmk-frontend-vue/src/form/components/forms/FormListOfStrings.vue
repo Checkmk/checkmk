@@ -93,26 +93,28 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table ref="tableRef" class="form-list-of-srings">
-    <tbody>
-      <template v-for="(_, index) in backendData" :key="index">
-        <tr
-          class="listof_element"
-          :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
-        >
-          <td class="vlof_content">
-            <FormEditDispatcher
-              v-model:data="backendData[index]"
-              :spec="spec.string_spec"
-              :backend-validation="elementValidation[index]!"
-              @update:data="checkAutoextend"
-              @paste="(event: ClipboardEvent) => onPaste(event, index)"
-            />
-          </td>
-        </tr>
-      </template>
-    </tbody>
-  </table>
+  <span role="group" :aria-label="spec.title">
+    <table ref="tableRef" class="form-list-of-srings">
+      <tbody>
+        <template v-for="(_, index) in backendData" :key="index">
+          <tr
+            class="listof_element"
+            :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
+          >
+            <td class="vlof_content">
+              <FormEditDispatcher
+                v-model:data="backendData[index]"
+                :spec="spec.string_spec"
+                :backend-validation="elementValidation[index]!"
+                @update:data="checkAutoextend"
+                @paste="(event: ClipboardEvent) => onPaste(event, index)"
+              />
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 

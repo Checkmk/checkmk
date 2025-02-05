@@ -95,6 +95,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       label: props.spec.add_element_label
     }"
     :try-delete="deleteElement"
+    role="group"
+    :aria-label="props.spec.title"
   >
     <template #item-props="{ index, itemData, itemElementValidation }">
       <FormEditDispatcher

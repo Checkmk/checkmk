@@ -13,6 +13,7 @@ def main() {
         ["EDITION", true],
         ["VERSION", true],
         ["DISABLE_CACHE", true],
+        ["FAKE_WINDOWS_ARTIFACTS", false],
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -79,8 +80,14 @@ def main() {
             );
         }
 
-        smart_stage(name: "Provide agent binaries") {
+        smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
             package_helper.provide_agent_binaries(version, edition, disable_cache);
+        }
+
+        smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
+            dir("${checkout_dir}") {
+                sh("scripts/fake-artifacts");
+            }
         }
     }
 

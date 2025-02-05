@@ -29,10 +29,30 @@ pkg_files(
     prefix = "bin",
 )
 
+pkg_files(
+    name = "rrdtool_lib",
+    srcs = [
+        "@rrdtool_native//:rrd_shared",
+    ],
+    attributes = pkg_attributes(
+        mode = "0644",
+    ),
+    prefix = "lib",
+)
+
+pkg_mklink(
+    name = "librrd_symlink",
+    # The "8" is the version of the library - no idea yet how to get this
+    link_name = "lib/librrd.so.8",
+    target = "librrd.so",
+)
+
 pkg_filegroup(
     name = "rrdtool_pkg",
     srcs = [
+        ":librrd_symlink",
         ":rrdtool_bin",
+        ":rrdtool_lib",
         ":rrdtool_skel_pkg",
     ],
     visibility = ["//visibility:public"],

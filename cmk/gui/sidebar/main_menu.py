@@ -130,7 +130,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
         hint_msg: int = 0
 
         for msg in message.get_gui_messages():
-            if "gui_hint" in msg["methods"]:
+            if "gui_hint" in msg["methods"] and not msg.get("acknowledged"):
                 hint_msg += 1
             if "gui_popup" in msg["methods"]:
                 popup_msg.append({"id": msg["id"], "text": msg["text"]})
@@ -139,7 +139,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
             "popup_messages": popup_msg,
             "hint_messages": {
                 "title": _("User message"),
-                "text": ungettext("message", "messages", hint_msg),
+                "text": _("new"),
                 "count": hint_msg,
             },
         }

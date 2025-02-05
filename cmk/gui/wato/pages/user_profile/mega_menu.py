@@ -153,6 +153,20 @@ def default_user_menu_topics(
             items=quick_items,
         ),
         TopicMenuTopic(
+            name="user_messages",
+            title=_("User messages"),
+            icon="topic_events",
+            items=[
+                TopicMenuItem(
+                    name="user_messages",
+                    title=_("Received messages"),
+                    url="user_message.py",
+                    sort_index=1,
+                    icon="topic_events",
+                )
+            ],
+        ),
+        TopicMenuTopic(
             name="user_profile",
             title=_("User profile"),
             icon="topic_profile",

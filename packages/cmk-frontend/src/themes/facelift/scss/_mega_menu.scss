@@ -196,6 +196,14 @@
         flex-grow: 0;
       }
 
+      span.new_msg {
+        padding: 2px 5px;
+        color: $font-color-white;
+        white-space: nowrap;
+        background-color: $color-state-2-background;
+        border-radius: $theme-border-radius;
+      }
+
       div.navigation_bar {
         display: flex;
         height: $megamenu-navbar-height;

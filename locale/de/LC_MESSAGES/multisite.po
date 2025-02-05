@@ -38161,6 +38161,11 @@ msgstr "Keine ausstehenden Änderungen."
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
 
+#, fuzzy
+msgid ""
+"No permission for fallback topic 'Other'. Please contact your administrator."
+msgstr "Bitte wenden Sie sich an Ihren Administrator."
+
 msgid "No proxy"
 msgstr "Kein Proxy"
 

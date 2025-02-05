@@ -32,6 +32,10 @@
       white-space: nowrap;
     }
   }
+  a.disabled {
+    pointer-events: none;
+    opacity: $inactive-opacity;
+  }
 }
 
 .wato td.right {

@@ -35,6 +35,7 @@ import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
 import {insert_before} from "./modules/layout";
+import {lock_and_redirect} from "./modules/sites";
 import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
 import * as ntop_alerts from "./modules/ntop/ntop_alerts";
@@ -80,6 +81,7 @@ const callable_functions: {[name: string]: CallableFunction} = {
     render_stats_table: render_stats_table,
     render_qr_code: render_qr_code,
     insert_before: insert_before,
+    lock_and_redirect: lock_and_redirect,
 };
 
 $(() => {

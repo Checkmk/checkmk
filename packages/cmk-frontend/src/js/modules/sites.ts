@@ -7,6 +7,7 @@
 import $ from "jquery";
 
 import {call_ajax} from "./ajax";
+import {add_class} from "@/modules/utils";
 
 interface AjaxJsonResponse<Result = any> {
     result_code: number;
@@ -79,4 +80,32 @@ function show_error(msg: string) {
 
     // Remove all loading icons
     $(".reloading").remove();
+}
+
+export async function lock_and_redirect(
+    iconButtonContainer: HTMLElement,
+    options: Record<string, string>,
+) {
+    if (!("redirect_url" in options)) {
+        throw new Error(
+            "lock_and_redirect has to set redirect_url in options!",
+        );
+    }
+    const iconButtons = iconButtonContainer.getElementsByTagName("a");
+    if (iconButtons.length != 1) {
+        throw new Error(
+            `lock_and_redirect: expected exactly one a-element, got ${iconButtons.length}`,
+        );
+    }
+    const iconButton: HTMLAnchorElement = iconButtons[0];
+
+    const handler = function () {
+        add_class(iconButton, "disabled");
+        //@ts-ignore
+        iconButton.disabled = true; // TODO: i don't think this has any effect on a non input element.
+        window.location.href = options.redirect_url;
+        // just to be sure, adding the disabled class normally should be enough
+        iconButton.removeEventListener("click", handler);
+    };
+    iconButton.addEventListener("click", handler);
 }

@@ -29,19 +29,19 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
     if request.var("filled_in") != "filter" or request.var("_active") == "":
         return False
 
-    mandatory_not_found = [x for x in mandatory.keys()]
+    mandatory_not_found = set(mandatory.keys())
 
-    sub_keys = [x for x in request.args.keys() if x not in _NON_DEFAULT_KEYS_TO_IGNORE]
+    sub_keys = request.args.keys() - _NON_DEFAULT_KEYS_TO_IGNORE
 
     for key in (request.var("_active") or "").split(";"):
         if key in mandatory:
-            mandatory_not_found = [x for x in mandatory_not_found if key != x]
-            sub_keys = [x for x in sub_keys if x != key]
+            mandatory_not_found.discard(key)
+            sub_keys.discard(key)
 
             if mandatory_sub := mandatory[key].keys():
+                sub_keys -= mandatory_sub
                 # compare each sub_key with the default
                 for sub in mandatory_sub:
-                    sub_keys = [x for x in sub_keys if x != sub]
                     given = request.var(sub) or ""
                     default = mandatory[key][sub] or ""
                     default = "is" if _OP_KEY_REGEX.match(sub) and default == "" else default

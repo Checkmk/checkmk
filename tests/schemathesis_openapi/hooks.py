@@ -44,32 +44,6 @@ def hook_before_load_schema(
 
     update_property(
         raw_schema,
-        "HostOrServiceCondition",
-        "match_on",
-        {"items": {"type": "string", "minLength": 1}},
-        "CMK-15035",
-    )
-    require_properties(raw_schema, "HostOrServiceCondition", ["operator", "match_on"], "CMK-15035")
-    require_properties(
-        raw_schema, "TagConditionScalarSchemaBase", ["key", "operator", "value"], "CMK-15035"
-    )
-    require_properties(
-        raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
-    )
-    require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
-    require_properties(raw_schema, "PreDefinedTimeRange", ["range"], "CMK-15166")
-
-    # NOTE: CMK-12182 is mostly done, but fixing InputPassword was apparently overlooked
-    update_property(
-        raw_schema,
-        "InputPassword",
-        "ident",
-        {"pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]+$"},
-        "CMK-12182",
-    )
-
-    update_property(
-        raw_schema,
         "HostExtensionsEffectiveAttributes",
         "snmp_community",
         {"nullable": True},
@@ -82,70 +56,6 @@ def hook_before_load_schema(
         {"nullable": True},
         None,
     )
-
-    update_property(
-        raw_schema,
-        "CreateFolder",
-        "name",
-        {"pattern": "^[-_ a-zA-Z0-9.]+$"},
-        "CMK-14381",
-    )
-
-    update_property(
-        raw_schema,
-        "NotificationPlugin",
-        "notify_plugin",
-        {"$ref": "#/components/schemas/PluginWithParams"},
-        "CMK-14375",
-    )
-    for property_name in (
-        "the_following_users",
-        "members_of_contact_groups",
-        "explicit_email_addresses",
-        "restrict_by_contact_groups",
-    ):
-        update_property(
-            raw_schema,
-            "ContactSelectionAttributes",
-            property_name,
-            {"$ref": "#/components/schemas/Checkbox"},
-            "CMK-14375.1",
-        )
-    for schema_name in ("ConditionsAttributes", "RuleConditions"):
-        for property_name in (
-            "match_sites",
-            "match_folder",
-            "match_host_tags",
-            "match_host_labels",
-            "match_host_groups",
-            "match_hosts",
-            "match_exclude_hosts",
-            "match_service_labels",
-            "match_service_groups",
-            "match_exclude_service_groups",
-            "match_service_groups_regex",
-            "match_exclude_service_groups_regex",
-            "match_services",
-            "match_exclude_services",
-            "match_check_types",
-            "match_plugin_output",
-            "match_contact_groups",
-            "match_service_levels",
-            "match_only_during_time_period",
-            "match_host_event_type",
-            "match_service_event_type",
-            "restrict_to_notification_numbers",
-            "throttle_periodic_notifications",
-            "match_notification_comment",
-            "event_console_alerts",
-        ):
-            update_property(
-                raw_schema,
-                schema_name,
-                property_name,
-                {"$ref": "#/components/schemas/Checkbox"},
-                "CMK-14375.2",
-            )
 
     for schema_name in (
         "FolderUpdateAttribute",
@@ -165,13 +75,15 @@ def hook_before_load_schema(
             None,
         )
 
-    update_property(
-        raw_schema,
-        "ChangesFields",
-        "user_id",
-        {"nullable": True},
-        "CMK-14995",
-    )
+    if "CMK-21783" in settings.suppressed_issues:
+        raw_schema["components"]["schemas"]["InventoryPaths"]["anyOf"] = raw_schema["components"][
+            "schemas"
+        ]["InventoryPaths"].pop("oneOf")
+    # ignore invalid time range values
+    update_property(raw_schema, "TimeRange2", "start", {"format": "binary"}, None)
+    update_property(raw_schema, "TimeRange2", "end", {"format": "binary"}, None)
+    update_property(raw_schema, "ConcreteTimeRange", "start", {"format": "binary"}, None)
+    update_property(raw_schema, "ConcreteTimeRange", "end", {"format": "binary"}, None)
 
     # SCHEMA modifications: additionalProperties
     # control the creation of additionalProperties in the root level of schema object definitions:
@@ -262,32 +174,82 @@ def after_call(
     logger.debug("%s %s: after_call handler", case.method, case.path)
     reason = response.reason if isinstance(response, requests.Response) else "n/a"
 
+    if case.path in (
+        "/domain-types/agent/actions/download/invoke",
+        "/domain-types/agent/actions/download_by_hash/invoke",
+        "/domain-types/agent/actions/download_by_host/invoke",
+    ):
+        # generic: invalid agent download response Content-Type
+        fix_response(
+            case,
+            response,
+            status_code=200,
+            update_headers=CaseInsensitiveDict({"Content-Type": "application/octet-stream"}),
+            ticket_id=None,
+        )
+    if case.path == "/domain-types/licensing/actions/configure/invoke":
+        fix_response(
+            case,
+            response,
+            status_code=-204,
+            valid_body=False,
+            body={},
+            set_body={"links": []},
+            ticket_id=None,
+        )
     # generic: invalid JSON response
-    if "/download" not in case.path:
-        if case.path == "/domain-types/licensing/actions/configure/invoke":
-            fix_response(
-                case,
-                response,
-                status_code=-204,
-                valid_body=False,
-                body={},
-                set_body={"links": []},
-                ticket_id=None,
-            )
-        else:
-            fix_response(
-                case,
-                response,
-                status_code=-204,
-                valid_body=False,
-                body={},
-                set_body={
-                    "title": reason,
-                    "status": response.status_code,
-                    "detail": reason,
-                },
-                ticket_id="INVALID-JSON",
-            )
+    fix_response(
+        case,
+        response,
+        status_code=-204,
+        valid_body=False,
+        body={},
+        set_body={
+            "title": reason,
+            "status": response.status_code,
+            "detail": reason,
+        },
+        ticket_id="CMK-11886",
+    )
+
+    fix_response(
+        case,
+        response,
+        "POST",
+        "/domain-types/host_config/actions/bulk-create/invoke",
+        body={},
+        update_items={"value": {"links": []}},
+        ticket_id=None,
+    )
+    fix_response(
+        case,
+        response,
+        "PUT",
+        "/domain-types/host_config/actions/bulk-update/invoke",
+        body={},
+        update_items={"value": {"links": []}},
+        ticket_id=None,
+    )
+    fix_response(
+        case,
+        response,
+        "GET",
+        "/domain-types/host_config/collections/all",
+        body={},
+        update_items={"value": {"links": []}},
+        ticket_id=None,
+    )
+    # avoid validation error if the "links" property is not selected to be returned
+    # NOTE: the "links" property is marked as *required* in the response schema
+    fix_response(
+        case,
+        response,
+        "GET",
+        "/domain-types/host_config/collections/all",
+        body={"links": None},
+        update_items={"links": []},
+        ticket_id=None,
+    )
 
     # generic: empty response Content-Type
     fix_response(
@@ -307,19 +269,31 @@ def after_call(
         update_headers=CaseInsensitiveDict({"Content-Type": "{auto}"}),
         ticket_id="CMK-11886",
     )
+    # generic: invalid 404 response Content-Type
+    try:
+        response.json
+    except json.decoder.JSONDecodeError:
+        # in case the body is not valid json, replace it
+        _404_body: dict[str, Any] | None = {
+            "title": "Not Found",
+            "status": 404,
+            "detail": str(response.content),
+        }
+    else:
+        _404_body = None
+    fix_response(
+        case,
+        response,
+        status_code=404,
+        update_headers=CaseInsensitiveDict({"Content-Type": PROBLEM_CONTENT_TYPE}),
+        set_body=_404_body,
+        ticket_id="CMK-11886",
+    )
     # generic: invalid 400 response Content-Type
     fix_response(
         case,
         response,
         status_code=400,
-        update_headers=CaseInsensitiveDict({"Content-Type": PROBLEM_CONTENT_TYPE}),
-        ticket_id=None,
-    )
-    # generic: invalid 404 response Content-Type
-    fix_response(
-        case,
-        response,
-        status_code=404,
         update_headers=CaseInsensitiveDict({"Content-Type": PROBLEM_CONTENT_TYPE}),
         ticket_id=None,
     )
@@ -348,18 +322,6 @@ def after_call(
         ticket_id=None,
     )
 
-    # incomplete 404 responses
-    fix_response(
-        case,
-        response,
-        method="POST",
-        path="/domain-types/host_config/actions/wait-for-completion/invoke",
-        status_code=404,
-        body={"title": "No running renaming job was found", "status": 404},
-        set_body={"title": "No running renaming job was found", "status": 404, "detail": ""},
-        ticket_id="CMK-14273",
-    )
-
     # invalid status: 500 instead of 400
     fix_response(
         case,
@@ -375,85 +337,57 @@ def after_call(
     fix_response(
         case,
         response,
-        method="GET",
-        path="/objects/service_discovery/{host_name}",
-        body={"detail": "Error running automation call <tt>service-discovery-preview</tt>.*"},
-        status_code=500,
-        set_status_code=400,
-        set_body={
-            "title": "Bad Request",
-            "status": 400,
-            "detail": "Failed to lookup IPv4 address via DNS.",
-        },
-        ticket_id="CMK-13216",
-    )
-    fix_response(
-        case,
-        response,
         method="POST",
-        path="/domain-types/service_discovery_run/actions/start/invoke",
-        body={"detail": "Error running automation call <tt>service-discovery-preview</tt>.*"},
+        path="/objects/bi_rule/{rule_id}",
         status_code=500,
+        body={"detail": "The requested pack_id does not exist"},
         set_status_code=400,
-        set_body={
-            "title": "Bad Request",
-            "status": 400,
-            "detail": "Failed to lookup IPv4 address via DNS.",
-        },
-        ticket_id="CMK-13216",
+        update_body={"title": "Not Found", "status": 400},
+        ticket_id="CMK-21677",
     )
     fix_response(
         case,
         response,
         method="PUT",
-        path="/objects/host/{host_name}/actions/update_discovery_phase/invoke",
-        body={"detail": "Error running automation call <tt>service-discovery-preview</tt>.*"},
-        status_code=500,
-        set_status_code=400,
-        set_body={
-            "title": "Bad Request",
-            "status": 400,
-            "detail": "Failed to lookup IPv4 address via DNS.",
-        },
-        ticket_id="CMK-13216",
-    )
-    fix_response(
-        case,
-        response,
-        method="POST",
-        path="/domain-types/host_tag_group/collections/all",
-        body={"detail": 'The tag ID ".*" is used twice.'},
-        status_code=500,
-        set_status_code=400,
-        update_body={
-            "title": "Bad Request",
-            "status": 400,
-        },
-        ticket_id="CMK-15167",
-    )
-
-    # invalid status: 500 instead of 404
-    fix_response(
-        case,
-        response,
-        method="DELETE",
-        path="/objects/bi_pack/{pack_id}",
+        path="/objects/bi_rule/{rule_id}",
         status_code=500,
         body={"detail": "The requested pack_id does not exist"},
-        set_status_code=404,
-        update_body={"title": "Not Found", "status": 404},
-        ticket_id="CMK-14991",
+        set_status_code=400,
+        update_body={"title": "Bad Request", "status": 400},
+        ticket_id="CMK-21677",
     )
     fix_response(
         case,
         response,
-        method="POST",
-        path="/domain-types/metric/actions/get_custom_graph/invoke",
-        status_code=500,
-        body={"detail": "Cannot find Custom graph with the name .*"},
-        set_status_code=400,
-        update_body={"title": "Not Found", "status": 404},
-        ticket_id="CMK-15515",
+        method="GET",
+        path="/objects/notification_rule/{rule_id}",
+        status_code=404,
+        set_body={
+            "title": "Not Found",
+            "detail": "The requested rule_id does not exist",
+            "status": 404,
+        },
+        ticket_id="CMK-21807",
+    )
+    fix_response(
+        case,
+        response,
+        method="GET",
+        path="/objects/quick_setup_action_result/{job_id}",
+        status_code=400,
+        set_status_code=404,
+        set_body={"status": 404},
+        ticket_id="CMK-21809",
+    )
+    fix_response(
+        case,
+        response,
+        method="GET",
+        path="/objects/quick_setup_stage_action_result/{job_id}",
+        status_code=400,
+        set_status_code=404,
+        set_body={"status": 404},
+        ticket_id="CMK-21809",
     )
 
     return response

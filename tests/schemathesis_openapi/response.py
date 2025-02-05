@@ -120,6 +120,7 @@ def fix_response(
         and (
             body is None
             or response_json == body
+            or all(body.get(_) == response_json.get(_) for _ in body)
             or all(match(body.get(_, ""), response_json.get(_, "")) for _ in body)
         )
         and (
@@ -179,7 +180,9 @@ def fix_response(
             if update_body:
                 response_json.update(update_body)
             if update_items:
-                for update_key in [_ for _ in update_items if _ in response_json]:
+                for update_key in [
+                    _ for _ in update_items if _ in response_json and response_json[_]
+                ]:
                     for idx in range(len(response_json[update_key])):
                         response_json[update_key][idx].update(update_items[update_key])
             response._content = json.dumps(response_json).encode()

@@ -21,6 +21,7 @@ def main() {
         ["CIPARAM_REMOVE_RC_CANDIDATES", false],
         ["SKIP_DEPLOY_TO_WEBSITE", false],
         ["DISABLE_CACHE", false],
+        ["FAKE_WINDOWS_ARTIFACTS", false],
     ]);
 
     check_environment_variables([
@@ -77,6 +78,7 @@ def main() {
         |USE_CASE:.......................... │${params.USE_CASE}│
         |CIPARAM_REMOVE_RC_CANDIDATES:...... │${params.CIPARAM_REMOVE_RC_CANDIDATES}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
+        |FAKE_WINDOWS_ARTIFACTS:............ │${params.FAKE_WINDOWS_ARTIFACTS}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
         |relative_deliverables_dir:......... │${relative_deliverables_dir}│
@@ -108,6 +110,7 @@ def main() {
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
                         DISABLE_CACHE: params.DISABLE_CACHE,
+                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
                     ],
 
                     build_params_no_check: [
@@ -185,6 +188,7 @@ def main() {
                         DISTRO: distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
+                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

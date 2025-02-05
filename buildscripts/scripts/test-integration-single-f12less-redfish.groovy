@@ -8,6 +8,7 @@ def main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
         // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -52,7 +53,8 @@ def main() {
                         edition: edition,
                         distro: distro,
                         download_dir: download_dir,
-                        bisect_comment: params.CIPARAM_BISECT_COMMENT
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
                     );
                 }
                 try {

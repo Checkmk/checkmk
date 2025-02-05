@@ -7,6 +7,7 @@ def main() {
         "EDITION",
         "DISTRO",
         "USE_CASE",
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -19,6 +20,7 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests"
@@ -59,7 +61,8 @@ def main() {
                         edition: edition,
                         distro: distro,
                         download_dir: download_dir,
-                        bisect_comment: params.CIPARAM_BISECT_COMMENT
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
                     );
                 }
                 try {

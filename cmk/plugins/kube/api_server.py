@@ -236,13 +236,7 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
 
     """
     version_match = VERSION_MATCH_RE.fullmatch(git_version)
-    if version_match is None:
-        LOGGER.error(
-            msg=f"Could not parse version string '{git_version}', using regex from kubectl "
-            f"'{VERSION_MATCH_RE.pattern}'."
-        )
-        return None
-    return version_match.group(1)
+    return None if version_match is None else version_match.group(1)
 
 
 def decompose_git_version(
@@ -255,6 +249,9 @@ def decompose_git_version(
     # https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/util/version/version.go
     identifier = _extract_sequence_based_identifier(git_version)
     if identifier is None:
+        LOGGER.error(
+            f"Could not parse version string '{git_version}', using regex from kubectl '{VERSION_MATCH_RE.pattern}'."
+        )
         return api.UnknownKubernetesVersion(git_version=git_version)
     # Unlike kubectl, we do not explicitly handle cases where a component is non-numeric, since
     # this is impossible based on the regex matching done by `_extract_sequence_based_identifier`

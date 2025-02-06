@@ -47,15 +47,13 @@ def main() {
         edition: params.EDITION,
         use_case: params.USE_CASE,
         override: params.OVERRIDE_DISTROS);
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
-    def cmk_version_rc_aware = versioning.get_cmk_version(
-        versioning.safe_branch_name(scm),
-        versioning.get_branch_version(checkout_dir),
-        params.VERSION
-    );
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def relative_deliverables_dir = "deliverables/${cmk_version_rc_aware}";
     def deliverables_dir = "${WORKSPACE}/deliverables/${cmk_version_rc_aware}";
@@ -208,7 +206,7 @@ def main() {
         }]
     }
 
-    def image_name = "minimal-alpine-checkmk-ci-master:latest";
+    def image_name = "minimal-alpine-checkmk-ci-${safe_branch_name}:latest";
     def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
     def docker_build_args = "-f ${dockerfile} .";
     def minimal_image = docker.build(image_name, docker_build_args);

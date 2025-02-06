@@ -391,6 +391,7 @@ GRAPHS_2_2 = [
     "memory_committing",
     "memory_that_cannot_be_swapped_out",
     "huge_pages",
+    "huge_pages_2",
     "vmalloc_address_space_1",
     "vmalloc_address_space_2",
     "heap_and_non_heap_memory",

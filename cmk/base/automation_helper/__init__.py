@@ -14,6 +14,10 @@ from cmk.ccc.daemon import daemonize
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    get_previously_loaded_plugins,
+)
 from cmk.base.automations import automations
 
 from ._app import clear_caches_before_each_call, get_application, reload_automation_config
@@ -46,11 +50,15 @@ def main() -> int:
             run_directory=run_directory,
             log_directory=log_directory,
         )
+        plugins = (
+            get_previously_loaded_plugins()
+        )  # _have_ we loaded plugins before? Does it matter?
+        discovery_rulesets = extract_known_discovery_rulesets(plugins)
         app = get_application(
             engine=automations,
             cache=cache,
             reloader_config=config.reloader_config,
-            reload_config=reload_automation_config,
+            reload_config=lambda: reload_automation_config(discovery_rulesets),
             clear_caches_before_each_call=clear_caches_before_each_call,
         )
 

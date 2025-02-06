@@ -30,8 +30,8 @@ from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-mod
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
+    extract_known_discovery_rulesets,
     get_previously_loaded_plugins,
-    iter_all_discovery_rulesets,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_plugins,
@@ -304,7 +304,10 @@ def _validate_discovery_parameters_usage() -> Sequence[str]:
         {DiscoveryParameters: entry_point_prefixes()[DiscoveryParameters]},
         raise_errors=False,
     )
-    referenced_ruleset_names = {str(ruleset_name) for ruleset_name in iter_all_discovery_rulesets()}
+    referenced_ruleset_names = {
+        str(ruleset_name)
+        for ruleset_name in extract_known_discovery_rulesets(get_previously_loaded_plugins())
+    }
     return _check_if_referenced(discovered_discovery_parameters, referenced_ruleset_names)
 
 

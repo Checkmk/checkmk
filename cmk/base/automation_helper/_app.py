@@ -7,7 +7,7 @@ import asyncio
 import io
 import sys
 import time
-from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from logging import Formatter, getLogger
@@ -22,6 +22,7 @@ from cmk.ccc import version as cmk_version
 from cmk.utils import paths, tty
 from cmk.utils.caching import cache_manager
 from cmk.utils.log import logger as cmk_logger
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
@@ -39,9 +40,9 @@ class HealthCheckResponse(BaseModel, frozen=True):
     last_reload_at: float
 
 
-def reload_automation_config() -> None:
+def reload_automation_config(discovery_rulesets: Iterable[RuleSetName]) -> None:
     cache_manager.clear()
-    config.load(validate_hosts=False)
+    config.load(discovery_rulesets, validate_hosts=False)
 
 
 def clear_caches_before_each_call() -> None:

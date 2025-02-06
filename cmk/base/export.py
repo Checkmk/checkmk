@@ -18,7 +18,10 @@ from cmk.utils.servicename import Item
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import get_previously_loaded_plugins
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    get_previously_loaded_plugins,
+)
 
 _config_loaded = False
 _checks_loaded = False
@@ -28,7 +31,8 @@ _checks_loaded = False
 def _load_config() -> None:
     global _config_loaded
     if not _config_loaded:
-        config.load(validate_hosts=False)
+        plugins = get_previously_loaded_plugins()
+        config.load(extract_known_discovery_rulesets(plugins), validate_hosts=False)
         _config_loaded = True
 
 

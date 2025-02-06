@@ -5,11 +5,9 @@
 
 from ._config import (
     AgentBasedPlugins,
-    get_discovery_ruleset,
-    get_host_label_ruleset,
+    extract_known_discovery_rulesets,
+    get_previously_collected_discovery_rules,
     get_previously_loaded_plugins,
-    is_stored_ruleset,
-    iter_all_discovery_rulesets,
     set_discovery_ruleset,
 )
 from ._discover import load_all_plugins, load_selected_plugins
@@ -18,13 +16,11 @@ from .utils import filter_relevant_raw_sections, sections_needing_redetection
 
 __all__ = [
     "AgentBasedPlugins",
+    "extract_known_discovery_rulesets",
     "get_check_plugin",
-    "get_discovery_ruleset",
-    "get_host_label_ruleset",
     "get_previously_loaded_plugins",
+    "get_previously_collected_discovery_rules",
     "filter_relevant_raw_sections",
-    "is_stored_ruleset",
-    "iter_all_discovery_rulesets",
     "load_all_plugins",
     "load_selected_plugins",
     "sections_needing_redetection",

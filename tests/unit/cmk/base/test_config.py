@@ -2822,7 +2822,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    config.load()
+    config.load(discovery_rulesets=())
 
     yield
 
@@ -2915,7 +2915,7 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        config.load()
+        config.load(discovery_rulesets=())
         assert config.explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert config.explicit_host_conf["parents"][HostName("hostB")] == "setting2"
         assert config.explicit_host_conf["other"][HostName("hostA")] == "setting3"
@@ -2939,7 +2939,7 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: VersionedConf
 
     assert not precompiled_check_config.exists()
 
-    config.save_packed_config(config_path, config_cache)
+    config.save_packed_config(config_path, config_cache, {})
 
     assert precompiled_check_config.exists()
 
@@ -2948,7 +2948,7 @@ def test_load_packed_config(config_path: VersionedConfigPath) -> None:
     config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
 
     assert "abcd" not in config.__dict__
-    config.load_packed_config(config_path)
+    config.load_packed_config(config_path, discovery_rulesets=())
     # Mypy does not understand that we add some new member for testing
     assert config.abcd == 1  # type: ignore[attr-defined]
     del config.__dict__["abcd"]

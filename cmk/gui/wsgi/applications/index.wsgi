@@ -59,7 +59,7 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
     if "apache.version" in env and env.get("SCRIPT_NAME"):
         env["PATH_INFO"] = env["SCRIPT_NAME"]
     span.set_attribute("http.route", environ["PATH_INFO"])
-    span.update_name(get_default_span_name(env))  # type: ignore[no-untyped-call]
+    span.update_name(get_default_span_name(env))
 
 
 init_span_processor(
@@ -74,7 +74,7 @@ init_span_processor(
     exporter_from_config(trace.trace_send_config(omd_config)),
 )
 
-Application = OpenTelemetryMiddleware(  # type: ignore[no-untyped-call]
+Application = OpenTelemetryMiddleware(
     LazyImportProfilingMiddleware(
         app_factory_module="cmk.gui.wsgi.app",
         app_factory_name="make_wsgi_app",

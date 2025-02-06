@@ -341,7 +341,7 @@ def oracle_execute(
 def db2_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     # IBM data server driver
     try:
-        import ibm_db  # type: ignore[import-not-found]
+        import ibm_db  # type: ignore[import-untyped]
         import ibm_db_dbi  # type: ignore[import-not-found]
     except ImportError as exc:
         bail_out(3, "%s. Please install it via pip." % exc)

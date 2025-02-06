@@ -12,7 +12,7 @@ import winreg
 from itertools import chain, repeat
 
 import pytest
-import win32evtlog  # type: ignore[import-not-found]
+import win32evtlog  # type: ignore[import-untyped]
 
 from .local import assert_subprocess, host, local_test, user_dir
 

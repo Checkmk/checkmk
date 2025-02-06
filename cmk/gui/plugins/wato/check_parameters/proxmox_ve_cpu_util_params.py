@@ -15,7 +15,6 @@ from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Float, Intege
 def _parameter_valuespec_proxmox_ve_cpu_util():
     return Dictionary(
         required_keys=["util"],
-        optional_keys=["average"],
         elements=[
             (
                 "util",

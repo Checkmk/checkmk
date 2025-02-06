@@ -137,20 +137,24 @@ class BaseNotificationPage(QuickSetupPage):
             "table > tr"
         )
 
+    @property
+    def _recipient_group(self) -> Locator:
+        return self._stage_four_locator.get_by_role("group")
+
     def delete_recipient_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button", name="Remove element")
 
     def select_recipient_dropdown(self, index: int = 0) -> Locator:
-        return self._recipients_rows.nth(index).get_by_role("combobox").nth(0)
+        return self._recipient_group.get_by_role("combobox").nth(index)
 
-    def select_recipient_option(self, index: int, option: str) -> Locator:
-        return self._recipients_rows.nth(index).get_by_role("option", name=option)
+    def select_recipient_option(self, option: str) -> Locator:
+        return self._recipient_group.get_by_role("option").filter(has_text=option)
 
-    def add_new_entry_button(self, index: int = 0) -> Locator:
-        return self._recipients_rows.nth(index).get_by_role("button", name="Add new entry")
+    def add_new_entry_button(self) -> Locator:
+        return self._recipient_group.get_by_role("button", name=" Add new entry")
 
-    def recipient_first_dropdown(self, index: int = 0) -> Locator:
-        return self._recipients_rows.nth(index).get_by_role("combobox").nth(1)
+    def recipient_first_dropdown(self) -> Locator:
+        return self._recipient_group.locator("button").filter(has_text="Select user")
 
     @property
     def apply_and_create_another_rule_button(self) -> Locator:
@@ -207,18 +211,17 @@ class BaseNotificationPage(QuickSetupPage):
 
     def set_recipient(self, index: int, recipient_option_name: str) -> None:
         self.select_recipient_dropdown(index).click()
-        self.select_recipient_option(index, recipient_option_name).click()
+        self.select_recipient_option(recipient_option_name).click()
 
     def add_recipient(
         self, index: int, recipient_option_name: str, recipient_value: str | None = None
     ) -> None:
-        self._add_recipient_button.click()
         self.select_recipient_dropdown(index).click()
-        self.select_recipient_option(index, recipient_option_name).click()
+        self.select_recipient_option(recipient_option_name).click()
         if recipient_value:
-            self.add_new_entry_button(index).click()
-            self.recipient_first_dropdown(index).click()
-            self.select_recipient_option(index, recipient_value).click()
+            self.add_new_entry_button().click()
+            self.recipient_first_dropdown().click()
+            self.select_recipient_option(recipient_value).click()
 
     def check_disable_rule(self, disable: bool) -> None:
         if self._disable_rule_button.is_checked() != disable:
@@ -250,6 +253,7 @@ class BaseNotificationPage(QuickSetupPage):
 
         logger.info("Add recipient: '%s'", user)
         self.delete_all_recipients()
+        self._add_recipient_button.click()
         self.add_recipient(0, "Specific users", user)
 
         logger.info("Add description: '%s'", description)

@@ -352,6 +352,31 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
             {
                 "name": "irrelevant",
                 "mode": ("url", {}),
+                "host": {
+                    "virthost": "$to.expand.virthost$",
+                    "address": ("direct", "$to.expand.address$"),
+                },
+            },
+            HostConfig(
+                name="hostname",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={
+                    "$to.expand.virthost$": "expanded.virthost",
+                    "$to.expand.address$": "expanded.address",
+                },
+            ),
+            [
+                "--sni",
+                "-I",
+                "expanded.address",
+                "-H",
+                "expanded.virthost",
+            ],
+        ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
                 "host": {"virthost": "virtual.host"},
             },
             HostConfig(

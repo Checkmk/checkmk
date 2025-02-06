@@ -352,7 +352,7 @@ def _common_args(
 
     args += ["-I", replace_macros(host.server_address, host_config.macros)]
     if (virtual_host := host.virtual_host(mode)) is not None:
-        args += ["-H", virtual_host]
+        args += ["-H", replace_macros(virtual_host, host_config.macros)]
 
     return args
 

@@ -6,6 +6,12 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 rrd_cli_tools = [
     "rrdtool",
     "rrdcached",
+    "rrdupdate",
+]
+
+rrd_cli_symlinks = [
+    "rrdcreate",
+    "rrdinfo",
 ]
 
 [genrule(
@@ -39,6 +45,15 @@ pkg_files(
     prefix = "lib",
 )
 
+[
+    pkg_mklink(
+        name = "%s_symlink" % b,
+        link_name = "bin/%s" % b,
+        target = "bin/rrdupdate",
+    )
+    for b in rrd_cli_symlinks
+]
+
 pkg_mklink(
     name = "librrd_symlink",
     # The "8" is the version of the library - no idea yet how to get this
@@ -53,7 +68,7 @@ pkg_filegroup(
         ":rrdtool_bin",
         ":rrdtool_lib",
         ":rrdtool_skel_pkg",
-    ],
+    ] + ["%s_symlink" % b for b in rrd_cli_symlinks],
     visibility = ["//visibility:public"],
 )
 

@@ -31,7 +31,8 @@ from cmk.base.automation_helper._watcher import (
 
 _WATCHED_MK_PATTERN: Final = "*.mk"
 _WATCHED_TXT_FILE: Final = "foo.txt"
-_WATCHED_DIRECTORY: Final = "some_dir"
+_WATCHED_DIRECTORY_PATTERN: Final = "some_dir*"
+_WATCHED_DIRECTORY = "some_dir"
 _MK_FILE: Final = "foo.mk"
 
 
@@ -45,28 +46,34 @@ def get_mk_file_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
 @pytest.fixture(name="directory_watcher_handler")
 def get_directory_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
     return _AutomationWatcherHandler(
-        cache=cache, patterns=[_WATCHED_DIRECTORY], ignore_directories=False
+        cache=cache, patterns=[_WATCHED_DIRECTORY_PATTERN], ignore_directories=False
     )
 
 
+@pytest.fixture(name="target_directory")
+def get_targed_directory(tmp_path: Path) -> Path:
+    (tmp_path / "watched").mkdir()
+    return tmp_path / "watched"
+
+
 @pytest.fixture(name="target_mk_file")
-def get_mk_target_file(tmp_path: Path) -> Path:
-    return tmp_path / _MK_FILE
+def get_mk_target_file(target_directory: Path) -> Path:
+    return target_directory / _MK_FILE
 
 
 @pytest.fixture(name="observer")
-def get_observer(cache: Cache, tmp_path: Path) -> ContextManager:
+def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
     return run(
         WatcherConfig(
             schedules=[
                 Schedule(
-                    path=tmp_path,
+                    path=target_directory,
                     ignore_directories=True,
                     recursive=True,
                     patterns=[_WATCHED_MK_PATTERN],
                 ),
                 Schedule(
-                    path=tmp_path,
+                    path=target_directory,
                     ignore_directories=True,
                     recursive=True,
                     patterns=[_WATCHED_TXT_FILE],
@@ -77,7 +84,38 @@ def get_observer(cache: Cache, tmp_path: Path) -> ContextManager:
     )
 
 
-def test_observer_handles_moved_mk_file(
+def test_observer_handles_move_from_unwatched_to_watched_directory(
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    tmp_path: Path,
+    target_mk_file: Path,
+) -> None:
+    tmp_file = tmp_path / "file.mk"
+    tmp_file.touch()
+    last_change_reference = cache.get_last_detected_change()
+    with caplog.at_level(logging.INFO), observer:
+        tmp_file.rename(target_mk_file)
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"Source: n/a, destination: {target_mk_file}, type: moved" in caplog.text
+
+
+def test_observer_handles_move_from_watched_to_unwatched_directory(
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    tmp_path: Path,
+    target_mk_file: Path,
+) -> None:
+    target_mk_file.touch()
+    last_change_reference = cache.get_last_detected_change()
+    with caplog.at_level(logging.INFO), observer:
+        target_mk_file.rename(tmp_path / "file.mk")
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"Source: {target_mk_file}, destination: n/a, type: moved" in caplog.text
+
+
+def test_observer_handles_move_within_watched_directory(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
     observer: ContextManager,
@@ -89,7 +127,7 @@ def test_observer_handles_moved_mk_file(
     with caplog.at_level(logging.INFO), observer:
         tmp_file.rename(target_mk_file)
         _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"{_MK_FILE} (overwritten)" in caplog.text
+    assert f"Source: {tmp_file}, destination: {target_mk_file}, type: moved" in caplog.text
 
 
 def test_observer_handles_created_mk_file(
@@ -102,7 +140,7 @@ def test_observer_handles_created_mk_file(
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.touch()
         _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"{_MK_FILE} (created)" in caplog.text
+    assert f"Source: {target_mk_file}, destination: n/a, type: created" in caplog.text
 
 
 def test_observer_handles_modified_mk_file(
@@ -116,7 +154,7 @@ def test_observer_handles_modified_mk_file(
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.write_bytes(b"hello")
         _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"{_MK_FILE} (modified)" in caplog.text
+    assert f"Source: {target_mk_file}, destination: n/a, type: modified" in caplog.text
 
 
 def test_observer_handles_deleted_mk_file(
@@ -130,20 +168,23 @@ def test_observer_handles_deleted_mk_file(
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.unlink()
         _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"{_MK_FILE} (deleted)" in caplog.text
+    assert f"Source: {target_mk_file}, destination: n/a, type: deleted" in caplog.text
 
 
 def test_observer_also_handles_txt_files(
     caplog: pytest.LogCaptureFixture,
     cache: Cache,
     observer: ContextManager,
-    tmp_path: Path,
+    target_directory: Path,
 ) -> None:
     last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
-        (tmp_path / _WATCHED_TXT_FILE).touch()
+        (target_directory / _WATCHED_TXT_FILE).touch()
         _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"{_WATCHED_TXT_FILE} (created)" in caplog.text
+    assert (
+        f"Source: {target_directory / _WATCHED_TXT_FILE}, destination: n/a, type: created"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -151,12 +192,34 @@ def test_observer_also_handles_txt_files(
     [
         pytest.param(
             FileMovedEvent(src_path="", dest_path=_MK_FILE),
-            "foo.mk (overwritten)",
-            id="file overwritten",
+            f"Source: n/a, destination: {_MK_FILE}, type: moved",
+            id="file moved umwatched to watched directory",
         ),
-        pytest.param(FileCreatedEvent(src_path=_MK_FILE), "foo.mk (created)", id="file created"),
-        pytest.param(FileModifiedEvent(src_path=_MK_FILE), "foo.mk (modified)", id="file modified"),
-        pytest.param(FileDeletedEvent(src_path=_MK_FILE), "foo.mk (deleted)", id="file deleted"),
+        pytest.param(
+            FileMovedEvent(src_path=_MK_FILE, dest_path=""),
+            "Source: foo.mk, destination: n/a, type: moved",
+            id="file moved from watched to unwatched directory",
+        ),
+        pytest.param(
+            FileMovedEvent(src_path=_MK_FILE, dest_path="bar.mk"),
+            f"Source: {_MK_FILE}, destination: bar.mk, type: moved",
+            id="file moved within watched directory",
+        ),
+        pytest.param(
+            FileCreatedEvent(src_path=_MK_FILE),
+            f"Source: {_MK_FILE}, destination: n/a, type: created",
+            id="file created",
+        ),
+        pytest.param(
+            FileModifiedEvent(src_path=_MK_FILE),
+            f"Source: {_MK_FILE}, destination: n/a, type: modified",
+            id="file modified",
+        ),
+        pytest.param(
+            FileDeletedEvent(src_path=_MK_FILE),
+            f"Source: {_MK_FILE}, destination: n/a, type: deleted",
+            id="file deleted",
+        ),
     ],
 )
 def test_automation_watcher_logging_pattern_match(
@@ -198,22 +261,32 @@ def test_automation_watcher_logging_no_match(
     [
         pytest.param(
             DirMovedEvent(src_path="", dest_path=_WATCHED_DIRECTORY),
-            f"{_WATCHED_DIRECTORY} (overwritten)",
-            id="dir overwritten",
+            f"Source: n/a, destination: {_WATCHED_DIRECTORY}, type: moved",
+            id="dir moved from unwatched to watched directory",
+        ),
+        pytest.param(
+            DirMovedEvent(src_path=_WATCHED_DIRECTORY, dest_path=""),
+            f"Source: {_WATCHED_DIRECTORY}, destination: n/a, type: moved",
+            id="dir moved from watched to unwatched directory",
+        ),
+        pytest.param(
+            DirMovedEvent(src_path=_WATCHED_DIRECTORY, dest_path=f"{_WATCHED_DIRECTORY}2"),
+            f"Source: {_WATCHED_DIRECTORY}, destination: {_WATCHED_DIRECTORY}2, type: moved",
+            id="watched dir moved to watched dir",
         ),
         pytest.param(
             DirCreatedEvent(src_path=_WATCHED_DIRECTORY),
-            f"{_WATCHED_DIRECTORY} (created)",
+            f"Source: {_WATCHED_DIRECTORY}, destination: n/a, type: created",
             id="dir created",
         ),
         pytest.param(
             DirModifiedEvent(src_path=_WATCHED_DIRECTORY),
-            f"{_WATCHED_DIRECTORY} (modified)",
+            f"Source: {_WATCHED_DIRECTORY}, destination: n/a, type: modified",
             id="dir modified",
         ),
         pytest.param(
             DirDeletedEvent(src_path=_WATCHED_DIRECTORY),
-            f"{_WATCHED_DIRECTORY} (deleted)",
+            f"Source: {_WATCHED_DIRECTORY}, destination: n/a, type: deleted",
             id="dir deleted",
         ),
     ],

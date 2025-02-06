@@ -90,8 +90,12 @@ class _AutomationWatcherHandler(PatternMatchingEventHandler):
 
     @classmethod
     def _log_handled_event(cls, event: FileSystemEvent) -> None:
-        match event.event_type:
-            case "moved":
-                LOGGER.info("[watcher] %s (overwritten)", event.dest_path)
-            case _:
-                LOGGER.info("[watcher] %s (%s)", event.src_path, event.event_type)
+        LOGGER.info(
+            f"[watcher] Source: {_decode_if_necessary(event.src_path) or 'n/a'}, "
+            f"destination: {_decode_if_necessary(event.dest_path) or 'n/a'}, "
+            f"type: {event.event_type}"
+        )
+
+
+def _decode_if_necessary(v: str | bytes, encoding: str = "utf-8") -> str:
+    return v if isinstance(v, str) else v.decode(encoding)

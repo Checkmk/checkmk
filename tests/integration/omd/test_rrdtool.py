@@ -192,3 +192,21 @@ def test_cli_xport(
     )
 
     assert stdout == result
+
+
+@pytest.mark.parametrize(
+    "cli_tool_args,return_code,expected_output",
+    [
+        (["rrdtool"], 0, "RRDtool"),
+        (["rrdcached", "--help"], 1, "RRDCacheD"),
+    ],
+)
+def test_additional_cli_tools(
+    cli_tool_args: list[str],
+    return_code: int,
+    expected_output: str,
+    site: Site,
+) -> None:
+    p = site.run(check=False, args=cli_tool_args)
+    assert expected_output in p.stdout
+    assert return_code == p.returncode

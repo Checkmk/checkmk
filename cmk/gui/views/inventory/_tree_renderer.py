@@ -67,7 +67,7 @@ class SDItem:
             or self.retention_interval is None
             or self.retention_interval.source == "current"
         ):
-            return " ".join([tdclass, "muted_text"]), html_value
+            return tdclass, html_value
 
         now = int(time.time())
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval

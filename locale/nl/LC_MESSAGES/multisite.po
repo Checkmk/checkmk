@@ -6683,9 +6683,6 @@ msgstr ""
 "Er is intussen een andere wijziging doorgevoerd. Controleer deze om er zeker "
 "van te zijn dat u deze nu ook wilt activeren en start de activering opnieuw."
 
-msgid "Another omd config change job is already running."
-msgstr "Een andere omd config change job is al bezig."
-
 #, python-format
 msgid ""
 "Another report (<tt>%s</tt>) uses the settings and page layout of this "
@@ -13828,6 +13825,10 @@ msgstr ""
 "Communicatie tussen verschillende onderdelen van Checkmk (bijv. GUI en check "
 "engine) wordt in dit logniveau gelogd."
 
+#, python-format
+msgid "Communication with ui-job-scheduler failed: %s"
+msgstr ""
+
 msgid "Community forum"
 msgstr "Gemeenschapsforum"
 
@@ -15429,6 +15430,13 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Could not connect to the remote site (%s)"
 msgstr "Kan geen verbinding maken met externe site: %s"
+
+#, python-format
+msgid ""
+"Could not connect to ui-job-scheduler. Possibly the service <tt>ui-job-"
+"scheduler</tt> is not started, please make sure that all site services are "
+"all started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -24462,6 +24470,10 @@ msgstr "Niet gelukt om ouder scan te starten: %s"
 msgid "Failed to start the job: %s"
 msgstr "Het starten van de opdracht is mislukt: %s"
 
+#, fuzzy, python-format
+msgid "Failed to stop job: %s"
+msgstr "Het starten van de opdracht is mislukt: %s"
+
 #, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "Synchronisatie met site mislukt: %s"
@@ -26595,6 +26607,10 @@ msgstr "Kreeg geen antwoord van IdP"
 
 msgid "Got no result to create dump file"
 msgstr "Ik heb geen resultaat om een dump bestand te maken"
+
+#, python-format
+msgid "Got response: HTTP %s: %s"
+msgstr ""
 
 msgid "Grab user from found processess"
 msgstr "Haal gebruiker uit gevonden processess"
@@ -30409,6 +30425,11 @@ msgstr ""
 #, python-format
 msgid ""
 "Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Hosts for virtual machines need to be created manually, please check the %s."
 msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
@@ -43272,6 +43293,11 @@ msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
 
 #, fuzzy
+msgid ""
+"No permission for fallback topic 'Other'. Please contact your administrator."
+msgstr "Neem contact op met uw beheerder."
+
+#, fuzzy
 msgid "No previous cycle available"
 msgstr "Geen informatie beschikbaar"
 
@@ -55055,11 +55081,6 @@ msgstr "Sla deze host op en ga naar"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. Virtual "
-"machines may take a few minutes to show up."
-msgstr ""
-
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Opgeslagen controleconfiguratie van host '%s' met %d diensten"
@@ -55252,6 +55273,10 @@ msgstr "Zoeken in alle vermeldingen één niveau lager dan de basis-DN"
 msgid "Search all rules and rulesets"
 msgstr "Zoeken in alle regels en regelsets"
 
+#, fuzzy
+msgid "Search available options"
+msgstr "Beschikbare opties"
+
 msgid "Search field allowing regular expression and partial matches"
 msgstr "Zoekveld met reguliere expressies en gedeeltelijke overeenkomsten"
 
@@ -55377,6 +55402,10 @@ msgstr "Zoek regelsets en regels"
 
 msgid "Search scope"
 msgstr "Zoekbereik"
+
+#, fuzzy
+msgid "Search selected options"
+msgstr "Afgewezen verbindingen"
 
 msgid "Search string"
 msgstr "Zoekreeks"
@@ -80730,6 +80759,9 @@ msgstr "Status van gastprogramma's voor virtuele machines (bijvoorbeeld ESX)"
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr "Virtual machine (bijvoorbeeld ESX) heartbeat status"
 
+msgid "Virtual machines may take a few minutes to show up."
+msgstr ""
+
 msgid "Virtual memory averaging"
 msgstr "Gemiddeld virtueel geheugen"
 
@@ -87760,6 +87792,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Another omd config change job is already running."
+#~ msgstr "Een andere omd config change job is al bezig."
 
 #~ msgid "Physical disks"
 #~ msgstr "Fysieke schijven"

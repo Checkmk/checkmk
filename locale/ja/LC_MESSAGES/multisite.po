@@ -6390,9 +6390,6 @@ msgstr ""
 "その間に別の変更が行われました。今すぐアクティベートして、アクティベーション"
 "を再開することを確認してください。"
 
-msgid "Another omd config change job is already running."
-msgstr "別のomd config変更ジョブがすでに実行されています。"
-
 #, python-format
 msgid ""
 "Another report (<tt>%s</tt>) uses the settings and page layout of this "
@@ -13249,6 +13246,10 @@ msgstr ""
 "Checkmkのさまざまなコンポーネント(GUIやチェックエンジンなど)間の通信は、この"
 "ログレベルに記録されます。"
 
+#, python-format
+msgid "Communication with ui-job-scheduler failed: %s"
+msgstr ""
+
 msgid "Community forum"
 msgstr "コミュニティ フォーラム"
 
@@ -14758,6 +14759,13 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Could not connect to the remote site (%s)"
 msgstr "リモートサイトに接続できません:%s"
+
+#, python-format
+msgid ""
+"Could not connect to ui-job-scheduler. Possibly the service <tt>ui-job-"
+"scheduler</tt> is not started, please make sure that all site services are "
+"all started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -23465,6 +23473,10 @@ msgstr "親スキャンの開始に失敗しました: %s"
 msgid "Failed to start the job: %s"
 msgstr "ジョブの開始に失敗しました: %s"
 
+#, fuzzy, python-format
+msgid "Failed to stop job: %s"
+msgstr "ジョブの開始に失敗しました: %s"
+
 #, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "サイトとの同期に失敗しました: %s"
@@ -25564,6 +25576,10 @@ msgstr "IdPからの応答なし"
 
 msgid "Got no result to create dump file"
 msgstr "ダンプファイルの作成に失敗しました"
+
+#, python-format
+msgid "Got response: HTTP %s: %s"
+msgstr ""
 
 msgid "Grab user from found processess"
 msgstr "見つかったプロセスからユーザーを取得します"
@@ -29338,6 +29354,11 @@ msgstr ""
 #, python-format
 msgid ""
 "Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Hosts for virtual machines need to be created manually, please check the %s."
 msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
@@ -41994,6 +42015,11 @@ msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
 
 #, fuzzy
+msgid ""
+"No permission for fallback topic 'Other'. Please contact your administrator."
+msgstr "管理者にお問い合わせください。"
+
+#, fuzzy
 msgid "No previous cycle available"
 msgstr "利用可能な情報はありません"
 
@@ -53651,11 +53677,6 @@ msgstr "このホストを保存して、行く"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. Virtual "
-"machines may take a few minutes to show up."
-msgstr ""
-
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
@@ -53845,6 +53866,10 @@ msgstr "ベースDNの1レベル下のすべてのエントリを検索します
 msgid "Search all rules and rulesets"
 msgstr "すべてのルールとルールセットを検索する"
 
+#, fuzzy
+msgid "Search available options"
+msgstr "利用可能なオプション"
+
 msgid "Search field allowing regular expression and partial matches"
 msgstr "正規表現と部分一致を許可する検索フィールド"
 
@@ -53966,6 +53991,10 @@ msgstr "ルールセットとルールを検索する"
 
 msgid "Search scope"
 msgstr "検索範囲"
+
+#, fuzzy
+msgid "Search selected options"
+msgstr "拒否されたコネクション"
 
 msgid "Search string"
 msgstr "検索文字列"
@@ -78711,6 +78740,9 @@ msgstr "仮想マシン(ESXなど)のゲストツールのステータス"
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr "仮想マシン(ESXなど)のハートビートステータス"
 
+msgid "Virtual machines may take a few minutes to show up."
+msgstr ""
+
 msgid "Virtual memory averaging"
 msgstr "仮想メモリの平均化"
 
@@ -85559,6 +85591,9 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid "Another omd config change job is already running."
+#~ msgstr "別のomd config変更ジョブがすでに実行されています。"
 
 #~ msgid "Physical disks"
 #~ msgstr "物理ディスク"

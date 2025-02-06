@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-31 06:00+0000\n"
+"PO-Revision-Date: 2025-02-06 00:28+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -6515,9 +6515,6 @@ msgstr ""
 "diese um sicherzustellen, dass Sie diese ebenfalls aktivieren wollen und "
 "starten Sie die Aktivierung erneut."
 
-msgid "Another omd config change job is already running."
-msgstr "Ein weiterer Auftrag zur Änderung der omd-Konfiguration läuft bereits."
-
 #, python-format
 msgid ""
 "Another report (<tt>%s</tt>) uses the settings and page layout of this "
@@ -10742,9 +10739,9 @@ msgstr ""
 msgid "Can still edit"
 msgstr "Schreibschutz ignorieren"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Can't contact the remote site using '%s'"
-msgstr "Kann sich nicht mit Remote-Instanz %s verbinden"
+msgstr "Die Remote-Instanz kann nicht über '%s' kontaktiert werden"
 
 #, python-format
 msgid "Can't parse version %r"
@@ -12338,9 +12335,8 @@ msgstr ""
 "Exklusiv (Nur Jobs mit Label-Einschränkungen laufen, die zu diesem Knoten "
 "passen). Der Status wechselt in den Warn-Zustand, wenn der Modus abweicht."
 
-#, fuzzy
 msgid "Choose condition"
-msgstr "Keine Bedingungen"
+msgstr "Bedingung auswählen"
 
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
@@ -12361,17 +12357,14 @@ msgstr ""
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Wählen Sie, ob sich diese Regel auf Plugins oder lokale Checks bezieht"
 
-#, fuzzy
 msgid "Choose operator"
-msgstr "%s Operationen"
+msgstr "Operator auswählen"
 
-#, fuzzy
 msgid "Choose password from store"
-msgstr "Aus dem Passwortspeicher"
+msgstr "Passwort aus dem Passwortspeicher auswählen"
 
-#, fuzzy
 msgid "Choose password type"
-msgstr "Passwort ändern"
+msgstr "Passworttyp auswählen"
 
 msgid "Choose single values"
 msgstr "Einzelne Werte auswählen"
@@ -12497,9 +12490,8 @@ msgstr ""
 "Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
 "einem 'aktivierenden' Zustand befinden darf"
 
-#, fuzzy
 msgid "Choose unit"
-msgstr "Alle auswählen"
+msgstr "Einheit auswählen"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -13371,6 +13363,10 @@ msgid ""
 msgstr ""
 "Die Kommunikation zwischen verschiedenen Komponenten von Checkmk (z.B. GUI "
 "und Check-Engine) wird in diesem Log-Level protokolliert."
+
+#, python-format
+msgid "Communication with ui-job-scheduler failed: %s"
+msgstr "Kommunikation mit ui-job-scheduler fehlgeschlagen: %s"
 
 msgid "Community forum"
 msgstr "Community Forum"
@@ -14276,11 +14272,10 @@ msgstr ""
 msgid "Connection"
 msgstr "Verbindung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Connection '%s' isn't found: consider activating changes"
 msgstr ""
-"Die DCD-Verbindung ist immer noch nicht hergestellt, prüfen Sie die "
-"Aktivierung von Änderungen"
+"Verbindung '%s' wurde nicht gefunden: Aktivierung von Änderungen erwägen"
 
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
@@ -14927,6 +14922,18 @@ msgstr ""
 #, python-format
 msgid "Could not connect to the remote site (%s)"
 msgstr "Konnte sich nicht mit Remote-Instanz (%s) verbinden"
+
+#, python-format
+msgid ""
+"Could not connect to ui-job-scheduler. Possibly the service <tt>ui-job-"
+"scheduler</tt> is not started, please make sure that all site services are "
+"all started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
+"Es konnte keine Verbindung zu ui-job-scheduler hergestellt werden. "
+"Möglicherweise ist der Dienst <tt>ui-job-scheduler</tt> nicht gestartet. "
+"Bitte stellen Sie sicher, dass alle Instanz-Services gestartet sind. Es "
+"wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
+"Fehler war: %s."
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -23187,9 +23194,9 @@ msgstr ""
 "Zu erstellende Exportdatei, die <tt>&lt;HOST&gt;</tt> für den Host-Namen "
 "enthält"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Export this %s for API"
-msgstr "Diese Regel für API exportieren"
+msgstr "Diese %s für API exportieren"
 
 msgid "Export this rule for API"
 msgstr "Diese Regel für API exportieren"
@@ -23665,6 +23672,10 @@ msgstr "Parent-Scan konnte nicht gestartet werden: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Fehler beim Starten des Jobs: %s"
+
+#, python-format
+msgid "Failed to stop job: %s"
+msgstr "Fehler beim Stoppen des Jobs: %s"
 
 #, python-format
 msgid "Failed to synchronize with site: %s"
@@ -25743,6 +25754,10 @@ msgstr "Keine Antwort vom IdP erhalten"
 
 msgid "Got no result to create dump file"
 msgstr "Kein Ergebnis zum Erstellen der Dump-Datei vorhanden"
+
+#, python-format
+msgid "Got response: HTTP %s: %s"
+msgstr "Antwort erhalten: HTTP %s:%s"
 
 msgid "Grab user from found processess"
 msgstr "Benutzer aus gefundenen Prozessen holen"
@@ -29190,6 +29205,13 @@ msgid ""
 msgstr ""
 "Hosts für EC2-Instanzen müssen manuell erstellt werden, bitte prüfen Sie die "
 "%s."
+
+#, python-format
+msgid ""
+"Hosts for virtual machines need to be created manually, please check the %s."
+msgstr ""
+"Hosts für virtuelle Maschinen müssen manuell erstellt werden, bitte prüfen "
+"Sie die %s."
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "Zwinge Hosts 'if' anstatt 'if64' zu verwenden"
@@ -33548,13 +33570,11 @@ msgstr "Ungültige Sicherung (zu klein)"
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
 
-#, fuzzy
 msgid "Invalid state change for host"
-msgstr "Ungültige Daten für die Liste"
+msgstr "Ungültige Zustandsänderung des Hosts"
 
-#, fuzzy
 msgid "Invalid state change for service"
-msgstr "Zustandsänderungen von Hosts/Services"
+msgstr "Ungültige Zustandsänderung des Services"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -34182,9 +34202,8 @@ msgstr "Auftrag beendet"
 msgid "Job name"
 msgstr "Jobname"
 
-#, fuzzy
 msgid "Job scheduler"
-msgstr "Bericht-Scheduler"
+msgstr "Job Scheduler"
 
 msgid "Job score"
 msgstr "Job-Bewertung"
@@ -41667,6 +41686,12 @@ msgstr "Keine ausstehenden Änderungen."
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
 
+msgid ""
+"No permission for fallback topic 'Other'. Please contact your administrator."
+msgstr ""
+"Keine Berechtigung für das Fallback-Thema 'Andere'. Bitte kontaktieren Sie "
+"Ihren Administrator."
+
 msgid "No previous cycle available"
 msgstr "Kein vorheriger Zyklus verfügbar"
 
@@ -42462,9 +42487,8 @@ msgstr ""
 msgid "Notification rule of user '%s'"
 msgstr "Benachrichtigungsregel des Benutzers'%s'"
 
-#, fuzzy
 msgid "Notification rule successfully edited!"
-msgstr "Die neue Benachrichtigungsregel wurde erfolgreich erstellt!"
+msgstr "Die Benachrichtigungsregel wurde erfolgreich bearbeitet!"
 
 msgid "Notification rules"
 msgstr "Benachrichtigungsregeln"
@@ -48882,9 +48906,8 @@ msgstr "Proxy-URL"
 msgid "Proxy host"
 msgstr "Proxy Host"
 
-#, fuzzy
 msgid "Proxy host is required but not specified."
-msgstr "%s wird benötigt, ist aber nicht angegeben."
+msgstr "Ein Proxy-Host wird benötigt, ist aber nicht angegeben."
 
 msgid "Proxy server"
 msgstr "Proxy-Server"
@@ -52868,14 +52891,6 @@ msgstr ""
 "Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
 "aktivieren, um sie zu aktivieren."
 
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. Virtual "
-"machines may take a few minutes to show up."
-msgstr ""
-"Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
-"aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis "
-"virtuelle Maschinen angezeigt werden."
-
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Check-Konfiguration von '%s' mit %d Services gespeichert"
@@ -53059,6 +53074,9 @@ msgstr "Alle Einträge eine Ebene unter Basis DN suchen"
 msgid "Search all rules and rulesets"
 msgstr "Suche nach allen Regeln und Regelsätzen"
 
+msgid "Search available options"
+msgstr "Verfügbare Optionen durchsuchen"
+
 msgid "Search field allowing regular expression and partial matches"
 msgstr "Suchfeld erlaubt reguläre Ausdrücke und Teilübereinstimmungen"
 
@@ -53180,6 +53198,9 @@ msgstr "Nach Regelsätzen und Regeln suchen"
 
 msgid "Search scope"
 msgstr "Suchbereich"
+
+msgid "Search selected options"
+msgstr "Ausgewählte Optionen durchsuchen"
 
 msgid "Search string"
 msgstr "Suchtext"
@@ -57874,6 +57895,8 @@ msgstr "Stapel"
 #, python-format
 msgid "Stage %s contains invalid form data. Please correct them and try again."
 msgstr ""
+"Stufe %s enthält ungültige Formulardaten. Bitte korrigieren Sie diese und "
+"versuchen Sie es erneut."
 
 msgid "Stage action result not found"
 msgstr "Ergebnis der Aktion dieser Stufe nicht gefunden"
@@ -57881,6 +57904,8 @@ msgstr "Ergebnis der Aktion dieser Stufe nicht gefunden"
 #, python-format
 msgid "Stages %s contain invalid form data. Please correct them and try again."
 msgstr ""
+"Stufen %s enthalten ungültige Formulardaten. Bitte korrigieren Sie diese und "
+"versuchen Sie es erneut."
 
 msgid "Stale"
 msgstr "Veraltet"
@@ -58128,7 +58153,6 @@ msgstr "Zustand und Anzahl von Prozessen"
 msgid "State and count of processes (only SNMP)"
 msgstr "Zustand und Anzahl der Prozesse (nur SNMP)"
 
-#, fuzzy
 msgid "State change"
 msgstr "Zustandsänderung"
 
@@ -58966,7 +58990,7 @@ msgstr "Schritte"
 
 #, python-format
 msgid "Still no data in '%s'"
-msgstr ""
+msgstr "Noch keine Daten in '%s'"
 
 msgid "Still nothing happened."
 msgstr "Kein Ereignis bisher."
@@ -59608,9 +59632,8 @@ msgstr "Synchronisierung von Broker-Zertifikaten"
 msgid "Synology Updates"
 msgstr "Updates für Synology"
 
-#, fuzzy
 msgid "Synthetic KPI Kwds"
-msgstr "Synthetische Tests"
+msgstr "Synthetische KPI Kwds"
 
 msgid "Synthetic Monitoring"
 msgstr "Synthetisches Monitoring"
@@ -62405,13 +62428,13 @@ msgstr "Die Datei scheint keine gültige iCalendar-Datei zu sein."
 msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr "Die Dateiendung muss <tt>.pdf</tt> sein"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The file extension of the uploaded file is not supported: %s. Supported file "
 "extensions: %s."
 msgstr ""
-"Der MIME-Typ der hochgeladenen Datei wird nicht unterstützt: %s. "
-"Unterstützte Dateierweiterungen: .tar.gz, .zip."
+"Die Dateierweiterung der hochgeladenen Datei wird nicht unterstützt: %s. "
+"Unterstützte Dateierweiterungen: %s."
 
 msgid "The file is empty"
 msgstr "Die Datei ist leer"
@@ -62989,6 +63012,9 @@ msgid ""
 "The job scheduler manages regularly running tasks and the execution of "
 "background jobs. Log entries of this component are written to <tt>%s</tt>."
 msgstr ""
+"Der Job Scheduler verwaltet regelmäßig laufende Aufgaben und die Ausführung "
+"von Hintergrundjobs. Protokolleinträge dieser Komponente werden nach <tt>%s</"
+"tt> geschrieben."
 
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"
@@ -77662,6 +77688,10 @@ msgstr "Zustand von Gasttools von virtuellen Maschinen (z.B. ESX)"
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr "Heartbeat-Zustand von virtuellen Maschinen"
 
+msgid "Virtual machines may take a few minutes to show up."
+msgstr ""
+"Es kann ein paar Minuten dauern, bis virtuelle Maschinen angezeigt werden."
+
 msgid "Virtual memory averaging"
 msgstr "Mittelung des virtuellen Speichers"
 
@@ -84667,6 +84697,18 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Another omd config change job is already running."
+#~ msgstr ""
+#~ "Ein weiterer Auftrag zur Änderung der omd-Konfiguration läuft bereits."
+
+#~ msgid ""
+#~ "Save your progress and go to the Activate Changes page to enable it. "
+#~ "Virtual machines may take a few minutes to show up."
+#~ msgstr ""
+#~ "Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
+#~ "aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis "
+#~ "virtuelle Maschinen angezeigt werden."
 
 #~ msgid ""
 #~ "Enable experimental rendering modes for form specs. Keep in mind thatsome "

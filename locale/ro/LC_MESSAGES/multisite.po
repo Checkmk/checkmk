@@ -6695,11 +6695,6 @@ msgstr ""
 "pentru a vă asigura că doriți să o activați și acum și să începeți din nou "
 "activarea."
 
-msgid "Another omd config change job is already running."
-msgstr ""
-"O altă sarcină de modificare a configurației omd este deja în curs de "
-"execuție."
-
 #, python-format
 msgid ""
 "Another report (<tt>%s</tt>) uses the settings and page layout of this "
@@ -13846,6 +13841,10 @@ msgstr ""
 "Comunicarea între diferite componente ale Checkmk (de exemplu, GUI și "
 "motorul de verificare) va fi înregistrată în acest nivel de jurnal."
 
+#, python-format
+msgid "Communication with ui-job-scheduler failed: %s"
+msgstr ""
+
 msgid "Community forum"
 msgstr "Forumul comunitar"
 
@@ -15432,6 +15431,13 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Could not connect to the remote site (%s)"
 msgstr "Nu se poate conecta la site-ul la distanță: %s."
+
+#, python-format
+msgid ""
+"Could not connect to ui-job-scheduler. Possibly the service <tt>ui-job-"
+"scheduler</tt> is not started, please make sure that all site services are "
+"all started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
+msgstr ""
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -24513,6 +24519,10 @@ msgstr "Nu a reușit să pornească scanarea părinților: %s."
 msgid "Failed to start the job: %s"
 msgstr "Nu a reușit să pornească lucrarea: %s."
 
+#, fuzzy, python-format
+msgid "Failed to stop job: %s"
+msgstr "Nu a reușit să pornească lucrarea: %s."
+
 #, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "Nu s-a reușit sincronizarea cu site-ul: %s."
@@ -26637,6 +26647,10 @@ msgstr "Nu am primit niciun răspuns de la IdP"
 msgid "Got no result to create dump file"
 msgstr ""
 "Nu am nici un rezultat pentru a crea un fișier de descărcare de gestiune"
+
+#, python-format
+msgid "Got response: HTTP %s: %s"
+msgstr ""
 
 msgid "Grab user from found processess"
 msgstr "Preia utilizatorul din procesele găsite"
@@ -30445,6 +30459,11 @@ msgstr ""
 #, python-format
 msgid ""
 "Hosts for EC2 instances need to be created manually, please check the %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Hosts for virtual machines need to be created manually, please check the %s."
 msgstr ""
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
@@ -43344,6 +43363,11 @@ msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
 
 #, fuzzy
+msgid ""
+"No permission for fallback topic 'Other'. Please contact your administrator."
+msgstr "Vă rugăm să vă contactați administratorul."
+
+#, fuzzy
 msgid "No previous cycle available"
 msgstr "Nu există informații disponibile"
 
@@ -55127,11 +55151,6 @@ msgstr "Salvați această gazdă și mergeți la"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
-msgid ""
-"Save your progress and go to the Activate Changes page to enable it. Virtual "
-"machines may take a few minutes to show up."
-msgstr ""
-
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -55325,6 +55344,10 @@ msgstr "Căutați toate intrările cu un nivel sub DN de bază"
 msgid "Search all rules and rulesets"
 msgstr "Căutați toate regulile și seturile de reguli"
 
+#, fuzzy
+msgid "Search available options"
+msgstr "Opțiuni disponibile"
+
 msgid "Search field allowing regular expression and partial matches"
 msgstr ""
 "Câmp de căutare care permite expresii regulate și corespondențe parțiale"
@@ -55450,6 +55473,10 @@ msgstr "Seturi de reguli și reguli de căutare"
 
 msgid "Search scope"
 msgstr "Domeniul de căutare"
+
+#, fuzzy
+msgid "Search selected options"
+msgstr "Conexiuni respinse"
 
 msgid "Search string"
 msgstr "Șir de căutare"
@@ -80911,6 +80938,9 @@ msgstr "Starea instrumentelor invitate ale mașinii virtuale (de exemplu, ESX)"
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr "Starea heartbeat a mașinii virtuale (de exemplu, ESX)"
 
+msgid "Virtual machines may take a few minutes to show up."
+msgstr ""
+
 msgid "Virtual memory averaging"
 msgstr "Calcularea mediei de memorie virtuală"
 
@@ -87939,6 +87969,11 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Another omd config change job is already running."
+#~ msgstr ""
+#~ "O altă sarcină de modificare a configurației omd este deja în curs de "
+#~ "execuție."
 
 #~ msgid "Physical disks"
 #~ msgstr "Discuri fizice"

@@ -138,3 +138,33 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         }
     }
 }
+
+inside_container_minimal = {Map arg1=[:], Closure arg2 ->
+    // strangely providing a default value for @args does not work as expected.
+    // If no value got provided the provided body is taken as @args.
+    // In _script console_ however @arg1 will be [:] (the expected default arg)
+    // if no argument was provided.
+    // So we handle both cases here, setting default value for @args manually
+    def (args, body) = arg2 == null ? [[:], arg1] : [arg1, arg2];
+
+    def run_args_str = "-v ${checkout_dir}:/checkmk";
+    def image_name = "minimal-alpine-checkmk-ci-${args.get('safe_branch_name', 'BRANCH')}:latest";
+    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
+    def docker_build_args = "-f ${dockerfile} .";
+    def minimal_image = docker.build(image_name, docker_build_args);
+
+    // the reference repo dir is required for any git based interactions
+    def reference_repo_dir = cmd_output("""
+        if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
+            dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
+        fi
+    """);
+    if (reference_repo_dir) {
+        run_args_str += " -v ${reference_repo_dir}:${reference_repo_dir}:ro";
+    }
+
+    println("inside_container(image=${image_name} docker_args: ${run_args_str})");
+    minimal_image.inside(run_args_str) {
+        body();
+    }
+}

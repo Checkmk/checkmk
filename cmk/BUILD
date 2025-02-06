@@ -226,7 +226,6 @@ py_library(
     visibility = ["//tests/unit:__pkg__"],
     deps = [
         "//agents/plugins:mk_jolokia",
-        "@rrdtool_native//:rrdtool_python_lib",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,

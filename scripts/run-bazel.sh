@@ -10,11 +10,6 @@
 # Run this script e.g. to build the redis build
 # ./scripts/run-bazel.sh build @redis//:build
 #
-# Additional arguments can be passed via the BAZEL_CONFIG_ARGS variable
-# BAZEL_CONFIG_ARGS=--config=debug ./scripts/run-bazel.sh build @redis//:build
-# or
-# ./scripts/run-bazel.sh build --config=debug @redis//:build
-#
 # Check the check_mk/.bazelrc for available configs
 #
 
@@ -78,14 +73,6 @@ else
     echo
     BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache="""
 fi
-
-if [ "${CI}" == "true" ]; then
-    BAZEL_CONFIG_ARGS="--config=debug"
-    echo "Running on a CI machine, using addional args: \"${BAZEL_CONFIG_ARGS}\""
-else
-    BAZEL_CONFIG_ARGS=""
-    echo "Running on a non CI machine"
-fi
 echo "========================================================================="
 
 # We encountered false cache hits with remote caching due to environment variables
@@ -95,7 +82,6 @@ echo "========================================================================="
 
 # shellcheck disable=SC2086
 bazel "${ACTION}" \
-    ${BAZEL_CONFIG_ARGS} \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
     --action_env=CMK_BASE_BRANCH="2.4.0" \

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import traceback
-import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,6 +14,7 @@ from cmk.ccc import store
 from cmk.ccc.i18n import _
 
 from cmk.gui.background_job import (
+    AlreadyRunningError,
     BackgroundJob,
     BackgroundJobDefines,
     BackgroundProcessInterface,
@@ -309,17 +309,8 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Run Quick Setup Action")
 
-    @classmethod
-    def create_job_id(
-        cls,
-        quick_setup_id: str,
-        job_uuid: str,
-    ) -> str:
-        return f"{cls.job_prefix}-{quick_setup_id.replace(':', '_')}-{job_uuid}"
-
     def __init__(
         self,
-        job_uuid: str,
         quick_setup_id: QuickSetupId,
         action_id: ActionId,
         user_input_stages: Sequence[dict],
@@ -331,7 +322,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         self._user_input_stages = user_input_stages
         self._mode = mode
         self._object_id = object_id
-        super().__init__(job_id=self.create_job_id(quick_setup_id, job_uuid))
+        super().__init__(job_id=self.job_prefix)
 
     def run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
@@ -378,9 +369,7 @@ def start_quick_setup_job(
     user_input_stages: Sequence[dict],
     object_id: str | None,
 ) -> str:
-    job_uuid = str(uuid.uuid4())
     job = QuickSetupActionBackgroundJob(
-        job_uuid=job_uuid,
         quick_setup_id=quick_setup.id,
         action_id=action_id,
         user_input_stages=user_input_stages,
@@ -392,7 +381,6 @@ def start_quick_setup_job(
         JobTarget(
             callable=quick_setup_action_job_entry_point,
             args=QuickSetupActionJobArgs(
-                job_uuid=job_uuid,
                 quick_setup_id=quick_setup.id,
                 action_id=action_id,
                 user_input_stages=user_input_stages,
@@ -406,13 +394,14 @@ def start_quick_setup_job(
         ),
     )
     if job_start.is_error():
+        if isinstance(job_start.error, AlreadyRunningError):
+            raise job_start.error
         raise MKUserError(None, str(job_start.error))
 
     return job.get_job_id()
 
 
 class QuickSetupActionJobArgs(BaseModel, frozen=True):
-    job_uuid: str
     quick_setup_id: QuickSetupId
     action_id: ActionId
     user_input_stages: Sequence[dict]
@@ -424,7 +413,6 @@ def quick_setup_action_job_entry_point(
     job_interface: BackgroundProcessInterface, args: QuickSetupActionJobArgs
 ) -> None:
     QuickSetupActionBackgroundJob(
-        job_uuid=args.job_uuid,
         quick_setup_id=args.quick_setup_id,
         action_id=args.action_id,
         user_input_stages=args.user_input_stages,

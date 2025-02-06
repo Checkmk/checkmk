@@ -24,6 +24,14 @@ bazel_dep(name = "rules_cc", version = "0.0.17")
 bazel_dep(name = "rules_multitool", version = "0.4.0")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "1.1.0")
+single_version_override(
+    module_name = "rules_python",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
+        "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+    ],
+)
 bazel_dep(name = "rules_uv", version = "0.44.0")
 single_version_override(
     module_name = "rules_uv",
@@ -102,19 +110,6 @@ bazel_dep(
     version = "0.3.7",
 )
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-bazel_dep(name = "rules_proto_grpc_python", version = "5.0.1")
-single_version_override(
-    module_name = "rules_proto_grpc_python",
-    patch_strip = 3,
-    patches = [
-        # https://github.com/rules-proto-grpc/rules_proto_grpc/commit/155b8fe1028d9284670ff9fa0cb9168c72faf6e6
-        "//bazel/patches:rules_proto_grpc_python-generate_pyi.patch",
-        # Provide our own `requirement("protobuf")` dependency to avoid
-        # package collisions.
-        # See also: https://github.com/rules-proto-grpc/rules_proto_grpc/issues/394
-        "//bazel/patches:rules_proto_grpc_python-no_protobuf_dep.patch",
-    ],
-)
 
 fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
 

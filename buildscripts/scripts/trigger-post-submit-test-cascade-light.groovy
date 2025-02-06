@@ -49,7 +49,7 @@ def main() {
                         ],
                     );
                 }
-            }
+            }]
         }
     ).values().every { it } ? "SUCCESS" : "FAILURE";
 }

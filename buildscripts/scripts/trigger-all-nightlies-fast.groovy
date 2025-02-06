@@ -24,6 +24,7 @@ def main() {
     def job_parameters = [
         stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE),
         stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
     ];
 
     def override_editions = params.EDITIONS.trim() ?: "";
@@ -64,7 +65,7 @@ def main() {
                 }
             }
         ]}
-    }
+    );
 }
 
 return this;

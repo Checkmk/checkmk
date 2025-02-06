@@ -205,12 +205,7 @@ def main() {
         }]
     }
 
-    def image_name = "minimal-alpine-checkmk-ci-${safe_branch_name}:latest";
-    def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
-    def docker_build_args = "-f ${dockerfile} .";
-    def minimal_image = docker.build(image_name, docker_build_args);
-
-    minimal_image.inside(" -v ${checkout_dir}:/checkmk") {
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 

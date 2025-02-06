@@ -32,7 +32,6 @@ from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGrou
 from ._config import (
     add_check_plugin,
     add_discovery_ruleset,
-    add_host_label_ruleset,
     add_inventory_plugin,
     add_section_plugin,
     get_inventory_plugin,
@@ -131,7 +130,7 @@ def register_agent_section(
 
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
-        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+        add_discovery_ruleset(section_plugin.host_label_ruleset_name)
 
 
 def register_snmp_section(
@@ -152,7 +151,7 @@ def register_snmp_section(
 
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
-        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+        add_discovery_ruleset(section_plugin.host_label_ruleset_name)
 
 
 def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:

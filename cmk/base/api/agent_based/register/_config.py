@@ -64,10 +64,6 @@ def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
     stored_rulesets.setdefault(ruleset_name, [])
 
 
-def add_host_label_ruleset(ruleset_name: RuleSetName) -> None:
-    stored_rulesets.setdefault(ruleset_name, [])
-
-
 def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
     registered_inventory_plugins[inventory_plugin.name] = inventory_plugin
 
@@ -114,18 +110,9 @@ def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
     return stored_rulesets.keys()
 
 
-def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
-    return stored_rulesets.keys()
-
-
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
     rules: Sequence[RuleSpec],
 ) -> None:
-    """Set a ruleset to a given value"""
-    stored_rulesets[ruleset_name] = rules
-
-
-def set_host_label_ruleset(ruleset_name: RuleSetName, rules: Sequence[RuleSpec]) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules

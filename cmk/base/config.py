@@ -624,7 +624,9 @@ def _perform_post_config_loading_actions() -> None:
     cache_manager.clear_all()
 
     global_dict = globals()
-    _collect_parameter_rulesets_from_globals(global_dict)
+    _collect_parameter_rulesets_from_globals(
+        global_dict, agent_based_register.iter_all_discovery_rulesets()
+    )
     _transform_plugin_names_from_160_to_170(global_dict)
 
     get_config_cache().initialize()
@@ -769,24 +771,12 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
         }
 
 
-def _collect_parameter_rulesets_from_globals(global_dict: dict[str, Any]) -> None:
-    vars_to_remove = set()
-
-    for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
-        var_name = str(ruleset_name)
-        if var_name in global_dict:
-            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict[var_name])
-            # do not remove it yet, it may be a host_label ruleset as well!
-            vars_to_remove.add(var_name)
-
-    for ruleset_name in agent_based_register.iter_all_host_label_rulesets():
-        var_name = str(ruleset_name)
-        if var_name in global_dict:
-            agent_based_register.set_host_label_ruleset(ruleset_name, global_dict[var_name])
-            vars_to_remove.add(var_name)
-
-    for var_name in vars_to_remove:
-        del global_dict[var_name]
+def _collect_parameter_rulesets_from_globals(
+    global_dict: dict[str, Any], discovery_rulesets: Iterable[RuleSetName]
+) -> None:
+    for ruleset_name in discovery_rulesets:
+        if (var_name := str(ruleset_name)) in global_dict:
+            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict.pop(var_name))
 
 
 # Create list of all files to be included during configuration loading

@@ -30,9 +30,11 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.update_config.http.main import (
     _classify,
+    _detect_conflicts,
     _migratable,
     _migrate,
     _migrate_expect_response,
+    Conflict,
     HostType,
     V1Value,
 )
@@ -1021,6 +1023,23 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     assert not _migratable(rule_value)
+
+
+@pytest.mark.parametrize(
+    "rule_value, conflict",
+    [
+        (
+            EXAMPLE_33,
+            Conflict(
+                type_="add_headers_incompatible",
+                mode_fields=["add_headers"],
+                host_fields=[],
+            ),
+        ),
+    ],
+)
+def test_conflict(rule_value: Mapping[str, object], conflict: Conflict) -> None:
+    assert _detect_conflicts(rule_value) == conflict
 
 
 @pytest.mark.parametrize(

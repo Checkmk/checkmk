@@ -8,9 +8,10 @@ import re
 import sys
 from collections.abc import Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
 from pprint import pprint
-from typing import Literal
+from typing import Literal, LiteralString
 
 from pydantic import BaseModel, HttpUrl, ValidationError
 
@@ -21,6 +22,13 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
+
+
+@dataclass(frozen=True)
+class Conflict:
+    type_: LiteralString
+    mode_fields: list[str]
+    host_fields: list[str]
 
 
 class HostType(enum.Enum):
@@ -146,8 +154,6 @@ class V1Value(BaseModel, extra="forbid"):
 
 
 def _migratable_url_params(url_params: V1Url) -> bool:
-    if any(":" not in header for header in url_params.add_headers or []):
-        return False
     if (
         url_params.expect_response_header is not None
         and "\r\n" in url_params.expect_response_header.strip("\r\n")
@@ -165,10 +171,27 @@ def _migratable_url_params(url_params: V1Url) -> bool:
     return True
 
 
-def _migratable(rule_value: Mapping[str, object]) -> bool:
+def _detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | V1Value | ValidationError:
     try:
         value = V1Value.model_validate(rule_value)
-    except ValidationError:
+    except ValidationError as e:
+        # TODO: some validation errors need to be conflicts. Eventually V1Value needs to allow every
+        # value that can be loaded via the ruleset.
+        return e
+    mode = value.mode[1]
+    if isinstance(mode, V1Url):
+        if any(":" not in header for header in mode.add_headers or []):
+            return Conflict(
+                type_="add_headers_incompatible",
+                mode_fields=["add_headers"],
+                host_fields=[],
+            )
+    return value
+
+
+def _migratable(rule_value: Mapping[str, object]) -> bool:
+    value = _detect_conflicts(rule_value)
+    if not isinstance(value, V1Value):
         return False
     address = value.host.address[1]
     if isinstance(address, str):

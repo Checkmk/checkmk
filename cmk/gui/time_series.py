@@ -74,7 +74,7 @@ class TimeSeries:
         self.start = int(time_window[0])
         self.end = int(time_window[1])
         self.step = int(time_window[2])
-        self.values = [v if v is None else conversion(v) for v in data]
+        self.values: TimeSeriesValues = [v if v is None else conversion(v) for v in data]
 
     @property
     def twindow(self) -> TimeWindow:

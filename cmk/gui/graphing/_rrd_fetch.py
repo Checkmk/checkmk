@@ -99,26 +99,22 @@ def _align_and_resample_rrds(
     info resampling and alignment is done in reference to the first metric.
 
     TimeSeries are mutated in place, argument rrd_data is thus mutated"""
-
-    start_time = None
-    end_time = None
-    step = None
-
+    time_window = None
     for key, time_series in rrd_data.items():
         if not time_series:
             spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
-        if start_time is None:
-            start_time, end_time, step = time_series.twindow
-        elif (start_time, end_time, step) != time_series.twindow:
+        if time_window is None:
+            time_window = time_series.twindow
+        elif time_window != time_series.twindow:
             time_series.values = (
                 time_series.downsample(
-                    (start_time, end_time, step),
+                    time_window,
                     key.consolidation_function or consolidation_function,
                 )
-                if step >= time_series.twindow[2]
-                else time_series.forward_fill_resample((start_time, end_time, step))
+                if time_window[2] >= time_series.twindow[2]
+                else time_series.forward_fill_resample(time_window)
             )
 
 
@@ -148,7 +144,7 @@ def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -
 
 def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
     for data in rrd_data.values():
-        del data.values[-1]
+        data.values = data.values[:-1]
         data.end -= step
 
 

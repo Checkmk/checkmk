@@ -182,7 +182,7 @@ class CMKOpenApiSession(requests.Session):
                     f" for {operation}; URL={redirect_url}!"
                 )
                 if response and response.content:
-                    msg += f"; Last response: {response.status_code}; {response.content}"
+                    msg += f"; Last response: {response.status_code}; {response.content!r}"
                 raise TimeoutError(msg)
 
             logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)

@@ -388,8 +388,8 @@ def calculate_view_grouping_of_services(
                 continue  # skip grouping first row
 
             if current_group == group_spec:
-                row = rows_with_ids.pop(index)
-                rows_with_ids.insert(index - len(groups[group_id][1]), row)
+                r = rows_with_ids.pop(index)
+                rows_with_ids.insert(index - len(groups[group_id][1]), r)
                 continue
 
         current_group = group_spec

@@ -12,6 +12,7 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render
@@ -22,7 +23,7 @@ check_info = {}
 def parse_mkeventd_status(string_table):
     import json
 
-    parsed, site = {}, None
+    parsed, site = dict[Any, Any](), None
     for line in string_table:
         try:
             data = json.loads(line[0])

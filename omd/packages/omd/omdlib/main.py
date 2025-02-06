@@ -3447,6 +3447,7 @@ def main_restore(
     name = None
     fileobj = None
 
+    mode: Literal["r|*", "r:*"]
     if source == "-":
         fileobj = sys.stdin.buffer
         mode = "r|*"

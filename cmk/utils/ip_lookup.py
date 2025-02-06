@@ -215,7 +215,10 @@ def _actual_dns_lookup(
     fallback: HostAddress | None = None,
 ) -> HostAddress:
     try:
-        return HostAddress(socket.getaddrinfo(host_name, None, family)[0][4][0])
+        socket_address = socket.getaddrinfo(host_name, None, family)[0][4][0]
+        if isinstance(socket_address, int):
+            raise Exception("Your Python has been compiled with --disable-ipv6, sorry...")
+        return HostAddress(socket_address)
     except (MKTerminate, MKTimeout):
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here

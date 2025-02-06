@@ -1061,6 +1061,7 @@ class DiscoveryPageRenderer:
                 changed_labels,
                 added_labels,
                 removed_labels,
+                entry.old_discovered_parameters,
                 changed_parameters,
                 added_parameters,
                 removed_parameters,
@@ -1113,6 +1114,7 @@ class DiscoveryPageRenderer:
         changed_labels: Labels,
         added_labels: Labels,
         removed_labels: Labels,
+        old_parameters: Mapping[str, Any],
         changed_parameters: Mapping[str, Any],
         added_parameters: Mapping[str, Any],
         removed_parameters: Mapping[str, Any],
@@ -1139,7 +1141,17 @@ class DiscoveryPageRenderer:
                     len(changed_parameters),
                 )
                 % len(changed_parameters)
+                + html.render_icon(
+                    "search",
+                    _("Old: %r\nNew: %r")
+                    % (
+                        {k: v for k, v in old_parameters.items() if k in changed_parameters},
+                        changed_parameters,
+                    ),
+                    cssclass="iconbutton",
+                )
             )
+
         if added_parameters:
             html.p(
                 ungettext(
@@ -1148,6 +1160,11 @@ class DiscoveryPageRenderer:
                     len(added_parameters),
                 )
                 % len(added_parameters)
+                + html.render_icon(
+                    "search",
+                    _("New: %r") % added_parameters,
+                    cssclass="iconbutton",
+                )
             )
         if removed_parameters:
             html.p(
@@ -1157,6 +1174,11 @@ class DiscoveryPageRenderer:
                     len(removed_parameters),
                 )
                 % len(removed_parameters)
+                + html.render_icon(
+                    "search",
+                    _("Removed: %r") % removed_parameters,
+                    cssclass="iconbutton",
+                )
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:

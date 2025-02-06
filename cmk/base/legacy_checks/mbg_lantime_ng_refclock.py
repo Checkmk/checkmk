@@ -171,6 +171,7 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
 
     # Translation for values of MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
     refclock_substates = {
+        "-1": "MRS Ref None",
         "0": "not available",
         "1": "GPS sync",
         "2": "GPS tracking",
@@ -202,6 +203,9 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
         "165": "MRS HAVE QUICK sync",
         "166": "MRS external oscillator sync",
         "167": "MRS SyncE",
+        "168": "MRS video in sync",
+        "169": "MRS ltc sync",
+        "170": "MRS osc sync",
     }
 
     state, state_txt = refclock_states[state]

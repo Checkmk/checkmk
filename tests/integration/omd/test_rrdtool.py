@@ -199,6 +199,9 @@ def test_cli_xport(
     [
         (["rrdtool"], 0, "RRDtool"),
         (["rrdcached", "--help"], 1, "RRDCacheD"),
+        (["rrdupdate"], 1, "RRDtool"),
+        (["rrdcreate"], 1, "RRDtool"),
+        (["rrdinfo"], 1, "RRDtool"),
     ],
 )
 def test_additional_cli_tools(

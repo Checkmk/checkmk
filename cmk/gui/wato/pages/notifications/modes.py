@@ -952,7 +952,7 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
-        with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
+        with table_element(table_id="plugins", title=_("Predicted notifications")) as table:
             for contact, plugin, parameters, bulk in result[1]:
                 table.row()
                 if contact.startswith("mailto:"):
@@ -1650,7 +1650,7 @@ class ModeTestNotifications(ModeNotifications):
         html.close_div()
 
         html.open_div(class_="message_container")
-        html.h2(_("Analysis results"))
+        html.h2(_("Test results"))
         analyse_rules, analyse_resulting_notifications = analyse
         match_count_all = len(tuple(entry for entry in analyse_rules if "match" in entry))
         match_count_user = len(
@@ -1682,20 +1682,39 @@ class ModeTestNotifications(ModeNotifications):
             )
         )
         html.br()
-        resulting_notifications_count = len(analyse_resulting_notifications)
+        resulting_notifications_count = len(analyse_resulting_notifications[-1][0].split(","))
         html.write_text_permissive(
-            ("%d resulting %s")
+            ("%d %s")
             % (
                 resulting_notifications_count,
                 ungettext(
-                    "notification",
-                    "notifications",
+                    "notification would have been sent based on your notification rules (see table: 'Predicted notifications')",
+                    "notifications would have been sent based on your notification rules (see table: 'Predicted notifications')",
                     resulting_notifications_count,
                 ),
             )
         )
-        if request.var("notify_plugin"):
-            html.write_text_permissive(_("Notifications have been sent. "))
+        if dispatch_method := request.var("dispatch"):
+            notifications_sent = [
+                rule for rule in analyse_resulting_notifications if rule[1] == dispatch_method
+            ]
+            if notifications_sent:
+                notification_sent_count = len(notifications_sent[-1][0].split(","))
+            else:
+                notification_sent_count = 0
+            html.br()
+            html.write_text_permissive(
+                _("%d %s %s.")
+                % (
+                    notification_sent_count,
+                    self._vs_notification_scripts().value_to_html(dispatch_method),
+                    ungettext(
+                        "notification has been sent out",
+                        "notifications have been sent out",
+                        notification_sent_count,
+                    ),
+                )
+            )
         html.br()
         html.br()
         html.write_text_permissive("View the following tables for more details.")

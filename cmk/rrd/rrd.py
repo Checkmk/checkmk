@@ -47,6 +47,7 @@ from .interface import (  # pylint: disable=cmk-module-layer-violation
     RRDConfig,
     RRDInterface,
     RRDObjectConfig,
+    RRDReloadableConfig,
 )
 
 _Seconds = NewType("_Seconds", int)
@@ -736,14 +737,13 @@ class RRDCreator:
         self._rrd_interface = rrd_interface
         self._rrd_helper_output_buffer = b""
 
-    def create_rrds_keepalive(self, *, reload_config: Callable[[], RRDConfig]) -> None:
+    def create_rrds_keepalive(self, *, config: RRDReloadableConfig) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
 
         job_queue: list[bytes] = []
 
         console.verbose("Started Check_MK RRD creator.")
-        config = reload_config()
         try:
             # We read asynchronously from stdin and put the jobs into a queue.
             # That way the cmc main process will not be blocked by IO wait.
@@ -786,7 +786,7 @@ class RRDCreator:
                 if job_queue:
                     if job_queue[0] == b"*":
                         console.verbose("Reloading configuration.")
-                        config = reload_config()
+                        config.reload()
                     else:
                         spec = job_queue[0].decode("utf-8")
                         try:

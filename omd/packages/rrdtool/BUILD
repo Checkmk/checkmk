@@ -3,6 +3,11 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_fil
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
+rrd_cli_tools = [
+    "rrdtool",
+    "rrdcached",
+]
+
 [genrule(
     name = "%s_deployable" % binary,
     srcs = ["@rrdtool_native//:%s" % binary],
@@ -12,17 +17,11 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
            chmod u+w $@
            patchelf $@ --force-rpath --set-rpath "\\$$ORIGIN/../lib"
        """,
-) for binary in [
-    "rrdcached",
-    "rrdtool",
-]]
+) for binary in rrd_cli_tools]
 
 pkg_files(
     name = "rrdtool_bin",
-    srcs = [
-        "rrdcached",
-        "rrdtool",
-    ],
+    srcs = rrd_cli_tools,
     attributes = pkg_attributes(
         mode = "0755",
     ),

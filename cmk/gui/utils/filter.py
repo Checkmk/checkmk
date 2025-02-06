@@ -58,7 +58,7 @@ def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
             return True
 
     # check for given non default sub keys
-    if sub_keys := [x for x in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(x)]:
+    if any(key for key in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(key)):
         return True
 
     # check if non default request var has a value

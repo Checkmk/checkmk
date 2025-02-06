@@ -48,4 +48,12 @@ omdlib-install: $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/__init__.py
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m py_compile $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/*.py
+	# Pre-compile all python modules
+	$(BAZEL_CMD) run :venv
+	source .venv/bin/activate \
+	&& python3 -m compileall \
+		-f \
+		--invalidation-mode=checked-hash \
+		-s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
+		$(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/ \
+	&& deactivate

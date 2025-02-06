@@ -16,7 +16,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
 from dataclasses import dataclass
 from getpass import getuser
@@ -76,8 +76,6 @@ NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resourc
 
 
 class Site:
-    _GLOBAL_SETTINGS_FILE: Final = "etc/check_mk/multisite.d/wato/global.mk"
-
     def __init__(
         self,
         version: CMKVersion,
@@ -1473,19 +1471,32 @@ class Site:
             lambda: self.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
         )
 
-    def read_global_settings(self) -> dict[str, object]:
+    def read_global_settings(self, relative_path: Path) -> dict[str, object]:
         global_settings: dict[str, object] = {}
-        exec(self.read_file(self._GLOBAL_SETTINGS_FILE), {}, global_settings)
+        exec(self.read_file(relative_path), {}, global_settings)
         return global_settings
 
-    def write_global_settings(self, global_settings: Mapping[str, object]) -> None:
+    def write_global_settings(
+        self,
+        relative_path: Path,
+        global_settings: Mapping[str, object],
+    ) -> None:
         self.write_text_file(
-            self._GLOBAL_SETTINGS_FILE,
+            relative_path,
             "\n".join(f"{key} = {repr(val)}" for key, val in global_settings.items()),
         )
 
-    def update_global_settings(self, update: dict[str, object]) -> None:
-        self.write_global_settings(self.read_global_settings() | update)
+    def update_global_settings(self, relative_path: Path, update: dict[str, object]) -> None:
+        self.write_global_settings(
+            relative_path,
+            self.read_global_settings(relative_path) | update,
+        )
+
+
+@dataclass(frozen=True)
+class GlobalSettingsUpdate:
+    relative_path: Path
+    update: dict[str, object]
 
 
 class SiteFactory:
@@ -1822,7 +1833,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
-        global_settings_update: dict[str, object] | None = None,
+        global_settings_updates: Iterable[GlobalSettingsUpdate] = (),
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -1833,7 +1844,7 @@ class SiteFactory:
             save_results=save_results,
             report_crashes=report_crashes,
             tracing_config=tracing_config,
-            global_settings_update=global_settings_update,
+            global_settings_updates=global_settings_updates,
         )
 
     def get_test_site(
@@ -1846,7 +1857,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
-        global_settings_update: dict[str, object] | None = None,
+        global_settings_updates: Iterable[GlobalSettingsUpdate] = (),
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1869,8 +1880,11 @@ class SiteFactory:
 
         try:
             self.setup_customers(site, ["customer1", "customer2"])
-            if global_settings_update:
-                site.update_global_settings(global_settings_update)
+            for global_settings_update in global_settings_updates:
+                site.update_global_settings(
+                    global_settings_update.relative_path,
+                    global_settings_update.update,
+                )
             self.initialize_site(
                 site,
                 init_livestatus=init_livestatus,

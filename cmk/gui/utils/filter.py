@@ -24,42 +24,41 @@ _COUNT_KEY_REGEX: Final = re.compile(r".*_count$")
 _OP_KEY_REGEX: Final = re.compile(r".*_op$")
 
 
-def requested_filter_is_not_default(mandatory: VisualContext) -> bool:
-    """Compare default filters of page with given filter parameters"""
+def check_if_non_default_filter_in_request(ctx: VisualContext) -> bool:
     if request.var("filled_in") != "filter" or request.var("_active") == "":
         return False
 
-    mandatory_not_found = set(mandatory.keys())
+    ctx_keys = set(ctx.keys())
+    request_arg_keys = request.args.keys() - _NON_DEFAULT_KEYS_TO_IGNORE
 
-    sub_keys = request.args.keys() - _NON_DEFAULT_KEYS_TO_IGNORE
+    for active_key in (request.var("_active") or "").split(";"):
+        if active_key in ctx:
+            ctx_keys.discard(active_key)
+            request_arg_keys.discard(active_key)
 
-    for key in (request.var("_active") or "").split(";"):
-        if key in mandatory:
-            mandatory_not_found.discard(key)
-            sub_keys.discard(key)
+            if ctx_sub_keys := ctx[active_key].keys():
+                request_arg_keys -= ctx_sub_keys
+                for sub_key in ctx_sub_keys:
+                    given = request.var(sub_key) or ""
+                    default = ctx[active_key][sub_key] or ""
+                    default = "is" if _OP_KEY_REGEX.match(sub_key) and default == "" else default
 
-            if mandatory_sub := mandatory[key].keys():
-                sub_keys -= mandatory_sub
-                # compare each sub_key with the default
-                for sub in mandatory_sub:
-                    given = request.var(sub) or ""
-                    default = mandatory[key][sub] or ""
-                    default = "is" if _OP_KEY_REGEX.match(sub) and default == "" else default
-
-                    # ignore count vars, cause empty vars increase also the count
-                    if given != default and not _COUNT_KEY_REGEX.match(sub):
+                    # Variables with the `_count` suffix and a value of "" are valid as they
+                    # can also increase the count.
+                    if given != default and not _COUNT_KEY_REGEX.match(sub_key):
                         return True
 
-            elif request.var(key):
+            # First request check: only hit if key in _active and ctx without sub keys.
+            elif request.var(active_key):
                 return True
 
-        # check if non default request var has a value
-        elif request.var(key):
+        # Second request check: hit if key found in _active but not in context.
+        elif request.var(active_key):
             return True
 
-    # check for given non default sub keys
-    if any(key for key in sub_keys if not _NON_DEFAULT_KEY_REGEX.match(key)):
+    # If any request args remain and are not default keys, a filter must exist.
+    if any(key for key in request_arg_keys if not _NON_DEFAULT_KEY_REGEX.match(key)):
         return True
 
-    # check if non default request var has a value
-    return bool(mandatory_not_found)
+    # If any context keys remain post-processing, a filter must exist.
+    return bool(ctx_keys)

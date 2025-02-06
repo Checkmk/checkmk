@@ -45,7 +45,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.filter import requested_filter_is_not_default
+from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
@@ -724,7 +724,7 @@ def _extend_display_dropdown(
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
 
-    is_filter_set = requested_filter_is_not_default(
+    is_filter_set = check_if_non_default_filter_in_request(
         AjaxInitialDashboardFilters().get_context(page_name=name)
     )
 

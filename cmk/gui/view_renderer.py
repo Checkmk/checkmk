@@ -43,7 +43,7 @@ from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
-from cmk.gui.utils.filter import requested_filter_is_not_default
+from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
@@ -510,7 +510,7 @@ class GUIViewRenderer(ABCViewRenderer):
             )
 
     def _page_menu_entries_filter(self, show_filters: list[Filter]) -> Iterator[PageMenuEntry]:
-        is_filter_set = requested_filter_is_not_default(
+        is_filter_set = check_if_non_default_filter_in_request(
             AjaxInitialViewFilters().get_context(page_name=self.view.name)
         )
         yield PageMenuEntry(

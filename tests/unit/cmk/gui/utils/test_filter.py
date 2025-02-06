@@ -11,7 +11,7 @@ import cmk.gui.utils.filter
 def test_requested_filter_is_not_default__empty_request(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars={}))
 
-    value = cmk.gui.utils.filter.requested_filter_is_not_default({})
+    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
     expected = False
 
     assert value == expected
@@ -30,7 +30,7 @@ def test_requested_filter_is_not_default__request_args(
     stub = _RequestStub(args=args, vars={"filled_in": "filter", "_active": "foo;bar"})
     monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
 
-    value = cmk.gui.utils.filter.requested_filter_is_not_default({})
+    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
 
     assert value == expected
 
@@ -42,31 +42,31 @@ def test_requested_filter_is_not_default__request_args(
         pytest.param({"filled_in": "filter", "_active": "foo;"}, True, id="_active set and found"),
     ],
 )
-def test_requested_filter_is_not_default__request_vars_with_static_mandatory(
+def test_requested_filter_is_not_default__request_vars_with_static_ctx(
     vars: dict[str, str], expected: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     stub = _RequestStub(args=[], vars=vars)
     monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
 
-    value = cmk.gui.utils.filter.requested_filter_is_not_default({"foo": {"hello": "world"}})
+    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({"foo": {"hello": "world"}})
 
     assert value == expected
 
 
 @pytest.mark.parametrize(
-    "vars, mandatory, expected",
+    "vars, ctx, expected",
     [
         pytest.param(
             {"filled_in": "filter", "_active": "foo;"},
             {"foo": {}},
             False,
-            id="no sub keys matched in mandatory value",
+            id="no sub keys matched in context value",
         ),
         pytest.param(
             {"filled_in": "filter", "_active": "foo;"},
             {"foo": {"my_count": "1"}},
             False,
-            id="*_count matched var detected in mandatory",
+            id="*_count matched var detected in context",
         ),
         pytest.param(
             {"filled_in": "filter", "_active": "foo;", "foo": "value"},
@@ -78,25 +78,25 @@ def test_requested_filter_is_not_default__request_vars_with_static_mandatory(
             {"filled_in": "filter", "_active": "foo;", "foo": "value"},
             {},
             True,
-            id="foo found in _active keys but not in mandatory (branch #1)",
+            id="foo found in _active keys but not in context (branch #1)",
         ),
         pytest.param(
             {"filled_in": "filter", "_active": "foo;"},
             {"not_found": {}},
             True,
-            id="foo found in _active keys but not in mandatory (branch #2)",
+            id="foo found in _active keys but not in context (branch #2)",
         ),
     ],
 )
-def test_requested_filter_is_not_default__request_vars_with_dynamic_mandatory(
+def test_requested_filter_is_not_default__request_vars_with_dynamic_ctx(
     vars: dict[str, str],
-    mandatory: dict[str, dict[str, str]],
+    ctx: dict[str, dict[str, str]],
     expected: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars=vars))
 
-    value = cmk.gui.utils.filter.requested_filter_is_not_default(mandatory)
+    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request(ctx)
 
     assert value == expected
 

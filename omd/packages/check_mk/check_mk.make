@@ -188,11 +188,14 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	# After installing all python modules, ensure they are compiled
 	# compile pyc files explicitly selecting `checked-hash` invalidation mode
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall \
+	$(BAZEL_CMD) run :venv
+	source .venv/bin/activate \
+	&& python3 -m compileall \
 	    -f \
 	    --invalidation-mode=checked-hash \
 	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
-	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk"
+	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk" \
+	&& deactivate
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib

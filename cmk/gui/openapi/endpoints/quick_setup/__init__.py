@@ -23,6 +23,7 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.encoding import json_encode
 
+from cmk.gui.background_job import AlreadyRunningError
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
@@ -390,13 +391,20 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         )
 
     if action.run_in_background:
-        background_job_id = start_quick_setup_job(
-            quick_setup=quick_setup,
-            action_id=action.id,
-            mode=mode,
-            user_input_stages=body["stages"],
-            object_id=object_id,
-        )
+        try:
+            background_job_id = start_quick_setup_job(
+                quick_setup=quick_setup,
+                action_id=action.id,
+                mode=mode,
+                user_input_stages=body["stages"],
+                object_id=object_id,
+            )
+        except AlreadyRunningError:
+            return _serve_error(
+                title="Cannot start action",
+                detail="Another Quick setup action already running.",
+                status_code=429,
+            )
         background_job_status_link = constructors.link_endpoint(
             module_name="cmk.gui.openapi.endpoints.background_job",
             rel="cmk/show",

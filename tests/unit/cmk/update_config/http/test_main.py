@@ -1027,7 +1027,7 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         ),
     ],
 )
-def test_conflict(rule_value: Mapping[str, object], conflict: Conflict) -> None:
+def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:
     assert detect_conflicts(rule_value) == conflict
 
 

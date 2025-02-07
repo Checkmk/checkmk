@@ -87,7 +87,6 @@ types.requirements(
 )
 use_repo(types, "cmk_types")
 
-# Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
 bazel_dep(
     # Transitive dependency for protobuf.

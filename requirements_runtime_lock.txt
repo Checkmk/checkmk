@@ -2,9 +2,9 @@
 #    bazel run @@//:requirements_runtime
 --index-url https://pypi.org/simple
 
-aiohappyeyeballs==2.4.4 \
-    --hash=sha256:5fdd7d87889c63183afc18ce9271f9b0a7d32c2303e394468dd45d514a757745 \
-    --hash=sha256:a980909d50efcd44795c4afeca523296716d50cd756ddca6af8c65b996e27de8
+aiohappyeyeballs==2.4.6 \
+    --hash=sha256:147ec992cf873d74f5062644332c539fcd42956dc69453fe5204195e560517e1 \
+    --hash=sha256:9b05052f9042985d32ecbe4b59a77ae19c006a78f1344d7fdad69d28ded3d0b0
     # via aiohttp
 aiohttp==3.11.12 \
     --hash=sha256:0450ada317a65383b7cce9576096150fdb97396dcfe559109b403c7242faffef \
@@ -171,13 +171,13 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.36.14 \
-    --hash=sha256:4b0b8dd593b95f32a5a761dee65094423fbd06a4ad09f26b2e6c80493139569f \
-    --hash=sha256:e2dab15944c3f517c88850d60b07f2f6fd3bc69aa51c47670e4f45d62a8c41fd
+boto3==1.36.15 \
+    --hash=sha256:721d689ebd07a9a95f904356bd97f92032d8006a54eea25316ba55a7585ca7e9 \
+    --hash=sha256:b218092b08ce15fe29b2358345f4ccb812a2377a5e9bccd49e391a5976a24202
     # via -r _requirements_runtime.txt
-botocore==1.36.14 \
-    --hash=sha256:53feff270078c23ba852fb2638fde6c5f74084cfc019dd5433e865cd04065c60 \
-    --hash=sha256:546d0c071e9c8aeaca399d71bec414abe6434460f7d6640cbd92d4b1c3eb443e
+botocore==1.36.15 \
+    --hash=sha256:ab8e69930ef6c42784eb2dee6c0256627ca6bba57730ebe3056179d28aa63d44 \
+    --hash=sha256:fe0f8d786029125f4c66a30b1d81a551f667b0915dac843604ffa0652c5ff475
     # via
     #   -r _requirements_runtime.txt
     #   boto3
@@ -2225,9 +2225,9 @@ rfc3339-validator==0.1.4 \
     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b \
     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa
     # via openapi-schema-validator
-robotframework==7.2 \
-    --hash=sha256:0b1caeb40be3d8c5fd4eb9303b221e384aa98f87f665bd66e6de8d7170d8a3c7 \
-    --hash=sha256:9fc77d40283c26690bbc1563fb7fcadac789afe8695d332ced3fa4696df39eb9
+robotframework==7.2.1 \
+    --hash=sha256:38be9004ccac29c0129d1aa260b1e8f4d57d5acb5063cb78d81765b2aa04dc8d \
+    --hash=sha256:c776f81d8d6d1099d44eb922d11672c0a3d54cf959218763e4ee19da262f0fe8
     # via -r _requirements_runtime.txt
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \

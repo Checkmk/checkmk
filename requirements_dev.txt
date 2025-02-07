@@ -39,6 +39,7 @@ pylint-pydantic
 pylsp-mypy  # mypy plugin for python-lsp-server
 pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
 pytest
+pytest-asyncio  # faciliate testing of async code
 pytest-html  # used to generate HTML reports for test suites
 pytest-mock  # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order  # used to test resiliency

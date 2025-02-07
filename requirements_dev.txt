@@ -40,6 +40,7 @@ pylint-pydantic==0.3.4
 pylsp-mypy==0.6.9 # mypy plugin for python-lsp-server
 pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
 pytest==8.3.4
+pytest-asyncio==0.25.3  # faciliate testing of async code
 pytest-html==4.1.1 # used to generate HTML reports for test suites
 pytest-mock==3.14.0 # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order==1.1.1 # used to test resiliency

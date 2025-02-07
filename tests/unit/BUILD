@@ -102,6 +102,7 @@ py_test(
         requirement("pika"),
         requirement("polyfactory"),
         requirement("pylint"),
+        requirement("pytest-asyncio"),
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
         requirement("responses"),

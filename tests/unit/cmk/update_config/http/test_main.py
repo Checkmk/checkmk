@@ -28,16 +28,15 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     TlsVersion,
 )
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
-from cmk.update_config.http.main import (
+from cmk.update_config.http.conflicts import (
     _classify,
-    _detect_conflicts,
-    _migratable,
-    _migrate,
     _migrate_expect_response,
     Conflict,
+    detect_conflicts,
     HostType,
+    migratable,
 )
-from cmk.update_config.http.v1_scheme import V1Value
+from cmk.update_config.http.main import _migrate
 
 EXAMPLE_1 = {
     "name": "My web page",
@@ -774,7 +773,7 @@ EXAMPLE_87: Mapping[str, object] = {
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
-    assert _migratable(rule_value)
+    assert migratable(rule_value)
 
 
 @pytest.mark.parametrize(
@@ -791,10 +790,8 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     ],
 )
 def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -847,10 +844,8 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     ],
 )
 def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -923,10 +918,8 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
     ],
 )
 def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -955,10 +948,8 @@ def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> N
     ],
 )
 def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -976,10 +967,8 @@ def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object
     ],
 )
 def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1022,7 +1011,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
-    assert not _migratable(rule_value)
+    assert not migratable(rule_value)
 
 
 @pytest.mark.parametrize(
@@ -1039,7 +1028,7 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     ],
 )
 def test_conflict(rule_value: Mapping[str, object], conflict: Conflict) -> None:
-    assert _detect_conflicts(rule_value) == conflict
+    assert detect_conflicts(rule_value) == conflict
 
 
 @pytest.mark.parametrize(
@@ -1053,10 +1042,8 @@ def test_conflict(rule_value: Mapping[str, object], conflict: Conflict) -> None:
     ],
 )
 def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1071,10 +1058,8 @@ def test_migrate_response_time(rule_value: Mapping[str, object], expected: objec
     ],
 )
 def test_migrate_expect_string(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1091,10 +1076,8 @@ def test_migrate_expect_string(rule_value: Mapping[str, object], expected: objec
     ],
 )
 def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1110,10 +1093,8 @@ def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> 
     ],
 )
 def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1152,10 +1133,8 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
     ],
 )
 def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1164,10 +1143,8 @@ def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object)
 
 
 def test_migrate_auth_user() -> None:
-    # Assemble
-    value = V1Value.model_validate(EXAMPLE_36)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(EXAMPLE_36)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1177,10 +1154,8 @@ def test_migrate_auth_user() -> None:
 
 
 def test_migrate_auth_no_auth() -> None:
-    # Assemble
-    value = V1Value.model_validate(EXAMPLE_27)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(EXAMPLE_27)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1201,10 +1176,8 @@ def test_migrate_auth_no_auth() -> None:
     ],
 )
 def test_migrate_redirect(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1239,10 +1212,8 @@ def test_helper_migrate_expect_response() -> None:
     ],
 )
 def test_migrate_expect_response(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1257,10 +1228,8 @@ def test_migrate_expect_response(rule_value: Mapping[str, object], expected: obj
     ],
 )
 def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1276,10 +1245,8 @@ def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> Non
     ],
 )
 def test_migrate_expect_response_header(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1297,10 +1264,8 @@ def test_migrate_expect_response_header(rule_value: Mapping[str, object], expect
     ],
 )
 def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1318,10 +1283,8 @@ def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> Non
     ],
 )
 def test_migrate_address_family(rule_value: Mapping[str, object], expected: object) -> None:
-    # Assemble
-    value = V1Value.model_validate(rule_value)
     # Act
-    migrated = _migrate(value)
+    migrated = _migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert

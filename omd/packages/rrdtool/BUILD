@@ -49,7 +49,7 @@ pkg_files(
     pkg_mklink(
         name = "%s_symlink" % b,
         link_name = "bin/%s" % b,
-        target = "bin/rrdupdate",
+        target = "rrdupdate",
     )
     for b in rrd_cli_symlinks
 ]

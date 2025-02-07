@@ -47,6 +47,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
+        ReplicationPath("dir", "mkps_avail", "var/check_mk/packages_local", []),
+        ReplicationPath("dir", "mkps_disabled", "var/check_mk/disabled_packages", []),
         ReplicationPath("dir", "local", "local", []),
         ReplicationPath(
             ty="file",
@@ -224,7 +226,9 @@ def test_get_replication_components(edition, monkeypatch, replicate_ec, replicat
         expected = [e for e in expected if e.ident not in ["mkeventd", "mkeventd_mkp"]]
 
     if not replicate_mkps:
-        expected = [e for e in expected if e.ident not in ["local", "mkps"]]
+        expected = [
+            e for e in expected if e.ident not in ["local", "mkps", "mkps_avail", "mkps_disabled"]
+        ]
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected

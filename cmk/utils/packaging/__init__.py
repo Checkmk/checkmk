@@ -329,17 +329,12 @@ def install(
     post_package_change_actions: bool = True,
 ) -> Manifest:
     try:
-        package_path = package_store.get_existing_package_path(package_id)
-        pushed_from_central_site = (
-            cmk.utils.paths.local_enabled_packages_dir in package_path.parents
-        )
         return _install(
             installer,
             package_store.get_existing_package_path(package_id).read_bytes(),
             path_config,
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
-            pushed_from_central_site=pushed_from_central_site,
         )
     finally:
         # it is enabled, even if installing failed
@@ -357,7 +352,6 @@ def _install(
     *,
     allow_outdated: bool,
     post_package_change_actions: bool,
-    pushed_from_central_site: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -405,10 +399,6 @@ def _install(
 
             if part is PackagePart.EC_RULE_PACKS:
                 uninstall_packaged_rule_packs(remove_files)
-
-        if not pushed_from_central_site:
-            # If we are a remote site and the mkp was pushed, we mustn't delete our only copy
-            remove_enabled_mark(old_manifest)
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)

@@ -1,0 +1,29 @@
+Title: Synconization of MKPs in distributed setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1738937627
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+The syncronization of MKPs to remote sites in a distributed setup could lead to inconsistent states.
+
+This also affects single-site setups, as we no longer disable MKPs that have been updated.
+We need to keep the previous MKP enabled in case it is applicable for remote sites (potentially running a newer Checkmk version).
+
+The problems were particularly noticeable when executing `mkp` commands on the remote sites command line.
+Commandline operations on the remote site should be possible, even if the deployment state of the MKPs can only be changed temporarily -- a subsequent syncronization would reset them.
+
+This fixes in particular the following issues:
+
+ * MKPs that were disabled on the remote site could not be re-enabled
+ * MKPs that were removed from the central site would not be removed from the remote
+ * MKPs that were uninstalled (deactivated) where also disabled
+
+These inconsistencies have been caused by an optimization:
+Disabled MKPs where never synced at all.
+
+With this werk we sync the whole state of the MKP manager.
+In case you have a lot of disabled MKPs, the next syncronization might take a bit longer.
+Since these files don't change, the subsequent activations will (virtually) not be affected.

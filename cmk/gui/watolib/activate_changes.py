@@ -264,6 +264,18 @@ def get_replication_paths() -> list[ReplicationPath]:
         ),
         ReplicationPath(
             "dir",
+            "mkps_disabled",
+            os.path.relpath(cmk.utils.paths.disabled_packages_dir, cmk.utils.paths.omd_root),
+            [],
+        ),
+        ReplicationPath(  # add this explicitly, it is *not* below `local` despite the name.
+            "dir",
+            "mkps_avail",
+            os.path.relpath(cmk.utils.paths.local_optional_packages_dir, cmk.utils.paths.omd_root),
+            [],
+        ),
+        ReplicationPath(
+            "dir",
             "local",
             "local",
             [],
@@ -2344,7 +2356,9 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
 
     # Remove extensions if site does not want them
     if not site_config.get("replicate_mkps"):
-        paths = [e for e in paths if e.ident not in ["local", "mkps"]]
+        paths = [
+            e for e in paths if e.ident not in ["local", "mkps", "mkps_disabled", "mkps_avail"]
+        ]
 
     return paths
 

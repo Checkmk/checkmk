@@ -16,7 +16,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
-import cmk.utils.packaging._installed
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -211,24 +210,12 @@ def test_install(mkp_bytes: bytes, installer: packaging.Installer) -> None:
         _PATH_CONFIG,
         allow_outdated=False,
         post_package_change_actions=True,
-        pushed_from_central_site=False,
     )
     assert installer.is_installed(packaging.PackageName("aaa")) is True
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
     assert manifest.version == "1.0.0"
     assert manifest.files[packaging.PackagePart.CHECKS] == [Path("aaa")]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
-
-
-def test_install_not_deleting_pushed_mkp_on_update(installer: packaging.Installer) -> None:
-    manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    # Simulate encountering a pushed MKP during update
-    base_name = packaging.format_file_name(manifest.id)
-    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
-    file_path.rename(cmk.utils.paths.local_enabled_packages_dir / base_name)
-    file_path.unlink()
-    packaging.install(installer, packaging.PackageStore(), manifest.id, _PATH_CONFIG)
-    assert installer.is_installed(packaging.PackageName("aaa")) is True
 
 
 def test_release_not_existing(installer: packaging.Installer) -> None:

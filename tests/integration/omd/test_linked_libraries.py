@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import shlex
 from collections.abc import Collection, Iterator
@@ -180,7 +181,8 @@ def test_linked_libraries(site: Site) -> None:
 
 def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
     perl_rrd_so = (
-        Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/auto/RRDs/RRDs.so"
+        Path(site.root)
+        / f"lib/perl5/lib/perl5/x86_64-linux-{'' if 'sles' in os.environ.get('DISTRO', 'unset') else 'gnu-'}thread-multi/auto/RRDs/RRDs.so"
     )
     linked_rrd_libs = [
         linked_library

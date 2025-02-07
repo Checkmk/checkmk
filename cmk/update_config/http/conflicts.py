@@ -99,6 +99,12 @@ def detect_conflicts(
                 mode_fields=["add_headers"],
                 host_fields=[],
             )
+        if mode.ssl in ["ssl_1", "ssl_2", "ssl_3"]:
+            return Conflict(
+                type_="ssl_incompatible",
+                mode_fields=["ssl"],
+                host_fields=[],
+            )
     return MigratableValue.model_validate(value.model_dump())
 
 

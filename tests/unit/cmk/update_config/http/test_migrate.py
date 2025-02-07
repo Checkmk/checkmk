@@ -991,9 +991,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_13,
         EXAMPLE_14,
         EXAMPLE_20,
-        EXAMPLE_22,
-        EXAMPLE_23,
-        EXAMPLE_24,
         EXAMPLE_33,
         EXAMPLE_44,
         EXAMPLE_49,
@@ -1022,6 +1019,30 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="add_headers_incompatible",
                 mode_fields=["add_headers"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_22,
+            Conflict(
+                type_="ssl_incompatible",
+                mode_fields=["ssl"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_23,
+            Conflict(
+                type_="ssl_incompatible",
+                mode_fields=["ssl"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_24,
+            Conflict(
+                type_="ssl_incompatible",
+                mode_fields=["ssl"],
                 host_fields=[],
             ),
         ),

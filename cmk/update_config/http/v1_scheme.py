@@ -71,9 +71,9 @@ class V1Url(BaseModel, extra="forbid"):
             "auto",  # use with auto-negotiation
             "ssl_1_2",  # enforce TLS 1.2
             "ssl_1_3",  # enforce TLS 1.3
-            # "ssl_1",  # enforce TLS 1.0, not supported in V2
-            # "ssl_2",  # enforce SSL 2.0, not supported in V2
-            # "ssl_3",  # enforce SSL 3.0, not supported in V2
+            "ssl_1",  # enforce TLS 1.0
+            "ssl_2",  # enforce SSL 2.0
+            "ssl_3",  # enforce SSL 3.0
         ]
         | None
     ) = None

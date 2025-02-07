@@ -9,7 +9,6 @@ from collections.abc import Hashable, Iterator, Sequence
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
@@ -403,22 +402,26 @@ def calculate_view_grouping_of_services(
     return groupings, rows_with_ids
 
 
+def get_group_spec(group_spec: GroupSpec, service_name: str) -> GroupSpec:
+    if re.findall(r"\\\d", group_spec["title"]):
+        return GroupSpec(
+            title=re.sub(
+                pattern=group_spec["pattern"],
+                repl=group_spec["title"],
+                string=service_name,
+            ),
+            pattern=group_spec["pattern"],
+            min_items=group_spec["min_items"],
+        )
+    return group_spec
+
+
 def try_to_match_group(row: Row) -> GroupSpec | None:
     for group_spec in active_config.service_view_grouping:
         if row.get("service_description") and re.match(
             group_spec["pattern"], row["service_description"]
         ):
-            if re.findall(r"(\([^)]*\))", group_spec["pattern"]):
-                return GroupSpec(
-                    title=re.sub(
-                        group_spec["pattern"],
-                        escape_regex_chars(group_spec["title"]),
-                        row["service_description"],
-                    ),
-                    pattern=group_spec["pattern"],
-                    min_items=group_spec["min_items"],
-                )
-            return group_spec
+            return get_group_spec(group_spec, row["service_description"])
 
     return None
 

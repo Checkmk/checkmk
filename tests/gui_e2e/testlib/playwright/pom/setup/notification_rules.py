@@ -153,7 +153,7 @@ class BaseNotificationPage(QuickSetupPage):
     def add_new_entry_button(self) -> Locator:
         return self._recipient_group.get_by_role("button", name=" Add new entry")
 
-    def recipient_first_dropdown(self) -> Locator:
+    def select_user_dropdown(self) -> Locator:
         return self._recipient_group.locator("button").filter(has_text="Select user")
 
     @property
@@ -220,7 +220,7 @@ class BaseNotificationPage(QuickSetupPage):
         self.select_recipient_option(recipient_option_name).click()
         if recipient_value:
             self.add_new_entry_button().click()
-            self.recipient_first_dropdown().click()
+            self.select_user_dropdown().click()
             self.select_recipient_option(recipient_value).click()
 
     def check_disable_rule(self, disable: bool) -> None:

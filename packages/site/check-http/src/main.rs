@@ -32,6 +32,12 @@ async fn main() {
                 .to_string()
                 .lines()
                 .filter(|line| !line.trim().is_empty() && !line.contains("For more information"))
+                .map(|line| {
+                    line.split("'--server <SERVER>':")
+                        .nth(1)
+                        .unwrap_or(line)
+                        .trim()
+                })
                 .collect::<Vec<&str>>()
                 .join("\n");
             let output = Output::from_check_results(vec![

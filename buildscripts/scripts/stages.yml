@@ -431,7 +431,7 @@ STAGES:
     # files. The ordering is a bit ad hoc, perhaps we should keep the list of
     # steps here in dependency order.
     - NAME: "Package livestatus"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/livestatus"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/livestatus.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -449,7 +449,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
     - NAME: "Package cmk-agent-based"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_BASED_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_BASED_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-agent-based"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-based.txt"
       TEXT_ON_SKIP: "No cmk-agent-based files changed"
@@ -463,98 +463,98 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
 
     - NAME: "Package cmk-agent-receiver"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_RECEIVER_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_RECEIVER_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-agent-receiver"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-receiver.txt"
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
 
     - NAME: "Package cmk-ccc"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-ccc"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-ccc.txt"
       TEXT_ON_SKIP: "No cmk-ccc files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
 
     - NAME: "Package cmk-crypto"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-crypto"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-crypto.txt"
       TEXT_ON_SKIP: "No cmk-crypto files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
 
     - NAME: "Package cmk-events"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-mkp-tool"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-events.txt"
       TEXT_ON_SKIP: "No cmk-events files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
 
     - NAME: "Package cmk-graphing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_GRAPHING_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_GRAPHING_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-graphing"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-graphing.txt"
       TEXT_ON_SKIP: "No cmk-graphing files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
     - NAME: "Package cmk-livestatus-client"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-livestatus-client"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
 
     - NAME: "Package cmk-messaging"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-messaging"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-messaging.txt"
       TEXT_ON_SKIP: "No cmk-messaging files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
 
     - NAME: "Package cmk-mknotifyd"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "non-free/packages/cmk-mknotifyd"
       COMMAND: "../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mknotifyd.txt"
       TEXT_ON_SKIP: "No cmk-mknotifyd files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mknotifyd.txt"
 
     - NAME: "Package cmk-mkp-tool"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKP_TOOL_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKP_TOOL_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-mkp-tool"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
     - NAME: "Package cmk-otel-collector"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "non-free/packages/cmk-otel-collector"
       COMMAND: "../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-otel-collector.txt"
       TEXT_ON_SKIP: "No cmk-otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
 
     - NAME: "Package cmk-rulesets"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RULESETS_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RULESETS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-rulesets"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-rulesets.txt"
       TEXT_ON_SKIP: "No cmk-rulesets files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-rulesets.txt"
 
     - NAME: "Package cmk-server-side-calls"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-server-side-calls"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
       TEXT_ON_SKIP: "No cmk-server-side-calls files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
 
     - NAME: "Package cmk-werks"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-werks"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: "No cmk-werks package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
     - NAME: "Package cmk-trace"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_SEMGREP_RULE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-trace"
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-trace.txt"
       TEXT_ON_SKIP: "No cmk-trace package files changed"
@@ -568,7 +568,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
     - NAME: "Package cmk-shared-typing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_SHARED_TYPING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_SHARED_TYPING_FILES,CHANGED_REQUIREMENTS_LOCK
       DIR: "packages/cmk-shared-typing"
       COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
       TEXT_ON_SKIP: "No cmk-shared-typing files changed"

@@ -72,6 +72,15 @@ def _increased_logging_level(site: Site) -> Iterator[None]:
         _write_global_settings(site, global_settings_rel_path, ori_global_setting)
 
 
+@contextmanager
+def trace_broker_messages(site: Site) -> Iterator[None]:
+    try:
+        site.execute(["cmk-monitor-broker", "--enable_tracing"])
+        yield
+    finally:
+        site.execute(["cmk-monitor-broker", "--disable_tracing"])
+
+
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     with site_factory.get_test_site_ctx(
@@ -86,7 +95,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
             ),
         ],
     ) as central_site:
-        with _increased_logging_level(central_site):
+        with _increased_logging_level(central_site), trace_broker_messages(central_site):
             yield central_site
 
 
@@ -115,7 +124,10 @@ def _make_connected_remote_site(
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
     ) as remote_site:
-        with _connection(central_site=central_site, remote_site=remote_site):
+        with (
+            _connection(central_site=central_site, remote_site=remote_site),
+            trace_broker_messages(remote_site),
+        ):
             yield remote_site
 
 

@@ -48,7 +48,7 @@ from typing import Any, Protocol, TypeVar
 
 class _ValueStoreManagerProtocol(Protocol):
     @property
-    def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc]
+    def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc,explicit-any]
         ...
 
     def save(self) -> None: ...
@@ -57,7 +57,7 @@ class _ValueStoreManagerProtocol(Protocol):
 _active_host_value_store: _ValueStoreManagerProtocol | None = None
 
 
-def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[misc]
+def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[explicit-any]
     """Get the value store for the current service from Checkmk
 
     The returned value store object can be used to persist values

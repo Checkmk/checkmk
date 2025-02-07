@@ -16,7 +16,7 @@ class GetRateError(IgnoreResultsError):
     """
 
 
-def get_rate(  # type: ignore[misc]
+def get_rate(  # type: ignore[explicit-any]
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
@@ -109,7 +109,7 @@ def get_rate(  # type: ignore[misc]
     return rate
 
 
-def get_average(  # type: ignore[misc]
+def get_average(  # type: ignore[explicit-any]
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,

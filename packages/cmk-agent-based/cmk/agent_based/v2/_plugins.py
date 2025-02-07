@@ -29,10 +29,10 @@ _HostLabelFunctionAllParams = Callable[
     [Sequence[Mapping[str, object]], _Section], HostLabelGenerator
 ]
 
-InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
+InventoryFunction = Callable[..., InventoryResult]  # type: ignore[explicit-any]
 
-CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]
-DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
+CheckFunction = Callable[..., CheckResult]  # type: ignore[explicit-any]
+DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[explicit-any]
 
 
 @dataclass
@@ -613,7 +613,7 @@ class InventoryPlugin:
     inventory_ruleset_name: str | None = None
 
 
-def entry_point_prefixes() -> (  # type: ignore[misc]  # explicit Any
+def entry_point_prefixes() -> (  # type: ignore[explicit-any]
     Mapping[
         type[
             AgentSection[Any]

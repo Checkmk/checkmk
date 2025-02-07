@@ -47,8 +47,8 @@ __all__ = [
 _DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg,misc]
 
 
-_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]  # type: ignore[misc]
-_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]  # type: ignore[misc]
+_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]  # type: ignore[explicit-any]
+_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]  # type: ignore[explicit-any]
 
 _OptNumber = None | int | float
 
@@ -72,15 +72,15 @@ LegacyResult = (
 )
 
 
-_CheckFunctionLegacy = Callable[
+_CheckFunctionLegacy = Callable[  # type: ignore[explicit-any]
     ...,
     None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult, None, None],
 ]
-_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]  # type: ignore[explicit-any]
 
 
 @dataclass(frozen=True, kw_only=True)
-class LegacyCheckDefinition:
+class LegacyCheckDefinition:  # type: ignore[explicit-any]
     name: str
     detect: SNMPDetectSpecification | None = None
     fetch: list[SNMPTree] | SNMPTree | None = None
@@ -89,7 +89,7 @@ class LegacyCheckDefinition:
     discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
     parse_function: Callable[[list], object] | None = None  # type: ignore[type-arg]
     check_ruleset_name: str | None = None
-    check_default_parameters: Mapping[str, Any] | None = None
+    check_default_parameters: Mapping[str, Any] | None = None  # type: ignore[explicit-any]
     service_name: str | None = None
 
 
@@ -158,7 +158,7 @@ def _build_perfdata(
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
-def check_levels(
+def check_levels(  # type: ignore[explicit-any]
     value: int | float,
     dsname: None | str,
     params: Any,

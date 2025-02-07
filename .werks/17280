@@ -1,0 +1,24 @@
+Title: Grouping of services in table views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1738909949
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+Grouping services in table views did not previously work as expected.
+
+With <a href="https://checkmk.com/werk/15494">Werk 15494</a>, a new service grouping
+feature was introduced that did not work as expected in certain situations after
+<a href="https://checkmk.com/werk/15550">Werk 15550</a> fixed a crash related to
+service grouping.
+
+Another issue fixed with <a href="https://checkmk.com/werk/15494">Werk 17278</a> partially
+broke the feature even more.
+
+The original feature also had a bug where when using non-matching
+groups, the group title would be displayed incorrectly, in specific situations.
+
+All of the above are now fixed and the original feature is restored and
+working again.

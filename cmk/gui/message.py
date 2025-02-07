@@ -64,14 +64,24 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     messages = store.load_object_from_file(path, default=[])
 
-    # Delete too old messages
+    # Delete too old messages and update security message durations
     updated = False
     for index, message in enumerate(messages):
         now = time.time()
         valid_till = message.get("valid_till")
-        if valid_till is not None and valid_till < now:
-            messages.pop(index)
-            updated = True
+        valid_from = message.get("time")
+        if valid_till is not None:
+            if message.get("security") and active_config.user_security_notification_duration.get(
+                "update_existing_duration"
+            ):
+                message["valid_till"] = (
+                    valid_from
+                    + active_config.user_security_notification_duration.get("max_duration")
+                )
+                updated = True
+            if valid_till < now:
+                messages.pop(index)
+                updated = True
 
     if updated:
         save_gui_messages(messages)
@@ -286,7 +296,7 @@ def _validate_msg(msg: Message, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-branches
+def _process_message_message(msg: Message) -> None:  # pylint: disable=R0912
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 

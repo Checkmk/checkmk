@@ -2719,15 +2719,8 @@ class ConfigVariableUserSecurityNotifications(ConfigVariable):
         return "user_security_notification_duration"
 
     def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Age(
-                display=["days", "minutes", "hours"],
-                label=_("Session timeout:"),
-                minvalue=900,
-                default_value=604800,
-            ),
+        return Dictionary(
             title=_("User security notification duration"),
-            label=_("Display time for user security messages"),
             help=_(
                 "If a user has an email address associated with their account, "
                 "the user will not be shown a security notification in their user "
@@ -2736,7 +2729,35 @@ class ConfigVariableUserSecurityNotifications(ConfigVariable):
                 "an undismissable message in their user tab for the duration "
                 "defined by this setting."
             ),
+            elements=[
+                (
+                    "max_duration",
+                    Age(
+                        display=["days", "minutes", "hours"],
+                        label=_("Session timeout:"),
+                        default_value=604800,
+                        title=_("Display time for user security messages"),
+                        validate=self._validate_min,
+                    ),
+                ),
+                (
+                    "update_existing_duration",
+                    Checkbox(
+                        title=_("Update existing security notifications"),
+                        label=_("Retroactively apply max duration to existing notifications"),
+                        help=_(
+                            "Update existing security notifications to use the new max duration."
+                        ),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            optional_keys=[],
         )
+
+    def _validate_min(self, value, varprefix):
+        if value < 900:
+            raise MKUserError(varprefix, _("The minimum duration may not be less than 15 minutes"))
 
 
 class ConfigVariableDefaultUserProfile(ConfigVariable):

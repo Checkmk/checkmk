@@ -109,6 +109,8 @@ def render_user_message_table(what: str) -> None:
                     "delete",
                     onclick=onclick,
                 )
+            else:
+                html.icon("warning", _("Cannot be deleted manually, must expire"))
 
             table.cell(_("Message"), msg)
             table.cell(_("Date sent"), datetime)

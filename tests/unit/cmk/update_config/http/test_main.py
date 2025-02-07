@@ -36,8 +36,8 @@ from cmk.update_config.http.main import (
     _migrate_expect_response,
     Conflict,
     HostType,
-    V1Value,
 )
+from cmk.update_config.http.v1_scheme import V1Value
 
 EXAMPLE_1 = {
     "name": "My web page",

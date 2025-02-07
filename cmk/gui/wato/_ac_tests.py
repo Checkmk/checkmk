@@ -566,15 +566,14 @@ class ACTestBackupConfigured(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>You should have a backup configured for being able to restore your "
-            "monitoring environment in case of a data loss.<br>"
-            "In case you a using a virtual machine as Checkmk server and perform snapshot based "
-            "backups, you should be safe.</p>"
-            "<p>In case you are using a 3rd party backup solution the backed up data may not be "
-            "reliably backed up or not up-to-date in the moment of the backup.</p>"
-            "<p>It is recommended to use the Checkmk backup to create a backup of the runnning "
-            "site to be sure that the data is consistent. If you need to, you can then use "
-            "the 3rd party tool to archive the Checkmk backups.</p>"
+            "A reliable backup ensures that your monitoring "
+            "environment can be restored in case of data loss.<br><br>We recommend "
+            'using the <a href="wato.py?mode=backup">Checkmk backup</a> '
+            "feature to create a consistent backup "
+            "of your running site.<br><br>Virtual machine snapshots alone are not "
+            "sufficient, as they do not guarantee data consistency.<br>"
+            "Similarly, third-party backup solutions may fail to capture a "
+            "consistent state."
         )
 
     def is_relevant(self) -> bool:

@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import subprocess
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 import pytest
 
@@ -327,3 +327,70 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
     assert "ProductVersion" in properties
     assert properties["ProductVersion"] == cmk_version
     assert not re.match(r".*-rc\d+$", properties["ProductVersion"])
+
+
+def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) -> None:
+    if not package_path.endswith((".rpm", ".deb")):
+        pytest.skip("%s is another package type" % os.path.basename(package_path))
+
+    LOGGER.info("Testing %s", package_path)
+
+    paths = _get_paths_from_package(package_path)
+
+    omd_version = _get_omd_version(cmk_version, package_path)
+    LOGGER.info("Checking OMD version: %s", omd_version)
+
+    def _get_shipped_python_binary_name(paths: list[str]) -> str:
+        """
+        Get name for the shipped Python binary.
+
+        Will look for a name with major and minor included, e.g. python3.12
+        """
+        for path in paths:
+            if not path.startswith(f"/opt/omd/versions/{omd_version}/bin/python3"):
+                continue
+
+            # We might encounter binaries like python3.12-config.
+            # Skip those by checking if we end in a number
+            if not path.endswith(tuple(map(str, range(10)))):
+                continue
+
+            p = PosixPath(path)
+
+            # We need a major.minor version, not just python3
+            if "." not in p.name:
+                continue
+
+            return p.name
+
+        raise ValueError("Unable to find shipped Python version")
+
+    def expected_pyc_path(python_file_path: str, python3_version: str) -> str:
+        # In: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__init__.py
+        # Out: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
+        path = PosixPath(python_file_path)
+
+        cachedir = path.parent / "__pycache__"
+
+        filename = path.name.removesuffix(path.suffix)
+        filename = f"{filename}.cpython-{python3_version}.pyc"
+
+        return str(cachedir / filename)
+
+    python_binary = _get_shipped_python_binary_name(paths)
+    shortened_python_version = python_binary.replace("python", "").replace(".", "")
+
+    python_paths = set(
+        path for path in paths if path.startswith(f"/opt/omd/versions/{omd_version}/lib/python3")
+    )
+    python_files = [path for path in python_paths if path.endswith(".py")]
+    assert python_files, f"Didn't find Python files in package {package_path}"
+
+    missing_pycs = set()
+    for path in python_files:
+        expected_path = expected_pyc_path(path, shortened_python_version)
+
+        if expected_path not in python_paths:
+            missing_pycs.add(path)
+
+    assert not missing_pycs, f"The following files aren't precompiled: {', '.join(missing_pycs)}"

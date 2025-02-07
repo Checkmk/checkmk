@@ -79,11 +79,11 @@ def main() -> int:
     return 0
 
 
-def _reload_automation_config() -> None:
+def _reload_automation_config() -> config.LoadedConfigSentinel:
     cache_manager.clear()
     plugins = get_previously_loaded_plugins()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
-    config.load(discovery_rulesets, validate_hosts=False)
+    return config.load(discovery_rulesets, validate_hosts=False)
 
 
 def _clear_caches_before_each_call() -> None:

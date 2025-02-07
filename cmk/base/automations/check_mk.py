@@ -152,9 +152,18 @@ import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register import get_previously_loaded_plugins
+from cmk.base.api.agent_based.register import (
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
+)
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-from cmk.base.automations import Automation, automations, MKAutomationError
+from cmk.base.automations import (
+    Automation,
+    automations,
+    load_config,
+    load_plugins,
+    MKAutomationError,
+)
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,
@@ -243,8 +252,6 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
 
 class AutomationDiscovery(DiscoveryAutomation):
     cmd = "service-discovery"
-    needs_config = True
-    needs_checks = True
 
     # Does discovery for a list of hosts. For possible values see
     # DiscoverySettings
@@ -253,7 +260,8 @@ class AutomationDiscovery(DiscoveryAutomation):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ServiceDiscoveryResult:
         force_snmp_cache_refresh, args = _extract_directive("@scan", args)
         _prevent_scan, args = _extract_directive("@noscan", args)
@@ -285,8 +293,15 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
+        if plugins is None:
+            plugins = load_plugins()
+
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         config_cache = config.get_config_cache()
-        plugins = agent_based_register.get_previously_loaded_plugins()
         discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
         ruleset_matcher = config_cache.ruleset_matcher
         autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
@@ -385,8 +400,6 @@ automations.register(AutomationDiscovery())
 
 class AutomationDiscoveryPre22Name(AutomationDiscovery):
     cmd = "inventory"
-    needs_config = True
-    needs_checks = True
 
 
 automations.register(AutomationDiscoveryPre22Name())
@@ -394,15 +407,22 @@ automations.register(AutomationDiscoveryPre22Name())
 
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ServiceDiscoveryPreviewResult:
         run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
+
+        if plugins is None:
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         config_cache = config.get_config_cache()
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
@@ -441,18 +461,24 @@ automations.register(AutomationSpecialAgentDiscoveryPreview())
 
 class AutomationDiscoveryPreview(Automation):
     cmd = "service-discovery-preview"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ServiceDiscoveryPreviewResult:
         prevent_fetching, args = _extract_directive("@nofetch", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
-
         host_name = HostName(args[0])
+
+        if plugins is None:
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         on_error = OnError.RAISE if raise_errors else OnError.WARN
@@ -736,10 +762,11 @@ class AutomationAutodiscovery(DiscoveryAutomation):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> AutodiscoveryResult:
         with redirect_stdout(open(os.devnull, "w")):
-            result = _execute_autodiscovery(called_from_automation_helper)
+            result = _execute_autodiscovery(plugins, loaded_config)
 
         return AutodiscoveryResult(*result)
 
@@ -748,17 +775,21 @@ automations.register(AutomationAutodiscovery())
 
 
 def _execute_autodiscovery(
-    called_from_automation_helper: bool,
+    ab_plugins: AgentBasedPlugins | None,
+    loaded_config: config.LoadedConfigSentinel | None,
 ) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
         return {}, False
 
-    ab_plugins = agent_based_register.get_previously_loaded_plugins()
+    ab_plugins = load_plugins() if ab_plugins is None else ab_plugins
+    if loaded_config is None:
+        loaded_config = load_config(
+            discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(ab_plugins)
+        )
+
     discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
-    if not called_from_automation_helper:
-        config.load(discovery_rules)
     config_cache = config.get_config_cache()
     autochecks_config = config.AutochecksConfigurer(config_cache, ab_plugins.check_plugins)
     ip_address_of = config.ConfiguredIPLookup(
@@ -1000,11 +1031,20 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> SetAutochecksV2Result:
         set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
         config_cache = config.get_config_cache()
-        check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
+
+        if plugins is None:
+            plugins = load_plugins()
+
+        check_plugins = plugins.check_plugins
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
 
         service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
             (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
@@ -1052,13 +1092,12 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     """Set the new collection of discovered host labels"""
 
     cmd = "update-host-labels"
-    needs_config = True
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> UpdateHostLabelsResult:
         hostname = HostName(args[0])
         DiscoveredHostLabelsStore(hostname).save(
@@ -1068,6 +1107,8 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
             ]
         )
 
+        if loaded_config is None:
+            loaded_config = load_config(discovery_rulesets=())
         config_cache = config.get_config_cache()
         self._trigger_discovery_check(config_cache, hostname)
         return UpdateHostLabelsResult()
@@ -1078,8 +1119,6 @@ automations.register(AutomationUpdateHostLabels())
 
 class AutomationRenameHosts(Automation):
     cmd = "rename-hosts"
-    needs_config = True
-    needs_checks = True
 
     def __init__(self) -> None:
         super().__init__()
@@ -1092,9 +1131,17 @@ class AutomationRenameHosts(Automation):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> RenameHostsResult:
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
+
+        if plugins is None:
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
 
         actions: list[str] = []
 
@@ -1417,15 +1464,22 @@ automations.register(AutomationRenameHosts())
 
 class AutomationGetServicesLabels(Automation):
     cmd = "get-services-labels"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> GetServicesLabelsResult:
         host_name, services = HostName(args[0]), args[1:]
+
+        if plugins is None:
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
@@ -1454,19 +1508,25 @@ class _FoundService:
 
 class AutomationAnalyseServices(Automation):
     cmd = "analyse-service"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> AnalyseServiceResult:
         host_name = HostName(args[0])
         servicedesc = args[1]
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        plugins = agent_based_register.get_previously_loaded_plugins()
+
+        if plugins is None:
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         return (
             AnalyseServiceResult(
                 service_info=found.service_info,
@@ -1658,15 +1718,17 @@ automations.register(AutomationAnalyseServices())
 
 class AutomationAnalyseHost(Automation):
     cmd = "analyse-host"
-    needs_config = True
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> AnalyseHostResult:
         host_name = HostName(args[0])
+
+        if loaded_config is None:
+            loaded_config = load_config(discovery_rulesets=())
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return AnalyseHostResult(
@@ -1679,9 +1741,6 @@ automations.register(AutomationAnalyseHost())
 
 
 class ABCDeleteHosts:
-    needs_config = False
-    needs_checks = False
-
     def _execute(self, args: list[str]) -> None:
         for hostname_str in args:
             self._delete_host_files(HostName(hostname_str))
@@ -1735,13 +1794,12 @@ class ABCDeleteHosts:
 
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
-    needs_checks = False
-    needs_config = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> DeleteHostsResult:
         self._execute(args)
         return DeleteHostsResult()
@@ -1784,13 +1842,12 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
     local site and are now handled by a remote site"""
 
     cmd = "delete-hosts-known-remote"
-    needs_config = False
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> DeleteHostsKnownRemoteResult:
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
@@ -1825,8 +1882,6 @@ automations.register(AutomationDeleteHostsKnownRemote())
 
 class AutomationRestart(Automation):
     cmd = "restart"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def _mode(self) -> CoreAction:
         if config.monitoring_core == "cmc" and not self._check_plugins_have_changed():
@@ -1836,12 +1891,21 @@ class AutomationRestart(Automation):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> RestartResult:
         if args:
             nodes = {HostName(hn) for hn in args}
         else:
             nodes = None
+
+        if plugins is None:  # TODO: do we need these?
+            plugins = load_plugins()
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
         ip_address_of = config.ConfiguredIPLookup(
@@ -1896,16 +1960,10 @@ class AutomationReload(AutomationRestart):
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ReloadResult:
-        return ReloadResult(
-            super()
-            .execute(
-                args,
-                called_from_automation_helper,
-            )
-            .config_warnings
-        )
+        return ReloadResult(super().execute(args, plugins, loaded_config).config_warnings)
 
 
 automations.register(AutomationReload())
@@ -1957,28 +2015,29 @@ def _execute_silently(
 class AutomationGetConfiguration(Automation):
     # Automation call to get the default configuration
     cmd = "get-configuration"
-    needs_config = False
-    # This needed the checks in the past. This was necessary to get the
-    # default values of check related global settings. This kind of
-    # global settings have been removed from the global settings page
-    # of WATO. We can now disable this (by default).
-    # We need to be careful here, because users may have added their own
-    # global settings related to checks. To deal with this, we check
-    # for requested but missing global variables and load the checks in
-    # case one is missing. When it's still missing then, we silenlty skip
-    # this option (like before).
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> GetConfigurationResult:
+        called_from_automation_helper = plugins is not None or loaded_config is not None
         if called_from_automation_helper:
             raise RuntimeError(
                 "This automation call should never be called from the automation helper "
                 "as it can only return the active config and we want the default config."
             )
+        # This needed the checks in the past. This was necessary to get the
+        # default values of check related global settings. This kind of
+        # global settings have been removed from the global settings page
+        # of WATO. We can now disable this (by default).
+        # We need to be careful here, because users may have added their own
+        # global settings related to checks. To deal with this, we check
+        # for requested but missing global variables and load the checks in
+        # case one is missing. When it's still missing then, we silenlty skip
+        # this option (like before).
+
         # We read the list of variable names from stdin since
         # that could be too much for the command line
         variable_names = ast.literal_eval(sys.stdin.read())
@@ -2012,18 +2071,17 @@ automations.register(AutomationGetConfiguration())
 
 class AutomationGetCheckInformation(Automation):
     cmd = "get-check-information"
-    needs_config = False
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> GetCheckInformationResult:
         man_page_path_map = man_pages.make_man_page_path_map(
             discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
-        plugins = agent_based_register.get_previously_loaded_plugins()
+        plugins = plugins or load_plugins()
 
         plugin_infos: dict[str, dict[str, Any]] = {}
         for plugin in plugins.check_plugins.values():
@@ -2065,15 +2123,14 @@ automations.register(AutomationGetCheckInformation())
 
 class AutomationGetSectionInformation(Automation):
     cmd = "get-section-information"
-    needs_config = False
-    needs_checks = True
 
     def execute(
         self,
         args: object,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> GetSectionInformationResult:
-        plugins = agent_based_register.get_previously_loaded_plugins()
+        plugins = plugins or load_plugins()
         section_infos = {
             str(section_name): {
                 # for now, we need only these two.
@@ -2099,13 +2156,12 @@ automations.register(AutomationGetSectionInformation())
 
 class AutomationScanParents(Automation):
     cmd = "scan-parents"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ScanParentsResult:
         settings = {
             "timeout": int(args[0]),
@@ -2116,6 +2172,12 @@ class AutomationScanParents(Automation):
         hostnames = [HostName(hn) for hn in islice(args, 4, None)]
         if not cmk.base.parent_scan.traceroute_available():
             raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
+
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(
+            agent_based_register.extract_known_discovery_rulesets(plugins)
+        )
+
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
         monitoring_host = (
@@ -2195,13 +2257,12 @@ def get_special_agent_commandline(
 
 class AutomationDiagSpecialAgent(Automation):
     cmd = "diag-special-agent"
-    needs_config = False
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> DiagSpecialAgentResult:
         diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
         return DiagSpecialAgentResult(
@@ -2262,19 +2323,22 @@ automations.register(AutomationDiagSpecialAgent())
 
 class AutomationDiagHost(Automation):
     cmd = "diag-host"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> DiagHostResult:
         host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         ipaddress = HostAddress(ipaddress)
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
+        plugins = plugins or load_plugins()
+        loaded_config = loaded_config or load_config(
+            agent_based_register.extract_known_discovery_rulesets(plugins)
+        )
         config_cache = config.get_config_cache()
         plugins = agent_based_register.get_previously_loaded_plugins()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
@@ -2683,17 +2747,20 @@ automations.register(AutomationDiagHost())
 
 class AutomationActiveCheck(Automation):
     cmd = "active-check"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ActiveCheckResult:
         host_name = HostName(args[0])
         plugin, item = args[1:]
 
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(
+            agent_based_register.extract_known_discovery_rulesets(plugins)
+        )
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
@@ -2826,14 +2893,14 @@ automations.register(AutomationActiveCheck())
 
 class AutomationUpdatePasswordsMergedFile(Automation):
     cmd = "update-passwords-merged-file"
-    needs_config = True
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> UpdatePasswordsMergedFileResult:
+        loaded_config = loaded_config or load_config(discovery_rulesets=())
         cmk.utils.password_store.save(
             config.get_config_cache().collect_passwords(),
             cmk.utils.password_store.pending_password_store_path(),
@@ -2846,14 +2913,18 @@ automations.register(AutomationUpdatePasswordsMergedFile())
 
 class AutomationUpdateDNSCache(Automation):
     cmd = "update-dns-cache"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> UpdateDNSCacheResult:
+        plugins = plugins or load_plugins()  # can we remove this?
+        loaded_config = loaded_config or load_config(
+            agent_based_register.extract_known_discovery_rulesets(plugins)
+        )
+
         config_cache = config.get_config_cache()
         hosts_config = config_cache.hosts_config
         return UpdateDNSCacheResult(
@@ -2876,19 +2947,22 @@ automations.register(AutomationUpdateDNSCache())
 
 class AutomationGetAgentOutput(Automation):
     cmd = "get-agent-output"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
+
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(
+            agent_based_register.extract_known_discovery_rulesets(plugins)
+        )
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
-        plugins = agent_based_register.get_previously_loaded_plugins()
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -3049,17 +3123,19 @@ automations.register(AutomationGetAgentOutput())
 
 class AutomationNotificationReplay(Automation):
     cmd = "notification-replay"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> NotificationReplayResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
                 raise RuntimeError(msg)
+
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(discovery_rulesets=())
 
         nr = args[0]
         notify.notification_replay_backlog(
@@ -3089,17 +3165,19 @@ automations.register(AutomationNotificationReplay())
 
 class AutomationNotificationAnalyse(Automation):
     cmd = "notification-analyse"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> NotificationAnalyseResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
                 raise RuntimeError(msg)
+
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(discovery_rulesets=())
 
         nr = args[0]
         return NotificationAnalyseResult(
@@ -3130,13 +3208,12 @@ automations.register(AutomationNotificationAnalyse())
 
 class AutomationNotificationTest(Automation):
     cmd = "notification-test"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> NotificationTestResult:
         def ensure_nagios(msg: str) -> None:
             if config.is_cmc():
@@ -3144,6 +3221,10 @@ class AutomationNotificationTest(Automation):
 
         context = json.loads(args[0])
         dispatch = args[1]
+
+        plugins = plugins or load_plugins()  # do we really still need this?
+        loaded_config = loaded_config or load_config(discovery_rulesets=())
+
         return NotificationTestResult(
             notify.notification_test(
                 context,
@@ -3173,13 +3254,12 @@ automations.register(AutomationNotificationTest())
 
 class AutomationGetBulks(Automation):
     cmd = "notification-get-bulks"
-    needs_config = False
-    needs_checks = False
 
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
         return NotificationGetBulksResult(
@@ -3192,13 +3272,12 @@ automations.register(AutomationGetBulks())
 
 class AutomationCreateDiagnosticsDump(Automation):
     cmd = "create-diagnostics-dump"
-    needs_config = False
-    needs_checks = False
 
     def execute(
         self,
         args: DiagnosticsCLParameters,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> CreateDiagnosticsDumpResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):

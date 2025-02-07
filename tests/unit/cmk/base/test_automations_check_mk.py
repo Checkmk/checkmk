@@ -20,12 +20,17 @@ from cmk.automations.results import DiagHostResult
 from cmk.fetchers import PiggybackFetcher
 
 from cmk.base import config, core_config
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
+
+_NO_PLUGINS_FOR_TEST = AgentBasedPlugins({}, {}, {}, {})
+
+_CLAIM_CONFIG_WAS_LOADED = config.LoadedConfigSentinel()
 
 
 class TestAutomationDiagHost:
@@ -63,7 +68,9 @@ class TestAutomationDiagHost:
     @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
-        assert check_mk.AutomationDiagHost().execute(args, False) == DiagHostResult(
+        assert check_mk.AutomationDiagHost().execute(
+            args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED
+        ) == DiagHostResult(
             0,
             raw_data,
         )
@@ -195,7 +202,10 @@ def test_automation_active_check(
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
-    assert active_check.execute(active_check_args, False) == expected_result
+    assert (
+        active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED)
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -255,6 +265,6 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = check_mk.AutomationActiveCheck()
-    active_check.execute(active_check_args, False)
+    active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED)
 
     assert error_message == capsys.readouterr().err

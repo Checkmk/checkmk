@@ -1757,9 +1757,7 @@ def mode_automation(args: list[str]) -> None:
     ):
         sys.exit(
             automations.automations.execute_and_write_serialized_result_to_stdout(
-                name,
-                automation_args,
-                called_from_automation_helper=False,
+                name, automation_args
             )
         )
 

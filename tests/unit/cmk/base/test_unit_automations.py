@@ -20,6 +20,8 @@ from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
+from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.config import LoadedConfigSentinel
 
 
 def test_registered_automations() -> None:
@@ -91,7 +93,9 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
-    assert automation.execute(["test-host"], False) == AnalyseHostResult(
+    assert automation.execute(
+        ["test-host"], AgentBasedPlugins({}, {}, {}, {}), LoadedConfigSentinel()
+    ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
             "cmk/site": "NO_SITE",
@@ -132,7 +136,8 @@ def test_service_labels(monkeypatch):
 
     assert automation.execute(
         ["test-host", "CPU load", "CPU temp"],
-        False,
+        AgentBasedPlugins({}, {}, {}, {}),
+        LoadedConfigSentinel(),
     ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},

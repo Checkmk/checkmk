@@ -558,13 +558,26 @@ def register(name: str, default_value: Any) -> None:
 #   '----------------------------------------------------------------------'
 
 
+class LoadedConfigSentinel:
+    """Indicate that a config loading function has been called.
+
+    The config loading currently mostly manipulates a global state.
+    Return an instance of this class, to indicate that the config has been loaded.
+
+    Someday (TM): return the actual loaded config!
+    """
+
+    def __bool__(self) -> Literal[True]:
+        return True
+
+
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load(
     discovery_rulesets: Iterable[RuleSetName],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-) -> None:
+) -> LoadedConfigSentinel:
     _initialize_config()
 
     _changed_var_names = _load_config(with_conf_d)
@@ -587,6 +600,8 @@ def load(
                 file=sys.stderr,
             )
             sys.exit(3)
+
+    return LoadedConfigSentinel()
 
 
 # This function still mostly manipulates a global state.

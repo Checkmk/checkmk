@@ -26,6 +26,10 @@ from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config
+from cmk.base.api.agent_based.register import (
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
+)
 from cmk.base.automations import AutomationError
 
 from ._cache import Cache, CacheError
@@ -39,8 +43,8 @@ class AutomationEngine(Protocol):
         self,
         cmd: str,
         args: list[str],
-        *,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ABCAutomationResult | AutomationError: ...
 
 
@@ -48,6 +52,8 @@ class AutomationEngine(Protocol):
 class _State:
     automation_or_reload_lock: asyncio.Lock
     last_reload_at: float
+    plugins: AgentBasedPlugins | None
+    loaded_config: config.LoadedConfigSentinel | None
 
 
 @dataclass(frozen=True)
@@ -55,7 +61,7 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[], None]
+    reload_config: Callable[[], config.LoadedConfigSentinel]
     clear_caches_before_each_call: Callable[[], None]
     state: _State
 
@@ -69,7 +75,7 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     reloader_config: ReloaderConfig,
-    reload_config: Callable[[], None],
+    reload_config: Callable[[], config.LoadedConfigSentinel],
     clear_caches_before_each_call: Callable[[], None],
 ) -> FastAPI:
     app = FastAPI(
@@ -87,6 +93,8 @@ def make_application(
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
             last_reload_at=0,
+            plugins=None,
+            loaded_config=None,
         ),
     )
 
@@ -108,8 +116,9 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
     dependencies.state.last_reload_at = time.time()
     config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
+    dependencies.state.plugins = get_previously_loaded_plugins()
     tty.reinit()
-    dependencies.reload_config()
+    dependencies.state.loaded_config = dependencies.reload_config()
 
     reloader_task = asyncio.create_task(
         _reloader_task(
@@ -130,7 +139,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], None],
+    reload_callback: Callable[[], config.LoadedConfigSentinel],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -159,7 +168,7 @@ async def _reloader_task(
 
                     LOGGER.info("[reloader] Triggering reload")
                     state.last_reload_at = time.time()
-                    reload_callback()
+                    state.loaded_config = reload_callback()
                     break
 
             else:
@@ -200,7 +209,7 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], None],
+    reload_config: Callable[[], config.LoadedConfigSentinel],
     clear_caches_before_each_call: Callable[[], None],
     state: _State,
 ) -> AutomationResponse:
@@ -211,7 +220,7 @@ def _execute_automation_endpoint(
     )
     if cache.reload_required(state.last_reload_at):
         state.last_reload_at = time.time()
-        reload_config()
+        state.loaded_config = reload_config()
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()
@@ -234,7 +243,8 @@ def _execute_automation_endpoint(
             result_or_error_code: ABCAutomationResult | int = engine.execute(
                 payload.name,
                 list(payload.args),
-                called_from_automation_helper=True,
+                state.plugins,
+                state.loaded_config,
             )
         except SystemExit as system_exit:
             LOGGER.error(

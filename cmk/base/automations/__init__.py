@@ -7,6 +7,7 @@ import abc
 import enum
 import os
 import sys
+from collections.abc import Iterable
 from contextlib import nullcontext, redirect_stdout, suppress
 from typing import assert_never
 
@@ -17,13 +18,14 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.timeout import Timeout
 
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config, profiling
 from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
+    AgentBasedPlugins,
     get_previously_loaded_plugins,
 )
 
@@ -55,29 +57,26 @@ class Automations:
         self,
         cmd: str,
         args: list[str],
-        *,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None = None,
+        loaded_config: config.LoadedConfigSentinel | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
-            return self._execute(
-                cmd,
-                remaining_args,
-                called_from_automation_helper=called_from_automation_helper,
-            )
+            return self._execute(cmd, remaining_args, plugins, loaded_config)
 
     def execute_and_write_serialized_result_to_stdout(
         self,
         cmd: str,
         args: list[str],
-        *,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None = None,
+        loaded_config: config.LoadedConfigSentinel | None = None,
     ) -> int:
         try:
             result = self.execute(
                 cmd,
                 args,
-                called_from_automation_helper=called_from_automation_helper,
+                plugins,
+                loaded_config,
             )
         finally:
             profiling.output_profile()
@@ -100,8 +99,8 @@ class Automations:
         self,
         cmd: str,
         args: list[str],
-        *,
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ABCAutomationResult | AutomationError:
         try:
             try:
@@ -112,26 +111,8 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            if not called_from_automation_helper and automation.needs_checks:
-                with (
-                    tracer.span("load_all_plugins"),
-                    redirect_stdout(open(os.devnull, "w")),
-                ):
-                    log.setup_console_logging()
-                    config.load_all_plugins(
-                        local_checks_dir=paths.local_checks_dir,
-                        checks_dir=paths.checks_dir,
-                    )
-
-            if not called_from_automation_helper and automation.needs_config:
-                discovery_rulesets = extract_known_discovery_rulesets(
-                    get_previously_loaded_plugins()
-                )
-                with tracer.span("load_config"):
-                    config.load(discovery_rulesets, validate_hosts=False)
-
             with tracer.span(f"execute_automation[{cmd}]"):
-                result = automation.execute(args, called_from_automation_helper)
+                result = automation.execute(args, plugins, loaded_config)
 
         except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -155,16 +136,33 @@ class Automations:
                 return args, None
 
 
+def load_plugins() -> AgentBasedPlugins:
+    with (
+        tracer.span("load_all_plugins"),
+        redirect_stdout(open(os.devnull, "w")),
+    ):
+        log.setup_console_logging()
+        config.load_all_plugins(
+            local_checks_dir=paths.local_checks_dir,
+            checks_dir=paths.checks_dir,
+        )
+    return get_previously_loaded_plugins()
+
+
+def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigSentinel:
+    with tracer.span("load_config"):
+        return config.load(discovery_rulesets, validate_hosts=False)
+
+
 class Automation(abc.ABC):
     cmd: str | None = None
-    needs_checks: bool
-    needs_config: bool
 
     @abc.abstractmethod
     def execute(
         self,
         args: list[str],
-        called_from_automation_helper: bool,
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigSentinel | None,
     ) -> ABCAutomationResult: ...
 
 

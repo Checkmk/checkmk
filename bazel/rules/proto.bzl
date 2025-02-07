@@ -1,3 +1,5 @@
+load("@bazel_skylib//rules:copy_file.bzl", _copy_file = "copy_file")
+load("@rules_proto//proto:defs.bzl", _proto_library = "proto_library")
 load(
     "@rules_proto_grpc//:defs.bzl",
     "ProtoPluginInfo",
@@ -7,6 +9,23 @@ load(
 )
 load("@rules_python//python:defs.bzl", _py_library = "py_library")
 load("@rules_python//python:proto.bzl", _py_proto_library = "py_proto_library")
+
+def proto_library_as(name, proto, as_proto, **kwargs):
+    """Macro to create a proto_library after moving the proto to a different path.
+
+    This avoids errors such as
+    "Error in fail: Cannot generate Python code for a .proto whose path contains '-'"
+
+    Args:
+        name: the name of the target.
+        proto: the proto file.
+        as_proto: new path to the proto file under the current directory.
+        **kwargs: arguments forwarded to the proto_library.
+
+    """
+    name_cp = name + "_cp"
+    _copy_file(name = name_cp, src = proto, out = as_proto)
+    _proto_library(name = name, srcs = [as_proto], **kwargs)
 
 py_proto_compile = rule(
     implementation = proto_compile_impl,

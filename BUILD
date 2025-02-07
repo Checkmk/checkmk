@@ -1,12 +1,11 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
-load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
+load("//bazel/rules:proto.bzl", "proto_library_as")
 
 exports_files(
     [
@@ -196,33 +195,17 @@ create_venv(
     }),
 )
 
-copy_file(
-    name = "_cmc_config_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:cmc_config/config.proto",
-    out = "cmc_proto/config.proto",
-)
-
-copy_file(
-    name = "_cmc_cycletime_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:cmc_config/cycletime.proto",
-    out = "cmc_proto/cycletime.proto",
-)
-
-copy_file(
-    name = "_cmc_state_proto",
-    src = "//non-free/packages/cmc-protocols/protocols:cmc_config/state.proto",
-    out = "cmc_proto/state.proto",
-)
-
-proto_library(
+proto_library_as(
     name = "cycletime_proto",
-    srcs = ["cmc_proto/cycletime.proto"],
+    as_proto = "cmc_proto/cycletime.proto",
+    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/cycletime.proto",
     visibility = ["//visibility:public"],
 )
 
-proto_library(
+proto_library_as(
     name = "config_proto",
-    srcs = ["cmc_proto/config.proto"],
+    as_proto = "cmc_proto/config.proto",
+    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/config.proto",
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
@@ -231,9 +214,10 @@ proto_library(
     ],
 )
 
-proto_library(
+proto_library_as(
     name = "state_proto",
-    srcs = ["cmc_proto/state.proto"],
+    as_proto = "cmc_proto/state.proto",
+    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/state.proto",
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",

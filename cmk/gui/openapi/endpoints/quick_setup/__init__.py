@@ -466,13 +466,13 @@ def _add_summary_error_message(
     all_stage_errors.extend(current_errors)
 
     faulty_stage_indices = [
-        err.stage_index for err in current_errors if err.stage_index is not None
+        err.stage_index + 1 for err in current_errors if err.stage_index is not None
     ]
     faulty_stage_indices.sort()
 
     msg = (
         _("Stages %s contain invalid form data. Please correct them and try again.")
-        % ", ".join(str(index + 1) for index in faulty_stage_indices)
+        % ", ".join(str(index) for index in faulty_stage_indices)
         if len(faulty_stage_indices) > 1
         else _("Stage %s contains invalid form data. Please correct them and try again.")
         % faulty_stage_indices[0]

@@ -113,37 +113,35 @@ class BaseNotificationPage(QuickSetupPage):
 
     # stage 3
     @property
-    def stage_three_locator(self) -> Locator:
+    def stage_three(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Notification method (plug-in)")
 
     @property
     def select_email_parameter_dropdown(self) -> Locator:
-        return self.stage_three_locator.get_by_role("combobox").nth(1)
+        return self.stage_three.get_by_role("combobox").nth(1)
 
     def notification_method_option(self, option: str) -> Locator:
-        return self.stage_three_locator.get_by_role("option", name=option)
+        return self.stage_three.get_by_role("option", name=option)
 
     def create_parameter_button(self) -> Locator:
-        return self.stage_three_locator.get_by_role("button", name="Create")
+        return self.stage_three.get_by_role("button", name="Create")
 
     # stage 4
     @property
-    def _stage_four_locator(self) -> Locator:
+    def _stage_four(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Recipient")
 
     @property
     def _add_recipient_button(self) -> Locator:
-        return self._stage_four_locator.get_by_role("button", name="Add recipient")
+        return self._stage_four.get_by_role("button", name="Add recipient")
 
     @property
     def _recipients_rows(self) -> Locator:
-        return self._stage_four_locator.get_by_role("group", name="Select recipient").locator(
-            "table > tr"
-        )
+        return self._stage_four.get_by_role("group", name="Select recipient").locator("table > tr")
 
     @property
     def _recipient_group(self) -> Locator:
-        return self._stage_four_locator.get_by_role("group")
+        return self._stage_four.get_by_role("group")
 
     def delete_recipient_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button", name="Remove element")

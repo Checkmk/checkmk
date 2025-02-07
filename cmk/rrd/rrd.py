@@ -20,10 +20,10 @@ import sys
 import time
 import traceback
 import xml.etree.ElementTree as ET
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import assert_never, cast, Literal, NewType, Protocol, Self, TypedDict
+from typing import assert_never, cast, Literal, NewType, Self
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -42,9 +42,12 @@ from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
 
-from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
+from .interface import (  # pylint: disable=cmk-module-layer-violation
+    RRDConfig,
+    RRDInterface,
+    RRDObjectConfig,
+)
 
 _Seconds = NewType("_Seconds", int)
 
@@ -62,26 +65,6 @@ _default_rrd_format: _RRDFormat = "pnp_multiple"
 def _rrd_pnp_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
     return str(cmk.utils.paths.rrd_multiple_dir / cmk.utils.pnp_cleanup(hostname))
-
-
-class RRDObjectConfig(TypedDict):
-    """RRDObjectConfig
-    This typing might not be complete or even wrong, feel free to improve"""
-
-    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
-    rras: list[tuple[float, int, int]]
-    step: int
-    format: Literal["pnp_multiple", "cmc_single"]
-
-
-class _RRDConfig(Protocol):
-    def rrd_config(self, hostname: HostName) -> RRDObjectConfig | None: ...
-
-    def rrd_config_of_service(
-        self, hostname: HostName, description: ServiceName
-    ) -> RRDObjectConfig | None: ...
-
-    def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None: ...
 
 
 @dataclass(frozen=True)
@@ -135,7 +118,7 @@ rrd_heartbeat = 8460
 
 
 def _get_rrd_conf(
-    config: _RRDConfig, hostname: HostName, servicedesc: _RRDServiceName = "_HOST_"
+    config: RRDConfig, hostname: HostName, servicedesc: _RRDServiceName = "_HOST_"
 ) -> _RRDFileConfigWithFormat:
     if servicedesc == "_HOST_":
         rrdconf: RRDObjectConfig | None = config.rrd_config(hostname)
@@ -194,7 +177,7 @@ def _parse_cmc_rrd_info(info_file_path: str) -> RRDInfo:
 
 
 def _create_rrd(
-    rrd_interface: RRDInterface, config: _RRDConfig, spec: RRDSpec, log: Callable[[str], None]
+    rrd_interface: RRDInterface, config: RRDConfig, spec: RRDSpec, log: Callable[[str], None]
 ) -> str:
     """Create a new RRD. Automatically reuses data from an existing RRD if the
     type is CMC SINGLE. This mode is for extending existing RRDs by new metrics."""
@@ -292,7 +275,7 @@ class RRDConverter:
         self._rrd_interface = rrd_interface
         self._hostname = hostname
 
-    def convert_rrds_of_host(self, config: _RRDConfig, *, split: bool, delete: bool) -> None:
+    def convert_rrds_of_host(self, config: RRDConfig, *, split: bool, delete: bool) -> None:
         console.verbose(f"{tty.bold}{tty.yellow}{self._hostname}{tty.normal}:")
 
         try:
@@ -318,7 +301,7 @@ class RRDConverter:
 
     def _convert_cmc_versus_pnp(
         self,
-        config: _RRDConfig,
+        config: RRDConfig,
         existing_rrds: _RRDServices,
         *,
         delete: bool,
@@ -351,7 +334,7 @@ class RRDConverter:
 
     def _convert_pnp_rrds(
         self,
-        config: _RRDConfig,
+        config: RRDConfig,
         existing_rrds: _RRDServices,
         *,
         split: bool,
@@ -371,7 +354,7 @@ class RRDConverter:
                     split=split,
                 )
 
-    def _convert_cmc_rrds(self, config: _RRDConfig, existing_rrds: _RRDServices) -> None:
+    def _convert_cmc_rrds(self, config: RRDConfig, existing_rrds: _RRDServices) -> None:
         host_dir = _rrd_cmc_host_dir(self._hostname)
         for servicedesc, existing_rrd_formats in existing_rrds.items():
             if "cmc_single" in existing_rrd_formats:
@@ -417,7 +400,7 @@ class RRDConverter:
                     raise TypeError()
                 yield service
 
-    def _convert_pnp_to_cmc(self, config: _RRDConfig, servicedesc: _RRDServiceName) -> None:
+    def _convert_pnp_to_cmc(self, config: RRDConfig, servicedesc: _RRDServiceName) -> None:
         console.verbose_no_lf(
             f"   {servicedesc} {tty.bold}{tty.cyan}PNP{tty.normal} -> {tty.bold}CMC{tty.normal}"
         )
@@ -562,7 +545,7 @@ class RRDConverter:
 
     def _convert_cmc_rrd_of(
         self,
-        config: _RRDConfig,
+        config: RRDConfig,
         spec: RRDSpec,
         rrd_file_path: str,
         target_rrdconf: _RRDFileConfig,
@@ -753,7 +736,7 @@ class RRDCreator:
         self._rrd_interface = rrd_interface
         self._rrd_helper_output_buffer = b""
 
-    def create_rrds_keepalive(self, *, reload_config: Callable[[], _RRDConfig]) -> None:
+    def create_rrds_keepalive(self, *, reload_config: Callable[[], RRDConfig]) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
 
@@ -848,7 +831,7 @@ class RRDCreator:
         written = os.write(1, self._rrd_helper_output_buffer[:size])
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
 
-    def _create_rrd_from_spec(self, config: _RRDConfig, spec: RRDSpec) -> None:
+    def _create_rrd_from_spec(self, config: RRDConfig, spec: RRDSpec) -> None:
         rrd_file_name = _create_rrd(
             self._rrd_interface, config, spec, self._queue_rrd_helper_response
         )

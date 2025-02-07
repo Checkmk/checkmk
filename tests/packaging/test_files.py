@@ -107,6 +107,8 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
+    paths = _get_paths_from_package(package_path)
+
     version_allowed_patterns = [
         "/opt/omd/versions/?$",
         "/opt/omd/versions/###OMD_VERSION###/?$",
@@ -127,10 +129,6 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/opt/omd/sites$",
             "/var/lock/mkbackup$",
         ] + version_allowed_patterns
-
-        paths = subprocess.check_output(
-            ["rpm", "-qlp", package_path], encoding="utf-8"
-        ).splitlines()
     elif package_path.endswith(".deb"):
         allowed_patterns = [
             "/$",
@@ -153,12 +151,6 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/etc/init.d/$",
             "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
         ] + version_allowed_patterns
-
-        paths = []
-        for line in subprocess.check_output(
-            ["dpkg", "-c", package_path], encoding="utf-8"
-        ).splitlines():
-            paths.append(line.split()[5].lstrip("."))
     else:
         raise NotImplementedError()
 
@@ -172,6 +164,23 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             re.match(p.replace("###OMD_VERSION###", omd_version), path) for p in allowed_patterns
         )
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
+
+
+def _get_paths_from_package(path_to_package: str) -> list[str]:
+    if path_to_package.endswith(".rpm"):
+        paths = subprocess.check_output(
+            ["rpm", "-qlp", path_to_package], encoding="utf-8"
+        ).splitlines()
+    elif path_to_package.endswith(".deb"):
+        paths = []
+        for line in subprocess.check_output(
+            ["dpkg", "-c", path_to_package], encoding="utf-8"
+        ).splitlines():
+            paths.append(line.split()[5].lstrip("."))
+    else:
+        raise NotImplementedError()
+
+    return paths
 
 
 def test_cma_only_contains_version_paths(package_path: str, cmk_version: str) -> None:

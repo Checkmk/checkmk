@@ -29,8 +29,8 @@
     "https://bcr.bazel.build/modules/aspect_rules_js/1.40.0/MODULE.bazel": "01a1014e95e6816b68ecee2584ae929c7d6a1b72e4333ab1ff2d2c6c30babdf1",
     "https://bcr.bazel.build/modules/aspect_rules_js/1.40.0/source.json": "b6fd491369e9ef888fdef64b839023a2360caaea8eb370d2cfbfdd2a96721311",
     "https://bcr.bazel.build/modules/aspect_rules_lint/0.12.0/MODULE.bazel": "e767c5dbfeb254ec03275a7701b5cfde2c4d2873676804bc7cb27ddff3728fed",
-    "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.9/MODULE.bazel": "8e9024b0d8a9da8846e834d5b375faff37d8201adf95cb254993f918bc8f4941",
-    "https://bcr.bazel.build/modules/aspect_rules_lint/1.0.9/source.json": "2d83448b245cf9ef8429ea33ebc9c4cd3a3912d1818851413cd97c7bdaad446e",
+    "https://bcr.bazel.build/modules/aspect_rules_lint/1.1.0/MODULE.bazel": "d32845f1d8c90fa03d94ca61b567be01f1ea8ea3972daaaf6224eaa2afcc1298",
+    "https://bcr.bazel.build/modules/aspect_rules_lint/1.1.0/source.json": "28a2f29851a078d263769ff7615edd428566bdc29e7b65f20d5ffb093bd39123",
     "https://bcr.bazel.build/modules/bazel_features/0.1.0/MODULE.bazel": "47011d645b0f949f42ee67f2e8775188a9cf4a0a1528aa2fa4952f2fd00906fd",
     "https://bcr.bazel.build/modules/bazel_features/1.1.0/MODULE.bazel": "cfd42ff3b815a5f39554d97182657f8c4b9719568eb7fded2b9135f084bf760b",
     "https://bcr.bazel.build/modules/bazel_features/1.1.1/MODULE.bazel": "27b8c79ef57efe08efccbd9dd6ef70d61b4798320b8d3c134fd571f78963dbcd",
@@ -2299,7 +2299,7 @@
     "@@rules_multitool~//multitool:extension.bzl%multitool": {
       "general": {
         "bzlTransitiveDigest": "AtvPzG/SAawYMKVVHcMoJq4EXkVPTIhS3AeNwENXp9E=",
-        "usagesDigest": "m6+MwuSBO5f9NCuaxZKz6Z3WEYNOy/9r0FAe3miBs4A=",
+        "usagesDigest": "3Scb0I8Ppf54cLnh8bbgbtXWjVx2LXeUyWNiTmeUciY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -2501,7 +2501,7 @@
           "@@grpc~//requirements.bazel.txt": "c43a56443ad71bd3b700cc3f4e889e1fd7516c2deddb6e9b75f40194bc92bf1c",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "d0d98b9631c6ec0c488f39c5a24eb1e64a6c066d64062caca95580606e7fa561",
+          "@@//requirements_all_lock.txt": "25eb9e6c40dcecd927e6db89dbd8165d51c849e607606b58aea763518a600e1e",
           "@@rules_mypy~//mypy/private/requirements.txt": "a1f94fdc72dde074efe30628a69ce502984b09c61db2938601ed18d320f59d26",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -8251,7 +8251,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "ruff==0.9.2 --hash=sha256:1a605fdcf6e8b2d39f9436d343d1f0ff70c365a1e681546de0104bef81ce88df --hash=sha256:3292c5a22ea9a5f9a185e2d131dc7f98f8534a32fb6d2ee7b9944569239c648d --hash=sha256:492a5e44ad9b22a0ea98cf72e40305cbdaf27fac0d927f8bc9e1df316dcc96eb --hash=sha256:71cbe22e178c5da20e1514e1e01029c73dc09288a8028a5d3446e6bba87a5145 --hash=sha256:80605a039ba1454d002b32139e4970becf84b5fee3a3c3bf1c2af6f61a784347 --hash=sha256:82b35259b0cbf8daa22a498018e300b9bb0174c2bbb7bcba593935158a78054d --hash=sha256:8b6a9701d1e371bf41dca22015c3f89769da7576884d2add7317ec1ec8cb9c3c --hash=sha256:8efd9da7a1ee314b910da155ca7e8953094a7c10d0c0a39bfde3fcfd2a015684 --hash=sha256:9cc53e68b3c5ae41e8faf83a3b89f4a5d7b2cb666dff4b366bb86ed2a85b481f --hash=sha256:a1b63fa24149918f8b37cef2ee6fff81f24f0d74b6f0bdc37bc3e1f2143e41c6 --hash=sha256:af1e9e9fe7b1f767264d26b1075ac4ad831c7db976911fa362d09b2d0356426a --hash=sha256:b338edc4610142355ccf6b87bd356729b62bf1bc152a2fad5b0c7dc04af77bfe --hash=sha256:b5eceb334d55fae5f316f783437392642ae18e16dcf4f1858d55d3c2a0f8f5d0 --hash=sha256:b9aab82bb20afd5f596527045c01e6ae25a718ff1784cb92947bff1f83068b00 --hash=sha256:c547f7f256aa366834829a08375c297fa63386cbe5f1459efaf174086b564247 --hash=sha256:c5e1d6abc798419cf46eed03f54f2e0c3adb1ad4b801119dedf23fcaf69b55b5 --hash=sha256:d18bba3d3353ed916e882521bc3e0af403949dbada344c20c16ea78f47af965e --hash=sha256:fbd337bac1cfa96be615f6efcd4bc4d077edbc127ef30e2b8ba2a27e18c054d4"
+              "requirement": "ruff==0.9.4 --hash=sha256:05bebf4cdbe3ef75430d26c375773978950bbf4ee3c95ccb5448940dc092408e --hash=sha256:1d4c8772670aecf037d1bf7a07c39106574d143b26cfe5ed1787d2f31e800214 --hash=sha256:37c892540108314a6f01f105040b5106aeb829fa5fb0561d2dcaf71485021137 --hash=sha256:433dedf6ddfdec7f1ac7575ec1eb9844fa60c4c8c2f8887a070672b8d353d34c --hash=sha256:54499fb08408e32b57360f6f9de7157a5fec24ad79cb3f42ef2c3f3f728dfe2b --hash=sha256:56acd6c694da3695a7461cc55775f3a409c3815ac467279dfa126061d84b314b --hash=sha256:585792f1e81509e38ac5123492f8875fbc36f3ede8185af0a26df348e5154f41 --hash=sha256:64e73d25b954f71ff100bb70f39f1ee09e880728efb4250c632ceed4e4cdf706 --hash=sha256:6907ee3529244bb0ed066683e075f09285b38dd5b4039370df6ff06041ca19e7 --hash=sha256:6ce6743ed64d9afab4fafeaea70d3631b4d4b28b592db21a5c2d1f0ef52934bf --hash=sha256:87c90c32357c74f11deb7fbb065126d91771b207bf9bfaaee01277ca59b574ec --hash=sha256:a6c634fc6f5a0ceae1ab3e13c58183978185d131a29c425e4eaa9f40afe1e6d6 --hash=sha256:bfc5f1d7afeda8d5d37660eeca6d389b142d7f2b5a1ab659d9214ebd0e025231 --hash=sha256:d612dbd0f3a919a8cc1d12037168bfa536862066808960e0cc901404b77968f0 --hash=sha256:db1192ddda2200671f9ef61d9597fcef89d934f5d1705e571a93a67fb13a4402 --hash=sha256:de9edf2ce4b9ddf43fd93e20ef635a900e25f622f87ed6e3047a664d0e8f810e --hash=sha256:e0c93e7d47ed951b9394cf352d6695b31498e68fd5782d6cbc282425655f687a --hash=sha256:faa935fc00ae854d8b638c16a5f1ce881bc3f67446957dd6f2af440a5fc8526b"
             }
           },
           "cmk_requirements_312_azure_core": {

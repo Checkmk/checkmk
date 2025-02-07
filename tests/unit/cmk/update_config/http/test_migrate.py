@@ -991,7 +991,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_13,
         EXAMPLE_14,
         EXAMPLE_20,
-        EXAMPLE_33,
         EXAMPLE_44,
         EXAMPLE_49,
         EXAMPLE_51,

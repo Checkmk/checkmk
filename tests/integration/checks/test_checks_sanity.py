@@ -123,28 +123,41 @@ def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     assert host_services
 
 
+def _runs_cmc(site: Site) -> bool:
+    return site.run(["omd", "config", "show", "CORE"]).stdout.strip() == "cmc"
+
+
 def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site) -> None:
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
-        f"Process {site.id} active check helpers",
         f"Process {site.id} agent receiver",
-        f"Process {site.id} alert helper",
         f"Process {site.id} apache",
         f"Process {site.id} automation helpers",
-        # f"Process {site.id} checker helpers",  # FIXME
-        f"Process {site.id} cmc",
-        f"Process {site.id} dcd",
         f"Process {site.id} event console",
-        f"Process {site.id} fetcher helpers",
         # jaeger is not enabled in this test
         # f"Process {site.id} jaeger",
-        f"Process {site.id} livestatus proxy",
-        f"Process {site.id} notification spooler",
-        f"Process {site.id} notify helper",
         f"Process {site.id} piggyback hub",
         f"Process {site.id} rabbitmq",
         # f"Process {site.id} real-time helper",  # not enabled
         f"Process {site.id} redis-server",
-        f"Process {site.id} rrd helper",
         f"Process {site.id} rrdcached",
     }
+
+    if _runs_cmc(site):
+        expected_ps_services |= {
+            f"Process {site.id} active check helpers",
+            f"Process {site.id} alert helper",
+            # f"Process {site.id} checker helpers",  # FIXME
+            f"Process {site.id} cmc",
+            f"Process {site.id} fetcher helpers",
+            f"Process {site.id} livestatus proxy",
+            f"Process {site.id} notification spooler",
+            f"Process {site.id} notify helper",
+            # f"Process {site.id} real-time helper",  # not enabled
+            f"Process {site.id} rrd helper",
+        }
+    if site.version.is_enterprise_edition():
+        expected_ps_services |= {
+            f"Process {site.id} dcd",
+        }
+
     assert {k for k in host_services if k.startswith("Process")} == expected_ps_services

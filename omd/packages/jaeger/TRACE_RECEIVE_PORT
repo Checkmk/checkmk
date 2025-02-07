@@ -15,7 +15,7 @@ fi
 
 case "$1" in
     default)
-        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_RECEIVE_PORT 4317)
+        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_RECEIVE_PORT 4417)
         echo "$PORT"
         ;;
     choices)

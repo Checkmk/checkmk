@@ -3861,7 +3861,12 @@ class Option(NamedTuple):
 exclude_options = [
     Option("no-rrds", None, False, "do not copy RRD files (performance data)"),
     Option("no-logs", None, False, "do not copy the monitoring history and log files"),
-    Option("no-agents", None, False, "do not copy agent files created by the bakery"),
+    Option(
+        "no-agents",
+        None,
+        False,
+        "do not copy agent files created by the bakery (does not affect raw edition)",
+    ),
     Option(
         "no-past",
         "N",

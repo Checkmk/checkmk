@@ -2763,7 +2763,9 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
 
     # Remove extensions if site does not want them
     if not site_config.get("replicate_mkps"):
-        repl_paths = [e for e in repl_paths if e.ident not in ["local", "mkps"]]
+        repl_paths = [
+            e for e in repl_paths if e.ident not in ["local", "mkps", "mkps_disabled", "mkps_avail"]
+        ]
 
     return repl_paths
 

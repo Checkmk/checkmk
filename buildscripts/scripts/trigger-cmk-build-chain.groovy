@@ -112,21 +112,23 @@ def main() {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
         },
+        "Integration Test for Packages": {
+            success &= smart_stage(
+                    name: "Integration Test for Packages",
+                    condition: run_int_tests,
+                    raiseOnError: false,) {
+                build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+            }
+        },
+        "Update Test": {
+            success &= smart_stage(
+                    name: "Update Test",
+                    condition: run_update_tests,
+                    raiseOnError: false,) {
+                build(job: "${base_folder}/test-update", parameters: job_parameters);
+            }
+        }
     ]);
-
-    success &= smart_stage(
-            name: "Integration Test for Packages",
-            condition: run_int_tests,
-            raiseOnError: false,) {
-        build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-            name: "Update Test",
-            condition: run_update_tests,
-            raiseOnError: false,) {
-        build(job: "${base_folder}/test-update", parameters: job_parameters);
-    }
 
     success &= smart_stage(
             name: "Trigger Saas Gitlab jobs",

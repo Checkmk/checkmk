@@ -39,7 +39,7 @@ const updateData = (id: string, value: Ref) => {
     :open="isOpen"
     @toggle-open="toggleOpen"
   />
-  <div v-show="isOpen">
+  <div v-show="isOpen" :aria-expanded="isOpen" :aria-label="props.title">
     <CompositeWidget
       :items="props.items"
       :data="props?.data || {}"

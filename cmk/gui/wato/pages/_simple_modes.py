@@ -393,7 +393,6 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 )
 
             self._new = True
-            self._clone = self._default_id()
             self._ident = None
             self._entry = self._clone_entry(entry)
             return
@@ -802,12 +801,9 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 True,
             )
 
-        if self._new and not self._clone:
+        if self._new:
             # New form, no validation
             return DEFAULT_VALUE, DataOrigin.DISK, False
-
-        if self._clone:
-            self._ident = self._clone
 
         # Existing entry from disk
         catalog_converter = self._get_catalog_converter()

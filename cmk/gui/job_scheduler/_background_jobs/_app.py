@@ -29,7 +29,7 @@ from cmk.gui.background_job import (
     StartResponse,
     TerminateRequest,
 )
-from cmk.gui.job_scheduler._scheduler import SchedulerState
+from cmk.gui.job_scheduler._scheduler import filter_running_jobs, SchedulerState
 
 
 def get_application(
@@ -105,7 +105,7 @@ def get_application(
                 job_executions=executor.job_executions(),
             ),
             scheduled_jobs=ScheduledJobsHealth(
-                running_jobs=list(scheduler_state.running_jobs.keys()),
+                running_jobs=list(filter_running_jobs(scheduler_state.running_jobs).keys()),
                 job_executions=dict(scheduler_state.job_executions),
             ),
         )

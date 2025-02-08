@@ -192,6 +192,18 @@ def _collect_finished_threads(running_jobs: dict[str, threading.Thread]) -> None
             del running_jobs[job_name]
 
 
+def filter_running_jobs(
+    running_jobs: Mapping[str, threading.Thread],
+) -> dict[str, threading.Thread]:
+    """Provide an up-to-date list of running jobs.
+
+    collect_finished_threads might have not been executed since a job finished, which
+    causes some lag in the update of scheduler_state.running_jobs. This function
+    does some ad-hoc filtering to get the correct list of running jobs.
+    """
+    return {job_id: thread for job_id, thread in running_jobs.items() if thread.is_alive()}
+
+
 @dataclass
 class SchedulerState:
     running_jobs: dict[str, threading.Thread] = field(default_factory=dict)

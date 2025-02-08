@@ -76,7 +76,7 @@ def test_run_scheduled_jobs_in_thread() -> None:
     run_scheduled_jobs(jobs, state, crash_report_callback=reraise_exception)
 
     assert "threaded_job" in state.running_jobs
-    state.running_jobs["threaded_job"].join()
+    state.running_jobs["threaded_job"].thread.join()
     assert called.is_set()
     assert state.job_executions == {"threaded_job": 1}
 
@@ -111,5 +111,5 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     finally:
         shall_terminate.set()
         assert "threaded_job" in state.running_jobs
-        state.running_jobs["threaded_job"].join()
+        state.running_jobs["threaded_job"].thread.join()
         assert state.job_executions == {"threaded_job": 1}

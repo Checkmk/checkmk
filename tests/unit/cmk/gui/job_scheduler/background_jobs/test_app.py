@@ -28,7 +28,7 @@ from cmk.gui.background_job import (
     TerminateRequest,
 )
 from cmk.gui.job_scheduler._background_jobs._app import get_application
-from cmk.gui.job_scheduler._scheduler import SchedulerState
+from cmk.gui.job_scheduler._scheduler import ScheduledJob, SchedulerState
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +106,14 @@ def _get_test_client(loaded_at: int) -> TestClient:
             executor=DummyExecutor(logger),
             scheduler_state=SchedulerState(
                 running_jobs={
-                    "scheduled_1_running": DummyThread(is_stopped=False),
-                    "scheduled_2_finished": DummyThread(is_stopped=True),
+                    "scheduled_1_running": ScheduledJob(
+                        started_at=123,
+                        thread=DummyThread(is_stopped=False),
+                    ),
+                    "scheduled_2_finished": ScheduledJob(
+                        started_at=111,
+                        thread=DummyThread(is_stopped=True),
+                    ),
                 },
                 job_executions=Counter({"scheduled_1": 1, "scheduled_2": 2}),
             ),
@@ -184,7 +190,7 @@ def test_health_check() -> None:
     )
     assert response.background_jobs.running_jobs == {"job_id": 42}
     assert response.background_jobs.job_executions == {"job_1": 1, "job_2": 2}
-    assert response.scheduled_jobs.running_jobs == ["scheduled_1_running"]
+    assert response.scheduled_jobs.running_jobs == {"scheduled_1_running": 123}
     assert response.scheduled_jobs.job_executions == {"scheduled_1": 1, "scheduled_2": 2}
 
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 from pydantic import BaseModel
 
@@ -56,7 +56,7 @@ class BackgroundJobsHealth(BaseModel, frozen=True):
 
 
 class ScheduledJobsHealth(BaseModel, frozen=True):
-    running_jobs: Sequence[str]
+    running_jobs: Mapping[str, int]
     job_executions: Mapping[str, int]
 
 

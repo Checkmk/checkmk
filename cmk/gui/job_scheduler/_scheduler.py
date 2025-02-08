@@ -122,14 +122,19 @@ def run_scheduled_jobs(
                 state.job_executions[job.name] += 1
                 if job.run_in_thread:
                     logger.debug("Starting [%s] in thread", job.name)
-                    state.running_jobs[job.name] = thread = threading.Thread(
-                        target=job_thread_main,
-                        args=(
-                            job,
-                            trace.Link(span.get_span_context()),
-                            crash_report_callback,
+                    state.running_jobs[job.name] = ScheduledJob(
+                        started_at=int(time.time()),
+                        thread=(
+                            thread := threading.Thread(
+                                target=job_thread_main,
+                                args=(
+                                    job,
+                                    trace.Link(span.get_span_context()),
+                                    crash_report_callback,
+                                ),
+                                name=f"scheduled-{job.name}",
+                            )
                         ),
-                        name=f"scheduled-{job.name}",
                     )
                     thread.start()
                     logger.debug("Started [%s]", job.name)
@@ -178,33 +183,37 @@ def job_thread_main(
 
 
 @tracer.instrument()
-def _wait_for_job_threads(running_jobs: dict[str, threading.Thread]) -> None:
+def _wait_for_job_threads(running_jobs: dict[str, ScheduledJob]) -> None:
     logger.debug("Waiting for threads to terminate")
-    for job_name, thread in list(running_jobs.items()):
-        thread.join()
+    for job_name, job in list(running_jobs.items()):
+        job.thread.join()
         del running_jobs[job_name]
 
 
-def _collect_finished_threads(running_jobs: dict[str, threading.Thread]) -> None:
-    for job_name, thread in list(running_jobs.items()):
-        if not thread.is_alive():
+def _collect_finished_threads(running_jobs: dict[str, ScheduledJob]) -> None:
+    for job_name, job in list(running_jobs.items()):
+        if not job.thread.is_alive():
             logger.debug("Removing finished thread [%s]", job_name)
             del running_jobs[job_name]
 
 
-def filter_running_jobs(
-    running_jobs: Mapping[str, threading.Thread],
-) -> dict[str, threading.Thread]:
+def filter_running_jobs(running_jobs: Mapping[str, ScheduledJob]) -> dict[str, ScheduledJob]:
     """Provide an up-to-date list of running jobs.
 
     collect_finished_threads might have not been executed since a job finished, which
     causes some lag in the update of scheduler_state.running_jobs. This function
     does some ad-hoc filtering to get the correct list of running jobs.
     """
-    return {job_id: thread for job_id, thread in running_jobs.items() if thread.is_alive()}
+    return {job_id: job for job_id, job in running_jobs.items() if job.thread.is_alive()}
+
+
+@dataclass
+class ScheduledJob:
+    started_at: int
+    thread: threading.Thread
 
 
 @dataclass
 class SchedulerState:
-    running_jobs: dict[str, threading.Thread] = field(default_factory=dict)
+    running_jobs: dict[str, ScheduledJob] = field(default_factory=dict)
     job_executions: Counter[str] = field(default_factory=Counter)

@@ -527,22 +527,13 @@ def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
     )
 
 
-def get_variable_names() -> list[str]:
-    """Provides the list of all known configuration variables."""
-    return [k for k in default_config.__dict__ if k[0] != "_"]
-
-
 def get_default_config() -> dict[str, Any]:
     """Provides a dictionary containing the Check_MK default configuration"""
-    cfg: dict[str, Any] = {}
-    for key in get_variable_names():
-        value = getattr(default_config, key)
-
-        if isinstance(value, (dict, list)):
-            value = copy.deepcopy(value)
-
-        cfg[key] = value
-    return cfg
+    return {
+        key: copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+        for key, value in default_config.__dict__.items()
+        if key[0] != "_"
+    }
 
 
 def load_default_config() -> None:
@@ -924,7 +915,7 @@ class PackedConfigGenerator:
 
         global_variables = globals()
 
-        for varname in get_variable_names() + list(derived_config_variable_names):
+        for varname in (*variable_defaults, *derived_config_variable_names):
             if varname in self._skipped_config_variable_names:
                 continue
 

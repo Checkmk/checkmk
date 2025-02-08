@@ -105,6 +105,7 @@ def get_application(
                 job_executions=executor.job_executions(),
             ),
             scheduled_jobs=ScheduledJobsHealth(
+                next_cycle_start=scheduler_state.next_cycle_start,
                 running_jobs={
                     name: job.started_at
                     for name, job in filter_running_jobs(scheduler_state.running_jobs).items()

@@ -105,6 +105,7 @@ def _get_test_client(loaded_at: int) -> TestClient:
             registered_jobs={"hello_job": HelloJob},
             executor=DummyExecutor(logger),
             scheduler_state=SchedulerState(
+                next_cycle_start=10,
                 running_jobs={
                     "scheduled_1_running": ScheduledJob(
                         started_at=123,
@@ -190,6 +191,7 @@ def test_health_check() -> None:
     )
     assert response.background_jobs.running_jobs == {"job_id": 42}
     assert response.background_jobs.job_executions == {"job_1": 1, "job_2": 2}
+    assert response.scheduled_jobs.next_cycle_start == 10
     assert response.scheduled_jobs.running_jobs == {"scheduled_1_running": 123}
     assert response.scheduled_jobs.job_executions == {"scheduled_1": 1, "scheduled_2": 2}
 

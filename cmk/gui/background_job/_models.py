@@ -56,6 +56,7 @@ class BackgroundJobsHealth(BaseModel, frozen=True):
 
 
 class ScheduledJobsHealth(BaseModel, frozen=True):
+    next_cycle_start: int
     running_jobs: Mapping[str, int]
     job_executions: Mapping[str, int]
 

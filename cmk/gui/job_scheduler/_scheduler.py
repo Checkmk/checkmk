@@ -61,6 +61,7 @@ def _run_scheduler(
                 logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
 
             if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
+                state.next_cycle_start = int(time.time() + sleep_time)
                 stop_event.wait(sleep_time)
         finally:
             # The UI code does not clean up locks properly in all cases, so we need to do it here
@@ -211,5 +212,6 @@ class ScheduledJob:
 
 @dataclass
 class SchedulerState:
+    next_cycle_start: int = 0
     running_jobs: dict[str, ScheduledJob] = field(default_factory=dict)
     job_executions: Counter[str] = field(default_factory=Counter)

@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
         not in (
             "agent-2.2.0p14-windows-dhcp",  # CMK-21720
             "agent-2.2.0p14-windows-veeam-backup",  # CMK-21720
+            "agent-2.2.0p14-windows-mssql",  # CMK-21720
         )
     ],
 )

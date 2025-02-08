@@ -396,6 +396,14 @@ msgstr "%Y-%m-%d"
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%s is gestopt na %s om %s."
 
+#, fuzzy, python-format
+msgid "%d %s %s."
+msgstr "%d site is %s."
+
+#, fuzzy, python-format
+msgid "%d %s."
+msgstr "Toevoegen %s"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d Filter instellingen"
@@ -3312,6 +3320,10 @@ msgstr "Alle mislukte meldingen bevestigen"
 msgid "Acknowledge all incompatible werks"
 msgstr "Alle onverenigbare werken erkennen"
 
+#, fuzzy
+msgid "Acknowledge all received messages"
+msgstr "Alle berichten in %s bevestigd."
+
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "Host- en serviceproblemen erkennen en bevestigingen verwijderen"
 
@@ -3322,6 +3334,10 @@ msgstr "Erkende onverenigbare Werks"
 #, python-format
 msgid "Acknowledge last %s result"
 msgstr "Bevestig laatste %s resultaat"
+
+#, fuzzy
+msgid "Acknowledge message"
+msgstr "Niet-geaccepteerde berichten"
 
 msgid "Acknowledge problems"
 msgstr "Erken problemen"
@@ -6593,10 +6609,6 @@ msgstr "Analyseer de beschikbaarheid van deze aggregatie"
 
 msgid "Analyse predictive monitoring for this service"
 msgstr "Analyseer voorspellende monitoring voor deze dienst"
-
-#, fuzzy
-msgid "Analysis results"
-msgstr "Laatste resultaat"
 
 #, fuzzy
 msgid "Analysis: Recent notifications"
@@ -11150,6 +11162,10 @@ msgstr ""
 "Kan cookie niet verkrijgen van ntop server '%s' voor gebruiker '%s'. "
 "Controleer uw ntop verbindingsinstellingen."
 
+#, fuzzy
+msgid "Cannot be deleted manually, must expire"
+msgstr "Handmatig door gebruiker verwijderde gebeurtenis"
+
 msgid "Cannot calculate graph recipes"
 msgstr "Kan grafiekrecepten niet berekenen"
 
@@ -11836,10 +11852,6 @@ msgstr "Locatie specifieke configuratie variabele %s veranderd in %s."
 
 msgid "Changes"
 msgstr "Wijzigingen"
-
-#, fuzzy
-msgid "Changes activated"
-msgstr "Is nooit geactiveerd geweest"
 
 #, fuzzy
 msgid "Changes activated on"
@@ -16465,6 +16477,10 @@ msgstr "Momenteel zijn er geen veranderingen te activeren."
 msgid "Currently there are no unsent notification bulks pending."
 msgstr ""
 "Momenteel zijn er geen niet-verzonden kennisgevingsbulken in behandeling."
+
+#, fuzzy
+msgid "Currently you have no recieved messages"
+msgstr "Momenteel lopende processen"
 
 #, python-format
 msgid "Currently, there are %s not yet activated."
@@ -26520,10 +26536,6 @@ msgstr "Globbing patroon voor invoerbestanden"
 msgid "Go critical if all licenses are used"
 msgstr "Ga kritisch als alle licenties zijn gebruikt"
 
-#, fuzzy
-msgid "Go to \"All hosts\""
-msgstr "Alle gastheren"
-
 #, fuzzy, python-format
 msgid "Go to %s overview"
 msgstr "Overzicht gastheren"
@@ -26547,12 +26559,6 @@ msgstr "Parameters voor deze host"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Ga naar de regels van deze InfluxDB verbinding"
-
-#, python-format
-msgid ""
-"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
-"start monitoring your %s services."
-msgstr ""
 
 #, fuzzy
 msgid "Go to the next stage"
@@ -44184,10 +44190,6 @@ msgstr "Meldingen ingeschakeld"
 msgid "Notifications enabled on %d of %d %s"
 msgstr "Meldingen ingeschakeld"
 
-#, fuzzy
-msgid "Notifications have been sent. "
-msgstr "Kennisgevingsfase"
-
 msgid "Notifications of contact"
 msgstr "Kennisgevingen van contact"
 
@@ -50327,6 +50329,10 @@ msgstr "Voorgedefinieerde zoekopdrachten"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Voorspeld gemiddelde voor 15 minuten CPU belasting"
 
+#, fuzzy
+msgid "Predicted notifications"
+msgstr "Dienstmededelingen"
+
 msgid "Prediction"
 msgstr "Voorspelling"
 
@@ -53706,9 +53712,6 @@ msgstr "Resultaat van het laatste synchronisatieproces"
 msgid "Result of summed up values"
 msgstr "Resultaat van opgetelde waarden"
 
-msgid "Resulting notifications"
-msgstr "Resulterende kennisgevingen"
-
 msgid "Resulting state"
 msgstr "Resulterende staat"
 
@@ -53787,6 +53790,10 @@ msgstr "Informatie ophalen over..."
 msgid ""
 "Retrieve process information using WMI (Windows Management Instrumentation)"
 msgstr "Procesinformatie opvragen met WMI (Windows Management Instrumentation)"
+
+#, fuzzy
+msgid "Retroactively apply max duration to existing notifications"
+msgstr "Beperken tot kennisgevingsnummer"
 
 msgid "Retry"
 msgstr "Opnieuw proberen"
@@ -61441,6 +61448,10 @@ msgid "Store size"
 msgstr "Winkelgrootte"
 
 #, fuzzy
+msgid "Store the secret in cleartext"
+msgstr "Vooraf gedeeld geheim"
+
+#, fuzzy
 msgid "Stored Location"
 msgstr "Locatie van het systeem"
 
@@ -62783,6 +62794,10 @@ msgid "Test notifications on"
 msgstr "laatste mededeling"
 
 #, fuzzy
+msgid "Test results"
+msgstr "Laatste resultaat"
+
+#, fuzzy
 msgid "Test runtime"
 msgstr "Procesruntime"
 
@@ -64070,10 +64085,6 @@ msgstr ""
 #, python-format
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr "De centrale (%s) en externe site (%s) zijn niet compatibel. Reden: %s"
-
-#, fuzzy
-msgid "The changes have been activated successfully."
-msgstr "Is nooit geactiveerd geweest"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -65772,6 +65783,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, fuzzy, python-format
 msgid "The minimum allowed value is %s."
 msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
+
+msgid "The minimum duration may not be less than 15 minutes"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -77313,6 +77327,14 @@ msgstr "Duur bijwerken"
 msgid "Update event?"
 msgstr "Een gebeurtenis bijwerken"
 
+#, fuzzy
+msgid "Update existing security notifications"
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Update existing security notifications to use the new max duration."
+msgstr "laatste mededeling"
+
 msgid "Update host labels"
 msgstr "Bijwerken hostlabels"
 
@@ -86737,11 +86759,6 @@ msgstr "maximum"
 msgid "memory"
 msgstr "geheugen"
 
-msgid "message"
-msgid_plural "messages"
-msgstr[0] "bericht"
-msgstr[1] "berichten"
-
 msgid "messages"
 msgstr "berichten"
 
@@ -86843,6 +86860,10 @@ msgstr "ontkennen"
 msgid "never"
 msgstr "(nooit)"
 
+#, fuzzy
+msgid "new"
+msgstr "Nieuw"
+
 msgid "new element"
 msgstr "nieuw onderdeel"
 
@@ -86923,10 +86944,10 @@ msgid "notif."
 msgstr "notif."
 
 #, fuzzy
-msgid "notification"
-msgid_plural "notifications"
-msgstr[0] "Kennisgeving"
-msgstr[1] "Kennisgeving"
+msgid "notification has been sent out"
+msgid_plural "notifications have been sent out"
+msgstr[0] "Kennisgevingsfase"
+msgstr[1] "Kennisgevingsfase"
 
 msgid "notification rule"
 msgstr "kennisgevingsregel"
@@ -86934,6 +86955,15 @@ msgstr "kennisgevingsregel"
 #, fuzzy
 msgid "notification rules"
 msgstr "kennisgevingsregel"
+
+msgid ""
+"notification would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgid_plural ""
+"notifications would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "notifications within last"
 msgstr "kennisgevingen binnen de laatste"
@@ -87192,6 +87222,12 @@ msgstr "bereik"
 msgid "range in the middle"
 msgstr "bereik in het midden"
 
+#, fuzzy
+msgid "received message has been acknowledged"
+msgid_plural "received messages have been acknowledged"
+msgstr[0] "Deze gebeurtenis is erkend."
+msgstr[1] "Deze gebeurtenis is erkend."
+
 msgid "regard as scheduled downtime"
 msgstr "beschouwen als geplande downtime"
 
@@ -87423,10 +87459,6 @@ msgstr "statusvermeldingen"
 
 msgid "stopped"
 msgstr "gestopt"
-
-#, fuzzy
-msgid "store the secret"
-msgstr "Vooraf gedeeld geheim"
 
 #, fuzzy
 msgid "strict"
@@ -87792,6 +87824,36 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Analysis results"
+#~ msgstr "Laatste resultaat"
+
+#~ msgid "Resulting notifications"
+#~ msgstr "Resulterende kennisgevingen"
+
+#~ msgid "message"
+#~ msgid_plural "messages"
+#~ msgstr[0] "bericht"
+#~ msgstr[1] "berichten"
+
+#, fuzzy
+#~ msgid "notification"
+#~ msgid_plural "notifications"
+#~ msgstr[0] "Kennisgeving"
+#~ msgstr[1] "Kennisgeving"
+
+#, fuzzy
+#~ msgid "Changes activated"
+#~ msgstr "Is nooit geactiveerd geweest"
+
+#, fuzzy
+#~ msgid "Go to \"All hosts\""
+#~ msgstr "Alle gastheren"
+
+#, fuzzy
+#~ msgid "The changes have been activated successfully."
+#~ msgstr "Is nooit geactiveerd geweest"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr "Een andere omd config change job is al bezig."

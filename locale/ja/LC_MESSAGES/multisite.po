@@ -389,6 +389,14 @@ msgstr "%Y-%m-%d"
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d。%B %Y at %H: %M"
 
+#, fuzzy, python-format
+msgid "%d %s %s."
+msgstr "%d サイト %s 。"
+
+#, fuzzy, python-format
+msgid "%d %s."
+msgstr "%sを追加"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d フィルター設定"
@@ -3191,6 +3199,10 @@ msgstr "全ての失敗した通知を承認する"
 msgid "Acknowledge all incompatible werks"
 msgstr "全ての互換性のないWerksを承認する"
 
+#, fuzzy
+msgid "Acknowledge all received messages"
+msgstr "%s内のすべてのメッセージを確認しました。"
+
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "ホストとサービスの問題を承認、承認を削除"
 
@@ -3200,6 +3212,10 @@ msgstr "認められた互換性のないWerks"
 #, python-format
 msgid "Acknowledge last %s result"
 msgstr "最後の %s 結果を確認する"
+
+#, fuzzy
+msgid "Acknowledge message"
+msgstr "未確認のメッセージ"
 
 msgid "Acknowledge problems"
 msgstr "問題を認知"
@@ -6305,9 +6321,6 @@ msgstr "この集計の可用性を分析する"
 
 msgid "Analyse predictive monitoring for this service"
 msgstr "このサービスの予測監視を分析する"
-
-msgid "Analysis results"
-msgstr "分析結果"
 
 msgid "Analysis: Recent notifications"
 msgstr "分析: 最近の通知"
@@ -10703,6 +10716,10 @@ msgstr ""
 "ユーザー'%s'のntop サーバ'%s'から cookie を取得できません。ntop 接続設定を確"
 "認してください。"
 
+#, fuzzy
+msgid "Cannot be deleted manually, must expire"
+msgstr "ユーザーが手動で削除したイベント"
+
 msgid "Cannot calculate graph recipes"
 msgstr "グラフレシピを計算できません"
 
@@ -11370,10 +11387,6 @@ msgstr "サイト固有の構成変数 %s を %sに変更しました。"
 
 msgid "Changes"
 msgstr "変更"
-
-#, fuzzy
-msgid "Changes activated"
-msgstr "アクティベートされたことがない"
 
 #, fuzzy
 msgid "Changes activated on"
@@ -15768,6 +15781,10 @@ msgstr "現在、アクティブ化する変更はありません。"
 
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "現在、保留中の未送信の通知バルクはありません。"
+
+#, fuzzy
+msgid "Currently you have no recieved messages"
+msgstr "現在実行中のプロセス"
 
 #, python-format
 msgid "Currently, there are %s not yet activated."
@@ -25489,10 +25506,6 @@ msgstr "入力ファイルのグロブパターン"
 msgid "Go critical if all licenses are used"
 msgstr "すべてのライセンスが使用されている場合はクリティカルに変化します"
 
-#, fuzzy
-msgid "Go to \"All hosts\""
-msgstr "すべてのホスト"
-
 #, fuzzy, python-format
 msgid "Go to %s overview"
 msgstr "ホストの概要"
@@ -25516,12 +25529,6 @@ msgstr "このホストのパラメーター"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "新しいInfluxDB接続のルールに移動する"
-
-#, python-format
-msgid ""
-"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
-"start monitoring your %s services."
-msgstr ""
 
 #, fuzzy
 msgid "Go to the next stage"
@@ -42889,9 +42896,6 @@ msgstr "通知を有効化"
 msgid "Notifications enabled on %d of %d %s"
 msgstr "通知を有効化"
 
-msgid "Notifications have been sent. "
-msgstr "通知が送信されました。 "
-
 msgid "Notifications of contact"
 msgstr "連絡先の通知"
 
@@ -48931,6 +48935,10 @@ msgstr "事前定義された検索"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "CPU負荷の15分間の予測平均"
 
+#, fuzzy
+msgid "Predicted notifications"
+msgstr "サービス通知"
+
 msgid "Prediction"
 msgstr "予測"
 
@@ -52308,9 +52316,6 @@ msgstr "最後の同期プロセスの結果"
 msgid "Result of summed up values"
 msgstr "合計値の結果"
 
-msgid "Resulting notifications"
-msgstr "結果の通知"
-
 msgid "Resulting state"
 msgstr "結果の状態"
 
@@ -52390,6 +52395,10 @@ msgid ""
 "Retrieve process information using WMI (Windows Management Instrumentation)"
 msgstr ""
 "WMI(Windows Management Instrumentation)を使用してプロセス情報を取得する"
+
+#, fuzzy
+msgid "Retroactively apply max duration to existing notifications"
+msgstr "通知番号に制限する"
 
 msgid "Retry"
 msgstr "リトライ"
@@ -59930,6 +59939,10 @@ msgid "Store size"
 msgstr "サイズ保管する"
 
 #, fuzzy
+msgid "Store the secret in cleartext"
+msgstr "事前共有したシークレット"
+
+#, fuzzy
 msgid "Stored Location"
 msgstr "システムの場所"
 
@@ -61243,6 +61256,10 @@ msgstr "最終通知"
 msgid "Test notifications on"
 msgstr "最終通知"
 
+#, fuzzy
+msgid "Test results"
+msgstr "最終結果"
+
 msgid "Test runtime"
 msgstr "テストランタイム"
 
@@ -62451,10 +62468,6 @@ msgstr ""
 #, python-format
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr "セントラル(%s)は、リモートサイト(%s)と互換性がありません。理由: %s"
-
-#, fuzzy
-msgid "The changes have been activated successfully."
-msgstr "アクティベートされたことがない"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -64078,6 +64091,9 @@ msgstr "最小許容値は %sです。"
 #, python-format
 msgid "The minimum allowed value is %s."
 msgstr "最小許容値は %sです。"
+
+msgid "The minimum duration may not be less than 15 minutes"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -75366,6 +75382,14 @@ msgstr "更新時間"
 msgid "Update event?"
 msgstr "イベントを更新しますか？"
 
+#, fuzzy
+msgid "Update existing security notifications"
+msgstr "最終通知"
+
+#, fuzzy
+msgid "Update existing security notifications to use the new max duration."
+msgstr "最終通知"
+
 msgid "Update host labels"
 msgstr "ホストラベルを更新する"
 
@@ -84539,10 +84563,6 @@ msgstr "最大"
 msgid "memory"
 msgstr "記憶"
 
-msgid "message"
-msgid_plural "messages"
-msgstr[0] "メッセージ"
-
 msgid "messages"
 msgstr "メッセージ"
 
@@ -84651,6 +84671,10 @@ msgstr "否定する"
 msgid "never"
 msgstr "(決してない)"
 
+#, fuzzy
+msgid "new"
+msgstr "新しい"
+
 msgid "new element"
 msgstr "新しい要素"
 
@@ -84730,9 +84754,9 @@ msgid "notif."
 msgstr "通知."
 
 #, fuzzy
-msgid "notification"
-msgid_plural "notifications"
-msgstr[0] "通知"
+msgid "notification has been sent out"
+msgid_plural "notifications have been sent out"
+msgstr[0] "通知が送信されました。 "
 
 msgid "notification rule"
 msgstr "通知ルール"
@@ -84740,6 +84764,17 @@ msgstr "通知ルール"
 #, fuzzy
 msgid "notification rules"
 msgstr "通知ルール"
+
+#, fuzzy
+msgid ""
+"notification would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgid_plural ""
+"notifications would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgstr[0] ""
+"通知ルールが設定されている場合、影響を受けるユーザーに通知する（通知を送信す"
+"る）"
 
 msgid "notifications within last"
 msgstr "最後の内の通知"
@@ -84996,6 +85031,11 @@ msgstr "範囲"
 msgid "range in the middle"
 msgstr "真ん中の範囲"
 
+#, fuzzy
+msgid "received message has been acknowledged"
+msgid_plural "received messages have been acknowledged"
+msgstr[0] "このイベントは承認されました。"
+
 msgid "regard as scheduled downtime"
 msgstr "予定されたダウンタイムと見なす"
 
@@ -85218,10 +85258,6 @@ msgstr "ステータスエントリ"
 
 msgid "stopped"
 msgstr "停止"
-
-#, fuzzy
-msgid "store the secret"
-msgstr "事前共有したシークレット"
 
 #, fuzzy
 msgid "strict"
@@ -85591,6 +85627,33 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid "Analysis results"
+#~ msgstr "分析結果"
+
+#~ msgid "Resulting notifications"
+#~ msgstr "結果の通知"
+
+#~ msgid "message"
+#~ msgid_plural "messages"
+#~ msgstr[0] "メッセージ"
+
+#, fuzzy
+#~ msgid "notification"
+#~ msgid_plural "notifications"
+#~ msgstr[0] "通知"
+
+#, fuzzy
+#~ msgid "Changes activated"
+#~ msgstr "アクティベートされたことがない"
+
+#, fuzzy
+#~ msgid "Go to \"All hosts\""
+#~ msgstr "すべてのホスト"
+
+#, fuzzy
+#~ msgid "The changes have been activated successfully."
+#~ msgstr "アクティベートされたことがない"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr "別のomd config変更ジョブがすでに実行されています。"

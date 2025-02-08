@@ -387,6 +387,14 @@ msgstr "%d.%m.%Y"
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d. %B %Y um %H:%M"
 
+#, fuzzy, python-format
+msgid "%d %s %s."
+msgstr "%d Instanz ist %s."
+
+#, fuzzy, python-format
+msgid "%d %s."
+msgstr "%s hinzufügen"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d Filtereinstellungen"
@@ -3268,6 +3276,10 @@ msgstr "Alle fehlgeschlagenen Benachrichtigungen quittieren"
 msgid "Acknowledge all incompatible werks"
 msgstr "Alle inkompatiblen Werke quittieren"
 
+#, fuzzy
+msgid "Acknowledge all received messages"
+msgstr "Alle Nachrichten in %s quittiert."
+
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "Quittiere Host- und Service-Probleme und entferne Quittierungen"
 
@@ -3277,6 +3289,10 @@ msgstr "Inkompatible Werks quittieren"
 #, python-format
 msgid "Acknowledge last %s result"
 msgstr "Bestätige letzten %s-Vorgang"
+
+#, fuzzy
+msgid "Acknowledge message"
+msgstr "Unquittierte Nachrichten"
 
 msgid "Acknowledge problems"
 msgstr "Probleme quittieren"
@@ -6429,9 +6445,6 @@ msgstr "Verfügbarkeit dieser Aggregation analysieren"
 
 msgid "Analyse predictive monitoring for this service"
 msgstr "Prognosebasiertes Monitoring für diesen Service analysieren"
-
-msgid "Analysis results"
-msgstr "Analyse-Ergebnisse"
 
 msgid "Analysis: Recent notifications"
 msgstr "Analyse: aktuellste Benachrichtigungen"
@@ -10767,6 +10780,10 @@ msgstr ""
 "Es können keine Cookies vom ntop-Server '%s' für den Benutzer '%s' abgerufen "
 "werden. Bitte überprüfen Sie Ihre ntop-Verbindungseinstellungen."
 
+#, fuzzy
+msgid "Cannot be deleted manually, must expire"
+msgstr "Ereignis manuell von Benutzer gelöscht"
+
 msgid "Cannot calculate graph recipes"
 msgstr "Kann Graphdefinitionen nicht berechnen"
 
@@ -11452,9 +11469,6 @@ msgstr "Instanzspezifische Konfigurationsvariable %s nach %s geändert."
 
 msgid "Changes"
 msgstr "Änderung(en)"
-
-msgid "Changes activated"
-msgstr "Änderungen aktiviert"
 
 msgid "Changes activated on"
 msgstr "Änderungen wurden aktiviert am"
@@ -15951,6 +15965,10 @@ msgstr "Im Moment gibt es keine offenen Konfigurationsänderungen."
 
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "Im Moment gibt es keine ausstehenden Sammelbenachrichtigungen."
+
+#, fuzzy
+msgid "Currently you have no recieved messages"
+msgstr "Aktuell laufende Prozesse"
 
 #, python-format
 msgid "Currently, there are %s not yet activated."
@@ -25669,9 +25687,6 @@ msgstr "Globbing Pattern für Eingabedateien"
 msgid "Go critical if all licenses are used"
 msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 
-msgid "Go to \"All hosts\""
-msgstr "Gehe zu \"Alle Hosts\""
-
 #, python-format
 msgid "Go to %s overview"
 msgstr "Gehe zu %s Übersicht"
@@ -25693,15 +25708,6 @@ msgstr "Zu den Parametern dieser Methode"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Zu den Regeln dieser InfluxDB-Verbindung"
-
-#, python-format
-msgid ""
-"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
-"start monitoring your %s services."
-msgstr ""
-"Gehen Sie auf die Seite Monitor > Alle Hosts oder klicken Sie auf die "
-"Schaltfläche Zu allen Hosts gehen, um das Monitoring Ihrer %s Services zu "
-"starten."
 
 msgid "Go to the next stage"
 msgstr "Zum nächsten Schritt"
@@ -42543,9 +42549,6 @@ msgstr "Benachrichtigungen aktiviert"
 msgid "Notifications enabled on %d of %d %s"
 msgstr "Benachrichtigungen aktiviert bei %d von %d %s"
 
-msgid "Notifications have been sent. "
-msgstr "Benachrichtigungen wurden verschickt. "
-
 msgid "Notifications of contact"
 msgstr "Benachrichtigungen von Kontakt"
 
@@ -48321,6 +48324,10 @@ msgstr "Vordefinierte Suchen"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Vorhersage der 15-minütigen CPU-Last"
 
+#, fuzzy
+msgid "Predicted notifications"
+msgstr "Service-Benachrichtigungen"
+
 msgid "Prediction"
 msgstr "Vorhersage"
 
@@ -51576,9 +51583,6 @@ msgstr "Ergebnis der letzten Synchronisation"
 msgid "Result of summed up values"
 msgstr "Ergebnis der summierten Werte"
 
-msgid "Resulting notifications"
-msgstr "Sich ergebende Benachrichtigungen"
-
 msgid "Resulting state"
 msgstr "Resultierender Zustand"
 
@@ -51658,6 +51662,10 @@ msgid ""
 msgstr ""
 "Beziehe Informationen über Prozesse mit WMI (Windows Management "
 "Instrumentation)"
+
+#, fuzzy
+msgid "Retroactively apply max duration to existing notifications"
+msgstr "Erstellung von Benachrichtigungen einschränken"
 
 msgid "Retry"
 msgstr "Wiederhole"
@@ -59122,6 +59130,10 @@ msgstr ""
 msgid "Store size"
 msgstr "Speichergröße"
 
+#, fuzzy
+msgid "Store the secret in cleartext"
+msgstr "speichere das Geheimnis"
+
 msgid "Stored Location"
 msgstr "Gespeicherter Ort"
 
@@ -60375,6 +60387,10 @@ msgstr "Benachrichtigungen testen"
 
 msgid "Test notifications on"
 msgstr "Benachrichtigungen testen auf"
+
+#, fuzzy
+msgid "Test results"
+msgstr "Letztes Ergebnis"
 
 msgid "Test runtime"
 msgstr "Testlaufzeit"
@@ -61663,9 +61679,6 @@ msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Die Zentralinstanz (%s) und die Remote-Instanz (%s) sind nicht kompatibel. "
 "Grund: %s"
-
-msgid "The changes have been activated successfully."
-msgstr "Die Änderungen wurden erfolgreich aktiviert."
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -63425,6 +63438,9 @@ msgstr "Die minimal erlaubte Anzahl an Regex-Gruppen ist %s."
 #, python-format
 msgid "The minimum allowed value is %s."
 msgstr "Der minimal erlaubte Wert ist %s."
+
+msgid "The minimum duration may not be less than 15 minutes"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74456,6 +74472,14 @@ msgstr "Dauer der Aktualisierung"
 msgid "Update event?"
 msgstr "Ereignis aktualisieren?"
 
+#, fuzzy
+msgid "Update existing security notifications"
+msgstr "Benachrichtigungen testen"
+
+#, fuzzy
+msgid "Update existing security notifications to use the new max duration."
+msgstr "Dauer der Sicherheitsbenachrichtigung des Benutzers"
+
 msgid "Update host labels"
 msgstr "Host-Labels aktualisieren"
 
@@ -83657,11 +83681,6 @@ msgstr "Maximum"
 msgid "memory"
 msgstr "Speicher"
 
-msgid "message"
-msgid_plural "messages"
-msgstr[0] "Nachricht"
-msgstr[1] "Nachrichten"
-
 msgid "messages"
 msgstr "Nachrichten"
 
@@ -83769,6 +83788,10 @@ msgstr "invers"
 msgid "never"
 msgstr "nie"
 
+#, fuzzy
+msgid "new"
+msgstr "Neu"
+
 msgid "new element"
 msgstr "neues Element"
 
@@ -83845,16 +83868,31 @@ msgstr "nicht vorhanden"
 msgid "notif."
 msgstr "Zustellung."
 
-msgid "notification"
-msgid_plural "notifications"
-msgstr[0] "Benachrichtigung"
-msgstr[1] "Benachrichtigungen"
+#, fuzzy
+msgid "notification has been sent out"
+msgid_plural "notifications have been sent out"
+msgstr[0] "Benachrichtigungen wurden verschickt. "
+msgstr[1] "Benachrichtigungen wurden verschickt. "
 
 msgid "notification rule"
 msgstr "Benachrichtigungsregel"
 
 msgid "notification rules"
 msgstr "Benachrichtigungsregeln"
+
+#, fuzzy
+msgid ""
+"notification would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgid_plural ""
+"notifications would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgstr[0] ""
+"Betroffene Benutzer informieren, wenn Benachrichtigungsregeln aktiviert sind "
+"(Benachrichtigungen senden)"
+msgstr[1] ""
+"Betroffene Benutzer informieren, wenn Benachrichtigungsregeln aktiviert sind "
+"(Benachrichtigungen senden)"
 
 msgid "notifications within last"
 msgstr "Benachrichtigungen innerhalb der letzten"
@@ -84109,6 +84147,12 @@ msgstr "Zeitspanne"
 msgid "range in the middle"
 msgstr "Bereich in der Mitte"
 
+#, fuzzy
+msgid "received message has been acknowledged"
+msgid_plural "received messages have been acknowledged"
+msgstr[0] "Dieses Ereignis wurde quittiert."
+msgstr[1] "Dieses Ereignis wurde quittiert."
+
 msgid "regard as scheduled downtime"
 msgstr "als Wartungszeit werten"
 
@@ -84328,9 +84372,6 @@ msgstr "Zustandseinträge"
 
 msgid "stopped"
 msgstr "angehalten"
-
-msgid "store the secret"
-msgstr "speichere das Geheimnis"
 
 msgid "strict"
 msgstr "streng"
@@ -84697,6 +84738,40 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Analysis results"
+#~ msgstr "Analyse-Ergebnisse"
+
+#~ msgid "Resulting notifications"
+#~ msgstr "Sich ergebende Benachrichtigungen"
+
+#~ msgid "message"
+#~ msgid_plural "messages"
+#~ msgstr[0] "Nachricht"
+#~ msgstr[1] "Nachrichten"
+
+#~ msgid "notification"
+#~ msgid_plural "notifications"
+#~ msgstr[0] "Benachrichtigung"
+#~ msgstr[1] "Benachrichtigungen"
+
+#~ msgid "Changes activated"
+#~ msgstr "Änderungen aktiviert"
+
+#~ msgid "Go to \"All hosts\""
+#~ msgstr "Gehe zu \"Alle Hosts\""
+
+#, python-format
+#~ msgid ""
+#~ "Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+#~ "start monitoring your %s services."
+#~ msgstr ""
+#~ "Gehen Sie auf die Seite Monitor > Alle Hosts oder klicken Sie auf die "
+#~ "Schaltfläche Zu allen Hosts gehen, um das Monitoring Ihrer %s Services zu "
+#~ "starten."
+
+#~ msgid "The changes have been activated successfully."
+#~ msgstr "Die Änderungen wurden erfolgreich aktiviert."
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr ""

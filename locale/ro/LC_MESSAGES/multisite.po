@@ -393,6 +393,14 @@ msgstr "%Y-%m-%d"
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d. %B %Y la %H:%M"
 
+#, fuzzy, python-format
+msgid "%d %s %s."
+msgstr "%d site-ul este %s."
+
+#, fuzzy, python-format
+msgid "%d %s."
+msgstr "Adaugă %s"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d setări de Filtrare"
@@ -3334,6 +3342,10 @@ msgstr "Recunoașterea tuturor notificărilor eșuate"
 msgid "Acknowledge all incompatible werks"
 msgstr "Recunoașteți toate lucrările incompatibile"
 
+#, fuzzy
+msgid "Acknowledge all received messages"
+msgstr "A confirmat toate mesajele din %s."
+
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr ""
 "Recunoașterea problemelor gazdei și ale serviciului și eliminarea "
@@ -3345,6 +3357,10 @@ msgstr "Werks incompatibile recunoscute"
 #, python-format
 msgid "Acknowledge last %s result"
 msgstr "Recunoașterea ultimului rezultat %s"
+
+#, fuzzy
+msgid "Acknowledge message"
+msgstr "Mesaje neacceptate"
 
 msgid "Acknowledge problems"
 msgstr "Recunoașteți problemele"
@@ -6605,9 +6621,6 @@ msgstr "Analizați disponibilitatea acestei agregări"
 
 msgid "Analyse predictive monitoring for this service"
 msgstr "Analizați monitorizarea predictivă pentru acest serviciu"
-
-msgid "Analysis results"
-msgstr "Rezultatele analizei"
 
 msgid "Analysis: Recent notifications"
 msgstr "Analiză: Notificări recente"
@@ -11178,6 +11191,10 @@ msgstr ""
 "Nu se poate achiziționa cookie-ul de pe serverul ntop '%s' pentru "
 "utilizatorul '%s'. Vă rugăm să verificați setările de conectare ntop."
 
+#, fuzzy
+msgid "Cannot be deleted manually, must expire"
+msgstr "Eveniment șters manual de către utilizator"
+
 msgid "Cannot calculate graph recipes"
 msgstr "Nu se pot calcula rețete grafice"
 
@@ -11864,10 +11881,6 @@ msgstr ""
 
 msgid "Changes"
 msgstr "Modificări"
-
-#, fuzzy
-msgid "Changes activated"
-msgstr "Nu a fost niciodată activat"
 
 #, fuzzy
 msgid "Changes activated on"
@@ -16478,6 +16491,10 @@ msgstr "În prezent, nu există nicio modificare de activat."
 
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "În prezent, nu există pachete de notificări neexpediate în așteptare."
+
+#, fuzzy
+msgid "Currently you have no recieved messages"
+msgstr "Procesele care rulează în prezent"
 
 #, python-format
 msgid "Currently, there are %s not yet activated."
@@ -26558,10 +26575,6 @@ msgstr "Model de globbing pentru fișierele de intrare"
 msgid "Go critical if all licenses are used"
 msgstr "Devine critic dacă sunt folosite toate licențele"
 
-#, fuzzy
-msgid "Go to \"All hosts\""
-msgstr "Toate gazdele"
-
 #, fuzzy, python-format
 msgid "Go to %s overview"
 msgstr "Prezentare generală a gazdei"
@@ -26585,12 +26598,6 @@ msgstr "Parametrii pentru această gazdă"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Mergeți la regulile acestei conexiuni InfluxDB"
-
-#, python-format
-msgid ""
-"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
-"start monitoring your %s services."
-msgstr ""
 
 #, fuzzy
 msgid "Go to the next stage"
@@ -44253,9 +44260,6 @@ msgstr "Notificări activate"
 msgid "Notifications enabled on %d of %d %s"
 msgstr "Notificări activate"
 
-msgid "Notifications have been sent. "
-msgstr "Notificările au fost trimise. "
-
 msgid "Notifications of contact"
 msgstr "Notificări de contact"
 
@@ -50396,6 +50400,10 @@ msgstr "Căutări predefinite"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Media prognozată pentru 15 minute de încărcare a CPU"
 
+#, fuzzy
+msgid "Predicted notifications"
+msgstr "Notificări de servicii"
+
 msgid "Prediction"
 msgstr "Predicție"
 
@@ -53773,9 +53781,6 @@ msgstr "Rezultatul ultimului proces de sincronizare"
 msgid "Result of summed up values"
 msgstr "Rezultatul valorilor însumate"
 
-msgid "Resulting notifications"
-msgstr "Notificări rezultate"
-
 msgid "Resulting state"
 msgstr "Starea rezultată"
 
@@ -53859,6 +53864,10 @@ msgid ""
 msgstr ""
 "Obținerea de informații despre procese utilizând WMI (Windows Management "
 "Instrumentation)"
+
+#, fuzzy
+msgid "Retroactively apply max duration to existing notifications"
+msgstr "Restricție la numărul de notificare"
 
 msgid "Retry"
 msgstr "Reîncercare"
@@ -61609,6 +61618,10 @@ msgid "Store size"
 msgstr "Dimensiunea magazinului"
 
 #, fuzzy
+msgid "Store the secret in cleartext"
+msgstr "Secretul pre-împărțit"
+
+#, fuzzy
 msgid "Stored Location"
 msgstr "Locația sistemului"
 
@@ -62929,6 +62942,10 @@ msgstr "Notificări de testare"
 msgid "Test notifications on"
 msgstr "Notificări de testare pe"
 
+#, fuzzy
+msgid "Test results"
+msgstr "Ultimul rezultat"
+
 msgid "Test runtime"
 msgstr "Timpul de execuție a testului"
 
@@ -64217,10 +64234,6 @@ msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Site-ul central (%s) și cel de la distanță (%s) nu sunt compatibile. "
 "Motivul: %s."
-
-#, fuzzy
-msgid "The changes have been activated successfully."
-msgstr "Nu a fost niciodată activat"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -65931,6 +65944,9 @@ msgstr "Numărul minim permis de grupuri regex este %s."
 #, python-format
 msgid "The minimum allowed value is %s."
 msgstr "Valoarea minimă admisă este %s."
+
+msgid "The minimum duration may not be less than 15 minutes"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -77480,6 +77496,14 @@ msgstr "Durata de actualizare"
 msgid "Update event?"
 msgstr "Eveniment de actualizare?"
 
+#, fuzzy
+msgid "Update existing security notifications"
+msgstr "Notificări de testare"
+
+#, fuzzy
+msgid "Update existing security notifications to use the new max duration."
+msgstr "Notificări de testare pe"
+
 msgid "Update host labels"
 msgstr "Actualizarea etichetelor gazdă"
 
@@ -86918,12 +86942,6 @@ msgstr "maxim"
 msgid "memory"
 msgstr "memorie"
 
-msgid "message"
-msgid_plural "messages"
-msgstr[0] "mesaj"
-msgstr[1] ""
-msgstr[2] ""
-
 msgid "messages"
 msgstr "mesaje"
 
@@ -87024,6 +87042,10 @@ msgstr "nega"
 msgid "never"
 msgstr "niciodată"
 
+#, fuzzy
+msgid "new"
+msgstr "Nou"
+
 msgid "new element"
 msgstr "element nou"
 
@@ -87101,17 +87123,34 @@ msgid "notif."
 msgstr "notificare."
 
 #, fuzzy
-msgid "notification"
-msgid_plural "notifications"
-msgstr[0] "Notificare"
-msgstr[1] "Notificare"
-msgstr[2] "Notificare"
+msgid "notification has been sent out"
+msgid_plural "notifications have been sent out"
+msgstr[0] "Notificările au fost trimise. "
+msgstr[1] "Notificările au fost trimise. "
+msgstr[2] "Notificările au fost trimise. "
 
 msgid "notification rule"
 msgstr "norma de notificare"
 
 msgid "notification rules"
 msgstr "reguli de notificare"
+
+#, fuzzy
+msgid ""
+"notification would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgid_plural ""
+"notifications would have been sent based on your notification rules (see "
+"table: 'Predicted notifications')"
+msgstr[0] ""
+"Notificarea utilizatorilor afectați dacă există reguli de notificare "
+"(trimiterea de notificări)"
+msgstr[1] ""
+"Notificarea utilizatorilor afectați dacă există reguli de notificare "
+"(trimiterea de notificări)"
+msgstr[2] ""
+"Notificarea utilizatorilor afectați dacă există reguli de notificare "
+"(trimiterea de notificări)"
 
 msgid "notifications within last"
 msgstr "notificări în ultimele"
@@ -87367,6 +87406,13 @@ msgstr "gama"
 msgid "range in the middle"
 msgstr "intervalul din mijloc"
 
+#, fuzzy
+msgid "received message has been acknowledged"
+msgid_plural "received messages have been acknowledged"
+msgstr[0] "Acest eveniment a fost recunoscut."
+msgstr[1] "Acest eveniment a fost recunoscut."
+msgstr[2] "Acest eveniment a fost recunoscut."
+
 msgid "regard as scheduled downtime"
 msgstr "consideră că este vorba de timp de nefuncționare programat"
 
@@ -87599,10 +87645,6 @@ msgstr "intrări de stare"
 
 msgid "stopped"
 msgstr "oprit"
-
-#, fuzzy
-msgid "store the secret"
-msgstr "Secretul pre-împărțit"
 
 #, fuzzy
 msgid "strict"
@@ -87969,6 +88011,37 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Analysis results"
+#~ msgstr "Rezultatele analizei"
+
+#~ msgid "Resulting notifications"
+#~ msgstr "Notificări rezultate"
+
+#~ msgid "message"
+#~ msgid_plural "messages"
+#~ msgstr[0] "mesaj"
+#~ msgstr[1] ""
+#~ msgstr[2] ""
+
+#, fuzzy
+#~ msgid "notification"
+#~ msgid_plural "notifications"
+#~ msgstr[0] "Notificare"
+#~ msgstr[1] "Notificare"
+#~ msgstr[2] "Notificare"
+
+#, fuzzy
+#~ msgid "Changes activated"
+#~ msgstr "Nu a fost niciodată activat"
+
+#, fuzzy
+#~ msgid "Go to \"All hosts\""
+#~ msgstr "Toate gazdele"
+
+#, fuzzy
+#~ msgid "The changes have been activated successfully."
+#~ msgstr "Nu a fost niciodată activat"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr ""

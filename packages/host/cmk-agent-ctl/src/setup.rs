@@ -80,14 +80,15 @@ impl PathResolver {
 }
 
 pub fn connection_timeout() -> u64 {
-    match env::var(constants::ENV_CONNECTION_TIMEOUT) {
-        Err(_) => constants::CONNECTION_TIMEOUT,
-        Ok(timeout) => {
-            let max = timeout.parse().unwrap();
-            debug!("Using debug value for CONNECTION_TIMEOUT: {}", max);
-            max
-        }
-    }
+    let Ok(str_timeout) = env::var(constants::ENV_CONNECTION_TIMEOUT) else {
+        return constants::CONNECTION_TIMEOUT;
+    };
+    let Ok(timeout) = str_timeout.parse() else {
+        debug!("Failed conversion of '{}' to u64.", str_timeout);
+        return constants::CONNECTION_TIMEOUT;
+    };
+    debug!("Using debug value for CONNECTION_TIMEOUT: {}", timeout);
+    timeout
 }
 
 pub fn max_connections() -> usize {

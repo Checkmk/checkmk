@@ -108,6 +108,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.memory.arrays:*.devices:": {
             "title": _l("Devices"),
             "keyorder": [
+                "index",
                 "locator",
                 "bank_locator",
                 "type",
@@ -120,6 +121,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "size",
             ],
         },
+        ".hardware.memory.arrays:*.devices:*.index": {"title": _l("Index")},
         ".hardware.memory.arrays:*.devices:*.locator": {"title": _l("Locator")},
         ".hardware.memory.arrays:*.devices:*.bank_locator": {"title": _l("Bank locator")},
         ".hardware.memory.arrays:*.devices:*.type": {"title": _l("Type")},

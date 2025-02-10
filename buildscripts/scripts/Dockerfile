@@ -10,14 +10,19 @@
 #
 
 FROM python:3.12-alpine3.21
-# 120MB
+# 119MB
 # alpine:3.21 around 190MB
 # python:3.11.6-slim around 1100MB
 
 # bash is required to be used in Jenkins with image.inside(), requires +3MB
 # git is required to use checkmk-dev-tools, requires +13MB
 # make is required by scripts/fake-artifacts, see CMK-21338, requires +9MB
-RUN apk update && apk add bash git make
+# coreutils, grep is required by validate_changes.py/find-[python,shell]-files
+# to get "sort --zero-terminated" and "grep --binary-files=", requires +2MB
+# cache removal saves 3MB
+RUN apk update && \
+    apk add bash git make coreutils grep && \
+    rm -rf /var/cache/apk/*
 
 # install checkmk-dev-tools to run ci-artifacts
 # install pyyaml to parse editions.yml and stages.yml

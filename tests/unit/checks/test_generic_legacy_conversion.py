@@ -545,7 +545,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "graylog_sources",
         "gude_humidity",
         "gude_powerbanks",
-        "gude_relayport",
         "gude_temp",
         "h3c_lanswitch_cpu",
         "h3c_lanswitch_sensors",

@@ -28,7 +28,12 @@ service:
     telemetry:
         metrics:
             level: detailed
-            address: "[::1]:$PORT"
+            readers:
+              - pull:
+                  exporter:
+                    prometheus:
+                      host: "[::1]"
+                      port: $PORT
 EOF
         ;;
     depends)

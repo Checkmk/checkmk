@@ -179,15 +179,17 @@ def test_linked_libraries(site: Site) -> None:
                 assert False, f"Library {lib.name} was not found. Linked from {file}"
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "almalinux-9",
-    reason="to be fixed with CMK-21706",
-)
 def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
-    perl_rrd_so = (
-        Path(site.root)
-        / f"lib/perl5/lib/perl5/x86_64-linux-{'' if 'sles' in os.environ.get('DISTRO', 'unset') else 'gnu-'}thread-multi/auto/RRDs/RRDs.so"
-    )
+    distro = os.environ["DISTRO"]
+    if "sles" in distro or "alma" in distro:
+        perl_rrd_so = (
+            Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/RRDs/RRDs.so"
+        )
+    else:
+        perl_rrd_so = (
+            Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/auto/RRDs/RRDs.so"
+        )
+
     linked_rrd_libs = [
         linked_library
         for linked_library in _parse_ldd(_run_ldd(site, perl_rrd_so))

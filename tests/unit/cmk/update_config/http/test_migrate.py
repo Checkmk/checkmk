@@ -998,7 +998,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_14,
         EXAMPLE_20,
         EXAMPLE_44,
-        EXAMPLE_49,
         EXAMPLE_51,
         EXAMPLE_59,
         EXAMPLE_60,
@@ -1063,6 +1062,14 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="must_decide_whether_name_or_value",
                 mode_fields=["expect_response_header"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_49,
+            Conflict(
+                type_="cant_have_regex_and_string",
+                mode_fields=["expect_regex", "expect_string"],
                 host_fields=[],
             ),
         ),

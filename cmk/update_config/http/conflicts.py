@@ -65,8 +65,6 @@ def _classify(host: str) -> HostType:
 
 
 def _migratable_url_params(url_params: MigratableUrl) -> bool:
-    if url_params.expect_regex is not None and url_params.expect_string is not None:
-        return False
     if url_params.post_data is not None and url_params.method in ("GET", "DELETE", "HEAD"):
         return False
     try:
@@ -112,6 +110,12 @@ def detect_conflicts(
                     mode_fields=["expect_response_header"],
                     host_fields=[],
                 )
+        if mode.expect_regex is not None and mode.expect_string is not None:
+            return Conflict(
+                type_="cant_have_regex_and_string",
+                mode_fields=["expect_regex", "expect_string"],
+                host_fields=[],
+            )
     return MigratableValue.model_validate(value.model_dump())
 
 

@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -13,7 +14,10 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
+from cmk.ccc.version import Version
+
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+from cmk.automations.results import ABCAutomationResult, SerializedResult
 
 from cmk.base.automation_helper._app import (
     _reloader_task,
@@ -24,7 +28,16 @@ from cmk.base.automation_helper._app import (
 )
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
-from cmk.base.automations import AutomationExitCode
+from cmk.base.automations import AutomationError
+
+
+class _DummyAutomationResult(ABCAutomationResult):
+    @staticmethod
+    def automation_call() -> str:
+        return "dummy"
+
+    def serialize(self, for_cmk_version: Version) -> SerializedResult:
+        return SerializedResult("dummy_serialized")
 
 
 class _DummyAutomationEngineSuccess:
@@ -34,8 +47,10 @@ class _DummyAutomationEngineSuccess:
         args: list[str],
         *,
         called_from_automation_helper: bool,
-    ) -> AutomationExitCode:
-        return AutomationExitCode.SUCCESS
+    ) -> _DummyAutomationResult:
+        sys.stdout.write("stdout_success")
+        sys.stderr.write("stderr_success")
+        return _DummyAutomationResult()
 
 
 class _DummyAutomationEngineFailure:
@@ -45,7 +60,22 @@ class _DummyAutomationEngineFailure:
         args: list[str],
         *,
         called_from_automation_helper: bool,
-    ) -> AutomationExitCode:
+    ) -> AutomationError:
+        sys.stdout.write("stdout_failure")
+        sys.stderr.write("stderr_failure")
+        return AutomationError.KNOWN_ERROR
+
+
+class _DummyAutomationEngineSystemExit:
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> AutomationError:
+        sys.stdout.write("stdout_system_exit")
+        sys.stderr.write("stderr_system_exit")
         raise SystemExit(1)
 
 
@@ -87,9 +117,9 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
 
     assert resp.status_code == 200
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
-        exit_code=AutomationExitCode.SUCCESS,
-        output="",
-        error="",
+        serialized_result_or_error_code="dummy_serialized",
+        stdout="stdout_success",
+        stderr="stderr_success",
     )
     mock_reload_config.assert_called_once()  # only at application startup
     mock_clear_caches_before_each_call.assert_called_once()
@@ -108,9 +138,30 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
 
     assert resp.status_code == 200
     assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
-        exit_code=1,
-        output="",
-        error="",
+        serialized_result_or_error_code=1,
+        stdout="stdout_failure",
+        stderr="stderr_failure",
+    )
+    mock_reload_config.assert_called_once()  # only at application startup
+    mock_clear_caches_before_each_call.assert_called_once()
+
+
+def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock()
+    mock_clear_caches_before_each_call = mocker.MagicMock()
+    with _get_test_client(
+        _DummyAutomationEngineSystemExit(),
+        cache,
+        mock_reload_config,
+        mock_clear_caches_before_each_call,
+    ) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert resp.status_code == 200
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        serialized_result_or_error_code=1,
+        stdout="stdout_system_exit",
+        stderr="stderr_system_exit",
     )
     mock_reload_config.assert_called_once()  # only at application startup
     mock_clear_caches_before_each_call.assert_called_once()

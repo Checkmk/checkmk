@@ -8,6 +8,7 @@ import enum
 import os
 import sys
 from contextlib import nullcontext, redirect_stdout, suppress
+from typing import assert_never
 
 import cmk.ccc.debug
 from cmk.ccc import version as cmk_version
@@ -31,8 +32,7 @@ class MKAutomationError(MKGeneralException):
     pass
 
 
-class AutomationExitCode(enum.IntEnum):
-    SUCCESS = 0
+class AutomationError(enum.IntEnum):
     KNOWN_ERROR = 1
     UNKNOWN_ERROR = 2
 
@@ -48,8 +48,12 @@ class Automations:
         self._automations[automation.cmd] = automation
 
     def execute(
-        self, cmd: str, args: list[str], *, called_from_automation_helper: bool = False
-    ) -> AutomationExitCode:
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
             return self._execute(
@@ -58,13 +62,43 @@ class Automations:
                 called_from_automation_helper=called_from_automation_helper,
             )
 
+    def execute_and_write_serialized_result_to_stdout(
+        self,
+        cmd: str,
+        args: list[str],
+        *,
+        called_from_automation_helper: bool,
+    ) -> int:
+        try:
+            result = self.execute(
+                cmd,
+                args,
+                called_from_automation_helper=called_from_automation_helper,
+            )
+        finally:
+            profiling.output_profile()
+
+        match result:
+            case ABCAutomationResult():
+                with suppress(IOError):
+                    sys.stdout.write(
+                        result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
+                        + "\n"
+                    )
+                    sys.stdout.flush()
+                return 0
+            case AutomationError():
+                return result
+            case _:
+                assert_never(result)
+
     def _execute(
         self,
         cmd: str,
         args: list[str],
         *,
         called_from_automation_helper: bool,
-    ) -> AutomationExitCode:
+    ) -> ABCAutomationResult | AutomationError:
         try:
             try:
                 automation = self._automations[cmd]
@@ -96,24 +130,15 @@ class Automations:
             console.error(f"{e}", file=sys.stderr)
             if cmk.ccc.debug.enabled():
                 raise
-            return AutomationExitCode.KNOWN_ERROR
+            return AutomationError.KNOWN_ERROR
 
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
             console.error(f"{e}", file=sys.stderr)
-            return AutomationExitCode.UNKNOWN_ERROR
+            return AutomationError.UNKNOWN_ERROR
 
-        finally:
-            profiling.output_profile()
-
-        with suppress(IOError):
-            sys.stdout.write(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
-            )
-            sys.stdout.flush()
-
-        return AutomationExitCode.SUCCESS
+        return result
 
     def _extract_timeout_from_args(self, args: list[str]) -> tuple[list[str], int | None]:
         match args:

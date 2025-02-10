@@ -33,3 +33,39 @@ py_library(
         requirement("pytest-metadata"),
     ],
 )
+
+py_library(
+    name = "testlib_system_level",
+    testonly = True,
+    srcs = ["__init__.py"] + glob(
+        include = ["testlib/**"],
+        exclude = ["testlib/unit/**"],
+    ),
+    imports = [".."],
+    deps = [
+        "//cmk:lib_cmk",
+        requirement("beautifulsoup4"),
+        requirement("cryptography"),
+        requirement("docker"),
+        requirement("dockerpty"),
+        requirement("pexpect"),
+        requirement("playwright"),
+        requirement("pytest"),
+        requirement("requests"),
+    ],
+)
+
+py_library(
+    name = "testlib_unit",
+    testonly = True,
+    srcs = ["__init__.py"] + glob(include = [
+        "testlib/unit/**",
+        "testlib/common/**",
+    ]),
+    imports = [".."],
+    deps = [
+        "//cmk:lib_cmk",
+        requirement("pexpect"),
+        requirement("pytest"),
+    ],
+)

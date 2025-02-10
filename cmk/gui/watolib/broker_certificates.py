@@ -24,6 +24,7 @@ from cmk.utils import paths
 from cmk.utils.certs import (
     CustomerBrokerCA,
     LocalBrokerCertificate,
+    MessagingTrustedCAs,
     SiteBrokerCA,
     SiteBrokerCertificate,
 )
@@ -286,7 +287,10 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
         )
 
     def execute(self, api_request: StoreBrokerCertificatesData) -> bool:
-        SiteBrokerCertificate.persist_broker_certificates(paths.omd_root, api_request.certificates)
+        trusted_cas_store = MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root))
+        SiteBrokerCertificate.persist_broker_certificates(
+            paths.omd_root, api_request.certificates, trusted_cas_store
+        )
 
         # Remove local CA files to avoid confusion. They have no use anymore.
         SiteBrokerCA.delete(paths.omd_root)

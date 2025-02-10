@@ -269,6 +269,7 @@ class SiteBrokerCertificate:
         cls,
         omd_root: Path,
         received: messaging.BrokerCertificates,
+        trusted_cas_store: MessagingTrustedCAs,
     ) -> None:
         """Persist the received certificates to disk."""
         cert_path = cls.cert_path(omd_root)
@@ -278,7 +279,7 @@ class SiteBrokerCertificate:
 
         cert_path.parent.mkdir(parents=True, exist_ok=True)
 
-        MessagingTrustedCAs.write(omd_root, received.signing_ca + received.additionally_trusted_ca)
+        trusted_cas_store.write(received.signing_ca + received.additionally_trusted_ca)
         cert_path.write_bytes(received.cert)
 
 
@@ -407,22 +408,19 @@ class LocalBrokerCertificate:
 
 
 class MessagingTrustedCAs:
-    @classmethod
-    def path(cls, omd_root: Path) -> Path:
-        return messaging.trusted_cas_file(omd_root)
+    def __init__(self, path: Path) -> None:
+        self.path: Final = path
 
-    @classmethod
-    def write(cls, omd_root: Path, certs: bytes) -> None:
-        cls.path(omd_root).write_bytes(certs)
+    def write(self, certs: bytes) -> None:
+        self.path.write_bytes(certs)
 
-    @classmethod
-    def update_trust_cme(cls, omd_root: Path) -> None:
+    def update_trust_cme(self, update_from: Iterable[Path]) -> None:
         """Add all customer CAs to the trusted CAs file. Only relevant in a multisite setup."""
-        trusted_cas = [SiteBrokerCA.cert_path(omd_root).read_bytes()]
-        for path in messaging.all_cme_cacert_files(omd_root):
+        trusted_cas = []
+        for path in update_from:
             try:
                 trusted_cas.append(path.read_bytes())
             except FileNotFoundError:
                 pass
 
-        cls.write(omd_root, b"".join(trusted_cas))
+        self.write(b"".join(trusted_cas))

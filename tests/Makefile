@@ -50,7 +50,10 @@ SYSTEM_TESTS := \
     test-gui-e2e-cme \
     test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_BASE_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+PYTEST_BASE_TEST_ARGS := \
+    -p "no:cov" \
+    --log-cli-level=INFO \
+    --log-cli-format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
 PYTEST_SYSTEM_TEST_ARGS := $(PYTEST_BASE_TEST_ARGS) --session-timeout 10800
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose

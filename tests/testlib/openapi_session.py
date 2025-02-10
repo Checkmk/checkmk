@@ -6,6 +6,7 @@
 import itertools
 import logging
 import time
+import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Any, NamedTuple
@@ -217,6 +218,13 @@ class ChangesAPI(BaseAPI):
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
     ) -> None:
+        def _extract_activation_id_from_url(url: str) -> str:
+            try:
+                path_parts = urllib.parse.urlparse(response.headers["Location"]).path.split("/")
+                return path_parts[path_parts.index("activation_run") + 1]
+            except (ValueError, IndexError):
+                return f"unknown (URL: {url})"
+
         response = self.session.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
             json={
@@ -234,7 +242,10 @@ class ChangesAPI(BaseAPI):
             return  # changes are activated
         if response.status_code == 422:
             raise NoActiveChanges  # there are no changes
-        if 300 <= response.status_code < 400:
+        if response.status_code == 303:
+            logger.info(
+                "Activation id: %s", _extract_activation_id_from_url(response.headers["Location"])
+            )
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 

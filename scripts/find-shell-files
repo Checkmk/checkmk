@@ -164,10 +164,9 @@ get_files_from_filesystem() {
 }
 
 filter_for_shell_files() {
+    # use "-r" over "--no-run-if-empty" and "-0" over "--null" to work on alpine
     sort --zero-terminated |
-        xargs \
-            --no-run-if-empty \
-            --null \
+        xargs -r -0 \
             grep --binary-files=without-match --files-with-matches "${SHEBANG_PATTERN}"
 }
 

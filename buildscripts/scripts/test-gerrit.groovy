@@ -6,9 +6,12 @@ def main() {
     def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");
     // no `def` - must be global
     test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
     def result_dir = "${checkout_dir}/results";
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
+    def safe_branch_name = versioning.safe_branch_name(scm);
 
     print(
         """
@@ -49,17 +52,17 @@ def main() {
 
         dir("${checkout_dir}") {
             stage("Create stages") {
-                /// Generate list of stages to be added - save them locally for reference
-                sh("""scripts/run-in-docker.sh \
-                    scripts/run-uvenv \
-                      buildscripts/scripts/validate_changes.py \
-                      --env "RESULTS=${result_dir}" \
-                      --env "WORKSPACE=${checkout_dir}" \
-                      --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
-                      --write-file=${result_dir}/stages.json \
-                      buildscripts/scripts/stages.yml
-                """);
-
+                inside_container_minimal(safe_branch_name: safe_branch_name) {
+                    /// Generate list of stages to be added - save them locally for reference
+                    sh("""python buildscripts/scripts/validate_changes.py \
+                          -vv \
+                          --env "RESULTS=${result_dir}" \
+                          --env "WORKSPACE=${checkout_dir}" \
+                          --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
+                          --write-file=${result_dir}/stages.json \
+                          buildscripts/scripts/stages.yml
+                    """);
+                }
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             test_gerrit_helper.desc_add_status_row("Preparation",

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections import Counter
 from collections.abc import Callable, Generator, Mapping
+from typing import Literal
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -113,16 +115,15 @@ agent_section_dmidecode = AgentSection(
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
-    memory_array_number = 0
+    counter: Counter[Literal["physical_memory_array", "memory_device"]] = Counter()
     for title, lines in section:
-        memory_array_number += title == "Physical Memory Array"
-        yield from _dispatch_subsection(title, lines, memory_array_number)
+        yield from _dispatch_subsection(title, lines, counter)
 
 
 def _dispatch_subsection(
     title: str,
     lines: list[list[str]],
-    memory_array_number: int,
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
 ) -> InventoryResult:
     if title == "BIOS Information":
         yield _make_inventory_bios(lines)
@@ -141,11 +142,13 @@ def _dispatch_subsection(
         return
 
     if title == "Physical Memory Array":
-        yield _make_inventory_physical_mem_array(lines, memory_array_number)
+        counter.update({"physical_memory_array": 1})
+        yield _make_inventory_physical_mem_array(lines, counter)
         return
 
     if title == "Memory Device":
-        yield from _make_inventory_mem_device(lines, memory_array_number)
+        counter.update({"memory_device": 1})
+        yield from _make_inventory_mem_device(lines, counter)
         return
 
 
@@ -222,10 +225,13 @@ def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, N
     )
 
 
-def _make_inventory_physical_mem_array(lines: list[list[str]], array_number: int) -> Attributes:
+def _make_inventory_physical_mem_array(
+    lines: list[list[str]],
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
+) -> Attributes:
     # We expect several possible arrays
     return Attributes(
-        path=["hardware", "memory", "arrays", str(array_number)],
+        path=["hardware", "memory", "arrays", str(counter["physical_memory_array"])],
         inventory_attributes=_make_dict(
             lines,
             {
@@ -240,7 +246,7 @@ def _make_inventory_physical_mem_array(lines: list[list[str]], array_number: int
 
 def _make_inventory_mem_device(
     lines: list[list[str]],
-    array_number: int,
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
 ) -> Generator[TableRow, None, None]:
     device = _make_dict(
         lines,
@@ -267,10 +273,11 @@ def _make_inventory_mem_device(
     device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
     device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
 
-    key_keys = ["set"]  # match hp_proliant_mem!
+    key_columns = {k: device.pop(k) for k in ("set",)}
+    key_columns.update({"index": counter["memory_device"]})
     yield TableRow(
-        path=["hardware", "memory", "arrays", str(array_number), "devices"],
-        key_columns={k: device.pop(k) for k in key_keys},
+        path=["hardware", "memory", "arrays", str(counter["physical_memory_array"]), "devices"],
+        key_columns=key_columns,
         inventory_columns=device,
     )
 

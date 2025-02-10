@@ -33,6 +33,7 @@ from cmk.utils.notify_types import (
     NotificationParameterSpecs,
     NotificationPluginNameStr,
     NotifyAnalysisInfo,
+    NotifyPluginInfo,
 )
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
@@ -1682,7 +1683,9 @@ class ModeTestNotifications(ModeNotifications):
             )
         )
         html.br()
-        resulting_notifications_count = len(analyse_resulting_notifications[-1][0].split(","))
+        resulting_notifications_count = _get_resulting_notifications_count(
+            analyse_resulting_notifications
+        )
         html.write_text_permissive(
             ("%d %s")
             % (
@@ -2208,6 +2211,25 @@ class ModeTestNotifications(ModeNotifications):
                 "show_user_rules": self._show_user_rules,
             },
         )
+
+
+def _get_resulting_notifications_count(
+    analyse_resulting_notifications: list[NotifyPluginInfo],
+) -> int:
+    if not analyse_resulting_notifications:
+        return 0
+
+    method_dict: dict[str, list[str]] = {}
+    for match in analyse_resulting_notifications:
+        method = match[1]
+        method_dict.setdefault(method, [])
+
+        for contact in match[0].split(","):
+            if contact in method_dict[method]:
+                continue
+            method_dict[method].append(contact)
+
+    return sum(len(value) for value in method_dict.values())
 
 
 def _validate_general_opts(value: dict, varprefix: str) -> None:

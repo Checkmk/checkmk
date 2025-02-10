@@ -98,12 +98,14 @@ class ABCCrashReportPage(Page, abc.ABC):
         )
 
     def _get_crash_report_row(self, crash_id: str, *, site_id: str) -> CrashReportRow | None:
-        if rows := CrashReportsRowTable().get_crash_report_rows(
+        rows = CrashReportsRowTable().get_crash_report_rows(
             only_sites=[SiteId(site_id)],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
-        ):
-            return rows[0]
-        return None
+        )
+        try:
+            return next(rows)
+        except StopIteration:
+            return None
 
     def _get_serialized_crash_report(self):
         return {

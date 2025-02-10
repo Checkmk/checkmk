@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 import livestatus
@@ -76,8 +76,13 @@ class CrashReportsRowTable(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        rows = []
-        for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
+        return sorted(
+            self.parse_rows(self.get_crash_report_rows(only_sites, filter_headers="")),
+            key=lambda r: r["crash_time"],
+        )
+
+    def parse_rows(self, rows: Iterable[Row]) -> Iterable[Row]:
+        for raw_row in rows:
             crash_info = raw_row.get("crash_info")
             if crash_info is None:
                 continue  # skip broken crash reports
@@ -87,30 +92,26 @@ class CrashReportsRowTable(RowTable):
             except json.JSONDecodeError:
                 continue  # skip broken crash infos like b'' or b'\n'
 
-            rows.append(
-                {
-                    "site": raw_row["site"],
-                    "crash_id": raw_row["crash_id"],
-                    "crash_type": raw_row["crash_type"],
-                    "crash_time": crash_info_raw["time"],
-                    "crash_version": crash_info_raw["version"],
-                    "crash_exc_type": crash_info_raw["exc_type"],
-                    "crash_exc_value": crash_info_raw["exc_value"],
-                    "crash_exc_traceback": crash_info_raw["exc_traceback"],
-                }
-            )
-        return sorted(rows, key=lambda r: r["crash_time"])
+            yield {
+                "site": raw_row["site"],
+                "crash_id": raw_row["crash_id"],
+                "crash_type": raw_row["crash_type"],
+                "crash_time": crash_info_raw["time"],
+                "crash_version": crash_info_raw["version"],
+                "crash_exc_type": crash_info_raw["exc_type"],
+                "crash_exc_value": crash_info_raw["exc_value"],
+                "crash_exc_traceback": crash_info_raw["exc_traceback"],
+            }
 
     def get_crash_report_rows(
         self, only_sites: OnlySites, filter_headers: str
-    ) -> list[dict[str, str]]:
+    ) -> Iterator[dict[str, str]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
         crash_infos = self._get_crash_report_info(only_sites, filter_headers)
         if not crash_infos:
-            return []
+            return
 
-        rows = []
         for crash_info in crash_infos:
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
@@ -141,9 +142,7 @@ class CrashReportsRowTable(RowTable):
                 sites.live().set_prepend_site(False)
 
             crash_info.update(dict(zip(headers, raw_row)))
-            rows.append(crash_info)
-
-        return rows
+            yield crash_info
 
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None

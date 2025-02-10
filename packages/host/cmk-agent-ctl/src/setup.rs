@@ -91,14 +91,15 @@ pub fn connection_timeout() -> u64 {
 }
 
 pub fn max_connections() -> usize {
-    match env::var(constants::ENV_MAX_CONNECTIONS) {
-        Err(_) => constants::MAX_CONNECTIONS,
-        Ok(max) => {
-            let max = max.parse().unwrap();
-            debug!("Using debug value for MAX_CONNECTIONS: {}", max);
-            max
-        }
-    }
+    let Ok(str_max) = env::var(constants::ENV_MAX_CONNECTIONS) else {
+        return constants::MAX_CONNECTIONS;
+    };
+    let Ok(max) = str_max.parse() else {
+        debug!("Failed conversion of '{}' to uszie.", str_max);
+        return constants::MAX_CONNECTIONS;
+    };
+    debug!("Using debug value for MAX_CONNECTIONS: {}", max);
+    max
 }
 
 #[cfg(unix)]

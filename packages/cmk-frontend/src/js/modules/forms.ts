@@ -246,10 +246,6 @@ function enable_label_input_fields(
             element.parentNode!.insertBefore(msg, element.nextSibling);
         });
 
-        tagify.on("add", function () {
-            $("div.label_error").remove(); // Remove all previous errors
-        });
-
         // Realize the auto completion dropdown field by using an ajax call
         tagify.on("input", function (e) {
             $("div.label_error").remove(); // Remove all previous errors

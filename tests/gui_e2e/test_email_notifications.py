@@ -53,6 +53,9 @@ def test_filesystem_email_notifications(
 
     logger.info("Clone the existing default notification rule")
     notification_configuration_page = NotificationConfiguration(dashboard_page.page)
+    total_sent = notification_configuration_page.get_total_sent_notifications_count()
+    total_failures = notification_configuration_page.get_failed_notifications_count()
+    logger.info("Current notification stats: sent=%s, failed=%s", total_sent, total_failures)
     # The scrollbar interrupts the interaction with rule edit button -> collapse overview
     notification_configuration_page.collapse_notification_overview(True)
     notification_configuration_page.notification_rule_copy_button(0).click()
@@ -112,8 +115,8 @@ def test_filesystem_email_notifications(
         notification_configuration_page.navigate()
         # The notifications stats need to be read -> open overview
         notification_configuration_page.collapse_notification_overview(False)
-        notification_configuration_page.check_total_sent_notifications_is_not_zero()
-        notification_configuration_page.check_failed_notifications_is_zero()
+        notification_configuration_page.check_total_sent_notifications_has_changed(total_sent)
+        notification_configuration_page.check_failed_notifications_has_not_changed(total_failures)
 
         with manage_new_page_from_browser_context(service_search_page.page.context) as new_page:
             email_page = EmailPage(new_page, html_file_path)

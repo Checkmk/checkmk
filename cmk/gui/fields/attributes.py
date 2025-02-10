@@ -22,6 +22,8 @@ from cmk.gui.watolib.tags import load_tag_group
 from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time
 from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
+from .definitions import CmkOneOfSchema
+
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
 
 
@@ -808,7 +810,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
     )
 
 
-class SNMPCredentials(OneOfSchema):
+class SNMPCredentials(CmkOneOfSchema):
     """Validate and convert from/to Checkmk internal format for SNMP credentials.
 
     Here are the various possible values in the attribute

@@ -171,13 +171,13 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.36.15 \
-    --hash=sha256:721d689ebd07a9a95f904356bd97f92032d8006a54eea25316ba55a7585ca7e9 \
-    --hash=sha256:b218092b08ce15fe29b2358345f4ccb812a2377a5e9bccd49e391a5976a24202
+boto3==1.36.18 \
+    --hash=sha256:084ff25af2d7bda3102d6367f5453e2e83f8cde1da73079ea144595b03cb9400 \
+    --hash=sha256:be8e32c34d7b103a64fafdd277fa1ec136733b4bbfc11dcfa597efa36a820b37
     # via -r _requirements_runtime.txt
-botocore==1.36.15 \
-    --hash=sha256:ab8e69930ef6c42784eb2dee6c0256627ca6bba57730ebe3056179d28aa63d44 \
-    --hash=sha256:fe0f8d786029125f4c66a30b1d81a551f667b0915dac843604ffa0652c5ff475
+botocore==1.36.18 \
+    --hash=sha256:7898d109affd9231c555e71fda88308c1da2db8d39e83d33eb8cb40ebf1ba82f \
+    --hash=sha256:ddadafe460e91f11677720a2fcc3ea09c4abb914de2b000da7ba46b4c97da3d7
     # via
     #   -r _requirements_runtime.txt
     #   boto3
@@ -1093,9 +1093,9 @@ markupsafe==3.0.2 \
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.23.3 \
-    --hash=sha256:20c0f8c613f68bcb45b2a0d3282e2f172575560170bf220d67aafb42717910e4 \
-    --hash=sha256:d586c8685ebdb80bf754e1f96e3f305aaf30951f1fc69175b977453633467e76
+marshmallow==3.24.0 \
+    --hash=sha256:378572f727e52123d00de1bdd9b7ea7bed18bbfedc7f9bfbcddaf78925a8d602 \
+    --hash=sha256:459922b7a1fd3d29d5082ddcadfcea0efd98985030e71d3ef0dd8f44f406e41d
     # via
     #   -r _requirements_runtime.txt
     #   apispec-oneofschema
@@ -1962,9 +1962,9 @@ pyparsing==3.2.1 \
     # via
     #   -r _requirements_runtime.txt
     #   httplib2
-pypdf==5.2.0 \
-    --hash=sha256:7c38e68420f038f2c4998fd9d6717b6db4f6cef1642e9cf384d519c9cf094663 \
-    --hash=sha256:d107962ec45e65e3bd10c1d9242bdbbedaa38193c9e3a6617bd6d996e5747b19
+pypdf==5.3.0 \
+    --hash=sha256:08393660dfea25b27ec6fe863fb2f2248e6270da5103fae49e9dea8178741951 \
+    --hash=sha256:d7b6db242f5f8fdb4990ae11815c394b8e1b955feda0befcce862efd8559c181
     # via -r _requirements_runtime.txt
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
@@ -2225,9 +2225,9 @@ rfc3339-validator==0.1.4 \
     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b \
     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa
     # via openapi-schema-validator
-robotframework==7.2.1 \
-    --hash=sha256:38be9004ccac29c0129d1aa260b1e8f4d57d5acb5063cb78d81765b2aa04dc8d \
-    --hash=sha256:c776f81d8d6d1099d44eb922d11672c0a3d54cf959218763e4ee19da262f0fe8
+robotframework==7.2.2 \
+    --hash=sha256:1cb4ec69d52aae515bf6037cee66a2a2d8dc3256368081c0f4b3d4578d40904e \
+    --hash=sha256:9c420f6d35e9c8cd4b75b77cc78e36407604534ec4ab0cbddf699d7c0b2fc435
     # via -r _requirements_runtime.txt
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \

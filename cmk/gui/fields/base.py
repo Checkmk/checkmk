@@ -49,6 +49,17 @@ class BaseSchema(Schema):
     def dict_class(self) -> type:
         return dict
 
+    context: dict[typing.Any, typing.Any] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
     def remove_ordered_dict(self, data, **kwargs):

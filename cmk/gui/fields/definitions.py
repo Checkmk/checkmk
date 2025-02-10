@@ -282,7 +282,20 @@ class LogicalExprSchema(BaseSchema):
     )
 
 
-class ExprSchema(OneOfSchema):
+class CmkOneOfSchema(OneOfSchema):
+    context: dict[object, object] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+
+class ExprSchema(CmkOneOfSchema):
     """Top level class for query expression schema
 
     Operators can be one of: AND, OR
@@ -364,8 +377,17 @@ class ExprSchema(OneOfSchema):
 
 
 class _ExprNested(base.Nested):
-    def _load(self, value, data, partial=None):
-        _data = super()._load(value, data, partial=partial)
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+    def _load(self, value, partial=None):
+        _data = super()._load(value, partial=partial)
         return tree_to_expr(_data, table=self.metadata["table"])
 
 

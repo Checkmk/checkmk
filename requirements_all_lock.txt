@@ -278,24 +278,24 @@ blinker==1.9.0 \
     # via
     #   -r requirements_all.txt
     #   flask
-boto3==1.36.15 \
-    --hash=sha256:721d689ebd07a9a95f904356bd97f92032d8006a54eea25316ba55a7585ca7e9 \
-    --hash=sha256:b218092b08ce15fe29b2358345f4ccb812a2377a5e9bccd49e391a5976a24202
+boto3==1.36.18 \
+    --hash=sha256:084ff25af2d7bda3102d6367f5453e2e83f8cde1da73079ea144595b03cb9400 \
+    --hash=sha256:be8e32c34d7b103a64fafdd277fa1ec136733b4bbfc11dcfa597efa36a820b37
     # via -r requirements_all.txt
-boto3-stubs[logs]==1.36.15 \
-    --hash=sha256:0768bab3b03d9bcf7e1345eea881cd2d5ab17e41f21d63dac2660ee9438e3557 \
-    --hash=sha256:557562358f6d61b2ff36384f6d391ecc8211b69b2f5110eed3f689449dfa8024
+boto3-stubs[logs]==1.36.18 \
+    --hash=sha256:0c24ee76b35965b44eaa9ea5b1f1aba7293098a7249f029e82c15ca61a2217bc \
+    --hash=sha256:306fb0de8f0936697d051313cb38f499409c03a7b09abd8d68bcc687e978d6ce
     # via -r requirements_dev.txt
-botocore==1.36.15 \
-    --hash=sha256:ab8e69930ef6c42784eb2dee6c0256627ca6bba57730ebe3056179d28aa63d44 \
-    --hash=sha256:fe0f8d786029125f4c66a30b1d81a551f667b0915dac843604ffa0652c5ff475
+botocore==1.36.18 \
+    --hash=sha256:7898d109affd9231c555e71fda88308c1da2db8d39e83d33eb8cb40ebf1ba82f \
+    --hash=sha256:ddadafe460e91f11677720a2fcc3ea09c4abb914de2b000da7ba46b4c97da3d7
     # via
     #   -r requirements_all.txt
     #   boto3
     #   s3transfer
-botocore-stubs==1.36.15 \
-    --hash=sha256:46730e2ae7352db23089c58287cae88c034f11235dffec8f4f882b789e18262e \
-    --hash=sha256:d4852bafdf1f577c588f01334fbab4bbf43e61ee80651c218b482fdc6534d1a7
+botocore-stubs==1.36.18 \
+    --hash=sha256:1dac8d9527a57a6f322e4db7533cb9247798791cbcc3d3ee847f354d68eca870 \
+    --hash=sha256:6d21b2fdf375fab25c403fee63ee31b02fa72253709ce06460933a869160fd32
     # via
     #   -r requirements_dev.txt
     #   boto3-stubs
@@ -743,13 +743,13 @@ execnet==2.1.1 \
     --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
     --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
     # via pytest-xdist
-faker==35.2.0 \
-    --hash=sha256:28c24061780f83b45d9cb15a72b8f143b09d276c9ff52eb557744b7a89e8ba19 \
-    --hash=sha256:609abe555761ff31b0e5e16f958696e9b65c9224a7ac612ac96bfc2b8f09fe35
+faker==36.1.0 \
+    --hash=sha256:aa0b93487d3adf7cd89953d172e3df896cb7b35d8a5222c0da873edbe2f7adf5 \
+    --hash=sha256:f40510350aecfe006f45cb3f8879b35e861367cf347f51a7f2ca2c0571fdcc0b
     # via polyfactory
-fakeredis[lua]==2.26.2 \
-    --hash=sha256:3ee5003a314954032b96b1365290541346c9cc24aab071b52cc983bb99ecafbf \
-    --hash=sha256:86d4129df001efc25793cb334008160fccc98425d9f94de47884a92b63988c14
+fakeredis[lua]==2.27.0 \
+    --hash=sha256:7b7584ec104392592297f46864a82cb7339a23e254ee885bf5ae07cfc64fbce7 \
+    --hash=sha256:f4b6e0fa4193acbf00d81dac71ff5cc34fe7d7c12f1560b036f98578a103d5c3
     # via -r requirements_dev.txt
 fastapi==0.115.8 \
     --hash=sha256:0ce9111231720190473e222cdf0f07f7206ad7e53ea02beb1d2dc36e2f0741e9 \
@@ -1198,9 +1198,9 @@ httpx==0.28.1 \
     # via
     #   -r requirements_all.txt
     #   schemathesis
-hypothesis==6.125.2 \
-    --hash=sha256:55d4966d521b85d2f77e916dabb00d66d5530ea9fbb89c7489ee810625fac802 \
-    --hash=sha256:c70f0a12deb688ce90f2765a507070c4bff57e48ac86849f4350bbddc1df41a3
+hypothesis==6.125.3 \
+    --hash=sha256:6276d9d8f7f91ebd7ad95081f004bcf5699afb4d680a8321861cbf3a5de45d3b \
+    --hash=sha256:ae0381987d0ccacc62867343acc38a0ca5e959fc4da98b3e018b0debf080a557
     # via
     #   -r requirements_dev.txt
     #   hypothesis-graphql
@@ -1227,9 +1227,9 @@ id==1.5.0 \
     --hash=sha256:292cb8a49eacbbdbce97244f47a97b4c62540169c976552e497fd57df0734c1d \
     --hash=sha256:f1434e1cef91f2cbb8a4ec64663d5a23b9ed43ef44c4c957d02583d61714c658
     # via twine
-identify==2.6.6 \
-    --hash=sha256:7bec12768ed44ea4761efb47806f0a41f86e7c0a5fdf5950d4648c90eca7e251 \
-    --hash=sha256:cbd1810bce79f8b671ecb20f53ee0ae8e86ae84b557de31d89709dc2a48ba881
+identify==2.6.7 \
+    --hash=sha256:155931cb617a401807b09ecec6635d6c692d180090a1cedca8ef7d58ba5b6aa0 \
+    --hash=sha256:3fa266b42eba321ee0b2bb0936a6a6b9e36a1351cbb69055b3082f4193035684
     # via pre-commit
 idna==3.10 \
     --hash=sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9 \
@@ -1737,9 +1737,9 @@ markupsafe==3.0.2 \
     #   -r requirements_all.txt
     #   jinja2
     #   werkzeug
-marshmallow==3.23.3 \
-    --hash=sha256:20c0f8c613f68bcb45b2a0d3282e2f172575560170bf220d67aafb42717910e4 \
-    --hash=sha256:d586c8685ebdb80bf754e1f96e3f305aaf30951f1fc69175b977453633467e76
+marshmallow==3.24.0 \
+    --hash=sha256:378572f727e52123d00de1bdd9b7ea7bed18bbfedc7f9bfbcddaf78925a8d602 \
+    --hash=sha256:459922b7a1fd3d29d5082ddcadfcea0efd98985030e71d3ef0dd8f44f406e41d
     # via
     #   -r requirements_all.txt
     #   apispec-oneofschema
@@ -2936,9 +2936,9 @@ pyparsing==3.2.1 \
     # via
     #   -r requirements_all.txt
     #   httplib2
-pypdf==5.2.0 \
-    --hash=sha256:7c38e68420f038f2c4998fd9d6717b6db4f6cef1642e9cf384d519c9cf094663 \
-    --hash=sha256:d107962ec45e65e3bd10c1d9242bdbbedaa38193c9e3a6617bd6d996e5747b19
+pypdf==5.3.0 \
+    --hash=sha256:08393660dfea25b27ec6fe863fb2f2248e6270da5103fae49e9dea8178741951 \
+    --hash=sha256:d7b6db242f5f8fdb4990ae11815c394b8e1b955feda0befcce862efd8559c181
     # via -r requirements_all.txt
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
@@ -3002,9 +3002,9 @@ pytest-asyncio==0.25.3 \
     --hash=sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3 \
     --hash=sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a
     # via -r requirements_dev.txt
-pytest-check==2.4.1 \
-    --hash=sha256:5224efcef059bf7f0cda253f8d0f62704b4819ff48c93f51c675aea6a014f650 \
-    --hash=sha256:74f38938183880d9921aeb85662437d2b13e1e053e1bed7d186d54613d3068c7
+pytest-check==2.4.2 \
+    --hash=sha256:12a4f5d4346a861ac74ca9b433fa991f0c0116b2bdc044c38b0a70b712eb4ee2 \
+    --hash=sha256:5aa59e0c1b670651b96f40819dc0607dcd8a3f6781804f8d9534100f32e20c27
     # via -r requirements_dev.txt
 pytest-html==4.1.1 \
     --hash=sha256:70a01e8ae5800f4a074b56a4cb1025c8f4f9b038bba5fe31e3c98eb996686f07 \
@@ -3092,7 +3092,6 @@ python-dateutil==2.9.0.post0 \
     #   arrow
     #   botocore
     #   bson
-    #   faker
     #   icalendar
     #   kubernetes
     #   opsgenie-sdk
@@ -3114,9 +3113,9 @@ python-lsp-jsonrpc==1.1.2 \
     --hash=sha256:4688e453eef55cd952bff762c705cedefa12055c0aec17a06f595bcc002cc912 \
     --hash=sha256:7339c2e9630ae98903fdaea1ace8c47fba0484983794d6aafd0bd8989be2b03c
     # via python-lsp-server
-python-lsp-server==1.12.1 \
-    --hash=sha256:812f874253e74982a634eeec885ef4136ae03cc557ec15a9ece6a094e35a0be7 \
-    --hash=sha256:bd90fcabf53066f0a66e4246767e96cd99c13ad16e61b95fd3ab622821ea048c
+python-lsp-server==1.12.2 \
+    --hash=sha256:750116459449184ba20811167cdf96f91296ae12f1f65ebd975c5c159388111b \
+    --hash=sha256:fea039a36b3132774d0f803671184cf7dde0c688e7b924f23a6359a66094126d
     # via
     #   -r requirements_dev.txt
     #   pylsp-mypy
@@ -3330,9 +3329,9 @@ rich==13.9.4 \
     #   bandit
     #   checkmk-dev-tools
     #   twine
-robotframework==7.2.1 \
-    --hash=sha256:38be9004ccac29c0129d1aa260b1e8f4d57d5acb5063cb78d81765b2aa04dc8d \
-    --hash=sha256:c776f81d8d6d1099d44eb922d11672c0a3d54cf959218763e4ee19da262f0fe8
+robotframework==7.2.2 \
+    --hash=sha256:1cb4ec69d52aae515bf6037cee66a2a2d8dc3256368081c0f4b3d4578d40904e \
+    --hash=sha256:9c420f6d35e9c8cd4b75b77cc78e36407604534ec4ab0cbddf699d7c0b2fc435
     # via -r requirements_all.txt
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \
@@ -3478,9 +3477,9 @@ s3transfer==0.11.2 \
     # via
     #   -r requirements_all.txt
     #   boto3
-schemathesis==3.39.9 \
-    --hash=sha256:1fd11bb5c5244c96a01e5bf66a4418e51b7a1d47bb74edb0e71fd33ac4e2e352 \
-    --hash=sha256:82c2cf05860d688a10b5656f35c93863b24819eff539c18df7a3f4d33d06ec5c
+schemathesis==3.39.10 \
+    --hash=sha256:917e6471a777f0a6ee999ceb3998444b47190de66a4fe44f41ca2f3e2d512c67 \
+    --hash=sha256:de87a6934ebe6ac733796bd836f6613b612f558390c602e9640885e45d03bcb1
     # via -r requirements_dev.txt
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
@@ -3772,9 +3771,9 @@ sphinx==7.4.7 \
     #   sphinxcontrib-jquery
     #   sphinxcontrib-plantuml
     #   sphinxcontrib-spelling
-sphinx-autoapi==3.4.0 \
-    --hash=sha256:4027fef2875a22c5f2a57107c71641d82f6166bf55beb407a47aaf3ef14e7b92 \
-    --hash=sha256:e6d5371f9411bbb9fca358c00a9e57aef3ac94cbfc5df4bab285946462f69e0c
+sphinx-autoapi==3.5.0 \
+    --hash=sha256:10dcdf86e078ae1fb144f653341794459e86f5b23cf3e786a735def71f564089 \
+    --hash=sha256:8676db32dded669dc6be9100696652640dc1e883e45b74710d74eb547a310114
     # via -r requirements_dev.txt
 sphinx-autodoc-typehints==2.3.0 \
     --hash=sha256:3098e2c6d0ba99eacd013eb06861acc9b51c6e595be86ab05c08ee5506ac0c67 \
@@ -3969,9 +3968,9 @@ twine==6.1.0 \
     --hash=sha256:a47f973caf122930bf0fbbf17f80b83bc1602c9ce393c7845f289a3001dc5384 \
     --hash=sha256:be324f6272eff91d07ee93f251edf232fc647935dd585ac003539b42404a8dbd
     # via -r requirements_dev.txt
-types-awscrt==0.23.9 \
-    --hash=sha256:57ec68d45ef873458df7307ec80578a6334696f088549ab349c3d655e7e3562b \
-    --hash=sha256:71181a6c5188352ae934e74a7633d80c82ac5c6f89054bd7d653bb1b5bba240b
+types-awscrt==0.23.10 \
+    --hash=sha256:7391bf502f6093221e68da8fb6a2af7ec67a98d376c58d5b76cc3938f449d121 \
+    --hash=sha256:965659260599b421564204b895467684104a2c0311bbacfd3c2423b8b0d3f3e9
     # via botocore-stubs
 types-beautifulsoup4==4.12.0.20250204 \
     --hash=sha256:57ce9e75717b63c390fd789c787d267a67eb01fa6d800a03b9bdde2e877ed1eb \
@@ -4027,9 +4026,9 @@ types-pillow==10.2.0.20240822 \
     --hash=sha256:559fb52a2ef991c326e4a0d20accb3bb63a7ba8d40eb493e0ecb0310ba52f0d3 \
     --hash=sha256:d9dab025aba07aeb12fd50a6799d4eac52a9603488eca09d7662543983f16c5d
     # via -r requirements_dev.txt
-types-protobuf==5.29.1.20241207 \
-    --hash=sha256:2ebcadb8ab3ef2e3e2f067e0882906d64ba0dc65fc5b0fd7a8b692315b4a0be9 \
-    --hash=sha256:92893c42083e9b718c678badc0af7a9a1307b92afe1599e5cba5f3d35b668b2f
+types-protobuf==5.29.1.20250208 \
+    --hash=sha256:c1acd6a59ab554dbe09b5d1fa7dd701e2fcfb2212937a3af1c03b736060b792a \
+    --hash=sha256:c5f8bfb4afdc1b5cbca1848f2c8b361a2090add7401f410b22b599ef647bf483
     # via
     #   -r requirements_dev.txt
     #   mypy-protobuf
@@ -4037,9 +4036,9 @@ types-psutil==6.1.0.20241221 \
     --hash=sha256:600f5a36bd5e0eb8887f0e3f3ff2cf154d90690ad8123c8a707bba4ab94d3185 \
     --hash=sha256:8498dbe13285a9ba7d4b2fa934c569cc380efc74e3dacdb34ae16d2cdf389ec3
     # via -r requirements_dev.txt
-types-pyasn1==0.6.0.20240913 \
-    --hash=sha256:95f3cb1fbd63ff91cd0410945f8aeae6b0be359533c00f39d8e17124884157af \
-    --hash=sha256:a1da054db13d3d4ccfa69c515678154014336ad3d9f9ade01845f9edb1a2bc71
+types-pyasn1==0.6.0.20250208 \
+    --hash=sha256:14c6a0463555fb74ec81aca67ad2eb6d8409895359238511a3eceda7b5426235 \
+    --hash=sha256:4a4fef8801efa983a88a1db52f6d7ac70cb1ad48abf25fad59134237603d5334
     # via -r requirements_dev.txt
 types-pymssql==2.1.0 \
     --hash=sha256:3a531f46f559bbedf242bde7c8dbee18200c32e830522fcc4c67ebf96215a169 \
@@ -4082,9 +4081,9 @@ types-s3transfer==0.11.2 \
     --hash=sha256:09c31cff8c79a433fcf703b840b66d1f694a6c70c410ef52015dd4fe07ee0ae2 \
     --hash=sha256:3ccb8b90b14434af2fb0d6c08500596d93f3a83fb804a2bb843d9bf4f7c2ca60
     # via boto3-stubs
-types-setuptools==75.8.0.20250110 \
-    --hash=sha256:96f7ec8bbd6e0a54ea180d66ad68ad7a1d7954e7281a710ea2de75e355545271 \
-    --hash=sha256:a9f12980bbf9bcdc23ecd80755789085bad6bfce4060c2275bc2b4ca9f2bc480
+types-setuptools==75.8.0.20250210 \
+    --hash=sha256:a217d7b4d59be04c29e23d142c959a0f85e71292fd3fc4313f016ca11f0b56dc \
+    --hash=sha256:c1547361b2441f07c94e25dce8a068e18c611593ad4b6fdd727b1a8f5d1fda33
     # via
     #   -r requirements_dev.txt
     #   requirements-parser
@@ -4109,7 +4108,6 @@ typing-extensions==4.12.2 \
     #   azure-mgmt-resource
     #   azure-storage-blob
     #   beautifulsoup4
-    #   faker
     #   fastapi
     #   jira
     #   mypy
@@ -4127,6 +4125,7 @@ tzdata==2025.1 \
     # via
     #   -r requirements_all.txt
     #   exchangelib
+    #   faker
 tzlocal==5.2 \
     --hash=sha256:49816ef2fe65ea8ac19d19aa7a1ae0551c834303d5014c6d5a62e4cbda8047b8 \
     --hash=sha256:8d399205578f1a9342816409cc1e46a93ebd5755e39ea2d85334bea911bf0e6e
@@ -4250,9 +4249,9 @@ vcrpy==7.0.0 \
     --hash=sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
     # via -r requirements_all.txt
-virtualenv==20.29.1 \
-    --hash=sha256:4e4cb403c0b0da39e13b46b1b2476e505cb0046b25f242bee80f62bf990b2779 \
-    --hash=sha256:b8b8970138d32fb606192cb97f6cd4bb644fa486be9308fb9b63f81091b5dc35
+virtualenv==20.29.2 \
+    --hash=sha256:fdaabebf6d03b5ba83ae0a02cfe96f48a716f4fae556461d180825866f75b728 \
+    --hash=sha256:febddfc3d1ea571bdb1dc0f98d7b45d24def7428214d4fb73cc486c9568cce6a
     # via pre-commit
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \

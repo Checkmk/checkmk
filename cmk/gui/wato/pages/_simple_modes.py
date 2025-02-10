@@ -380,6 +380,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
             self._new = False
             self._ident: str | None = ident
+            self._clone: str | None = None
             self._entry = entry
             return
 
@@ -399,6 +400,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
         self._new = True
         self._ident = None
+        self._clone = None
         self._entry = self._default_entry()
 
     def _clone_entry(self, entry: _T) -> _T:

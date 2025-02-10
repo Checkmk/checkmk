@@ -137,6 +137,7 @@ def _connection(
             "site_id": remote_site.id,
         }
 
+    logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
     central_site.openapi.sites.create(
         {
             "basic_settings": basic_settings,
@@ -170,16 +171,22 @@ def _connection(
             },
         }
     )
+    logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
     central_site.openapi.sites.login(remote_site.id)
+    logger.info("Activating site setup changes")
     central_site.openapi.changes.activate_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures
         force_foreign_changes=True,
     )
     try:
+        logger.info("Connection from '%s' to '%s' established", central_site.id, remote_site.id)
         yield
     finally:
+        logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
         logger.warning("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+        logger.info("Delete remote site connection '%s'", remote_site.id)
         central_site.openapi.sites.delete(remote_site.id)
+        logger.info("Activating site removal changes")
         central_site.openapi.changes.activate_and_wait_for_completion(
             # this seems to be necessary to avoid sporadic CI failures
             force_foreign_changes=True,

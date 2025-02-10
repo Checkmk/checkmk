@@ -134,7 +134,7 @@ impl PullProcessFixture {
                 test_path
             );
         }
-        Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"))
+        Command::new(common::controller_command_path())
             .env("DEBUG_HOME_DIR", test_path)
             .env("DEBUG_CONNECTION_TIMEOUT", "1")
             .args(commands)
@@ -223,7 +223,7 @@ impl TrustFixture {
 }
 
 async fn delete_all_connections(test_path: &Path, enable_legacy_mode: bool) -> AnyhowResult<()> {
-    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"));
+    let mut cmd = Command::new(common::controller_command_path());
     cmd.env("DEBUG_HOME_DIR", test_path).args(["delete-all"]);
     if enable_legacy_mode {
         cmd.arg("--enable-insecure-connections");

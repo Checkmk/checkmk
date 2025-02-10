@@ -274,21 +274,19 @@ def main() {
 
         // this must not be called from within the container (results in yaml package missing)
         def exclude_pattern = versioning.get_internal_artifacts_pattern();
-        inside_container(ulimit_nofile: 1024) {
-            artifacts_helper.upload_version_dir(
-                deliverables_dir,
-                WEB_DEPLOY_DEST,
-                WEB_DEPLOY_PORT,
-                EXCLUDE_PATTERN=exclude_pattern,
-            );
+        artifacts_helper.upload_version_dir(
+            deliverables_dir,
+            WEB_DEPLOY_DEST,
+            WEB_DEPLOY_PORT,
+            EXCLUDE_PATTERN=exclude_pattern,
+        );
 
-            if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
-                // uploads distro packages, source.tar.gz and hashes
-                artifacts_helper.upload_files_to_nexus(
-                    "${deliverables_dir}/check-mk-saas-${cmk_version}*",
-                    "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
-                );
-            }
+        if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
+            // uploads distro packages, source.tar.gz and hashes
+            artifacts_helper.upload_files_to_nexus(
+                "${deliverables_dir}/check-mk-saas-${cmk_version}*",
+                "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
+            );
         }
     }
 

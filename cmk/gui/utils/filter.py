@@ -10,7 +10,7 @@ from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
 
 _NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
-    {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name"}
+    {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name", "name"}
 )
 _NON_DEFAULT_KEY_REGEX: Final = re.compile(r".*(_op|_bool|_count|_indexof_\d+)$")
 _COUNT_KEY_REGEX: Final = re.compile(r".*_count$")

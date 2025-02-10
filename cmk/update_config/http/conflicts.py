@@ -37,13 +37,30 @@ class MigratableCert(V1Cert):
     pass
 
 
-class MigratableHost(V1Host):
-    address: tuple[Literal["direct"], str] | tuple[Literal["proxy"], V1Proxy]
+class MigrateableHost(V1Host):
+    address: tuple[Literal["direct"], str]
+
+
+def _build_url(scheme: str, host: str, port: int | None, path: str) -> str:
+    port_suffix = f":{port}" if port is not None else ""
+    return f"{scheme}://{host}{port_suffix}{path}"
 
 
 class MigratableValue(V1Value):
-    host: MigratableHost
+    host: MigrateableHost
     mode: tuple[Literal["url"], MigratableUrl] | tuple[Literal["cert"], MigratableCert]
+
+    def url(self) -> str:
+        scheme = "https" if self.uses_https() else "http"
+        path = self.mode[1].uri or "" if isinstance(self.mode[1], MigratableUrl) else ""
+        address = self.host.address[1]
+        if isinstance(address, str):
+            url = _build_url(scheme, address, self.host.port, path)
+        # TODO: currently not possible, due to proxy tunneling unavailable in V2.
+        # else:
+        #     proxy = _build_url(scheme, address.address, address.port or value.host.port, path)
+        #     connection["proxy"] = proxy
+        return url
 
 
 @dataclass(frozen=True)

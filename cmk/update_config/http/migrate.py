@@ -20,8 +20,7 @@ def _migrate_header(header: str) -> dict[str, object]:
 
 def _migrate_url_params(
     url_params: MigratableUrl, address_family: str
-) -> tuple[str, dict[str, object], Mapping[str, object]]:
-    path = url_params.uri or ""
+) -> tuple[dict[str, object], Mapping[str, object]]:
     match url_params.ssl:
         case None:
             tls_versions = {}
@@ -142,7 +141,6 @@ def _migrate_url_params(
         case max_age:
             max_age_new = {"max_age": max_age}
     return (
-        path,
         {
             **method,  # TODO: Proxy sets this to CONNECT.
             **tls_versions,
@@ -190,11 +188,6 @@ def _migrate_name(name: str) -> Mapping[str, object]:
     return {"prefix": "auto", "name": name}
 
 
-def _build_url(scheme: str, host: str, port: int | None, path: str) -> str:
-    port_suffix = f":{port}" if port is not None else ""
-    return f"{scheme}://{host}{port_suffix}{path}"
-
-
 def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
     value = MigratableValue.model_validate(rule_value)
     match value.host.address_family:
@@ -209,21 +202,9 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
         case None:
             address_family = "any"
     if isinstance(value.mode[1], MigratableCert):
-        path, connection, remaining_settings = (
-            "",
-            *_migrate_cert_params(value.mode[1], address_family),
-        )
+        connection, remaining_settings = _migrate_cert_params(value.mode[1], address_family)
     else:
-        path, connection, remaining_settings = _migrate_url_params(value.mode[1], address_family)
-    scheme = "https" if value.uses_https() else "http"
-
-    address = value.host.address[1]
-    if isinstance(address, str):
-        url = _build_url(scheme, address, value.host.port, path)
-    else:
-        proxy = _build_url(scheme, address.address, address.port or value.host.port, path)
-        connection["proxy"] = proxy
-
+        connection, remaining_settings = _migrate_url_params(value.mode[1], address_family)
     return {
         "endpoints": [
             {
@@ -233,7 +214,7 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
-                "url": url,
+                "url": value.url(),
                 "individual_settings": {
                     "connection": connection,
                     **remaining_settings,

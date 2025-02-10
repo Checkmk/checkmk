@@ -11,7 +11,9 @@ from pathlib import Path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
-from cmk.base.automation_helper._app import AutomationPayload, HealthCheckResponse
+from cmk.automations.helper_api import AutomationPayload
+
+from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
     Config,
     default_config,

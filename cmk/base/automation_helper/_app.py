@@ -7,7 +7,7 @@ import asyncio
 import io
 import sys
 import time
-from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from logging import Formatter, getLogger
@@ -20,6 +20,8 @@ from pydantic import BaseModel
 from cmk.utils import paths, tty
 from cmk.utils.caching import cache_manager
 
+from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
@@ -27,19 +29,6 @@ from ._cache import Cache, CacheError
 from ._config import ReloaderConfig
 from ._log import LOGGER, temporary_log_level
 from ._tracer import TRACER
-
-
-class AutomationPayload(BaseModel, frozen=True):
-    name: str
-    args: Sequence[str]
-    stdin: str
-    log_level: int
-
-
-class AutomationResponse(BaseModel, frozen=True):
-    exit_code: int
-    output: str
-    error: str
 
 
 class HealthCheckResponse(BaseModel, frozen=True):

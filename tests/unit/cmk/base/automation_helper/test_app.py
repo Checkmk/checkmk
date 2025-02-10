@@ -13,12 +13,12 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
+from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,
     AutomationEngine,
-    AutomationPayload,
-    AutomationResponse,
     get_application,
     HealthCheckResponse,
 )

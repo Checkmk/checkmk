@@ -11,12 +11,13 @@ from collections.abc import Sequence
 from typing import Final
 
 import requests
-from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 
 from cmk.utils import paths
+
+from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
@@ -38,7 +39,7 @@ class HelperExecutor(AutomationExecutor):
         session = requests.Session()
         session.mount(AUTOMATION_HELPER_BASE_URL, _LocalAutomationAdapter())
 
-        payload = _AutomationPayload(
+        payload = AutomationPayload(
             name=command,
             args=arguments_with_timeout(args, timeout),
             stdin=stdin,
@@ -47,26 +48,19 @@ class HelperExecutor(AutomationExecutor):
 
         response = session.post(AUTOMATION_HELPER_ENDPOINT, json=payload)
         response.raise_for_status()
-        response_data = response.json()
+        response_data = AutomationResponse.model_validate(response.json())
 
         return LocalAutomationResult(
-            exit_code=response_data["exit_code"],
-            output=response_data["output"],
+            exit_code=response_data.exit_code,
+            output=response_data.output,
             command_description=self.command_description(command, args, logger, timeout),
-            error=response_data["error"],
+            error=response_data.error,
         )
 
     def command_description(
         self, command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
     ) -> str:
         return repr({"command": command, "args": arguments_with_timeout(args, timeout)})
-
-
-class _AutomationPayload(BaseModel, frozen=True):
-    name: str
-    args: Sequence[str]
-    stdin: str
-    log_level: int
 
 
 class _LocalAutomationConnection(HTTPConnection):

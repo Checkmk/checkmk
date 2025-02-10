@@ -1,0 +1,110 @@
+# Git it is mounted if necessary but not included in images
+.git
+
+# copy of repo root .gitignore
+.*.swo
+.*.swp
+.bugs/.last
+.bugs/.my_ids
+.cache
+.cargo
+.coverage
+.coverage.*
+.directory
+.DS_Store
+.idea/
+.metadata
+.mypy_cache
+.mypy_cache/
+.python-*-stamp
+.cargo
+.ropeproject
+.hypothesis
+.syntastic
+.testmondata
+.venv.lock
+/.venv/
+/.docker_workspace/
+/build_user_home/
+*.cookie
+*.gcno
+*.gcov
+*.iml
+*.py.*.py
+*.pyc
+*_pb2.py
+*_pb2.pyi
+*.pb.cc
+*.pb.h
+*.timer
+**/launch.json
+*~
+*kate-swp
+/.tmp*
+/*.wpr
+/*.wpu
+/announce*
+artefacts/
+build/
+ChangeLog
+check_mk-*.tar.gz
+check-mk-*.build
+check-mk-*.dsc
+check-mk-*.tar.gz
+check-mk-*_amd64.deb
+clang-analyzer/
+cmc-*.tar.gz
+cme-*.tar.gz
+agents/linux/*
+doc/plugin-api/build/
+doc/plugin-api/source/apidoc/
+doc/documentation/*.png
+doc/documentation/*.cmapx
+version_txt_from_previous_run
+GPATH
+GRTAGS
+GTAGS
+htmlcov/
+logback.log
+mk-livestatus-*.tar.gz
+node_modules/
+omd/bazel-*
+omd/pkgs_by_bzl/
+bazel_execution_log*.json
+pip-mirror-tmp
+RemoteSystemsTempFiles
+requirements.txt
+requirements-no-dev.txt
+tags
+tests/web/data/*
+tests/var/*
+tests/results/*
+tests/.hypothesis/
+/results
+/buildscripts/infrastructure/build-nodes/scripts/defines.make
+/buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
+/bazel-*
+
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
+
+# Used by pyenv
+.python-version
+
+### VisualStudioCode ###
+.vscode/*
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# gui-e2e tests: playwright specific ignores
+test-results/
+*.png

@@ -9,14 +9,17 @@ def main() {
     check_job_parameters([
         "EDITION",
         "DISTRO",
-        "VERSION"
+        "VERSION",
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -29,6 +32,7 @@ def main() {
     def download_dir = "package_download";
     def custom_git_ref = "";
     def incremented_counter = "";
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
 
     currentBuild.description += (
         """
@@ -64,14 +68,14 @@ def main() {
             mount_credentials: true,
             priviliged: true,
         ) {
+            single_tests.prepare_workspace(
+                cleanup: [
+                    "${checkout_dir}/${download_dir}"
+                ],
+                make_venv: true
+            );
             dir("${checkout_dir}") {
-                /// remove downloaded packages since they consume dozens of MiB
-                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
-
-                // Initialize our virtual environment before parallelization
-                sh("make .venv");
-
-                custom_git_ref = cmd_output("git rev-parse HEAD");
+                custom_git_ref = effective_git_ref;
                 incremented_counter = cmd_output("git rev-list HEAD --count");
             }
         }
@@ -88,21 +92,15 @@ def main() {
             priviliged: true,
         ) {
             dir("${checkout_dir}") {
-                upstream_build(
-                    relative_job_name: "builders/build-cmk-distro-package",
-                    build_params: [
-                        /// currently CUSTOM_GIT_REF must match, but in the future
-                        /// we should define dependency paths for build-cmk-distro-package
-                        CUSTOM_GIT_REF: custom_git_ref,
-                        EDITION: edition,
-                        DISTRO: distro,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                    ],
-                    dest: download_dir,
-                );
+                stage("Fetch Checkmk package") {
+                    single_tests.fetch_package(
+                        edition: edition,
+                        distro: distro,
+                        download_dir: download_dir,
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
+                    );
+                }
             }
         }
     }

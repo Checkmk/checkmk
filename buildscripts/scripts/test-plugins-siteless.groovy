@@ -14,6 +14,7 @@ def main() {
         "DOCKER_REGISTRY",
     ]);
 
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
@@ -27,6 +28,7 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-plugins-siteless-docker";
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
 
     currentBuild.description += (
         """
@@ -67,25 +69,26 @@ def main() {
             mount_credentials: true,
             priviliged: true,
         ) {
+            single_tests.prepare_workspace(
+                cleanup: [
+                    "${WORKSPACE}/test-results",
+                ],
+                make_venv: false
+            );
 
             dir("${checkout_dir}") {
-                // Cleanup test results directory before starting the test to prevent previous
-                // runs somehow affecting the current run.
-                sh("rm -rf ${WORKSPACE}/test-results");
-
                 try {
                     stage("Run `make ${make_target}`") {
                         dir("${checkout_dir}/tests") {
-                            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-                                sh("""
-                                    RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
-                                    EDITION='${edition}' \
-                                    DOCKER_TAG='${docker_tag}' \
-                                    VERSION="daily" \
-                                    DISTRO='${distro}' \
-                                    make ${make_target}
-                                """);
-                            }
+                            single_tests.run_make_target(
+                                result_path: "${WORKSPACE}/test-results/${distro}",
+                                edition: edition,
+                                docker_tag: setup_values.docker_tag,
+                                version: "daily",
+                                distro: distro,
+                                branch_name: setup_values.safe_branch_name,
+                                make_target: make_target,
+                            );
                         }
                     }
                 }

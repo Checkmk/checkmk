@@ -59,7 +59,7 @@ metric_swap_cached = Metric(
     name="swap_cached",
     title=Title("Swap cached"),
     unit=UNIT_BYTES,
-    color=Color.LIGHT_GREEN,
+    color=Color.PINK,
 )
 metric_mem_lnx_slab = Metric(
     name="mem_lnx_slab",
@@ -78,6 +78,12 @@ metric_mem_lnx_buffers = Metric(
     title=Title("Buffered memory"),
     unit=UNIT_BYTES,
     color=Color.CYAN,
+)
+metric_sreclaimable = Metric(
+    name="sreclaimable",
+    title=Title("Reclaimable slab"),
+    unit=UNIT_BYTES,
+    color=Color.ORANGE,
 )
 
 perfometer_mem_used = Perfometer(
@@ -151,6 +157,37 @@ graph_mem_absolute = Graph(
         "mem_used",
         "mem_free",
     ),
+    conflicting=("mem_lnx_cached", "mem_lnx_buffers"),
+)
+graph_mem_absolute_2 = Graph(
+    name="mem_absolute_2",
+    title=Title("RAM"),
+    simple_lines=(
+        # see mem_linux.py
+        Sum(
+            Title("Total RAM"),
+            Color.DARK_BLUE,
+            (
+                "mem_used",
+                "mem_free",
+                "mem_lnx_cached",
+                "mem_lnx_buffers",
+                "swap_cached",
+                "sreclaimable",
+            ),
+        ),
+        WarningOf("mem_used"),
+        CriticalOf("mem_used"),
+    ),
+    compound_lines=(
+        "mem_used",
+        "mem_free",
+        "mem_lnx_cached",
+        "mem_lnx_buffers",
+        "swap_cached",
+        "sreclaimable",
+    ),
+    optional=("swap_cached", "sreclaimable"),
 )
 graph_ram_swap_used = Graph(
     name="ram_swap_used",

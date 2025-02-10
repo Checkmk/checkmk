@@ -8,8 +8,6 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from cmk.gui.watolib.bulk_discovery import BulkDiscoveryBackgroundJob
-
 
 class TestBackgroundJobSnapshot:
     @pytest.mark.usefixtures("inline_background_jobs")
@@ -19,13 +17,12 @@ class TestBackgroundJobSnapshot:
         clients.HostConfig.create(host_name="foobar")
 
         automation = mocker.patch("cmk.gui.watolib.bulk_discovery.discovery")
-        clients.ServiceDiscovery.bulk_discovery(hostnames=["foobar"])
+        resp = clients.ServiceDiscovery.bulk_discovery(hostnames=["foobar"], follow_redirects=True)
         automation.assert_called_once()
 
-        job_id = BulkDiscoveryBackgroundJob.job_prefix
+        job_id = resp.json["id"]
         resp = clients.BackgroundJob.get(job_id=job_id)
 
-        assert resp.json["id"] == BulkDiscoveryBackgroundJob.job_prefix
         assert set(resp.json["extensions"]["status"]["log_info"].keys()) == {
             "JobProgressUpdate",
             "JobResult",

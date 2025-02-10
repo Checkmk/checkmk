@@ -702,10 +702,10 @@ class ServiceDiscoveryAPI(BaseAPI):
 
         status = self.get_bulk_discovery_job_status(job_id)
 
-        if status["extensions"]["state"] != "finished":
+        if status["extensions"]["status"]["state"] != "finished":
             raise RuntimeError(f"Discovery job {job_id} failed: {status}")
 
-        output = "\n".join(status["extensions"]["logs"]["progress"])
+        output = "\n".join(status["extensions"]["status"]["log_info"]["JobProgressUpdate"])
         if "Traceback (most recent call last)" in output:
             raise RuntimeError(f"Found traceback in job output: {output}")
         if "0 failed" not in output:
@@ -715,11 +715,11 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_bulk_discovery_status(self, job_id: str) -> str:
         job_status_response = self.get_bulk_discovery_job_status(job_id)
-        status: str = job_status_response["extensions"]["state"]
+        status: str = job_status_response["extensions"]["status"]["state"]
         return status
 
     def get_bulk_discovery_job_status(self, job_id: str) -> dict:
-        response = self.session.get(f"/objects/discovery_run/{job_id}")
+        response = self.session.get(f"/objects/background_job/{job_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         job_status_response: dict = response.json()

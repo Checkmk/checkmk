@@ -1202,22 +1202,10 @@ def test_openapi_bulk_discovery_with_default_options(
     resp = clients.ServiceDiscovery.bulk_discovery(
         hostnames=["foobar", "sample"],
         monitor_undecided_services=True,
+        follow_redirects=False,
     )
     automation.assert_called_once()
-    assert resp.json["id"] == "bulk_discovery"
-    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
-        "is finished"
-    ), resp.json
-    assert "active" in resp.json["extensions"]
-    assert "state" in resp.json["extensions"]
-    assert "result" in resp.json["extensions"]["logs"]
-    assert "progress" in resp.json["extensions"]["logs"]
-
-    status_resp = clients.ServiceDiscovery.discovery_run_status(resp.json["id"])
-    assert status_resp.json["id"] == resp.json["id"]
-    assert "active" in status_resp.json["extensions"]
-
-    # TODO: additional tests for bulk discovery modes (CMK-10160)
+    assert resp.status_code == 303
 
 
 def test_openapi_bulk_discovery_with_invalid_hostname(

@@ -998,7 +998,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_14,
         EXAMPLE_20,
         EXAMPLE_44,
-        EXAMPLE_51,
         EXAMPLE_75,
         EXAMPLE_85,
         EXAMPLE_86,
@@ -1105,6 +1104,14 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_51,
+            Conflict(
+                type_="cant_post_data_with_get_delete_head",
+                mode_fields=["method", "post_data"],
                 host_fields=[],
             ),
         ),

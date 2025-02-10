@@ -65,8 +65,6 @@ def _classify(host: str) -> HostType:
 
 
 def _migratable_url_params(url_params: MigratableUrl) -> bool:
-    if url_params.post_data is not None and url_params.method in ("GET", "DELETE", "HEAD"):
-        return False
     try:
         _migrate_expect_response(url_params.expect_response or [])
     except ValueError:
@@ -120,6 +118,12 @@ def detect_conflicts(
             return Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
+                host_fields=[],
+            )
+        if mode.post_data is not None and mode.method in ("GET", "DELETE", "HEAD"):
+            return Conflict(
+                type_="cant_post_data_with_get_delete_head",
+                mode_fields=["method", "post_data"],
                 host_fields=[],
             )
     return MigratableValue.model_validate(value.model_dump())

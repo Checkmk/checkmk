@@ -16,7 +16,7 @@ from urllib3.connectionpool import HTTPConnectionPool
 
 from cmk.utils.paths import omd_root
 
-from cmk.base.automation_helper._app import AutomationPayload
+from cmk.automations.helper_api import AutomationPayload
 
 _BASE_URL = "http://aut-helper"
 

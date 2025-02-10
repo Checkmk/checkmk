@@ -729,6 +729,8 @@ EXAMPLE_89: Mapping[str, object] = {
     "disable_sni": True,
 }
 
+EXAMPLE_90: Mapping[str, object] = {}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -994,19 +996,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value",
-    [
-        EXAMPLE_11,
-        EXAMPLE_85,
-        EXAMPLE_86,
-        EXAMPLE_87,
-    ],
-)
-def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
-    assert not migratable(rule_value)
-
-
-@pytest.mark.parametrize(
     "rule_value, conflict",
     [
         (
@@ -1053,6 +1042,13 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         ),
         (
             EXAMPLE_9,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_11,
             Conflict(
                 type_="cant_migrate_address_with_macro",
                 host_fields=["address"],
@@ -1178,6 +1174,27 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             ),
         ),
         (
+            EXAMPLE_85,
+            Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_86,
+            Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_86,
+            Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            ),
+        ),
+        (
             EXAMPLE_75,
             Conflict(
                 type_="cant_disable_sni_with_https",
@@ -1190,6 +1207,13 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
                 type_="cant_disable_sni_with_https",
                 mode_fields=["ssl"],
                 disable_sni=True,
+            ),
+        ),
+        (
+            EXAMPLE_90,
+            Conflict(
+                type_="invalid_value",
+                cant_load=True,
             ),
         ),
     ],

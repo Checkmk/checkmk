@@ -67,6 +67,7 @@ class Conflict:
     mode_fields: Sequence[str] = ()
     host_fields: Sequence[str] = ()
     disable_sni: bool = False
+    cant_load: bool = False
 
 
 class HostType(enum.Enum):
@@ -90,10 +91,11 @@ def detect_conflicts(
 ) -> Conflict | MigratableValue | ValidationError:
     try:
         value = V1Value.model_validate(rule_value)
-    except ValidationError as e:
-        # TODO: some validation errors need to be conflicts. Eventually V1Value needs to allow every
-        # value that can be loaded via the ruleset.
-        return e
+    except ValidationError:
+        return Conflict(
+            type_="invalid_value",
+            cant_load=True,
+        )
     if value.host.address is None:
         return Conflict(
             type_="cant_migrate_address_with_macro",

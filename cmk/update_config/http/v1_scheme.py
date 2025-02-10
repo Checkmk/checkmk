@@ -11,7 +11,7 @@ from pydantic import BaseModel
 class V1Proxy(BaseModel, extra="forbid"):
     address: str
     port: int | None = None
-    # auth: None  # TODO: This is not supported in V2. Turn into conflict?
+    auth: object = None  # migration in V2 is unclear
 
 
 class V1Host(BaseModel, extra="forbid"):

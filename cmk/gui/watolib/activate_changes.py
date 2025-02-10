@@ -48,9 +48,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
-from cmk.utils.certs import (
-    SiteBrokerCA,
-)
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -2225,7 +2222,7 @@ def sync_and_activate(
 
 def create_broker_certificates(
     broker_cert_sync: BrokerCertificateSync,
-    central_ca: SiteBrokerCA,
+    central_ca_bundle: PersistedCertificateWithPrivateKey,
     customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     settings: SiteConfiguration,
     site_activation_state: SiteActivationState,
@@ -2242,7 +2239,7 @@ def create_broker_certificates(
         try:
             _set_sync_state(site_activation_state, _("Syncing broker certificates"))
             broker_cert_sync.create_broker_certificates(
-                site_id, settings, central_ca, customer_ca_bundle
+                site_id, settings, central_ca_bundle, customer_ca_bundle
             )
             return site_activation_state
         except Exception as e:

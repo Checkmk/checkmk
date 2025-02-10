@@ -38,7 +38,7 @@ from cmk.update_config.http.conflicts import (
 )
 from cmk.update_config.http.migrate import migrate
 
-HOST_1 = {"address": ("direct", "[::1]")}
+HOST_1 = {"address": ("direct", "[::1]"), "virthost": "[::1]"}
 
 EXAMPLE_1 = {
     "name": "My web page",
@@ -149,19 +149,19 @@ EXAMPLE_14: Mapping[str, object] = {
 
 EXAMPLE_15: Mapping[str, object] = {
     "name": "hostname_only",
-    "host": {"address": ("direct", "google.com")},
+    "host": {"address": ("direct", "google.com"), "virthost": "google.com"},
     "mode": ("url", {}),
 }
 
 EXAMPLE_16: Mapping[str, object] = {
     "name": "ipv4_only",
-    "host": {"address": ("direct", "127.0.0.1")},
+    "host": {"address": ("direct", "127.0.0.1"), "virthost": "127.0.0.1"},
     "mode": ("url", {}),
 }
 
 EXAMPLE_17: Mapping[str, object] = {
     "name": "localhost",
-    "host": {"address": ("direct", "localhost")},
+    "host": {"address": ("direct", "localhost"), "virthost": "localhost"},
     "mode": ("url", {}),
 }
 
@@ -173,13 +173,13 @@ EXAMPLE_18: Mapping[str, object] = {
 
 EXAMPLE_19: Mapping[str, object] = {
     "name": "port_specified_twice",
-    "host": {"address": ("direct", "[::1]:80"), "port": 80},
+    "host": {"address": ("direct", "[::1]:80"), "virthost": "[::1]:80", "port": 80},
     "mode": ("url", {}),
 }
 
 EXAMPLE_20: Mapping[str, object] = {
     "name": "ipv6",
-    "host": {"address": ("direct", "::1")},
+    "host": {"address": ("direct", "::1"), "virthost": "[::1]"},
     "mode": ("url", {}),
 }
 
@@ -628,7 +628,7 @@ EXAMPLE_79: Mapping[str, object] = {
 EXAMPLE_80: Mapping[str, object] = {
     "name": "address_family",
     "host": {
-        "address": ("direct", "[::1]"),
+        **HOST_1,
         "address_family": "any",
     },
     "mode": ("url", {}),
@@ -637,7 +637,7 @@ EXAMPLE_80: Mapping[str, object] = {
 EXAMPLE_81: Mapping[str, object] = {
     "name": "address_family",
     "host": {
-        "address": ("direct", "[::1]"),
+        **HOST_1,
         "address_family": "ipv4_enforced",
     },
     "mode": ("url", {}),
@@ -646,7 +646,7 @@ EXAMPLE_81: Mapping[str, object] = {
 EXAMPLE_82: Mapping[str, object] = {
     "name": "address_family",
     "host": {
-        "address": ("direct", "[::1]"),
+        **HOST_1,
         "address_family": "primary_enforced",
     },
     "mode": ("url", {}),
@@ -655,7 +655,7 @@ EXAMPLE_82: Mapping[str, object] = {
 EXAMPLE_83: Mapping[str, object] = {
     "name": "address_family",
     "host": {
-        "address": ("direct", "[::1]"),
+        **HOST_1,
         "address_family": "ipv6_enforced",
     },
     "mode": ("url", {}),
@@ -792,25 +792,27 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, url, server",
     [
-        (EXAMPLE_15, "http://google.com"),
-        (EXAMPLE_16, "http://127.0.0.1"),
-        (EXAMPLE_17, "http://localhost"),
-        (EXAMPLE_18, "http://[::1]"),
-        (EXAMPLE_19, "http://[::1]:80:80"),  # TODO: This may or may not be acceptable.
-        (EXAMPLE_21, "http://[::1]/werks"),
-        (EXAMPLE_25, "https://[::1]"),
-        (EXAMPLE_26, "https://google.com"),
+        (EXAMPLE_10, "http://facebook.de", "google.com"),
+        (EXAMPLE_15, "http://google.com", "google.com"),
+        (EXAMPLE_16, "http://127.0.0.1", "127.0.0.1"),
+        (EXAMPLE_17, "http://localhost", "localhost"),
+        (EXAMPLE_18, "http://[::1]", "[::1]"),
+        (EXAMPLE_19, "http://[::1]:80:80", "[::1]:80"),  # TODO: This may or may not be acceptable.
+        (EXAMPLE_21, "http://[::1]/werks", "[::1]"),
+        (EXAMPLE_25, "https://[::1]", "[::1]"),
+        (EXAMPLE_26, "https://google.com", "google.com"),
     ],
 )
-def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
+def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) -> None:
     # Act
     migrated = migrate(rule_value)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
-    assert ssc_value[0].url == expected
+    assert ssc_value[0].url == url
+    assert ssc_value[0].settings.server == server
 
 
 @pytest.mark.parametrize(
@@ -994,7 +996,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 @pytest.mark.parametrize(
     "rule_value",
     [
-        EXAMPLE_10,
         EXAMPLE_11,
         EXAMPLE_85,
         EXAMPLE_86,

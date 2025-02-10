@@ -217,6 +217,7 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
                 "url": value.url(),
                 "individual_settings": {
                     "connection": connection,
+                    "server": value.host.address[1],
                     **remaining_settings,
                 },
             },

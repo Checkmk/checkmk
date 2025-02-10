@@ -23,16 +23,7 @@ class V1Host(BaseModel, extra="forbid"):
     # true, if client_cert is true, client private key or -S is enabled. On redirect new ports might
     # be defined. This behaviour will not transfer to the new check, most likely.
     port: int | None = None
-    # TODO: The URL always needs to point to the physical server, with a client optionally providing
-    # a different destination in the HostName header, as far as I understand. This is implemented
-    # correctly in check_http.c (v1). The v1 ssc behaves very strangely, since it uses HTTP 1.0, if
-    # no virtual host is specified (instead of deducing the HostName from the physical server name).
-    # In v2, the implementation is also strange, since it demands the virtual host, and makes the
-    # physical server optional. This needs to be discussed with PM.
-    # What should really happen:
-    # url: contains server, that needs to be DNS resolved (given always by address field in v1)
-    # host name header: contains the virtual host
-    virthost: None = None
+    virthost: str | None = None
 
 
 class V1Auth(BaseModel, extra="forbid"):

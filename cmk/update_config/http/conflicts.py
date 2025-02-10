@@ -53,14 +53,12 @@ class MigratableValue(V1Value):
     def url(self) -> str:
         scheme = "https" if self.uses_https() else "http"
         path = self.mode[1].uri or "" if isinstance(self.mode[1], MigratableUrl) else ""
-        address = self.host.address[1]
-        if isinstance(address, str):
-            url = _build_url(scheme, address, self.host.port, path)
+        hostname = self.host.virthost or self.host.address[1]
         # TODO: currently not possible, due to proxy tunneling unavailable in V2.
-        # else:
+        # if isinstance(address, V1Proxy):
         #     proxy = _build_url(scheme, address.address, address.port or value.host.port, path)
         #     connection["proxy"] = proxy
-        return url
+        return _build_url(scheme, hostname, self.host.port, path)
 
 
 @dataclass(frozen=True)
@@ -109,6 +107,11 @@ def detect_conflicts(
                 host_fields=["address"],
             )
         elif isinstance(address, str):
+            if not value.uses_https() and value.host.virthost is None:
+                return Conflict(
+                    type_="http_1_0_not_supported",
+                    host_fields=["virthost"],
+                )
             type_ = _classify(address)
             if type_ is not HostType.EMBEDDABLE:
                 # This might have some issues, since customers can put a port, uri, and really mess with

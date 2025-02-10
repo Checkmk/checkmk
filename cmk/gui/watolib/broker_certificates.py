@@ -32,14 +32,9 @@ from cmk.gui.http import request as _request
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
+from cmk import messaging
 from cmk.crypto.certificate import CertificateSigningRequest, X509Name
 from cmk.crypto.keys import PrivateKey
-from cmk.messaging import (
-    all_cert_files,
-    BrokerCertificates,
-    clear_brokers_certs_cache,
-    rabbitmq,
-)
 
 logger = logging.getLogger("cmk.web.background-job")
 _ORG_TEMPLATE = "Checkmk Site {}"
@@ -109,7 +104,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
             CertificateSigningRequest(csr), relativedelta(years=2)
         )
 
-        remote_broker_certs = BrokerCertificates(
+        remote_broker_certs = messaging.BrokerCertificates(
             cert=signed.dump_pem().bytes,
             signing_ca=central_ca.cert_bundle.certificate.dump_pem().bytes,
         )
@@ -126,7 +121,9 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         pass
 
 
-def sync_broker_certs(settings: SiteConfiguration, remote_broker_certs: BrokerCertificates) -> None:
+def sync_broker_certs(
+    settings: SiteConfiguration, remote_broker_certs: messaging.BrokerCertificates
+) -> None:
     do_remote_automation(
         settings,
         "store-broker-certs",
@@ -156,21 +153,21 @@ def broker_certs_created(site_id: SiteId) -> bool:
 
 def create_remote_broker_certs(
     signing_ca: SiteBrokerCA, site_id: SiteId, site: SiteConfiguration
-) -> BrokerCertificates:
+) -> messaging.BrokerCertificates:
     """
     Create a new certificate with private key for the broker of a remote site.
     """
 
     site_cert = SiteBrokerCertificate.create(site_id, paths.omd_root, signing_ca.cert_bundle)
 
-    return BrokerCertificates(
+    return messaging.BrokerCertificates(
         cert=site_cert.cert_bundle.certificate.dump_pem().bytes,
         signing_ca=signing_ca.cert_bundle.certificate.dump_pem().bytes,
     )
 
 
 def sync_remote_broker_certs(
-    site: SiteConfiguration, broker_certificates: BrokerCertificates
+    site: SiteConfiguration, broker_certificates: messaging.BrokerCertificates
 ) -> None:
     """
     Send the broker certificates to the remote site for storage.
@@ -189,7 +186,7 @@ def clean_remote_sites_certs(*, kept_sites: Container[SiteId]) -> None:
     Remove broker certificates of remote sites.
     """
 
-    for cert in all_cert_files(omd_root=paths.omd_root):
+    for cert in messaging.all_cert_files(omd_root=paths.omd_root):
         if SiteId(cert.name.removesuffix("_cert.pem")) in kept_sites:
             continue
         cert.unlink(missing_ok=True)
@@ -243,14 +240,14 @@ def _create_csr(private_key: PrivateKey) -> CertificateSigningRequest:
 
 @dataclass(frozen=True)
 class StoreBrokerCertificatesData:
-    certificates: BrokerCertificates
+    certificates: messaging.BrokerCertificates
     central_site: SiteId
 
 
 class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificatesData]):
     def _add_central_site_user(self, central_site: SiteId) -> None:
         def _handle_errors(command: tuple[str, ...]) -> IO[str] | None:
-            popen = rabbitmq.rabbitmqctl_process(command, wait=True)
+            popen = messaging.rabbitmq.rabbitmqctl_process(command, wait=True)
             if popen.stderr and (lines := popen.stderr.readlines()):
                 logger.error(
                     "Failed to execute command: %s, with error: %s",
@@ -260,11 +257,11 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
                 raise MKGeneralException(f"Failed to execute command: {command}")
             return popen.stdout
 
-        rabbitmq.rabbitmqctl_process(("add_user", central_site, "password"), wait=True)
+        messaging.rabbitmq.rabbitmqctl_process(("add_user", central_site, "password"), wait=True)
         # the password here is used to avoid the process waiting for input
         # it is removed in the next command
         _handle_errors(("clear_password", central_site))
-        user_permissions = rabbitmq.make_default_remote_user_permission(central_site)
+        user_permissions = messaging.rabbitmq.make_default_remote_user_permission(central_site)
         _handle_errors(
             (
                 "set_permissions",
@@ -284,7 +281,7 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
         request_certificates = _request.get_str_input_mandatory("certificates")
         request_site = _request.get_str_input_mandatory("site_id")
         return StoreBrokerCertificatesData(
-            certificates=BrokerCertificates.model_validate_json(request_certificates),
+            certificates=messaging.BrokerCertificates.model_validate_json(request_certificates),
             central_site=SiteId(request_site),
         )
 
@@ -297,8 +294,8 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
         # In case we're logging in, and the node is running, immediately create the user.
         # If for some reason the node is not running, the user will be created when the
         # node starts and imports the definitions.
-        if rabbitmq.rabbitmqctl_process(("status",), wait=True).returncode == 0:
-            clear_brokers_certs_cache()
+        if messaging.rabbitmq.rabbitmqctl_process(("status",), wait=True).returncode == 0:
+            messaging.clear_brokers_certs_cache()
             self._add_central_site_user(api_request.central_site)
 
         return True

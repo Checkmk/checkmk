@@ -16,11 +16,9 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
-    def cmk_version_rc_aware = versioning.get_cmk_version(
-        versioning.safe_branch_name(scm),
-        versioning.get_branch_version(checkout_dir),
-        params.VERSION
-    );
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
 
     print(
         """
@@ -33,22 +31,20 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
-        smart_stage(
-            name: "Deploy to website",
-        ) {
-            artifacts_helper.deploy_to_website(
-                 cmk_version_rc_aware
-            );
-        }
-        smart_stage(
-            name: "Cleanup RC candicates",
-            condition: params.CIPARAM_REMOVE_RC_CANDIDATES,
-        ) {
-            artifacts_helper.cleanup_rc_candidates_of_version(
-                cmk_version_rc_aware
-            );
-        }
+    smart_stage(
+        name: "Deploy to website",
+    ) {
+        artifacts_helper.deploy_to_website(
+            cmk_version_rc_aware
+        );
+    }
+    smart_stage(
+        name: "Cleanup RC candicates",
+        condition: params.CIPARAM_REMOVE_RC_CANDIDATES,
+    ) {
+        artifacts_helper.cleanup_rc_candidates_of_version(
+           cmk_version_rc_aware
+        );
     }
 }
 

@@ -83,6 +83,7 @@ tests/.hypothesis/
 /bazel_log*
 bazel-memory.profile
 user.bazelrc
+remote.bazelrc
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

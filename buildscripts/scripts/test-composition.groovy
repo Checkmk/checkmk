@@ -74,6 +74,7 @@ def main() {
         ("Test ${distro}") : {
             def stepName = "Test ${distro}";
             def run_condition = distro in selected_distros;
+            def build_instance = null;
 
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition){
@@ -85,7 +86,7 @@ def main() {
                 condition: run_condition,
                 raiseOnError: false,
             ) {
-                def build_instance = smart_build(
+                build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: relative_job_name,
@@ -103,6 +104,12 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
+            }
+            smart_stage(
+                name: "Copy artifacts",
+                condition: run_condition && build_instance,
+                raiseOnError: false,
+            ) {
                 copyArtifacts(
                     projectName: relative_job_name,
                     selector: specific(build_instance.getId()), // buildNumber shall be a string

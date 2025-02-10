@@ -601,6 +601,7 @@ def test_registered_display_hints() -> None:
         ".hardware.memory.arrays:",
         ".hardware.memory.arrays:*.",
         ".hardware.memory.arrays:*.devices:",
+        ".hardware.memory.arrays:*.devices:*.index",
         ".hardware.memory.arrays:*.devices:*.bank_locator",
         ".hardware.memory.arrays:*.devices:*.data_width",
         ".hardware.memory.arrays:*.devices:*.form_factor",

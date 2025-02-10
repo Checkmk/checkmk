@@ -330,7 +330,7 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return SDItem(
+    alignment_class, _coloring_class, rendered_value = SDItem(
         key=key,
         title=title,
         value=attributes.pairs.get(key),
@@ -338,6 +338,7 @@ def _paint_host_inventory_attribute(
         paint_function=paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
+    return alignment_class, rendered_value
 
 
 def attribute_painter_from_hint(
@@ -399,7 +400,7 @@ def _paint_host_inventory_column(
 ) -> CellSpec:
     if ident not in row:
         return "", ""
-    return SDItem(
+    alignment_class, _coloring_class, rendered_value = SDItem(
         key=SDKey(ident),
         title=title,
         value=row[ident],
@@ -407,6 +408,7 @@ def _paint_host_inventory_column(
         paint_function=paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
+    return alignment_class, rendered_value
 
 
 def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
@@ -427,7 +429,7 @@ def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPaint
         sorter=ident,
         paint=lambda row: _paint_host_inventory_column(row, ident, hint.title, hint.paint_function),
         export_for_python=lambda row, cell: row.get(ident),
-        export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
+        export_for_csv=lambda row, cell: ("" if (data := row.get(ident)) is None else str(data)),
         export_for_json=lambda row, cell: row.get(ident),
     )
 

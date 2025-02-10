@@ -31,8 +31,10 @@ def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
         ca_cert_bundle.certificate_path.read_bytes()
     )
 
-    site_cert = SiteBrokerCertificate.create(site_name, omd_root, issuer=ca_cert_bundle)
-    site_cert.persist(omd_root)
+    site_broker_ca = SiteBrokerCertificate(
+        messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
+    )
+    site_broker_ca.persist(site_broker_ca.create_bundle(site_name, ca_cert_bundle))
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:

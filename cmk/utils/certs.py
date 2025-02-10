@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal, Self
+from typing import Final, Literal
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
@@ -22,7 +22,6 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk import messaging
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -224,19 +223,14 @@ class CertManagementEvent(SecurityEvent):
 
 
 class SiteBrokerCertificate:
-    def __init__(self, bundle: CertificateWithPrivateKey) -> None:
-        self.cert_bundle = bundle
+    def __init__(self, cert_path: Path, key_path: Path) -> None:
+        self.cert_path: Final = cert_path
+        self.key_path: Final = key_path
 
     @classmethod
-    def key_path(cls, omd_root: Path) -> Path:
-        return messaging.site_key_file(omd_root)
-
-    @classmethod
-    def cert_path(cls, omd_root: Path) -> Path:
-        return messaging.site_cert_file(omd_root)
-
-    @classmethod
-    def create(cls, site_name: str, omd_root: Path, issuer: CertificateWithPrivateKey) -> Self:
+    def create_bundle(
+        cls, site_name: str, issuer: CertificateWithPrivateKey
+    ) -> CertificateWithPrivateKey:
         """Have the site's certificate issued by the given CA.
 
         The certificate and key are not persisted to disk directly because this method is also used
@@ -247,7 +241,7 @@ class SiteBrokerCertificate:
         is_ca = False
         key_size = 4096
 
-        cert_bundle = issuer.issue_new_certificate(
+        return issuer.issue_new_certificate(
             common_name=site_name,
             organization=organization,
             expiry=expires,
@@ -255,32 +249,25 @@ class SiteBrokerCertificate:
             is_ca=is_ca,
         )
 
-        return cls(cert_bundle)
+    def persist(self, cert_bundle: CertificateWithPrivateKey) -> None:
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+        PersistedCertificateWithPrivateKey.persist(cert_bundle, self.cert_path, self.key_path)
 
-    def persist(self, omd_root: Path) -> None:
-        cert_path = self.cert_path(omd_root)
-        key_path = self.key_path(omd_root)
-
-        cert_path.parent.mkdir(parents=True, exist_ok=True)
-        PersistedCertificateWithPrivateKey.persist(self.cert_bundle, cert_path, key_path)
-
-    @classmethod
     def persist_broker_certificates(
-        cls,
-        omd_root: Path,
-        received: messaging.BrokerCertificates,
+        self,
+        signing_ca: bytes,
+        cert: bytes,
+        additionally_trusted_ca: bytes,
         trusted_cas_store: MessagingTrustedCAs,
     ) -> None:
         """Persist the received certificates to disk."""
-        cert_path = cls.cert_path(omd_root)
+        ca = Certificate.load_pem(CertificatePEM(signing_ca))
+        Certificate.load_pem(CertificatePEM(cert)).verify_is_signed_by(ca)
 
-        ca = Certificate.load_pem(CertificatePEM(received.signing_ca))
-        Certificate.load_pem(CertificatePEM(received.cert)).verify_is_signed_by(ca)
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
 
-        cert_path.parent.mkdir(parents=True, exist_ok=True)
-
-        trusted_cas_store.write(received.signing_ca + received.additionally_trusted_ca)
-        cert_path.write_bytes(received.cert)
+        trusted_cas_store.write(signing_ca + additionally_trusted_ca)
+        self.cert_path.write_bytes(cert)
 
 
 class SiteBrokerCA:

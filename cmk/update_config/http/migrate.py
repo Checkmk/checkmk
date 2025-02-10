@@ -5,7 +5,6 @@
 
 
 from collections.abc import Mapping
-from typing import Literal
 
 from cmk.update_config.http.conflicts import (
     MigratableCert,
@@ -21,23 +20,17 @@ def _migrate_header(header: str) -> dict[str, object]:
 
 def _migrate_url_params(
     url_params: MigratableUrl, address_family: str
-) -> tuple[Literal["http", "https"], str, dict[str, object], Mapping[str, object]]:
+) -> tuple[str, dict[str, object], Mapping[str, object]]:
     path = url_params.uri or ""
     match url_params.ssl:
-        # In check_http.c (v1), this also determines the port.
-        # If this logic is adapted, then `_migrate_name` needs to be fixed.
         case None:
-            scheme: Literal["http", "https"] = "http"
             tls_versions = {}
         case "auto":
-            scheme = "https"
             # TODO: PMs specified allow_higher False, revisit this, once we have their reasoning.
             tls_versions = {"tls_versions": {"min_version": "auto", "allow_higher": True}}
         case "ssl_1_2":
-            scheme = "https"
             tls_versions = {"tls_versions": {"min_version": "tls_1_2", "allow_higher": False}}
         case "ssl_1_3":
-            scheme = "https"
             tls_versions = {"tls_versions": {"min_version": "tls_1_3", "allow_higher": False}}
     match url_params.response_time:
         case None:
@@ -149,7 +142,6 @@ def _migrate_url_params(
         case max_age:
             max_age_new = {"max_age": max_age}
     return (
-        scheme,
         path,
         {
             **method,  # TODO: Proxy sets this to CONNECT.
@@ -217,15 +209,13 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
         case None:
             address_family = "any"
     if isinstance(value.mode[1], MigratableCert):
-        scheme, path, connection, remaining_settings = (
-            "https",
+        path, connection, remaining_settings = (
             "",
             *_migrate_cert_params(value.mode[1], address_family),
         )
     else:
-        scheme, path, connection, remaining_settings = _migrate_url_params(
-            value.mode[1], address_family
-        )
+        path, connection, remaining_settings = _migrate_url_params(value.mode[1], address_family)
+    scheme = "https" if value.uses_https() else "http"
 
     address = value.host.address[1]
     if isinstance(address, str):

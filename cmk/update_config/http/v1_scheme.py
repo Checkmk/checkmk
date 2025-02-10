@@ -115,3 +115,10 @@ class V1Value(BaseModel, extra="forbid"):
     host: V1Host
     mode: tuple[Literal["url"], V1Url] | tuple[Literal["cert"], V1Cert]
     disable_sni: Literal[True, None] = None
+
+    def uses_https(self) -> bool:
+        # In check_http.c (v1), this also determines the port.
+        # If this logic is adapted, then `_migrate_name` needs to be fixed.
+        if isinstance(self.mode[1], V1Cert):
+            return True
+        return self.mode[1].ssl is not None

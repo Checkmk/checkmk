@@ -5,7 +5,7 @@
 
 import enum
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
@@ -44,8 +44,9 @@ class MigratableValue(V1Value):
 @dataclass(frozen=True)
 class Conflict:
     type_: LiteralString
-    mode_fields: list[str]
-    host_fields: list[str]
+    mode_fields: Sequence[str] = ()
+    host_fields: Sequence[str] = ()
+    disable_sni: bool = False
 
 
 class HostType(enum.Enum):
@@ -79,44 +80,37 @@ def detect_conflicts(
             return Conflict(
                 type_="add_headers_incompatible",
                 mode_fields=["add_headers"],
-                host_fields=[],
             )
         if mode.ssl in ["ssl_1", "ssl_2", "ssl_3"]:
             return Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],
-                host_fields=[],
             )
         if mode.expect_response_header is not None:
             if "\r\n" in mode.expect_response_header.strip("\r\n"):
                 return Conflict(
                     type_="cant_match_multiple_response_header",
                     mode_fields=["expect_response_header"],
-                    host_fields=[],
                 )
             if ":" not in mode.expect_response_header:
                 return Conflict(
                     type_="must_decide_whether_name_or_value",
                     mode_fields=["expect_response_header"],
-                    host_fields=[],
                 )
         if mode.expect_regex is not None and mode.expect_string is not None:
             return Conflict(
                 type_="cant_have_regex_and_string",
                 mode_fields=["expect_regex", "expect_string"],
-                host_fields=[],
             )
         if mode.method in ["OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND"]:
             return Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             )
         if mode.post_data is not None and mode.method in ("GET", "DELETE", "HEAD"):
             return Conflict(
                 type_="cant_post_data_with_get_delete_head",
                 mode_fields=["method", "post_data"],
-                host_fields=[],
             )
         try:
             _migrate_expect_response(mode.expect_response or [])
@@ -124,8 +118,18 @@ def detect_conflicts(
             return Conflict(
                 type_="only_status_codes_allowed",
                 mode_fields=["expect_response"],
-                host_fields=[],
             )
+        if value.uses_https() and value.disable_sni:
+            return Conflict(
+                type_="cant_disable_sni_with_https",
+                mode_fields=["ssl"],
+                disable_sni=True,
+            )
+    elif value.disable_sni:  # Cert mode is always https
+        return Conflict(
+            type_="cant_disable_sni_with_https",
+            disable_sni=True,
+        )
     return MigratableValue.model_validate(value.model_dump())
 
 
@@ -146,6 +150,4 @@ def migratable(rule_value: Mapping[str, object]) -> bool:
             # We have the same issue as above.
             return False
         return False  # TODO: We don't have a address, if proxy is specified because of the HOSTADDRESS-url conflict.
-    if value.disable_sni:
-        return False
     return True

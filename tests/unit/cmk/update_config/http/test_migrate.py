@@ -720,6 +720,13 @@ EXAMPLE_88: Mapping[str, object] = {
     "mode": ("url", {"expect_response_header": "a"}),
 }
 
+EXAMPLE_89: Mapping[str, object] = {
+    "name": "disable_sni",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_1_3"}),
+    "disable_sni": True,
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -997,7 +1004,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_13,
         EXAMPLE_14,
         EXAMPLE_20,
-        EXAMPLE_75,
         EXAMPLE_85,
         EXAMPLE_86,
         EXAMPLE_87,
@@ -1015,7 +1021,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="add_headers_incompatible",
                 mode_fields=["add_headers"],
-                host_fields=[],
             ),
         ),
         (
@@ -1023,7 +1028,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],
-                host_fields=[],
             ),
         ),
         (
@@ -1031,7 +1035,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],
-                host_fields=[],
             ),
         ),
         (
@@ -1039,7 +1042,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],
-                host_fields=[],
             ),
         ),
         (
@@ -1047,7 +1049,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="cant_match_multiple_response_header",
                 mode_fields=["expect_response_header"],
-                host_fields=[],
             ),
         ),
         (
@@ -1055,7 +1056,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="must_decide_whether_name_or_value",
                 mode_fields=["expect_response_header"],
-                host_fields=[],
             ),
         ),
         (
@@ -1063,7 +1063,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="cant_have_regex_and_string",
                 mode_fields=["expect_regex", "expect_string"],
-                host_fields=[],
             ),
         ),
         (
@@ -1071,7 +1070,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             ),
         ),
         (
@@ -1079,7 +1077,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             ),
         ),
         (
@@ -1087,7 +1084,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             ),
         ),
         (
@@ -1095,7 +1091,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             ),
         ),
         (
@@ -1103,7 +1098,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="method_unavailable",
                 mode_fields=["method"],
-                host_fields=[],
             ),
         ),
         (
@@ -1111,7 +1105,6 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="cant_post_data_with_get_delete_head",
                 mode_fields=["method", "post_data"],
-                host_fields=[],
             ),
         ),
         (
@@ -1119,7 +1112,21 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="only_status_codes_allowed",
                 mode_fields=["expect_response"],
-                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_75,
+            Conflict(
+                type_="cant_disable_sni_with_https",
+                disable_sni=True,
+            ),
+        ),
+        (
+            EXAMPLE_89,
+            Conflict(
+                type_="cant_disable_sni_with_https",
+                mode_fields=["ssl"],
+                disable_sni=True,
             ),
         ),
     ],

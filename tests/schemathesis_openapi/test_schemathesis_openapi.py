@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 
 import pytest
 import schemathesis
@@ -17,7 +18,9 @@ schema = get_schema()
 
 
 @pytest.mark.type("schemathesis_openapi")
-@schema.parametrize(endpoint="")
+@schema.parametrize(
+    method=os.getenv("SCHEMATHESIS_METHOD", ""), endpoint=os.getenv("SCHEMATHESIS_ENDPOINT", "")
+)
 def test_openapi_stateless(case: schemathesis.models.Case) -> None:
     """Run default, stateless schemathesis testing."""
     if case.path == "/domain-types/notification_rule/collections/all" and case.method in (

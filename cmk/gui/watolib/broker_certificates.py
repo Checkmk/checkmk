@@ -115,7 +115,9 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
 
         # the presence of the following cert is used to determine if the broker certificates need
         # to be created/synced, so only save it if the sync was successful
-        LocalBrokerCertificate.write(site_id, paths.omd_root, remote_broker_certs.cert)
+        LocalBrokerCertificate(messaging.multisite_cert_file(paths.omd_root, site_id)).write(
+            remote_broker_certs.cert
+        )
 
     def update_trusted_cas(self) -> None:
         # Only relevant for editions with different customers
@@ -149,7 +151,7 @@ def ask_remote_csr(settings: SiteConfiguration) -> x509CertificateSigningRequest
 
 
 def broker_certs_created(site_id: SiteId) -> bool:
-    return LocalBrokerCertificate.exists(site_id, paths.omd_root)
+    return LocalBrokerCertificate(messaging.multisite_cert_file(paths.omd_root, site_id)).exists()
 
 
 def create_remote_broker_certs(

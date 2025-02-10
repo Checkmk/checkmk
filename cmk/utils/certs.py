@@ -387,24 +387,20 @@ class CustomerBrokerCA:
 
 
 class LocalBrokerCertificate:
-    @classmethod
-    def cert_path(cls, omd_root: Path, site_name: str) -> Path:
-        return messaging.multisite_cert_file(omd_root, site_name)
+    def __init__(self, path: Path) -> None:
+        self.cert_path: Final = path
 
-    @classmethod
-    def load(cls, site_name: str, omd_root: Path) -> Certificate:
-        return Certificate.load_pem(CertificatePEM(cls.cert_path(omd_root, site_name).read_bytes()))
+    def load(self) -> Certificate:
+        return Certificate.load_pem(CertificatePEM(self.cert_path.read_bytes()))
 
-    @classmethod
-    def write(cls, site_name: str, omd_root: Path, cert: bytes) -> None:
+    def write(self, cert: bytes) -> None:
         save_single_cert(
-            cls.cert_path(omd_root, site_name),
+            self.cert_path,
             Certificate.load_pem(CertificatePEM(cert)),
         )
 
-    @classmethod
-    def exists(cls, site_name: str, omd_root: Path) -> bool:
-        return cls.cert_path(omd_root, site_name).exists()
+    def exists(self) -> bool:
+        return self.cert_path.exists()
 
 
 class MessagingTrustedCAs:

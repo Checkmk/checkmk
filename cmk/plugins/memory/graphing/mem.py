@@ -234,7 +234,7 @@ graph_swap = Graph(
 graph_caches = Graph(
     name="caches",
     title=Title("Caches"),
-    simple_lines=[
+    compound_lines=[
         "mem_lnx_slab",
         "swap_cached",
         "mem_lnx_buffers",

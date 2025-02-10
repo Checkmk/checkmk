@@ -76,11 +76,11 @@ withCredentialFileAtLocation = {Map args, Closure body ->
     body.delegate = [:];
     try {
         withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
-                sh("ln -s ${SECRET_LOCATION} ${args.location}");
+                sh("cp ${SECRET_LOCATION} ${args.location}");
                 body();
         }
         return true;
     } finally {
-        sh("rm ${args.location}");
+        sh("rm -f ${args.location}");
     }
 };

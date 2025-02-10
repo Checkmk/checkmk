@@ -37,30 +37,29 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.result = parallel(
-        all_editions.collectEntries { edition ->
-            [("${edition}") : {
-                def stepName = "Trigger ${edition}";
-                def run_condition = edition in editions_to_test;
+    def stages = all_editions.collectEntries { edition ->
+        [("${edition}") : {
+            def stepName = "Trigger ${edition}";
+            def run_condition = edition in editions_to_test;
 
-                /// this makes sure the whole parallel thread is marked as skipped
-                if (! run_condition){
-                    Utils.markStageSkippedForConditional(stepName);
-                }
-
-                smart_stage(
-                    name: stepName,
-                    condition: run_condition,
-                    raiseOnError: true,
-                ) {
-                    smart_build(
-                        job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
-                        parameters: job_parameters,
-                    );
-                }
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
             }
-        ]}
-    );
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: true,
+            ) {
+                smart_build(
+                    job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
+                    parameters: job_parameters,
+                );
+            }
+        }]
+    }
+    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
 }
 
 return this;

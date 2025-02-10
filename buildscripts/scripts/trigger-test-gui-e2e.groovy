@@ -65,33 +65,32 @@ def main() {
         """.stripMargin());
     currentBuild.description += "<br>Selected editions: <b>${selected_editions.join(" ")}</b>";
 
-    currentBuild.result = parallel(
-        all_editions.collectEntries { edition -> [
-            ("${edition}") : {
-                def run_condition = edition in selected_editions;
-                /// this makes sure the whole parallel thread is marked as skipped
-                if (! run_condition){
-                    Utils.markStageSkippedForConditional("${edition}");
-                }
-                smart_stage(
-                    name: "Test ${edition}",
-                    condition: run_condition,
-                    raiseOnError: false,
-                ) {
-                    build(
-                        job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
-                        parameters: [
-                            stringParam(name: 'EDITION', value: edition),
-                            stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-                            stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                            stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                        ]
-                    );
-                }
-            }]
-        }
-    ).values().every { it } ? "SUCCESS" : "FAILURE";
+    def stages = all_editions.collectEntries { edition ->
+        [("${edition}") : {
+            def run_condition = edition in selected_editions;
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional("${edition}");
+            }
+            smart_stage(
+                name: "Test ${edition}",
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                smart_build(
+                    job: "${branch_base_folder}/builders/test-gui-e2e-f12less",
+                    parameters: [
+                        stringParam(name: 'EDITION', value: edition),
+                        stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
+                        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
+                        stringParam(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                    ]
+                );
+            }
+        }]
+    }
+    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
 }
 
 return this;

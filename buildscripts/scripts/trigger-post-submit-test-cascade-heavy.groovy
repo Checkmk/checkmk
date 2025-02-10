@@ -27,23 +27,24 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.result = parallel(
-        job_names.collectEntries { job_name ->
-            [("${job_name}") : {
-                stage("Trigger ${job_name}") {
-                    smart_build(
-                        job: "${branch_base_folder}/${job_name}",
-                        parameters: [
-                            stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                            stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                            stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                            stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
-                        ],
-                    );
-                }
-            }]
-        }
-    ).values().every { it } ? "SUCCESS" : "FAILURE";
+    def stages = job_names.collectEntries { job_name ->
+        [("${job_name}") : {
+            smart_stage(
+                name: "Trigger ${job_name}",
+            ) {
+                smart_build(
+                    job: "${branch_base_folder}/${job_name}",
+                    parameters: [
+                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
+                    ],
+                );
+            }
+        }]
+    }
+    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
 }
 
 return this;

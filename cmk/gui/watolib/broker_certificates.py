@@ -22,7 +22,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
 from cmk.utils.certs import (
-    CustomerBrokerCA,
     LocalBrokerCertificate,
     MessagingTrustedCAs,
     SiteBrokerCA,
@@ -34,7 +33,11 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import messaging
-from cmk.crypto.certificate import CertificateSigningRequest, X509Name
+from cmk.crypto.certificate import (
+    CertificateSigningRequest,
+    PersistedCertificateWithPrivateKey,
+    X509Name,
+)
 from cmk.crypto.keys import PrivateKey
 
 logger = logging.getLogger("cmk.web.background-job")
@@ -57,7 +60,9 @@ class BrokerCertificateSync(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load_or_create_customer_ca(self, customer: str) -> CustomerBrokerCA | None:
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -66,7 +71,7 @@ class BrokerCertificateSync(abc.ABC):
         site_id: SiteId,
         settings: SiteConfiguration,
         central_ca: SiteBrokerCA,
-        customer_ca: CustomerBrokerCA | None,
+        customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     ) -> None:
         raise NotImplementedError
 
@@ -88,7 +93,9 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
                 required_certificates["provider"].append((site_id, settings))
         return required_certificates
 
-    def load_or_create_customer_ca(self, customer: str) -> CustomerBrokerCA | None:
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
         # Only relevant for editions with different customers
         return None
 
@@ -97,7 +104,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         site_id: SiteId,
         settings: SiteConfiguration,
         central_ca: SiteBrokerCA,
-        customer_ca: CustomerBrokerCA | None,
+        customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     ) -> None:
         logger.info("Remote broker certificates creation for site %s", site_id)
         csr = ask_remote_csr(settings)

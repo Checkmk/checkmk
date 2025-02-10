@@ -338,27 +338,18 @@ class SiteBrokerCA:
 
 
 class CustomerBrokerCA:
-    def __init__(self, bundle: PersistedCertificateWithPrivateKey) -> None:
-        self.cert_bundle = bundle
+    def __init__(self, cert_path: Path, key_path: Path) -> None:
+        self.cert_path: Final = cert_path
+        self.key_path: Final = key_path
 
-    @classmethod
-    def key_path(cls, omd_root: Path, customer: str) -> Path:
-        return messaging.multisite_ca_key_file(omd_root, customer)
-
-    @classmethod
-    def cert_path(cls, omd_root: Path, customer: str) -> Path:
-        return messaging.multisite_cacert_file(omd_root, customer)
-
-    @classmethod
-    def create_and_persist(cls, customer: str, site_name: str, omd_root: Path) -> Self:
+    def create_and_persist(
+        self, customer: str, site_name: str
+    ) -> PersistedCertificateWithPrivateKey:
         common_name = f"Message broker '{customer}' CA"
         organization = f"Checkmk Site {site_name}"
         expires = relativedelta(years=5)
         key_size = 4096
         is_ca = True
-
-        cert_path = cls.cert_path(omd_root, customer)
-        key_path = cls.key_path(omd_root, customer)
 
         cert = CertificateWithPrivateKey.generate_self_signed(
             common_name=common_name,
@@ -368,22 +359,15 @@ class CustomerBrokerCA:
             is_ca=is_ca,
         )
 
-        cert_path.parent.mkdir(parents=True, exist_ok=True)
-        return cls(PersistedCertificateWithPrivateKey.persist(cert, cert_path, key_path))
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+        return PersistedCertificateWithPrivateKey.persist(cert, self.cert_path, self.key_path)
 
-    @classmethod
-    def load(cls, customer: str, omd_root: Path) -> Self:
-        return cls(
-            PersistedCertificateWithPrivateKey.read_files(
-                cls.cert_path(omd_root, customer),
-                cls.key_path(omd_root, customer),
-            )
-        )
+    def load(self) -> PersistedCertificateWithPrivateKey:
+        return PersistedCertificateWithPrivateKey.read_files(self.cert_path, self.key_path)
 
-    @classmethod
-    def delete(cls, customer: str, omd_root: Path) -> None:
-        cls.cert_path(omd_root, customer).unlink(missing_ok=True)
-        cls.key_path(omd_root, customer).unlink(missing_ok=True)
+    def delete(self) -> None:
+        self.cert_path.unlink(missing_ok=True)
+        self.key_path.unlink(missing_ok=True)
 
 
 class LocalBrokerCertificate:

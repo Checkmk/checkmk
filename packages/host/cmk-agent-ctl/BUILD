@@ -84,7 +84,13 @@ rust_test_suite(
         "tests/test_status.rs",
     ],
     crate_features = ["build_system_bazel"],
+    env = {
+        "CMK_AGENT_CTL_PATH": "$(execpaths :cmk-agent-ctl)",
+        "ROOTPATH": "$(location :cmk-agent-ctl)",
+        "RUST_BACKTRACE": "1",
+    },
     deps = all_crate_deps() + [
+        ":cmk-agent-ctl",
         ":cmk-agent-ctl-lib",
         ":cmk-agent-ctl-tests-common",
         "@cargo_deps_host//:assert_cmd",

@@ -609,7 +609,21 @@ class Site:
         helper_file = caller_file.parent / name
         return PythonHelper(self, helper_file)
 
-    def omd(self, mode: str, *args: str) -> int:
+    def omd(self, mode: str, *args: str, check: bool = False) -> int:
+        """run the "omd" command with the given mode and arguments.
+
+        Args:
+            mode (str): The mode of the "omd" command. e.g. "status", "restart", "start", "stop"
+            args (str): More (optional) arguments to the "omd" command.
+            check (bool, optional): Run cmd as check/strict - raise Exception on rc!=0.
+
+        raises:
+            subprocess.CalledProcessError: If check is True and the return code is not 0.
+                Will also contain the output of the command in the exception message.
+
+        Returns:
+            int: return code of the "omd" command
+        """
         cmd = ["omd", mode] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         completed_process = self.run(
@@ -617,7 +631,7 @@ class Site:
             capture_output=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            check=False,
+            check=check,
         )
         logger.debug("Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
@@ -1015,7 +1029,8 @@ class Site:
     def start(self) -> None:
         if not self.is_running():
             logger.info("Starting site")
-            assert self.omd("start") == 0
+            # start the site and ensure it's fully running (including all services)
+            assert self.omd("start", check=True) == 0
             # print("= BEGIN PROCESSES AFTER START ==============================")
             # self.execute(["ps", "aux"]).wait()
             # print("= END PROCESSES AFTER START ==============================")
@@ -1989,6 +2004,12 @@ def get_site_factory(
     version: CMKVersion | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
+    """retrieves a correctly parameterized SiteFactory object
+
+    This will be either
+        * the default one (daily) or
+        * as parameterized from the environment
+    """
     version = version or version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,

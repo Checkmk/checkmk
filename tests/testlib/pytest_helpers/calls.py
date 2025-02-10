@@ -40,6 +40,7 @@ def exit_pytest_on_exceptions(
     exceptions = (BaseException,) if exceptions is None else exceptions
     msg = f"{exit_msg}\n"
     try:
+        # simply execute the context body
         yield
     except exceptions as excp:
         msg += _exception_traceback(excp)

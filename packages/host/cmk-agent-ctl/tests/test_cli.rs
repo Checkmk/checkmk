@@ -105,9 +105,12 @@ async fn test_dump() -> AnyhowResult<()> {
     Ok(())
 }
 
+/// Tests that 'cmk-agent-ctl' errors if it cannot switch to the correct user.
 #[cfg(unix)]
 #[test]
 fn test_fail_become_user() {
+    // If the environment variable DEBUG_HOME_DIR is set this test will hang.
+    std::env::remove_var("DEBUG_HOME_DIR");
     for mode in SUPPORTED_MODES {
         if mode == "help" {
             continue;

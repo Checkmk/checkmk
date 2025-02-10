@@ -10,7 +10,6 @@ from livestatus import SiteId
 from cmk.ccc.i18n import _
 
 from cmk.utils import paths
-from cmk.utils.certs import SiteBrokerCertificate
 
 from cmk.gui.watolib.activate_changes import get_all_replicated_sites
 from cmk.gui.watolib.broker_certificates import (
@@ -19,6 +18,7 @@ from cmk.gui.watolib.broker_certificates import (
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
+from cmk import messaging
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 
@@ -31,7 +31,7 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
     created with the new names.
     """
     logger.debug("Deleting broker certificates of site %s", old_site_id)
-    SiteBrokerCertificate.cert_path(paths.omd_root).unlink(missing_ok=True)
+    messaging.site_cert_file(paths.omd_root).unlink(missing_ok=True)
     logger.debug("Deleting broker certificates of replicated sites")
     clean_remote_sites_certs(kept_sites=[])
 

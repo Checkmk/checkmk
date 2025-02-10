@@ -35,6 +35,7 @@ from cmk.gui.watolib.automations import do_remote_automation
 from cmk import messaging
 from cmk.crypto.certificate import (
     CertificateSigningRequest,
+    CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
     X509Name,
 )
@@ -168,10 +169,13 @@ def create_remote_broker_certs(
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    site_cert = SiteBrokerCertificate.create(site_id, paths.omd_root, signing_ca_bundle)
+    site_broker_ca = SiteBrokerCertificate(
+        messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
+    )
+    site_ca_bundle = site_broker_ca.create_bundle(site_id, signing_ca_bundle)
 
     return messaging.BrokerCertificates(
-        cert=site_cert.cert_bundle.certificate.dump_pem().bytes,
+        cert=site_ca_bundle.certificate.dump_pem().bytes,
         signing_ca=signing_ca_bundle.certificate.dump_pem().bytes,
     )
 
@@ -223,21 +227,23 @@ class BrokerCertificateSyncRegistry(Registry[BrokerCertificateSync]):
 broker_certificate_sync_registry = BrokerCertificateSyncRegistry()
 
 
-def _create_message_broker_certs() -> SiteBrokerCertificate:
+def _create_message_broker_certs() -> CertificateWithPrivateKey:
     """Initialize the CA and create the certificate for use with the message broker.
     These might be replaced by the "store-broker-certs" automation.
     """
 
     ca = SiteBrokerCA(messaging.cacert_file(paths.omd_root), messaging.ca_key_file(paths.omd_root))
-    bundle = ca.create_and_persist(omd_site())
+    ca_bundle = ca.create_and_persist(omd_site())
     MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root)).write(
-        bundle.certificate_path.read_bytes()
+        ca_bundle.certificate_path.read_bytes()
     )
 
-    site_cert = SiteBrokerCertificate.create(omd_site(), paths.omd_root, issuer=bundle)
-    site_cert.persist(paths.omd_root)
+    site_broker_ca = SiteBrokerCertificate(
+        messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
+    )
+    site_broker_ca.persist(bundle := site_broker_ca.create_bundle(omd_site(), issuer=ca_bundle))
 
-    return site_cert
+    return bundle
 
 
 def _create_csr(private_key: PrivateKey) -> CertificateSigningRequest:
@@ -300,8 +306,13 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
 
     def execute(self, api_request: StoreBrokerCertificatesData) -> bool:
         trusted_cas_store = MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root))
-        SiteBrokerCertificate.persist_broker_certificates(
-            paths.omd_root, api_request.certificates, trusted_cas_store
+        SiteBrokerCertificate(
+            messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
+        ).persist_broker_certificates(
+            signing_ca=api_request.certificates.signing_ca,
+            cert=api_request.certificates.cert,
+            additionally_trusted_ca=api_request.certificates.additionally_trusted_ca,
+            trusted_cas_store=trusted_cas_store,
         )
 
         # Remove local CA files to avoid confusion. They have no use anymore.
@@ -327,5 +338,5 @@ class AutomationCreateBrokerCertificates(AutomationCommand[None]):
         pass
 
     def execute(self, api_request: None) -> BrokerCertsCSR:
-        private_key = _create_message_broker_certs().cert_bundle.private_key
+        private_key = _create_message_broker_certs().private_key
         return {"csr": _create_csr(private_key).csr.public_bytes(Encoding.PEM)}

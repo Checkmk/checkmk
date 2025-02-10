@@ -714,6 +714,12 @@ EXAMPLE_87: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_88: Mapping[str, object] = {
+    "name": "expect_response_header",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"expect_response_header": "a"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -999,7 +1005,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_61,
         EXAMPLE_62,
         EXAMPLE_63,
-        EXAMPLE_74,
         EXAMPLE_75,
         EXAMPLE_85,
         EXAMPLE_86,
@@ -1042,6 +1047,22 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_74,
+            Conflict(
+                type_="cant_match_multiple_response_header",
+                mode_fields=["expect_response_header"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_88,
+            Conflict(
+                type_="must_decide_whether_name_or_value",
+                mode_fields=["expect_response_header"],
                 host_fields=[],
             ),
         ),

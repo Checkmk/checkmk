@@ -65,12 +65,6 @@ def _classify(host: str) -> HostType:
 
 
 def _migratable_url_params(url_params: MigratableUrl) -> bool:
-    if (
-        url_params.expect_response_header is not None
-        and "\r\n" in url_params.expect_response_header.strip("\r\n")
-    ):
-        # TODO: Redirects behave differently in V1 and V2.
-        return False
     if url_params.expect_regex is not None and url_params.expect_string is not None:
         return False
     if url_params.post_data is not None and url_params.method in ("GET", "DELETE", "HEAD"):
@@ -105,6 +99,19 @@ def detect_conflicts(
                 mode_fields=["ssl"],
                 host_fields=[],
             )
+        if mode.expect_response_header is not None:
+            if "\r\n" in mode.expect_response_header.strip("\r\n"):
+                return Conflict(
+                    type_="cant_match_multiple_response_header",
+                    mode_fields=["expect_response_header"],
+                    host_fields=[],
+                )
+            if ":" not in mode.expect_response_header:
+                return Conflict(
+                    type_="must_decide_whether_name_or_value",
+                    mode_fields=["expect_response_header"],
+                    host_fields=[],
+                )
     return MigratableValue.model_validate(value.model_dump())
 
 

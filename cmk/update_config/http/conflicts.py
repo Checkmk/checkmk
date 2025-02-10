@@ -116,6 +116,12 @@ def detect_conflicts(
                 mode_fields=["expect_regex", "expect_string"],
                 host_fields=[],
             )
+        if mode.method in ["OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND"]:
+            return Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
+                host_fields=[],
+            )
     return MigratableValue.model_validate(value.model_dump())
 
 

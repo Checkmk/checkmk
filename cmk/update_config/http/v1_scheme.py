@@ -95,8 +95,11 @@ class V1Url(BaseModel, extra="forbid"):
             "PUT",
             "DELETE",
             "HEAD",
-            # Not supported by V2
-            # "OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND",
+            "OPTIONS",
+            "TRACE",
+            "CONNECT",
+            "CONNECT_POST",
+            "PROPFIND",
         ]
         | None
     ) = None

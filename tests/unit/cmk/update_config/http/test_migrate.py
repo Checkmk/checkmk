@@ -508,7 +508,7 @@ EXAMPLE_62: Mapping[str, object] = {
 EXAMPLE_63: Mapping[str, object] = {
     "name": "method",
     "host": {"address": ("direct", "[::1]")},
-    "mode": ("url", {"method": "PROP_FIND"}),
+    "mode": ("url", {"method": "PROPFIND"}),
 }
 
 
@@ -999,11 +999,6 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_20,
         EXAMPLE_44,
         EXAMPLE_51,
-        EXAMPLE_59,
-        EXAMPLE_60,
-        EXAMPLE_61,
-        EXAMPLE_62,
-        EXAMPLE_63,
         EXAMPLE_75,
         EXAMPLE_85,
         EXAMPLE_86,
@@ -1070,6 +1065,46 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
             Conflict(
                 type_="cant_have_regex_and_string",
                 mode_fields=["expect_regex", "expect_string"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_59,
+            Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_60,
+            Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_61,
+            Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_62,
+            Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
+                host_fields=[],
+            ),
+        ),
+        (
+            EXAMPLE_63,
+            Conflict(
+                type_="method_unavailable",
+                mode_fields=["method"],
                 host_fields=[],
             ),
         ),

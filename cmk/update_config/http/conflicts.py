@@ -64,14 +64,6 @@ def _classify(host: str) -> HostType:
     return HostType.INVALID
 
 
-def _migratable_url_params(url_params: MigratableUrl) -> bool:
-    try:
-        _migrate_expect_response(url_params.expect_response or [])
-    except ValueError:
-        return False
-    return True
-
-
 def detect_conflicts(
     rule_value: Mapping[str, object],
 ) -> Conflict | MigratableValue | ValidationError:
@@ -126,6 +118,14 @@ def detect_conflicts(
                 mode_fields=["method", "post_data"],
                 host_fields=[],
             )
+        try:
+            _migrate_expect_response(mode.expect_response or [])
+        except ValueError:
+            return Conflict(
+                type_="only_status_codes_allowed",
+                mode_fields=["expect_response"],
+                host_fields=[],
+            )
     return MigratableValue.model_validate(value.model_dump())
 
 
@@ -148,6 +148,4 @@ def migratable(rule_value: Mapping[str, object]) -> bool:
         return False  # TODO: We don't have a address, if proxy is specified because of the HOSTADDRESS-url conflict.
     if value.disable_sni:
         return False
-    if isinstance(value.mode[1], V1Cert):
-        return True
-    return _migratable_url_params(value.mode[1])
+    return True

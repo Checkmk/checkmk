@@ -567,7 +567,9 @@ class SiteManagement:
             "edit-sites",
             _("Deleted site %s") % site_id,
             domains=domains,
-            sites=list(connected_sites),
+            # Exclude site which is about to be removed. The activation won't be executed for that
+            # site anymore, so there is no point in adding a change for this site
+            sites=list(connected_sites - {site_id}),
             need_restart=True,
         )
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)

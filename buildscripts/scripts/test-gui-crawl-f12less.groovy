@@ -8,12 +8,14 @@ def main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
         // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
         "DOCKER_REGISTRY",
     ]);
 
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
@@ -25,9 +27,11 @@ def main() {
     )
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def make_target = "test-gui-crawl-docker";
     def download_dir = "package_download";
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
 
     currentBuild.description += (
         """
@@ -68,59 +72,42 @@ def main() {
             mount_credentials: true,
             priviliged: true,
         ) {
+            single_tests.prepare_workspace(
+                cleanup: [
+                    "${WORKSPACE}/test-results",
+                    "${checkout_dir}/${download_dir}"
+                ],
+                make_venv: true
+            );
+
             dir("${checkout_dir}") {
-
-                // Cleanup test results directory before starting the test to prevent previous
-                // runs somehow affecting the current run.
-                sh("rm -rf ${WORKSPACE}/test-results");
-
-                /// remove downloaded packages since they consume dozens of MiB
-                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
-
-                // Initialize our virtual environment before parallelization
-                sh("make .venv");
-
                 stage("Fetch Checkmk package") {
-                    upstream_build(
-                        relative_job_name: "builders/build-cmk-distro-package",
-                        build_params: [
-                            /// currently CUSTOM_GIT_REF must match, but in the future
-                            /// we should define dependency paths for build-cmk-distro-package
-                            CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
-                            EDITION: edition,
-                            DISTRO: distro,
-                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                        ],
-                        dest: download_dir,
+                    single_tests.fetch_package(
+                        edition: edition,
+                        distro: distro,
+                        download_dir: download_dir,
+                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                        fake_windows_artifacts: fake_windows_artifacts,
                     );
                 }
                 try {
                     stage("Run `make ${make_target}`") {
                         dir("${checkout_dir}/tests") {
-                            sh("""
-                                RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
-                                EDITION='${edition}' \
-                                DOCKER_TAG='${docker_tag}' \
-                                VERSION="daily" \
-                                DISTRO='${distro}' \
-                                make ${make_target}
-                            """);
+                            single_tests.run_make_target(
+                                result_path: "${WORKSPACE}/test-results/${distro}",
+                                edition: edition,
+                                docker_tag: setup_values.docker_tag,
+                                version: "daily",
+                                distro: distro,
+                                branch_name: setup_values.safe_branch_name,
+                                make_target: make_target,
+                            );
                         }
                     }
                 } finally {
                     stage("Archive / process test reports") {
                         dir("${WORKSPACE}") {
-                            show_duration("archiveArtifacts") {
-                                archiveArtifacts("test-results/**");
-                            }
-                            xunit([Custom(
-                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: "**/junit.xml",
-                                skipNoTestFiles: false,
-                                stopProcessingIfError: true
-                            )]);
+                            single_tests.archive_and_process_reports(test_results: "test-results/**");
                         }
                     }
                     stage('archive crawler report') {

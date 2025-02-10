@@ -117,39 +117,21 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
     # by multiple "Memory Device" sections. Keep track of which belongs where:
     counter: Counter[Literal["physical_memory_array", "memory_device"]] = Counter()
     for title, lines in section:
-        yield from _dispatch_subsection(title, lines, counter)
-
-
-def _dispatch_subsection(
-    title: str,
-    lines: list[list[str]],
-    counter: Counter[Literal["physical_memory_array", "memory_device"]],
-) -> InventoryResult:
-    if title == "BIOS Information":
-        yield _make_inventory_bios(lines)
-        return
-
-    if title == "System Information":
-        yield _make_inventory_system(lines)
-        return
-
-    if title == "Chassis Information":
-        yield _make_inventory_chassis(lines)
-        return
-
-    if title == "Processor Information":
-        yield from _make_inventory_processor(lines)
-        return
-
-    if title == "Physical Memory Array":
-        counter.update({"physical_memory_array": 1})
-        yield _make_inventory_physical_mem_array(lines, counter)
-        return
-
-    if title == "Memory Device":
-        counter.update({"memory_device": 1})
-        yield from _make_inventory_mem_device(lines, counter)
-        return
+        match title:
+            case "BIOS Information":
+                yield _make_inventory_bios(lines)
+            case "System Information":
+                yield _make_inventory_system(lines)
+            case "Chassis Information":
+                yield _make_inventory_chassis(lines)
+            case "Processor Information":
+                yield from _make_inventory_processor(lines)
+            case "Physical Memory Array":
+                counter.update({"physical_memory_array": 1})
+                yield _make_inventory_physical_mem_array(lines, counter)
+            case "Memory Device":
+                counter.update({"memory_device": 1})
+                yield from _make_inventory_mem_device(lines, counter)
 
 
 def _make_inventory_bios(lines: list[list[str]]) -> Attributes:

@@ -127,10 +127,8 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
             case "Processor Information":
                 yield from _make_inventory_processor(lines)
             case "Physical Memory Array":
-                counter.update({"physical_memory_array": 1})
                 yield _make_inventory_physical_mem_array(lines, counter)
             case "Memory Device":
-                counter.update({"memory_device": 1})
                 yield from _make_inventory_mem_device(lines, counter)
 
 
@@ -211,6 +209,7 @@ def _make_inventory_physical_mem_array(
     lines: list[list[str]],
     counter: Counter[Literal["physical_memory_array", "memory_device"]],
 ) -> Attributes:
+    counter.update({"physical_memory_array": 1})
     # We expect several possible arrays
     return Attributes(
         path=["hardware", "memory", "arrays", str(counter["physical_memory_array"])],
@@ -255,6 +254,7 @@ def _make_inventory_mem_device(
     device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
     device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
 
+    counter.update({"memory_device": 1})
     key_columns = {k: device.pop(k) for k in ("set",)}
     key_columns.update({"index": counter["memory_device"]})
     yield TableRow(

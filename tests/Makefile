@@ -52,7 +52,10 @@ SYSTEM_TESTS := \
     test-gui-e2e-cme \
     test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+PYTEST_SYSTEM_TEST_ARGS := \
+    -p "no:cov" \
+    --log-cli-level=INFO \
+    --log-cli-format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker

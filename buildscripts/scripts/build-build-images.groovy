@@ -166,10 +166,6 @@ def main() {
                     cat /etc/os-release
                     echo \$USER
                     echo \$HOME
-                    echo Hello from reference image
-                    cat /etc/os-release
-                    echo \$USER
-                    echo \$HOME
                     ls -alF \$HOME
                     ls -alF \$HOME/.cache
                     echo fcache > \$HOME/.cache/fcache

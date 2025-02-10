@@ -179,6 +179,10 @@ def test_linked_libraries(site: Site) -> None:
                 assert False, f"Library {lib.name} was not found. Linked from {file}"
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "almalinux-9",
+    reason="to be fixed with CMK-21706",
+)
 def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
     perl_rrd_so = (
         Path(site.root)

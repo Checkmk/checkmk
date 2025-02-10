@@ -122,9 +122,7 @@ class RowTableLivestatus(RowTable):
         return rows, len(data)
 
 
-def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
-) -> list[LivestatusRow]:
+def debug_livestatus(query: Query) -> None:
     if all(
         (
             active_config.debug_livestatus_queries,
@@ -135,6 +133,27 @@ def query_livestatus(
         html.open_div(class_=["livestatus", "message"])
         html.tt(str(query).replace("\n", "<br>\n"))
         html.close_div()
+
+
+def query_row(
+    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+) -> LivestatusRow:
+    debug_livestatus(query)
+
+    sites.live().set_auth_domain(auth_domain)
+
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
+        row = sites.live().query_row(query)
+
+    sites.live().set_auth_domain("read")
+
+    return row
+
+
+def query_livestatus(
+    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+) -> list[LivestatusRow]:
+    debug_livestatus(query)
 
     sites.live().set_auth_domain(auth_domain)
     with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):

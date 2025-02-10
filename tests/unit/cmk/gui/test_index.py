@@ -76,5 +76,5 @@ def test_get_start_url_invalid(invalid_url: str) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_invalid_config(monkeypatch: MonkeyPatch) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "_attributes", {"start_url": "http://asdasd/"})
+        m.setattr(user, "attributes", {"start_url": "http://asdasd/"})
         assert cmk.gui.main._get_start_url() == "dashboard.py"

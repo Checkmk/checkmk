@@ -49,7 +49,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.certs import (
-    CustomerBrokerCA,
     SiteBrokerCA,
 )
 from cmk.utils.hostaddress import HostName
@@ -140,6 +139,7 @@ from cmk.gui.watolib.snapshots import SnapshotManager
 
 from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
 
@@ -2225,7 +2225,7 @@ def sync_and_activate(
 def create_broker_certificates(
     broker_cert_sync: BrokerCertificateSync,
     central_ca: SiteBrokerCA,
-    customer_ca: CustomerBrokerCA | None,
+    customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     settings: SiteConfiguration,
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
@@ -2240,7 +2240,9 @@ def create_broker_certificates(
         sync_start = time.time()
         try:
             _set_sync_state(site_activation_state, _("Syncing broker certificates"))
-            broker_cert_sync.create_broker_certificates(site_id, settings, central_ca, customer_ca)
+            broker_cert_sync.create_broker_certificates(
+                site_id, settings, central_ca, customer_ca_bundle
+            )
             return site_activation_state
         except Exception as e:
             duration = time.time() - sync_start

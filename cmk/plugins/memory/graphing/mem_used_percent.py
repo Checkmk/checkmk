@@ -34,12 +34,12 @@ graph_mem_percent = Graph(
     title=Title("RAM usage"),
     minimal_range=MinimalRange(0, 100),
     simple_lines=(
-        "mem_used_percent",
         WarningOf("mem_used_percent"),
         CriticalOf("mem_used_percent"),
         "mem_used_percent_avg",
         WarningOf("mem_used_percent_avg"),
         CriticalOf("mem_used_percent_avg"),
     ),
+    compound_lines=("mem_used_percent",),
     optional=["mem_used_percent_avg"],
 )

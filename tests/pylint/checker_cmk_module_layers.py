@@ -701,6 +701,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),

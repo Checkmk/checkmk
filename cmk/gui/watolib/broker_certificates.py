@@ -46,8 +46,10 @@ BrokerCertsCSR = Mapping[Literal["csr"], bytes]
 
 
 class BrokerCertificateSync(abc.ABC):
-    def load_central_ca(self) -> SiteBrokerCA:
-        return SiteBrokerCA.load(paths.omd_root)
+    def load_central_ca(self) -> PersistedCertificateWithPrivateKey:
+        return SiteBrokerCA(
+            messaging.cacert_file(paths.omd_root), messaging.ca_key_file(paths.omd_root)
+        ).load()
 
     @abc.abstractmethod
     def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
@@ -70,7 +72,7 @@ class BrokerCertificateSync(abc.ABC):
         self,
         site_id: SiteId,
         settings: SiteConfiguration,
-        central_ca: SiteBrokerCA,
+        central_ca_bundle: PersistedCertificateWithPrivateKey,
         customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     ) -> None:
         raise NotImplementedError
@@ -103,18 +105,16 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         self,
         site_id: SiteId,
         settings: SiteConfiguration,
-        central_ca: SiteBrokerCA,
+        central_ca_bundle: PersistedCertificateWithPrivateKey,
         customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     ) -> None:
         logger.info("Remote broker certificates creation for site %s", site_id)
         csr = ask_remote_csr(settings)
-        signed = central_ca.cert_bundle.sign_csr(
-            CertificateSigningRequest(csr), relativedelta(years=2)
-        )
+        signed = central_ca_bundle.sign_csr(CertificateSigningRequest(csr), relativedelta(years=2))
 
         remote_broker_certs = messaging.BrokerCertificates(
             cert=signed.dump_pem().bytes,
-            signing_ca=central_ca.cert_bundle.certificate.dump_pem().bytes,
+            signing_ca=central_ca_bundle.certificate.dump_pem().bytes,
         )
 
         logger.info("Sending signed broker certificates for site %s", site_id)
@@ -162,17 +162,17 @@ def broker_certs_created(site_id: SiteId) -> bool:
 
 
 def create_remote_broker_certs(
-    signing_ca: SiteBrokerCA, site_id: SiteId, site: SiteConfiguration
+    signing_ca_bundle: PersistedCertificateWithPrivateKey, site_id: SiteId, site: SiteConfiguration
 ) -> messaging.BrokerCertificates:
     """
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    site_cert = SiteBrokerCertificate.create(site_id, paths.omd_root, signing_ca.cert_bundle)
+    site_cert = SiteBrokerCertificate.create(site_id, paths.omd_root, signing_ca_bundle)
 
     return messaging.BrokerCertificates(
         cert=site_cert.cert_bundle.certificate.dump_pem().bytes,
-        signing_ca=signing_ca.cert_bundle.certificate.dump_pem().bytes,
+        signing_ca=signing_ca_bundle.certificate.dump_pem().bytes,
     )
 
 
@@ -228,10 +228,13 @@ def _create_message_broker_certs() -> SiteBrokerCertificate:
     These might be replaced by the "store-broker-certs" automation.
     """
 
-    ca = SiteBrokerCA.create_and_persist(omd_site(), paths.omd_root)
-    ca.write_trusted_cas_file(paths.omd_root)
+    ca = SiteBrokerCA(messaging.cacert_file(paths.omd_root), messaging.ca_key_file(paths.omd_root))
+    bundle = ca.create_and_persist(omd_site())
+    MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root)).write(
+        bundle.certificate_path.read_bytes()
+    )
 
-    site_cert = SiteBrokerCertificate.create(omd_site(), paths.omd_root, issuer=ca.cert_bundle)
+    site_cert = SiteBrokerCertificate.create(omd_site(), paths.omd_root, issuer=bundle)
     site_cert.persist(paths.omd_root)
 
     return site_cert
@@ -302,7 +305,9 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
         )
 
         # Remove local CA files to avoid confusion. They have no use anymore.
-        SiteBrokerCA.delete(paths.omd_root)
+        SiteBrokerCA(
+            messaging.cacert_file(paths.omd_root), messaging.ca_key_file(paths.omd_root)
+        ).delete()
 
         # In case we're logging in, and the node is running, immediately create the user.
         # If for some reason the node is not running, the user will be created when the

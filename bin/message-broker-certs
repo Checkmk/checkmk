@@ -10,7 +10,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.utils.certs import SiteBrokerCA, SiteBrokerCertificate
+from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
+
+from cmk import messaging
 
 
 @dataclass(frozen=True)
@@ -23,11 +25,13 @@ def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
     """Initialize the CA and create the certificate for use with the message broker.
     These might be replaced by the config sync later.
     """
+    ca = SiteBrokerCA(messaging.cacert_file(omd_root), messaging.ca_key_file(omd_root))
+    ca_cert_bundle = ca.create_and_persist(site_name)
+    MessagingTrustedCAs(messaging.trusted_cas_file(omd_root)).write(
+        ca_cert_bundle.certificate_path.read_bytes()
+    )
 
-    ca = SiteBrokerCA.create_and_persist(site_name, omd_root)
-    ca.write_trusted_cas_file(omd_root)
-
-    site_cert = SiteBrokerCertificate.create(site_name, omd_root, issuer=ca.cert_bundle)
+    site_cert = SiteBrokerCertificate.create(site_name, omd_root, issuer=ca_cert_bundle)
     site_cert.persist(omd_root)
 
 

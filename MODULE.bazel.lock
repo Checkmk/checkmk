@@ -2931,7 +2931,7 @@
         "usagesDigest": "qpZNKU6hTsq/hD7VT5JN435zego/ibD9dCDtPxVeEU0=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "f2a7e79fb3b7bf1fd98f682daee7a1f7717cf4e380a633a8fd9fddba6baadc50",
+          "@@//requirements_all_lock.txt": "ba858d5c531ec548ed2913f799f423926cede0192b72efdb28c62ac9309e7fbf",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -7099,7 +7099,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "marshmallow==3.23.1     --hash=sha256:3a8dfda6edd8dcdbf216c0ede1d1e78d230a6dc9c5a088f58c4083b974a0d468     --hash=sha256:fece2eb2c941180ea1b7fcbd4a83c51bfdd50093fdd3ad2585ee5e1df2508491"
+              "requirement": "marshmallow==3.26.1     --hash=sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c     --hash=sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6"
             }
           },
           "cmk_requirements_312_azure_mgmt_resource": {

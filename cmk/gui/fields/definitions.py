@@ -283,7 +283,20 @@ class LogicalExprSchema(BaseSchema):
     )
 
 
-class ExprSchema(OneOfSchema):
+class CmkOneOfSchema(OneOfSchema):
+    context: dict[object, object] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+
+class ExprSchema(CmkOneOfSchema):
     """Top level class for query expression schema
 
     Operators can be one of: AND, OR
@@ -365,8 +378,17 @@ class ExprSchema(OneOfSchema):
 
 
 class _ExprNested(base.Nested):
-    def _load(self, value, data, partial=None):
-        _data = super()._load(value, data, partial=partial)
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+    def _load(self, value, partial=None):
+        _data = super()._load(value, partial=partial)
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
@@ -615,7 +637,11 @@ class HostField(base.String):
         host = Host.host(value)
         self._confirm_user_has_permission(host)
 
-        if self._skip_validation_on_view and self.context.get("object_context") == "view":
+        if (
+            self._skip_validation_on_view
+            and self.context is not None
+            and self.context.get("object_context") == "view"
+        ):
             return
 
         # Regex gets checked through the `pattern` of the String instance
@@ -1039,7 +1065,11 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
+        if (
+            self.presence == "might_not_exist_on_view"
+            and self.context is not None
+            and self.context["object_context"] == "view"
+        ):
             return
 
         if self.presence in ["should_exist", "might_not_exist_on_view"]:

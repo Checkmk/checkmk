@@ -354,10 +354,6 @@ def to_dict(schema: BaseSchema) -> dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
-    if not getattr(schema.Meta, "ordered", False):
-        # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
-        raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
-
     if (schema_example := schema.schema_example) is not None:
         return schema_example
 

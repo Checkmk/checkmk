@@ -473,7 +473,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,
-        context: dict | None = None,
+        context: dict[object, object] = {},
         load_only: types.StrSequenceOrSet = (),
         dump_only: types.StrSequenceOrSet = (),
         partial: bool | types.StrSequenceOrSet = False,

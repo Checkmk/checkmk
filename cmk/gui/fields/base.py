@@ -28,17 +28,13 @@ from marshmallow import (
 from marshmallow.base import SchemaABC
 from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, pre_dump, PRE_LOAD
 from marshmallow.error_store import ErrorStore
+from marshmallow.fields import Field
 
 from cmk.fields import base
 
 
 class BaseSchema(Schema):
     """The Base Schema for all request and response schemas."""
-
-    class Meta:
-        """Holds configuration for marshmallow"""
-
-        ordered = True  # we want to have documentation in definition-order
 
     cast_to_dict: bool = False
     schema_example: dict[str, typing.Any] | None = None
@@ -50,6 +46,17 @@ class BaseSchema(Schema):
     @property
     def dict_class(self) -> type:
         return dict
+
+    context: dict[typing.Any, typing.Any] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
 
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
@@ -88,7 +95,7 @@ class BaseSchema(Schema):
     @classmethod
     def from_dict(
         cls,
-        fields: dict[str, ma_fields.Field | type[ma_fields.Field]],
+        fields: dict[str, Field],
         *,
         name: str = "GeneratedSchema",
     ) -> type[Self]:
@@ -499,7 +506,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         metadata = kwargs.pop("metadata", {})
 
-        self._context = getattr(self.parent, "context", {})
+        self._context = getattr(self.parent, "context", {}) if hasattr(self, "parent") else {}
         self._context.update(metadata.get("context", {}))
 
         self._nested_args = nested

@@ -336,7 +336,18 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
     # In this situation, it should be sufficient to replace the `missing` parameter with
     # a `lambda` which returns the same object, as callables are ignored by apispec.
 
-    def _deserialize(self, value, attr, data, partial=None, **kwargs):
+    context: dict[object, object] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+    def _deserialize(self, value, attr, data=None, partial=None, **kwargs):
         self._validate_missing(value)
         if value is fields.missing_:  # type: ignore[attr-defined, unused-ignore]
             _miss = self.missing

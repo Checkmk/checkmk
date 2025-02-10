@@ -16,6 +16,6 @@ class AutomationPayload(BaseModel, frozen=True):
 
 
 class AutomationResponse(BaseModel, frozen=True):
-    exit_code: int
-    output: str
-    error: str
+    serialized_result_or_error_code: str | int
+    stdout: str
+    stderr: str

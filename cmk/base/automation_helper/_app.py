@@ -11,19 +11,22 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from logging import Formatter, getLogger
-from typing import Protocol
+from typing import assert_never, Protocol
 
 from fastapi import FastAPI
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
+from cmk.ccc import version as cmk_version
+
 from cmk.utils import paths, tty
 from cmk.utils.caching import cache_manager
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config
-from cmk.base.automations import AutomationExitCode
+from cmk.base.automations import AutomationError
 
 from ._cache import Cache, CacheError
 from ._config import ReloaderConfig
@@ -61,7 +64,7 @@ class AutomationEngine(Protocol):
         args: list[str],
         *,
         called_from_automation_helper: bool,
-    ) -> AutomationExitCode: ...
+    ) -> ABCAutomationResult | AutomationError: ...
 
 
 def get_application(
@@ -170,7 +173,7 @@ def _execute_automation_endpoint(
     ):
         clear_caches_before_each_call()
         try:
-            exit_code: int = engine.execute(
+            result_or_error_code: ABCAutomationResult | int = engine.execute(
                 payload.name,
                 list(payload.args),
                 called_from_automation_helper=True,
@@ -181,10 +184,10 @@ def _execute_automation_endpoint(
                 payload.name,
                 payload.args,
             )
-            exit_code = (
+            result_or_error_code = (
                 system_exit_code
                 if isinstance(system_exit_code := system_exit.code, int)
-                else AutomationExitCode.UNKNOWN_ERROR
+                else AutomationError.UNKNOWN_ERROR
             )
         else:
             LOGGER.info(
@@ -193,11 +196,25 @@ def _execute_automation_endpoint(
                 payload.args,
             )
 
-        return AutomationResponse(
-            exit_code=exit_code,
-            output=buffer_stdout.getvalue(),
-            error=buffer_stderr.getvalue(),
-        )
+        match result_or_error_code:
+            case ABCAutomationResult():
+                return AutomationResponse(
+                    serialized_result_or_error_code=result_or_error_code.serialize(
+                        cmk_version.Version.from_str(cmk_version.__version__)
+                    ),
+                    stdout=buffer_stdout.getvalue(),
+                    stderr=buffer_stderr.getvalue(),
+                )
+
+            case int():
+                return AutomationResponse(
+                    serialized_result_or_error_code=result_or_error_code,
+                    stdout=buffer_stdout.getvalue(),
+                    stderr=buffer_stderr.getvalue(),
+                )
+
+            case _:
+                assert_never(result_or_error_code)
 
 
 async def _reloader_task(

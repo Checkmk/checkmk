@@ -8,7 +8,7 @@
 import logging
 import socket
 from collections.abc import Sequence
-from typing import Final
+from typing import assert_never, Final
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -50,12 +50,23 @@ class HelperExecutor(AutomationExecutor):
         response.raise_for_status()
         response_data = AutomationResponse.model_validate(response.json())
 
-        return LocalAutomationResult(
-            exit_code=response_data.exit_code,
-            output=response_data.output,
-            command_description=self.command_description(command, args, logger, timeout),
-            error=response_data.error,
-        )
+        match response_data.serialized_result_or_error_code:
+            case str():
+                return LocalAutomationResult(
+                    exit_code=0,
+                    output=response_data.serialized_result_or_error_code,
+                    command_description=self.command_description(command, args, logger, timeout),
+                    error=response_data.stderr,
+                )
+            case int():
+                return LocalAutomationResult(
+                    exit_code=response_data.serialized_result_or_error_code,
+                    output=response_data.stdout,
+                    command_description=self.command_description(command, args, logger, timeout),
+                    error=response_data.stderr,
+                )
+            case _:
+                assert_never(response_data.serialized_result_or_error_code)
 
     def command_description(
         self, command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None

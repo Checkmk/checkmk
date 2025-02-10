@@ -71,6 +71,7 @@ def main() {
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {
+            def stepName = "Test ${distro}";
             def run_condition = distro in selected_distros;
 
             /// this makes sure the whole parallel thread is marked as skipped
@@ -79,35 +80,44 @@ def main() {
             }
 
             smart_stage(
-                name: "Test ${distro}",
+                name: stepName,
                 condition: run_condition,
                 raiseOnError: false,
             ) {
                 def build_instance = smart_build(
-                    job: relative_job_name,
-                    parameters: [
-                        stringParam(name: "DISTRO", value: distro),
-                        stringParam(name: "EDITION", value: EDITION),
-                        stringParam(name: "VERSION", value: VERSION),
-                        stringParam(name: "DOCKER_TAG", value: docker_tag),
-                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
-                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: relative_job_name,
+                    build_params: [
+                        DISTRO: distro,
+                        EDITION: EDITION,
+                        VERSION: VERSION,
+                        DOCKER_TAG: docker_tag,
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
                     ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
                 copyArtifacts(
-                    projectName: build_instance.getFullProjectName(),
+                    projectName: relative_job_name,
                     selector: specific(build_instance.getId()), // buildNumber shall be a string
                     target: "${checkout_dir}/test-results",
                     fingerprintArtifacts: true
                 );
-                return build_instance.getResult();
             }
         }]
     }
 
-    currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
 
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {

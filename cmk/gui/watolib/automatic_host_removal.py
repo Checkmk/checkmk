@@ -55,9 +55,7 @@ def execute_host_removal_job() -> None:
 
         if not (
             hosts_to_be_removed := {
-                site_id: hosts
-                for site_id, hosts_iter in _hosts_to_be_removed()
-                if (hosts := list(hosts_iter))
+                site_id: hosts for site_id, hosts in _hosts_to_be_removed() if hosts
             }
         ):
             _LOGGER_BACKGROUND_JOB.debug("Found no hosts to be removed, exiting")
@@ -97,21 +95,23 @@ def _init_logging() -> None:
     _LOGGER.propagate = False
 
 
-def _hosts_to_be_removed() -> Iterator[tuple[SiteId, Iterator[Host]]]:
+def _hosts_to_be_removed() -> list[tuple[SiteId, list[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
-    yield from ((site_id, _hosts_to_be_removed_for_site(site_id)) for site_id in wato_site_ids())
+    return [(site_id, _hosts_to_be_removed_for_site(site_id)) for site_id in wato_site_ids()]
 
 
-def _hosts_to_be_removed_for_site(site_id: SiteId) -> Iterator[Host]:
+def _hosts_to_be_removed_for_site(site_id: SiteId) -> list[Host]:
     if site_is_local(active_config, site_id):
         try:
-            hostnames = _hosts_to_be_removed_local()
+            # evaluate the generator here to potentially catch the exception below
+            hostnames = list(_hosts_to_be_removed_local())
+        # can happen if the Nagios core is currently restarting during the activation of changes
         except MKLivestatusSocketError:
             _LOGGER.info(
                 f"Skipping local site {site_id}, since livestatus is not available",
                 exc_info=True,
             )
-            return
+            return []
     else:
         try:
             hostnames_serialized = str(
@@ -123,10 +123,10 @@ def _hosts_to_be_removed_for_site(site_id: SiteId) -> Iterator[Host]:
             )
         except (MKUserError, MKAutomationException) as e:
             _LOGGER.info(f"Skipping remote site {site_id}, might be down or not logged in ({e})")
-            return
+            return []
         hostnames = json.loads(hostnames_serialized)
 
-    yield from (Host.load_host(hostname) for hostname in hostnames)
+    return [Host.load_host(hostname) for hostname in hostnames]
 
 
 def _hosts_to_be_removed_local() -> Iterator[HostName]:

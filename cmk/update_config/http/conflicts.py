@@ -13,7 +13,7 @@ from typing import Literal, LiteralString
 
 from pydantic import HttpUrl, ValidationError
 
-from cmk.update_config.http.v1_scheme import V1Cert, V1Url, V1Value
+from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1Value
 
 
 class MigratableUrl(V1Url):
@@ -37,7 +37,12 @@ class MigratableCert(V1Cert):
     pass
 
 
+class MigratableHost(V1Host):
+    address: tuple[Literal["direct"], str] | tuple[Literal["proxy"], V1Proxy]
+
+
 class MigratableValue(V1Value):
+    host: MigratableHost
     mode: tuple[Literal["url"], MigratableUrl] | tuple[Literal["cert"], MigratableCert]
 
 
@@ -74,6 +79,27 @@ def detect_conflicts(
         # TODO: some validation errors need to be conflicts. Eventually V1Value needs to allow every
         # value that can be loaded via the ruleset.
         return e
+    if value.host.address is None:
+        return Conflict(
+            type_="cant_migrate_address_with_macro",
+            host_fields=["address"],
+        )
+    else:
+        address = value.host.address[1]
+        if isinstance(address, V1Proxy):
+            return Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            )
+        elif isinstance(address, str):
+            type_ = _classify(address)
+            if type_ is not HostType.EMBEDDABLE:
+                # This might have some issues, since customers can put a port, uri, and really mess with
+                # us in a multitude of ways.
+                return Conflict(
+                    type_="cant_turn_address_into_url",
+                    host_fields=["address"],
+                )
     mode = value.mode[1]
     if isinstance(mode, V1Url):
         if any(":" not in header for header in mode.add_headers or []):
@@ -135,19 +161,4 @@ def detect_conflicts(
 
 def migratable(rule_value: Mapping[str, object]) -> bool:
     value = detect_conflicts(rule_value)
-    if not isinstance(value, MigratableValue):
-        return False
-    address = value.host.address[1]
-    if isinstance(address, str):
-        type_ = _classify(address)
-        if type_ is not HostType.EMBEDDABLE:
-            # This might have some issues, since customers can put a port, uri, and really mess with
-            # us in a multitude of ways.
-            return False
-    else:
-        type_ = _classify(address.address)
-        if type_ is not HostType.EMBEDDABLE:
-            # We have the same issue as above.
-            return False
-        return False  # TODO: We don't have a address, if proxy is specified because of the HOSTADDRESS-url conflict.
-    return True
+    return isinstance(value, MigratableValue)

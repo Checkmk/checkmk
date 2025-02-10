@@ -992,18 +992,8 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 @pytest.mark.parametrize(
     "rule_value",
     [
-        EXAMPLE_3,
-        EXAMPLE_4,
-        EXAMPLE_5,
-        EXAMPLE_6,
-        EXAMPLE_7,
-        EXAMPLE_8,
-        EXAMPLE_9,
         EXAMPLE_10,
         EXAMPLE_11,
-        EXAMPLE_13,
-        EXAMPLE_14,
-        EXAMPLE_20,
         EXAMPLE_85,
         EXAMPLE_86,
         EXAMPLE_87,
@@ -1016,6 +1006,76 @@ def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
 @pytest.mark.parametrize(
     "rule_value, conflict",
     [
+        (
+            EXAMPLE_3,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_4,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_5,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_6,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_7,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_8,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_9,
+            Conflict(
+                type_="cant_migrate_address_with_macro",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_13,
+            Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_14,
+            Conflict(
+                type_="proxy_tunnel_not_available",
+                host_fields=["address"],
+            ),
+        ),
+        (
+            EXAMPLE_20,  # TODO: check whether this would work in V1, or whether users typically use `[::1]` in their rule
+            Conflict(
+                type_="cant_turn_address_into_url",
+                host_fields=["address"],
+            ),
+        ),
         (
             EXAMPLE_33,
             Conflict(

@@ -15,7 +15,7 @@ class V1Proxy(BaseModel, extra="forbid"):
 
 
 class V1Host(BaseModel, extra="forbid"):
-    address: tuple[Literal["direct"], str] | tuple[Literal["proxy"], V1Proxy]
+    address: tuple[Literal["direct"], str] | tuple[Literal["proxy"], V1Proxy] | None = None
     address_family: Literal["any", "ipv4_enforced", "ipv6_enforced", "primary_enforced", None] = (
         None
     )

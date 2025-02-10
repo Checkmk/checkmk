@@ -29,7 +29,8 @@ def main() -> None:
             sys.stdout.write(f"MIGRATABLE: {folder}, {rule_index}\n")
             pprint(migrate(rule.value))  # nosemgrep: disallow-print
         else:
-            sys.stdout.write(f"IMPOSSIBLE: {folder}, {rule_index}\n")
+            sys.stderr.write(f"IMPOSSIBLE: {folder}, {rule_index}\n")
+            sys.stderr.write(value.type_)
         pprint(rule.value)  # nosemgrep: disallow-print
         sys.stdout.write("\n")
 

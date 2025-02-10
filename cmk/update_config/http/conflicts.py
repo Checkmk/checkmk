@@ -86,9 +86,7 @@ def _classify(host: str) -> HostType:
     return HostType.INVALID
 
 
-def detect_conflicts(
-    rule_value: Mapping[str, object],
-) -> Conflict | MigratableValue | ValidationError:
+def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableValue:
     try:
         value = V1Value.model_validate(rule_value)
     except ValidationError:

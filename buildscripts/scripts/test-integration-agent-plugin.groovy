@@ -13,6 +13,7 @@ def main() {
         "EDITION",
     ]);
 
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
@@ -24,6 +25,8 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-integration-agent-plugin-docker";
+
+    def setup_values = single_tests.common_prepare(version: version, make_target: make_target);
 
     currentBuild.description += (
         """
@@ -67,27 +70,27 @@ def main() {
             mount_credentials: true,
             priviliged: true,
         ) {
+            single_tests.prepare_workspace(
+                cleanup: [
+                    "${WORKSPACE}/test-results",
+                ],
+                make_venv: true
+            );
+
             dir("${checkout_dir}") {
-                // Cleanup test results directory before starting the test to prevent previous
-                // runs somehow affecting the current run.
-                sh("rm -rf ${WORKSPACE}/test-results");
-
-                // Initialize our virtual environment before parallelization
-                sh("make .venv");
-
                 stage("Run `make ${make_target}`") {
-                        dir("${checkout_dir}/tests") {
-                            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-                                sh("""
-                                    RESULT_PATH='${WORKSPACE}/test-results' \
-                                    EDITION='${edition}' \
-                                    VERSION='${VERSION == "daily" ? VERSION : cmk_version}' \
-                                    BRANCH='${safe_branch_name}' \
-                                    make ${make_target}
-                                """);
-                            }
-                        }
+                    dir("${checkout_dir}/tests") {
+                        single_tests.run_make_target(
+                            result_path: "${WORKSPACE}/test-results",
+                            edition: edition,
+                            docker_tag: setup_values.docker_tag,
+                            version: VERSION == "daily" ? version : cmk_version,
+                            // distro: distro,
+                            branch_name: setup_values.safe_branch_name,
+                            make_target: make_target,
+                        );
                     }
+                }
             }
         }
     }

@@ -2788,6 +2788,7 @@ class ServiceDiscoveryClient(RestApiClient):
         do_full_scan: bool | None = None,
         bulk_size: int | None = None,
         ignore_errors: bool | None = None,
+        follow_redirects: bool = True,
         expect_ok: bool = True,
     ) -> Response:
         body: dict = {
@@ -2812,6 +2813,7 @@ class ServiceDiscoveryClient(RestApiClient):
             url=f"/domain-types/{self.discovery_run_domain}/actions/bulk-discovery-start/invoke",
             body=body,
             expect_ok=expect_ok,
+            follow_redirects=follow_redirects,
         )
 
     def discovery_run_status(self, id_: str, expect_ok: bool = True) -> Response:

@@ -26,10 +26,8 @@ from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.background_job import JobID
 from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
-from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
-    DiscoveryBackgroundJobStatusObject,
-)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
@@ -43,7 +41,6 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
 )
 from cmk.gui.watolib.bulk_discovery import (
-    bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
     prepare_hosts_for_discovery,
     start_bulk_discovery,
@@ -613,20 +610,24 @@ class BulkDiscovery(BaseSchema):
     constructors.domain_type_action_href("discovery_run", "bulk-discovery-start"),
     "cmk/activate",
     method="post",
-    status_descriptions={
-        409: "A bulk discovery job is already active",
-    },
-    additional_status_codes=[409],
+    additional_status_codes=[303],
     request_schema=BulkDiscovery,
-    response_schema=DiscoveryBackgroundJobStatusObject,
+    output_empty=True,
+    status_descriptions={
+        303: "The bulk discovery job has been started in the background."
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
 )
 def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
-    """Start a bulk discovery job"""
+    """Start a bulk discovery job
+
+    This endpoint will start a bulk discovery background job. Only one bulk discovery job can run
+    at a time. An active bulk discovery job will block other bulk discovery jobs from running until
+    the active job is finished.
+    """
     # TODO: documentation should be adjusted; initial fix for resolving tests
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
-    if job.is_active():
-        return Response(status=409)
 
     options = body["options"]
     discovery_settings = DiscoverySettings(
@@ -649,31 +650,14 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     ).is_error():
         raise result.error
 
-    return _serve_background_job(job)
-
-
-@Endpoint(
-    constructors.object_href("discovery_run", "{job_id}"),
-    "cmk/show",
-    method="get",
-    path_params=[JOB_ID],
-    status_descriptions={
-        404: "There is no running background job with this job_id.",
-    },
-    response_schema=DiscoveryBackgroundJobStatusObject,
-)
-def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
-    """Show the status of a bulk discovery job"""
-
-    job_id = params["job_id"]
-    job = BulkDiscoveryBackgroundJob()
-    if job.get_job_id() != job_id:
-        raise ProblemException(
-            status=404,
-            title="The requested background job_id was not found",
-            detail=f"Could not find a background job with id {job_id}.",
-        )
-    return _serve_background_job(job)
+    background_job_status_link = constructors.link_endpoint(
+        module_name="cmk.gui.openapi.endpoints.background_job",
+        rel="cmk/show",
+        parameters={JobID.field_name: job.get_job_id()},
+    )
+    response = Response(status=303)
+    response.location = urlparse(background_job_status_link["href"]).path
+    return response
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
@@ -684,25 +668,6 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
     return fetch_service_discovery_background_job_status(host.site_id(), host.name())
 
 
-def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
-    job_id = job.get_job_id()
-    status_details = bulk_discovery_job_status(job)
-    return serve_json(
-        constructors.domain_object(
-            domain_type="discovery_run",
-            identifier=job_id,
-            title=f"Background job {job_id} {'is active' if status_details['is_active'] else 'is finished'}",
-            extensions={
-                "active": status_details["is_active"],
-                "state": status_details["job_state"],
-                "logs": status_details["logs"],
-            },
-            deletable=False,
-            editable=False,
-        )
-    )
-
-
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service_discovery_result)
     endpoint_registry.register(update_service_phase)
@@ -710,4 +675,3 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(service_discovery_run_wait_for_completion)
     endpoint_registry.register(execute_service_discovery)
     endpoint_registry.register(execute_bulk_discovery)
-    endpoint_registry.register(show_bulk_discovery_status)

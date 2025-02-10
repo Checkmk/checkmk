@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Sequence
 from typing import NamedTuple, NewType, TypedDict
 
@@ -14,7 +13,7 @@ from cmk.ccc import store
 
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
-from cmk.utils.paths import configuration_lockfile
+from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
@@ -32,6 +31,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.utils import gen_id
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -217,13 +217,15 @@ def _migrate_automatic_rediscover_parameters(
 
 class BulkDiscoveryBackgroundJob(BackgroundJob):
     job_prefix = "bulk_discovery"
+    lock_file = tmp_run_dir / "bulk_discovery.lock"
 
     @classmethod
     def gui_title(cls) -> str:
         return _("Bulk Discovery")
 
     def __init__(self) -> None:
-        super().__init__(self.job_prefix)
+        job_id = f"{self.job_prefix}-{gen_id()}"
+        super().__init__(job_id)
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
@@ -238,7 +240,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
-        with job_interface.gui_context():
+        job_interface.send_progress_update(_("Waiting to acquire lock"))
+        with job_interface.gui_context(), store.locked(self.lock_file):
+            job_interface.send_progress_update(_("Acquired lock"))
             self._do_execute(mode, do_scan, ignore_errors, tasks, job_interface)
 
     def _do_execute(

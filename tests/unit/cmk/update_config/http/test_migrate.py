@@ -38,6 +38,8 @@ from cmk.update_config.http.conflicts import (
 )
 from cmk.update_config.http.migrate import migrate
 
+HOST_1 = {"address": ("direct", "[::1]")}
+
 EXAMPLE_1 = {
     "name": "My web page",
     "host": {"address": ("direct", "open-one.de")},
@@ -165,7 +167,7 @@ EXAMPLE_17: Mapping[str, object] = {
 
 EXAMPLE_18: Mapping[str, object] = {
     "name": "ipv6_embedded",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {}),
 }
 
@@ -183,7 +185,7 @@ EXAMPLE_20: Mapping[str, object] = {
 
 EXAMPLE_21: Mapping[str, object] = {
     "name": "ipv6",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -194,25 +196,25 @@ EXAMPLE_21: Mapping[str, object] = {
 
 EXAMPLE_22: Mapping[str, object] = {
     "name": "tls1",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_1"}),
 }
 
 EXAMPLE_23: Mapping[str, object] = {
     "name": "ssl2",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_2"}),
 }
 
 EXAMPLE_24: Mapping[str, object] = {
     "name": "ssl3",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_3"}),
 }
 
 EXAMPLE_25: Mapping[str, object] = {
     "name": "tls_1_2",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_1_2"}),
 }
 
@@ -225,61 +227,61 @@ EXAMPLE_26: Mapping[str, object] = {
 
 EXAMPLE_27: Mapping[str, object] = {
     "name": "tls_auto_negotiation",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "auto"}),
 }
 
 EXAMPLE_28: Mapping[str, object] = {
     "name": "response_time",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"response_time": ("fixed", (0.0, 0.0))}),
 }
 
 EXAMPLE_29: Mapping[str, object] = {
     "name": "timeout",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"timeout": 10}),
 }
 
 EXAMPLE_30: Mapping[str, object] = {
     "name": "timeout",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"timeout": 0}),
 }
 
 EXAMPLE_31: Mapping[str, object] = {
     "name": "user_agent",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"user_agent": "agent"}),
 }
 
 EXAMPLE_32: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": ["head: tail", "mop: ", "a: b: c"]}),
 }
 
 EXAMPLE_33: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": ["mop"]}),
 }
 
 EXAMPLE_34: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": ["head:tail"]}),
 }
 
 EXAMPLE_35: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": ["head:"]}),
 }
 
 EXAMPLE_36: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -297,67 +299,67 @@ EXAMPLE_36: Mapping[str, object] = {
 
 EXAMPLE_37: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "ok"}),
 }
 
 EXAMPLE_38: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "warning"}),
 }
 
 EXAMPLE_39: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "critical"}),
 }
 
 EXAMPLE_40: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "follow"}),
 }
 
 EXAMPLE_41: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "sticky"}),
 }
 
 EXAMPLE_42: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"onredirect": "stickyport"}),
 }
 
 EXAMPLE_43: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response_header": "yes:no"}),
 }
 
 EXAMPLE_44: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response": ["no"]}),
 }
 
 EXAMPLE_45: Mapping[str, object] = {
     "name": "authorization",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response": []}),
 }
 
 EXAMPLE_46: Mapping[str, object] = {
     "name": "expect_string",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_string": "example"}),
 }
 
 EXAMPLE_47: Mapping[str, object] = {
     "name": "regex",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -373,7 +375,7 @@ EXAMPLE_47: Mapping[str, object] = {
 
 EXAMPLE_48: Mapping[str, object] = {
     "name": "regex",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -389,7 +391,7 @@ EXAMPLE_48: Mapping[str, object] = {
 
 EXAMPLE_49: Mapping[str, object] = {
     "name": "regex",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -406,7 +408,7 @@ EXAMPLE_49: Mapping[str, object] = {
 
 EXAMPLE_50: Mapping[str, object] = {
     "name": "post_data",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -417,7 +419,7 @@ EXAMPLE_50: Mapping[str, object] = {
 
 EXAMPLE_51: Mapping[str, object] = {
     "name": "post_data",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -429,7 +431,7 @@ EXAMPLE_51: Mapping[str, object] = {
 
 EXAMPLE_52: Mapping[str, object] = {
     "name": "post_data",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -441,7 +443,7 @@ EXAMPLE_52: Mapping[str, object] = {
 
 EXAMPLE_53: Mapping[str, object] = {
     "name": "post_data",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -453,88 +455,88 @@ EXAMPLE_53: Mapping[str, object] = {
 
 EXAMPLE_54: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "GET"}),
 }
 
 EXAMPLE_55: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "DELETE"}),
 }
 
 EXAMPLE_56: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "HEAD"}),
 }
 
 EXAMPLE_57: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "PUT"}),
 }
 
 EXAMPLE_58: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "POST"}),
 }
 
 EXAMPLE_59: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "OPTIONS"}),
 }
 
 EXAMPLE_60: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "TRACE"}),
 }
 
 EXAMPLE_61: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "CONNECT"}),
 }
 
 EXAMPLE_62: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "CONNECT_POST"}),
 }
 
 EXAMPLE_63: Mapping[str, object] = {
     "name": "method",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"method": "PROPFIND"}),
 }
 
 
 EXAMPLE_64: Mapping[str, object] = {
     "name": "no_body",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"no_body": True}),
 }
 
 
 EXAMPLE_65: Mapping[str, object] = {
     "name": "page_size",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"page_size": {"minimum": 42, "maximum": 0}}),
 }
 
 
 EXAMPLE_66: Mapping[str, object] = {
     "name": "max_age",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"max_age": 111}),
 }
 
 EXAMPLE_67: Mapping[str, object] = {
     "name": "max_age",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -546,7 +548,7 @@ EXAMPLE_67: Mapping[str, object] = {
 
 EXAMPLE_68: Mapping[str, object] = {
     "name": "max_age",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": (
         "url",
         {
@@ -558,68 +560,68 @@ EXAMPLE_68: Mapping[str, object] = {
 
 EXAMPLE_69: Mapping[str, object] = {
     "name": "cert_fixed",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("cert", {"cert_days": ("fixed", (0.0, 0.0))}),
 }
 
 EXAMPLE_70: Mapping[str, object] = {
     "name": "cert_no_levels",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("cert", {"cert_days": ("no_levels", None)}),
 }
 
 EXAMPLE_71: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": [":tail"]}),
 }
 
 EXAMPLE_72: Mapping[str, object] = {
     "name": "headers",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"add_headers": ["head:  tail  "]}),
 }
 
 EXAMPLE_73: Mapping[str, object] = {
     "name": "expect_response_header",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response_header": "\r\nyes:no\r\n"}),
 }
 
 EXAMPLE_74: Mapping[str, object] = {
     "name": "expect_response_header",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response_header": "a:b\r\nyes:no"}),
 }
 
 EXAMPLE_75: Mapping[str, object] = {
     "name": "cert_no_levels",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("cert", {"cert_days": ("no_levels", None)}),
     "disable_sni": True,
 }
 
 EXAMPLE_76: Mapping[str, object] = {
     "name": "name",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {}),
 }
 
 EXAMPLE_77: Mapping[str, object] = {
     "name": "^name",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {}),
 }
 
 EXAMPLE_78: Mapping[str, object] = {
     "name": "name",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("cert", {"cert_days": ("no_levels", None)}),
 }
 
 EXAMPLE_79: Mapping[str, object] = {
     "name": "name",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_1_3"}),
 }
 
@@ -661,7 +663,7 @@ EXAMPLE_83: Mapping[str, object] = {
 
 EXAMPLE_84: Mapping[str, object] = {
     "name": "response_time",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"response_time": ("no_levels", None)}),
 }
 
@@ -716,13 +718,13 @@ EXAMPLE_87: Mapping[str, object] = {
 
 EXAMPLE_88: Mapping[str, object] = {
     "name": "expect_response_header",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"expect_response_header": "a"}),
 }
 
 EXAMPLE_89: Mapping[str, object] = {
     "name": "disable_sni",
-    "host": {"address": ("direct", "[::1]")},
+    "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_1_3"}),
     "disable_sni": True,
 }

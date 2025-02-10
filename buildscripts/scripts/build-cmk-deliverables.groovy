@@ -94,11 +94,13 @@ def main() {
     def stages = [
         "Build source package": {
             sleep(0.1 * timeOffsetForOrder++);
+            def build_instance = null;
+
             smart_stage(
                 name: "Build source package",
                 raiseOnError: false,
             ) {
-                def build_instance = smart_build(
+                build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-source_tgz",
@@ -118,6 +120,12 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
+            }
+            smart_stage(
+                name: "Copy artifacts",
+                condition: build_instance,
+                raiseOnError: false,
+            ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-source_tgz",
                     selector: specific(build_instance.getId()),
@@ -128,12 +136,13 @@ def main() {
         },
         "Build BOM": {
             sleep(0.1 * timeOffsetForOrder++);
+            def build_instance = null;
 
             smart_stage(
                 name: "Build BOM",
                 raiseOnError: false,
             ) {
-                def build_instance = smart_build(
+                build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
@@ -150,6 +159,12 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
+            }
+            smart_stage(
+                name: "Copy artifacts",
+                condition: build_instance,
+                raiseOnError: false,
+            ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-bom",
                     selector: specific(build_instance.getId()),
@@ -163,18 +178,20 @@ def main() {
     stages += all_distros.collectEntries { distro ->
         [("${distro}") : {
             sleep(0.1 * timeOffsetForOrder++);
-
             def run_condition = distro in selected_distros;
+            def build_instance = null;
+
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition){
                 Utils.markStageSkippedForConditional("${distro}");
             }
+
             smart_stage(
                 name: "distro package ${distro}",
                 condition: run_condition,
                 raiseOnError: false,
             ) {
-                def build_instance = smart_build(
+                build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
@@ -195,6 +212,12 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
+            }
+            smart_stage(
+                name: "Copy artifacts",
+                condition: run_condition && build_instance,
+                raiseOnError: false,
+            ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
                     selector: specific(build_instance.getId()),

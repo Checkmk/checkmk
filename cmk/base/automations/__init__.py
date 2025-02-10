@@ -24,10 +24,7 @@ from cmk.utils.timeout import Timeout
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config, profiling
-from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
-    get_previously_loaded_plugins,
-)
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk import trace
 
@@ -142,11 +139,11 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        config.load_all_plugins(
+        plugins, _errors = config.load_all_plugins(
             local_checks_dir=paths.local_checks_dir,
             checks_dir=paths.checks_dir,
         )
-    return get_previously_loaded_plugins()
+    return plugins
 
 
 def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigFragment:

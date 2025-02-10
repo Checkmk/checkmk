@@ -1451,7 +1451,8 @@ def load_all_plugins(
     *,
     local_checks_dir: Path,
     checks_dir: str,
-) -> list[str]:
+    # TODO: make a nice class for this.
+) -> tuple[agent_based_register.AgentBasedPlugins, list[str]]:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
@@ -1464,7 +1465,7 @@ def load_all_plugins(
         raise_errors=cmk.ccc.debug.enabled(),
     )
 
-    return errors + legacy_errors
+    return agent_based_register.get_previously_loaded_plugins(), errors + legacy_errors
 
 
 @tracer.instrument("load_and_convert_legacy_checks")

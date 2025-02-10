@@ -46,7 +46,6 @@ from cmk.utils.livestatus_helpers.testing import (
 
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
-    get_previously_loaded_plugins,
 )
 
 import cmk.crypto.password_hashing
@@ -291,12 +290,12 @@ def agent_based_plugins() -> AgentBasedPlugins:
         config,
     )
 
-    errors = config.load_all_plugins(
+    plugins, errors = config.load_all_plugins(
         local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
         checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
     )
     assert not errors
-    return get_previously_loaded_plugins()
+    return plugins
 
 
 class FixPluginLegacy:

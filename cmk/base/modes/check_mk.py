@@ -156,7 +156,7 @@ def load_config(plugins: agent_based_register.AgentBasedPlugins) -> config.Loade
 
 
 def load_checks() -> agent_based_register.AgentBasedPlugins:
-    errors = config.load_all_plugins(
+    _plugins, errors = config.load_all_plugins(
         local_checks_dir=cmk.utils.paths.local_checks_dir,
         checks_dir=cmk.utils.paths.checks_dir,
     )

@@ -8,11 +8,16 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 import livestatus
-from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
+from livestatus import MKLivestatusNotFoundError, OnlySites, Query, QuerySpecification
 
-from cmk.gui import sites
 from cmk.gui.config import Config
-from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
+from cmk.gui.data_source import (
+    ABCDataSource,
+    DataSourceLivestatus,
+    query_livestatus,
+    query_row,
+    RowTable,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -115,7 +120,7 @@ class CrashReportsRowTable(RowTable):
         for crash_info in crash_infos:
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
-            headers = ["crash_info"]
+            headers = ["site", "crash_info"]
             columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
             if crash_info["crash_type"] in ("check", "section"):
@@ -126,20 +131,20 @@ class CrashReportsRowTable(RowTable):
                 ]
 
             try:
-                sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([SiteId(crash_info["site"])])
-
-                raw_row = sites.live().query_row(
-                    "GET crashreports\n"
-                    "Columns: %s\n"
-                    "Filter: id = %s"
-                    % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
+                raw_row = query_row(
+                    Query(
+                        QuerySpecification(
+                            table="crashreports",
+                            columns=columns,
+                            headers="Filter: id = %s" % livestatus.lqencode(crash_info["crash_id"]),
+                        )
+                    ),
+                    only_sites=only_sites,
+                    limit=None,
+                    auth_domain="read",
                 )
             except MKLivestatusNotFoundError:
                 continue
-            finally:
-                sites.live().set_only_sites(None)
-                sites.live().set_prepend_site(False)
 
             crash_info.update(dict(zip(headers, raw_row)))
             yield crash_info
@@ -147,15 +152,18 @@ class CrashReportsRowTable(RowTable):
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None
     ) -> list[dict[str, str]]:
-        try:
-            sites.live().set_prepend_site(True)
-            sites.live().set_only_sites(only_sites)
-            rows = sites.live().query(
-                "GET crashreports\nColumns: id component\n%s" % (filter_headers or "")
-            )
-        finally:
-            sites.live().set_only_sites(None)
-            sites.live().set_prepend_site(False)
+        rows = query_livestatus(
+            Query(
+                QuerySpecification(
+                    table="crashreports",
+                    columns=["id", "component"],
+                    headers=filter_headers or "",
+                )
+            ),
+            only_sites=only_sites,
+            limit=None,
+            auth_domain="read",
+        )
 
         columns = ["site", "crash_id", "crash_type"]
         return [dict(zip(columns, r)) for r in rows]

@@ -5,7 +5,7 @@
 
 from .base import ABCDataSource, RowTable
 from .datasources import register_data_sources
-from .livestatus import DataSourceLivestatus, query_livestatus, RowTableLivestatus
+from .livestatus import DataSourceLivestatus, query_livestatus, query_row, RowTableLivestatus
 from .registry import data_source_registry, DataSourceRegistry, row_id
 
 __all__ = [
@@ -18,4 +18,5 @@ __all__ = [
     "DataSourceLivestatus",
     "RowTableLivestatus",
     "query_livestatus",
+    "query_row",
 ]

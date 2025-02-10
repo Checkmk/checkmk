@@ -34,7 +34,6 @@ from cmk.update_config.http.conflicts import (
     Conflict,
     detect_conflicts,
     HostType,
-    migratable,
 )
 from cmk.update_config.http.migrate import migrate
 
@@ -739,8 +738,10 @@ EXAMPLE_90: Mapping[str, object] = {}
         EXAMPLE_68,
     ],
 )
-def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
-    assert migratable(rule_value)
+def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
+    # Act
+    migrated = migrate(rule_value)
+    _ = parse_http_params(process_configuration_to_parameters(migrated).value)
 
 
 @pytest.mark.parametrize(

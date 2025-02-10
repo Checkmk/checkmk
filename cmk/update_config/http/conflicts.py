@@ -179,8 +179,3 @@ def detect_conflicts(
             disable_sni=True,
         )
     return MigratableValue.model_validate(value.model_dump())
-
-
-def migratable(rule_value: Mapping[str, object]) -> bool:
-    value = detect_conflicts(rule_value)
-    return isinstance(value, MigratableValue)

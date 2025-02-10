@@ -14,7 +14,8 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.http.conflicts import migratable
+from cmk.update_config.http.conflicts import detect_conflicts, MigratableValue
+from cmk.update_config.http.migrate import migrate
 
 
 def main() -> None:
@@ -23,8 +24,10 @@ def main() -> None:
         set_global_vars()
         all_rulesets = AllRulesets.load_all_rulesets()
     for folder, rule_index, rule in all_rulesets.get_rulesets()["active_checks:http"].get_rules():
-        if migratable(rule.value):
+        value = detect_conflicts(rule.value)
+        if isinstance(value, MigratableValue):
             sys.stdout.write(f"MIGRATABLE: {folder}, {rule_index}\n")
+            pprint(migrate(rule.value))  # nosemgrep: disallow-print
         else:
             sys.stdout.write(f"IMPOSSIBLE: {folder}, {rule_index}\n")
         pprint(rule.value)  # nosemgrep: disallow-print

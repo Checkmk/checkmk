@@ -5,6 +5,23 @@
 pub mod agent;
 pub mod certs;
 use assert_cmd::Command;
+use std::path;
+
+#[cfg(not(feature = "build_system_bazel"))]
+pub fn controller_command_path() -> path::PathBuf {
+    assert_cmd::cargo::cargo_bin("cmk-agent-ctl")
+}
+
+#[cfg(feature = "build_system_bazel")]
+pub fn controller_command_path() -> path::PathBuf {
+    let mut path = std::env::current_dir().unwrap();
+    path.push("packages");
+    path.push("host");
+    path.push("cmk-agent-ctl");
+    path.push("cmk-agent-ctl");
+    assert!(path.is_file());
+    path
+}
 
 pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {
     tempfile::Builder::new().prefix(prefix).tempdir().unwrap()

@@ -16,8 +16,20 @@ use tempfile::NamedTempFile;
 pub use tempfile::TempDir;
 use yaml_rust2::YamlLoader;
 
+#[cfg(not(feature = "build_system_bazel"))]
 pub fn run_bin() -> Command {
     Command::cargo_bin("mk-sql").unwrap()
+}
+
+#[cfg(feature = "build_system_bazel")]
+pub fn run_bin() -> Command {
+    let mut path = std::env::current_dir().unwrap();
+    path.push("packages");
+    path.push("host");
+    path.push("mk-sql");
+    path.push("mk-sql");
+    assert!(path.is_file());
+    Command::new(&path)
 }
 
 pub fn run_bin_error() -> Output {

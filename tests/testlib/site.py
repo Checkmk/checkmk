@@ -1936,6 +1936,14 @@ class SiteFactory:
         if site.exists():
             if reuse_site:
                 logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
+                if site.version != self.version:
+                    # issue a warning if the version and/or edition differ
+                    # we will still continue, as the tester/user might have a good reason for this
+                    logger.warning(
+                        "REUSE was set, but versions and/or editions differ. May cause issues."
+                    )
+                    logger.warning("  existing : version=%s).", site.version)
+                    logger.warning("  requested: version=%s).", self.version)
             else:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()

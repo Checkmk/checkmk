@@ -349,6 +349,12 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
 class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     """Base class for edit modes"""
 
+    def __init__(self, mode_type, store):
+        self._ident: str | None = None
+        self._clone: str | None = None
+        self._new: bool = True
+        super().__init__(mode_type, store)
+
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         raise NotImplementedError()
 
@@ -379,8 +385,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 )
 
             self._new = False
-            self._ident: str | None = ident
-            self._clone: str | None = None
+            self._ident = ident
             self._entry = entry
             return
 
@@ -393,14 +398,10 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                     "clone", _("This %s does not exist.") % self._mode_type.name_singular()
                 )
 
-            self._new = True
-            self._ident = None
+            self._clone = self._default_id()
             self._entry = self._clone_entry(entry)
             return
 
-        self._new = True
-        self._ident = None
-        self._clone = None
         self._entry = self._default_entry()
 
     def _clone_entry(self, entry: _T) -> _T:

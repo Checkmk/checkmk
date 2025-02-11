@@ -175,7 +175,7 @@ function renderTuple(
         return h('span', [
           formSpec.show_titles && title ? `${title}: ` : h([]),
           renderForm(element, value[index], elementValidations[index]),
-          index === formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? ', ' : ''
+          index !== formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? ', ' : ''
         ])
       })
     ]

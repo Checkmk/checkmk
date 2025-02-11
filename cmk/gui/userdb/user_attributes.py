@@ -38,6 +38,7 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIIconTitle)
     user_attribute_registry.register(UIIconPlacement)
     user_attribute_registry.register(UIBasicAdvancedToggle)
+    user_attribute_registry.register(ContextualHelpIcon)
 
 
 class TemperatureUnitUserAttribute(UserAttribute):
@@ -342,6 +343,25 @@ class UIBasicAdvancedToggle(UserAttribute):
                     choices=show_mode_choices(),
                 ),
             ],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class ContextualHelpIcon(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "contextual_help_icon"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Contextual help icon"),
+            help=_("Some help text"),
+            choices=[(None, _("Show icon")), ("hide_icon", _("Hide icon"))],
         )
 
     def domain(self) -> str:

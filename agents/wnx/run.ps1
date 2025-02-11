@@ -25,6 +25,7 @@ $argOhm = $false
 $argExt = $false
 $argSql = $false
 $argDetach = $false
+$argSkipSqlTest = $false
 
 $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
                  -latest `
@@ -58,19 +59,20 @@ function Write-Help() {
     Write-Host "$name [arguments]"
     Write-Host ""
     Write-Host "Available arguments:"
-    Write-Host "  -?, -h, --help       display help and exit"
-    Write-Host "  -A, --all            shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
-    Write-Host "  --clean-all          clean literally all, use with care"
-    Write-Host "  --clean-artifacts    clean artifacts"
-    Write-Host "  -C, --ctl            build controller"
-    Write-Host "  -Q, --mk-sql         build mk-sql"
-    Write-Host "  -B, --build          build agent"
-    Write-Host "  -M, --msi            build msi"
-    Write-Host "  -O, --ohm            build ohm"
-    Write-Host "  -E, --extensions     build extensions"
-    Write-Host "  -T, --test           run agent component tests using binary in repo_root/artefacts"
-    Write-Host "  --detach             detach USB before running"
-    Write-Host "  --sign               sign controller using Yubikey based Code Certificate"
+    Write-Host "  -?, -h, --help          display help and exit"
+    Write-Host "  -A, --all               shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
+    Write-Host "  --clean-all             clean literally all, use with care"
+    Write-Host "  --clean-artifacts       clean artifacts"
+    Write-Host "  -C, --ctl               build controller"
+    Write-Host "  -Q, --mk-sql            build mk-sql"
+    Write-Host "  -B, --build             build agent"
+    Write-Host "  -M, --msi               build msi"
+    Write-Host "  -O, --ohm               build ohm"
+    Write-Host "  -E, --extensions        build extensions"
+    Write-Host "  -T, --test              run agent component tests using binary in repo_root/artefacts"
+    Write-Host "  -S, --skip-mk-sql-test  skip sql test to be able to build msi in case sql is not configured"
+    Write-Host "  --detach                detach USB before running"
+    Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
@@ -98,6 +100,7 @@ else {
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
+            { $("-S", "--skip-mk-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }
@@ -546,7 +549,11 @@ try {
     Clear-All
     Build-Agent
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
-    Build-Package $argSql "host/mk-sql" "MK-SQL"
+    if ($argSkipSqlTest -ne $true) {
+        Build-Package $argSql "host/mk-sql" "MK-SQL"
+    } else {
+        Build-Package $argSql "host/mk-sql" "MK-SQL" --build
+    }
     Build-Ohm
     Build-Ext
     Build-MSI

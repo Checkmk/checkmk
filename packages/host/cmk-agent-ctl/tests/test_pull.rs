@@ -558,11 +558,20 @@ async fn _test_pull_reload(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
     // give windows some time to close socket
     #[cfg(windows)]
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
-    assert!(
-        std::net::TcpStream::connect(socket_addr).is_err(),
-        "port is {} ",
-        p,
-    );
+
+    // Time needed to close socket is highly variable.
+    let mut socket_closed = std::net::TcpStream::connect(socket_addr).is_err();
+    // So retry rather than cause test to fail.
+    for delay in 1..10 {
+        if socket_closed {
+            break;
+        }
+        // Delay before retry on socket
+        tokio::time::sleep(tokio::time::Duration::from_millis(delay * delay * 100)).await;
+        socket_closed = std::net::TcpStream::connect(socket_addr).is_err();
+    }
+    // If socket is still not closed we will fail.
+    assert!(socket_closed, "port is {} ", p,);
 
     teardown(test_dir, pull_proc_fixture, None)
         .await

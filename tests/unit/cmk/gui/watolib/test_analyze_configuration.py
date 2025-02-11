@@ -56,12 +56,12 @@ def test_registered_ac_tests() -> None:
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",
         "ACTestUnexpectedAllowedIPRanges",
-        "ACTestMknotifydCommunicationEncrypted",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_ac_tests += [
             "ACTestSecureAgentUpdaterTransport",
+            "ACTestMknotifydCommunicationEncrypted",
         ]
 
     registered_plugins = sorted(ac_test_registry.keys())

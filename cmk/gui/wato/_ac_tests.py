@@ -74,7 +74,8 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
     ac_test_registry.register(ACTestOldDefaultCredentials)
-    ac_test_registry.register(ACTestMknotifydCommunicationEncrypted)
+    if edition() is not Edition.CRE:
+        ac_test_registry.register(ACTestMknotifydCommunicationEncrypted)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)

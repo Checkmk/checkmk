@@ -23,7 +23,8 @@ def parse_raritan_pdu_plugs(string_table):
 
 def inventory_raritan_pdu_plugs(parsed):
     for key, value in parsed.items():
-        yield key, {"discovered_state": value["state"]}
+        if (state := value["state"]) != "unknown":
+            yield key, {"discovered_state": state}
 
 
 def check_raritan_pdu_plugs(item, params, parsed):

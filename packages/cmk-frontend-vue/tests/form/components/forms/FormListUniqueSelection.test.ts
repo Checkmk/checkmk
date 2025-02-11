@@ -178,3 +178,14 @@ test('FormListUniqueSelection unique element only shows once', async () => {
   await fireEvent.click(secondSingleChoiceElement)
   expect(queryByText(secondSingleChoiceElement, 'Choice 1')).toBeNull()
 })
+
+test('FormListUniqueSelection shows backend validation pointing to list', async () => {
+  render(FormEdit, {
+    props: {
+      spec: listSpec,
+      data: [],
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: [] }]
+    }
+  })
+  screen.getByText('Backend error message')
+})

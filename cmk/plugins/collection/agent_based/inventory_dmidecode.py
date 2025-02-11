@@ -158,6 +158,49 @@ def _parse_bios_information(lines: list[list[str]]) -> BIOSInformation:
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class SystemInformation:
+    manufacturer: str
+    product_name: str
+    version: str
+    serial_number: str
+    uuid: str
+    family: str
+
+
+def _parse_system_information(lines: list[list[str]]) -> SystemInformation:
+    manufacturer = ""
+    product_name = ""
+    version = ""
+    serial_number = ""
+    uuid = ""
+    family = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Product Name":
+                product_name = raw_value
+            case "Version":
+                version = raw_value
+            case "Serial Number":
+                serial_number = raw_value
+            case "UUID":
+                uuid = raw_value
+            case "Family":
+                family = raw_value
+    return SystemInformation(
+        manufacturer=manufacturer,
+        product_name=product_name,
+        version=version,
+        serial_number=serial_number,
+        uuid=uuid,
+        family=family,
+    )
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -177,7 +220,18 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                     },
                 )
             case "System Information":
-                yield _make_inventory_system(lines)
+                system_information = _parse_system_information(lines)
+                yield Attributes(
+                    path=["hardware", "system"],
+                    inventory_attributes={
+                        "manufacturer": system_information.manufacturer,
+                        "product": system_information.product_name,
+                        "version": system_information.version,
+                        "serial": system_information.serial_number,
+                        "uuid": system_information.uuid,
+                        "family": system_information.family,
+                    },
+                )
             case "Chassis Information":
                 yield _make_inventory_chassis(lines)
             case "Processor Information":
@@ -186,23 +240,6 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                 yield _make_inventory_physical_mem_array(lines, counter)
             case "Memory Device":
                 yield from _make_inventory_mem_device(lines, counter)
-
-
-def _make_inventory_system(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["hardware", "system"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Manufacturer": "manufacturer",
-                "Product Name": "product",
-                "Version": "version",
-                "Serial Number": "serial",
-                "UUID": "uuid",
-                "Family": "family",
-            },
-        ),
-    )
 
 
 def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:

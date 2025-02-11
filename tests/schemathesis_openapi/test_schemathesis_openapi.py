@@ -10,6 +10,7 @@ import schemathesis
 from hypothesis import given, seed, strategies
 
 from tests.schemathesis_openapi import settings
+from tests.schemathesis_openapi.hooks import after_call
 from tests.schemathesis_openapi.runners import run_crud_test, run_state_machine_test
 from tests.schemathesis_openapi.schema import get_schema, parametrize_crud_endpoints
 
@@ -23,12 +24,8 @@ schema = get_schema()
 )
 def test_openapi_stateless(case: schemathesis.models.Case) -> None:
     """Run default, stateless schemathesis testing."""
-    if case.path == "/domain-types/notification_rule/collections/all" and case.method in (
-        "GET",
-        "POST",
-    ):
-        pytest.skip(reason="Currently fails due to CMK-14375.")
-    case.call_and_validate(allow_redirects=settings.allow_redirects)
+    response = case.call(allow_redirects=settings.allow_redirects)
+    case.validate_response(after_call(case, response))
 
 
 @pytest.mark.skip(reason="Currently fails due to recursive schema references")

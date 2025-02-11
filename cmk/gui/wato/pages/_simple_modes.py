@@ -804,11 +804,11 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 True,
             )
 
-        if self._new and not self._clone:
+        if self._new and self._clone is None:
             # New form, no validation
             return DEFAULT_VALUE, DataOrigin.DISK, False
 
-        if self._clone:
+        if self._clone is not None:
             self._ident = self._clone
 
         # Existing entry from disk

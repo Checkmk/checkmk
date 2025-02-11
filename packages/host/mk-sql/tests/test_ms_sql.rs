@@ -1286,14 +1286,8 @@ async fn test_check_config_exec_piggyback_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_lack_of_sql_db() {
     let dir = tools::create_temp_process_dir();
-    let content = std::fs::read_to_string(
-        PathBuf::new()
-            .join("tests")
-            .join("files")
-            .join("test-no-ms-sql.yml"),
-    )
-    .unwrap();
-    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let content = include_str!("files/test-no-ms-sql.yml");
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", content);
     let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
     let output = check_config.exec(&Env::default()).await.unwrap();
     let awaited = "<<<mssql_instance:sep(124)>>>

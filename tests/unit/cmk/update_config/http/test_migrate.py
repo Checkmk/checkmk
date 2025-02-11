@@ -1308,7 +1308,7 @@ def test_migrate_auth_no_auth() -> None:
 @pytest.mark.parametrize(
     "rule_value, expected",
     [
-        (EXAMPLE_27, None),
+        (EXAMPLE_27, "ok"),  # TODO: discuss with PM
         (EXAMPLE_37, "ok"),
         (EXAMPLE_38, "warning"),
         (EXAMPLE_39, "critical"),

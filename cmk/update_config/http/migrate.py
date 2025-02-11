@@ -74,7 +74,7 @@ def _migrate_url_params(
         # TODO: V1 and V2 work differently, if searching for strings in documents, also need to test
         # with http codes.
         case None:
-            redirects: Mapping[str, object] = {}
+            redirects: Mapping[str, object] = {"redirects": "ok"}
         case onredirect:
             redirects = {"redirects": onredirect}
     match url_params.expect_string, url_params.expect_regex:

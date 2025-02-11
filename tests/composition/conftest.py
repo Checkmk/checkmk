@@ -195,7 +195,7 @@ def _connection(
         yield
     finally:
         logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
-        logger.warning("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+        logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
         logger.info("Delete remote site connection '%s'", remote_site.id)
         central_site.openapi.sites.delete(remote_site.id)
         logger.info("Activating site removal changes")

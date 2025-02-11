@@ -5,6 +5,7 @@
 
 import itertools
 import logging
+import pprint
 import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
@@ -212,18 +213,23 @@ class BaseAPI:
         self.session = session
 
 
+class ActivateStartResult(NamedTuple):
+    activation_id: str
+    redirect_url: str
+
+
 class ChangesAPI(BaseAPI):
     def activate(
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-    ) -> None:
+    ) -> ActivateStartResult:
         def _extract_activation_id_from_url(url: str) -> str:
             try:
                 path_parts = urllib.parse.urlparse(response.headers["Location"]).path.split("/")
                 return path_parts[path_parts.index("activation_run") + 1]
             except (ValueError, IndexError):
-                return f"unknown (URL: {url})"
+                raise ValueError(f"Failed to parse activation id from URL: {url}")
 
         response = self.session.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
@@ -237,17 +243,21 @@ class ChangesAPI(BaseAPI):
             # handle that for us.
             allow_redirects=False,
         )
-        if response.status_code == 200:
-            logger.info("Activation id: %s", response.json()["id"])
-            return  # changes are activated
+
         if response.status_code == 422:
             raise NoActiveChanges  # there are no changes
-        if response.status_code == 303:
-            logger.info(
-                "Activation id: %s", _extract_activation_id_from_url(response.headers["Location"])
-            )
-            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        raise UnexpectedResponse.from_response(response)
+
+        if response.status_code != 303:
+            raise UnexpectedResponse.from_response(response)
+
+        logger.info(
+            "Activation id: %s",
+            (activation_id := _extract_activation_id_from_url(response.headers["Location"])),
+        )
+        return ActivateStartResult(
+            activation_id=activation_id,
+            redirect_url=response.headers["Location"],
+        )
 
     def get_pending(self) -> list[dict[str, Any]]:
         """Returns a list of all changes currently pending."""
@@ -273,11 +283,20 @@ class ChangesAPI(BaseAPI):
         pending_changes_ids_before = set(_.get("id") for _ in self.get_pending())
 
         logger.info("Activate changes and wait %ds for completion...", timeout)
-        with self.session.wait_for_completion(timeout, "get", "activate_changes"):
-            try:
-                self.activate(sites, force_foreign_changes)
-            except NoActiveChanges:
-                return False
+        activation_id = None
+        try:
+            with self.session.wait_for_completion(timeout, "get", "activate_changes"):
+                try:
+                    start_result = self.activate(sites, force_foreign_changes)
+                except NoActiveChanges:
+                    return False
+
+                activation_id = start_result.activation_id
+                raise Redirect(start_result.redirect_url)
+        finally:
+            if activation_id:
+                activation_status = self.get_activation_status(activation_id)
+                logger.info("Activation status: %s", str(pprint.pformat(activation_status)))
 
         pending_changes_after = self.get_pending()
         if strict:
@@ -295,6 +314,12 @@ class ChangesAPI(BaseAPI):
             )
 
         return True
+
+    def get_activation_status(self, activation_id: str) -> dict[str, Any]:
+        response = self.session.get(f"/objects/activation_run/{activation_id}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
 
 
 class UsersAPI(BaseAPI):

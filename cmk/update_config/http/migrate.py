@@ -143,6 +143,8 @@ def _migrate_url_params(
     return (
         {
             **method,  # TODO: Proxy sets this to CONNECT.
+            "http_versions": "http_1_1",  # TODO: This preserves behaviour, v1 only allows for HTTP/1.1. or HTTP/1.0.
+            # However, for most customers this still might be undesirable.
             **tls_versions,
             **timeout,
             **user_agent,

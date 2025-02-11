@@ -1464,3 +1464,13 @@ def test_migrate_address_family(rule_value: Mapping[str, object], expected: obje
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.address_family == expected
+
+
+def test_preserve_http_version() -> None:
+    # Act
+    migrated = migrate(EXAMPLE_27)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.http_versions == "http_1_1"

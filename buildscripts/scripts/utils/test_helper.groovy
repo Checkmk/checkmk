@@ -20,12 +20,10 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
-            withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
-                sh("""
-                    set -o pipefail
-                    ${cmd}
-                """);
-            }
+            sh("""
+                set -o pipefail
+                ${cmd}
+            """);
         }
     }
 }

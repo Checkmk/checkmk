@@ -742,6 +742,12 @@ EXAMPLE_91: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_92: Mapping[str, object] = {
+    "name": "authorization",
+    "host": {"address": ("direct", "[::1]"), "virthost": ""},
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -1184,6 +1190,13 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
             Conflict(
                 type_="v1_checks_redirect_response",
                 mode_fields=["onredirect", "expect_response"],
+            ),
+        ),
+        (
+            EXAMPLE_92,
+            Conflict(
+                type_="invalid_value",
+                cant_load=True,
             ),
         ),
     ],

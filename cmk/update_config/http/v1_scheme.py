@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class V1Proxy(BaseModel, extra="forbid"):
@@ -23,7 +23,7 @@ class V1Host(BaseModel, extra="forbid"):
     # true, if client_cert is true, client private key or -S is enabled. On redirect new ports might
     # be defined. This behaviour will not transfer to the new check, most likely.
     port: int | None = None
-    virthost: str | None = None
+    virthost: str | None = Field(default=None, min_length=1)
 
 
 class V1Auth(BaseModel, extra="forbid"):

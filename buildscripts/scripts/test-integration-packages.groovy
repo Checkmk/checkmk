@@ -55,6 +55,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |all_distros:.............  │${all_distros}│
         |selected_distros:........  │${selected_distros}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:........  │${safe_branch_name}│

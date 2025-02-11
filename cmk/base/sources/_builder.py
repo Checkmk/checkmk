@@ -165,21 +165,7 @@ class _Builder:
 
     def _initialize_snmp_plugin_store(self) -> None:
         if len(SNMPFetcher.plugin_store) != len(self.plugins.snmp_sections):
-            # That's a hack.
-            #
-            # `make_plugin_store()` depends on
-            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
-            # that are populated by the Check API upon loading the plugins.
-            #
-            # It is there, when the plugins are loaded, that we should
-            # make the plug-in store.  However, it is not clear whether
-            # the API would let us register hooks to accomplish that.
-            #
-            # The current solution is brittle in that there is not guarantee
-            # that all the relevant plugins are loaded at this point.
-            SNMPFetcher.plugin_store = make_plugin_store(
-                agent_based_register.get_previously_loaded_plugins()
-            )
+            SNMPFetcher.plugin_store = make_plugin_store(self.plugins)
 
     def _initialize_snmp_based(self) -> None:
         if not self.cds.is_snmp:

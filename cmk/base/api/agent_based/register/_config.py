@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Self
 
@@ -32,6 +32,7 @@ class AgentBasedPlugins:
     snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
     check_plugins: Mapping[CheckPluginName, CheckPlugin]
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
+    errors: Sequence[str]
 
     @classmethod
     def empty(cls) -> Self:
@@ -40,10 +41,11 @@ class AgentBasedPlugins:
             snmp_sections={},
             check_plugins={},
             inventory_plugins={},
+            errors=(),
         )
 
 
-def get_previously_loaded_plugins() -> AgentBasedPlugins:
+def get_previously_loaded_plugins(errors: Sequence[str] = ()) -> AgentBasedPlugins:
     """Return the previously loaded agent-based plugins
 
     In the long run we want to get rid of this function and instead
@@ -54,6 +56,7 @@ def get_previously_loaded_plugins() -> AgentBasedPlugins:
         snmp_sections=registered_snmp_sections,
         check_plugins=registered_check_plugins,
         inventory_plugins=registered_inventory_plugins,
+        errors=errors,
     )
 
 

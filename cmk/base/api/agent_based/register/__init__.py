@@ -5,7 +5,6 @@
 
 from ._config import (
     AgentBasedPlugins,
-    get_previously_loaded_plugins,
 )
 from ._discover import load_all_plugins, load_selected_plugins
 from .check_plugins import get_check_plugin
@@ -19,7 +18,6 @@ __all__ = [
     "AgentBasedPlugins",
     "extract_known_discovery_rulesets",
     "get_check_plugin",
-    "get_previously_loaded_plugins",
     "filter_relevant_raw_sections",
     "load_all_plugins",
     "load_selected_plugins",

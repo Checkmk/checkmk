@@ -29,7 +29,6 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
     AgentBasedPlugins,
-    get_previously_loaded_plugins,
 )
 from cmk.base.automations import AutomationError
 
@@ -117,8 +116,9 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
     dependencies.state.last_reload_at = time.time()
 
-    config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
-    plugins = get_previously_loaded_plugins()
+    plugins = config.load_all_plugins(
+        local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
+    )
     dependencies.state.plugins = plugins
 
     tty.reinit()

@@ -91,11 +91,11 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 
 def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins, errors = load_all_plugins(
+    plugins = load_all_plugins(
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )
-    return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, errors)
+    return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 
 def _validate_active_checks_loading() -> ActiveCheckResult:

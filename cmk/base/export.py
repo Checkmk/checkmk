@@ -42,9 +42,7 @@ def _load_config() -> config.LoadedConfigFragment:
 def _load_checks() -> AgentBasedPlugins:
     global _plugins
     if _plugins is None:
-        _plugins, _errors = config.load_all_plugins(
-            local_checks_dir=local_checks_dir, checks_dir=checks_dir
-        )
+        _plugins = config.load_all_plugins(local_checks_dir=local_checks_dir, checks_dir=checks_dir)
     return _plugins
 
 

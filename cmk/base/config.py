@@ -1462,21 +1462,19 @@ def load_all_plugins(
     *,
     local_checks_dir: Path,
     checks_dir: str,
-    # TODO: make a nice class for this.
-) -> tuple[agent_based_register.AgentBasedPlugins, list[str]]:
+) -> agent_based_register.AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
 
-    errors = agent_based_register.load_all_plugins(
+    return agent_based_register.load_all_plugins(
         sections=sections,
         checks=checks,
+        legacy_errors=legacy_errors,
         raise_errors=cmk.ccc.debug.enabled(),
     )
-
-    return agent_based_register.get_previously_loaded_plugins(), errors + legacy_errors
 
 
 @tracer.instrument("load_and_convert_legacy_checks")
@@ -1826,14 +1824,17 @@ class AutochecksConfigurer:
         return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
-        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
         return service_description(
             self._config_cache.ruleset_matcher,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
                 None
-                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name, plugins))
+                if (
+                    p := agent_based_register.get_check_plugin(
+                        entry.check_plugin_name, self._check_plugins
+                    )
+                )
                 is None
                 else p.service_name
             ),

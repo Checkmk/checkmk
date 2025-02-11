@@ -155,14 +155,14 @@ def load_config(plugins: agent_based_register.AgentBasedPlugins) -> config.Loade
 
 
 def load_checks() -> agent_based_register.AgentBasedPlugins:
-    _plugins, errors = config.load_all_plugins(
+    plugins = config.load_all_plugins(
         local_checks_dir=cmk.utils.paths.local_checks_dir,
         checks_dir=cmk.utils.paths.checks_dir,
     )
     if sys.stderr.isatty():
-        for error_msg in errors:
+        for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)
-    return agent_based_register.get_previously_loaded_plugins()
+    return plugins
 
 
 # .
@@ -1518,6 +1518,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         loaded_config.config_cache,
         ip_address_of,
         create_core(config.monitoring_core),
+        plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,
@@ -1572,6 +1573,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         loaded_config.config_cache,
         ip_address_of,
         create_core(config.monitoring_core),
+        plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,

@@ -449,6 +449,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 fetcher,
                 file_cache_options,
                 loaded_config,
+                plugins,
                 ip_address_of_host,
                 run_settings.host_config.ip_address,
             )
@@ -524,6 +525,7 @@ class AutomationDiscoveryPreview(Automation):
             fetcher,
             file_cache_options,
             loaded_config,
+            plugins,
             ip_address_of,
             ip_address,
         )
@@ -538,6 +540,7 @@ def _get_discovery_preview(
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
     loaded_config: config.LoadedConfigFragment,
+    plugins: AgentBasedPlugins,
     ip_address_of: config.IPLookup,
     ip_address: HostAddress | None,
 ) -> ServiceDiscoveryPreviewResult:
@@ -554,6 +557,7 @@ def _get_discovery_preview(
             fetcher,
             file_cache_options,
             loaded_config,
+            plugins=plugins,
         )
 
         def make_discovered_host_labels(
@@ -677,10 +681,10 @@ def _execute_discovery(
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
     loaded_config: config.LoadedConfigFragment,
+    plugins: AgentBasedPlugins,
 ) -> CheckPreview:
     config_cache = loaded_config.config_cache
     hosts_config = config.make_hosts_config()
-    plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
     parser = CMKParser(
@@ -961,6 +965,7 @@ def _execute_autodiscovery(
                     config_cache,
                     ip_address_of,
                     core,
+                    ab_plugins,
                     locking_mode=config.restart_locking,
                     all_hosts=hosts_config.hosts,
                     discovery_rules=loaded_config.discovery_rules,
@@ -975,6 +980,7 @@ def _execute_autodiscovery(
                     config_cache,
                     ip_address_of,
                     core,
+                    ab_plugins,
                     all_hosts=hosts_config.hosts,
                     locking_mode=config.restart_locking,
                     discovery_rules=loaded_config.discovery_rules,
@@ -1192,6 +1198,7 @@ class AutomationRenameHosts(Automation):
                     ip_address_of,
                     hosts_config,
                     loaded_config,
+                    plugins,
                     skip_config_locking_for_bakery=True,
                 )
 
@@ -2018,6 +2025,7 @@ class AutomationRestart(Automation):
             ip_address_of,
             hosts_config,
             loaded_config,
+            plugins,
             hosts_to_update=nodes,
         )
 
@@ -2081,6 +2089,7 @@ def _execute_silently(
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_config: Hosts,
     loaded_config: config.LoadedConfigFragment,
+    plugins: AgentBasedPlugins,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
@@ -2093,6 +2102,7 @@ def _execute_silently(
                 config_cache,
                 ip_address_of,
                 create_core(config.monitoring_core),
+                plugins,
                 action=action,
                 all_hosts=hosts_config.hosts,
                 discovery_rules=loaded_config.discovery_rules,

@@ -7,7 +7,6 @@
 from collections.abc import Mapping
 
 import pytest
-from pytest import MonkeyPatch
 
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -28,12 +27,9 @@ from cmk.base.config import FilterMode, HostCheckTable
 from cmk.discover_plugins import PluginLocation
 
 
-@pytest.fixture(autouse=True, scope="module")
-def _use_fix_register(agent_based_plugins):
-    """These tests modify the plug-in registry. Make sure to load it first."""
-
-
-def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
+def test_cluster_ignores_nodes_parameters(
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+) -> None:
     node = HostName("node")
     cluster = HostName("cluster")
 
@@ -57,7 +53,6 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     )
     ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
     config_cache = ts.apply(monkeypatch)
-    plugins = agent_based_register.get_previously_loaded_plugins()
 
     # a rule for the node:
     monkeypatch.setattr(
@@ -74,8 +69,8 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
 
     clustered_service = config_cache.check_table(
         cluster,
-        plugins.check_plugins,
-        config_cache.make_service_configurer(plugins.check_plugins),
+        agent_based_plugins.check_plugins,
+        config_cache.make_service_configurer(agent_based_plugins.check_plugins),
     )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),
@@ -83,7 +78,9 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
+def test_check_table_enforced_vs_discovered_precedence(
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+) -> None:
     smart = CheckPluginName("smart_temp")
     node = HostName("node")
     cluster = HostName("cluster")
@@ -139,10 +136,9 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
+    check_plugins = agent_based_plugins.check_plugins
     service_configurer = config_cache.make_service_configurer(check_plugins)
 
-    check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
     node_services = config_cache.check_table(node, check_plugins, service_configurer)
     cluster_services = config_cache.check_table(cluster, check_plugins, service_configurer)
 
@@ -384,10 +380,11 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
     ],
 )
 def test_check_table(
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     hostname_str: str,
     filter_mode: FilterMode,
     expected_result: HostCheckTable,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
 ) -> None:
     hostname = HostName(hostname_str)
 
@@ -501,13 +498,12 @@ def test_check_table(
     )
 
     config_cache = ts.apply(monkeypatch)
-    plugins = agent_based_register.get_previously_loaded_plugins()
 
     assert set(
         config_cache.check_table(
             hostname,
-            plugins.check_plugins,
-            config_cache.make_service_configurer(plugins.check_plugins),
+            agent_based_plugins.check_plugins,
+            config_cache.make_service_configurer(agent_based_plugins.check_plugins),
             filter_mode=filter_mode,
         ),
     ) == set(expected_result)
@@ -526,7 +522,7 @@ def test_check_table(
     ],
 )
 def test_check_table_of_mgmt_boards(
-    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: list[ServiceID]
+    monkeypatch: pytest.MonkeyPatch, hostname_str: str, expected_result: list[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
 
@@ -580,7 +576,9 @@ def test_check_table_of_mgmt_boards(
     )
 
 
-def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
+def test_check_table__static_checks_win(
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+) -> None:
     hostname_str = "df_host"
     hostname = HostName(hostname_str)
     plugin_name = CheckPluginName("df")
@@ -605,8 +603,8 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
 
     chk_table = config_cache.check_table(
         hostname,
-        agent_based_register.get_previously_loaded_plugins().check_plugins,
-        config_cache.make_service_configurer({}),
+        agent_based_plugins.check_plugins,
+        config_cache.make_service_configurer(agent_based_plugins.check_plugins),
     )
 
     # assert check table is populated as expected
@@ -626,7 +624,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_check_table__get_static_check_entries(
-    monkeypatch: MonkeyPatch, check_group_parameters: Mapping[str, object]
+    monkeypatch: pytest.MonkeyPatch, check_group_parameters: Mapping[str, object]
 ) -> None:
     hostname = HostName("hostname")
 

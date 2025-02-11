@@ -26,7 +26,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 import cmk.base.nagios_utils
 from cmk.base import core_config
 from cmk.base.api.agent_based.register import (
-    get_previously_loaded_plugins,
+    AgentBasedPlugins,
 )
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
@@ -61,6 +61,7 @@ def do_reload(
     config_cache: ConfigCache,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
+    plugins: AgentBasedPlugins,
     *,
     all_hosts: Iterable[HostName],
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -72,6 +73,7 @@ def do_reload(
         config_cache,
         ip_address_of,
         core,
+        plugins,
         action=CoreAction.RELOAD,
         all_hosts=all_hosts,
         discovery_rules=discovery_rules,
@@ -85,6 +87,7 @@ def do_restart(
     config_cache: ConfigCache,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
+    plugins: AgentBasedPlugins,
     *,
     all_hosts: Iterable[HostName],
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -99,7 +102,7 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
-                plugins=get_previously_loaded_plugins(),
+                plugins=plugins,
                 discovery_rules=discovery_rules,
                 ip_address_of=ip_address_of,
                 all_hosts=all_hosts,

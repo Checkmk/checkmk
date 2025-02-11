@@ -11,7 +11,6 @@ from cmk.utils.redis import disable_redis
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
     extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
 )
 
 from cmk.gui import main_modules
@@ -24,11 +23,10 @@ def main() -> int:
     try:
         main_modules.load_plugins()
         with disable_redis(), gui_context():
-            config.load_all_plugins(
+            plugins = config.load_all_plugins(
                 local_checks_dir=paths.local_checks_dir,
                 checks_dir=paths.checks_dir,
             )
-            plugins = get_previously_loaded_plugins()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
             config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))

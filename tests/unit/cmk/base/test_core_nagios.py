@@ -394,6 +394,7 @@ def _make_plugins_for_test() -> AgentBasedPlugins:
             )
         },
         inventory_plugins={},
+        errors=(),
     )
 
 

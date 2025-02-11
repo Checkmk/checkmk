@@ -14,6 +14,6 @@ print(
         load_all_plugins(
             local_checks_dir=paths.local_checks_dir,
             checks_dir=paths.checks_dir,
-        )[1]
+        ).errors
     )
 )

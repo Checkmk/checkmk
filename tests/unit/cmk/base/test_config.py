@@ -3036,6 +3036,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         agent_based_register.load_all_plugins(
             sections=(),
             checks=converted_legacy_checks,
+            legacy_errors=(),
             raise_errors=False,  # we still expect the error to be raised
         )
 
@@ -3063,12 +3064,12 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    agent_based_register.load_all_plugins(
+    plugins = agent_based_register.load_all_plugins(
         sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
         checks=(),
+        legacy_errors=(),
         raise_errors=True,  # we don't expect any errors
     )
-    plugins = agent_based_register.get_previously_loaded_plugins()
     assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 

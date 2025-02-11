@@ -85,16 +85,27 @@ class BaseNotificationPage(QuickSetupPage):
 
     # stage 2
     @property
+    def _stage_two(self) -> Locator:
+        return self.main_area.locator("li").filter(has_text="Filter for hosts")
+
+    @property
     def _host_filters_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Host filters")
+        return self._stage_two.get_by_role("button", name="Host filters")
+
+    @property
+    def _host_filters_dropdown(self) -> Locator:
+        return self._stage_two.get_by_label("Host filters")
 
     @property
     def hosts_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_role("checkbox", name="Hosts", exact=True)
+        return self._host_filters_dropdown.locator("tr").nth(4).get_by_role("checkbox")
 
     @property
     def hosts_textfield(self) -> Locator:
-        return self.main_area.locator().get_by_role("group", name="Hosts").locator("input")
+        return self._host_filters_dropdown.locator("tr").nth(4).locator("input")
+
+    def select_host_from_textfield(self, name: str) -> Locator:
+        return self._host_filters_dropdown.locator("li", has_text=name)
 
     @property
     def _service_filters_button(self) -> Locator:
@@ -331,8 +342,8 @@ class AddNotificationRule(BaseNotificationPage):
 
     @property
     def si_service_subject_input(self) -> Locator:
-        return self.editor_slide_in.get_by_label("Subject line for service notifications").locator(
-            "input"
+        return self.editor_slide_in.get_by_role(
+            "textbox", name="Subject line for service notifications"
         )
 
     @property
@@ -343,6 +354,6 @@ class AddNotificationRule(BaseNotificationPage):
 
     @property
     def si_host_subject_input(self) -> Locator:
-        return self.editor_slide_in.get_by_label("Subject line for host notifications").locator(
-            "input"
+        return self.editor_slide_in.get_by_role(
+            "textbox", name="Subject line for host notifications"
         )

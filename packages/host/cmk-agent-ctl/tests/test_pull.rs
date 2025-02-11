@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-// Test files are compiled to seperate crates, so there
+// Test files are compiled to separate crates, so there
 // may be some unused functions in the common module
 #![allow(dead_code)]
 

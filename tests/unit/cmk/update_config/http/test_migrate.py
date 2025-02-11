@@ -194,7 +194,7 @@ EXAMPLE_21: Mapping[str, object] = {
 }
 
 EXAMPLE_22: Mapping[str, object] = {
-    "name": "tls1",
+    "name": "tls_1_0",
     "host": HOST_1,
     "mode": ("url", {"ssl": "ssl_1"}),
 }
@@ -218,9 +218,9 @@ EXAMPLE_25: Mapping[str, object] = {
 }
 
 EXAMPLE_26: Mapping[str, object] = {
-    "name": "tls_1_3",
+    "name": "tls_1_2",
     "host": {"address": ("direct", "google.com")},
-    "mode": ("url", {"ssl": "ssl_1_3"}),
+    "mode": ("url", {"ssl": "ssl_1_2"}),
 }
 
 
@@ -621,7 +621,7 @@ EXAMPLE_78: Mapping[str, object] = {
 EXAMPLE_79: Mapping[str, object] = {
     "name": "name",
     "host": HOST_1,
-    "mode": ("url", {"ssl": "ssl_1_3"}),
+    "mode": ("url", {"ssl": "ssl_1_2"}),
 }
 
 EXAMPLE_80: Mapping[str, object] = {
@@ -724,7 +724,7 @@ EXAMPLE_88: Mapping[str, object] = {
 EXAMPLE_89: Mapping[str, object] = {
     "name": "disable_sni",
     "host": HOST_1,
-    "mode": ("url", {"ssl": "ssl_1_3"}),
+    "mode": ("url", {"ssl": "ssl_1_2"}),
     "disable_sni": True,
 }
 
@@ -746,6 +746,12 @@ EXAMPLE_92: Mapping[str, object] = {
     "name": "authorization",
     "host": {"address": ("direct", "[::1]"), "virthost": ""},
     "mode": ("url", {}),
+}
+
+EXAMPLE_93: Mapping[str, object] = {
+    "name": "tls_1_1",
+    "host": HOST_1,
+    "mode": ("url", {"ssl": "ssl_1_1"}),
 }
 
 
@@ -950,7 +956,6 @@ def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object
     [
         (EXAMPLE_17, None),
         (EXAMPLE_25, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
-        (EXAMPLE_26, {"min_version": TlsVersion.TLS_1_3, "allow_higher": False}),
         (EXAMPLE_27, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
     ],
 )
@@ -1197,6 +1202,13 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
             Conflict(
                 type_="invalid_value",
                 cant_load=True,
+            ),
+        ),
+        (
+            EXAMPLE_93,
+            Conflict(
+                type_="ssl_incompatible",
+                mode_fields=["ssl"],
             ),
         ),
     ],

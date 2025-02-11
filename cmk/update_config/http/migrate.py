@@ -5,6 +5,7 @@
 
 
 from collections.abc import Mapping
+from typing import assert_never
 
 from cmk.update_config.http.conflicts import (
     MigratableCert,
@@ -29,8 +30,8 @@ def _migrate_url_params(
             tls_versions = {"tls_versions": {"min_version": "auto", "allow_higher": True}}
         case "ssl_1_2":
             tls_versions = {"tls_versions": {"min_version": "tls_1_2", "allow_higher": False}}
-        case "ssl_1_3":
-            tls_versions = {"tls_versions": {"min_version": "tls_1_3", "allow_higher": False}}
+        case too_old:
+            assert_never(too_old)
     match url_params.response_time:
         case None:
             response_time: Mapping[str, object] = {}

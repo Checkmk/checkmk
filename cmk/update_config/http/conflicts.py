@@ -17,6 +17,8 @@ from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1V
 
 
 class MigratableUrl(V1Url):
+    ssl: Literal["auto", "ssl_1_2"] | None = None
+
     def migrate_expect_response(self) -> None | list[int]:
         if self.expect_response is None:
             return None
@@ -127,7 +129,7 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
                 type_="add_headers_incompatible",
                 mode_fields=["add_headers"],
             )
-        if mode.ssl in ["ssl_1", "ssl_2", "ssl_3"]:
+        if mode.ssl in ["ssl_1", "ssl_2", "ssl_3", "ssl_1_1"]:
             return Conflict(
                 type_="ssl_incompatible",
                 mode_fields=["ssl"],

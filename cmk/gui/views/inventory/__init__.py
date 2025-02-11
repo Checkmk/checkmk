@@ -1353,7 +1353,7 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return _compute_cell_spec(
+    alignment_class, _coloring_class, rendered_value = _compute_cell_spec(
         _InventoryTreeValueInfo(
             key,
             attributes.pairs.get(key),
@@ -1361,12 +1361,13 @@ def _paint_host_inventory_attribute(
         ),
         hint,
     )
+    return alignment_class, rendered_value
 
 
 def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
     if column not in row:
         return "", ""
-    return _compute_cell_spec(
+    alignment_class, _coloring_class, rendered_value = _compute_cell_spec(
         _InventoryTreeValueInfo(
             column,
             row[column],
@@ -1374,6 +1375,7 @@ def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint)
         ),
         hint,
     )
+    return alignment_class, rendered_value
 
 
 def _register_table_column(
@@ -2234,16 +2236,19 @@ def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHi
 def _compute_cell_spec(
     value_info: _InventoryTreeValueInfo,
     hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> tuple[str, HTML]:
-    # TODO separate tdclass from rendered value
-    tdclass, code = hint.paint_function(value_info.value)
+) -> tuple[str, Literal["", "inactive_cell"], HTML]:
+    # Returns a tuple of two css classes (alignment and coloring) and the HTML value
+    # We keep alignment and coloring classes separate as we only need the coloring within
+    # tables
+    # TODO separate alignment_class and coloring_class from rendered value
+    alignment_class, code = hint.paint_function(value_info.value)
     html_value = HTML() + code
     if (
         not html_value
         or value_info.retention_interval is None
         or value_info.retention_interval.source == "current"
     ):
-        return tdclass, html_value
+        return alignment_class, "", html_value
 
     now = int(time.time())
     valid_until = (
@@ -2252,7 +2257,8 @@ def _compute_cell_spec(
     keep_until = valid_until + value_info.retention_interval.retention_interval
     if now > keep_until:
         return (
-            tdclass,
+            alignment_class,
+            "inactive_cell",
             HTMLWriter.render_span(
                 html_value
                 + HTML("&nbsp;")
@@ -2266,7 +2272,8 @@ def _compute_cell_spec(
         )
     if now > valid_until:
         return (
-            tdclass,
+            alignment_class,
+            "inactive_cell",
             HTMLWriter.render_span(
                 html_value,
                 title=_("Data was provided at %s and is considered valid until %s")
@@ -2277,44 +2284,51 @@ def _compute_cell_spec(
                 css=["muted_text"],
             ),
         )
-    return tdclass, html_value
+    return alignment_class, "", html_value
 
 
-def _show_value(
-    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
-    if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info.value, hint)
-        return
-    html.write_html(_compute_cell_spec(value_info, hint)[1])
-
-
-def _show_delta_value(
+def _compute_delta_cell_spec(
     value: tuple[SDValue, SDValue],
     hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
+) -> tuple[str, Literal["", "inactive_cell"], HTML]:
+    # Returns a tuple of two css classes (alignment and coloring) and the HTML value
+    # Both the alignment and the coloring class are always an empty string but were added for a fct
+    # signature consistent with _compute_cell_spec
     old, new = value
     if old is None and new is not None:
-        html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
-        html.close_span()
-    elif old is not None and new is None:
-        html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
-        html.close_span()
-    elif old == new:
-        html.write_html(_get_html_value(old, hint))
-    elif old is not None and new is not None:
-        html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
-        html.close_span()
-        html.write_text(" → ")
-        html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
-        html.close_span()
-    else:
-        raise NotImplementedError()
+        return (
+            "",
+            "",
+            HTMLWriter.render_span(_get_html_value(new, hint), css=["invnew"]),
+        )
+    if old is not None and new is None:
+        return (
+            "",
+            "",
+            HTMLWriter.render_span(_get_html_value(old, hint), css=["invold"]),
+        )
+    if old == new:
+        return "", "", _get_html_value(old, hint)
+    if old is not None and new is not None:
+        return (
+            "",
+            "",
+            (
+                HTMLWriter.render_span(_get_html_value(old, hint), css=["invold"])
+                + " → "
+                + HTMLWriter.render_span(_get_html_value(new, hint), css=["invnew"])
+            ),
+        )
+    raise NotImplementedError()
+
+
+def _get_cell_spec(
+    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+) -> tuple[str, Literal["", "inactive_cell"], HTML]:
+    if isinstance(value_info, _DeltaTreeValueInfo):
+        return _compute_delta_cell_spec(value_info.value, hint)
+    return _compute_cell_spec(value_info, hint)
 
 
 class _LoadTreeError(Exception):
@@ -2420,10 +2434,11 @@ class TreeRenderer:
         html.open_table()
         for value_info in sorted_pairs:
             attr_hint = hints.get_attribute_hint(value_info.key)
+            _, coloring_class, rendered_value = _get_cell_spec(value_info, attr_hint)
             html.open_tr()
             html.th(self._get_header(attr_hint.title, value_info.key))
-            html.open_td()
-            _show_value(value_info, attr_hint)
+            html.open_td(class_=coloring_class)
+            html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -2481,8 +2496,11 @@ class TreeRenderer:
                     )
                 else:
                     tdclass, _rendered_value = column_hint.paint_function(value_info.value)
-                html.open_td(class_=tdclass)
-                _show_value(value_info, column_hint)
+                _alignment_class, coloring_class, rendered_value = _get_cell_spec(
+                    value_info, column_hint
+                )
+                html.open_td(class_=" ".join([tdclass, coloring_class]))
+                html.write_html(rendered_value)
                 html.close_td()
             html.close_tr()
         html.close_table()

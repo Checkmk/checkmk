@@ -947,6 +947,15 @@ td.invtree {
       height: 14px;
       padding: 2px 6px;
       background-color: $nested-table-td-bg-color;
+
+      &.inactive_cell {
+        background-color: $nested-table-td-inactive-bg-color;
+
+        > span {
+          color: $font-color;
+          opacity: $inactive-opacity;
+        }
+      }
     }
 
     th {

@@ -159,7 +159,7 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
                 mode_fields=["method", "post_data"],
             )
         try:
-            _migrate_expect_response(mode.expect_response or [])
+            migrated_expect_response = _migrate_expect_response(mode.expect_response or [])
         except ValueError:
             return Conflict(
                 type_="only_status_codes_allowed",
@@ -170,6 +170,11 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
                 type_="cant_disable_sni_with_https",
                 mode_fields=["ssl"],
                 disable_sni=True,
+            )
+        if migrated_expect_response and mode.onredirect in ["follow", "sticky", "stickyport"]:
+            return Conflict(
+                type_="v1_checks_redirect_response",
+                mode_fields=["onredirect", "expect_response"],
             )
     elif value.disable_sni:  # Cert mode is always https
         return Conflict(

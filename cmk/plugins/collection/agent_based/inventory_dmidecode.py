@@ -201,6 +201,29 @@ def _parse_system_information(lines: list[list[str]]) -> SystemInformation:
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ChassisInformation:
+    manufacturer: str
+    type: str
+
+
+def _parse_chassis_information(lines: list[list[str]]) -> ChassisInformation:
+    manufacturer = ""
+    type_ = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Type":
+                type_ = raw_value
+    return ChassisInformation(
+        manufacturer=manufacturer,
+        type=type_,
+    )
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -233,26 +256,20 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                     },
                 )
             case "Chassis Information":
-                yield _make_inventory_chassis(lines)
+                chassis_information = _parse_chassis_information(lines)
+                yield Attributes(
+                    path=["hardware", "chassis"],
+                    inventory_attributes={
+                        "manufacturer": chassis_information.manufacturer,
+                        "type": chassis_information.type,
+                    },
+                )
             case "Processor Information":
                 yield from _make_inventory_processor(lines)
             case "Physical Memory Array":
                 yield _make_inventory_physical_mem_array(lines, counter)
             case "Memory Device":
                 yield from _make_inventory_mem_device(lines, counter)
-
-
-def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["hardware", "chassis"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Manufacturer": "manufacturer",
-                "Type": "type",
-            },
-        ),
-    )
 
 
 # Note: This node is also being filled by lnx_cpuinfo

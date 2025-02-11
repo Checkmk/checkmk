@@ -282,7 +282,7 @@ class UIIconTitle(UserAttribute):
                 "to save some space in the UI."
             ),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["hide"]]?
-            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            choices=[(None, _("Show title")), ("hide", _("Hide title"))],
         )
 
 

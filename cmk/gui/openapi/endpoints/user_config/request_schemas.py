@@ -213,6 +213,13 @@ class UserInterfaceAttributes(BaseSchema):
         enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
         load_default="default",
     )
+    contextual_help_icon = fields.String(
+        required=False,
+        enum=["show_icon", "hide_icon"],
+        description="Whether or not to show the contextual icon in the UI for this user.",
+        example="show_icon",
+        load_default="show_icon",
+    )
 
 
 class CustomUserAttributes(BaseSchema):
@@ -366,6 +373,7 @@ class CreateUser(CustomUserAttributes):
             "navigation_bar_icons": "hide",
             "mega_menu_icons": "topic",
             "show_mode": "default",
+            "contextual_help_icon": "show_icon",
         },
         example={"interface_theme": "dark"},
         description="",
@@ -401,6 +409,13 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         " Alternatively, this option can also be used to enforce show more removing the three dots "
         "for all menus.",
         enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
+    )
+    contextual_help_icon = fields.String(
+        required=False,
+        enum=["show_icon", "hide_icon"],
+        description="Whether or not to show the contextual icon in the UI for this user.",
+        example="show_icon",
+        load_default="show_icon",
     )
 
 

@@ -245,6 +245,7 @@ class UserSpec(TypedDict, total=False):
     nav_hide_icons_title: NotRequired[Literal["hide"] | None]
     icons_per_item: NotRequired[Literal["entry"] | None]
     temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
+    contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
 
 
 class UserObjectValue(TypedDict):

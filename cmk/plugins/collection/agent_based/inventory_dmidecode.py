@@ -6,6 +6,7 @@
 import time
 from collections import Counter
 from collections.abc import Callable, Generator, Mapping
+from dataclasses import dataclass
 from typing import Literal
 
 from cmk.agent_based.v2 import (
@@ -112,6 +113,51 @@ agent_section_dmidecode = AgentSection(
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class BIOSInformation:
+    vendor: str
+    version: str
+    release_date: float | None
+    bios_revision: str
+    firmware_revision: str
+
+
+def _parse_date(value: str) -> float | None:
+    try:
+        return time.mktime(time.strptime(value, "%m/%d/%Y"))
+    except ValueError:
+        return None
+
+
+def _parse_bios_information(lines: list[list[str]]) -> BIOSInformation:
+    vendor = ""
+    version = ""
+    release_date = None
+    bios_revision = ""
+    firmware_revision = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Vendor":
+                vendor = raw_value
+            case "Version":
+                version = raw_value
+            case "Release Date":
+                release_date = _parse_date(raw_value)
+            case "BIOS Revision":
+                bios_revision = raw_value
+            case "Firmware Revision":
+                firmware_revision = raw_value
+    return BIOSInformation(
+        vendor=vendor,
+        version=version,
+        release_date=release_date,
+        bios_revision=bios_revision,
+        firmware_revision=firmware_revision,
+    )
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -119,7 +165,17 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
     for title, lines in section:
         match title:
             case "BIOS Information":
-                yield _make_inventory_bios(lines)
+                bios_information = _parse_bios_information(lines)
+                yield Attributes(
+                    path=["software", "bios"],
+                    inventory_attributes={
+                        "vendor": bios_information.vendor,
+                        "version": bios_information.version,
+                        "date": bios_information.release_date,
+                        "revision": bios_information.bios_revision,
+                        "firmware": bios_information.firmware_revision,
+                    },
+                )
             case "System Information":
                 yield _make_inventory_system(lines)
             case "Chassis Information":
@@ -130,22 +186,6 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                 yield _make_inventory_physical_mem_array(lines, counter)
             case "Memory Device":
                 yield from _make_inventory_mem_device(lines, counter)
-
-
-def _make_inventory_bios(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["software", "bios"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Vendor": "vendor",
-                "Version": "version",
-                "Release Date": ("date", _parse_date),
-                "BIOS Revision": "revision",
-                "Firmware Revision": "firmware",
-            },
-        ),
-    )
 
 
 def _make_inventory_system(lines: list[list[str]]) -> Attributes:
@@ -298,13 +338,6 @@ inventory_plugin_dmidecode = InventoryPlugin(
 # | .__/ \__,_|_|  |___/\___| |_| |_|\___|_| .__/ \___|_|  |___/
 # |_|                                      |_|
 #
-
-
-def _parse_date(value: str) -> float | None:
-    try:
-        return time.mktime(time.strptime(value, "%m/%d/%Y"))
-    except ValueError:
-        return None
 
 
 def _parse_size(v: str) -> float | None:  # into Bytes (int)

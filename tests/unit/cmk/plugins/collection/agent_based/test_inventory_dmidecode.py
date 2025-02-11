@@ -31,6 +31,7 @@ from cmk.plugins.collection.agent_based.inventory_dmidecode import (
                     inventory_attributes={
                         "vendor": "Foo",
                         "version": "V1.15",
+                        "date": None,
                         "revision": "1.0",
                         "firmware": "2.0",
                     },

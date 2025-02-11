@@ -33,7 +33,7 @@ def main() {
     def download_dir = "package_download";
     def custom_git_ref = "";
     def incremented_counter = "";
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: "daily");
 
     currentBuild.description += (
         """

@@ -42,10 +42,6 @@ def main() {
 
     shout("configure");
 
-    /// don't add $WORKSPACE based values here, since $docker_args is being
-    /// used on different nodes
-    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
-
     def bazel_log_prefix = "bazel_log_";
 
     def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
@@ -119,7 +115,7 @@ def main() {
     if (params.DEPLOY_TO_WEBSITE_ONLY) {
         // This stage is used only by bauwelt/bw-release in order to publish an already built release
         stage('Deploying previously build version to website only') {
-            docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+            inside_container(ulimit_nofile: 1024) {
                 artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware);
             }
@@ -132,7 +128,7 @@ def main() {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
         sh("rm -rf ${WORKSPACE}/${bazel_log_prefix}*");
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+        inside_container(ulimit_nofile: 1024) {
             dir("${checkout_dir}") {
                 sh("make buildclean");
                 versioning.configure_checkout_folder(EDITION, cmk_version);
@@ -162,7 +158,7 @@ def main() {
     def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
 
     conditional_stage("Build agent artifacts fast", !params.FAKE_WINDOWS_ARTIFACTS) {
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+        inside_container(ulimit_nofile: 1024) {
             dir("${checkout_dir}") {
                 // Initialize our virtual environment before parallelization
                 sh("make .venv");
@@ -197,11 +193,12 @@ def main() {
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
-                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                            docker_image_from_alias("IMAGE_TESTING").inside(
-                                "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
-                                build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
-                            }
+                        inside_container(
+                            set_docker_group_id: true,
+                            ulimit_nofile: 1024,
+                            priviliged: true,
+                        ) {
+                            build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
                         }
                     }
                 }
@@ -219,7 +216,7 @@ def main() {
     }
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir} --ulimit nofile=2048:2048") {
+    inside_container(ulimit_nofile: 2048) {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 
@@ -278,50 +275,54 @@ def main() {
                 def distro_dir = "${WORKSPACE}/checkout";
 
                 lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
-                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                        // For the package build we need a higher ulimit
-                        // * Bazel opens many files which can lead to crashes
-                        // * See CMK-12159
-                        docker.image("${distro}:${docker_tag}").inside(
-                                /* groovylint-disable LineLength */
-                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro} --init") {
-                                /* groovylint-enable LineLength */
-                            stage("${distro} initialize workspace") {
-                                cleanup_directory("${WORKSPACE}/versions");
-                                sh("rm -rf ${distro_dir}");
-                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
-                                sh("rm -rf ${distro_dir}/bazel_execution_log*");
-                            }
+                    inside_container(
+                        image: docker.image("${distro}:${docker_tag}"),
+                        args: [
+                            "--ulimit nofile=16384:32768",
+                            "-v ${checkout_dir}:${checkout_dir}:ro",
+                            "--hostname ${distro}",
+                        ],
+                        init: true,
+                    ) {
+                        stage("${distro} initialize workspace") {
+                            cleanup_directory("${WORKSPACE}/versions");
+                            sh("rm -rf ${distro_dir}");
+                            sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
+                            sh("rm -rf ${distro_dir}/bazel_execution_log*");
+                        }
 
-                            stage("${distro} build package") {
-                                withCredentials([
-                                    usernamePassword(
-                                        credentialsId: 'nexus',
-                                        passwordVariable: 'NEXUS_PASSWORD',
-                                        usernameVariable: 'NEXUS_USERNAME'),
-                                    usernamePassword(
-                                        credentialsId: 'bazel-caching-credentials',
-                                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                                        usernameVariable: 'BAZEL_CACHE_USER'),
-                                ]) {
-                                    versioning.print_image_tag();
-                                    build_package(distro_package_type(distro), distro_dir, omd_env_vars);
-                                }
+                        stage("${distro} build package") {
+                            withCredentials([
+                                usernamePassword(
+                                    credentialsId: 'nexus',
+                                    passwordVariable: 'NEXUS_PASSWORD',
+                                    usernameVariable: 'NEXUS_USERNAME'),
+                                usernamePassword(
+                                    credentialsId: 'bazel-caching-credentials',
+                                    /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                                    passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                                    usernameVariable: 'BAZEL_CACHE_USER'),
+                            ]) {
+                                versioning.print_image_tag();
+                                build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                             }
-                            sh("""echo ==== ${distro} =====
-                            ps wauxw
-                            """);
+                        }
+                        sh("""echo ==== ${distro} =====
+                        ps wauxw
+                        """);
 
-                            stage("Parse bazel execution logs") {
-                                bazel_logs.try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
-                            }
+                        stage("Parse bazel execution logs") {
+                            bazel_logs.try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
                         }
                     }
                 }
 
-                docker_image_from_alias("IMAGE_TESTING").inside(
-                        "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro") {
+                inside_container(
+                    args: [
+                        "-v ${checkout_dir}:${checkout_dir}:ro",
+                    ],
+                    ulimit_nofile: 1024,
+                ) {
                     def package_name = versioning.get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
                     def build_package_path = "${distro_dir}/${package_name}";
                     def node_version_dir = "${WORKSPACE}/versions";
@@ -376,32 +377,30 @@ def main() {
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
         def exclude_pattern = versioning.get_internal_artifacts_pattern();
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
-                assert_no_dirty_files(checkout_dir);
-                artifacts_helper.download_version_dir(
-                    upload_path,
-                    INTERNAL_DEPLOY_PORT,
-                    cmk_version_rc_aware,
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}",
-                    "*",
-                    "all packages",
-                    exclude_pattern,
-                );
-                artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
-                if (deploy_to_website) {
-                    artifacts_helper.deploy_to_website(cmk_version_rc_aware);
-                }
+        inside_container(ulimit_nofile: 1024) {
+            assert_no_dirty_files(checkout_dir);
+            artifacts_helper.download_version_dir(
+                upload_path,
+                INTERNAL_DEPLOY_PORT,
+                cmk_version_rc_aware,
+                "${WORKSPACE}/versions/${cmk_version_rc_aware}",
+                "*",
+                "all packages",
+                exclude_pattern,
+            );
+            artifacts_helper.upload_version_dir(
+                "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
+            if (deploy_to_website) {
+                artifacts_helper.deploy_to_website(cmk_version_rc_aware);
             }
+        }
 
-            if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
-                // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
-                artifacts_helper.upload_files_to_nexus(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}/check-mk-saas-${cmk_version}*",
-                    "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
-                );
-            }
+        if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
+            // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
+            artifacts_helper.upload_files_to_nexus(
+                "${WORKSPACE}/versions/${cmk_version_rc_aware}/check-mk-saas-${cmk_version}*",
+                "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
+            );
         }
     }
 }
@@ -466,7 +465,10 @@ def create_and_upload_bom(workspace, branch_version, version) {
         }
         stage('Create BOM') {
             on_dry_run_omit(LONG_RUNNING, "Create BOM") {
-                scanner_image.inside("-v ${checkout_dir}:${checkout_dir}") {
+                inside_container(
+                    image: scanner_image,
+                    args: ["-v ${checkout_dir}:${checkout_dir}"], // why?!
+                ) {
                     sh("""python3 -m dependencyscanner \
                     --stage prod \
                     --outfile '${bom_path}' \
@@ -482,7 +484,13 @@ def create_and_upload_bom(workspace, branch_version, version) {
                     variable: 'DTRACK_API_KEY')]) {
                 withEnv(["DTRACK_URL=${DTRACK_URL}"]) {
                     on_dry_run_omit(LONG_RUNNING, "Upload BOM") {
-                        scanner_image.inside("-v ${checkout_dir}:${checkout_dir} --env DTRACK_URL,DTRACK_API_KEY") {
+                        inside_container(
+                            image: scanner_image,
+                            args: [
+                                "-v ${checkout_dir}:${checkout_dir}", // why?!
+                                "--env DTRACK_URL,DTRACK_API_KEY",
+                            ],
+                        ) {
                             sh("""scripts/upload-bom \
                             --bom-path '${bom_path}' \
                             --project-name 'Checkmk ${branch_version}' \

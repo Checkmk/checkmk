@@ -5,10 +5,8 @@
 def main() {
     dir("${checkout_dir}") {
         stage("Update") {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker_image_from_alias("IMAGE_TESTING").inside() {
-                    sh("make -C doc/documentation htmlhelp");
-                }
+            inside_container() {
+                sh("make -C doc/documentation htmlhelp");
             }
             stage("Stash") {
                 stash(

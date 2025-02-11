@@ -61,7 +61,7 @@ else
 
     # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
     # That's why we need to mount the reference repos.
-    GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_reference_clones/check_mk.git"
+    GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 
     DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}"
@@ -70,6 +70,7 @@ fi
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
 "${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
+
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
 # Limit CPU weight to 1/4 and used CPUs to N-CPUs - 2 in order to keep system usable

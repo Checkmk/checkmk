@@ -13,7 +13,7 @@ def main() {
         }
     }
     stage("Build announcement") {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
+        inside_container() {
             dir("${checkout_dir}") {
                 def announce_file = sh(script: 'make print-CHECK_MK_ANNOUNCE_TAR_FILE', returnStdout: true).trim();
                 sh(script: "make announcement");

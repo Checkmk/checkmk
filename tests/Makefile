@@ -270,7 +270,7 @@ test-lint-groovy:
 	cd ..; scripts/npm-ci && scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-lint-groovy-docker:
-	../scripts/run-in-docker.sh make --quiet test-lint-groovy
+	DOCKER_RUN_ADDOPTS="-e HOME" ../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)

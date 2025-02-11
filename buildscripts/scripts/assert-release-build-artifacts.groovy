@@ -25,7 +25,11 @@ def main() {
         """.stripMargin());
 
     stage("Assert release build artifacts") {
-        docker_image_from_alias("IMAGE_TESTING").inside("-v \$HOME/.cmk-credentials:\$HOME/.cmk-credentials -v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}") {
+        inside_container(
+            set_docker_group_id: true,
+            mount_credentials: true,
+            priviliged: true,
+        ) {
             withCredentials([
                 usernamePassword(
                     credentialsId: 'nexus',

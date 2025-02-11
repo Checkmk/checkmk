@@ -17,8 +17,8 @@ suppressed_issues = {
     "CMK-11886",  # no real fix possible
     "INVALID-JSON",
 }
-if "TEST_OPENAPI_SUPPRESS" in environ:
-    suppressed_issues.update(set(getenv("TEST_OPENAPI_SUPPRESS", "").upper().split(",")))
+if "SCHEMATHESIS_SUPPRESS" in environ:
+    suppressed_issues.update(set(getenv("SCHEMATHESIS_SUPPRESS", "").upper().split(",")))
 else:
     suppressed_issues.update(
         {
@@ -38,7 +38,7 @@ else:
             "CMK-15515",
         }
     )
-for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):
+for issue in set(getenv("SCHEMATHESIS_ALLOW", "").upper().split(",")):
     suppressed_issues.discard(issue)
 
 # default "string" strategy

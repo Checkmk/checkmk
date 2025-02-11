@@ -201,7 +201,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
 
     api_url = f"http://localhost:{site.apache_port}/{site.id}/check_mk/api/1.0"
     schema_filename = "openapi-doc"
-    schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", "")
+    schema_filedir = os.getenv("SCHEMATHESIS_SCHEMA_DIR", "")
     if os.path.exists(f"{schema_filedir}/{schema_filename}.json"):
         schema_filetype = "json"
     else:

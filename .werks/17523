@@ -1,0 +1,11 @@
+Title: raritan_pdu_plugs: Don't discover plugs in unknown state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1739264034
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+Previously, plugs that reported an unknown state have been discovered and reported as OK.
+We no longer discover these plugs.

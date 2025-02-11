@@ -22,8 +22,8 @@ from tests.schemathesis_openapi.schema import (
 logger = logging.getLogger(__name__)
 
 
-@schemathesis.hooks.register("before_load_schema")
-def hook_before_load_schema(  # pylint: disable=too-many-branches
+@schemathesis.hook("before_load_schema")
+def hook_before_load_schema(
     context: schemathesis.hooks.HookContext, raw_schema: dict[str, Any]
 ) -> None:
     """Modify the raw schema before loading it.
@@ -224,7 +224,7 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         json.dump(raw_schema, f, indent=2)
 
 
-@schemathesis.hooks.register("before_call")
+@schemathesis.hook("before_call")
 def hook_before_call(
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
@@ -241,7 +241,8 @@ def hook_before_call(
 
 
 @schemathesis.hooks.register("after_call")
-def hook_after_call(  # pylint: disable=too-many-branches
+@schemathesis.hook("after_call")
+def hook_after_call(
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
     response: schemathesis.transports.responses.GenericResponse,
@@ -251,6 +252,13 @@ def hook_after_call(  # pylint: disable=too-many-branches
     This can be used to analyze and modify the response before validation
     (e.g. to suppress response validation errors).
     """
+    after_call(case, response)
+
+
+def after_call(
+    case: schemathesis.models.Case,
+    response: schemathesis.transports.responses.GenericResponse,
+) -> schemathesis.transports.responses.GenericResponse:
     logger.debug("%s %s: after_call handler", case.method, case.path)
     reason = response.reason if isinstance(response, requests.Response) else "n/a"
 
@@ -448,4 +456,4 @@ def hook_after_call(  # pylint: disable=too-many-branches
         ticket_id="CMK-15515",
     )
 
-    # invalid status: 500 instead of 409
+    return response

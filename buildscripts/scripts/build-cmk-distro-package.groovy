@@ -161,11 +161,9 @@ def main() {
                             passwordVariable: 'NEXUS_PASSWORD',
                             usernameVariable: 'NEXUS_USERNAME'),
                     ]) {
-                        withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
-                            /// Don't use withEnv, see
-                            /// https://issues.jenkins.io/browse/JENKINS-43632
-                            sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
-                        }
+                        /// Don't use withEnv, see
+                        /// https://issues.jenkins.io/browse/JENKINS-43632
+                        sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
                     }
 
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");

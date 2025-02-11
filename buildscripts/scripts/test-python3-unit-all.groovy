@@ -11,10 +11,8 @@ def main() {
             dir("${checkout_dir}") {
                 withCredentials([
                 ]) {
-                    withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
-                        lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource: null) {
-                            sh("make -C tests test-unit-all");
-                        }
+                    lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource: null) {
+                        sh("make -C tests test-unit-all");
                     }
                 }
             }

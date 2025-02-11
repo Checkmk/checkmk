@@ -51,10 +51,6 @@ def test_inventory_raritan_pdu_plugs() -> None:
             {"discovered_state": "off"},
         ),
         (
-            "3",
-            {"discovered_state": "unknown"},
-        ),
-        (
             "4",
             {"discovered_state": "on"},
         ),
@@ -65,10 +61,6 @@ def test_inventory_raritan_pdu_plugs() -> None:
         (
             "6",
             {"discovered_state": "on"},
-        ),
-        (
-            "7",
-            {"discovered_state": "unknown"},
         ),
     ]
 

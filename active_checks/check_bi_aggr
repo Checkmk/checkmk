@@ -103,8 +103,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--in-downtime",
         metavar="S",
-        choices=["ok", "warn"],
-        default=None,
+        choices=["normal", "ok", "warn"],
+        default="normal",
         help=(
             "S can be 'ok' or 'warn'. Force this state if the aggregate is in scheduled downtime."
             " OK states will always be unchanged."
@@ -113,8 +113,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--acknowledged",
         metavar="S",
-        choices=["ok", "warn"],
-        default=None,
+        choices=["normal", "ok", "warn"],
+        default="normal",
         help=("Same as --in-downtime, but for acknowledged aggregates."),
     )
     parser.add_argument(
@@ -226,7 +226,7 @@ def main(argv: Sequence[str]) -> None:
 
     # Handle downtimes and acknowledgements
     is_aggr_in_downtime = response_data["aggregations"][args.aggr_name]["in_downtime"]
-    if args.in_downtime and is_aggr_in_downtime:
+    if args.in_downtime != "normal" and is_aggr_in_downtime:
         aggr_output += ", currently in downtime"
         if args.in_downtime == "ok":
             aggr_state = 0
@@ -276,7 +276,7 @@ def main(argv: Sequence[str]) -> None:
                     conn.command("[%d] DEL_SVC_DOWNTIME;%d" % (now, dt_id[0]))
 
     is_aggr_acknowledged = response_data["aggregations"][args.aggr_name]["acknowledged"]
-    if args.acknowledged and is_aggr_acknowledged:
+    if args.acknowledged != "normal" and is_aggr_acknowledged:
         aggr_output += ", is acknowledged"
         if args.acknowledged == "ok":
             aggr_state = 0

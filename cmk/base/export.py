@@ -19,34 +19,37 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
+    AgentBasedPlugins,
     extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
 )
 
-_config_loaded = False
-_checks_loaded = False
+_config: config.LoadedConfigFragment | None = None
+_plugins: AgentBasedPlugins | None = None
 
 
 # TODO: This should be solved in the config module / ConfigCache object
 def _load_config() -> None:
-    global _config_loaded
-    if not _config_loaded:
-        plugins = get_previously_loaded_plugins()
-        config.load(extract_known_discovery_rulesets(plugins), validate_hosts=False)
-        _config_loaded = True
+    global _config
+    if _config is None:
+        # not sure if we need the plugins here (probably not)
+        # but this whole module is soon to be removed anyway
+        plugins = _load_checks()
+        _config = config.load(extract_known_discovery_rulesets(plugins), validate_hosts=False)
 
 
 # TODO: This should be solved in the config module / ConfigCache object
-def _load_checks() -> None:
-    global _checks_loaded
-    if not _checks_loaded:
-        config.load_all_plugins(local_checks_dir=local_checks_dir, checks_dir=checks_dir)
-        _checks_loaded = True
+def _load_checks() -> AgentBasedPlugins:
+    global _plugins
+    if _plugins is None:
+        _plugins, _errors = config.load_all_plugins(
+            local_checks_dir=local_checks_dir, checks_dir=checks_dir
+        )
+    return _plugins
 
 
 def reset_config() -> None:
-    global _config_loaded
-    _config_loaded = False
+    global _config
+    _config = None
 
 
 def logwatch_service_description(
@@ -58,9 +61,8 @@ def logwatch_service_description(
     # (users might shadow/redefine the logwatch plug-in in unexpected places)
     # Failing to load the right plug-in would result in a wrong service description,
     # in turn leading to wrong service labels and ruleset matches.
-    _load_checks()
     plugin_name = CheckPluginName("logwatch")
-    plugin = get_previously_loaded_plugins().check_plugins[plugin_name]
+    plugin = _load_checks().check_plugins[plugin_name]
     return config.service_description(
         get_ruleset_matcher(),
         hostname,

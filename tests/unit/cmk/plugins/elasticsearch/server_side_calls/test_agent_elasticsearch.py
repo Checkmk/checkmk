@@ -33,7 +33,8 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
     params: dict[str, object] = {
         "hosts": ["testhost"],
         "protocol": "https",
-        "infos": ["cluster_health", "nodestats", "stats"],
+        "cluster_health": True,
+        "nodestats": False,
         "user": "user",
         "password": Secret(0),
     }
@@ -41,14 +42,39 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
     assert cmd.command_arguments == [
         "-P",
         "https",
-        "-m",
-        "cluster_health",
-        "nodestats",
-        "stats",
         "-u",
         "user",
         "-s",
         Secret(0).unsafe(),
+        "--cluster-health",
+        "--",
+        "testhost",
+    ]
+
+
+def test_agent_elasticsearch_stats() -> None:
+    params: dict[str, object] = {
+        "hosts": ["testhost"],
+        "protocol": "https",
+        "cluster_health": True,
+        "nodestats": False,
+        "stats": ["*-*", "indices", "jvm"],
+        "user": "user",
+        "password": Secret(0),
+    }
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG)
+    assert cmd.command_arguments == [
+        "-P",
+        "https",
+        "-u",
+        "user",
+        "-s",
+        Secret(0).unsafe(),
+        "--cluster-health",
+        "--stats",
+        "*-*",
+        "indices",
+        "jvm",
         "--",
         "testhost",
     ]

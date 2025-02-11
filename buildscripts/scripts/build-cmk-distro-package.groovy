@@ -119,8 +119,7 @@ def main() {
         }
     }
 
-    stage("Prepare environment") {
-        shout("Prepare environment");
+    stage("Build package") {
         lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
             inside_container(
                 image: docker.image("${distro}:${docker_tag}"),
@@ -148,13 +147,11 @@ def main() {
                     versioning.print_image_tag();
                     // Don't use withEnv, see
                     // https://issues.jenkins.io/browse/JENKINS-43632
-                    stage("Build package") {
-                        sh("""
-                            cd ${checkout_dir}/omd
-                            ${omd_env_vars.join(' ')} \
-                            make ${distro_package_type(distro)}
-                        """);
-                    }
+                    sh("""
+                        cd ${checkout_dir}/omd
+                        ${omd_env_vars.join(' ')} \
+                        make ${distro_package_type(distro)}
+                    """);
 
                     bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix)
                 }

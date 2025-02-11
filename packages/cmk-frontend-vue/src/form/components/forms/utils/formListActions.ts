@@ -51,12 +51,12 @@ export default function formListActions(
   }
 
   function setValidation(newBackendValidation: ValidationMessages) {
-    const [_listValidations, _elementValidations] = groupIndexedValidations(
+    const [listValidations, elementValidations] = groupIndexedValidations(
       newBackendValidation,
       data.value.length
     )
-    validation.value = _listValidations
-    Object.entries(_elementValidations).forEach(([i, value]) => {
+    validation.value = listValidations
+    Object.entries(elementValidations).forEach(([i, value]) => {
       elementValidation.value[i as unknown as number] = value
     })
   }

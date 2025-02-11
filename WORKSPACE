@@ -216,14 +216,6 @@ load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool_workspace")
 
 rrdtool_workspace()
 
-load("//omd/packages/glib:glib.bzl", "glib_local_repo")
-
-glib_local_repo("glib")
-
-load("//omd/packages/libxml2:libxml2.bzl", "libxml2_local_repo")
-
-libxml2_local_repo("libxml2")
-
 load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native_workspace")
 
 rrdtool_native_workspace()

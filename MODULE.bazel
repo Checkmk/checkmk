@@ -214,3 +214,7 @@ bazel_dep(
     version = "8.0.0",
     dev_dependency = True,
 )
+
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+new_local_repository(name="glib", build_file="@//omd/packages/glib:BUILD", path="/usr")
+new_local_repository(name="libxml2", build_file="@//omd/packages/libxml2:BUILD", path="/usr")

@@ -4,7 +4,7 @@
 # TODO: make output visible after job starting
 # TODO: make diagnostic better
 # 2023 (c) Checkmk GmbH
-# 
+#
 
 $make_exe = $Env:make_exe
 if ( "$make_exe" -eq "" ) {
@@ -13,14 +13,17 @@ if ( "$make_exe" -eq "" ) {
 
 $msbuild_exe = $Env:msbuild_exe
 if ( "$msbuild_exe" -eq "" ) {
-    msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
+    $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+                     -latest `
+                     -requires Microsoft.Component.MSBuild `
+                     -find MSBuild\**\Bin\MSBuild.exe
 }
 
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
-$makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
+$makefile = (Get-Item -Path ".\").FullName + "\Makefile"
 $host_dir = (Get-Item -Path ".\").FullName
 $cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\host\cmk-agent-ctl"
-# string below is used to quckly switch to the Powershell ISE, do not delete it
+# string below is used to quickly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
 $platforms = "Configuration=Release,Platform=x86", "Configuration=Release,Platform=x64"

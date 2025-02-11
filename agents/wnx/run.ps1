@@ -26,8 +26,12 @@ $argExt = $false
 $argSql = $false
 $argDetach = $false
 
-$msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
-$repo_root = (get-item $pwd).parent.parent.FullName 
+$msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+                 -latest `
+                 -requires Microsoft.Component.MSBuild `
+                 -find MSBuild\**\Bin\MSBuild.exe
+
+$repo_root = (get-item $pwd).parent.parent.FullName
 $arte = "$repo_root/artefacts"
 $build_dir = "$pwd/build"
 $ohm_dir = "$build_dir/ohm/"

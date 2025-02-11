@@ -38,12 +38,7 @@ from cmk.utils.user import UserId
 import cmk.gui.inventory as inventory
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
-from cmk.gui.data_source import (
-    ABCDataSource,
-    data_source_registry,
-    DataSourceRegistry,
-    RowTable,
-)
+from cmk.gui.data_source import ABCDataSource, data_source_registry, DataSourceRegistry, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
@@ -68,12 +63,7 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry, register_painter
-from cmk.gui.painter_options import (
-    paint_age,
-    PainterOption,
-    PainterOptionRegistry,
-    PainterOptions,
-)
+from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -737,7 +727,7 @@ class TableViewSpec:
             return TableViewSpec(
                 # This seems to be important for the availability of GUI elements, such as filters,
                 # sorter, etc. in related contexts (eg. data source inv*).
-                view_name=view_name if view_name.startswith("inv") else f"inv{view_name}",
+                view_name=(view_name if view_name.startswith("inv") else f"inv{view_name}"),
                 title=title,
                 _long_title_function=_make_long_title_function(title, path[:-1]),
                 icon=raw_hint.get("icon"),
@@ -2138,7 +2128,7 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 def _make_columns(
-    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
+    rows: (Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]),
     key_order: Sequence[SDKey],
 ) -> Sequence[SDKey]:
     return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))

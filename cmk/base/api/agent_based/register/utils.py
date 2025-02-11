@@ -6,12 +6,13 @@
 import inspect
 import sys
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
 from cmk.ccc.version import Edition
 
 from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -27,6 +28,8 @@ from cmk.base.api.agent_based.plugin_classes import (
 
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.discover_plugins import PluginLocation
+
+from ._config import AgentBasedPlugins
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
@@ -244,4 +247,16 @@ def sections_needing_redetection(
         for section_names in sections_by_parsed_name.values()
         if len(section_names) > 1
         for section_name in section_names
+    }
+
+
+def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[RuleSetName]:
+    return {
+        r
+        for r in (
+            *(p.discovery_ruleset_name for p in plugins.check_plugins.values()),
+            *(p.host_label_ruleset_name for p in plugins.agent_sections.values()),
+            *(p.host_label_ruleset_name for p in plugins.snmp_sections.values()),
+        )
+        if r is not None
     }

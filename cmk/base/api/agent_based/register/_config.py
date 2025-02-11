@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -46,18 +45,6 @@ def get_previously_loaded_plugins() -> AgentBasedPlugins:
         check_plugins=registered_check_plugins,
         inventory_plugins=registered_inventory_plugins,
     )
-
-
-def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[RuleSetName]:
-    return {
-        r
-        for r in (
-            *(p.discovery_ruleset_name for p in plugins.check_plugins.values()),
-            *(p.host_label_ruleset_name for p in plugins.agent_sections.values()),
-            *(p.host_label_ruleset_name for p in plugins.snmp_sections.values()),
-        )
-        if r is not None
-    }
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:

@@ -37,13 +37,13 @@ def test_registered_ac_tests() -> None:
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",
         "ACTestUnexpectedAllowedIPRanges",
-        "ACTestMknotifydCommunicationEncrypted",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_ac_tests += [
             "ACTestAlertHandlerEventTypes",
             "ACTestSecureAgentUpdaterTransport",
+            "ACTestMknotifydCommunicationEncrypted",
         ]
 
     registered_plugins = sorted(ac_test_registry.keys())

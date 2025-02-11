@@ -452,7 +452,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                     "url",
                     {
                         "uri": "/product",
-                        "ssl": "1.2",
+                        "ssl": "ssl_1_2",
                         "response_time": ("fixed", (100.0 / 1000, 200.0 / 1000)),
                         "timeout": 10,
                         "user_agent": "user",
@@ -630,7 +630,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
             [
                 "-u",
                 "/url.com",
-                "--ssl=ssl_1_1",
+                "--ssl=1.1",
                 "-w",
                 "100000.000000",
                 "-c",

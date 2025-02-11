@@ -267,7 +267,14 @@ def _url_arguments(
     match settings.ssl:
         case "auto":
             args.append("--ssl")
-        case str(ssl):
+        case str(settings_ssl):
+            ssl = {
+                "ssl_1_1": "1.1",
+                "ssl_1_2": "1.2",
+                "ssl_1": "1",
+                "ssl_2": "2",
+                "ssl_3": "3",
+            }[settings_ssl]
             args.append("--ssl=%s" % ssl)
 
     if (response_time := settings.response_time) is not None:

@@ -316,8 +316,13 @@ def _url_arguments(  # pylint: disable=too-many-branches
         args += ["-P", post_data.data, "-T", post_data.content_type]
 
     http_method = "CONNECT" if proxy_used else None
-    if settings.method is not None:
-        http_method = settings.method
+    match settings.method:
+        case None:
+            pass
+        case "CONNECT_POST":
+            http_method = "CONNECT:POST"
+        case _:
+            http_method = settings.method
     if http_method:
         args += ["-j", http_method]
 

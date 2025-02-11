@@ -159,7 +159,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                         "in_downtime": DictElement(
                             parameter_form=SingleChoice(
                                 title=Title("State, if BI aggregate is in scheduled downtime"),
-                                migrate=lambda x: str(x) or "normal",
+                                migrate=lambda x: str(x) if x is not None else "normal",
                                 elements=(
                                     SingleChoiceElement(
                                         name="normal",
@@ -176,7 +176,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                         "acknowledged": DictElement(
                             parameter_form=SingleChoice(
                                 title=Title("State, if BI aggregate is acknowledged"),
-                                migrate=lambda x: str(x) or "normal",
+                                migrate=lambda x: str(x) if x is not None else "normal",
                                 elements=(
                                     SingleChoiceElement(
                                         name="normal",

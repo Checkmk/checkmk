@@ -1,0 +1,19 @@
+commit bd180f6826f9545b6f6c84ec1c520c43b24c9f0c
+Author: Mathias Laurin <Mathias.Laurin+github.com@gmail.com>
+Date:   Mon Feb 10 14:37:25 2025 +0100
+
+    Do not type check _virtual_imports files
+
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+index 44823fc..105c9ae 100644
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -163,7 +163,7 @@ def _mypy_impl(target, ctx):
+         result_info = [OutputGroupInfo(mypy = depset(outputs))]
+ 
+     args.add_all([c.path for c in upstream_caches], before_each = "--upstream-cache")
+-    args.add_all(ctx.rule.files.srcs)
++    args.add_all([s for s in ctx.rule.files.srcs if "/_virtual_imports/" not in s.short_path])
+ 
+     if hasattr(ctx.attr, "_mypy_ini"):
+         args.add("--mypy-ini", ctx.file._mypy_ini.path)

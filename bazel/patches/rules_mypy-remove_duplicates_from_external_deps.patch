@@ -1,0 +1,52 @@
+commit bbf862dc3ecf5217b3b081420a2800f7d2a15539
+Author: Mathias Laurin <Mathias.Laurin+github.com@gmail.com>
+Date:   Tue Feb 11 11:26:53 2025 +0100
+
+    Remove duplicates from external deps
+    
+    We have a lot of dependencies in our software.  This patch brought the
+    MYPYPATH variable size from about 48k characters down to 17.5k.
+    
+    Removing duplicates also helps debugging path issues.
+
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+index fc40283..44823fc 100644
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -78,7 +78,7 @@ def _mypy_impl(target, ctx):
+ 
+     # we need to help mypy map the location of external deps by setting
+     # MYPYPATH to include the site-packages directories.
+-    external_deps = []
++    external_deps = {}
+ 
+     # we need to help mypy map the location of first party deps with custom
+     # 'imports' by setting MYPYPATH.
+@@ -110,14 +110,14 @@ def _mypy_impl(target, ctx):
+             types.append(dep[PyTypeLibraryInfo].directory.path + "/site-packages")
+         elif dep.label.workspace_root.startswith("external/"):
+             # TODO: do we need this, still?
+-            external_deps.append(dep.label.workspace_root + "/site-packages")
++            external_deps[dep.label.workspace_root + "/site-packages"] = 1
+ 
+-            external_deps.extend([
+-                "external/{}".format(x)
++            external_deps |= {
++                "external/{}".format(x): 1
+                 for x in _imports(dep)
+                 if "mypy_extensions" not in x and
+                    "typing_extensions" not in x
+-            ])
++            }
+         elif dep.label.workspace_name == "":
+             for import_ in _extract_imports(dep):
+                 imports_dirs[import_] = 1
+@@ -142,7 +142,7 @@ def _mypy_impl(target, ctx):
+ 
+     # types need to appear first in the mypy path since the module directories
+     # are the same and mypy resolves the first ones, first.
+-    mypy_path = ":".join(types + external_deps + unique_imports_dirs + unique_generated_dirs + generated_imports_dirs)
++    mypy_path = ":".join(types + external_deps.keys() + unique_imports_dirs + unique_generated_dirs + generated_imports_dirs)
+ 
+     output_file = ctx.actions.declare_file(ctx.rule.attr.name + ".mypy_stdout")
+ 

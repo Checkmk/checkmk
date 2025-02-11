@@ -16,9 +16,7 @@ from cmk.mkp_tool import _mkp as mkp
 from cmk.mkp_tool import (
     create,
     edit,
-    format_file_name,
     get_stored_manifests,
-    install,
     Installer,
     Manifest,
     PackageError,
@@ -286,45 +284,18 @@ def test_install(
 ) -> None:
     _install(
         installer,
-        package_store,
         _make_mkp_bytes(installer, path_config, package_store),
         path_config,
         {},
         allow_outdated=False,
         site_version="3.14",
         parse_version=float,
-        pushed_from_central_site=False,
     )
     assert installer.is_installed(PackageName("aaa")) is True
     manifest = _get_asserted_manifest(installer, PackageName("aaa"))
     assert manifest.version == "1.0.0"
     assert manifest.files[PackagePart.AGENT_BASED] == [Path("aaa")]
     assert path_config.agent_based_plugins_dir.joinpath("aaa").exists()
-
-
-def test_install_not_deleting_pushed_mkp_on_update(
-    installer: Installer,
-    package_store: PackageStore,
-    path_config: PathConfig,
-) -> None:
-    manifest = _create_simple_test_package(
-        installer, PackageName("aaa"), path_config, package_store
-    )
-    # Simulate encountering a pushed MKP during update
-    base_name = format_file_name(manifest.id)
-    file_path = package_store.local_packages / base_name
-    file_path.rename(package_store.enabled_packages / base_name)
-    install(  # pylint: disable=R0801 # yes, this line is similar to product code
-        installer,
-        package_store,
-        manifest.id,
-        path_config,
-        {},
-        allow_outdated=False,
-        site_version="3.14",
-        parse_version=float,
-    )
-    assert installer.is_installed(PackageName("aaa")) is True
 
 
 def test_release_not_existing(installer: Installer) -> None:

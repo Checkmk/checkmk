@@ -21,19 +21,7 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.parametrize(
-    "host_name",
-    [
-        host
-        for host in get_host_names()
-        if host
-        not in (
-            "agent-2.2.0p14-windows-dhcp",  # CMK-21720
-            "agent-2.2.0p14-windows-veeam-backup",  # CMK-21720
-            "agent-2.2.0p14-windows-mssql",  # CMK-21720
-        )
-    ],
-)
+@pytest.mark.parametrize("host_name", [host for host in get_host_names() if host])
 def test_plugin(
     test_site: Site,
     host_name: str,

@@ -83,6 +83,13 @@ class ConcreteUserInterfaceAttributes(BaseSchema):
         enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
         example="default",
     )
+    contextual_help_icon = fields.String(
+        required=False,
+        enum=["show_icon", "hide_icon"],
+        description="Whether or not to show the contextual icon in the UI for this user.",
+        example="show_icon",
+        load_default="show_icon",
+    )
 
 
 class UserIdleOption(BaseSchema):

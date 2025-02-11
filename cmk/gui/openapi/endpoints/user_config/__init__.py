@@ -59,6 +59,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     navigation_bar_icons: Literal["show", "hide"]
     mega_menu_icons: Literal["topic", "entry"]
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
+    contextual_help_icon: Literal["show_icon", "hide_icon"]
 
 
 class InternalInterfaceAttributes(TypedDict, total=False):
@@ -67,6 +68,7 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     nav_hide_icons_title: Literal["hide"] | None
     icons_per_item: Literal["entry"] | None
     show_mode: Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
+    contextual_help_icon: Literal["hide_icon"] | None
 
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -634,6 +636,12 @@ def _interface_options_to_internal_format(
             "default_show_more": "default_show_more",
             "enforce_show_more": "enforce_show_more",
         }[show_mode]
+
+    if help_icon := api_interface_options.get("contextual_help_icon"):
+        internal_inteface_options["contextual_help_icon"] = (
+            None if help_icon == "show_icon" else "hide_icon"
+        )
+
     return internal_inteface_options
 
 
@@ -672,6 +680,12 @@ def _interface_options_to_api_format(
     else:
         # TODO: What should *really* be done in case of None?
         pass
+
+    attributes["contextual_help_icon"] = (
+        "show_icon"
+        if internal_interface_options.get("contextual_help_icon") is None
+        else "hide_icon"
+    )
 
     return attributes
 

@@ -124,6 +124,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
     }
 
@@ -720,6 +721,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
         "temperature_unit": "fahrenheit",
     }
@@ -809,6 +811,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
     }
 

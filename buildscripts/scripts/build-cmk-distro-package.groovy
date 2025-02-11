@@ -14,6 +14,8 @@ def main() {
         "DEPENDENCY_PATH_HASHES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
+        // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
+        "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -24,6 +26,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
@@ -36,6 +39,8 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def version = params.VERSION;
+    def disable_cache = params.DISABLE_CACHE;
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -95,85 +100,13 @@ def main() {
                 sh("make .venv");
             }
 
-            stage("Fetch agent binaries") {
-                // shout("Fetch agent binaries");
+            smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
+                package_helper.provide_agent_updaters(version, edition, disable_cache);
+            }
 
-                upstream_build(
-                    relative_job_name: "builders/build-linux-agent-updater",
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: ["agents", "non-free/cmk-update-agent"],
-                    dest: "artifacts/build-linux-agent-updater",
-                );
-                dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
-                    sh("find .");
-                    sh("cp *.deb *.rpm ${checkout_dir}/agents/");
-                    sh("mkdir -p ${checkout_dir}/agents/linux");
-                    sh("cp cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/");
-                    if (edition != "raw") {
-                        sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
-                    }
-                }
-
-                upstream_build(
-                    relative_job_name: "winagt-build",  // TODO: move to builders
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: [
-                        "agents/wnx",
-                        "agents/windows",
-                        "packages/cmk-agent-ctl",
-                        "packages/mk-sql"
-                    ],
-                    dest: "artifacts/winagt-build",
-                );
-                dir("${checkout_dir}/artifacts/winagt-build") {
-                    sh("find .");
-                    sh("mkdir -p ${checkout_dir}/agents/windows");
-                    // TODO: SPoT!!
-                    sh("""cp \
-                        check_mk_agent-64.exe \
-                        check_mk_agent.exe \
-                        check_mk_agent.msi \
-                        check_mk_agent_unsigned.msi \
-                        check_mk.user.yml \
-                        OpenHardwareMonitorLib.dll \
-                        OpenHardwareMonitorCLI.exe \
-                        mk-sql.exe \
-                        robotmk_ext.exe \
-                        windows_files_hashes.txt \
-                        ${checkout_dir}/agents/windows/
-                    """);
-                }
-                dir("${checkout_dir}/agents/windows") {
-                    sh("""
-                        ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
-                        check_mk_agent.msi check_mk_agent_unsigned.msi unsign-msi.patch
-                    """);
-                }
-
-                upstream_build(
-                    relative_job_name: "winagt-build-modules",  // TODO: move to builders
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: ["agents/modules/windows"],
-                    dest: "artifacts/winagt-build-modules",
-                );
-                dir("${checkout_dir}/agents/windows") {
-                    sh("find ${checkout_dir}/artifacts/winagt-build-modules");
-                    sh("cp ${checkout_dir}/artifacts/winagt-build-modules/*.cab .");
+            smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
+                dir("${checkout_dir}") {
+                    sh("scripts/fake-artifacts");
                 }
             }
         }

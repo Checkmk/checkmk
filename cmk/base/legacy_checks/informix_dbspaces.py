@@ -2,7 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""
+Relevant documentation:
+    * https://docs.deistercloud.com/content/Databases.30/IBM%20Informix.2/Monitoring.10.xml?embedded=true#51cf1eb453b73e7ffdd2172551fc58ed
+    * https://www.ibm.com/docs/en/informix-servers/14.10?topic=tables-syschunks
+"""
 
 # mypy: disable-error-code="var-annotated"
 

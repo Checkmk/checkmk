@@ -82,37 +82,17 @@ cc_library(
 )
 
 cc_library(
-    name = "rrd_restore",
-    srcs = [
-        "src/rrd_restore.c",
-    ],
-    deps = [
-        ":rrdupd",
-        "@libxml2",
-    ],
-)
-
-cc_library(
     name = "rrd_library",
     srcs = [
-        "src/hash_32.c",
-        "src/rrd_client.c",
-        "src/rrd_create.c",
         "src/rrd_dump.c",
-        "src/rrd_error.c",
         "src/rrd_fetch.c",
         "src/rrd_fetch_cb.c",
         "src/rrd_first.c",
         "src/rrd_flushcached.c",
-        "src/rrd_format.c",
-        "src/rrd_info.c",
         "src/rrd_last.c",
         "src/rrd_lastupdate.c",
         "src/rrd_list.c",
-        "src/rrd_open.c",
         "src/rrd_resize.c",
-        "src/rrd_rpncalc.c",
-        "src/rrd_thread_safe.c",
         "src/rrd_tune.c",
         "src/rrd_version.c",
     ],
@@ -131,11 +111,7 @@ cc_shared_library(
     name = "rrd_shared",
     shared_lib_name = "librrd.so",
     visibility = ["@omd_packages//omd/packages/rrdtool:__pkg__"],
-    deps = [
-        "rrd_library",
-        "rrd_restore",
-        "rrdgraph",
-    ],
+    deps = ["rrd_library"],
 )
 
 # libbdi

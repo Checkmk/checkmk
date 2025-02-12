@@ -95,11 +95,9 @@ def main() {
             dir("${checkout_dir}") {
                 sh("make .ran-webpack");
             }
+        }
 
-            dir("${checkout_dir}") {
-                sh("make .venv");
-            }
-
+        inside_container_minimal(safe_branch_name: safe_branch_name) {
             smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
                 package_helper.provide_agent_binaries(version, edition, disable_cache);
             }

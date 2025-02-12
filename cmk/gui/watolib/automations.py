@@ -240,6 +240,7 @@ def check_mk_remote_automation_serialized(
                     ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
                     ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
                 ],
+                timeout=timeout,
             )
         )
 

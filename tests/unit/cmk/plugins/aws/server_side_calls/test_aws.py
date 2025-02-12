@@ -312,6 +312,37 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
             ],
             id="minimal_config_import_filtered_tags",
         ),
+        pytest.param(
+            {
+                "auth": ("none"),
+                "proxy_details": {
+                    "proxy_host": "1.1.1",
+                    "proxy_user": "banana",
+                    "proxy_password": (
+                        "cmk_postprocessed",
+                        "stored_password",
+                        ("banana123", ""),
+                    ),
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+                "connection_test": True,
+            },
+            [
+                "--proxy-host",
+                "1.1.1",
+                "--proxy-user",
+                "banana",
+                "--proxy-password-reference",
+                ANY,
+                "--ignore-all-tags",
+                "--hostname",
+                "foo",
+                "--piggyback-naming-convention",
+                "ip_region_instance",
+                "--connection-test",
+            ],
+            id="minimal_config_connection_test",
+        ),
     ],
 )
 def test_values_to_args(value: Mapping[str, Any], expected_args: Sequence[Any]) -> None:

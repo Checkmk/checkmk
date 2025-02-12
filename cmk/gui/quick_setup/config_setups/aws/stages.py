@@ -118,7 +118,7 @@ def prepare_aws() -> QuickSetupStage:
                     qs_validators.validate_test_connection_custom_collect_params(
                         rulespec_name=RuleGroup.SpecialAgents("aws"),
                         parameter_form=quick_setup_aws_form_spec(),
-                        custom_collect_params=aws_collect_params_with_defaults,
+                        custom_collect_params=_collect_params_for_connection_test,
                         error_message=_(
                             "Could not access your AWS account. Please check your Access and Secret key and try again."
                         ),
@@ -331,6 +331,19 @@ def aws_collect_params_with_defaults(
     return aws_transform_to_disk(
         collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
     )
+
+
+def _collect_params_for_connection_test(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Mapping[str, object]:
+    """For the quick setup validation of the AWS authentication we run a connection test only using
+    the agent option "--connection-test"."""
+    return {
+        **aws_transform_to_disk(
+            collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
+        ),
+        "connection_test": True,
+    }
 
 
 def _migrate_aws_service(service: str) -> object:

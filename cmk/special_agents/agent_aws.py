@@ -7417,6 +7417,12 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
                 help="Monitor limits for %s" % service.title,
             )
 
+    parser.add_argument(
+        "--connection-test",
+        action="store_true",
+        help="Run a connection test. No further agent code is executed.",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -7691,10 +7697,32 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     return account_id
 
 
+def _test_connection(args: Args, proxy_config: botocore.config.Config | None) -> int:
+    try:
+        _get_account_id(args, proxy_config)
+    except AwsAccessError as ae:
+        error_msg = f"Connection failed with: {ae}\n"
+        sys.stderr.write(error_msg)
+        return 2
+    return 0
+
+
 def agent_aws_main(args: Args) -> int:
     _setup_logging(args.debug, args.verbose)
 
     proxy_config = _get_proxy(args)
+
+    if args.connection_test:
+        return _test_connection(args, proxy_config)
+
+    try:
+        account_id = _get_account_id(args, proxy_config)
+    except AwsAccessError as ae:
+        # can not access AWS, retreat
+        sys.stdout.write("<<<aws_exceptions>>>\n")
+        sys.stdout.write("Exception: %s\n" % ae)
+        return 0
+
     aws_config = _configure_aws(args)
 
     global_services, regional_services = _sanitize_aws_services_params(
@@ -7714,14 +7742,6 @@ def agent_aws_main(args: Args) -> int:
             ),
             ", ".join(regional_services),
         )
-
-    try:
-        account_id = _get_account_id(args, proxy_config)
-    except AwsAccessError as ae:
-        # can not access AWS, retreat
-        sys.stdout.write("<<<aws_exceptions>>>\n")
-        sys.stdout.write("Exception: %s\n" % ae)
-        return 0
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [

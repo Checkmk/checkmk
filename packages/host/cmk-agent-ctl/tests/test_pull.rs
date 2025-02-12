@@ -75,7 +75,7 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
     );
     registry.save()?;
 
-    let output_err = common::controller_command()
+    let output_err = assert_cmd::Command::new(common::controller_command_path())
         .env("DEBUG_HOME_DIR", test_path)
         .arg("pull")
         .timeout(std::time::Duration::from_secs(5))

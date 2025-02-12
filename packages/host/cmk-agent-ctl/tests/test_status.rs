@@ -36,7 +36,7 @@ async fn test_status_ok() {
         ));
     }
 
-    let mut cmd = common::controller_command();
+    let mut cmd = assert_cmd::Command::new(common::controller_command_path());
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
         .arg("status")
         .unwrap()
@@ -53,7 +53,7 @@ async fn test_status_ok() {
 #[cfg(unix)]
 #[test]
 fn test_status_socket_down() {
-    let mut cmd = common::controller_command();
+    let mut cmd = assert_cmd::Command::new(common::controller_command_path());
     cmd.env("DEBUG_HOME_DIR", "/hurz/barz")
         .arg("status")
         .unwrap()

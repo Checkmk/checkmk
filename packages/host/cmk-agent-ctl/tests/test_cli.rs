@@ -65,7 +65,9 @@ fn test_supported_modes(help_stdout: String) -> bool {
 
 #[test]
 fn test_help() {
-    let output = common::controller_command().arg("-h").unwrap();
+    let output = assert_cmd::Command::new(common::controller_command_path())
+        .arg("-h")
+        .unwrap();
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
     assert!(stdout.contains("Checkmk agent controller"));
     assert!(test_supported_modes(String::from(stdout)));
@@ -87,7 +89,7 @@ async fn test_dump() -> AnyhowResult<()> {
         expected_remote_address,
     ));
 
-    let mut cmd = common::controller_command();
+    let mut cmd = assert_cmd::Command::new(common::controller_command_path());
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
         .arg("-vv")
@@ -110,7 +112,7 @@ fn test_fail_become_user() {
         if mode == "help" {
             continue;
         }
-        let mut cmd = common::controller_command();
+        let mut cmd = assert_cmd::Command::new(common::controller_command_path());
         let err = cmd
             .arg(mode)
             .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
@@ -130,7 +132,7 @@ fn test_fail_socket_missing() {
     let error_message_socket = "Something seems wrong with the agent socket";
 
     for mode in SUPPORTED_MODES {
-        let mut cmd = common::controller_command();
+        let mut cmd = assert_cmd::Command::new(common::controller_command_path());
         let output_res = cmd
             .timeout(std::time::Duration::from_secs(1))
             .env("DEBUG_HOME_DIR", "whatever")
@@ -187,7 +189,7 @@ fn test_migration_is_always_triggered() {
         }
         write_legacy_registry(&path_registry);
         assert!(config::Registry::from_file(&path_registry).is_err());
-        let mut cmd = common::controller_command();
+        let mut cmd = assert_cmd::Command::new(common::controller_command_path());
         cmd.timeout(std::time::Duration::from_secs(5))
             .env("DEBUG_HOME_DIR", test_dir.path())
             .arg(mode)
@@ -201,7 +203,7 @@ fn build_status_command_with_log(
     test_dir: &tempfile::TempDir,
     with_log_file: bool,
 ) -> assert_cmd::Command {
-    let mut cmd = common::controller_command();
+    let mut cmd = assert_cmd::Command::new(common::controller_command_path());
     cmd.timeout(std::time::Duration::from_secs(5))
         .env("DEBUG_HOME_DIR", test_dir.path())
         .env("MK_LOGDIR", test_dir.path())

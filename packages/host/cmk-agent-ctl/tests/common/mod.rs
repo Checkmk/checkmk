@@ -4,7 +4,6 @@
 
 pub mod agent;
 pub mod certs;
-use assert_cmd::Command;
 use std::path;
 
 #[cfg(not(feature = "build_system_bazel"))]
@@ -25,8 +24,4 @@ pub fn controller_command_path() -> path::PathBuf {
 
 pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {
     tempfile::Builder::new().prefix(prefix).tempdir().unwrap()
-}
-
-pub fn controller_command() -> Command {
-    Command::cargo_bin("cmk-agent-ctl").unwrap()
 }

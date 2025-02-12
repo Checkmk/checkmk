@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from types import ModuleType
 from typing import Any
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from cmk.ccc.plugin_registry import Registry
 

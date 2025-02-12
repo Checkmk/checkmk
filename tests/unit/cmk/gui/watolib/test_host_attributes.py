@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
 
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config

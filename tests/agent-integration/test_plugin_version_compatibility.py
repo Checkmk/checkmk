@@ -12,7 +12,7 @@ from pathlib import Path
 import docker  # type: ignore[import-untyped]
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 
 @pytest.fixture(scope="module")

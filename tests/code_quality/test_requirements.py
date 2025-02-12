@@ -21,7 +21,7 @@ import isort
 import pytest
 import requirements
 
-from tests.testlib.repo import (
+from tests.testlib.common.repo import (
     is_enterprise_repo,
     repo_path,
 )

@@ -23,7 +23,7 @@ def repo_path() -> Path:
     same as result of `git rev-parse --show-toplevel`, but repo_path is being executed
     quite often, so we take the not-so-portable-but-more-efficient approach.
     """
-    return Path(__file__).resolve().parent.parent.parent
+    return Path(__file__).resolve().parent.parent.parent.parent
 
 
 def is_enterprise_repo() -> bool:
@@ -63,7 +63,7 @@ def add_otel_collector_path() -> None:
 
 @cache
 def qa_test_data_path() -> Path:
-    return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
+    return Path(__file__).parent.parent.parent.resolve() / Path("qa-test-data")
 
 
 @cache

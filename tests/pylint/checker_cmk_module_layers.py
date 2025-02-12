@@ -13,7 +13,7 @@ from pylint.checkers import BaseChecker
 from pylint.checkers.utils import only_required_for_messages
 from pylint.lint.pylinter import PyLinter
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 ModuleName = NewType("ModuleName", str)
 ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path

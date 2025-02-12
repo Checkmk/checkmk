@@ -27,7 +27,7 @@ pytest.register_assert_rewrite(
     "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
 )
 
-from tests.testlib.repo import (  # noqa: E402
+from tests.testlib.common.repo import (  # noqa: E402
     add_python_paths,
     current_base_branch_name,
     is_cloud_repo,

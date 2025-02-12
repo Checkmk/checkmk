@@ -12,7 +12,7 @@ from typing import NamedTuple, NewType
 import pytest
 from semver import VersionInfo
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 
 ImportName = NewType("ImportName", "str")

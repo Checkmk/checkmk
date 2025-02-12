@@ -14,7 +14,7 @@ from typing import Final, Self
 import git
 from packaging.version import Version
 
-from tests.testlib.repo import (
+from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
     current_branch_version,

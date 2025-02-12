@@ -27,12 +27,12 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check  # type: ignore[import-untyped]
 
+from tests.testlib.common.repo import current_base_branch_name, repo_path
 from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
     create_cse_initial_config,
     cse_openid_oauth_provider,
 )
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.repo import current_base_branch_name, repo_path
 from tests.testlib.utils import (
     check_output,
     execute,

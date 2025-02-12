@@ -14,7 +14,7 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 

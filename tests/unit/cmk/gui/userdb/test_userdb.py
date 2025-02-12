@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.repo import is_managed_repo
+from tests.testlib.common.repo import is_managed_repo
 
 import cmk.ccc.version
 

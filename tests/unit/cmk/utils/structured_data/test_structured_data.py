@@ -12,7 +12,7 @@ from typing import Literal
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (

@@ -3,7 +3,7 @@
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
-    from tests.testlib.repo import add_protocols_path, add_python_paths, add_otel_collector_path;
+    from tests.testlib.common.repo import add_protocols_path, add_python_paths, add_otel_collector_path;
     add_protocols_path();
     add_python_paths();
     add_otel_collector_path();

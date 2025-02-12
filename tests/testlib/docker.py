@@ -20,9 +20,9 @@ import docker.models.containers  # type: ignore[import-untyped]
 import docker.models.images  # type: ignore[import-untyped]
 import requests
 
+from tests.testlib.common.repo import repo_path
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 

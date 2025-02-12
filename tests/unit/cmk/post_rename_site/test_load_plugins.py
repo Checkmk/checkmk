@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry

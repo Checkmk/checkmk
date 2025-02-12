@@ -8,7 +8,7 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from tests.code_quality.utils import ChangedFiles
 

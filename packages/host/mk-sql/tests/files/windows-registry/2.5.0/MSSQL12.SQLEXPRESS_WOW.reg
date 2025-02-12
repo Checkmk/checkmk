@@ -1,26 +1,26 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW]
 @="SQLEXPRESS_WOW"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\ClusterState]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\ClusterState]
 "SQL_Replication_Core_Inst"=dword:00000000
 "MPT_AGENT_CORE_CNI"=dword:00000000
 "SQL_Engine_Core_Inst"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\ConfigurationState]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\ConfigurationState]
 "SQL_Replication_Core_Inst"=dword:00000001
 "MPT_AGENT_CORE_CNI"=dword:00000001
 "SQL_Engine_Core_Inst"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\CPE]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\CPE]
 "CollectorParameters"="SQL MSSQL12.SQLEXPRESS_WOW"
 "TimeOfReporting"=dword:0000003c
 "ErrorDumpDir"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\LOG\\"
 "EnableErrorReporting"=dword:00000000
 "CustomerFeedback"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer]
 "SysDb"=dword:00000001
 "AuditLevel"=dword:00000002
 "BackupDirectory"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\Backup"
@@ -32,21 +32,21 @@ Windows Registry Editor Version 5.00
 "uptime_pid"=dword:000010fc
 "uptime_time_utc"=hex:61,16,f7,ac,f2,72,db,01
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\CurrentVersion]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\CurrentVersion]
 "RegisteredOwner"=""
 "SerialNumber"=""
 "CurrentVersion"="12.0.2000.8"
 "Language"=dword:00000409
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\HADR]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\HADR]
 "HADR_Enabled"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\Parameters]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\Parameters]
 "SQLArg0"="-dC:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\DATA\\master.mdf"
 "SQLArg1"="-eC:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\Log\\ERRORLOG"
 "SQLArg2"="-lC:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\DATA\\mastlog.ldf"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib]
 "ForceEncryption"=dword:00000000
 "HideInstance"=dword:00000000
 "Certificate"=""
@@ -54,29 +54,29 @@ Windows Registry Editor Version 5.00
 "AcceptedSPNs"=hex(7):00,00
 "DisplayName"="SQL Server Network Configuration"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\AdminConnection]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\AdminConnection]
 "DisplayName"="Dedicated Administrative Connection"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\AdminConnection\Tcp]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\AdminConnection\Tcp]
 "TcpDynamicPorts"="0"
 "DisplayName"="TCP/IP"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Np]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Np]
 "Enabled"=dword:00000000
 "PipeName"="\\\\.\\pipe\\MSSQL$SQLEXPRESS_WOW\\sql\\query"
 "DisplayName"="Named Pipes"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Sm]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Sm]
 "Enabled"=dword:00000001
 "DisplayName"="Shared Memory"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp]
 "Enabled"=dword:00000001
 "ListenOnAllIPs"=dword:00000001
 "KeepAlive"=dword:00007530
 "DisplayName"="TCP/IP"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP1]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP1]
 "Enabled"=dword:00000000
 "Active"=dword:00000001
 "TcpPort"=""
@@ -84,7 +84,7 @@ Windows Registry Editor Version 5.00
 "DisplayName"="Specific IP Address"
 "IpAddress"="fec0::f15e:48d4:e37e:6f80%1"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP2]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP2]
 "Enabled"=dword:00000000
 "Active"=dword:00000001
 "TcpPort"=""
@@ -92,7 +92,7 @@ Windows Registry Editor Version 5.00
 "DisplayName"="Specific IP Address"
 "IpAddress"="fe80::3de7:a923:1e30:84b0%3"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP3]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP3]
 "Enabled"=dword:00000000
 "Active"=dword:00000001
 "TcpPort"=""
@@ -100,7 +100,7 @@ Windows Registry Editor Version 5.00
 "DisplayName"="Specific IP Address"
 "IpAddress"="10.0.2.15"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP4]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP4]
 "Enabled"=dword:00000000
 "Active"=dword:00000001
 "TcpPort"=""
@@ -108,7 +108,7 @@ Windows Registry Editor Version 5.00
 "DisplayName"="Specific IP Address"
 "IpAddress"="::1"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP5]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IP5]
 "Enabled"=dword:00000000
 "Active"=dword:00000001
 "TcpPort"=""
@@ -116,57 +116,57 @@ Windows Registry Editor Version 5.00
 "DisplayName"="Specific IP Address"
 "IpAddress"="127.0.0.1"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
 "TcpPort"=""
 "TcpDynamicPorts"="60794"
 "DisplayName"="Any IP Address"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Via]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Via]
 "Enabled"=dword:00000000
 "DefaultServerPort"="0:1433"
 "ListenInfo"="0:1433"
 "DisplayName"="VIA"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\ADSDSOObject]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\ADSDSOObject]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\DB2OLEDB]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\DB2OLEDB]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\Microsoft.Jet.OLEDB.4.0]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\Microsoft.Jet.OLEDB.4.0]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSDAORA]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSDAORA]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSDASQL]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSDASQL]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSIDXS]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSIDXS]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSOLAP]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSOLAP]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSQLImpProv]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSQLImpProv]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSSEARCHSQL]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\MSSEARCHSQL]
 "AllowInProcess"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\SQLNCLI11]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Providers\SQLNCLI11]
 "AllowInProcess"=dword:00000001
 "DisallowAdhocAccess"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Replication]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Replication]
 "DistributionDB"=""
 "WorkingDirectory"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\repldata"
 "IsInstalled"=dword:00000001
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Security]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Security]
 "Entropy"=hex:83,f3,29,a8,72,88,2f,44,dd,88,de,af,9d,eb,f4,45,11,cc,cb,75,e5,\
   be,01,38,37,ab,24,81,bd,f1,e9,43,0b,3c,b1,94,54,05,0c,e6,5b,48,c0,1b,07,dd,\
   f8,18,86,4f,45,d4,92,03,c0,cb,3f,b1,47,b4,d2,61,57,fd,f3,5b,9a,ed,14,c0,98,\
@@ -179,7 +179,7 @@ Windows Registry Editor Version 5.00
   cf,b7,72,fa,5f,93,28,2f,89,f3,6a,9a,ed,94,78,01,a8,23,9d,0e,fa,aa,01,90,64,\
   a6,8d,c7,c9,62,7c,3d,e0,bb,cb
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup]
 "Version"="12.0.2000.8"
 "SP"=dword:00000000
 "SQLPath"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL"
@@ -204,19 +204,19 @@ Windows Registry Editor Version 5.00
 "SQLDataRoot"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL"
 "AGTGroup"="S-1-5-80-1378805293-3065386813-3887076227-2821246439-279436678"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup\SQL_Engine_Core_Inst]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup\SQL_Engine_Core_Inst]
 "ProductCode"="{A1ED7C85-A91A-4788-B0CC-86FA19C042E8}"
 "FeatureList"="SQL_Replication_Core_Inst=3 SQL_Engine_Core_Inst=3 SQL_DataFiles_Core_Inst=3 SQL_ENGINE_DB_CNI=3 SQL_Replication_CNI=3 SQL_Replication_FNI=3 SQL_CMDLINETOOLS_CNI=3 SQL_DUMPER_CNI=3 SQL_Engine_CNI=3 SQL_ENGINE_CORE_CNI=3 SQL_LEGACYTOOLS_CNI=3 SQL_REPL_ENGINE_SUPPORT_CNI=3 SQL_SLP_ENGINE_SUPPORT_CNI=3 MPT_AGENT_CORE_CNI=3 MPT_AGENT_CORE_MNGD_CNI=3 SQL_AGENT_FNI=3 SQL_DATA_COLLECTOR_FNI=3 SQL_LEGACYTOOLS_FNI=3 SQL_MAIL_FNI=3 SQL_REPL_ENGINE_SUPPORT_FNI=3 SQL_UPGRADESCRIPTS_FNI=3"
 "Version"="12.0.2000.8"
 "PatchLevel"="12.0.2000.8"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup\SQL_Engine_Core_Inst\1033]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\Setup\SQL_Engine_Core_Inst\1033]
 "ProductCode"="{71E418D7-C0C5-455A-A248-1A3C3839EEEF}"
 "FeatureList"="SQL_Engine_Core_Inst_Loc=3 SQL_ENGINE_CORE_CLI=3 MPT_AGENT_CORE_CLI=3 MPT_AGENT_CORE_MNGD_CLI=3 SQL_AGENT_FLI=3 SQL_DATA_COLLECTOR_FLI=3 SQL_LEGACYTOOLS_FLI=3 SQL_MAIL_FLI=3"
 "Version"="12.0.2000.8"
 "PatchLevel"="12.0.2000.8"
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\SQLServerAgent]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\SQLServerAgent]
 "ErrorLogFile"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\Log\\SQLAGENT.OUT"
 "WorkingDirectory"="C:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL12.SQLEXPRESS_WOW\\MSSQL\\JOBS"
 "RestartServer"="1"
@@ -229,9 +229,9 @@ Windows Registry Editor Version 5.00
 "ServerHost"=""
 "DownloadedMaxRows"=dword:00000064
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\SQLServerSCP]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\SQLServerSCP]
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\UpgradeIncompleteState]
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\UpgradeIncompleteState]
 "SQL_Replication_Core_Inst"=dword:00000000
 "MPT_AGENT_CORE_CNI"=dword:00000000
 "SQL_Engine_Core_Inst"=dword:00000000

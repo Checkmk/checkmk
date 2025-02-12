@@ -1,1 +1,0 @@
-reg delete "HKLM\SOFTWARE\checkmk\tests\mk-sql" /f

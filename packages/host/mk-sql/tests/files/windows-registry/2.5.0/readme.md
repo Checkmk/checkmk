@@ -16,10 +16,11 @@ replace
 ```
 with
 ```
-[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\Package-Name\Group-Name\Test-Name
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\<Repo-Name>\<Package-Name>\<Group-Name>\<Test-Name>
 ```
 where
 
+* Repo-Name is a name of the repo, for example, *2.5.0*
 * Package-Name is a name of the package, for example, *mk-sql* or *cmk-agent-ctl*
 * Group-Name is a name of the test group, for example *instances* or *tcp-logic*
 * Test-Name is a name of the some test(or tests), for example, *test-tcp-base*
@@ -35,7 +36,7 @@ fn read(custom_branch: Optional<None>) ...
 For example, for mk-sql everything you need  is located in the HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft ...
 In This case
 standard Branch is "SOFTWARE\"
-custom Branch us "SOFTWARE\check\tests\mks-sql\Group-Name\Test-Name\SOFTWARE\
+custom Branch us "SOFTWARE\check\tests\\<Repo-Name>\<Package-Name>\<Group-Name>\<Test-Name>\SOFTWARE\
 
 
 # Internals
@@ -43,7 +44,7 @@ custom Branch us "SOFTWARE\check\tests\mks-sql\Group-Name\Test-Name\SOFTWARE\
 We are using fro production normal Prefix Branch 
 **SOFTWARE**  
 but for test we are using test Prefix Branch
-**SOFTWARE\checkmk\tests\Package-Name\Group-Name\Test-Name**
+**SOFTWARE\checkmk\tests\2.5.0\Package-Name\Group-Name\Test-Name**
 
 Data are immutable.
 

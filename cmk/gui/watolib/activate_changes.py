@@ -271,6 +271,14 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             [],
         ),
         ReplicationPath(
+            "file",
+            "ack_werks",
+            os.path.relpath(
+                cmk.utils.paths.var_dir + "/acknowledged_werks.mk", cmk.utils.paths.omd_root
+            ),
+            [],
+        ),
+        ReplicationPath(
             "dir",
             "local",
             "local",

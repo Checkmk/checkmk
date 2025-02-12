@@ -63,7 +63,7 @@ def add_otel_collector_path() -> None:
 
 @cache
 def qa_test_data_path() -> Path:
-    return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
+    return Path(__file__).parent.parent.parent.resolve() / Path("qa-test-data")
 
 
 @cache

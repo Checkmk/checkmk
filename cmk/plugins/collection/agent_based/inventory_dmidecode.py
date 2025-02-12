@@ -345,10 +345,3 @@ def _parse_voltage(v: str) -> float | None:
 
     parts = v.split()
     return float(parts[0])
-
-
-def _parse_time(v: str) -> float:  # 155 ns
-    parts = v.split()
-    if parts[1] == "ns":
-        return float(parts[0]) / 1000000000.0
-    return float(parts[0])  # assume seconds

@@ -830,7 +830,6 @@ def test_registered_painters() -> None:
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_painters += [
-            "dcd_batch",
             "svc_metrics_forecast",
             "svc_metrics_hist",
             "sla_fixed",

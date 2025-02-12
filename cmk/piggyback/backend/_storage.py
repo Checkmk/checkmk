@@ -152,12 +152,16 @@ def get_messages_for(
 
 
 def get_piggybacked_host_with_sources(
-    omd_root: Path,
+    omd_root: Path, piggybacked_hostname: HostName | None = None
 ) -> Mapping[HostAddress, Sequence[PiggybackMetaData]]:
     """Generates all piggyback pig/piggybacked host pairs"""
     return {
         piggybacked_host: _get_payload_meta_data(piggybacked_host, omd_root)
-        for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
+        for piggybacked_host_folder in (
+            [d for d in [payload_dir(omd_root) / piggybacked_hostname] if d.exists()]
+            if piggybacked_hostname
+            else _get_piggybacked_host_folders(omd_root)
+        )
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
 

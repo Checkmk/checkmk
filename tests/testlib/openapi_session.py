@@ -32,10 +32,14 @@ class RestSessionException(Exception):
 class UnexpectedResponse(RestSessionException):
     @classmethod
     def from_response(cls, response: requests.Response) -> "UnexpectedResponse":
-        return cls(status_code=response.status_code, response_text=response.text or repr(response))
+        if 300 <= response.status_code < 400:
+            text = f"Redirect to {response.headers['Location']}"
+        else:
+            text = response.text or repr(response)
+        return cls(status_code=response.status_code, text=text)
 
-    def __init__(self, status_code: int, response_text: str) -> None:
-        super().__init__(f"[{status_code}] {response_text}")
+    def __init__(self, status_code: int, text: str) -> None:
+        super().__init__(f"[{status_code}] {text}")
         self.status_code = status_code
 
 
@@ -247,7 +251,7 @@ class ChangesAPI(BaseAPI):
         if response.status_code == 422:
             raise NoActiveChanges  # there are no changes
 
-        if response.status_code != 303:
+        if response.status_code not in (302, 303):
             raise UnexpectedResponse.from_response(response)
 
         logger.info(

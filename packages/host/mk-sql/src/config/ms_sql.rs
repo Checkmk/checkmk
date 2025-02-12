@@ -250,7 +250,7 @@ impl Config {
 }
 
 pub fn get_registry_instance_info(name: &InstanceName) -> Option<InstanceInfo> {
-    let all = get_instances();
+    let all = get_instances(None);
     let a = all.iter().find(|i| &i.name == name);
     a.cloned()
 }
@@ -260,12 +260,8 @@ fn get_additional_registry_instances(
     auth: &Authentication,
     conn: &Connection,
 ) -> Vec<CustomInstance> {
-    let work_host = calc_real_host(auth, conn).to_string().to_lowercase();
-    if work_host != "localhost" {
-        log::info!(
-            "skipping registry instances: the reason the host `{} `is not localhost",
-            work_host
-        );
+    if !is_local_endpoint(auth, conn) {
+        log::info!("skipping registry instances: the host is not enough localhost");
         return vec![];
     }
 
@@ -274,25 +270,32 @@ fn get_additional_registry_instances(
         .map(|i| i.name().to_string().to_lowercase().clone())
         .collect();
     log::info!("localhost is defined, adding registry instances");
-    platform::registry::get_instances()
+    platform::registry::get_instances(None)
         .into_iter()
-        .filter_map(|i| {
-            if names.contains(&i.name.to_string().to_lowercase()) {
+        .filter_map(|registry_instance_info| {
+            if names.contains(&registry_instance_info.name.to_string().to_lowercase()) {
                 log::info!(
                     "{} is ignored as already defined in custom instances",
-                    i.name
+                    registry_instance_info.name
                 );
                 return None;
             }
 
             Some(CustomInstance::from_registry(
-                &i.name,
+                &registry_instance_info.name,
                 auth,
                 conn,
-                &i.final_port(),
+                &registry_instance_info.final_host(),
+                &registry_instance_info.final_port(),
             ))
         })
         .collect::<Vec<CustomInstance>>()
+}
+
+pub fn is_local_endpoint(auth: &Authentication, conn: &Connection) -> bool {
+    auth.auth_type() == &AuthType::Integrated
+        || conn.hostname() == HostName::from("localhost".to_owned())
+        || conn.hostname() == HostName::from("127.0.0.1".to_owned())
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -696,12 +699,14 @@ impl CustomInstance {
         name: &InstanceName,
         main_auth: &Authentication,
         main_conn: &Connection,
-        port: &Option<&Port>,
+        hostname: &Option<HostName>,
+        port: &Option<Port>,
     ) -> Self {
         let (auth, conn) = CustomInstance::make_registry_auth_and_conn(
             main_auth,
             main_conn,
-            port.unwrap_or(&Port::from(0)),
+            hostname,
+            port.as_ref().unwrap_or(&Port::from(0)),
         );
         Self {
             name: name.clone(),
@@ -746,9 +751,13 @@ impl CustomInstance {
     fn make_registry_auth_and_conn(
         main_auth: &Authentication,
         main_conn: &Connection,
+        hostname: &Option<HostName>,
         port: &Port,
     ) -> (Authentication, Connection) {
         let conn = Connection {
+            hostname: hostname
+                .clone()
+                .unwrap_or_else(|| main_conn.hostname().clone()),
             port: port.clone(),
             ..main_conn.clone()
         };
@@ -780,19 +789,15 @@ impl CustomInstance {
 }
 
 pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
-    if is_local_host(auth, conn) {
+    if is_local_endpoint(auth, conn) {
         "localhost".to_string().into()
     } else {
         conn.hostname().clone()
     }
 }
 
-pub fn is_local_host(auth: &Authentication, _conn: &Connection) -> bool {
-    auth.auth_type() == &AuthType::Integrated
-}
-
 pub fn is_use_tcp(name: &InstanceName, auth: &Authentication, conn: &Connection) -> bool {
-    if is_local_host(auth, conn) {
+    if is_local_endpoint(auth, conn) {
         get_registry_instance_info(name)
             .map(|i| i.is_tcp())
             .unwrap_or(true)
@@ -1708,5 +1713,34 @@ mssql:
         };
         let c = Connection::default();
         assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
+    }
+
+    #[test]
+    fn test_is_local_endpoint() {
+        let auth_integrated = Authentication {
+            auth_type: AuthType::Integrated,
+            ..Default::default()
+        };
+        let auth_sql = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let conn_non_local = Connection {
+            hostname: HostName::from("localhost.com".to_string()),
+            ..Default::default()
+        };
+        let conn_local = Connection {
+            hostname: HostName::from("localhost".to_string()),
+            ..Default::default()
+        };
+        let conn_127 = Connection {
+            hostname: HostName::from("127.0.0.1".to_string()),
+            ..Default::default()
+        };
+        assert!(is_local_endpoint(&auth_integrated, &conn_local));
+        assert!(is_local_endpoint(&auth_integrated, &conn_non_local));
+        assert!(is_local_endpoint(&auth_sql, &conn_local));
+        assert!(is_local_endpoint(&auth_sql, &conn_127));
+        assert!(!is_local_endpoint(&auth_sql, &conn_non_local));
     }
 }

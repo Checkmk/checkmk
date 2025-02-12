@@ -8,7 +8,7 @@ use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
 use crate::config::defines::defaults::MAX_CONNECTIONS;
-use crate::config::ms_sql::{is_local_host, is_use_tcp, Discovery};
+use crate::config::ms_sql::{is_local_endpoint, is_use_tcp, Discovery};
 use crate::config::section;
 use crate::config::{
     self,
@@ -2164,7 +2164,13 @@ fn print_builders(title: &str, builders: &[SqlInstanceBuilder]) {
         builders.len(),
         builders
             .iter()
-            .map(|i| format!("{}", i.get_name()))
+            .map(|i| format!(
+                "{} {}",
+                i.get_name(),
+                i.get_endpoint()
+                    .map(|e| e.dump_compact())
+                    .unwrap_or_else(|| "None".to_string())
+            ))
             .collect::<Vec<_>>()
             .join(", ")
     );
@@ -2177,7 +2183,7 @@ async fn get_custom_instance_builder(
     let instance_name = &builder.get_name();
     let auth = endpoint.auth();
     let conn = endpoint.conn();
-    if is_local_host(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
+    if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
         if let Ok(mut client) = create_odbc_client(instance_name, None) {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
@@ -2342,7 +2348,11 @@ fn determine_reconnect(
                 Some(customization)
                     if Some(&customization.endpoint()) != instance_builder.get_endpoint() =>
                 {
-                    log::info!("Instance {} to be reconnected", instance_builder.get_name(),);
+                    log::info!(
+                        "Instance {} to be reconnected with {}",
+                        instance_builder.get_name(),
+                        customization.endpoint().dump_compact()
+                    );
                     (instance_builder, Some(customization.endpoint()))
                 }
                 _ => {

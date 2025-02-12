@@ -14,6 +14,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
+from tests.testlib.utils import wait_until
+
 from cmk.ccc.version import Version
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
@@ -23,8 +25,8 @@ from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,
     AutomationEngine,
-    get_application,
     HealthCheckResponse,
+    make_application,
 )
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
@@ -84,30 +86,64 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 ).model_dump()
 
 
-def _get_test_client(
+def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[], None],
     clear_caches_before_each_call: Callable[[], None],
+    reloader_config: ReloaderConfig = ReloaderConfig(
+        active=True,
+        poll_interval=1.0,
+        cooldown_interval=5.0,
+    ),
 ) -> TestClient:
-    app = get_application(
-        engine=engine,
-        cache=cache,
+    return TestClient(
+        make_application(
+            engine=engine,
+            cache=cache,
+            reloader_config=reloader_config,
+            reload_config=reload_config,
+            clear_caches_before_each_call=clear_caches_before_each_call,
+        )
+    )
+
+
+def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock()
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        mock_reload_config,
+        lambda: None,
         reloader_config=ReloaderConfig(
             active=True,
-            poll_interval=1.0,
-            cooldown_interval=5.0,
+            poll_interval=0.0,
+            cooldown_interval=0.0,
         ),
-        reload_config=reload_config,
-        clear_caches_before_each_call=clear_caches_before_each_call,
+    ) as client:
+        current_last_reload_at = HealthCheckResponse.model_validate(
+            client.get("/health").json()
+        ).last_reload_at
+        now = time.time()
+        assert now > current_last_reload_at
+        cache.store_last_detected_change(now)
+        wait_until(
+            lambda: HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
+            > current_last_reload_at,
+            timeout=0.25,
+            interval=0.025,
+        )
+
+    assert (
+        # once at application startup, once by the reloader task
+        mock_reload_config.call_count == 2
     )
-    return TestClient(app)
 
 
 def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
     mock_clear_caches_before_each_call = mocker.MagicMock()
-    with _get_test_client(
+    with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
@@ -128,7 +164,7 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
 def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
     mock_clear_caches_before_each_call = mocker.MagicMock()
-    with _get_test_client(
+    with _make_test_client(
         _DummyAutomationEngineFailure(),
         cache,
         mock_reload_config,
@@ -149,7 +185,7 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
 def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
     mock_clear_caches_before_each_call = mocker.MagicMock()
-    with _get_test_client(
+    with _make_test_client(
         _DummyAutomationEngineSystemExit(),
         cache,
         mock_reload_config,
@@ -170,7 +206,7 @@ def test_automation_with_system_exit(mocker: MockerFixture, cache: Cache) -> Non
 def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
     mock_clear_caches_before_each_call = mocker.MagicMock()
-    with _get_test_client(
+    with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
@@ -194,7 +230,7 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
 
 
 def test_health_check(cache: Cache) -> None:
-    with _get_test_client(
+    with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         lambda: None,

@@ -314,10 +314,11 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_MODE],
-    additional_status_codes=[201, 303],
+    additional_status_codes=[201, 303, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "
-        "Redirecting to the 'Get background job status snapshot' endpoint."
+        "Redirecting to the 'Get background job status snapshot' endpoint.",
+        429: "Another Quick setup action already running.",
     },
     request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
@@ -334,10 +335,11 @@ def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
-    additional_status_codes=[201, 303],
+    additional_status_codes=[201, 303, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "
-        "Redirecting to the 'Get background job status snapshot' endpoint."
+        "Redirecting to the 'Get background job status snapshot' endpoint.",
+        429: "Another Quick setup action already running.",
     },
     request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,

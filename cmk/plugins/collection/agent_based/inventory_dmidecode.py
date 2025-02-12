@@ -224,6 +224,71 @@ def _parse_chassis_information(lines: list[list[str]]) -> ChassisInformation:
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ProcessorInformation:
+    manufacturer: str
+    max_speed: float | None
+    voltage: float | None
+    status: str
+
+
+def _parse_speed(v: str) -> float | None:  # into Hz (float)
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1] == "GHz":
+        return float(parts[0]) * 1000000000.0
+    if parts[1] == "MHz":
+        return float(parts[0]) * 1000000.0
+    if parts[1] == "kHz":
+        return float(parts[0]) * 1000.0
+    if parts[1] == "Hz":
+        return float(parts[0])
+    return None
+
+
+def _parse_voltage(v: str) -> float | None:
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    return float(parts[0])
+
+
+def _parse_processor_information(lines: list[list[str]]) -> ProcessorInformation:
+    manufacturer = ""
+    max_speed: float | None = None
+    voltage: float | None = None
+    status = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Max Speed":
+                max_speed = _parse_speed(raw_value)
+            case "Voltage":
+                voltage = _parse_voltage(raw_value)
+            case "Status":
+                status = raw_value
+    return ProcessorInformation(
+        manufacturer=manufacturer,
+        max_speed=max_speed,
+        voltage=voltage,
+        status=status,
+    )
+
+
+def _map_vendor(manufacturer: str) -> str:
+    return {
+        "GenuineIntel": "intel",
+        "Intel(R) Corporation": "intel",
+        "AuthenticAMD": "amd",
+    }.get(manufacturer, manufacturer)
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -265,38 +330,22 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                     },
                 )
             case "Processor Information":
-                yield from _make_inventory_processor(lines)
+                processor_information = _parse_processor_information(lines)
+                if processor_information.status != "Unpopulated":
+                    # Note: This node is also being filled by lnx_cpuinfo
+                    yield Attributes(
+                        path=["hardware", "cpu"],
+                        inventory_attributes={
+                            "vendor": _map_vendor(processor_information.manufacturer),
+                            "max_speed": processor_information.max_speed,
+                            "voltage": processor_information.voltage,
+                            "status": processor_information.status,
+                        },
+                    )
             case "Physical Memory Array":
                 yield _make_inventory_physical_mem_array(lines, counter)
             case "Memory Device":
                 yield from _make_inventory_mem_device(lines, counter)
-
-
-# Note: This node is also being filled by lnx_cpuinfo
-def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, None, None]:
-    vendor_map = {
-        "GenuineIntel": "intel",
-        "Intel(R) Corporation": "intel",
-        "AuthenticAMD": "amd",
-    }
-    cpu_info = _make_dict(
-        lines,
-        {
-            "Manufacturer": ("vendor", lambda v: vendor_map.get(v, v)),
-            "Max Speed": ("max_speed", _parse_speed),
-            "Voltage": ("voltage", _parse_voltage),
-            "Status": "status",
-        },
-    )
-
-    if cpu_info.pop("Status", "") == "Unpopulated":
-        # Only update our CPU information if the socket is populated
-        return
-
-    yield Attributes(
-        path=["hardware", "cpu"],
-        inventory_attributes=cpu_info,
-    )
 
 
 def _make_inventory_physical_mem_array(
@@ -408,27 +457,3 @@ def _parse_size(v: str) -> float | None:  # into Bytes (int)
     if parts[1].lower() == "kb":
         return int(parts[0]) * 1024
     return int(parts[0])
-
-
-def _parse_speed(v: str) -> float | None:  # into Hz (float)
-    if not v or v == "Unknown":
-        return None
-
-    parts = v.split()
-    if parts[1] == "GHz":
-        return float(parts[0]) * 1000000000.0
-    if parts[1] == "MHz":
-        return float(parts[0]) * 1000000.0
-    if parts[1] == "kHz":
-        return float(parts[0]) * 1000.0
-    if parts[1] == "Hz":
-        return float(parts[0])
-    return None
-
-
-def _parse_voltage(v: str) -> float | None:
-    if not v or v == "Unknown":
-        return None
-
-    parts = v.split()
-    return float(parts[0])

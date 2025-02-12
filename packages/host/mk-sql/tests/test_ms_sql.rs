@@ -1494,7 +1494,7 @@ fn test_find_provided_query() {
 
 #[test]
 fn test_get_instances() {
-    let instances = platform::registry::get_instances();
+    let instances = platform::registry::get_instances(None);
     #[cfg(windows)]
     {
         let instances = instances
@@ -1503,10 +1503,10 @@ fn test_get_instances() {
             .collect::<Vec<_>>();
         assert!(!instances.is_empty());
         for instance in instances {
-            assert!(instance.final_port().is_some());
             assert!(instance.is_shared_memory());
             assert!(!instance.is_pipe());
             assert!(instance.is_tcp());
+            assert!(instance.final_port().unwrap().value() >= 1433u16);
             assert!(!instance.is_odbc_only());
         }
     }

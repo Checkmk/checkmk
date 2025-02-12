@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::types::{InstanceName, Port};
+use crate::types::{HostName, InstanceName, Port};
 
 pub struct Block {
     pub headline: Vec<String>,
@@ -46,85 +46,172 @@ pub fn get_row_value_by_idx(row: &[String], idx: usize) -> String {
     row.get(idx).cloned().unwrap_or_default()
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub enum Transport {
-    Tcp,
-    NamedPipe,
-    SharedMemory,
+#[derive(Debug, Clone)]
+struct NamedPipe(String);
+
+#[derive(Debug, Clone)]
+struct TcpPoint {
+    enabled_and_active: bool,
+    port: Option<Port>,
+    dynamic_port: Option<Port>,
+    hostname: HostName,
+}
+#[derive(Debug, Clone)]
+struct Tcp {
+    port: Option<Port>,
+    dynamic_port: Option<Port>,
+    listen_all_ips: bool,
+    peers: Vec<TcpPoint>,
+}
+
+pub struct PeerTcpInfo {
+    pub active: bool,
+    pub enabled: bool,
+    pub hostname: String,
+    pub port: Option<Port>,
+    pub dynamic_port: Option<Port>,
+}
+
+pub struct HostTcpInfo {
+    pub enabled: bool,
+    pub listen_on_all_ips: bool,
+    pub peers: Vec<PeerTcpInfo>,
+}
+
+pub fn get_host_tcp_info() -> HostTcpInfo {
+    HostTcpInfo {
+        enabled: true,
+        listen_on_all_ips: true,
+        peers: Vec::new(),
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct InstanceInfo {
     pub name: InstanceName,
-    port: Option<Port>,
-    dynamic_port: Option<Port>,
-    pipe: Option<String>,
-    transports: Vec<Transport>,
+    shared_memory: bool,
+    pipe: Option<NamedPipe>,
+    tcp: Option<Tcp>,
+}
+
+impl Tcp {
+    pub fn port(&self) -> Option<Port> {
+        if !self.listen_all_ips {
+            for peer in &self.peers {
+                if peer.port.is_some() && peer.port.as_ref().unwrap().value() != 0 {
+                    return peer.port.clone();
+                }
+                if peer.dynamic_port.is_some() && peer.dynamic_port.as_ref().unwrap().value() != 0 {
+                    return peer.dynamic_port.clone();
+                }
+            }
+            return None;
+        }
+
+        if self.port.is_some() && self.port.as_ref().unwrap().value() != 0 {
+            return self.port.clone();
+        }
+        if self.dynamic_port.is_some() && self.dynamic_port.as_ref().unwrap().value() != 0 {
+            return self.dynamic_port.clone();
+        }
+
+        None
+    }
+
+    pub fn hostname(&self) -> Option<HostName> {
+        if self.listen_all_ips {
+            return Some(HostName::from("localhost".to_string()));
+        }
+
+        for peer in &self.peers {
+            if peer.enabled_and_active {
+                return Some(peer.hostname.clone());
+            }
+        }
+
+        None
+    }
 }
 
 impl InstanceInfo {
-    pub fn final_port(&self) -> Option<&Port> {
+    pub fn final_port(&self) -> Option<Port> {
         if !self.is_tcp() {
             return None;
         }
-        self.dynamic_port
-            .as_ref()
-            .filter(|p| p.value() != 0)
-            .or(self.port.as_ref())
-            .filter(|p| p.value() != 0)
+
+        self.tcp.as_ref().and_then(|t| t.port().clone())
+    }
+
+    pub fn final_host(&self) -> Option<HostName> {
+        if !self.is_tcp() {
+            return None;
+        }
+
+        self.tcp.as_ref().and_then(|t| t.hostname())
     }
 
     pub fn is_shared_memory(&self) -> bool {
-        self.transports.contains(&Transport::SharedMemory)
+        self.shared_memory
     }
 
     pub fn is_pipe(&self) -> bool {
-        self.transports.contains(&Transport::NamedPipe) && self.pipe.is_some()
+        self.pipe.is_some()
     }
 
     pub fn is_tcp(&self) -> bool {
-        self.transports.contains(&Transport::Tcp)
+        self.tcp
+            .as_ref()
+            .map(|t| t.port().is_some())
+            .unwrap_or_default()
     }
 
     pub fn is_odbc_only(&self) -> bool {
-        !self.transports.is_empty() && !self.is_tcp()
+        !self.is_tcp()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        platform::{InstanceInfo, Transport},
+        platform::{InstanceInfo, Tcp},
         types::{InstanceName, Port},
     };
 
     #[test]
     fn test_instance_final_port() {
         let make_i = |port: Option<u16>, dynamic_port: Option<u16>| InstanceInfo {
-            name: InstanceName::from("AAA".to_owned()),
-            port: port.map(|p| p.into()),
-            dynamic_port: dynamic_port.map(|p| p.into()),
+            name: InstanceName::from("doesn't-matter".to_owned()),
+            shared_memory: false,
             pipe: None,
-            transports: vec![Transport::Tcp],
+            tcp: Some(Tcp {
+                port: port.map(|p| p.into()),
+                dynamic_port: dynamic_port.map(|p| p.into()),
+                listen_all_ips: true,
+                peers: vec![],
+            }),
         };
 
         let std_port = 1;
         let dyn_port = 2;
         assert_eq!(
             make_i(Some(std_port), None).final_port().unwrap(),
-            &Port::from(std_port)
+            Port::from(std_port)
+        );
+        assert_eq!(
+            make_i(Some(0), Some(dyn_port)).final_port().unwrap(),
+            Port::from(dyn_port)
         );
         assert_eq!(
             make_i(Some(std_port), Some(dyn_port)).final_port().unwrap(),
-            &Port::from(dyn_port)
+            Port::from(std_port)
         );
         assert_eq!(
-            make_i(Some(std_port), Some(dyn_port)).final_port().unwrap(),
-            &Port::from(dyn_port)
+            make_i(None, Some(dyn_port)).final_port().unwrap(),
+            Port::from(dyn_port)
         );
         assert_eq!(
             make_i(Some(std_port), Some(0)).final_port().unwrap(),
-            &Port::from(std_port)
+            Port::from(std_port)
         );
         assert!(make_i(Some(0), Some(0)).final_port().is_none());
     }
@@ -290,15 +377,18 @@ pub mod odbc {
 
 #[cfg(windows)]
 pub mod registry {
-    use super::{InstanceInfo, Transport};
-    use crate::types::{InstanceName, Port};
+    use super::{InstanceInfo, NamedPipe, Tcp, TcpPoint};
+    use crate::types::{HostName, InstanceName, Port};
     use std::collections::HashMap;
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+    const MS_SQL_DEFAULT_BRANCH_LOCATION: &str = r"SOFTWARE\";
 
-    pub fn get_instances() -> Vec<InstanceInfo> {
-        let instances_std = get_instances_on_key(r"SOFTWARE\Microsoft\Microsoft SQL Server\");
+    pub fn get_instances(custom_branch: Option<String>) -> Vec<InstanceInfo> {
+        let branch = custom_branch.unwrap_or_default() + MS_SQL_DEFAULT_BRANCH_LOCATION;
+        let instances_std =
+            get_instances_on_key(&(branch.clone() + r"Microsoft\Microsoft SQL Server\"));
         let instances_wow =
-            get_instances_on_key(r"SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\");
+            get_instances_on_key(&(branch + r"WOW6432Node\Microsoft\Microsoft SQL Server\"));
 
         instances_std.into_iter().chain(instances_wow).collect()
     }
@@ -327,39 +417,29 @@ pub mod registry {
 
         names_map
             .iter()
-            .filter_map(|x| get_info(sql_key, x.0, x.1))
+            .filter_map(|x| get_transport(sql_key, x.0, x.1))
             .collect::<Vec<InstanceInfo>>()
     }
 
-    fn get_transport(
-        sql_key: &str,
-        registry_instance_name: &str,
-        transport_key: &str,
-        flag_names: &[&str],
-    ) -> bool {
-        let instance_key = format!(
-            r"{}\MSSQLServer\SuperSocketNetLib\{}",
-            registry_instance_name, transport_key
-        );
+    fn get_shared_memory(sql_key: &str, key_name: &str) -> bool {
+        let instance_sm_key = format!(r"{}{}\MSSQLServer\SuperSocketNetLib\Sm", sql_key, key_name);
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
-            sql_key.to_owned() + &instance_key,
+            instance_sm_key,
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         ) {
-            flag_names.iter().all(|flag| {
-                let on: u32 = key.get_value(flag).unwrap_or_default();
-                on != 0
-            })
+            key.get_value::<u32, _>("Enabled").unwrap_or_default() != 0
         } else {
             false
         }
     }
 
     fn get_pipe(sql_key: &str, key_name: &str) -> Option<String> {
-        let instance_sm_key = format!(r"{}\MSSQLServer\SuperSocketNetLib\Np", key_name);
+        let instance_pipe_key =
+            format!(r"{}{}\MSSQLServer\SuperSocketNetLib\Np", sql_key, key_name);
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
-            sql_key.to_owned() + &instance_sm_key,
+            instance_pipe_key,
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         ) {
             let pipe_enabled: u32 = key.get_value("Enabled").unwrap_or_default();
@@ -373,57 +453,122 @@ pub mod registry {
         }
     }
 
-    fn get_enabled_transports(sql_key: &str, key_name: &str) -> Vec<Transport> {
-        let mut transports = vec![];
-        if get_transport(sql_key, key_name, "Tcp", &["Enabled", "ListenOnAllIPs"]) {
-            transports.push(Transport::Tcp);
-        }
-        if get_transport(sql_key, key_name, "Sm", &["Enabled"]) {
-            transports.push(Transport::SharedMemory);
-        }
-        if get_transport(sql_key, key_name, "Np", &["Enabled"]) {
-            transports.push(Transport::NamedPipe);
-        }
-        transports
+    fn _read_tcp_port(key: &RegKey, value: &str) -> u16 {
+        key.get_value::<String, _>(value)
+            .unwrap_or_default()
+            .parse::<u16>()
+            .unwrap_or(0)
     }
 
-    fn get_info(
+    fn get_tcp(sql_key: &str, key_name: &str) -> Option<Tcp> {
+        let instance_tcp_key =
+            format!(r"{}{}\MSSQLServer\SuperSocketNetLib\Tcp", sql_key, key_name);
+        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
+        if let Ok(key) = root_key.open_subkey_with_flags(
+            &instance_tcp_key,
+            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+        ) {
+            let tcp_enabled: u32 = key.get_value("Enabled").unwrap_or_default();
+            if tcp_enabled == 0 {
+                return None;
+            }
+            let ip_all_key = key.open_subkey_with_flags(
+                "IPAll",
+                winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+            );
+            // read ports
+            let (port, dynamic_port) = ip_all_key
+                .ok()
+                .map(|key| {
+                    let port: u16 = _read_tcp_port(&key, "TcpPort");
+                    let dynamic_port: u16 = _read_tcp_port(&key, "TcpDynamicPorts");
+                    (Some(port), Some(dynamic_port))
+                })
+                .unwrap();
+            Some(Tcp {
+                port: port.map(Port::from),
+                dynamic_port: dynamic_port.map(Port::from),
+                listen_all_ips: key
+                    .get_value::<u32, _>("ListenOnAllIPs")
+                    .unwrap_or_default()
+                    != 0,
+                peers: _gather_instances(key),
+            })
+        } else {
+            log::error!("Error opening registry key '{instance_tcp_key}'");
+            None
+        }
+    }
+
+    fn _gather_instances(key: RegKey) -> Vec<TcpPoint> {
+        let keys = key.enum_keys().filter_map(|x| x.ok());
+        keys.filter_map(|k| {
+            let ip_key = key.open_subkey_with_flags(
+                k,
+                winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+            );
+            if let Ok(ip_key) = ip_key {
+                let dynamic_port = ip_key
+                    .get_value::<String, _>("TcpDynamicPorts")
+                    .unwrap_or_default();
+                let port = ip_key.get_value::<String, _>("TcpPort").unwrap_or_default();
+                let hostname = ip_key
+                    .get_value::<String, _>("IpAddress")
+                    .unwrap_or_default();
+                let enabled = ip_key.get_value::<u32, _>("Enabled").unwrap_or_default() != 0;
+                let active = ip_key.get_value::<u32, _>("Active").unwrap_or_default() != 0;
+                if !enabled || !active {
+                    return None;
+                }
+                Some(TcpPoint {
+                    enabled_and_active: enabled && active,
+                    hostname: HostName::from(hostname),
+                    port: port.parse::<u16>().ok().map(Port::from),
+                    dynamic_port: dynamic_port.parse::<u16>().ok().map(Port::from),
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
+    }
+
+    fn get_transport(
         sql_key: &str,
         instance_name: &str,
         registry_instance_name: &str,
     ) -> Option<InstanceInfo> {
-        let instance_tcp_ip_all_key = format!(
-            r"{}\MSSQLServer\SuperSocketNetLib\Tcp\IPAll",
-            registry_instance_name
-        );
-        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
-        if let Ok(key) = root_key.open_subkey_with_flags(
-            sql_key.to_owned() + &instance_tcp_ip_all_key,
-            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
-        ) {
-            let port: Option<String> = key.get_value("TcpPort").ok();
-            let dynamic_port: Option<String> = key.get_value("TcpDynamicPorts").ok();
-            Some(InstanceInfo {
-                name: InstanceName::from(instance_name.to_owned()),
-                port: port.and_then(|s| s.parse::<u16>().ok()).map(Port::from),
-                dynamic_port: dynamic_port
-                    .and_then(|s| s.parse::<u16>().ok())
-                    .map(Port::from),
-                pipe: get_pipe(sql_key, registry_instance_name),
-                transports: get_enabled_transports(sql_key, registry_instance_name),
-            })
-        } else {
-            log::warn!("cannot open key: {}", instance_tcp_ip_all_key);
-            None
-        }
+        let x = InstanceInfo {
+            name: InstanceName::from(instance_name.to_owned()),
+            shared_memory: get_shared_memory(sql_key, registry_instance_name),
+            pipe: get_pipe(sql_key, registry_instance_name).map(NamedPipe),
+            tcp: get_tcp(sql_key, registry_instance_name),
+        };
+        Some(x)
     }
+
     #[cfg(test)]
     mod tests {
+        use std::collections::HashSet;
+
         use super::get_instances;
         use crate::types::InstanceName;
+
+        /// must be in sync with test files
+        /// allowed not be in sync with actual repo branch(may be in future)
+        const REPO_NAME: &str = "2.5.0";
+
+        fn obtain_test_instances_registry_branch(test_set_name: &str) -> String {
+            format!(
+                r"SOFTWARE\checkmk\tests\{}\mk-sql\instances\{}\",
+                REPO_NAME, test_set_name
+            )
+        }
+
         #[test]
         fn test_get_instances() {
-            let infos = get_instances()
+            let custom_branch = obtain_test_instances_registry_branch("test-std");
+            let infos = get_instances(Some(custom_branch.to_owned()))
                 .into_iter()
                 .filter(|i| {
                     i.name != InstanceName::from("SQLEXPRESS_OLD")
@@ -432,13 +577,36 @@ pub mod registry {
                 .collect::<Vec<_>>();
             assert_eq!(infos.len(), 3usize);
         }
+
+        #[test]
+        fn test_get_host_tcp_info() {
+            let custom_branch = obtain_test_instances_registry_branch("test-not-all");
+            let infos = get_instances(Some(custom_branch.to_owned()))
+                .into_iter()
+                .map(|i| i.tcp)
+                .collect::<Vec<_>>();
+            assert_eq!(infos.len(), 2usize);
+            assert_eq!(infos[0].as_ref().unwrap().port().unwrap().value(), 1433);
+            assert_eq!(infos[1].as_ref().unwrap().port().unwrap().value(), 1433);
+            let host_name_set = infos
+                .into_iter()
+                .map(|i| i.unwrap().hostname().unwrap().to_string())
+                .collect::<HashSet<_>>();
+            assert_eq!(
+                host_name_set,
+                ["192.168.125.175", "192.168.121.170"]
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect::<HashSet<_>>()
+            );
+        }
     }
 }
 
 #[cfg(unix)]
 pub mod registry {
     use super::InstanceInfo;
-    pub fn get_instances() -> Vec<InstanceInfo> {
+    pub fn get_instances(_custom_branch: Option<String>) -> Vec<InstanceInfo> {
         vec![]
     }
     #[cfg(test)]
@@ -446,7 +614,7 @@ pub mod registry {
         use super::get_instances;
         #[test]
         fn test_get_instances() {
-            assert!(get_instances().is_empty());
+            assert!(get_instances(None).is_empty());
         }
     }
 }

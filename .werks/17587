@@ -1,0 +1,13 @@
+Title: informix_dbspaces: fix calculation of free and used space size
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1739361730
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+Prior to this werk, the free and used space size was incorrectly calculated as the chunk pagesize was taken
+instead of the dbspace default pagesize. This werk fixes this issue by querying the correct pagesize value. To
+benefit from this change, the mk_informix plugin should be reinstalled with this new change. The check plugin
+itself remains unmodified.

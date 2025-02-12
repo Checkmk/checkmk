@@ -272,6 +272,12 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ),
         ReplicationPath(
             "dir",
+            "mkps_local",
+            os.path.relpath(cmk.utils.paths.var_dir + "/packages_local", cmk.utils.paths.omd_root),
+            [],
+        ),
+        ReplicationPath(
+            "dir",
             "local",
             "local",
             [],

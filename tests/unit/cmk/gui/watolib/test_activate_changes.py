@@ -66,6 +66,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
+        ReplicationPath("dir", "mkps_local", "var/check_mk/packages_local", []),
         ReplicationPath("dir", "local", "local", []),
         ReplicationPath(
             ty="file",

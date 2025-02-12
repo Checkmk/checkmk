@@ -27,6 +27,10 @@ from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    get_previously_loaded_plugins,
+)
 from cmk.base.automations import AutomationError
 
 from ._cache import Cache, CacheError
@@ -41,7 +45,9 @@ class HealthCheckResponse(BaseModel, frozen=True):
 
 def reload_automation_config() -> None:
     cache_manager.clear()
-    config.load(validate_hosts=False)
+    plugins = get_previously_loaded_plugins()
+    discovery_rulesets = extract_known_discovery_rulesets(plugins)
+    config.load(discovery_rulesets, validate_hosts=False)
 
 
 def clear_caches_before_each_call() -> None:
@@ -93,6 +99,7 @@ def get_application(
             local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
         )
         tty.reinit()
+
         reload_config()
 
         reloader_task = asyncio.create_task(

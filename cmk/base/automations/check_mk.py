@@ -287,6 +287,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         plugins = agent_based_register.get_previously_loaded_plugins()
+        discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
         ruleset_matcher = config_cache.ruleset_matcher
         autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
 
@@ -354,9 +355,12 @@ class AutomationDiscovery(DiscoveryAutomation):
                 host_label_plugins=HostLabelPluginMapper(
                     ruleset_matcher=ruleset_matcher,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
+                    discovery_rules=discovery_rules,
                 ),
                 plugins=DiscoveryPluginMapper(
-                    ruleset_matcher=ruleset_matcher, check_plugins=plugins.check_plugins
+                    ruleset_matcher=ruleset_matcher,
+                    check_plugins=plugins.check_plugins,
+                    discovery_rules=discovery_rules,
                 ),
                 autochecks_config=autochecks_config,
                 settings=settings,
@@ -644,6 +648,7 @@ def _execute_discovery(
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
     plugins = agent_based_register.get_previously_loaded_plugins()
+    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
     parser = CMKParser(
@@ -691,13 +696,16 @@ def _execute_discovery(
             host_label_plugins=HostLabelPluginMapper(
                 ruleset_matcher=ruleset_matcher,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
+                discovery_rules=discovery_rules,
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
                 ruleset_matcher, plugins.check_plugins
             ),
             discovery_plugins=DiscoveryPluginMapper(
-                ruleset_matcher=ruleset_matcher, check_plugins=plugins.check_plugins
+                ruleset_matcher=ruleset_matcher,
+                check_plugins=plugins.check_plugins,
+                discovery_rules=discovery_rules,
             ),
             autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(
@@ -747,10 +755,11 @@ def _execute_autodiscovery(
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
         return {}, False
 
-    if not called_from_automation_helper:
-        config.load()
-    config_cache = config.get_config_cache()
     ab_plugins = agent_based_register.get_previously_loaded_plugins()
+    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
+    if not called_from_automation_helper:
+        config.load(discovery_rules)
+    config_cache = config.get_config_cache()
     autochecks_config = config.AutochecksConfigurer(config_cache, ab_plugins.check_plugins)
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
@@ -787,9 +796,12 @@ def _execute_autodiscovery(
     host_label_plugins = HostLabelPluginMapper(
         ruleset_matcher=ruleset_matcher,
         sections={**ab_plugins.agent_sections, **ab_plugins.snmp_sections},
+        discovery_rules=discovery_rules,
     )
     plugins = DiscoveryPluginMapper(
-        ruleset_matcher=ruleset_matcher, check_plugins=ab_plugins.check_plugins
+        ruleset_matcher=ruleset_matcher,
+        check_plugins=ab_plugins.check_plugins,
+        discovery_rules=discovery_rules,
     )
     on_error = OnError.IGNORE
 
@@ -1454,7 +1466,7 @@ class AutomationAnalyseServices(Automation):
         servicedesc = args[1]
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        plugins = get_previously_loaded_plugins()
+        plugins = agent_based_register.get_previously_loaded_plugins()
         return (
             AnalyseServiceResult(
                 service_info=found.service_info,
@@ -1971,7 +1983,7 @@ class AutomationGetConfiguration(Automation):
         # that could be too much for the command line
         variable_names = ast.literal_eval(sys.stdin.read())
 
-        config.load(with_conf_d=False)
+        config.load(discovery_rulesets=(), with_conf_d=False)
 
         missing_variables = [v for v in variable_names if not hasattr(config, v)]
 
@@ -1980,7 +1992,11 @@ class AutomationGetConfiguration(Automation):
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )
-            config.load(with_conf_d=False)
+            plugins = agent_based_register.get_previously_loaded_plugins()
+            config.load(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins),
+                with_conf_d=False,
+            )
 
         result = {}
         for varname in variable_names:

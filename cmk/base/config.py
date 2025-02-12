@@ -567,7 +567,10 @@ def register(name: str, default_value: Any) -> None:
 #   '----------------------------------------------------------------------'
 
 
+# This function still mostly manipulates a global state.
+# Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load(
+    discovery_rulesets: Iterable[RuleSetName],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> None:
@@ -577,7 +580,7 @@ def load(
 
     _initialize_derived_config_variables()
 
-    _perform_post_config_loading_actions()
+    _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
         config_cache = get_config_cache()
@@ -595,7 +598,9 @@ def load(
             sys.exit(3)
 
 
-def load_packed_config(config_path: ConfigPath) -> None:
+# This function still mostly manipulates a global state.
+# Passing the discovery rulesets as an argument is a first step to make it more functional.
+def load_packed_config(config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]) -> None:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -611,22 +616,20 @@ def load_packed_config(config_path: ConfigPath) -> None:
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
-    _perform_post_config_loading_actions()
+    _perform_post_config_loading_actions(discovery_rulesets)
 
 
 def _initialize_config() -> None:
     load_default_config()
 
 
-def _perform_post_config_loading_actions() -> None:
+def _perform_post_config_loading_actions(discovery_rulesets: Iterable[RuleSetName]) -> None:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
     global_dict = globals()
-    _collect_parameter_rulesets_from_globals(
-        global_dict, agent_based_register.iter_all_discovery_rulesets()
-    )
+    _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
 
     get_config_cache().initialize()
@@ -808,9 +811,15 @@ def get_derived_config_variable_names() -> set[str]:
     return {"service_service_levels", "host_service_levels"}
 
 
-def save_packed_config(config_path: ConfigPath, config_cache: ConfigCache) -> None:
+def save_packed_config(
+    config_path: ConfigPath,
+    config_cache: ConfigCache,
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
-    PackedConfigStore.from_serial(config_path).write(PackedConfigGenerator(config_cache).generate())
+    PackedConfigStore.from_serial(config_path).write(
+        PackedConfigGenerator(config_cache, discovery_rules).generate()
+    )
 
 
 class PackedConfigGenerator:
@@ -840,8 +849,11 @@ class PackedConfigGenerator:
         "extra_nagios_conf",
     ]
 
-    def __init__(self, config_cache: ConfigCache) -> None:
+    def __init__(
+        self, config_cache: ConfigCache, discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
+    ) -> None:
         self._config_cache = config_cache
+        self._discovery_rules = discovery_rules
 
     def generate(self) -> Mapping[str, Any]:
         helper_config: dict[str, Any] = {}
@@ -926,18 +938,7 @@ class PackedConfigGenerator:
 
             helper_config[varname] = val
 
-        #
-        # Add discovery rules
-        #
-
-        for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
-            value = agent_based_register.get_discovery_ruleset(ruleset_name)
-            if not value:
-                continue
-
-            helper_config[str(ruleset_name)] = value
-
-        return helper_config
+        return helper_config | {str(k): v for k, v in self._discovery_rules.items()}
 
 
 class PackedConfigStore:

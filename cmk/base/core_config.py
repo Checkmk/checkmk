@@ -8,7 +8,7 @@ import os
 import shutil
 import socket
 import sys
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal
@@ -27,6 +27,8 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import configuration_lockfile
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -65,6 +67,7 @@ class MonitoringCore(abc.ABC):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         plugins: agent_based_register.AgentBasedPlugins,
+        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
@@ -77,6 +80,7 @@ class MonitoringCore(abc.ABC):
             ip_address_of,
             licensing_handler,
             plugins,
+            discovery_rules,
             passwords,
             hosts_to_update,
         )
@@ -89,6 +93,7 @@ class MonitoringCore(abc.ABC):
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
         plugins: agent_based_register.AgentBasedPlugins,
+        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
@@ -259,6 +264,7 @@ def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     plugins: agent_based_register.AgentBasedPlugins,
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
@@ -289,6 +295,7 @@ def do_create_config(
                 core,
                 config_cache,
                 plugins,
+                discovery_rules,
                 ip_address_of,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
@@ -382,6 +389,7 @@ def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     plugins: agent_based_register.AgentBasedPlugins,
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None = None,
     *,
@@ -402,6 +410,7 @@ def _create_core_config(
             config_path,
             config_cache,
             plugins,
+            discovery_rules,
             ip_address_of,
             hosts_to_update=hosts_to_update,
             passwords=passwords,

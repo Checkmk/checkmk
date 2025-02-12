@@ -23,7 +23,10 @@ from cmk.utils.hostaddress import HostName
 
 import cmk.base.nagios_utils
 from cmk.base import core_config
-from cmk.base.api.agent_based.register import get_previously_loaded_plugins
+from cmk.base.api.agent_based.register import (
+    get_previously_collected_discovery_rules,
+    get_previously_loaded_plugins,
+)
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 
@@ -93,6 +96,7 @@ def do_restart(
                 core=core,
                 config_cache=config_cache,
                 plugins=get_previously_loaded_plugins(),
+                discovery_rules=get_previously_collected_discovery_rules(),
                 ip_address_of=ip_address_of,
                 all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,

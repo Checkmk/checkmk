@@ -500,10 +500,12 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         *,
         ruleset_matcher: RulesetMatcher,
         sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ) -> None:
         super().__init__()
         self.ruleset_matcher: Final = ruleset_matcher
         self._sections = sections
+        self._discovery_rules: Final = discovery_rules
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
         plugin = self._sections.get(__key)
@@ -516,7 +518,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
                     default_parameters=plugin.host_label_default_parameters,
                     ruleset_name=plugin.host_label_ruleset_name,
                     ruleset_type=plugin.host_label_ruleset_type,
-                    rules_getter_function=agent_based_register.get_host_label_ruleset,
+                    rules_getter_function=lambda n: self._discovery_rules.get(n, []),
                 ),
             )
             if plugin is not None
@@ -1038,10 +1040,12 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         *,
         ruleset_matcher: RulesetMatcher,
         check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
+        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ) -> None:
         super().__init__()
         self.ruleset_matcher: Final = ruleset_matcher
         self._check_plugins: Final = check_plugins
+        self._discovery_rules: Final = discovery_rules
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plug-ins and
@@ -1074,7 +1078,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,
-                rules_getter_function=agent_based_register.get_discovery_ruleset,
+                rules_getter_function=lambda n: self._discovery_rules.get(n, []),
             ),
         )
 

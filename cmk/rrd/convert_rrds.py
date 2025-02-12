@@ -21,7 +21,7 @@ def convert_rrds(
     split: bool,
     delete: bool,
 ) -> None:
-    config.load(with_conf_d=True)
+    config.load(discovery_rulesets=(), with_conf_d=True)
     rrd_config = RRDConfigImpl()
 
     if not hostnames:

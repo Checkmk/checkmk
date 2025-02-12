@@ -49,7 +49,7 @@ class RRDConfigImpl(RRDReloadableConfig):
         )
 
     def _load_cee_config_cache(self) -> CEEConfigCache:
-        base_config.load_packed_config(LATEST_CONFIG)
+        base_config.load_packed_config(LATEST_CONFIG, discovery_rulesets=())
         config_cache = base_config.get_config_cache()
         assert isinstance(config_cache, CEEConfigCache)
         return config_cache

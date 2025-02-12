@@ -1462,6 +1462,7 @@ def mode_update() -> None:
                 core=create_core(config.monitoring_core),
                 config_cache=config_cache,
                 plugins=agent_based_register.get_previously_loaded_plugins(),
+                discovery_rules=agent_based_register.get_previously_collected_discovery_rules(),
                 ip_address_of=ip_address_of,
                 all_hosts=hosts_config.hosts,
                 duplicates=sorted(
@@ -1784,8 +1785,10 @@ modes.register(
 def mode_notify(options: dict, args: list[str]) -> int | None:
     from cmk.base import notify
 
+    plugins = agent_based_register.get_previously_loaded_plugins()
+    discovery_rules = agent_based_register.extract_known_discovery_rulesets(plugins)
     with store.lock_checkmk_configuration(configuration_lockfile):
-        config.load(with_conf_d=True, validate_hosts=False)
+        config.load(discovery_rulesets=discovery_rules, with_conf_d=True, validate_hosts=False)
 
     def ensure_nagios(msg: str) -> None:
         if config.is_cmc():
@@ -1871,6 +1874,7 @@ def mode_check_discovery(
 
     config_cache = config.get_config_cache()
     plugins = agent_based_register.get_previously_loaded_plugins()
+    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
@@ -1943,9 +1947,12 @@ def mode_check_discovery(
                 host_label_plugins=HostLabelPluginMapper(
                     ruleset_matcher=ruleset_matcher,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
+                    discovery_rules=discovery_rules,
                 ),
                 plugins=DiscoveryPluginMapper(
-                    ruleset_matcher=ruleset_matcher, check_plugins=plugins.check_plugins
+                    ruleset_matcher=ruleset_matcher,
+                    check_plugins=plugins.check_plugins,
+                    discovery_rules=discovery_rules,
                 ),
                 autochecks_config=autochecks_config,
                 enforced_services=config_cache.enforced_services_table(
@@ -2170,6 +2177,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
     plugins = agent_based_register.get_previously_loaded_plugins()
+    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
@@ -2262,9 +2270,12 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             host_label_plugins=HostLabelPluginMapper(
                 ruleset_matcher=config_cache.ruleset_matcher,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
+                discovery_rules=discovery_rules,
             ),
             plugins=DiscoveryPluginMapper(
-                ruleset_matcher=config_cache.ruleset_matcher, check_plugins=plugins.check_plugins
+                ruleset_matcher=config_cache.ruleset_matcher,
+                check_plugins=plugins.check_plugins,
+                discovery_rules=discovery_rules,
             ),
             run_plugin_names=run_plugin_names,
             ignore_plugin=config_cache.check_plugin_ignored,
@@ -3061,7 +3072,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
-    config.load()
+    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
+    config.load(discovery_rules)
     config_cache = config.get_config_cache()
     plugins = agent_based_register.get_previously_loaded_plugins()
     parser = CMKParser(

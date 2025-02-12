@@ -17,7 +17,6 @@ def rrdtool_native_workspace():
             "//omd/packages/rrdtool/patches:0003-cli-xport-consistency.dif",
             "//omd/packages/rrdtool/patches:0004-fix-error-formatting.dif",
             "//omd/packages/rrdtool/patches:0005-config-disable_nls.dif",
-            "//omd/packages/rrdtool/patches:0007-config-disable_rrd_restore.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

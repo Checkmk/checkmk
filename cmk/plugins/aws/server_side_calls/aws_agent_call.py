@@ -61,6 +61,7 @@ class AwsParams(BaseModel):
     services: Mapping[str, ServiceConfig] | None = None
     piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
     overall_tags: list[Tag] | None = None
+    connection_test: bool = False  # only used by quick setup
 
 
 def _get_tag_options(tags: list[Tag], prefix: str) -> Sequence[str]:
@@ -197,6 +198,9 @@ def aws_arguments(
             params.piggyback_naming_convention,
         )
     )
+
+    if params.connection_test:
+        args.append("--connection-test")
 
     yield SpecialAgentCommand(command_arguments=args)
 

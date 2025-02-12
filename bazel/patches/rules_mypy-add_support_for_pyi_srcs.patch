@@ -1,0 +1,35 @@
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+index 098c3ed..d599ef9 100644
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -104,7 +104,12 @@ def _mypy_impl(target, ctx):
+     for import_ in _extract_imports(target):
+         imports_dirs[import_] = 1
+ 
++    pyi_files = []
++    pyi_dirs = {}
+     for dep in (ctx.rule.attr.deps + additional_types):
++        if RulesPythonPyInfo in dep and hasattr(dep[RulesPythonPyInfo], "direct_pyi_files"):
++            pyi_files.extend(dep[RulesPythonPyInfo].direct_pyi_files.to_list())
++            pyi_dirs |= {"%s/%s" % (ctx.bin_dir.path, imp): None for imp in _extract_imports(dep) if imp != "site-packages" and imp != "_main"}
+         depsets.append(dep.default_runfiles.files)
+         if PyTypeLibraryInfo in dep:
+             types.append(dep[PyTypeLibraryInfo].directory.path + "/site-packages")
+@@ -140,7 +145,7 @@ def _mypy_impl(target, ctx):
+ 
+     # types need to appear first in the mypy path since the module directories
+     # are the same and mypy resolves the first ones, first.
+-    mypy_path = ":".join(sorted(types) + sorted(external_deps) + sorted(imports_dirs) + sorted(generated_dirs) + sorted(generated_imports_dirs))
++    mypy_path = ":".join(sorted(types) + sorted(pyi_dirs) + sorted(external_deps) + sorted(imports_dirs) + sorted(generated_dirs) + sorted(generated_imports_dirs))
+ 
+     output_file = ctx.actions.declare_file(ctx.rule.attr.name + ".mypy_stdout")
+ 
+@@ -182,7 +187,7 @@ def _mypy_impl(target, ctx):
+         mnemonic = "mypy",
+         progress_message = "mypy %{label}",
+         inputs = depset(
+-            direct = ctx.rule.files.srcs + py_type_files + upstream_caches + config_files,
++            direct = ctx.rule.files.srcs + py_type_files + pyi_files + upstream_caches + config_files,
+             transitive = depsets,
+         ),
+         outputs = outputs,

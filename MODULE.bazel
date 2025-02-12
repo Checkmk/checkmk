@@ -70,6 +70,7 @@ single_version_override(
         "//bazel/patches:rules_mypy-sort_mypypath_sections.patch",
         "//bazel/patches:rules_mypy-skip_virtual_imports.patch",
         "//bazel/patches:rules_mypy-no_lib_in_mypypath_when_stubs_are_available.patch",
+        "//bazel/patches:rules_mypy-add_support_for_pyi_srcs.patch",
     ],
 )
 

@@ -9,6 +9,12 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
+"""
+Relevant documentation:
+    * https://docs.deistercloud.com/content/Databases.30/IBM%20Informix.2/Monitoring.10.xml?embedded=true#51cf1eb453b73e7ffdd2172551fc58ed
+    * https://www.ibm.com/docs/en/informix-servers/14.10?topic=tables-syschunks
+"""
+
 check_info = {}
 
 

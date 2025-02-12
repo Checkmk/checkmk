@@ -170,6 +170,7 @@ informix_tabextents() {
 }
 
 informix_dbspaces() {
+    # the default dbspace pagesize must be taken to calculate the used and free space
     echo "<<<informix_dbspaces>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select
@@ -179,7 +180,7 @@ informix_dbspaces() {
             sd.flags,
             'CHUNK',
             sc.fname,
-            sc.pagesize,
+            (select sh_pagesize from sysmaster:sysshmvals) pagesize,
             sc.chksize,
             sc.nfree,
             sc.flags,

@@ -42,6 +42,7 @@ py_library(
         requirement("requests"),
         requirement("starlette"),
         requirement("uvicorn"),
+        requirement("uvicorn-worker"),
     ],
 )
 
@@ -95,6 +96,7 @@ py_wheel(
         "requests",
         "starlette",
         "uvicorn",
+        "uvicorn-worker",
     ],
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
     # TODO: Duplicated from pyproject.toml

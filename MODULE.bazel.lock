@@ -3302,7 +3302,7 @@
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "a9f8be53e75ac48bb345aee6848615e16bd057cfd6cf5f6b13a2dcb2ca2749f1",
+          "@@//requirements_all_lock.txt": "6aa3106e3e3f8d498a3d1aab75813412d21dcb4764304d2b2bfccf6996fc740f",
           "@@rules_mypy~//mypy/private/requirements.txt": "a1f94fdc72dde074efe30628a69ce502984b09c61db2938601ed18d320f59d26",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -7165,6 +7165,7 @@
                 "uritemplate": "{\"cmk_requirements_312_uritemplate\":[{\"version\":\"3.12\"}]}",
                 "urllib3": "{\"cmk_requirements_312_urllib3\":[{\"version\":\"3.12\"}]}",
                 "uvicorn": "{\"cmk_requirements_312_uvicorn\":[{\"version\":\"3.12\"}]}",
+                "uvicorn_worker": "{\"cmk_requirements_312_uvicorn_worker\":[{\"version\":\"3.12\"}]}",
                 "vcrpy": "{\"cmk_requirements_312_vcrpy\":[{\"version\":\"3.12\"}]}",
                 "virtualenv": "{\"cmk_requirements_312_virtualenv\":[{\"version\":\"3.12\"}]}",
                 "watchdog": "{\"cmk_requirements_312_watchdog\":[{\"version\":\"3.12\"}]}",
@@ -7548,6 +7549,7 @@
                 "uritemplate",
                 "urllib3",
                 "uvicorn",
+                "uvicorn_worker",
                 "vcrpy",
                 "virtualenv",
                 "watchdog",
@@ -13367,6 +13369,23 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "fakeredis[lua]==2.27.0 --hash=sha256:7b7584ec104392592297f46864a82cb7339a23e254ee885bf5ae07cfc64fbce7 --hash=sha256:f4b6e0fa4193acbf00d81dac71ff5cc34fe7d7c12f1560b036f98578a103d5c3"
+            }
+          },
+          "cmk_requirements_312_uvicorn_worker": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "uvicorn-worker==0.3.0 --hash=sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b --hash=sha256:ef0fe8aad27b0290a9e602a256b03f5a5da3a9e5f942414ca587b645ec77dd52"
             }
           },
           "cmk_requirements_312_multipart": {

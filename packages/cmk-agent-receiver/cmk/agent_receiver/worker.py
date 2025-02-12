@@ -12,7 +12,7 @@ from urllib.parse import unquote
 import h11
 from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavailable
 from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
-from uvicorn.workers import UvicornWorker
+from uvicorn_worker import UvicornWorker
 
 
 def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:

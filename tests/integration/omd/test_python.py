@@ -31,15 +31,13 @@ class PipCommand(NamedTuple):
     needs_target_as_commandline: bool
 
 
-PYTHON_VERSION = _get_python_version_from_defines_make()
+PYVER = _get_python_version_from_defines_make()
 
 SUPPORTED_PIP_CMDS: tuple[PipCommand, ...] = (
     PipCommand(["python3", "-m", "pip"], True),
+    PipCommand([f"pip{PYVER.major}"], False),  # Target is set in the wrapper script as cmd line
     PipCommand(
-        [f"pip{PYTHON_VERSION.major}"], False
-    ),  # Target is set in the wrapper script as cmd line
-    PipCommand(
-        [f"pip{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}"], False
+        [f"pip{PYVER.major}.{PYVER.minor}"], False
     ),  # Target is set in the wrapper script as cmd line
 )
 
@@ -195,3 +193,50 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
     ).communicate()[0]
     assert "--enable-optimizations" in output
     assert "--with-lto" in output
+
+
+@pytest.mark.parametrize(
+    "import_path,expected_source_file,expected_pyc_file",
+    [
+        pytest.param(
+            "cmk.base.config",
+            f"lib/python{PYVER.major}/cmk/base/config.py",
+            f"lib/python{PYVER.major}/cmk/base/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            id="pyc for imports from the big monolith cmk namespace",
+        ),
+        pytest.param(
+            "cmk.werks.config",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/werks/config.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/werks/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            id="pyc for imports from cmk packages namespace",
+        ),
+        pytest.param(
+            "omdlib.main",
+            f"lib/python{PYVER.major}/omdlib/main.py",
+            f"lib/python{PYVER.major}/omdlib/__pycache__/main.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            id="pyc for imports from omdlib",
+        ),
+        pytest.param(
+            "requests.sessions",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/requests/sessions.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/requests/__pycache__/sessions.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            id="pyc for imports from third party packages",
+        ),
+    ],
+)
+def test_python_is_bytecode_compiled(
+    import_path: str,
+    expected_source_file: str,
+    expected_pyc_file: str,
+    site: Site,
+) -> None:
+    # This tests sample-tests some well known (and hopefully long existing) modules regarding pre-compiled pyc files
+    # !!! IMPORTANT !!!
+    # in case any tested module does not exist anymore, please replace it with an existing one!
+
+    output = site.check_output(
+        ["python3", "-v", "-c", f"import {import_path}"], stderr=subprocess.STDOUT
+    )
+    assert (
+        f"{site.root}/{expected_pyc_file} matches {site.root}/{expected_source_file}" in output
+    ), f"No matching pyc file for '{import_path}' found"

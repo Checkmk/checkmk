@@ -731,6 +731,9 @@ def _prepare_git_overlay(
         ],
     )
 
+    # remove any broken links in the repository (e.g. invalid bazel cache references)
+    _exec_run(container, ["find", target_path, "-maxdepth", "1", "-xtype", "l", "-delete"])
+
     # target_path belongs to root, but its content belong to testuser. Newer git versions don't like
     # that by default, so we explicitly say that this is ok.
     _exec_run(

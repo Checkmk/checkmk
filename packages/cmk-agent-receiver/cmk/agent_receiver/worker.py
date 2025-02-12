@@ -45,10 +45,10 @@ class _ClientCertProtocol(H11Protocol):
                 self.send_400_response(msg)
                 return
 
-            if isinstance(event, h11.NEED_DATA):
+            if event is h11.NEED_DATA:
                 break
 
-            elif isinstance(event, h11.PAUSED):
+            elif event is h11.PAUSED:
                 # This case can occur in HTTP pipelining, so we need to
                 # stop reading any more data, and ensure that at the end
                 # of the active request/response cycle we handle any
@@ -80,28 +80,25 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
 
                 raw_path, _, query_string = event.target.partition(b"?")
+                path = unquote(raw_path.decode("ascii"))
+                full_path = self.root_path + path
+                full_raw_path = self.root_path.encode("ascii") + raw_path
                 self.scope = {
                     "type": "http",
-                    "asgi": {
-                        "version": self.config.asgi_version,
-                        "spec_version": "2.3",
-                    },
+                    "asgi": {"version": self.config.asgi_version, "spec_version": "2.3"},
                     "http_version": event.http_version.decode("ascii"),
                     "server": self.server,
                     "client": self.client,
-                    # Upstream also has this suppression
-                    # https://github.com/encode/uvicorn/blob/47304d9ae76321f0f5f649ff4f73e09b17085933/uvicorn/protocols/http/h11_impl.py#L210C43-L210C75
                     "scheme": self.scheme,  # type: ignore[typeddict-item]
                     "method": event.method.decode("ascii"),
                     "root_path": self.root_path,
-                    "path": unquote(raw_path.decode("ascii")),
-                    "raw_path": raw_path,
+                    "path": full_path,
+                    "raw_path": full_raw_path,
                     "query_string": query_string,
                     "headers": self.headers,
+                    "state": self.app_state.copy(),
                 }
-
-                upgrade = self._get_upgrade()
-                if upgrade == b"websocket" and self._should_upgrade_to_ws():
+                if self._should_upgrade():
                     self.handle_websocket_upgrade(event)
                     return
 
@@ -115,6 +112,14 @@ class _ClientCertProtocol(H11Protocol):
                     self.logger.warning(message)
                 else:
                     app = self.app
+
+                # When starting to process a request, disable the keep-alive
+                # timeout. Normally we disable this when receiving data from
+                # client and set back when finishing processing its request.
+                # However, for pipelined requests processing finishes after
+                # already receiving the next request and thus the timer may
+                # be set here, which we don't want.
+                self._unset_keepalive_if_required()
 
                 self.cycle = RequestResponseCycle(
                     scope=self.scope,
@@ -147,6 +152,8 @@ class _ClientCertProtocol(H11Protocol):
                     continue
                 self.cycle.more_body = False
                 self.cycle.message_event.set()
+                if self.conn.their_state == h11.MUST_CLOSE:
+                    break
 
 
 class ClientCertWorker(UvicornWorker):

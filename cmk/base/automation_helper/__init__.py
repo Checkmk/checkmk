@@ -11,12 +11,18 @@ from setproctitle import setproctitle
 
 from cmk.ccc.daemon import daemonize
 
+from cmk.utils.caching import cache_manager
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
+from cmk.base import config
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    get_previously_loaded_plugins,
+)
 from cmk.base.automations import automations
 
-from ._app import clear_caches_before_each_call, get_application, reload_automation_config
+from ._app import make_application
 from ._cache import Cache
 from ._config import config_from_disk_or_default_config
 from ._log import configure_logger, LOGGER
@@ -46,13 +52,6 @@ def main() -> int:
             run_directory=run_directory,
             log_directory=log_directory,
         )
-        app = get_application(
-            engine=automations,
-            cache=cache,
-            reloader_config=config.reloader_config,
-            reload_config=reload_automation_config,
-            clear_caches_before_each_call=clear_caches_before_each_call,
-        )
 
         daemonize()
 
@@ -63,7 +62,13 @@ def main() -> int:
             try:
                 run_server(
                     config.server_config,
-                    app,
+                    make_application(
+                        engine=automations,
+                        cache=cache,
+                        reloader_config=config.reloader_config,
+                        reload_config=_reload_automation_config,
+                        clear_caches_before_each_call=_clear_caches_before_each_call,
+                    ),
                 )
             except SystemExit:
                 LOGGER.info("Received termination signal, shutting down")
@@ -72,3 +77,14 @@ def main() -> int:
         return 1
 
     return 0
+
+
+def _reload_automation_config() -> None:
+    cache_manager.clear()
+    plugins = get_previously_loaded_plugins()
+    discovery_rulesets = extract_known_discovery_rulesets(plugins)
+    config.load(discovery_rulesets, validate_hosts=False)
+
+
+def _clear_caches_before_each_call() -> None:
+    config.get_config_cache().ruleset_matcher.clear_caches()

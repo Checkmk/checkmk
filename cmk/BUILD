@@ -104,6 +104,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "snmpsim-lextudio",
     "urllib3",
     "uvicorn",
+    "uvicorn-worker",
     "vcrpy",
     "watchdog",
 ]

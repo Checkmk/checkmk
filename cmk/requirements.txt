@@ -86,4 +86,5 @@ opentelemetry-semantic-conventions==0.50b0 # used for distributed tracing of Che
 fastapi==0.115.6 # automation helper and needed to run fake idp for cse tests
 gunicorn==23.0.0 # automation helper
 watchdog==6.0.0 # automation helper
+uvicorn-worker==0.3.0  # automation helper
 uvicorn==0.32.1  # ui-job-scheduler

@@ -785,6 +785,7 @@ gunicorn==23.0.0 \
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
+    #   uvicorn-worker
 h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
@@ -2642,6 +2643,11 @@ uvicorn==0.32.1 \
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
+    #   uvicorn-worker
+uvicorn-worker==0.3.0 \
+    --hash=sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b \
+    --hash=sha256:ef0fe8aad27b0290a9e602a256b03f5a5da3a9e5f942414ca587b645ec77dd52
+    # via -r _requirements_runtime.txt
 vcrpy==6.0.1 \
     --hash=sha256:621c3fb2d6bd8aa9f87532c688e4575bcbbde0c0afeb5ebdb7e14cac409edfdd \
     --hash=sha256:9e023fee7f892baa0bbda2f7da7c8ac51165c1c6e38ff8688683a12a4bde9278

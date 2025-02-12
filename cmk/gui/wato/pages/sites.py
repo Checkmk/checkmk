@@ -1236,6 +1236,7 @@ class ModeDistributedMonitoring(WatoMode):
                 icon="recreate_broker_certificate",
                 class_=["lockable"],
             )
+            html.write_text_permissive(_("Create remote broker certificates"))
             html.write_html(render_end_tag("div"))
 
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")

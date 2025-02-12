@@ -566,6 +566,7 @@ class FilterInvHasSoftwarePackage(Filter):
                 continue
             if to_version and self.version_is_higher(version, to_version):
                 continue
+            return True
         return False
 
     def version_is_lower(self, a: str | None, b: str | None) -> bool:

@@ -289,6 +289,61 @@ def _map_vendor(manufacturer: str) -> str:
     }.get(manufacturer, manufacturer)
 
 
+@dataclass(frozen=True, kw_only=True)
+class PhysicalMemoryArray:
+    index: int
+    location: str
+    use: str
+    error_correction_type: str
+    maximum_capacity: float | None
+
+
+def _parse_size(v: str) -> float | None:  # into Bytes (int)
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1].lower() == "tb":
+        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
+    if parts[1].lower() == "gb":
+        return int(parts[0]) * 1024 * 1024 * 1024
+    if parts[1].lower() == "mb":
+        return int(parts[0]) * 1024 * 1024
+    if parts[1].lower() == "kb":
+        return int(parts[0]) * 1024
+    return int(parts[0])
+
+
+def _parse_physical_memory_array(
+    lines: list[list[str]],
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
+) -> PhysicalMemoryArray:
+    location = ""
+    use = ""
+    error_correction_type = ""
+    maximum_capacity: float | None = None
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Location":
+                location = raw_value
+            case "Use":
+                use = raw_value
+            case "Error Correction Type":
+                error_correction_type = raw_value
+            case "Maximum Capacity":
+                maximum_capacity = _parse_size(raw_value)
+    counter.update({"physical_memory_array": 1})
+    return PhysicalMemoryArray(
+        index=counter["physical_memory_array"],
+        location=location,
+        use=use,
+        error_correction_type=error_correction_type,
+        maximum_capacity=maximum_capacity,
+    )
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -343,29 +398,18 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                         },
                     )
             case "Physical Memory Array":
-                yield _make_inventory_physical_mem_array(lines, counter)
+                physical_memory_array = _parse_physical_memory_array(lines, counter)
+                yield Attributes(
+                    path=["hardware", "memory", "arrays", str(physical_memory_array.index)],
+                    inventory_attributes={
+                        "location": physical_memory_array.location,
+                        "use": physical_memory_array.use,
+                        "error_correction": physical_memory_array.error_correction_type,
+                        "maximum_capacity": physical_memory_array.maximum_capacity,
+                    },
+                )
             case "Memory Device":
                 yield from _make_inventory_mem_device(lines, counter)
-
-
-def _make_inventory_physical_mem_array(
-    lines: list[list[str]],
-    counter: Counter[Literal["physical_memory_array", "memory_device"]],
-) -> Attributes:
-    counter.update({"physical_memory_array": 1})
-    # We expect several possible arrays
-    return Attributes(
-        path=["hardware", "memory", "arrays", str(counter["physical_memory_array"])],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Location": "location",
-                "Use": "use",
-                "Error Correction Type": "error_correction",
-                "Maximum Capacity": ("maximum_capacity", _parse_size),
-            },
-        ),
-    )
 
 
 def _make_inventory_mem_device(
@@ -433,27 +477,3 @@ inventory_plugin_dmidecode = InventoryPlugin(
     name="dmidecode",
     inventory_function=inventory_dmidecode,
 )
-
-#                              _          _
-#  _ __   __ _ _ __ ___  ___  | |__   ___| |_ __   ___ _ __ ___
-# | '_ \ / _` | '__/ __|/ _ \ | '_ \ / _ \ | '_ \ / _ \ '__/ __|
-# | |_) | (_| | |  \__ \  __/ | | | |  __/ | |_) |  __/ |  \__ \
-# | .__/ \__,_|_|  |___/\___| |_| |_|\___|_| .__/ \___|_|  |___/
-# |_|                                      |_|
-#
-
-
-def _parse_size(v: str) -> float | None:  # into Bytes (int)
-    if not v or v == "Unknown":
-        return None
-
-    parts = v.split()
-    if parts[1].lower() == "tb":
-        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
-    if parts[1].lower() == "gb":
-        return int(parts[0]) * 1024 * 1024 * 1024
-    if parts[1].lower() == "mb":
-        return int(parts[0]) * 1024 * 1024
-    if parts[1].lower() == "kb":
-        return int(parts[0]) * 1024
-    return int(parts[0])

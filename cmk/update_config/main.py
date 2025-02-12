@@ -35,10 +35,6 @@ from cmk.utils.redis import disable_redis
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
@@ -300,10 +296,9 @@ def _initialize_base_environment() -> None:
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )
-    plugins = get_previously_loaded_plugins()
     # Watch out: always load the plugins before loading the config.
     # The validation step will not be executed otherwise.
-    base_config.load(extract_known_discovery_rulesets(plugins))
+    base_config.load()
 
 
 @contextmanager

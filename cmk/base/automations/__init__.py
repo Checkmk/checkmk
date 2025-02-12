@@ -22,10 +22,6 @@ from cmk.utils.timeout import Timeout
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config, profiling
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 
 from cmk import trace
 
@@ -124,11 +120,8 @@ class Automations:
                     )
 
             if not called_from_automation_helper and automation.needs_config:
-                discovery_rulesets = extract_known_discovery_rulesets(
-                    get_previously_loaded_plugins()
-                )
                 with tracer.span("load_config"):
-                    config.load(discovery_rulesets, validate_hosts=False)
+                    config.load(validate_hosts=False)
 
             with tracer.span(f"execute_automation[{cmd}]"):
                 result = automation.execute(args, called_from_automation_helper)

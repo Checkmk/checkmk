@@ -22,7 +22,7 @@ def convert_rrds(
     split: bool,
     delete: bool,
 ) -> None:
-    config.load(discovery_rulesets=(), with_conf_d=True)
+    config.load(with_conf_d=True)
     config_cache = config.get_config_cache()
     assert isinstance(config_cache, CEEConfigCache)
     hosts_config = config.make_hosts_config()

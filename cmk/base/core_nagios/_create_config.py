@@ -28,8 +28,6 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -74,7 +72,6 @@ class NagiosCore(core_config.MonitoringCore):
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
@@ -85,7 +82,6 @@ class NagiosCore(core_config.MonitoringCore):
         self._precompile_hostchecks(
             config_path,
             plugins,
-            discovery_rules,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -133,7 +129,6 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -144,7 +139,6 @@ class NagiosCore(core_config.MonitoringCore):
             config_path,
             self._config_cache,
             plugins,
-            discovery_rules,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):

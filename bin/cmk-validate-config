@@ -9,10 +9,6 @@ from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 
 from cmk.gui import main_modules
 from cmk.gui.utils.script_helpers import gui_context
@@ -28,10 +24,9 @@ def main() -> int:
                 local_checks_dir=paths.local_checks_dir,
                 checks_dir=paths.checks_dir,
             )
-            plugins = get_previously_loaded_plugins()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
-            config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+            config.load()
 
             result = validate_mk_files()
 

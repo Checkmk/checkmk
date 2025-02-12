@@ -18,7 +18,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never
 
@@ -34,8 +34,6 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
@@ -115,14 +113,13 @@ def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
     plugins: agent_based_register.AgentBasedPlugins,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
     console.verbose("Creating precompiled host check config...")
     hosts_config = config_cache.hosts_config
 
-    save_packed_config(config_path, config_cache, discovery_rules)
+    save_packed_config(config_path, config_cache)
 
     console.verbose("Precompiling host checks...")
 

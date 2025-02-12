@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils.rulesets import RuleSetName
@@ -56,24 +56,12 @@ def get_previously_loaded_plugins() -> AgentBasedPlugins:
     )
 
 
-def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[RuleSetName]:
-    return {
-        r
-        for r in (
-            *(p.discovery_ruleset_name for p in plugins.check_plugins.values()),
-            *(p.host_label_ruleset_name for p in plugins.agent_sections.values()),
-            *(p.host_label_ruleset_name for p in plugins.snmp_sections.values()),
-        )
-        if r is not None
-    }
-
-
-def get_previously_collected_discovery_rules() -> Mapping[RuleSetName, Sequence[RuleSpec]]:
-    return stored_rulesets
-
-
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
+
+
+def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
+    stored_rulesets.setdefault(ruleset_name, [])
 
 
 def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
@@ -85,6 +73,16 @@ def add_section_plugin(section_plugin: SectionPlugin) -> None:
         registered_agent_sections[section_plugin.name] = section_plugin
     else:
         registered_snmp_sections[section_plugin.name] = section_plugin
+
+
+def get_discovery_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
+    """Returns all rulesets of a given name"""
+    return stored_rulesets.get(ruleset_name, [])
+
+
+def get_host_label_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
+    """Returns all rulesets of a given name"""
+    return stored_rulesets.get(ruleset_name, [])
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | None:
@@ -102,6 +100,14 @@ def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
     return section_name in registered_snmp_sections or section_name in registered_agent_sections
+
+
+def is_stored_ruleset(ruleset_name: RuleSetName) -> bool:
+    return ruleset_name in stored_rulesets
+
+
+def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
+    return stored_rulesets.keys()
 
 
 def set_discovery_ruleset(

@@ -17,7 +17,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -61,13 +61,7 @@ from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree, serialize_tree
-
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -80,7 +74,7 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     )
 else:
 
-    def cmc_specific_attrs(discovery_rulesets: Iterable[RuleSetName]) -> Mapping[str, int]:
+    def cmc_specific_attrs() -> Mapping[str, int]:
         return {}
 
 
@@ -550,8 +544,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if (key := result[0][i]) not in ["license_usage_history"]
         }
 
-        discovery_rulesets = extract_known_discovery_rulesets(get_previously_loaded_plugins())
-        performance_data.update(cmc_specific_attrs(discovery_rulesets))
+        performance_data.update(cmc_specific_attrs())
 
         return performance_data
 

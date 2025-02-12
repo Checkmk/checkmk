@@ -45,10 +45,6 @@ from cmk.utils.log import console
 
 import cmk.base.utils
 from cmk.base import config, profiling
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 from cmk.base.modes import modes
 
 from cmk import trace
@@ -148,7 +144,7 @@ try:
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
     if mode_name not in modes.non_config_options():
-        config.load(extract_known_discovery_rulesets(get_previously_loaded_plugins()))
+        config.load()
 
     done, exit_status = False, 0
     if mode_name is not None and mode_args is not None:

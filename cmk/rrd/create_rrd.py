@@ -8,10 +8,6 @@
 from cmk.utils.config_path import LATEST_CONFIG
 
 from cmk.base import config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 from cmk.base.config import CEEConfigCache  # pylint: disable=cmk-module-layer-violation
 from cmk.base.utils import register_sigint_handler  # pylint: disable=cmk-module-layer-violation
 
@@ -21,11 +17,7 @@ from .rrd import RRDCreator  # pylint: disable=cmk-module-layer-violation
 
 def create_rrd(rrd_interface: RRDInterface) -> None:
     def reload_config() -> CEEConfigCache:
-        plugins = (
-            get_previously_loaded_plugins()
-        )  # _have_ we loaded plugins before? Does it matter?
-        discovery_rulesets = extract_known_discovery_rulesets(plugins)
-        config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
+        config.load_packed_config(LATEST_CONFIG)
         config_cache = config.get_config_cache()
         assert isinstance(config_cache, CEEConfigCache)
         return config_cache

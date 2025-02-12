@@ -1,0 +1,9 @@
+Title: Windows: Remote Desktop Licenses: Correctly identify 'Windows Server 2025'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1739967141
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+

@@ -201,12 +201,26 @@ def _piggybacked_service_gets_updated(
     source_site: Site, target_site: Site, hostname_source: str, hostname_piggybacked: str
 ) -> bool:
     now = time.time()
-    # sleep needed to not enforce decimal positions in the agent output
+
+    # sleep needed to make sure the integer timestamp is increased.
     time.sleep(1)
+
+    # fetch new piggybacked data from the source
     source_site.schedule_check(hostname_source, "Check_MK")
-    target_site.schedule_check(hostname_piggybacked, "Check_MK")
-    service_time = get_piggybacked_service_time(source_site, hostname_source, hostname_piggybacked)
-    return service_time - now > 0
+
+    # It may take some time for the piggyback hub to forward the data.
+    # We are defensive here to avoid flakes in the test, and retry a few times.
+    # It should be quite fast, though
+    for _retry in range(5):
+        # check that the piggybacked source host has a new dataset
+        target_site.schedule_check(hostname_piggybacked, "Check_MK")
+        service_time = get_piggybacked_service_time(
+            source_site, hostname_source, hostname_piggybacked
+        )
+        if service_time - now > 0:
+            return True
+        time.sleep(1)
+    return False
 
 
 def test_piggyback_hub_disabled_globally(

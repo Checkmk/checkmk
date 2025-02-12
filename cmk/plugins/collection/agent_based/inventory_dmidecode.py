@@ -5,7 +5,6 @@
 
 import time
 from collections import Counter
-from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -19,8 +18,6 @@ from cmk.agent_based.v2 import (
 )
 
 Section = list[tuple[str, StringTable]]
-
-Converter = str | tuple[str, Callable[[str], str | float | None]]
 
 
 def parse_dmidecode(string_table: StringTable) -> Section:
@@ -344,6 +341,96 @@ def _parse_physical_memory_array(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class MemoryDevice:
+    index: int
+    total_width: str
+    data_width: str
+    form_factor: str
+    set: str
+    locator: str
+    bank_locator: str
+    type: str
+    type_detail: str
+    manufacturer: str
+    serial_number: str
+    asset_tag: str
+    part_number: str
+    speed: float | None
+    size: float | None
+
+
+def _parse_memory_device(
+    lines: list[list[str]],
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
+) -> MemoryDevice:
+    total_width = ""
+    data_width = ""
+    form_factor = ""
+    set_ = ""
+    locator = ""
+    bank_locator = ""
+    type_ = ""
+    type_detail = ""
+    manufacturer = ""
+    serial_number = ""
+    asset_tag = ""
+    part_number = ""
+    speed: float | None = None
+    size: float | None = None
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Total Width":
+                total_width = raw_value
+            case "Data Width":
+                data_width = raw_value
+            case "Form Factor":
+                form_factor = raw_value
+            case "Set":
+                set_ = raw_value
+            case "Locator":
+                locator = raw_value
+            case "Bank Locator":
+                bank_locator = raw_value
+            case "Type":
+                type_ = raw_value
+            case "Type Detail":
+                type_detail = raw_value
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Serial Number":
+                serial_number = raw_value
+            case "Asset Tag":
+                asset_tag = raw_value
+            case "Part Number":
+                part_number = raw_value
+            case "Speed":
+                speed = _parse_speed(raw_value)
+            case "Size":
+                if raw_value != "No Module Installed":
+                    size = _parse_size(raw_value)
+    counter.update({"memory_device": 1})
+    return MemoryDevice(
+        index=counter["memory_device"],
+        total_width=total_width,
+        data_width=data_width,
+        form_factor=form_factor,
+        set=set_,
+        locator=locator,
+        bank_locator=bank_locator,
+        type=type_,
+        type_detail=type_detail,
+        manufacturer=manufacturer,
+        serial_number=serial_number,
+        asset_tag=asset_tag,
+        part_number=part_number,
+        speed=speed,
+        size=size,
+    )
+
+
 def inventory_dmidecode(section: Section) -> InventoryResult:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
@@ -400,7 +487,12 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
             case "Physical Memory Array":
                 physical_memory_array = _parse_physical_memory_array(lines, counter)
                 yield Attributes(
-                    path=["hardware", "memory", "arrays", str(physical_memory_array.index)],
+                    path=[
+                        "hardware",
+                        "memory",
+                        "arrays",
+                        str(physical_memory_array.index),
+                    ],
                     inventory_attributes={
                         "location": physical_memory_array.location,
                         "use": physical_memory_array.use,
@@ -409,68 +501,36 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                     },
                 )
             case "Memory Device":
-                yield from _make_inventory_mem_device(lines, counter)
-
-
-def _make_inventory_mem_device(
-    lines: list[list[str]],
-    counter: Counter[Literal["physical_memory_array", "memory_device"]],
-) -> Generator[TableRow, None, None]:
-    device = _make_dict(
-        lines,
-        {
-            "Total Width": "total_width",  # 64 bits
-            "Data Width": "data_width",  # 64 bits
-            "Form Factor": "form_factor",  # SODIMM
-            "Set": "set",  # None
-            "Locator": "locator",  # PROC 1 DIMM 2
-            "Bank Locator": "bank_locator",  # Bank 2/3
-            "Type": "type",  # DDR2
-            "Type Detail": "type_detail",  # Synchronous
-            "Manufacturer": "manufacturer",  # Not Specified
-            "Serial Number": "serial",  # Not Specified
-            "Asset Tag": "asset_tag",  # Not Specified
-            "Part Number": "part_number",  # Not Specified
-            "Speed": "speed",  # 667 MHz
-            "Size": "size",  # 2048 MB
-        },
-    )
-    if device["size"] == "No Module Installed":
-        return
-    # Convert speed and size into numbers
-    device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
-    device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
-
-    counter.update({"memory_device": 1})
-    key_columns = {k: device.pop(k) for k in ("set",)}
-    key_columns.update({"index": counter["memory_device"]})
-    yield TableRow(
-        path=["hardware", "memory", "arrays", str(counter["physical_memory_array"]), "devices"],
-        key_columns=key_columns,
-        inventory_columns=device,
-    )
-
-
-def _make_dict(
-    lines: list[list[str]],
-    converter_map: Mapping[str, Converter],
-) -> dict[str, float | str | None]:
-    dict_: dict[str, float | str | None] = {}
-    for name, raw_value, *_rest in lines:
-        if name not in converter_map or raw_value == "Not Specified":
-            continue
-
-        converter = converter_map[name]
-        if isinstance(converter, str):
-            dict_[converter] = raw_value
-            continue
-
-        label, transform = converter
-        value = transform(raw_value)
-        if value is not None:
-            dict_[label] = value
-
-    return dict_
+                memory_device = _parse_memory_device(lines, counter)
+                if memory_device.size is not None:
+                    yield TableRow(
+                        path=[
+                            "hardware",
+                            "memory",
+                            "arrays",
+                            str(counter["physical_memory_array"]),
+                            "devices",
+                        ],
+                        key_columns={
+                            "index": memory_device.index,
+                            "set": memory_device.set,  # None
+                        },
+                        inventory_columns={
+                            "total_width": memory_device.total_width,  # 64 bits
+                            "data_width": memory_device.data_width,  # 64 bits
+                            "form_factor": memory_device.form_factor,  # SODIMM
+                            "locator": memory_device.locator,  # PROC 1 DIMM 2
+                            "bank_locator": memory_device.bank_locator,  # Bank 2/3
+                            "type": memory_device.type,  # DDR2
+                            "type_detail": memory_device.type_detail,  # Synchronous
+                            "manufacturer": memory_device.manufacturer,  # Not Specified
+                            "serial": memory_device.serial_number,  # Not Specified
+                            "asset_tag": memory_device.asset_tag,  # Not Specified
+                            "part_number": memory_device.part_number,  # Not Specified
+                            "speed": memory_device.speed,  # 667 MHz
+                            "size": memory_device.size,  # 2048 MB
+                        },
+                    )
 
 
 inventory_plugin_dmidecode = InventoryPlugin(

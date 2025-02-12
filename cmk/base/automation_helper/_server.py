@@ -31,7 +31,7 @@ class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[mis
         self.cfg.set("umask", 0o077)
         self.cfg.set("bind", f"unix:{self._config.unix_socket}")
         self.cfg.set("workers", self._config.num_workers)
-        self.cfg.set("worker_class", "uvicorn.workers.UvicornWorker")
+        self.cfg.set("worker_class", "uvicorn_worker.UvicornWorker")
         self.cfg.set("pidfile", str(self._config.pid_file))
         self.cfg.set("accesslog", str(self._config.access_log))
         self.cfg.set("errorlog", str(self._config.error_log))

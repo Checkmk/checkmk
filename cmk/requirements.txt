@@ -85,5 +85,6 @@ opentelemetry-semantic-conventions # used for distributed tracing of Checkmk
 fastapi  # automation helper and needed to run fake idp for cse tests
 gunicorn  # automation helper
 watchdog  # automation helper
+uvicorn-worker  # automation helper
 simplejson  # mk_jolokia
 uvicorn  # ui-job-scheduler

@@ -5,6 +5,7 @@
 
 import time
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -15,39 +16,6 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     StringTable,
     TableRow,
-)
-
-Section = list[tuple[str, StringTable]]
-
-
-def parse_dmidecode(string_table: StringTable) -> Section:
-    """Parse the output of `dmidecode -q | sed 's/\t/:/g'` with sep(58)
-    Note: on Linux \t is replaced by : and then the split is done by :.
-    On Windows the \t comes 1:1 and no splitting is being done.
-    So we need to split manually here.
-    """
-    # We cannot use a dict here, we may have multiple
-    # subsections with the same title and the order matters!
-    subsections = []
-    current_lines: StringTable = []  # these will not be used
-    for line in string_table:
-        # Windows plug-in keeps tabs and has no separator
-        if len(line) == 1:
-            parts = line[0].replace("\t", ":").split(":")
-            line = [x.strip() for x in parts]
-
-        if len(line) == 1:
-            current_lines = []
-            subsections.append((line[0], current_lines))
-        else:
-            current_lines.append([w.strip() for w in line[1:]])
-
-    return subsections
-
-
-agent_section_dmidecode = AgentSection(
-    name="dmidecode",
-    parse_function=parse_dmidecode,
 )
 
 
@@ -374,104 +342,169 @@ def _parse_memory_device(
     )
 
 
-def inventory_dmidecode(section: Section) -> InventoryResult:
+def parse_dmidecode(
+    string_table: StringTable,
+) -> Sequence[
+    BIOSInformation
+    | SystemInformation
+    | ChassisInformation
+    | ProcessorInformation
+    | PhysicalMemoryArray
+    | MemoryDevice
+]:
+    """Parse the output of `dmidecode -q | sed 's/\t/:/g'` with sep(58)
+    Note: on Linux \t is replaced by : and then the split is done by :.
+    On Windows the \t comes 1:1 and no splitting is being done.
+    So we need to split manually here.
+    """
+    # We cannot use a dict here, we may have multiple
+    # subsections with the same title and the order matters!
+    subsections = []
+    current_lines: StringTable = []  # these will not be used
+    for line in string_table:
+        # Windows plug-in keeps tabs and has no separator
+        if len(line) == 1:
+            parts = line[0].replace("\t", ":").split(":")
+            line = [x.strip() for x in parts]
+
+        if len(line) == 1:
+            current_lines = []
+            subsections.append((line[0], current_lines))
+        else:
+            current_lines.append([w.strip() for w in line[1:]])
+
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
+    entities: list[
+        BIOSInformation
+        | SystemInformation
+        | ChassisInformation
+        | ProcessorInformation
+        | PhysicalMemoryArray
+        | MemoryDevice
+    ] = []
     counter: Counter[Literal["physical_memory_array", "memory_device"]] = Counter()
-    for title, lines in section:
+    for title, lines in subsections:
         match title:
             case "BIOS Information":
-                bios_information = _parse_bios_information(lines)
+                entities.append(_parse_bios_information(lines))
+            case "System Information":
+                entities.append(_parse_system_information(lines))
+            case "Chassis Information":
+                entities.append(_parse_chassis_information(lines))
+            case "Processor Information":
+                entities.append(_parse_processor_information(lines))
+            case "Physical Memory Array":
+                entities.append(_parse_physical_memory_array(lines, counter))
+            case "Memory Device":
+                entities.append(_parse_memory_device(lines, counter))
+    return entities
+
+
+agent_section_dmidecode = AgentSection(
+    name="dmidecode",
+    parse_function=parse_dmidecode,
+)
+
+
+def inventory_dmidecode(
+    section: Sequence[
+        BIOSInformation
+        | SystemInformation
+        | ChassisInformation
+        | ProcessorInformation
+        | PhysicalMemoryArray
+        | MemoryDevice
+    ],
+) -> InventoryResult:
+    for entity in section:
+        match entity:
+            case BIOSInformation():
                 yield Attributes(
                     path=["software", "bios"],
                     inventory_attributes={
-                        "vendor": bios_information.vendor,
-                        "version": bios_information.version,
-                        "date": bios_information.release_date,
-                        "revision": bios_information.bios_revision,
-                        "firmware": bios_information.firmware_revision,
+                        "vendor": entity.vendor,
+                        "version": entity.version,
+                        "date": entity.release_date,
+                        "revision": entity.bios_revision,
+                        "firmware": entity.firmware_revision,
                     },
                 )
-            case "System Information":
-                system_information = _parse_system_information(lines)
+            case SystemInformation():
                 yield Attributes(
                     path=["hardware", "system"],
                     inventory_attributes={
-                        "manufacturer": system_information.manufacturer,
-                        "product": system_information.product_name,
-                        "version": system_information.version,
-                        "serial": system_information.serial_number,
-                        "uuid": system_information.uuid,
-                        "family": system_information.family,
+                        "manufacturer": entity.manufacturer,
+                        "product": entity.product_name,
+                        "version": entity.version,
+                        "serial": entity.serial_number,
+                        "uuid": entity.uuid,
+                        "family": entity.family,
                     },
                 )
-            case "Chassis Information":
-                chassis_information = _parse_chassis_information(lines)
+            case ChassisInformation():
                 yield Attributes(
                     path=["hardware", "chassis"],
                     inventory_attributes={
-                        "manufacturer": chassis_information.manufacturer,
-                        "type": chassis_information.type,
+                        "manufacturer": entity.manufacturer,
+                        "type": entity.type,
                     },
                 )
-            case "Processor Information":
-                processor_information = _parse_processor_information(lines)
-                if processor_information.status != "Unpopulated":
+            case ProcessorInformation():
+                if entity.status != "Unpopulated":
                     # Note: This node is also being filled by lnx_cpuinfo
                     yield Attributes(
                         path=["hardware", "cpu"],
                         inventory_attributes={
-                            "vendor": _map_vendor(processor_information.manufacturer),
-                            "max_speed": processor_information.max_speed,
-                            "voltage": processor_information.voltage,
-                            "status": processor_information.status,
+                            "vendor": _map_vendor(entity.manufacturer),
+                            "max_speed": entity.max_speed,
+                            "voltage": entity.voltage,
+                            "status": entity.status,
                         },
                     )
-            case "Physical Memory Array":
-                physical_memory_array = _parse_physical_memory_array(lines, counter)
+            case PhysicalMemoryArray():
                 yield Attributes(
                     path=[
                         "hardware",
                         "memory",
                         "arrays",
-                        str(physical_memory_array.index),
+                        str(entity.index),
                     ],
                     inventory_attributes={
-                        "location": physical_memory_array.location,
-                        "use": physical_memory_array.use,
-                        "error_correction": physical_memory_array.error_correction_type,
-                        "maximum_capacity": physical_memory_array.maximum_capacity,
+                        "location": entity.location,
+                        "use": entity.use,
+                        "error_correction": entity.error_correction_type,
+                        "maximum_capacity": entity.maximum_capacity,
                     },
                 )
-            case "Memory Device":
-                memory_device = _parse_memory_device(lines, counter)
-                if memory_device.size is not None:
+            case MemoryDevice():
+                if entity.size is not None:
                     yield TableRow(
                         path=[
                             "hardware",
                             "memory",
                             "arrays",
-                            str(memory_device.physical_memory_array),
+                            str(entity.physical_memory_array),
                             "devices",
                         ],
                         key_columns={
-                            "index": memory_device.index,
-                            "set": memory_device.set,  # None
+                            "index": entity.index,
+                            "set": entity.set,  # None
                         },
                         inventory_columns={
-                            "total_width": memory_device.total_width,  # 64 bits
-                            "data_width": memory_device.data_width,  # 64 bits
-                            "form_factor": memory_device.form_factor,  # SODIMM
-                            "locator": memory_device.locator,  # PROC 1 DIMM 2
-                            "bank_locator": memory_device.bank_locator,  # Bank 2/3
-                            "type": memory_device.type,  # DDR2
-                            "type_detail": memory_device.type_detail,  # Synchronous
-                            "manufacturer": memory_device.manufacturer,  # Not Specified
-                            "serial": memory_device.serial_number,  # Not Specified
-                            "asset_tag": memory_device.asset_tag,  # Not Specified
-                            "part_number": memory_device.part_number,  # Not Specified
-                            "speed": memory_device.speed,  # 667 MHz
-                            "size": memory_device.size,  # 2048 MB
+                            "total_width": entity.total_width,  # 64 bits
+                            "data_width": entity.data_width,  # 64 bits
+                            "form_factor": entity.form_factor,  # SODIMM
+                            "locator": entity.locator,  # PROC 1 DIMM 2
+                            "bank_locator": entity.bank_locator,  # Bank 2/3
+                            "type": entity.type,  # DDR2
+                            "type_detail": entity.type_detail,  # Synchronous
+                            "manufacturer": entity.manufacturer,  # Not Specified
+                            "serial": entity.serial_number,  # Not Specified
+                            "asset_tag": entity.asset_tag,  # Not Specified
+                            "part_number": entity.part_number,  # Not Specified
+                            "speed": entity.speed,  # 667 MHz
+                            "size": entity.size,  # 2048 MB
                         },
                     )
 

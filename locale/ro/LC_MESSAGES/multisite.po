@@ -2064,29 +2064,6 @@ msgstr ""
 "<p>Ați fost deconectat. Vă rugăm să reîncărcați pagina pentru a vă "
 "autentifica din nou.</p>"
 
-msgid ""
-"<p>You should have a backup configured for being able to restore your "
-"monitoring environment in case of a data loss.<br>In case you a using a "
-"virtual machine as Checkmk server and perform snapshot based backups, you "
-"should be safe.</p><p>In case you are using a 3rd party backup solution the "
-"backed up data may not be reliably backed up or not up-to-date in the moment "
-"of the backup.</p><p>It is recommended to use the Checkmk backup to create a "
-"backup of the runnning site to be sure that the data is consistent. If you "
-"need to, you can then use the 3rd party tool to archive the Checkmk backups."
-"</p>"
-msgstr ""
-"Ar trebui să aveți o copie de rezervă configurată pentru a vă putea restaura "
-"mediul de monitorizare în cazul unei pierderi de date.În cazul în care "
-"utilizați o mașină virtuală ca server Checkmk și efectuați copii de rezervă "
-"bazate pe instantanee, ar trebui să fiți în siguranță.</p><p>În cazul în "
-"care folosiți o soluție de backup de la o terță parte, este posibil ca "
-"datele copiate să nu fie copiate în mod fiabil sau să nu fie actualizate în "
-"momentul copierii de rezervă.</p><p>Se recomandă să folosiți copia de "
-"rezervă Checkmk pentru a crea o copie de rezervă a site-ului în execuție "
-"pentru a fi siguri că datele sunt consistente. Dacă este necesar, puteți "
-"utiliza apoi instrumentul terț pentru a arhiva copiile de rezervă Checkmk.</"
-"p>"
-
 #, python-format
 msgid "<tt>%s</tt> is a reserved keyword."
 msgstr "<tt>%s</tt> este un cuvânt cheie rezervat."
@@ -2412,6 +2389,15 @@ msgstr ""
 "serviciu. Puteți utiliza un <tt>$</tt> la sfârșit pentru a defini o "
 "potrivire exactă. Pentru fiecare serviciu care se potrivește pe gazdele "
 "specificate se va crea un nod copil. "
+
+msgid ""
+"A reliable backup ensures that your monitoring environment can be restored "
+"in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
+"mode=backup\">Checkmk backup</a> feature to create a consistent backup of "
+"your running site.<br><br>Virtual machine snapshots alone are not "
+"sufficient, as they do not guarantee data consistency.<br>Similarly, third-"
+"party backup solutions may fail to capture a consistent state."
+msgstr ""
 
 msgid "A report can not reference itself"
 msgstr "Un raport nu se poate referi la el însuși"
@@ -34621,6 +34607,10 @@ msgstr "Apel invalid: Nu sunt stabilite profiluri."
 msgid "Invalid call: The profile is missing."
 msgstr "Apel invalid: Profilul lipsește."
 
+#, fuzzy
+msgid "Invalid catalog data"
+msgstr "Identificator invalid"
+
 msgid "Invalid certificate"
 msgstr "Certificat invalid"
 
@@ -34637,10 +34627,6 @@ msgstr "Parametru de control invalid"
 
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
-
-#, fuzzy
-msgid "Invalid choice"
-msgstr "Subiect nevalabil"
 
 #, fuzzy, python-format
 msgid "Invalid choice %r"
@@ -34804,6 +34790,10 @@ msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 msgid "Invalid number"
 msgstr "Nume de fișier invalid"
 
+#, fuzzy
+msgid "Invalid number of tuple elements"
+msgstr "Element de bară laterală nevalabil %s"
+
 msgid "Invalid package part"
 msgstr "Parte de pachet invalidă"
 
@@ -34930,6 +34920,10 @@ msgstr "Sursă de date invalidă: %s"
 msgid "Invalid state change for service"
 msgstr "Modificări de stat ale gazdelor/serviciilor"
 
+#, fuzzy
+msgid "Invalid string"
+msgstr "Acțiune invalidă"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
@@ -34963,6 +34957,10 @@ msgstr ""
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "Cheia de rezoluție a timpului \"%s\" nu este validă"
 
+#, fuzzy
+msgid "Invalid time specific data"
+msgstr "Tipul specificat nu este valid."
+
 #, python-format
 msgid "Invalid timestep \"%d\" given"
 msgstr "Intervalul de timp \"%d\" nevalabil dat"
@@ -34972,6 +34970,10 @@ msgstr "Subiect nevalabil"
 
 msgid "Invalid transaction"
 msgstr "Tranzacție invalidă"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Test nevalabil."
 
 msgid "Invalid type specified."
 msgstr "Tipul specificat nu este valid."
@@ -76984,6 +76986,10 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Nu se poate potrivi conexiunea"
 
+#, fuzzy
+msgid "Unable to migrate value"
+msgstr "Nu a reușit să redea valoarea:"
+
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -77103,6 +77109,10 @@ msgstr ""
 "Nu se poate sincroniza grupurile imbricate (Nu s-a găsit un DN de bază comun "
 "pentru DN-ul de bază al utilizatorului \"%s\" și DN-ul de bază al grupului "
 "\"%s\")"
+
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Nu a reușit să redea valoarea:"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -88012,6 +88022,33 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "Ar trebui să aveți o copie de rezervă configurată pentru a vă putea "
+#~ "restaura mediul de monitorizare în cazul unei pierderi de date.În cazul "
+#~ "în care utilizați o mașină virtuală ca server Checkmk și efectuați copii "
+#~ "de rezervă bazate pe instantanee, ar trebui să fiți în siguranță.</"
+#~ "p><p>În cazul în care folosiți o soluție de backup de la o terță parte, "
+#~ "este posibil ca datele copiate să nu fie copiate în mod fiabil sau să nu "
+#~ "fie actualizate în momentul copierii de rezervă.</p><p>Se recomandă să "
+#~ "folosiți copia de rezervă Checkmk pentru a crea o copie de rezervă a site-"
+#~ "ului în execuție pentru a fi siguri că datele sunt consistente. Dacă este "
+#~ "necesar, puteți utiliza apoi instrumentul terț pentru a arhiva copiile de "
+#~ "rezervă Checkmk.</p>"
+
+#, fuzzy
+#~ msgid "Invalid choice"
+#~ msgstr "Subiect nevalabil"
+
 #~ msgid "Analysis results"
 #~ msgstr "Rezultatele analizei"
 
@@ -88157,20 +88194,8 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr "Subiect nevalabil"
 
 #, fuzzy
-#~ msgid "Invalid string"
-#~ msgstr "Acțiune invalidă"
-
-#, fuzzy
-#~ msgid "Invalid tuple"
-#~ msgstr "Test nevalabil."
-
-#, fuzzy
 #~ msgid "Invalid value for valuespec"
 #~ msgstr "Valoare invalidă pentru parametrul ack."
-
-#, fuzzy
-#~ msgid "Unable to transform value"
-#~ msgstr "Nu a reușit să redea valoarea:"
 
 #, fuzzy
 #~ msgid "Active Calls"

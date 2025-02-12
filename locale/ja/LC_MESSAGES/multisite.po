@@ -1980,26 +1980,6 @@ msgid ""
 msgstr ""
 "<p>ログアウトしました。再認証するには、ページを再読み込みしてください。</p>"
 
-msgid ""
-"<p>You should have a backup configured for being able to restore your "
-"monitoring environment in case of a data loss.<br>In case you a using a "
-"virtual machine as Checkmk server and perform snapshot based backups, you "
-"should be safe.</p><p>In case you are using a 3rd party backup solution the "
-"backed up data may not be reliably backed up or not up-to-date in the moment "
-"of the backup.</p><p>It is recommended to use the Checkmk backup to create a "
-"backup of the runnning site to be sure that the data is consistent. If you "
-"need to, you can then use the 3rd party tool to archive the Checkmk backups."
-"</p>"
-msgstr ""
-"<p>データが失われた場合に監視環境を復元できるようにバックアップを構成する必要"
-"があります。<br>仮想マシンをCheckmkサーバーとして使用し、スナップショットベー"
-"スのバックアップを実行する場合は、安全である必要があります。</p> <p>サード"
-"パーティのバックアップソリューションを使用している場合、バックアップされた"
-"データが確実にバックアップされないか、バックアップの時点で最新ではない可能性"
-"があります。</p> <p>推奨されます。 Checkmkバックアップを使用して、実行中のサ"
-"イトのバックアップを作成し、データの整合性を確保します。必要に応じて、サード"
-"パーティのツールを使用してCheckmkバックアップをアーカイブできます。</p>"
-
 #, python-format
 msgid "<tt>%s</tt> is a reserved keyword."
 msgstr "<tt>%s</tt> は予約済みのキーワードです。"
@@ -2310,6 +2290,15 @@ msgstr ""
 "サービスの説明の<b>始まり</b>に一致する正規表現。完全一致を定義するために、末"
 "尾の<tt> $ </tt>を使用できます。指定されたホスト上の一致するサービスごとに、1"
 "つの子ノードが作成されます。 "
+
+msgid ""
+"A reliable backup ensures that your monitoring environment can be restored "
+"in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
+"mode=backup\">Checkmk backup</a> feature to create a consistent backup of "
+"your running site.<br><br>Virtual machine snapshots alone are not "
+"sufficient, as they do not guarantee data consistency.<br>Similarly, third-"
+"party backup solutions may fail to capture a consistent state."
+msgstr ""
 
 msgid "A report can not reference itself"
 msgstr "レポートはそれ自体を参照できません"
@@ -33373,6 +33362,10 @@ msgstr "無効な呼び出し:プロファイルが設定されていません�
 msgid "Invalid call: The profile is missing."
 msgstr "無効な呼び出し: プロファイルがありません。"
 
+#, fuzzy
+msgid "Invalid catalog data"
+msgstr "無効なID"
+
 msgid "Invalid certificate"
 msgstr "無効な証明書"
 
@@ -33389,10 +33382,6 @@ msgstr "チェックパラメータが無効です"
 
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
-
-#, fuzzy
-msgid "Invalid choice"
-msgstr "無効なトピック"
 
 #, fuzzy, python-format
 msgid "Invalid choice %r"
@@ -33552,6 +33541,10 @@ msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
 msgid "Invalid number"
 msgstr "無効なファイル名"
 
+#, fuzzy
+msgid "Invalid number of tuple elements"
+msgstr "無効なサイドバー要素%s"
+
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
 
@@ -33677,6 +33670,10 @@ msgstr "無効なデータソース: %s"
 msgid "Invalid state change for service"
 msgstr "ホスト/サービスの状態変化"
 
+#, fuzzy
+msgid "Invalid string"
+msgstr "無効なアクション"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
@@ -33706,6 +33703,10 @@ msgstr "期間名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "無効な時間解決キー \"%s\" が指定されました"
 
+#, fuzzy
+msgid "Invalid time specific data"
+msgstr "無効なタイプが指定されました。"
+
 #, python-format
 msgid "Invalid timestep \"%d\" given"
 msgstr "無効なタイムステップ \"%d\"が指定されました"
@@ -33715,6 +33716,10 @@ msgstr "無効なトピック"
 
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "無効なテスト。"
 
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
@@ -74876,6 +74881,10 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "接続を一致させることができません"
 
+#, fuzzy
+msgid "Unable to migrate value"
+msgstr "値のレンダリングに失敗しました:"
+
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -74990,6 +74999,10 @@ msgid ""
 msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
+
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "値のレンダリングに失敗しました:"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -85628,6 +85641,31 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "<p>データが失われた場合に監視環境を復元できるようにバックアップを構成する"
+#~ "必要があります。<br>仮想マシンをCheckmkサーバーとして使用し、スナップ"
+#~ "ショットベースのバックアップを実行する場合は、安全である必要があります。</"
+#~ "p> <p>サードパーティのバックアップソリューションを使用している場合、バック"
+#~ "アップされたデータが確実にバックアップされないか、バックアップの時点で最新"
+#~ "ではない可能性があります。</p> <p>推奨されます。 Checkmkバックアップを使用"
+#~ "して、実行中のサイトのバックアップを作成し、データの整合性を確保します。必"
+#~ "要に応じて、サードパーティのツールを使用してCheckmkバックアップをアーカイ"
+#~ "ブできます。</p>"
+
+#, fuzzy
+#~ msgid "Invalid choice"
+#~ msgstr "無効なトピック"
+
 #~ msgid "Analysis results"
 #~ msgstr "分析結果"
 
@@ -85778,20 +85816,8 @@ msgstr ""
 #~ msgstr "無効なトピック"
 
 #, fuzzy
-#~ msgid "Invalid string"
-#~ msgstr "無効なアクション"
-
-#, fuzzy
-#~ msgid "Invalid tuple"
-#~ msgstr "無効なテスト。"
-
-#, fuzzy
 #~ msgid "Invalid value for valuespec"
 #~ msgstr "ackパラメーターの値が無効です。"
-
-#, fuzzy
-#~ msgid "Unable to transform value"
-#~ msgstr "値のレンダリングに失敗しました:"
 
 #, fuzzy
 #~ msgid "Active Calls"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-06 00:28+0000\n"
+"PO-Revision-Date: 2025-02-11 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -221,7 +221,7 @@ msgid ""
 "!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
 "%r"
 msgstr ""
-"Fehler: Erhaltene Klasse in RulespecRegistry:register_manual_check_rulespec "
+"Fehler: Empfangene Klasse in RulespecRegistry:register_manual_check_rulespec "
 "%r"
 
 #, python-format
@@ -387,13 +387,13 @@ msgstr "%d.%m.%Y"
 msgid "%a, %d. %B %Y at %H:%M"
 msgstr "%a, %d. %B %Y um %H:%M"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d %s %s."
-msgstr "%d Instanz ist %s."
+msgstr "%d %s %s."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d %s."
-msgstr "%s hinzufügen"
+msgstr "%d %s."
 
 #, python-format
 msgid "%d Filter settings"
@@ -2036,29 +2036,6 @@ msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
 msgstr "<p>Sie wurden abgemeldet. Für Neunameldung Seite neu laden.</p>"
 
-msgid ""
-"<p>You should have a backup configured for being able to restore your "
-"monitoring environment in case of a data loss.<br>In case you a using a "
-"virtual machine as Checkmk server and perform snapshot based backups, you "
-"should be safe.</p><p>In case you are using a 3rd party backup solution the "
-"backed up data may not be reliably backed up or not up-to-date in the moment "
-"of the backup.</p><p>It is recommended to use the Checkmk backup to create a "
-"backup of the runnning site to be sure that the data is consistent. If you "
-"need to, you can then use the 3rd party tool to archive the Checkmk backups."
-"</p>"
-msgstr ""
-"<p>Sie sollten eine Datensicherung konfiguriert haben, um Ihre Monitoring-"
-"Umgebung im Fall eines Datenverlusts wiederherstellen zu können.<br>Wenn Sie "
-"eine virtuelle Maschine als Checkmk-Server einsetzen und Snapshot-basierte "
-"Sicherungen durchführen, sollte dies ausreichen.</p><p>Wenn Sie eine Backup-"
-"Lösung eines Drittanbieters verwenden, kann es sein, dass die gesicherten "
-"Daten nicht zuverlässig gesichert werden oder zum Zeitpunkt der Sicherung "
-"nicht aktuell sind.</p><p>Es wird empfohlen, das Checkmk-Backup zu "
-"verwenden, um ein Backup der laufenden Website zu erstellen, um "
-"sicherzustellen, dass die Daten konsistent sind. Bei Bedarf können Sie dann "
-"das Tool eines Drittanbieters verwenden, um die Checkmk-Backups zu "
-"archivieren.</p>"
-
 #, python-format
 msgid "<tt>%s</tt> is a reserved keyword."
 msgstr "<tt>%s</tt> ist ein reserviertes Stichwort."
@@ -2385,6 +2362,15 @@ msgstr ""
 "muss. Sie können am Ende ein <tt>$</tt> anhängen, um einen vollständigen "
 "Vergleich zu erzwingen. Für jeden passenden Service auf den betreffenden "
 "Hosts wird ein Child-Knoten erzeugt. "
+
+msgid ""
+"A reliable backup ensures that your monitoring environment can be restored "
+"in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
+"mode=backup\">Checkmk backup</a> feature to create a consistent backup of "
+"your running site.<br><br>Virtual machine snapshots alone are not "
+"sufficient, as they do not guarantee data consistency.<br>Similarly, third-"
+"party backup solutions may fail to capture a consistent state."
+msgstr ""
 
 msgid "A report can not reference itself"
 msgstr "Ein Bericht kann sich nicht auf sich selbst beziehen"
@@ -3276,9 +3262,8 @@ msgstr "Alle fehlgeschlagenen Benachrichtigungen quittieren"
 msgid "Acknowledge all incompatible werks"
 msgstr "Alle inkompatiblen Werke quittieren"
 
-#, fuzzy
 msgid "Acknowledge all received messages"
-msgstr "Alle Nachrichten in %s quittiert."
+msgstr "Alle empfangenen Nachrichten quittieren"
 
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "Quittiere Host- und Service-Probleme und entferne Quittierungen"
@@ -3290,9 +3275,8 @@ msgstr "Inkompatible Werks quittieren"
 msgid "Acknowledge last %s result"
 msgstr "Bestätige letzten %s-Vorgang"
 
-#, fuzzy
 msgid "Acknowledge message"
-msgstr "Unquittierte Nachrichten"
+msgstr "Nachricht quittieren"
 
 msgid "Acknowledge problems"
 msgstr "Probleme quittieren"
@@ -10780,9 +10764,8 @@ msgstr ""
 "Es können keine Cookies vom ntop-Server '%s' für den Benutzer '%s' abgerufen "
 "werden. Bitte überprüfen Sie Ihre ntop-Verbindungseinstellungen."
 
-#, fuzzy
 msgid "Cannot be deleted manually, must expire"
-msgstr "Ereignis manuell von Benutzer gelöscht"
+msgstr "Kann nicht manuell gelöscht werden, muss ablaufen"
 
 msgid "Cannot calculate graph recipes"
 msgstr "Kann Graphdefinitionen nicht berechnen"
@@ -12807,7 +12790,7 @@ msgid "Client name"
 msgstr "Name des Kunden"
 
 msgid "Client requests received"
-msgstr "Client-Anfrage erhalten"
+msgstr "Client-Anfrage empfangen"
 
 msgid "Client secret"
 msgstr "Kunden-Geheimnis"
@@ -15966,9 +15949,8 @@ msgstr "Im Moment gibt es keine offenen Konfigurationsänderungen."
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "Im Moment gibt es keine ausstehenden Sammelbenachrichtigungen."
 
-#, fuzzy
 msgid "Currently you have no recieved messages"
-msgstr "Aktuell laufende Prozesse"
+msgstr "Sie haben derzeit keine erhaltenen Nachrichten"
 
 #, python-format
 msgid "Currently, there are %s not yet activated."
@@ -16448,19 +16430,19 @@ msgid "DHCP pools (Windows)"
 msgstr "DHCP Pool (Windows)"
 
 msgid "DHCP received declines"
-msgstr "erhaltene DHCP Ablehnungen"
+msgstr "empfangene DHCP Ablehnungen"
 
 msgid "DHCP received informs"
-msgstr "Erhaltene DHCP Konfigurationsparameter"
+msgstr "empfangene DHCP Konfigurationsparameter"
 
 msgid "DHCP received other messages"
-msgstr "Andere erhaltene DHCP Nachrichten"
+msgstr "Andere empfangene DHCP Nachrichten"
 
 msgid "DHCP received releases"
-msgstr "erhaltene DHCP Freigaben"
+msgstr "empfangene DHCP Freigaben"
 
 msgid "DHCP received requests"
-msgstr "erhaltene DHCP Anfragen"
+msgstr "empfangene DHCP Anfragen"
 
 msgid "DHCP sent acks"
 msgstr "Bestätigung einer DHCP-Anfrage"
@@ -16472,7 +16454,7 @@ msgid "DHCP sent offers"
 msgstr "gesendete DHCP Antworten"
 
 msgid "DHCP statistics (received messages)"
-msgstr "DHCP Statistik (erhaltene Nachrichten)"
+msgstr "DHCP Statistik (empfangene Nachrichten)"
 
 msgid "DHCP statistics (sent messages)"
 msgstr "DHCP Statistik (gesendete Nachrichten)"
@@ -33282,6 +33264,10 @@ msgstr "Ungültiger Anruf: Keine Profile gesetzt."
 msgid "Invalid call: The profile is missing."
 msgstr "Ungültiger Aufruf: Das Profil fehlt."
 
+#, fuzzy
+msgid "Invalid catalog data"
+msgstr "Ungültige Daten"
+
 msgid "Invalid certificate"
 msgstr "Ungültiges Zertifikat"
 
@@ -33298,9 +33284,6 @@ msgstr "Ungültiger Check-Parameter"
 
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
-
-msgid "Invalid choice"
-msgstr "Ungültige Auswahl"
 
 #, python-format
 msgid "Invalid choice %r"
@@ -33456,6 +33439,10 @@ msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 msgid "Invalid number"
 msgstr "Ungültige Nummer"
 
+#, fuzzy
+msgid "Invalid number of tuple elements"
+msgstr "Ungültiges Seitenleistenelement: %s"
+
 msgid "Invalid package part"
 msgstr "Ungültiger Teil im Paket"
 
@@ -33582,6 +33569,9 @@ msgstr "Ungültige Zustandsänderung des Hosts"
 msgid "Invalid state change for service"
 msgstr "Ungültige Zustandsänderung des Services"
 
+msgid "Invalid string"
+msgstr "Ungültige Zeichenkette"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ungültige Merkmal ID. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>_</tt>, <tt>-</"
@@ -33613,6 +33603,10 @@ msgstr ""
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "Ungültiger Schlüssel \"%s\" für Zeitauflösung angegeben"
 
+#, fuzzy
+msgid "Invalid time specific data"
+msgstr "Ungültiger Typ angegeben."
+
 #, python-format
 msgid "Invalid timestep \"%d\" given"
 msgstr "Ungültiger Schritt \"%d\" angegeben"
@@ -33622,6 +33616,9 @@ msgstr "Ungültiges Thema"
 
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
+
+msgid "Invalid tuple"
+msgstr "Ungültiges Tuple"
 
 msgid "Invalid type specified."
 msgstr "Ungültiger Typ angegeben."
@@ -39098,13 +39095,13 @@ msgid "Messages in text log files"
 msgstr "Meldungen in Textdateien"
 
 msgid "Messages received"
-msgstr "Empfangene Nachrichten"
+msgstr "Nachrichten empfangen"
 
 msgid "Messages sent"
 msgstr "Gesendete Nachrichten"
 
 msgid "Messages sent/received"
-msgstr "Gesendete/empfangene Nachrichten"
+msgstr "Nachrichten gesendet/empfangen"
 
 msgid "Messages that are spooled longer than this time will be thrown away."
 msgstr ""
@@ -41381,7 +41378,7 @@ msgid "No Azure services found."
 msgstr "Keine Azure-Services gefunden."
 
 msgid "No CSRF token received"
-msgstr "Kein CSRF-Token erhalten"
+msgstr "Kein CSRF-Token empfangen"
 
 msgid "No Conditions"
 msgstr "Keine Bedingungen"
@@ -45901,22 +45898,22 @@ msgid "PSU capacity levels"
 msgstr "PSU Kapazitätslevel"
 
 msgid "PUBLISH messages received"
-msgstr "Empfangene PUBLISH-Nachrichten"
+msgstr "PUBLISH-Nachrichten empfangen"
 
 msgid "PUBLISH messages sent"
 msgstr "Gesendete PUBLISH-Nachrichten"
 
 msgid "PUBLISH messages sent/received"
-msgstr "PUBLISH gesendete/empfangene Nachrichten"
+msgstr "PUBLISH Nachrichten gesendet/empfangen"
 
 msgid "PUBLISH messages: Bytes received"
-msgstr "PUBLISH-Nachrichten: Empfangene Bytes"
+msgstr "PUBLISH-Nachrichten: Bytes empfangen"
 
 msgid "PUBLISH messages: Bytes sent"
 msgstr "PUBLISH-Nachrichten: Gesendete Bytes"
 
 msgid "PUBLISH messages: Bytes sent/received"
-msgstr "PUBLISH-Nachrichten: Gesendete/empfangene Bytes"
+msgstr "PUBLISH-Nachrichten: Bytes gesendet/empfangen"
 
 msgid "PUT"
 msgstr "PUT"
@@ -48324,9 +48321,8 @@ msgstr "Vordefinierte Suchen"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Vorhersage der 15-minütigen CPU-Last"
 
-#, fuzzy
 msgid "Predicted notifications"
-msgstr "Service-Benachrichtigungen"
+msgstr "Vorhergesagte Benachrichtigungen"
 
 msgid "Prediction"
 msgstr "Vorhersage"
@@ -49833,7 +49829,7 @@ msgstr "Empfangene Words"
 
 #, python-format
 msgid "Received an invalid network scan result: %r"
-msgstr "Falsches Ergebis beim Netzwerk-Scan erhalten: %r"
+msgstr "Falsches Ergebnis beim Netzwerk-Scan empfangen: %r"
 
 #, python-format
 msgid ""
@@ -49845,7 +49841,7 @@ msgstr ""
 "wenden Sie sich bitte an den Checkmk-Support."
 
 msgid "Received messages"
-msgstr "Erhaltene Nachrichten"
+msgstr "Empfangene Nachrichten"
 
 msgid "Receiver protocol GRPC"
 msgstr "Empfängerprotokoll GRPC"
@@ -51663,9 +51659,8 @@ msgstr ""
 "Beziehe Informationen über Prozesse mit WMI (Windows Management "
 "Instrumentation)"
 
-#, fuzzy
 msgid "Retroactively apply max duration to existing notifications"
-msgstr "Erstellung von Benachrichtigungen einschränken"
+msgstr "Rückwirkende Anwendung der Höchstdauer auf bestehende Meldungen"
 
 msgid "Retry"
 msgstr "Wiederhole"
@@ -58272,7 +58267,7 @@ msgid "State if calibration is invalid"
 msgstr "Zustand für ungültige Kalibrierung"
 
 msgid "State if check plug-ins received no monitoring data"
-msgstr "Zustand, wenn Check-Plugins keine Monitoring-Daten erhalten haben"
+msgstr "Zustand, wenn Check-Plugins keine Monitoring-Daten empfangen haben"
 
 msgid "State if conditions above are not satisfied."
 msgstr "Zustand, wenn die Bedingungen von oben nicht erfüllt sind."
@@ -59130,9 +59125,8 @@ msgstr ""
 msgid "Store size"
 msgstr "Speichergröße"
 
-#, fuzzy
 msgid "Store the secret in cleartext"
-msgstr "speichere das Geheimnis"
+msgstr "Speichere das Geheimnis im Klartext"
 
 msgid "Stored Location"
 msgstr "Gespeicherter Ort"
@@ -60388,9 +60382,8 @@ msgstr "Benachrichtigungen testen"
 msgid "Test notifications on"
 msgstr "Benachrichtigungen testen auf"
 
-#, fuzzy
 msgid "Test results"
-msgstr "Letztes Ergebnis"
+msgstr "Testergebnisse"
 
 msgid "Test runtime"
 msgstr "Testlaufzeit"
@@ -63440,7 +63433,7 @@ msgid "The minimum allowed value is %s."
 msgstr "Der minimal erlaubte Wert ist %s."
 
 msgid "The minimum duration may not be less than 15 minutes"
-msgstr ""
+msgstr "Die Mindestdauer darf nicht weniger als 15 Minuten betragen"
 
 #, python-format
 msgid ""
@@ -73968,6 +73961,10 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Kann Verbindung nicht abgleichen"
 
+#, fuzzy
+msgid "Unable to migrate value"
+msgstr "Wert kann nicht umgewandelt werden"
+
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -74088,6 +74085,9 @@ msgstr ""
 "Synchronisation verschachtelter Gruppen nicht möglich (Es wurde keine "
 "gemeinsame Basis DN für die Benutzerbasis DN \"%s\" und die Gruppenbasis DN "
 "\"%s\" gefunden)"
+
+msgid "Unable to transform value"
+msgstr "Wert kann nicht umgewandelt werden"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -74472,13 +74472,13 @@ msgstr "Dauer der Aktualisierung"
 msgid "Update event?"
 msgstr "Ereignis aktualisieren?"
 
-#, fuzzy
 msgid "Update existing security notifications"
-msgstr "Benachrichtigungen testen"
+msgstr "existierende Sicherheitsbenachrichtigungen aktualisieren"
 
-#, fuzzy
 msgid "Update existing security notifications to use the new max duration."
-msgstr "Dauer der Sicherheitsbenachrichtigung des Benutzers"
+msgstr ""
+"Bestehende Sicherheitsbenachrichtigungen aktualisieren, um die neue "
+"Höchstdauer zu verwenden."
 
 msgid "Update host labels"
 msgstr "Host-Labels aktualisieren"
@@ -83788,9 +83788,8 @@ msgstr "invers"
 msgid "never"
 msgstr "nie"
 
-#, fuzzy
 msgid "new"
-msgstr "Neu"
+msgstr "neu"
 
 msgid "new element"
 msgstr "neues Element"
@@ -83868,11 +83867,10 @@ msgstr "nicht vorhanden"
 msgid "notif."
 msgstr "Zustellung."
 
-#, fuzzy
 msgid "notification has been sent out"
 msgid_plural "notifications have been sent out"
-msgstr[0] "Benachrichtigungen wurden verschickt. "
-msgstr[1] "Benachrichtigungen wurden verschickt. "
+msgstr[0] "Benachrichtigung wurde verschickt"
+msgstr[1] "Benachrichtigungen wurden verschickt"
 
 msgid "notification rule"
 msgstr "Benachrichtigungsregel"
@@ -83880,7 +83878,6 @@ msgstr "Benachrichtigungsregel"
 msgid "notification rules"
 msgstr "Benachrichtigungsregeln"
 
-#, fuzzy
 msgid ""
 "notification would have been sent based on your notification rules (see "
 "table: 'Predicted notifications')"
@@ -83888,11 +83885,11 @@ msgid_plural ""
 "notifications would have been sent based on your notification rules (see "
 "table: 'Predicted notifications')"
 msgstr[0] ""
-"Betroffene Benutzer informieren, wenn Benachrichtigungsregeln aktiviert sind "
-"(Benachrichtigungen senden)"
+"die Benachrichtigung wäre auf der Grundlage Ihrer Benachrichtigungsregeln "
+"gesendet worden (siehe Tabelle: ' Vorhergesagte Benachrichtigungen')"
 msgstr[1] ""
-"Betroffene Benutzer informieren, wenn Benachrichtigungsregeln aktiviert sind "
-"(Benachrichtigungen senden)"
+"die Benachrichtigungen wären auf der Grundlage Ihrer Benachrichtigungsregeln "
+"gesendet worden (siehe Tabelle: ' Vorhergesagte Benachrichtigungen')"
 
 msgid "notifications within last"
 msgstr "Benachrichtigungen innerhalb der letzten"
@@ -84147,11 +84144,10 @@ msgstr "Zeitspanne"
 msgid "range in the middle"
 msgstr "Bereich in der Mitte"
 
-#, fuzzy
 msgid "received message has been acknowledged"
 msgid_plural "received messages have been acknowledged"
-msgstr[0] "Dieses Ereignis wurde quittiert."
-msgstr[1] "Dieses Ereignis wurde quittiert."
+msgstr[0] "empfangene Nachricht wurde quittiert"
+msgstr[1] "empfangene Nachrichten wurden quittiert"
 
 msgid "regard as scheduled downtime"
 msgstr "als Wartungszeit werten"
@@ -84739,6 +84735,32 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "<p>Sie sollten eine Datensicherung konfiguriert haben, um Ihre Monitoring-"
+#~ "Umgebung im Fall eines Datenverlusts wiederherstellen zu können.<br>Wenn "
+#~ "Sie eine virtuelle Maschine als Checkmk-Server einsetzen und Snapshot-"
+#~ "basierte Sicherungen durchführen, sollte dies ausreichen.</p><p>Wenn Sie "
+#~ "eine Backup-Lösung eines Drittanbieters verwenden, kann es sein, dass die "
+#~ "gesicherten Daten nicht zuverlässig gesichert werden oder zum Zeitpunkt "
+#~ "der Sicherung nicht aktuell sind.</p><p>Es wird empfohlen, das Checkmk-"
+#~ "Backup zu verwenden, um ein Backup der laufenden Website zu erstellen, um "
+#~ "sicherzustellen, dass die Daten konsistent sind. Bei Bedarf können Sie "
+#~ "dann das Tool eines Drittanbieters verwenden, um die Checkmk-Backups zu "
+#~ "archivieren.</p>"
+
+#~ msgid "Invalid choice"
+#~ msgstr "Ungültige Auswahl"
+
 #~ msgid "Analysis results"
 #~ msgstr "Analyse-Ergebnisse"
 
@@ -84925,20 +84947,11 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Invalid optional choice"
 #~ msgstr "Ungültige optionale Auswahl"
 
-#~ msgid "Invalid string"
-#~ msgstr "Ungültige Zeichenkette"
-
-#~ msgid "Invalid tuple"
-#~ msgstr "Ungültiges Tuple"
-
 #~ msgid "Invalid value for valuespec"
 #~ msgstr "Ungültiger Wert für valuespec"
 
 #~ msgid "The configuration bundle does not contain all required objects."
 #~ msgstr "Das Konfigurationsbündel enthält nicht alle erforderlichen Objekte."
-
-#~ msgid "Unable to transform value"
-#~ msgstr "Wert kann nicht umgewandelt werden"
 
 #~ msgid "Rendering mode for valuespecs and tables"
 #~ msgstr "Rendering-Modus für Valuespecs und Tabellen"

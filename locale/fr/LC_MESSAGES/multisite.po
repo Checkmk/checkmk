@@ -2070,29 +2070,6 @@ msgstr ""
 "<p>Vous avez été déconnecté. Veuillez recharger la page pour vous "
 "réauthentifier.</p>"
 
-msgid ""
-"<p>You should have a backup configured for being able to restore your "
-"monitoring environment in case of a data loss.<br>In case you a using a "
-"virtual machine as Checkmk server and perform snapshot based backups, you "
-"should be safe.</p><p>In case you are using a 3rd party backup solution the "
-"backed up data may not be reliably backed up or not up-to-date in the moment "
-"of the backup.</p><p>It is recommended to use the Checkmk backup to create a "
-"backup of the runnning site to be sure that the data is consistent. If you "
-"need to, you can then use the 3rd party tool to archive the Checkmk backups."
-"</p>"
-msgstr ""
-"</p><p>Vous devriez avoir une sauvegarde configurée pour pouvoir restaurer "
-"votre environnement de surveillance en cas de perte de données.<br>Dans le "
-"cas où vous utilisez une machine virtuelle comme serveur Checkmk et "
-"effectuez des sauvegardes basées sur des instantanés, vous devriez être en "
-"sécurité.</p><p>Dans le cas où vous utilisez une solution de sauvegarde "
-"tierce, les données sauvegardées peuvent ne pas être fiables ou ne pas être "
-"à jour au moment de la sauvegarde.</p><p>Il est recommandé d'utiliser la "
-"sauvegarde Checkmk pour créer une sauvegarde du site en cours d'exécution "
-"pour être sûr que les données sont cohérentes. Si vous en avez besoin, vous "
-"pouvez ensuite utiliser l'outil tiers pour archiver les sauvegardes Checkmk."
-"</p>>"
-
 #, python-format
 msgid "<tt>%s</tt> is a reserved keyword."
 msgstr "<tt>%s</tt> est un mot-clé réservé."
@@ -2427,6 +2404,15 @@ msgstr ""
 "service. Vous pouvez utiliser un <tt>$</tt> de queue afin de définir une "
 "correspondance exacte. Pour chaque service correspondant sur les hôtes "
 "spécifiés, un nœud enfant sera créé. "
+
+msgid ""
+"A reliable backup ensures that your monitoring environment can be restored "
+"in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
+"mode=backup\">Checkmk backup</a> feature to create a consistent backup of "
+"your running site.<br><br>Virtual machine snapshots alone are not "
+"sufficient, as they do not guarantee data consistency.<br>Similarly, third-"
+"party backup solutions may fail to capture a consistent state."
+msgstr ""
 
 msgid "A report can not reference itself"
 msgstr "Un rapport ne peut pas se référer à lui-même"
@@ -34825,6 +34811,10 @@ msgstr "Appel non valide : Aucun profil défini."
 msgid "Invalid call: The profile is missing."
 msgstr "Appel non valide : Le profil est manquant."
 
+#, fuzzy
+msgid "Invalid catalog data"
+msgstr "Identité non valide"
+
 msgid "Invalid certificate"
 msgstr "Certificat invalide"
 
@@ -34841,10 +34831,6 @@ msgstr "Paramètre de contrôle non valide"
 
 msgid "Invalid check type"
 msgstr "Type de chèque non valide"
-
-#, fuzzy
-msgid "Invalid choice"
-msgstr "Sujet non valide"
 
 #, fuzzy, python-format
 msgid "Invalid choice %r"
@@ -35011,6 +34997,10 @@ msgstr "Type de perfomètre non valide : %s"
 msgid "Invalid number"
 msgstr "Nom de fichier non valide"
 
+#, fuzzy
+msgid "Invalid number of tuple elements"
+msgstr "Élément de barre latérale non valide %s"
+
 msgid "Invalid package part"
 msgstr "Partie de paquet non valide"
 
@@ -35139,6 +35129,10 @@ msgstr "Source de données non valide : %s"
 msgid "Invalid state change for service"
 msgstr "Changements d'état des hôtes / services"
 
+#, fuzzy
+msgid "Invalid string"
+msgstr "Action non valide"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "ID de balise non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
@@ -35172,6 +35166,10 @@ msgstr ""
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "La clé de résolution temporelle \"%s\" n'est pas valide"
 
+#, fuzzy
+msgid "Invalid time specific data"
+msgstr "Le type spécifié n'est pas valide."
+
 #, python-format
 msgid "Invalid timestep \"%d\" given"
 msgstr "Invalide timestep \"%d\" donné"
@@ -35181,6 +35179,10 @@ msgstr "Sujet non valide"
 
 msgid "Invalid transaction"
 msgstr "Transaction non valide"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Test non valide."
 
 msgid "Invalid type specified."
 msgstr "Le type spécifié n'est pas valide."
@@ -77496,6 +77498,10 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Impossible d'établir une connexion"
 
+#, fuzzy
+msgid "Unable to migrate value"
+msgstr "Impossible de transformer la valeur"
+
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -77616,6 +77622,9 @@ msgid ""
 msgstr ""
 "Impossible de synchroniser des groupes imbriqués (Pas de DN de base commun "
 "pour le DN de base de l'utilisateur \"%s\" et le DN de base du groupe \"%s\")"
+
+msgid "Unable to transform value"
+msgstr "Impossible de transformer la valeur"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -88647,6 +88656,33 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "</p><p>Vous devriez avoir une sauvegarde configurée pour pouvoir "
+#~ "restaurer votre environnement de surveillance en cas de perte de données."
+#~ "<br>Dans le cas où vous utilisez une machine virtuelle comme serveur "
+#~ "Checkmk et effectuez des sauvegardes basées sur des instantanés, vous "
+#~ "devriez être en sécurité.</p><p>Dans le cas où vous utilisez une solution "
+#~ "de sauvegarde tierce, les données sauvegardées peuvent ne pas être "
+#~ "fiables ou ne pas être à jour au moment de la sauvegarde.</p><p>Il est "
+#~ "recommandé d'utiliser la sauvegarde Checkmk pour créer une sauvegarde du "
+#~ "site en cours d'exécution pour être sûr que les données sont cohérentes. "
+#~ "Si vous en avez besoin, vous pouvez ensuite utiliser l'outil tiers pour "
+#~ "archiver les sauvegardes Checkmk.</p>>"
+
+#, fuzzy
+#~ msgid "Invalid choice"
+#~ msgstr "Sujet non valide"
+
 #, fuzzy
 #~ msgid "Analysis results"
 #~ msgstr "Dernier résultat"
@@ -88784,19 +88820,8 @@ msgstr ""
 #~ msgstr "Sujet non valide"
 
 #, fuzzy
-#~ msgid "Invalid string"
-#~ msgstr "Action non valide"
-
-#, fuzzy
-#~ msgid "Invalid tuple"
-#~ msgstr "Test non valide."
-
-#, fuzzy
 #~ msgid "Invalid value for valuespec"
 #~ msgstr "Valeur invalide pour le paramètre ack."
-
-#~ msgid "Unable to transform value"
-#~ msgstr "Impossible de transformer la valeur"
 
 #, fuzzy
 #~ msgid "Active Calls"

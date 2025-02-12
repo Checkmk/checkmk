@@ -2046,28 +2046,6 @@ msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
 msgstr "<p>U bent uitgelogd. Herlaad de pagina om u opnieuw aan te melden.</p>"
 
-msgid ""
-"<p>You should have a backup configured for being able to restore your "
-"monitoring environment in case of a data loss.<br>In case you a using a "
-"virtual machine as Checkmk server and perform snapshot based backups, you "
-"should be safe.</p><p>In case you are using a 3rd party backup solution the "
-"backed up data may not be reliably backed up or not up-to-date in the moment "
-"of the backup.</p><p>It is recommended to use the Checkmk backup to create a "
-"backup of the runnning site to be sure that the data is consistent. If you "
-"need to, you can then use the 3rd party tool to archive the Checkmk backups."
-"</p>"
-msgstr ""
-"<p>U moet een backup hebben geconfigureerd om uw monitoring omgeving te "
-"kunnen herstellen in geval van data verlies.<br>In het geval u een virtuele "
-"machine gebruikt als Checkmk server en snapshot-gebaseerde backups uitvoert, "
-"zou u veilig moeten zijn.</p><p>In het geval dat u een 3e partij back-up "
-"oplossing gebruikt, kan het zijn dat de back-up data niet betrouwbaar is of "
-"niet up-to-date is op het moment van de back-up.</p><p>Het wordt aanbevolen "
-"om de Checkmk back-up te gebruiken om een back-up te maken van de draaiende "
-"site om er zeker van te zijn dat de data consistent is. Indien nodig kunt u "
-"vervolgens de tool van derden gebruiken om de Checkmk-back-ups te archiveren."
-"</p>"
-
 #, python-format
 msgid "<tt>%s</tt> is a reserved keyword."
 msgstr "<tt>%s</tt> is een gereserveerd sleutelwoord."
@@ -2389,6 +2367,15 @@ msgstr ""
 "dienstbeschrijving. U kunt een <tt>$</tt> achteraan gebruiken om een exacte "
 "overeenkomst te definiëren. Voor elke overeenkomende dienst op de "
 "gespecificeerde hosts zal een kindnode worden aangemaakt. "
+
+msgid ""
+"A reliable backup ensures that your monitoring environment can be restored "
+"in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
+"mode=backup\">Checkmk backup</a> feature to create a consistent backup of "
+"your running site.<br><br>Virtual machine snapshots alone are not "
+"sufficient, as they do not guarantee data consistency.<br>Similarly, third-"
+"party backup solutions may fail to capture a consistent state."
+msgstr ""
 
 msgid "A report can not reference itself"
 msgstr "Een rapport kan niet naar zichzelf verwijzen"
@@ -34537,6 +34524,10 @@ msgstr "Ongeldige oproep: Geen profielen ingesteld."
 msgid "Invalid call: The profile is missing."
 msgstr "Ongeldige oproep: Het profiel ontbreekt."
 
+#, fuzzy
+msgid "Invalid catalog data"
+msgstr "Ongeldige ident"
+
 msgid "Invalid certificate"
 msgstr "Ongeldig certificaat"
 
@@ -34553,10 +34544,6 @@ msgstr "Ongeldige controleparameter"
 
 msgid "Invalid check type"
 msgstr "Ongeldig controletype"
-
-#, fuzzy
-msgid "Invalid choice"
-msgstr "Ongeldig onderwerp"
 
 #, fuzzy, python-format
 msgid "Invalid choice %r"
@@ -34720,6 +34707,10 @@ msgstr "Ongeldig fixel element type '%s'"
 msgid "Invalid number"
 msgstr "Ongeldige bestandsnaam"
 
+#, fuzzy
+msgid "Invalid number of tuple elements"
+msgstr "Ongeldig zijbalk element %s"
+
 msgid "Invalid package part"
 msgstr "Ongeldig pakketonderdeel"
 
@@ -34847,6 +34838,10 @@ msgstr "Ongeldige gegevensbron: %s"
 msgid "Invalid state change for service"
 msgstr "Staat wijzigingen van hosts / diensten"
 
+#, fuzzy
+msgid "Invalid string"
+msgstr "Ongeldige actie"
+
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ongeldige tag ID. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
@@ -34878,6 +34873,10 @@ msgstr ""
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "Ongeldige tijdresolutiesleutel \"%s\" gegeven"
 
+#, fuzzy
+msgid "Invalid time specific data"
+msgstr "Ongeldig type opgegeven."
+
 #, python-format
 msgid "Invalid timestep \"%d\" given"
 msgstr "Ongeldige tijdstap \"%d\" gegeven"
@@ -34887,6 +34886,10 @@ msgstr "Ongeldig onderwerp"
 
 msgid "Invalid transaction"
 msgstr "Ongeldige transactie"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Ongeldige test."
 
 msgid "Invalid type specified."
 msgstr "Ongeldig type opgegeven."
@@ -76809,6 +76812,10 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Kan verbinding niet tot stand brengen"
 
+#, fuzzy
+msgid "Unable to migrate value"
+msgstr "Mislukt om waarde te renderen:"
+
 #, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
@@ -76926,6 +76933,10 @@ msgid ""
 msgstr ""
 "Kan geneste groepen niet synchroniseren (geen gemeenschappelijke basis DN "
 "gevonden voor gebruiker basis DN \"%s\" en groep basis DN \"%s\")"
+
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Mislukt om waarde te renderen:"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -87825,6 +87836,32 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "<p>U moet een backup hebben geconfigureerd om uw monitoring omgeving te "
+#~ "kunnen herstellen in geval van data verlies.<br>In het geval u een "
+#~ "virtuele machine gebruikt als Checkmk server en snapshot-gebaseerde "
+#~ "backups uitvoert, zou u veilig moeten zijn.</p><p>In het geval dat u een "
+#~ "3e partij back-up oplossing gebruikt, kan het zijn dat de back-up data "
+#~ "niet betrouwbaar is of niet up-to-date is op het moment van de back-up.</"
+#~ "p><p>Het wordt aanbevolen om de Checkmk back-up te gebruiken om een back-"
+#~ "up te maken van de draaiende site om er zeker van te zijn dat de data "
+#~ "consistent is. Indien nodig kunt u vervolgens de tool van derden "
+#~ "gebruiken om de Checkmk-back-ups te archiveren.</p>"
+
+#, fuzzy
+#~ msgid "Invalid choice"
+#~ msgstr "Ongeldig onderwerp"
+
 #, fuzzy
 #~ msgid "Analysis results"
 #~ msgstr "Laatste resultaat"
@@ -87968,20 +88005,8 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgstr "Ongeldig onderwerp"
 
 #, fuzzy
-#~ msgid "Invalid string"
-#~ msgstr "Ongeldige actie"
-
-#, fuzzy
-#~ msgid "Invalid tuple"
-#~ msgstr "Ongeldige test."
-
-#, fuzzy
 #~ msgid "Invalid value for valuespec"
 #~ msgstr "Ongeldige waarde voor ack parameter."
-
-#, fuzzy
-#~ msgid "Unable to transform value"
-#~ msgstr "Mislukt om waarde te renderen:"
 
 #, fuzzy
 #~ msgid "Active Calls"

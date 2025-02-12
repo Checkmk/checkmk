@@ -85,4 +85,3 @@ types-requests==2.32.0.20241016 # used for type checking
 types-setuptools==75.6.0.20241126 # used for type checking
 types-simplejson==3.19.0.20240801 # used for type checking
 types-urllib3==1.26.25.14 # used for type checking
-uvicorn==0.32.1

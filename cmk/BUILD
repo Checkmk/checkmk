@@ -103,6 +103,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "setuptools-scm",
     "snmpsim-lextudio",
     "urllib3",
+    "uvicorn",
     "vcrpy",
     "watchdog",
 ]

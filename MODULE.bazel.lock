@@ -3302,7 +3302,7 @@
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "6aa3106e3e3f8d498a3d1aab75813412d21dcb4764304d2b2bfccf6996fc740f",
+          "@@//requirements_all_lock.txt": "f67eb096403c730455799d3ff81e32107ea76a9c183b2da3306250d890504c48",
           "@@rules_mypy~//mypy/private/requirements.txt": "a1f94fdc72dde074efe30628a69ce502984b09c61db2938601ed18d320f59d26",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -6612,7 +6612,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "checkmk-dev-tools==0.4.1 --hash=sha256:a097170c49e0f206bbba515c97b6ea9bef93a1cbb30c7ffb69914fed2bcf9c88 --hash=sha256:ba41114964d057411bb5fa1944689bc4bcf949af6879bf455e211d0dcdf62bb1"
+              "requirement": "checkmk-dev-tools==0.4.2 --hash=sha256:5c41173765bafd5325616d8e9626691b5663a019e09250b3e7b8e750abf90870 --hash=sha256:6cc24aed06b4e33c36d2f2595ee0948b991e973391ef8c354ef5e750e3a3392b"
             }
           },
           "cmk_requirements_312_elementpath": {

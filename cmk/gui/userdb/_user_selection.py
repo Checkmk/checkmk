@@ -23,7 +23,6 @@ from .store import load_users
 def UserSelection(
     only_contacts: bool = False,
     only_automation: bool = False,
-    none: str | None = None,
     # ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
@@ -33,7 +32,6 @@ def UserSelection(
         valuespec=_UserSelection(
             only_contacts=only_contacts,
             only_automation=only_automation,
-            none=none,
             title=title,
             help=help,
             default_value=default_value,
@@ -50,7 +48,6 @@ class _UserSelection(DropdownChoice[UserId]):
         self,
         only_contacts: bool = False,
         only_automation: bool = False,
-        none: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -58,7 +55,7 @@ class _UserSelection(DropdownChoice[UserId]):
     ) -> None:
         super().__init__(
             choices=self._generate_wato_users_elements_function(
-                none, only_contacts=only_contacts, only_automation=only_automation
+                only_contacts=only_contacts, only_automation=only_automation
             ),
             invalid_choice="complain",
             title=title,
@@ -68,11 +65,10 @@ class _UserSelection(DropdownChoice[UserId]):
 
     def _generate_wato_users_elements_function(
         self,
-        none_value: str | None,
         only_contacts: bool = False,
         only_automation: bool = False,
     ) -> Callable[[], list[tuple[UserId | None, str]]]:
-        def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
+        def get_wato_users() -> list[tuple[UserId | None, str]]:
             users = load_users()
             elements: list[tuple[UserId | None, str]] = sorted(
                 (name, "{} - {}".format(name, us.get("alias", name)))
@@ -80,11 +76,9 @@ class _UserSelection(DropdownChoice[UserId]):
                 if (not only_contacts or us.get("contactgroups"))
                 and (not only_automation or us.get("is_automation_user"))
             )
-            if nv is not None:
-                elements.insert(0, (None, nv))
             return elements
 
-        return lambda: get_wato_users(none_value)
+        return get_wato_users
 
     def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]

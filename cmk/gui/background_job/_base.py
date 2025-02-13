@@ -23,16 +23,13 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 
 from ._defines import BackgroundJobDefines
-from ._executor import JobExecutor, StartupError, ThreadedJobExecutor
+from ._executor import AlreadyRunningError, JobExecutor, StartupError, ThreadedJobExecutor
 from ._interface import JobTarget, SpanContextModel
 from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
 tracer = get_tracer()
-
-
-class AlreadyRunningError(Exception): ...
 
 
 class BackgroundJob:
@@ -146,13 +143,6 @@ class BackgroundJob:
         return self.get_status().user != user.id
 
     def is_active(self) -> bool:
-        if not self.exists():
-            return False
-
-        job_status = self.get_status()
-        if not job_status.is_active:
-            return False
-
         result = self._executor.is_alive(self._job_id)
         if result.is_error():
             return False
@@ -249,51 +239,16 @@ class BackgroundJob:
         override_job_log_level: int | None,
         origin_span_context: SpanContext,
     ) -> result.Result[None, AlreadyRunningError | StartupError]:
-        if self.is_active():
-            return result.Error(
-                AlreadyRunningError(f"Background Job {self._job_id} already running")
-            )
-
-        self._prepare_work_dir()
-
-        # Start processes
-        initial_status = JobStatusSpec(
-            state=JobStatusStates.INITIALIZED,
-            started=time.time(),
-            duration=0.0,
-            pid=None,
-            is_active=False,
-            loginfo={
-                "JobProgressUpdate": [],
-                "JobResult": [],
-                "JobException": [],
-            },
-            title=initial_status_args.title,
-            stoppable=initial_status_args.stoppable,
-            deletable=initial_status_args.deletable,
-            user=initial_status_args.user,
-            estimated_duration=initial_status_args.estimated_duration,
-            logfile_path=initial_status_args.logfile_path,
-            lock_wato=initial_status_args.lock_wato,
-            host_name=initial_status_args.host_name,
-        )
-        self._jobstatus_store.write(initial_status)
-
         return self._executor.start(
             self.__class__.__name__,
             self._job_id,
             self._work_dir,
             self.job_prefix,
             target,
-            initial_status_args.lock_wato,
-            initial_status_args.stoppable,
+            initial_status_args,
             override_job_log_level,
             origin_span_context=SpanContextModel.from_span_context(origin_span_context),
         )
-
-    def _prepare_work_dir(self) -> None:
-        self._delete_work_dir()
-        os.makedirs(self._work_dir)
 
     def wait_for_completion(self, timeout: float | None = None) -> bool:
         """Wait for background job to be complete.

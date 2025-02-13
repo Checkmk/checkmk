@@ -15,6 +15,7 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
     HealthResponse,
+    InitialStatusArgs,
     IsAliveRequest,
     IsAliveResponse,
     JobExecutor,
@@ -43,8 +44,7 @@ class DummyExecutor(JobExecutor):
         work_dir: str,
         span_id: str,
         target: JobTarget,
-        lock_wato: bool,
-        is_stoppable: bool,
+        initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         origin_span: SpanContextModel,
     ) -> result.Result[None, StartupError]:
@@ -140,8 +140,13 @@ def test_start() -> None:
                 work_dir="/tmp",
                 span_id="no_span",
                 target=job_target,
-                lock_wato=False,
-                is_stoppable=False,
+                initial_status_args=InitialStatusArgs(
+                    title="Hi",
+                    deletable=False,
+                    stoppable=False,
+                    lock_wato=False,
+                    user=None,
+                ),
                 override_job_log_level=None,
                 origin_span_context=SpanContextModel(
                     trace_id=0,

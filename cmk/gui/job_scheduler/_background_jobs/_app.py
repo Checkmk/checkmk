@@ -70,8 +70,7 @@ def get_application(
                         payload.target.args
                     ),
                 ),
-                payload.lock_wato,
-                payload.is_stoppable,
+                payload.initial_status_args,
                 payload.override_job_log_level,
                 payload.origin_span_context,
             )

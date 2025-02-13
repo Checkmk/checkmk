@@ -5,9 +5,12 @@
 
 import importlib
 import logging
+import os
+import shutil
 import threading
 import time
 from collections import Counter
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -16,11 +19,16 @@ import cmk.utils.resulttype as result
 from cmk.trace import get_current_span, get_tracer
 
 from ._interface import JobParameters, JobTarget, SpanContextModel
+from ._status import InitialStatusArgs, JobStatusSpec, JobStatusStates
+from ._store import JobStatusStore
 
 tracer = get_tracer()
 
 
 class StartupError(Exception): ...
+
+
+class AlreadyRunningError(Exception): ...
 
 
 @dataclass
@@ -40,11 +48,10 @@ class JobExecutor(Protocol):
         work_dir: str,
         span_id: str,
         target: JobTarget,
-        lock_wato: bool,
-        is_stoppable: bool,
+        initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         origin_span_context: SpanContextModel,
-    ) -> result.Result[None, StartupError]: ...
+    ) -> result.Result[None, StartupError | AlreadyRunningError]: ...
 
     def terminate(self, job_id: str) -> result.Result[None, StartupError]: ...
 
@@ -62,6 +69,7 @@ class ThreadedJobExecutor(JobExecutor):
 
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
+        self._start_lock = threading.Lock()
 
     @tracer.start_as_current_span("start")
     def start(
@@ -71,42 +79,79 @@ class ThreadedJobExecutor(JobExecutor):
         work_dir: str,
         span_id: str,
         target: JobTarget,
-        lock_wato: bool,
-        is_stoppable: bool,
+        initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         origin_span_context: SpanContextModel,
-    ) -> result.Result[None, StartupError]:
+    ) -> result.Result[None, StartupError | AlreadyRunningError]:
         get_current_span().set_attribute("cmk.job_id", job_id)
-        p = threading.Thread(
-            # The import hack here is done to avoid circular imports. Actually run_process is
-            # only needed in the background job. A better way to approach this, could be to
-            # launch the background job with a subprocess instead to get rid of this import
-            # hack.
-            # TODO
-            target=importlib.import_module("cmk.gui.background_job._process").run_process,
-            args=(
-                JobParameters(
-                    stop_event=(stop_event := threading.Event()),
-                    work_dir=work_dir,
-                    job_id=job_id,
-                    target=target,
-                    lock_wato=lock_wato,
-                    is_stoppable=is_stoppable,
-                    override_job_log_level=override_job_log_level,
-                    span_id=span_id,
-                    origin_span_context=origin_span_context,
+
+        with self._start_lock:
+            if (
+                job_id in ThreadedJobExecutor.running_jobs
+                and ThreadedJobExecutor.running_jobs[job_id].thread.is_alive()
+            ):
+                return result.Error(AlreadyRunningError(f"Background Job {job_id} already running"))
+
+            self._initialize_work_dir(work_dir, initial_status_args)
+
+            p = threading.Thread(
+                # The import hack here is done to avoid circular imports. Actually run_process is
+                # only needed in the background job. A better way to approach this, could be to
+                # launch the background job with a subprocess instead to get rid of this import
+                # hack.
+                # TODO
+                target=importlib.import_module("cmk.gui.background_job._process").run_process,
+                args=(
+                    JobParameters(
+                        stop_event=(stop_event := threading.Event()),
+                        work_dir=work_dir,
+                        job_id=job_id,
+                        target=target,
+                        lock_wato=initial_status_args.lock_wato,
+                        is_stoppable=initial_status_args.stoppable,
+                        override_job_log_level=override_job_log_level,
+                        span_id=span_id,
+                        origin_span_context=origin_span_context,
+                    ),
                 ),
-            ),
-            name=f"bg-{job_id}",
-        )
-        ThreadedJobExecutor._job_executions[type_id] += 1
-        ThreadedJobExecutor.running_jobs[job_id] = RunningJob(
-            thread=p,
-            stop_event=stop_event,
-            started_at=int(time.time()),
-        )
+                name=f"bg-{job_id}",
+            )
+            ThreadedJobExecutor._job_executions[type_id] += 1
+            ThreadedJobExecutor.running_jobs[job_id] = RunningJob(
+                thread=p,
+                stop_event=stop_event,
+                started_at=int(time.time()),
+            )
         p.start()
         return result.OK(None)
+
+    def _initialize_work_dir(self, work_dir: str, initial_status_args: InitialStatusArgs) -> None:
+        with suppress(FileNotFoundError):
+            shutil.rmtree(work_dir)
+        os.makedirs(work_dir)
+
+        JobStatusStore(work_dir).write(
+            JobStatusSpec(
+                state=JobStatusStates.INITIALIZED,
+                started=time.time(),
+                duration=0.0,
+                pid=None,
+                is_active=False,
+                loginfo={
+                    "JobProgressUpdate": [],
+                    "JobResult": [],
+                    "JobException": [],
+                },
+                title=initial_status_args.title,
+                stoppable=initial_status_args.stoppable,
+                deletable=initial_status_args.deletable,
+                user=initial_status_args.user,
+                estimated_duration=initial_status_args.estimated_duration,
+                logfile_path=initial_status_args.logfile_path,
+                lock_wato=initial_status_args.lock_wato,
+                host_name=initial_status_args.host_name,
+            )
+        )
 
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         try:

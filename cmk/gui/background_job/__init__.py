@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._base import AlreadyRunningError as AlreadyRunningError
 from ._base import BackgroundJob as BackgroundJob
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
+from ._executor import AlreadyRunningError as AlreadyRunningError
 from ._executor import JobExecutor as JobExecutor
 from ._executor import StartupError as StartupError
 from ._executor import ThreadedJobExecutor as ThreadedJobExecutor

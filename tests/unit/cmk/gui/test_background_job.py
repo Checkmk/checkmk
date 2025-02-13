@@ -125,16 +125,18 @@ def test_start_job() -> None:
     status = job.get_status()
     assert status.state == JobStatusStates.INITIALIZED
 
-    job.start(
-        simple_job_target(job.execute_hello),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-        override_job_log_level=logging.DEBUG,
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_hello),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+            override_job_log_level=logging.DEBUG,
+        )
+    ).is_ok(), result.error
     wait_until(job.is_active, timeout=10, interval=0.1)
 
     assert job.start(
@@ -150,12 +152,7 @@ def test_start_job() -> None:
 
     job.finish_hello_event.set()
 
-    wait_until(
-        lambda: job.get_status().state
-        not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
-        timeout=10,
-        interval=0.1,
-    )
+    wait_until(lambda: not job.is_active(), timeout=10, interval=0.1)
 
     status = job.get_status()
     assert status.state == JobStatusStates.FINISHED
@@ -170,15 +167,17 @@ def test_start_job() -> None:
 @pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
-    job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
 
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
@@ -190,6 +189,7 @@ def test_stop_job() -> None:
     assert status.state == JobStatusStates.RUNNING
 
     job.stop()
+    wait_until(lambda: not job.is_active(), timeout=10, interval=0.1)
 
     status = job.get_status()
     assert status.state == JobStatusStates.STOPPED
@@ -220,15 +220,17 @@ def test_job_status_not_started() -> None:
 @pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
-    job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=10,
@@ -253,15 +255,17 @@ def test_job_status_while_running() -> None:
 @pytest.mark.usefixtures("request_context", "allow_background_jobs")
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
-    job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=20,
@@ -293,15 +297,17 @@ def test_running_job_ids_none() -> None:
 @pytest.mark.usefixtures("allow_background_jobs")
 def test_running_job_ids_one_running() -> None:
     job = DummyBackgroundJob()
-    job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=20,
@@ -319,15 +325,17 @@ def test_wait_for_background_jobs_while_one_running_for_too_long(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     job = DummyBackgroundJob()
-    job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=20,
@@ -355,17 +363,17 @@ def test_wait_for_background_jobs_while_one_running_but_finishes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     job = DummyBackgroundJob()
-    result = job.start(
-        simple_job_target(job.execute_endless),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            deletable=False,
-            stoppable=True,
-            user=None,
-        ),
-    )
-    if result.is_error():
-        raise result.error
+    assert (
+        result := job.start(
+            simple_job_target(job.execute_endless),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=None,
+            ),
+        )
+    ).is_ok(), result.error
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=20,
@@ -407,18 +415,20 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
         status = job.get_status()
         assert status.state == JobStatusStates.INITIALIZED
 
-        job.start(
-            JobTarget(
-                callable=job_callback,
-                args=JobArgs(signal_file=terminate_signal_file),
-            ),
-            InitialStatusArgs(
-                title=job.gui_title(),
-                deletable=False,
-                stoppable=True,
-                user=None,
-            ),
-        )
+        assert (
+            result := job.start(
+                JobTarget(
+                    callable=job_callback,
+                    args=JobArgs(signal_file=terminate_signal_file),
+                ),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    deletable=False,
+                    stoppable=True,
+                    user=None,
+                ),
+            )
+        ).is_ok(), result.error
         wait_until(job.is_active, timeout=20, interval=0.1)
         assert job.is_active()
 

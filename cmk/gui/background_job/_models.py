@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from ._interface import JobTarget, SpanContextModel
+from ._status import InitialStatusArgs
 
 
 class StartRequest(BaseModel, frozen=True):
@@ -18,8 +19,7 @@ class StartRequest(BaseModel, frozen=True):
     # Args will be parsed specifically per job
     # (See cmk.gui.job_scheduler._background_jobs._app.get_application.start)
     target: JobTarget[dict]
-    lock_wato: bool
-    is_stoppable: bool
+    initial_status_args: InitialStatusArgs
     override_job_log_level: int | None
     origin_span_context: SpanContextModel
 

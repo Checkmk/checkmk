@@ -59,6 +59,7 @@ py_test(
         requirement("cryptography"),
         requirement("pytest"),
         requirement("time-machine"),
+        requirement("python-dateutil"),
     ],
 )
 

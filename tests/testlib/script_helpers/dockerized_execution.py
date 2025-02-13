@@ -2,6 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""This module provides functionality to execute tests within a Docker container.
+
+It handles the preparation of the Docker environment, executing specified test commands within
+the container, and collecting and storing the test results.
+"""
 
 from __future__ import annotations
 

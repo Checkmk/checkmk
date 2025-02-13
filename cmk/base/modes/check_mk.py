@@ -1254,12 +1254,12 @@ modes.register(
 
 
 def mode_flush(hosts: list[HostName]) -> None:
-    _plugins = load_checks_and_config()
+    plugins = load_checks_and_config()
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
     effective_host_callback = config.AutochecksConfigurer(
-        config_cache, agent_based_register.get_previously_loaded_plugins().check_plugins
+        config_cache, plugins.check_plugins
     ).effective_host
 
     if not hosts:
@@ -1272,7 +1272,7 @@ def mode_flush(hosts: list[HostName]) -> None:
         )
 
     effective_host_callback = config.AutochecksConfigurer(
-        config_cache, agent_based_register.get_previously_loaded_plugins().check_plugins
+        config_cache, plugins.check_plugins
     ).effective_host
     for host in hosts:
         print_("%-20s: " % host)

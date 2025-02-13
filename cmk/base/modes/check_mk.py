@@ -367,7 +367,7 @@ _SNMP_BACKEND_OPTION: Final = Option(
 
 
 def mode_list_hosts(options: dict, args: list[str]) -> None:
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     config_cache = config.get_config_cache()
     hosts = _list_all_hosts(
         config_cache,
@@ -454,7 +454,7 @@ modes.register(
 
 
 def mode_list_tag(args: list[str]) -> None:
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args))
     print_("\n".join(sorted(hosts)))
     if hosts:
@@ -905,7 +905,7 @@ modes.register(
 
 
 def mode_update_dns_cache() -> None:
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
     ip_lookup.update_dns_cache(
@@ -941,7 +941,7 @@ modes.register(
 
 
 def mode_cleanup_piggyback() -> None:
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     max_age = config.get_config_cache().get_definitive_piggybacked_data_expiry_age()
     piggyback_backend.cleanup_piggyback_files(
         cut_off_timestamp=time.time() - max_age, omd_root=cmk.utils.paths.omd_root
@@ -1108,7 +1108,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     config_cache = config.get_config_cache()
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
@@ -1190,7 +1190,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    _plugins = load_checks_and_config()
+    config.load(discovery_rulesets=())
     config_cache = config.get_config_cache()
     oid, *hostnames = args
 

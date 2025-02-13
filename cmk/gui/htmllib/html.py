@@ -379,6 +379,8 @@ class HTMLGenerator(HTMLWriter):
             classes += ["screenshotmode"]
         if user.inline_help_as_text:
             classes += ["inline_help_as_text"]
+        if user.get_attribute("contextual_help_icon"):
+            classes += ["inline_help_hide_icon"]
         return classes
 
     def html_foot(self) -> None:

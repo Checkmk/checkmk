@@ -12,7 +12,7 @@ info = [
     [
         "C:\\Program",
         "Files",
-        "(x86)\\check_mk\\plugins\\windows_multipath.vbs(19,",
+        "(x86)\\check_mk\\plugins\\windows_multipath.ps1(19,",
         "1)",
         "(null):",
         "0x80041010",

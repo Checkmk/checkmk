@@ -53,7 +53,6 @@ from cmk.utils.paths import (
     autodiscovery_dir,
     base_autochecks_dir,
     base_discovered_host_labels_dir,
-    checks_dir,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
@@ -2028,34 +2027,12 @@ class AutomationGetConfiguration(Automation):
                 "This automation call should never be called from the automation helper "
                 "as it can only return the active config and we want the default config."
             )
-        # This needed the checks in the past. This was necessary to get the
-        # default values of check related global settings. This kind of
-        # global settings have been removed from the global settings page
-        # of WATO. We can now disable this (by default).
-        # We need to be careful here, because users may have added their own
-        # global settings related to checks. To deal with this, we check
-        # for requested but missing global variables and load the checks in
-        # case one is missing. When it's still missing then, we silenlty skip
-        # this option (like before).
 
         # We read the list of variable names from stdin since
         # that could be too much for the command line
         variable_names = ast.literal_eval(sys.stdin.read())
 
         config.load(discovery_rulesets=(), with_conf_d=False)
-
-        missing_variables = [v for v in variable_names if not hasattr(config, v)]
-
-        if missing_variables:
-            config.load_all_plugins(
-                local_checks_dir=local_checks_dir,
-                checks_dir=checks_dir,
-            )
-            plugins = agent_based_register.get_previously_loaded_plugins()
-            config.load(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins),
-                with_conf_d=False,
-            )
 
         result = {}
         for varname in variable_names:

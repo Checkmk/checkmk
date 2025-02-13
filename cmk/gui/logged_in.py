@@ -188,11 +188,11 @@ class LoggedInUser:
         return self.load_file("start_url", None)
 
     @property
-    def show_help(self) -> bool:
+    def inline_help_as_text(self) -> bool:
         return self.load_file("help", False)
 
-    @show_help.setter
-    def show_help(self, value: bool) -> None:
+    @inline_help_as_text.setter
+    def inline_help_as_text(self, value: bool) -> None:
         self.save_file("help", value)
 
     @property

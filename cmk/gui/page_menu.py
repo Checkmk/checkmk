@@ -426,7 +426,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=_("Show inline help"),
-                        icon_name="toggle_" + ("on" if user.show_help else "off"),
+                        icon_name="toggle_" + ("on" if user.inline_help_as_text else "off"),
                         item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",
                         is_enabled=False,

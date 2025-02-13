@@ -16,7 +16,7 @@ import {add_class, has_class, remove_class} from "./utils";
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
-const SHOW_HELP_CLASS = "show_help";
+const SHOW_HELP_CLASS = "inline_help_as_text";
 
 function is_help_active() {
     return has_class(document.body, SHOW_HELP_CLASS);

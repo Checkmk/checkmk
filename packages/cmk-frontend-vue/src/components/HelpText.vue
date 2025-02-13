@@ -72,8 +72,8 @@ const closeHelp = () => {
 </template>
 
 <style scoped>
-body.show_help .help-text__trigger,
-body.show_help .help-text__icon {
+body.inline_help_as_text .help-text__trigger,
+body.inline_help_as_text .help-text__icon {
   display: none;
 }
 

@@ -377,8 +377,8 @@ class HTMLGenerator(HTMLWriter):
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
-        if user.show_help:
-            classes += ["show_help"]
+        if user.inline_help_as_text:
+            classes += ["inline_help_as_text"]
         return classes
 
     def html_foot(self) -> None:

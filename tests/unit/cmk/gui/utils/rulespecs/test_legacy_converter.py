@@ -1590,7 +1590,7 @@ def _compare_specs(actual: object, expected: object) -> None:
             continue
 
         # cached access to the password store
-        if "functools._lru_cache_wrapper" in str(actual_value):
+        if "ThreadLocalLRUCache" in str(actual_value):
             continue
 
         try:

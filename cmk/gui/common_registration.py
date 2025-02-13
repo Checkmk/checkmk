@@ -23,6 +23,7 @@ from cmk.gui import (
     graphing,
     gui_background_job,
     help_menu,
+    hooks,
     inventory,
     login,
     logwatch,
@@ -152,6 +153,7 @@ def register(
     help_developer_items: Callable[[], list[TopicMenuItem]],
     help_about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> None:
+    hooks.register_thread_cache_cleanup()
     pagetypes.register(mega_menu_registry)
     help_menu.register(
         mega_menu_registry,

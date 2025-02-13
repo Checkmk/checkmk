@@ -1378,7 +1378,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
 
     from cmk.base.core_nagios import create_config
 
-    _plugins = load_checks_and_config()
+    plugins = load_checks_and_config()
 
     hostnames = args if args else None
 
@@ -1419,7 +1419,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         sys.stdout,
         next(VersionedConfigPath.current()),
         config_cache,
-        agent_based_register.get_previously_loaded_plugins().check_plugins,
+        plugins.check_plugins,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
         passwords=cmk.utils.password_store.load(

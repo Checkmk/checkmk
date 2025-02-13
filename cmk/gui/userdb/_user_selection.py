@@ -28,6 +28,7 @@ def UserSelection(
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[UserId] = DEF_VALUE,
 ) -> Transform[UserId | None]:
+    # this has been ported to formspec be carfule about changes!
     return Transform(
         valuespec=_UserSelection(
             only_contacts=only_contacts,
@@ -54,7 +55,7 @@ class _UserSelection(DropdownChoice[UserId]):
         default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     ) -> None:
         super().__init__(
-            choices=self._generate_wato_users_elements_function(
+            choices=generate_wato_users_elements_function(
                 only_contacts=only_contacts, only_automation=only_automation
             ),
             invalid_choice="complain",
@@ -63,22 +64,22 @@ class _UserSelection(DropdownChoice[UserId]):
             default_value=default_value,
         )
 
-    def _generate_wato_users_elements_function(
-        self,
-        only_contacts: bool = False,
-        only_automation: bool = False,
-    ) -> Callable[[], list[tuple[UserId | None, str]]]:
-        def get_wato_users() -> list[tuple[UserId | None, str]]:
-            users = load_users()
-            elements: list[tuple[UserId | None, str]] = sorted(
-                (name, "{} - {}".format(name, us.get("alias", name)))
-                for (name, us) in users.items()
-                if (not only_contacts or us.get("contactgroups"))
-                and (not only_automation or us.get("is_automation_user"))
-            )
-            return elements
-
-        return get_wato_users
-
     def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
+
+
+def generate_wato_users_elements_function(
+    only_contacts: bool = False,
+    only_automation: bool = False,
+) -> Callable[[], list[tuple[UserId | None, str]]]:
+    def get_wato_users() -> list[tuple[UserId | None, str]]:
+        users = load_users()
+        elements: list[tuple[UserId | None, str]] = sorted(
+            (name, "{} - {}".format(name, us.get("alias", name)))
+            for (name, us) in users.items()
+            if (not only_contacts or us.get("contactgroups"))
+            and (not only_automation or us.get("is_automation_user"))
+        )
+        return elements
+
+    return get_wato_users

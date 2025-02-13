@@ -15,6 +15,7 @@ from cmk.ccc.version import Edition
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.user import UserId
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
@@ -28,8 +29,10 @@ from cmk.gui.form_specs.private import (
     ListOfStrings,
     MonitoredHostExtended,
     SingleChoiceExtended,
+    UserSelection,
 )
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
+from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
@@ -823,6 +826,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case LegacyValueSpec():
             return to_convert.valuespec
+
+        case UserSelection():
+            return _convert_to_legacy_user_selection(to_convert, localizer)
 
         case other:
             raise NotImplementedError(other)
@@ -2492,4 +2498,17 @@ def _convert_to_legacy_password(
         validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
         if to_convert.custom_validate
         else None,
+    )
+
+
+def _convert_to_legacy_user_selection(
+    to_convert: UserSelection, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Transform[UserId | None]:
+    legacy_filter = to_convert.filter.to_legacy()
+
+    return LegacyUserSelection(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        only_contacts=legacy_filter.only_contacts,
+        only_automation=legacy_filter.only_automation,
     )

@@ -28,6 +28,7 @@ from .optional_choice import OptionalChoice
 from .single_choice_editable import SingleChoiceEditable
 from .string_autocompleter import StringAutocompleter
 from .time_specific import TimeSpecific
+from .user_selection import UserSelection
 from .validators import not_empty
 
 __all__ = [
@@ -58,4 +59,5 @@ __all__ = [
     "Labels",
     "World",
     "Source",
+    "UserSelection",
 ]

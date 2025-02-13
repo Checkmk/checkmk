@@ -21,10 +21,7 @@ from tests.testlib.common.repo import (
     current_branch_version,
     repo_path,
 )
-from tests.testlib.common.utils import (
-    edition_from_env,
-    version_spec_from_env,
-)
+from tests.testlib.common.utils import version_spec_from_env
 
 from cmk.ccc.version import Edition
 
@@ -239,6 +236,24 @@ def version_from_env(
         edition_from_env(fallback_edition),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
+
+
+def parse_raw_edition(raw_edition: str) -> Edition:
+    try:
+        return Edition[raw_edition.upper()]
+    except KeyError:
+        for edition in Edition:
+            if edition.long == raw_edition:
+                return edition
+    raise ValueError(f"Unknown edition: {raw_edition}")
+
+
+def edition_from_env(fallback: Edition | None = None) -> Edition:
+    if raw_editon := os.environ.get("EDITION"):
+        return parse_raw_edition(raw_editon)
+    if fallback:
+        return fallback
+    raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
 
 
 def get_min_version(edition: Edition | None = None) -> CMKVersion:

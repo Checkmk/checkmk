@@ -27,7 +27,7 @@ from pprint import pformat
 from typing import Any, Final, Literal, overload
 
 import pytest
-import pytest_check  # type: ignore[import-untyped]
+import pytest_check
 
 from tests.testlib.common.repo import current_base_branch_name, repo_path
 from tests.testlib.common.utils import (

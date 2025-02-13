@@ -74,6 +74,7 @@ recurring_ical_events==2.0.2 # used for parsing recurring events in icalendar ob
 netapp-ontap==9.14.1.0 # used by netapp special agent
 redfish~= 3.2.2 # used for management board monitoring via Redfish, used by optional MKP
 robotframework~=7.0 # used for parsing robotmk agent data
+oracledb==2.5.1 # used by active check_sql
 opentelemetry-api==1.29.0 # used for distributed tracing of Checkmk
 opentelemetry-sdk==1.29.0 # used for distributed tracing of Checkmk
 opentelemetry-exporter-otlp==1.29.0 # used for distributed tracing of Checkmk

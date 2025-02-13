@@ -154,8 +154,7 @@ def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
 
 @pytest.mark.parametrize("pip_cmd", SUPPORTED_PIP_CMDS)
 def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand) -> None:
-    # We're using here another package which is needed for check_sql but not deployed by us
-    package_name = "oracledb"
+    package_name = "trickkiste"
     if pip_cmd.needs_target_as_commandline:
         command = pip_cmd.command + [
             "install",

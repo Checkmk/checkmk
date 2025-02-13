@@ -2931,7 +2931,7 @@
         "usagesDigest": "qpZNKU6hTsq/hD7VT5JN435zego/ibD9dCDtPxVeEU0=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "d6fbfa39534d7d0d5fd738322f814823b73ec92ea15a7e1b9c3657dc40de979e",
+          "@@//requirements_all_lock.txt": "4ad02ca2772be604b6ea72f2ecbaf392873c997a62f8856cc3923b54fe549b4a",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"
         },
@@ -5312,7 +5312,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "checkmk-dev-tools==0.4.2     --hash=sha256:5c41173765bafd5325616d8e9626691b5663a019e09250b3e7b8e750abf90870     --hash=sha256:6cc24aed06b4e33c36d2f2595ee0948b991e973391ef8c354ef5e750e3a3392b"
+              "requirement": "checkmk-dev-tools==0.4.3     --hash=sha256:135120ce312eee6c0dbecd5c7d6ef22d75315a38f8301db976c52b666657a2b7     --hash=sha256:c045dadc1a53073cac290cf52debf51f72f00216dfd5a40e703e2f5ca8fe337e"
             }
           },
           "cmk_requirements_312_msal_extensions": {

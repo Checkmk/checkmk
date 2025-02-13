@@ -140,13 +140,13 @@ function Start-ShortenPath($tgt_link, $path) {
 function Invoke-Cargo-With-Explicit-Package {
     param(
         [Parameter(
-            Mandatory=$True,
+            Mandatory = $True,
             Position = 0
         )]
         $cmd,
         [Parameter(
-            Mandatory=$False,
-            ValueFromRemainingArguments=$true,
+            Mandatory = $False,
+            ValueFromRemainingArguments = $true,
             Position = 1
         )]
         $further_args
@@ -236,6 +236,8 @@ try {
         if (-not (Test-Administrator)) {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
+        # TODO(timi): move it to CI
+        .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.4.0
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {

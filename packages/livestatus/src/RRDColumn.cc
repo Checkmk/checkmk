@@ -277,7 +277,13 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     auto [ptr, ec] =
         std::from_chars(dsname_view.begin(), dsname_view.end(), dsname);
     if (ec != std::errc{}) {
-        Warning(logger) << "Invalid location: " << location.data_source_name_;
+        Warning(logger)
+            << "cannot locate an RRD containing the metric of the RPN expression '"
+            << args_.rpn << "' for the "
+            << (service_description == dummy_service_description()
+                    ? "host '" + host_name + "'"
+                    : "service '" + host_name + ";" + service_description +
+                          "'");
         return {};
     }
 

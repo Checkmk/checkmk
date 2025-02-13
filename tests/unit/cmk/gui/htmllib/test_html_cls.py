@@ -80,8 +80,8 @@ def test_render_help_text() -> None:
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
-    assert user.show_help is True
+    monkeypatch.setattr(LoggedInUser, "inline_help_as_text", property(lambda s: True))
+    assert user.inline_help_as_text is True
     assert compare_html(
         html.render_help("äbc"),
         HTML.without_escaping(

@@ -19,7 +19,7 @@ from cmk.utils import paths
 
 from cmk.gui.i18n import _
 
-from ._executor import JobExecutor, StartupError
+from ._executor import AlreadyRunningError, JobExecutor, StartupError
 from ._interface import JobTarget, SpanContextModel
 from ._models import (
     HealthResponse,
@@ -29,6 +29,7 @@ from ._models import (
     StartResponse,
     TerminateRequest,
 )
+from ._status import InitialStatusArgs
 
 JOB_SCHEDULER_HOST: Final = "localhost"
 JOB_SCHEDULER_BASE_URL: Final = "http://local-ui-job-scheduler"
@@ -49,11 +50,10 @@ class JobSchedulerExecutor(JobExecutor):
         work_dir: str,
         span_id: str,
         target: JobTarget,
-        lock_wato: bool,
-        is_stoppable: bool,
+        initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
         origin_span_context: SpanContextModel,
-    ) -> result.Result[None, StartupError]:
+    ) -> result.Result[None, StartupError | AlreadyRunningError]:
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/start",
             json=StartRequest(
@@ -65,8 +65,7 @@ class JobSchedulerExecutor(JobExecutor):
                     callable=target.callable,
                     args=target.args.model_dump(mode="json"),
                 ),
-                lock_wato=lock_wato,
-                is_stoppable=is_stoppable,
+                initial_status_args=initial_status_args,
                 override_job_log_level=override_job_log_level,
                 origin_span_context=origin_span_context,
             ).model_dump(mode="json"),
@@ -77,6 +76,8 @@ class JobSchedulerExecutor(JobExecutor):
         if not response.success:
             if response.error_type == "StartupError":
                 return result.Error(StartupError(response.error_message))
+            elif response.error_type == "AlreadyRunningError":
+                return result.Error(AlreadyRunningError(response.error_message))
             raise TypeError(f"Unhandled error: {response.error_type} - {response.error_message}")
 
         return result.OK(None)

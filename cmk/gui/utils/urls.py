@@ -449,6 +449,7 @@ class DocReference(Enum):
     LDAP = "ldap"
     MKPS = "mkps"
     NOTIFICATIONS = "notifications"
+    NTOPNG_CONNECT = "ntop#ntop_connect"
     PIGGYBACK = "piggyback"
     PROMETHEUS = "monitoring_prometheus"
     REGEXES = "regexes"

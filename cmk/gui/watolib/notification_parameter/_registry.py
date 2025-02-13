@@ -135,7 +135,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
             wrapped_form_spec=Catalog(
                 elements={
                     "general": Topic(
-                        title=Title("Parameter properties"),
+                        title=Title("General properties"),
                         elements={
                             "description": TopicElement(
                                 parameter_form=String(

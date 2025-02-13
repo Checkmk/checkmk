@@ -339,6 +339,7 @@ CEE_UNUSED_PACKAGES = [
     "types-python-dateutil",
     "types-markdown",
     "types-pika-ts",
+    "oracledb",  # actually used now by check_sql but those files are not yet checked to to missing .py extension (CMK-21797)
 ]
 
 

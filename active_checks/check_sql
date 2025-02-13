@@ -278,10 +278,7 @@ def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> A
     sys.path.append(
         f"/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     )
-    try:
-        import oracledb  # type: ignore[import-not-found]
-    except ImportError as exc:
-        bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
+    import oracledb
 
     try:
         oracledb.init_oracle_client()
@@ -303,10 +300,7 @@ def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> A
 def oracle_execute(
     cursor: Any, cmd: str, inpt: Sequence[str], procedure: bool
 ) -> list[tuple[Any, ...]]:
-    try:
-        import oracledb
-    except ImportError as exc:
-        bail_out(3, "%s. Please install it via 'pip install oracledb'." % exc)
+    import oracledb
 
     if procedure:
         LOG.info("SQL Procedure Name: %s", cmd)

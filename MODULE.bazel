@@ -108,6 +108,12 @@ types.requirements(
 use_repo(types, "cmk_types")
 
 bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"]
+)
+
 bazel_dep(
     # Transitive dependency for protobuf.
     # Req anything with a version equal or greater than 1.64.0.

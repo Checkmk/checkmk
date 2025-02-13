@@ -1,0 +1,128 @@
+diff --git a/src/google/protobuf/compiler/java/full/enum.cc b/src/google/protobuf/compiler/java/full/enum.cc
+index 30db3b413..eaec94691 100644
+--- a/src/google/protobuf/compiler/java/full/enum.cc
++++ b/src/google/protobuf/compiler/java/full/enum.cc
+@@ -28,6 +28,7 @@
+ 
+ // Must be last.
+ #include "google/protobuf/port_def.inc"
++#pragma GCC diagnostic ignored "-Wsign-compare"
+ 
+ namespace google {
+ namespace protobuf {
+@@ -396,4 +397,5 @@ bool EnumNonLiteGenerator::CanUseEnumValues() {
+ }  // namespace protobuf
+ }  // namespace google
+ 
++#pragma GCC diagnostic pop
+ #include "google/protobuf/port_undef.inc"
+diff --git a/src/google/protobuf/compiler/java/full/message.cc b/src/google/protobuf/compiler/java/full/message.cc
+index 3e3e49999..85e3407a6 100644
+--- a/src/google/protobuf/compiler/java/full/message.cc
++++ b/src/google/protobuf/compiler/java/full/message.cc
+@@ -804,7 +804,9 @@ void ImmutableMessageGenerator::GenerateDescriptorMethods(
+         "  switch (number) {\n");
+     printer->Indent();
+     printer->Indent();
++#pragma GCC diagnostic ignored "-Wsign-compare"
+     for (int i = 0; i < map_fields.size(); ++i) {
++#pragma GCC diagnostic pop
+       const FieldDescriptor* field = map_fields[i];
+       const FieldGeneratorInfo* info = context_->GetFieldGeneratorInfo(field);
+       printer->Print(
+diff --git a/src/google/protobuf/compiler/java/full/message_builder.cc b/src/google/protobuf/compiler/java/full/message_builder.cc
+index 53de5d324..10d0138d2 100644
+--- a/src/google/protobuf/compiler/java/full/message_builder.cc
++++ b/src/google/protobuf/compiler/java/full/message_builder.cc
+@@ -38,6 +38,7 @@
+ 
+ // Must be last.
+ #include "google/protobuf/port_def.inc"
++#pragma GCC diagnostic ignored "-Wsign-compare"
+ 
+ namespace google {
+ namespace protobuf {
+@@ -816,4 +817,5 @@ void MessageBuilderGenerator::GenerateIsInitialized(io::Printer* printer) {
+ }  // namespace protobuf
+ }  // namespace google
+ 
++#pragma GCC diagnostic pop
+ #include "google/protobuf/port_undef.inc"
+diff --git a/src/google/protobuf/compiler/java/lite/enum.cc b/src/google/protobuf/compiler/java/lite/enum.cc
+index 8e3c57cf9..4c66c5b2a 100644
+--- a/src/google/protobuf/compiler/java/lite/enum.cc
++++ b/src/google/protobuf/compiler/java/lite/enum.cc
+@@ -25,6 +25,7 @@
+ #include "google/protobuf/descriptor.pb.h"
+ #include "google/protobuf/io/printer.h"
+ 
++#pragma GCC diagnostic ignored "-Wsign-compare"
+ namespace google {
+ namespace protobuf {
+ namespace compiler {
+@@ -255,3 +256,4 @@ void EnumLiteGenerator::Generate(io::Printer* printer) {
+ }  // namespace compiler
+ }  // namespace protobuf
+ }  // namespace google
++#pragma GCC diagnostic pop
+diff --git a/src/google/protobuf/compiler/rust/relative_path.cc b/src/google/protobuf/compiler/rust/relative_path.cc
+index e214dada4..ca446181a 100644
+--- a/src/google/protobuf/compiler/rust/relative_path.cc
++++ b/src/google/protobuf/compiler/rust/relative_path.cc
+@@ -62,7 +62,9 @@ std::string RelativePath::Relative(const RelativePath& dest) const {
+     result.push_back(segment);
+   }
+   // Push `..` from the common ancestor to the current path.
++#pragma GCC diagnostic ignored "-Wsign-compare"
+   for (int i = 0; i < current_segments.size(); ++i) {
++#pragma GCC diagnostic pop
+     result.push_back("..");
+   }
+   absl::c_reverse(result);
+diff --git a/src/google/protobuf/io/printer.h b/src/google/protobuf/io/printer.h
+index 7677e9dbb..c2d84c3b7 100644
+--- a/src/google/protobuf/io/printer.h
++++ b/src/google/protobuf/io/printer.h
+@@ -124,7 +124,9 @@ class AnnotationProtoCollector : public AnnotationCollector {
+                      const std::string& file_path, const std::vector<int>& path,
+                      absl::optional<Semantic> semantic) override {
+     auto* annotation = annotation_proto_->add_annotation();
++#pragma GCC diagnostic ignored "-Wsign-compare"
+     for (int i = 0; i < path.size(); ++i) {
++#pragma GCC diagnostic pop
+       annotation->add_path(path[i]);
+     }
+     annotation->set_source_file(file_path);
+diff --git a/src/google/protobuf/map.cc b/src/google/protobuf/map.cc
+index 570b61bec..0f61557f4 100644
+--- a/src/google/protobuf/map.cc
++++ b/src/google/protobuf/map.cc
+@@ -116,7 +116,9 @@ void UntypedMapBase::ClearTable(const ClearInput input) {
+   ABSL_DCHECK_NE(num_buckets_, kGlobalEmptyTableSize);
+ 
+   if (alloc_.arena() == nullptr) {
++#pragma GCC diagnostic ignored "-Wdeprecated"
+     const auto loop = [=](auto destroy_node) {
++#pragma GCC diagnostic pop
+       const TableEntryPtr* table = table_;
+       for (map_index_t b = index_of_first_non_null_, end = num_buckets_;
+            b < end; ++b) {
+diff --git a/src/google/protobuf/port.h b/src/google/protobuf/port.h
+index 3a0162ca9..0f69678d1 100644
+--- a/src/google/protobuf/port.h
++++ b/src/google/protobuf/port.h
+@@ -175,12 +175,14 @@ void AssertDownCast(From* from) {
+   static_assert(std::is_base_of<From, To>::value, "illegal DownCast");
+ 
+ #if defined(__cpp_concepts)
++#pragma GCC diagnostic ignored "-Wmissing-requires"
+   // Check that this function is not used to downcast message types.
+   // For those we should use {Down,Dynamic}CastTo{Message,Generated}.
+   static_assert(!requires {
+     std::derived_from<std::remove_pointer_t<To>,
+                       typename std::remove_pointer_t<To>::MessageLite>;
+   });
++#pragma GCC diagnostic pop
+ #endif
+ 
+ #if PROTOBUF_RTTI

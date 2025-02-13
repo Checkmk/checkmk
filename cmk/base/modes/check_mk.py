@@ -1789,10 +1789,8 @@ modes.register(
 def mode_notify(options: dict, args: list[str]) -> int | None:
     from cmk.base import notify
 
-    plugins = agent_based_register.get_previously_loaded_plugins()
-    discovery_rules = agent_based_register.extract_known_discovery_rulesets(plugins)
     with store.lock_checkmk_configuration(configuration_lockfile):
-        config.load(discovery_rulesets=discovery_rules, with_conf_d=True, validate_hosts=False)
+        config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
 
     def ensure_nagios(msg: str) -> None:
         if config.is_cmc():

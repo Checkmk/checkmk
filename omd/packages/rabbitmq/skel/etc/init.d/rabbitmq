@@ -43,15 +43,32 @@ await_process_stop() {
     return 1
 }
 
+rabbitmq_accepting_connections() {
+    "${RABBITMQ_DIAGNOSTICS}" check_port_listener --node "${RABBITMQ_NODENAME}" "${RABBITMQ_PORT}"
+    # no idea why we can't use this anymore; it will fail for the management plugin
+    # "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
+}
+
 await_process_start() {
+    # Only write output in the end, otherwise we clobber the logfile.
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ $((N % 10)) -eq 0 ] && printf "."
-        [ -s "${PIDFILE}" ] && return 0
-        [ -e "${PIDFILE}" ] || return 1
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && break
+        [ -e "${PIDFILE}" ] || {
+            date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
+            return 1
+        }
         sleep 0.1
     done
+
+    # once again, mostly to get the output of the diagnostics call
+    [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+        date +"%F %T.%N RabbitMQ considered ready"
+        return 0
+    }
+
+    date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1
 }
 

@@ -125,6 +125,7 @@ $dragging-bg-color: $ux-theme-1;
 
 $nested-table-th-bg-color: $ux-theme-4;
 $nested-table-td-bg-color: $ux-theme-5;
+$nested-table-td-inactive-bg-color: $nested-table-td-bg-color;
 
 $duallist-control-a-hover-bg-color: mix($white, $grey-5, 10%);
 
@@ -207,4 +208,4 @@ $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $font-color;
-$inactive-opacity: 0.5;
+$inactive-opacity: 0.6;

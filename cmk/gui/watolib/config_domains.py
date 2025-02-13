@@ -119,7 +119,9 @@ class ConfigDomainCore(ABCConfigDomain):
         if activate_settings is None:
             activate_settings = {}
 
-        return ConfigDomainCoreSettings(**activate_settings)
+        return ConfigDomainCoreSettings(
+            hosts_to_update=list(activate_settings.get("hosts_to_update", []))
+        )
 
     def default_globals(self) -> Mapping[str, Any]:
         return _core_config_default_globals(*self._get_global_config_var_names())
@@ -207,9 +209,10 @@ class ConfigDomainGUI(ABCConfigDomain):
 
     @classmethod
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
-        return DomainRequest(
-            cls.ident(), {k: v for setting in settings for k, v in setting.items()}
-        )
+        setting = SerializedSettings()
+        for s in settings:
+            setting.update(s)
+        return DomainRequest(cls.ident(), setting)
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible

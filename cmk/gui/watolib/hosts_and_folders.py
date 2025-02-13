@@ -84,8 +84,8 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
+    DomainSettings,
     generate_hosts_to_update_settings,
-    SerializedSettings,
 )
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
@@ -931,7 +931,7 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
 
 def _generate_domain_settings(
     ident: ConfigDomainName, hostnames: Sequence[HostName]
-) -> SerializedSettings:
+) -> DomainSettings:
     return {ident: generate_hosts_to_update_settings(hostnames)}
 
 
